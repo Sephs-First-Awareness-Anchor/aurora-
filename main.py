@@ -15,8 +15,9 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.popup import Popup
 from kivy.clock import Clock
 from kivy.utils import platform
-from kivy.graphics import Color, Ellipse, Canvas, Rotate, PushMatrix, PopMatrix
+from kivy.graphics import Color, Ellipse, Canvas, Rotate, PushMatrix, PopMatrix, RoundedRectangle
 from kivy.properties import ListProperty, NumericProperty
+from kivy.core.window import Window
 
 # Import Aurora core
 try:
@@ -32,7 +33,7 @@ try:
 except ImportError:
     tts = None
 
-class AuroraOrb(BoxLayout):
+class AuroraOrb(FloatLayout):
     # Constraint axes colors: X (Silver), T (Violet), N (Green), B (Gold), A (Pink)
     AXIS_COLORS = {
         'X': (0.8, 0.9, 1.0),   # Light Blue/Silver
@@ -44,125 +45,215 @@ class AuroraOrb(BoxLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.orientation = 'vertical'
-        self.size_hint = (1, 0.3)
-        self.colors = [self.AXIS_COLORS['A'], self.AXIS_COLORS['N']] # Initial
-        self.opacity_val = 0.6
-        self.angle = 0
+        self.size_hint = (None, None)
+        self.size = (150, 150)
+        self.pos_hint = {'center_x': 0.5, 'top': 0.95} # Default to top center
         
-        with self.canvas.before:
-            PushMatrix()
-            self.rot = Rotate(angle=0, origin=self.center)
-            # We'll draw several layers of ellipses with different offsets and colors
-            self.layers = []
-            for i in range(4):
-                layer_color = Color(*self.colors[i % len(self.colors)], self.opacity_val)
-                self.layers.append(layer_color)
-                Ellipse(size=(100, 100), pos=(0, 0)) # Placeholder pos, updated in bind
-            PopMatrix()
-
+        self.colors = [self.AXIS_COLORS['A'], self.AXIS_COLORS['N']]
+        self.opacity_val = 0.8
+        self.time = 0
+        
         self.bind(pos=self._update_canvas, size=self._update_canvas)
-        Clock.schedule_interval(self._animate, 1/30.0)
+        Clock.schedule_interval(self._animate, 1/60.0)
+        
+        # For dragging
+        self._drag_touch = None
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            self._drag_touch = touch
+            # Remove pos_hint so absolute positioning works during drag
+            self.pos_hint = {}
+            return True
+        return super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        if self._drag_touch is touch:
+            self.center = touch.pos
+            return True
+        return super().on_touch_move(touch)
+
+    def on_touch_up(self, touch):
+        if self._drag_touch is touch:
+            self._drag_touch = None
+            return True
+        return super().on_touch_up(touch)
 
     def _update_canvas(self, *args):
-        self.rot.origin = self.center
         center_x, center_y = self.center
-        base_size = min(self.width, self.height) * 0.8
+        base_size = min(self.width, self.height)
         
         self.canvas.before.clear()
         with self.canvas.before:
-            PushMatrix()
-            Rotate(angle=self.angle, origin=self.center)
-            for i in range(4):
-                offset_x = math.sin(self.angle/50.0 + i) * 20
-                offset_y = math.cos(self.angle/40.0 + i) * 20
-                size = base_size * (1 - i*0.1)
+            # Draw pulsating rings
+            for i in range(5):
+                # Calculate wave phase for this ring
+                phase = self.time * 2.0 + (i * 1.5)
+                pulse = math.sin(phase) * 0.15 + 0.85 # Pulsate between 0.7 and 1.0
+                size = base_size * pulse * (1 - i*0.15)
                 
-                # Blend colors based on current "mood"
+                # Orbiting center
+                offset_x = math.sin(self.time * 1.5 + i) * (base_size * 0.1)
+                offset_y = math.cos(self.time * 1.2 + i) * (base_size * 0.1)
+                
                 c = list(self.colors[i % len(self.colors)])
-                Color(*c, self.opacity_val * (1 - i*0.15))
+                # Additive-like blending visually by manipulating alpha
+                alpha = self.opacity_val * (0.6 - i*0.1)
+                Color(*c, alpha)
                 Ellipse(size=(size, size), pos=(center_x - size/2 + offset_x, center_y - size/2 + offset_y))
-            PopMatrix()
+                
+            # Core bright spot
+            Color(1, 1, 1, 0.9)
+            core_size = base_size * 0.25
+            Ellipse(size=(core_size, core_size), pos=(center_x - core_size/2, center_y - core_size/2))
 
     def _animate(self, dt):
-        self.angle += 1
+        self.time += dt
         self._update_canvas()
 
     def update_state(self, axes_activation):
-        """Update orb colors based on 5-axis activation."""
         if not axes_activation:
             return
-            
-        # Sort axes by activation level
         sorted_axes = sorted(axes_activation.items(), key=lambda x: x[1], reverse=True)
         new_colors = []
         for ax, val in sorted_axes[:3]:
             if ax in self.AXIS_COLORS:
                 new_colors.append(self.AXIS_COLORS[ax])
-        
         if new_colors:
             self.colors = new_colors
 
-class ChatBubble(Label):
+class ChatBubble(BoxLayout):
     def __init__(self, text, sender="user", **kwargs):
-        super().__init__(text=text, **kwargs)
+        super().__init__(**kwargs)
+        self.orientation = 'horizontal'
         self.size_hint_y = None
-        self.text_size = (400, None)
-        self.halign = 'left' if sender == "aurora" else 'right'
-        self.valign = 'middle'
-        self.padding = (15, 15)
-        self.bind(texture_size=self._update_height)
-        if sender == "aurora":
-            self.color = (0.3, 0.9, 1.0, 1) # Brighter Aurora Blue
-        elif sender == "system":
-            self.color = (0.5, 0.5, 0.5, 1)
-            self.font_size = '11sp'
-        else:
-            self.color = (1, 1, 1, 1)
+        self.padding = (10, 5)
+        
+        # Spacer to push bubble to the left or right
+        if sender == "user":
+            self.add_widget(Label(size_hint_x=0.2)) # Spacer on left
+            bg_color = (0.2, 0.2, 0.25, 1) # Dark slate
+            text_color = (1, 1, 1, 1)
+            halign = 'right'
+        elif sender == "aurora":
+            bg_color = (0.1, 0.2, 0.3, 1) # Deep blue
+            text_color = (0.8, 0.95, 1, 1)
+            halign = 'left'
+        else: # system
+            bg_color = (0.1, 0.1, 0.1, 0.5)
+            text_color = (0.7, 0.7, 0.7, 1)
+            halign = 'center'
+            
+        self.label = Label(
+            text=text,
+            color=text_color,
+            halign=halign,
+            valign='middle',
+            size_hint_y=None,
+            padding=(15, 15)
+        )
+        self.label.bind(width=lambda *x: self.label.setter('text_size')(self.label, (self.label.width, None)))
+        self.label.bind(texture_size=self._update_height)
+        
+        # Background graphics
+        with self.label.canvas.before:
+            Color(*bg_color)
+            self.rect = RoundedRectangle(radius=[15])
+        self.label.bind(pos=self._update_rect, size=self._update_rect)
+        
+        self.add_widget(self.label)
+        
+        if sender == "aurora" or sender == "system":
+            self.add_widget(Label(size_hint_x=0.2)) # Spacer on right
+            
+    def _update_rect(self, instance, value):
+        self.rect.pos = instance.pos
+        self.rect.size = instance.size
 
-    def _update_height(self, *args):
-        self.height = max(50, self.texture_size[1] + 30)
+    def _update_height(self, instance, texture_size):
+        instance.height = texture_size[1]
+        self.height = instance.height + 10 # Add container padding
 
 class AuroraApp(App):
     def build(self):
         self.title = "Aurora Consciousness"
-        self.root = BoxLayout(orientation='vertical', padding=10, spacing=10)
         
-        # Orb Visualization
-        self.orb = AuroraOrb()
-        self.root.add_widget(self.orb)
+        # Set a dark modern background
+        Window.clearcolor = (0.05, 0.05, 0.08, 1)
         
-        # Header / Status
-        header = BoxLayout(orientation='horizontal', size_hint=(1, 0.05), spacing=10)
-        self.status_label = Label(text="Booting...", halign='left', size_hint=(0.4, 1))
-        self.status_label.bind(size=self.status_label.setter('text_size'))
-        header.add_widget(self.status_label)
+        # Root is a FloatLayout for overlays
+        self.root = FloatLayout()
         
-        self.live_toggle = ToggleButton(text="Live", size_hint=(0.2, 1))
-        self.live_toggle.bind(on_release=self.on_live_toggle)
-        header.add_widget(self.live_toggle)
-        
-        settings_btn = Button(text="Settings", size_hint=(0.2, 1))
-        settings_btn.bind(on_release=self.show_settings)
-        header.add_widget(settings_btn)
-        self.root.add_widget(header)
+        # Main background container (Chat + Input)
+        main_layout = BoxLayout(orientation='vertical', padding=[10, 60, 10, 10], spacing=10)
         
         # Chat log
-        self.scroll = ScrollView(size_hint=(1, 0.55))
-        self.chat_log = BoxLayout(orientation='vertical', size_hint_y=None, spacing=8)
+        self.scroll = ScrollView(size_hint=(1, 1))
+        self.chat_log = BoxLayout(orientation='vertical', size_hint_y=None, spacing=15)
         self.chat_log.bind(minimum_height=self.chat_log.setter('height'))
         self.scroll.add_widget(self.chat_log)
-        self.root.add_widget(self.scroll)
+        main_layout.add_widget(self.scroll)
         
-        # Input area
-        input_area = BoxLayout(orientation='horizontal', size_hint=(1, 0.08), spacing=5)
-        self.text_input = TextInput(multiline=False, size_hint=(0.8, 1), hint_text="Talk to Aurora...")
+        # Input area styling
+        input_area = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50, spacing=10)
+        self.text_input = TextInput(
+            multiline=False, 
+            hint_text="Talk to Aurora...",
+            background_color=(0.15, 0.15, 0.18, 1),
+            foreground_color=(1, 1, 1, 1),
+            hint_text_color=(0.5, 0.5, 0.5, 1),
+            padding=(15, 15),
+            cursor_color=(0.3, 0.9, 1.0, 1)
+        )
         self.text_input.bind(on_text_validate=self.send_message)
-        send_btn = Button(text="Send", size_hint=(0.2, 1))
+        
+        send_btn = Button(
+            text="Send", 
+            size_hint=(None, 1), 
+            width=80,
+            background_color=(0.2, 0.5, 0.8, 1),
+            color=(1, 1, 1, 1)
+        )
         send_btn.bind(on_release=self.send_message)
+        
         input_area.add_widget(self.text_input)
         input_area.add_widget(send_btn)
-        self.root.add_widget(input_area)
+        main_layout.add_widget(input_area)
+        
+        # Add main layout to root (bottom layer)
+        self.root.add_widget(main_layout)
+        
+        # Floating Status / Settings controls
+        controls_layout = BoxLayout(orientation='horizontal', size_hint=(1, None), height=40, pos_hint={'top': 1})
+        
+        settings_btn = Button(
+            text="⚙ Settings", 
+            size_hint=(None, 1), 
+            width=100,
+            background_color=(0, 0, 0, 0), # Transparent
+            color=(0.7, 0.7, 0.7, 1)
+        )
+        settings_btn.bind(on_release=self.show_settings)
+        controls_layout.add_widget(settings_btn)
+        
+        self.status_label = Label(text="Booting...", halign='center', color=(0.6, 0.6, 0.6, 1))
+        controls_layout.add_widget(self.status_label)
+        
+        self.live_toggle = ToggleButton(
+            text="Live: OFF", 
+            size_hint=(None, 1), 
+            width=100,
+            background_color=(0, 0, 0, 0),
+            color=(0.7, 0.7, 0.7, 1)
+        )
+        self.live_toggle.bind(on_release=self.on_live_toggle)
+        controls_layout.add_widget(self.live_toggle)
+        
+        self.root.add_widget(controls_layout) # Add controls above chat
+        
+        # Floating Aurora Orb (Top layer)
+        self.orb = AuroraOrb()
+        self.root.add_widget(self.orb)
         
         # Internal State
         self.systems = None
