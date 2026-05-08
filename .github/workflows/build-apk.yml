@@ -23,10 +23,12 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Install System Dependencies
+    - name: Install Dependencies
       run: |
         sudo apt update
         sudo apt install -y git zip unzip autoconf libtool libtool-bin pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev automake autopoint gettext libltdl-dev
+        pip install --upgrade pip
+        pip install "Cython<3.0" virtualenv setuptools buildozer
 
     - name: Clear space
       run: |
@@ -37,10 +39,7 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Explicitly use the python from setup-python
-        $pythonLocation/python -m pip install --upgrade pip
-        $pythonLocation/python -m pip install "Cython>=3.0.0,<3.1.0" virtualenv setuptools git+https://github.com/kivy/buildozer.git@master
-        $pythonLocation/python -m buildozer.scripts.client android debug
+        buildozer android debug
       env:
         # Increase logging
         BUILDOZER_WARN_ON_ROOT: 0

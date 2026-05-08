@@ -38,7 +38,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0,hostpython3,requests,numpy,opencv,typing-extensions,chardet,idna,urllib3,certifi,plyer,aiohttp,aiosignal,attrs,frozenlist,multidict,yarl,edge-tts
+requirements = python3,kivy==2.3.0,requests,numpy,opencv,plyer,aiohttp,edge-tts
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
