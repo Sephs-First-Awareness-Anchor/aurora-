@@ -170,28 +170,45 @@ class AuroraApp(App):
         self.voice_enabled = True
         self.full_autonomy = True
         self.last_percept_ts = 0
-        
-        threading.Thread(target=self.boot_aurora_thread, daemon=True).start()
-        
+
+        if platform == 'android':
+            from android.permissions import request_permissions, Permission
+            request_permissions([
+                Permission.CAMERA,
+                Permission.RECORD_AUDIO,
+                Permission.READ_EXTERNAL_STORAGE,
+                Permission.WRITE_EXTERNAL_STORAGE,
+                Permission.ACCESS_FINE_LOCATION,
+            ], self.on_permissions_result)
+        else:
+            self.start_boot_thread()
+
         return self.root
+
+    def on_permissions_result(self, permissions, grants):
+        # Called when the user dismisses the permission dialogs
+        self.start_boot_thread()
+
+    def start_boot_thread(self):
+        threading.Thread(target=self.boot_aurora_thread, daemon=True).start()
 
     def show_settings(self, *args):
         content = BoxLayout(orientation='vertical', padding=10, spacing=10)
-        
+
         voice_row = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
         voice_row.add_widget(Label(text="Voice Synthesis"))
         voice_btn = ToggleButton(text="ON" if self.voice_enabled else "OFF", state='down' if self.voice_enabled else 'normal')
         voice_btn.bind(on_release=lambda x: self.toggle_voice(x))
         voice_row.add_widget(voice_btn)
         content.add_widget(voice_row)
-        
+
         auto_row = BoxLayout(orientation='horizontal', size_hint_y=None, height=40)
         auto_row.add_widget(Label(text="Full Autonomy"))
         auto_btn = ToggleButton(text="ON" if self.full_autonomy else "OFF", state='down' if self.full_autonomy else 'normal')
         auto_btn.bind(on_release=lambda x: self.toggle_autonomy(x))
         auto_row.add_widget(auto_btn)
         content.add_widget(auto_row)
-        
+
         close_btn = Button(text="Close", size_hint_y=None, height=40)
         popup = Popup(title="Aurora Settings", content=content, size_hint=(0.8, 0.4))
         close_btn.bind(on_release=popup.dismiss)
@@ -210,23 +227,15 @@ class AuroraApp(App):
         if boot_aurora:
             try:
                 state_dir = "aurora_state"
-                if platform == 'android':
-                    from android.permissions import request_permissions, Permission
-                    request_permissions([
-                        Permission.CAMERA,
-                        Permission.RECORD_AUDIO,
-                        Permission.READ_EXTERNAL_STORAGE,
-                        Permission.WRITE_EXTERNAL_STORAGE,
-                    ])
-                
                 self.systems = boot_aurora(state_dir=state_dir, verbose=False)
                 Clock.schedule_once(lambda dt: self.set_status("Aurora is Online"), 0)
                 threading.Thread(target=self.autonomy_loop, daemon=True).start()
             except Exception as e:
+                import traceback
+                traceback.print_exc()
                 Clock.schedule_once(lambda dt: self.set_status(f"Boot Failed: {str(e)}"), 0)
         else:
             Clock.schedule_once(lambda dt: self.set_status("Aurora Core Not Found"), 0)
-
     def set_status(self, text):
         self.status_label.text = text
 
