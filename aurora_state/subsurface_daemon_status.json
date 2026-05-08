@@ -1,6 +1,6 @@
 {
   "heat": "COOL",
-  "updated": "12:24:25",
+  "updated": "13:38:39",
   "runtime_profile": "subsurface",
   "stratum_role": "subsurface",
   "browser_today": "disabled",
@@ -18,8 +18,8 @@
     "B": 1.0,
     "A": 1.0
   },
-  "dilation_factor": 1.0,
-  "dilation_state": "stable",
+  "dilation_factor": 1.322,
+  "dilation_state": "optimal",
   "telemetry_fails": [],
   "telemetry_weakest": "?",
   "qao_recent_events": 0,
@@ -27,7 +27,7 @@
   "fail_summary": [
     {
       "dim": "context_carryover",
-      "fails": 776,
+      "fails": 777,
       "avg_sev": 0.478
     },
     {
@@ -46,7 +46,7 @@
       "avg_sev": 0.66
     }
   ],
-  "distillation_status": "20260508_071424 ready",
+  "distillation_status": "idle",
   "distillation_bytes_purged": 0,
   "distillation_crystals": 0,
   "distillation_coherence_ratio": 1.0,
@@ -62,44 +62,44 @@
   "interaction_quasi_count": 0,
   "runtime_governor_mode": "survival",
   "runtime_governor_axes": {
-    "X": 0.8065,
+    "X": 0.7498,
     "T": 1.0,
-    "N": 0.9439,
-    "B": 1.0,
+    "N": 0.932,
+    "B": 0.5611,
     "A": 1.0
   },
   "runtime_energy_balance": {
     "raw_N": 1.0,
-    "xt_support": 0.8664,
-    "temporal_maturity": 0.5352,
-    "balanced_N": 0.9439
+    "xt_support": 0.8381,
+    "temporal_maturity": 0.5074,
+    "balanced_N": 0.932
   },
   "runtime_host": {
     "cpu_count": 4,
-    "load_1m": 5.1382,
-    "load_5m": 6.4448,
-    "load_ratio": 1.6112,
-    "mem_available_mb": 567.95,
-    "mem_pressure": 0.8514,
-    "disk_free_ratio": 0.0671,
-    "process_rss_mb": 96.18
+    "load_1m": 10.0015,
+    "load_5m": 6.1396,
+    "load_ratio": 2.5,
+    "mem_available_mb": 1180.55,
+    "mem_pressure": 0.691,
+    "disk_free_ratio": 0.0742,
+    "process_rss_mb": 59.49
   },
   "runtime_recent_blocked": [],
-  "runtime_last_heavy_run_age": null,
-  "generation": 1,
+  "runtime_last_heavy_run_age": 553.6,
+  "generation": 5,
   "sensory_mic_active": true,
-  "sensory_camera_active": true,
-  "surface_snapshot_at": 1778257465.0193286,
+  "sensory_camera_active": false,
+  "surface_snapshot_at": 1778261917.7956765,
   "surface_snapshot_trigger": "interval",
   "surface_snapshot_flagged": false,
   "surface_snapshot_reason": "",
-  "surface_snapshot_summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
-  "surface_snapshot_age_s": 0.11,
+  "surface_snapshot_summary": "Surface is tracking live audio. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+  "surface_snapshot_age_s": 1.86,
   "subsurface_repair_phase": "enforce",
   "subsurface_repair_issue": "semantic_precision",
   "subsurface_repair_reason": "subsurface is moving from research into corrective pressure",
   "subsurface_repair_intensity": 0.58,
-  "subsurface_repair_excerpt": "No external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+  "subsurface_repair_excerpt": "Researcher lookup failed: HTTP Error 429: Too Many Requests",
   "subsurface_sensory_maturity": 0.0,
   "subsurface_sensory_semantic_nodes": 0,
   "subsurface_sensory_summary": "",

@@ -1,10 +1,33 @@
 {
-  "updated_at": 1778257480.160255,
-  "updated_at_str": "2026-05-08 12:24:40",
-  "phase": "steady",
-  "issue": "",
-  "reason": "enforcement period elapsed \u2014 auto-cleared",
-  "intensity": 0.0,
-  "observer_context": {},
-  "poedex_excerpt": ""
+  "updated_at": 1778260211.1141443,
+  "updated_at_str": "2026-05-08 13:10:11",
+  "phase": "enforce",
+  "issue": "semantic_precision",
+  "reason": "subsurface is moving from research into corrective pressure",
+  "intensity": 0.58,
+  "observer_context": {
+    "qao_recent_events": 0,
+    "qao_top_issue": "?",
+    "fail_summary": [
+      {
+        "dim": "context_carryover",
+        "fails": 776,
+        "avg_sev": 0.478
+      },
+      {
+        "dim": "implied_intent_inference",
+        "fails": 499,
+        "avg_sev": 0.5
+      },
+      {
+        "dim": "contradiction_handling",
+        "fails": 391,
+        "avg_sev": 0.5
+      }
+    ],
+    "surface_flagged": false,
+    "surface_reason": "",
+    "surface_summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm."
+  },
+  "poedex_excerpt": "Researcher lookup failed: HTTP Error 429: Too Many Requests"
 }

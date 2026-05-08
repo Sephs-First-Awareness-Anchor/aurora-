@@ -1,9 +1,9 @@
 {
-  "total_fails": 2613,
+  "total_fails": 2618,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 81,
-      "severity_sum": 8.2686315853606,
+      "fail_count": 82,
+      "severity_sum": 8.3710315853606,
       "recent": [
         0.1024,
         0.1024,
@@ -29,8 +29,8 @@
       "examples": []
     },
     "context_carryover": {
-      "fail_count": 776,
-      "severity_sum": 371.0874999999994,
+      "fail_count": 777,
+      "severity_sum": 371.3619999999994,
       "recent": [
         0.2745,
         0.2745,
@@ -139,8 +139,8 @@
       "examples": []
     },
     "uncertainty_signaling": {
-      "fail_count": 311,
-      "severity_sum": 123.2425000000002,
+      "fail_count": 312,
+      "severity_sum": 123.31240000000021,
       "recent": [
         0.0699,
         0.0699,
@@ -166,8 +166,8 @@
       "examples": []
     },
     "boundary_calibration": {
-      "fail_count": 86,
-      "severity_sum": 9.25000000000001,
+      "fail_count": 87,
+      "severity_sum": 9.300000000000011,
       "recent": [
         0.05,
         0.05,
@@ -296,8 +296,8 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 75,
-      "severity_sum": 17.909999999999997,
+      "fail_count": 76,
+      "severity_sum": 18.148799999999998,
       "recent": [
         0.2388,
         0.2388,

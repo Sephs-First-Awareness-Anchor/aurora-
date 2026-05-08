@@ -1,239 +1,5 @@
 [
   {
-    "source": "distill_complete",
-    "axes": [
-      "N",
-      "B",
-      "X"
-    ],
-    "amount": 0.125,
-    "half_life": 5400,
-    "ts": 1778216360.4165442,
-    "notes": "Distillation: 0 crystals"
-  },
-  {
-    "source": "distill_complete",
-    "axes": [
-      "N",
-      "B",
-      "X"
-    ],
-    "amount": 0.125,
-    "half_life": 5400,
-    "ts": 1778217774.6111002,
-    "notes": "Distillation: 0 crystals"
-  },
-  {
-    "source": "distill_complete",
-    "axes": [
-      "N",
-      "B",
-      "X"
-    ],
-    "amount": 0.125,
-    "half_life": 5400,
-    "ts": 1778219544.3991344,
-    "notes": "Distillation: 0 crystals"
-  },
-  {
-    "source": "dream_complete",
-    "axes": [
-      "B",
-      "A"
-    ],
-    "amount": 0.18,
-    "half_life": 3600,
-    "ts": 1778229534.4501774,
-    "notes": "Dream burst completed"
-  },
-  {
-    "source": "assimilation_complete",
-    "axes": [
-      "X",
-      "N"
-    ],
-    "amount": 0.16,
-    "half_life": 3600,
-    "ts": 1778229658.9518678,
-    "notes": "Scheduled assimilation cycle"
-  },
-  {
-    "source": "study_complete",
-    "axes": [
-      "N",
-      "T"
-    ],
-    "amount": 0.2,
-    "half_life": 3600,
-    "ts": 1778229962.017678,
-    "notes": "OETS study cycle completed"
-  },
-  {
-    "source": "assimilation_complete",
-    "axes": [
-      "X",
-      "N"
-    ],
-    "amount": 0.16,
-    "half_life": 3600,
-    "ts": 1778230265.7577035,
-    "notes": "Scheduled assimilation cycle"
-  },
-  {
-    "source": "study_complete",
-    "axes": [
-      "N",
-      "T"
-    ],
-    "amount": 0.2,
-    "half_life": 3600,
-    "ts": 1778230689.6627154,
-    "notes": "OETS study cycle completed"
-  },
-  {
-    "source": "assimilation_complete",
-    "axes": [
-      "X",
-      "N"
-    ],
-    "amount": 0.16,
-    "half_life": 3600,
-    "ts": 1778230870.2598612,
-    "notes": "Scheduled assimilation cycle"
-  },
-  {
-    "source": "dream_complete",
-    "axes": [
-      "B",
-      "A"
-    ],
-    "amount": 0.18,
-    "half_life": 3600,
-    "ts": 1778231172.5989563,
-    "notes": "Dream burst completed"
-  },
-  {
-    "source": "dream_complete",
-    "axes": [
-      "B",
-      "A"
-    ],
-    "amount": 0.18,
-    "half_life": 3600,
-    "ts": 1778231356.5642457,
-    "notes": "Dream burst completed"
-  },
-  {
-    "source": "assimilation_complete",
-    "axes": [
-      "X",
-      "N"
-    ],
-    "amount": 0.16,
-    "half_life": 3600,
-    "ts": 1778231569.8180163,
-    "notes": "Scheduled assimilation cycle"
-  },
-  {
-    "source": "study_complete",
-    "axes": [
-      "N",
-      "T"
-    ],
-    "amount": 0.2,
-    "half_life": 3600,
-    "ts": 1778231857.1984015,
-    "notes": "OETS study cycle completed"
-  },
-  {
-    "source": "assimilation_complete",
-    "axes": [
-      "X",
-      "N"
-    ],
-    "amount": 0.16,
-    "half_life": 3600,
-    "ts": 1778232174.4247582,
-    "notes": "Scheduled assimilation cycle"
-  },
-  {
-    "source": "study_complete",
-    "axes": [
-      "N",
-      "T"
-    ],
-    "amount": 0.2,
-    "half_life": 3600,
-    "ts": 1778232431.5185456,
-    "notes": "OETS study cycle completed"
-  },
-  {
-    "source": "dream_complete",
-    "axes": [
-      "B",
-      "A"
-    ],
-    "amount": 0.18,
-    "half_life": 3600,
-    "ts": 1778232722.1375818,
-    "notes": "Dream burst completed"
-  },
-  {
-    "source": "dream_complete",
-    "axes": [
-      "B",
-      "A"
-    ],
-    "amount": 0.18,
-    "half_life": 3600,
-    "ts": 1778232953.02295,
-    "notes": "Dream burst completed"
-  },
-  {
-    "source": "assimilation_complete",
-    "axes": [
-      "X",
-      "N"
-    ],
-    "amount": 0.16,
-    "half_life": 3600,
-    "ts": 1778233122.224263,
-    "notes": "Scheduled assimilation cycle"
-  },
-  {
-    "source": "study_complete",
-    "axes": [
-      "N",
-      "T"
-    ],
-    "amount": 0.2,
-    "half_life": 3600,
-    "ts": 1778233228.5327082,
-    "notes": "OETS study cycle completed"
-  },
-  {
-    "source": "assimilation_complete",
-    "axes": [
-      "X",
-      "N"
-    ],
-    "amount": 0.16,
-    "half_life": 3600,
-    "ts": 1778233726.2392511,
-    "notes": "Scheduled assimilation cycle"
-  },
-  {
-    "source": "dream_complete",
-    "axes": [
-      "B",
-      "A"
-    ],
-    "amount": 0.18,
-    "half_life": 3600,
-    "ts": 1778233997.2298102,
-    "notes": "Dream burst completed"
-  },
-  {
     "source": "assimilation_complete",
     "axes": [
       "X",
@@ -1035,6 +801,128 @@
     "amount": 0.2,
     "half_life": 3600,
     "ts": 1778256951.299669,
+    "notes": "OETS study cycle completed"
+  },
+  {
+    "source": "study_complete",
+    "axes": [
+      "N",
+      "T"
+    ],
+    "amount": 0.2,
+    "half_life": 3600,
+    "ts": 1778257829.6767886,
+    "notes": "OETS study cycle completed"
+  },
+  {
+    "source": "study_complete",
+    "axes": [
+      "N",
+      "T"
+    ],
+    "amount": 0.2,
+    "half_life": 3600,
+    "ts": 1778258483.1497483,
+    "notes": "OETS study cycle completed"
+  },
+  {
+    "source": "study_complete",
+    "axes": [
+      "N",
+      "T"
+    ],
+    "amount": 0.2,
+    "half_life": 3600,
+    "ts": 1778259223.344291,
+    "notes": "OETS study cycle completed"
+  },
+  {
+    "source": "study_complete",
+    "axes": [
+      "N",
+      "T"
+    ],
+    "amount": 0.2,
+    "half_life": 3600,
+    "ts": 1778259738.5984504,
+    "notes": "OETS study cycle completed"
+  },
+  {
+    "source": "assimilation_complete",
+    "axes": [
+      "X",
+      "N"
+    ],
+    "amount": 0.16,
+    "half_life": 3600,
+    "ts": 1778259890.3169456,
+    "notes": "Scheduled assimilation cycle"
+  },
+  {
+    "source": "study_complete",
+    "axes": [
+      "N",
+      "T"
+    ],
+    "amount": 0.2,
+    "half_life": 3600,
+    "ts": 1778260256.222172,
+    "notes": "OETS study cycle completed"
+  },
+  {
+    "source": "assimilation_complete",
+    "axes": [
+      "X",
+      "N"
+    ],
+    "amount": 0.16,
+    "half_life": 3600,
+    "ts": 1778260498.8448274,
+    "notes": "Scheduled assimilation cycle"
+  },
+  {
+    "source": "distill_complete",
+    "axes": [
+      "N",
+      "B",
+      "X"
+    ],
+    "amount": 0.125,
+    "half_life": 5400,
+    "ts": 1778260846.36183,
+    "notes": "Distillation: 0 crystals"
+  },
+  {
+    "source": "study_complete",
+    "axes": [
+      "N",
+      "T"
+    ],
+    "amount": 0.2,
+    "half_life": 3600,
+    "ts": 1778260996.8769984,
+    "notes": "OETS study cycle completed"
+  },
+  {
+    "source": "dream_complete",
+    "axes": [
+      "B",
+      "A"
+    ],
+    "amount": 0.18,
+    "half_life": 3600,
+    "ts": 1778261365.9311662,
+    "notes": "Dream burst completed"
+  },
+  {
+    "source": "study_complete",
+    "axes": [
+      "N",
+      "T"
+    ],
+    "amount": 0.2,
+    "half_life": 3600,
+    "ts": 1778261798.1654541,
     "notes": "OETS study cycle completed"
   }
 ]

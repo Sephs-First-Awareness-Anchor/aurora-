@@ -1,14 +1,14 @@
 {
   "source": "subsurface_daemon",
-  "generated_at": 1778257465.1255097,
+  "generated_at": 1778261919.6581187,
   "dominant_axis_hint": "X",
   "governor_mode": "survival",
   "readiness_bias": 0.28,
   "surface_guidance": "Surface should feel careful around interpretation while subsurface sharpens the boundary problem. The caution should start easing because the issue is moving toward remedy.",
   "present_sensory_perspective": {
-    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+    "summary": "Surface is tracking live audio. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
     "mic_live": true,
-    "camera_live": true,
+    "camera_live": false,
     "scope": "constant_surface_feed",
     "trigger": "interval",
     "flagged": false
@@ -62,11 +62,10 @@
     "sensory_growth_maturity": 0.0,
     "sensory_growth_recent": [],
     "blocked_tasks": [
-      "assimilation",
-      "mutation"
+      "assimilation"
     ],
     "handoff_status": "researched",
-    "mem_available_mb": 567.95,
+    "mem_available_mb": 1180.55,
     "sensory_history_scope": "discard_after_processing",
     "continuity_scope": "durable_recall_and_consolidation",
     "surface_frame_dependency": "surface_flags_and_5s_snapshots"
