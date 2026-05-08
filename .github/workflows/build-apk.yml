@@ -40,8 +40,8 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Call buildozer as a module to avoid PATH issues
-        python3 -m buildozer.scripts.client android debug
+        # Call buildozer as a module using the 'python' from setup-python
+        python -m buildozer.scripts.client android debug
       env:
         # Increase logging
         BUILDOZER_WARN_ON_ROOT: 0
