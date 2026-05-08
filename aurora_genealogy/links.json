@@ -1,0 +1,3235 @@
+{
+  "L:ecee8a4a8c": {
+    "id": "L:ecee8a4a8c",
+    "parents": [
+      "NC:B>A",
+      "NC:B>B"
+    ],
+    "depth": 1,
+    "created_at_tick": 16,
+    "stats": {
+      "count": 8,
+      "mean_pos_relief": {
+        "X": 7.150091889032539e-05,
+        "T": 6.801156392260583e-05,
+        "N": 2.772046334320412e-08,
+        "B": -1.518146803737386e-09,
+        "A": -6.994120807577032e-11
+      },
+      "mean_relief": {
+        "X": 7.150091889032539e-05,
+        "T": 6.801156392260583e-05,
+        "N": 2.772046334320412e-08,
+        "B": -1.518146803737386e-09,
+        "A": -6.994120807577032e-11
+      },
+      "stdev_relief": {
+        "X": 5.749640675972071e-05,
+        "T": 4.9969644452774676e-05,
+        "N": 1.3260043843229243e-08,
+        "B": 1.1368358480632206e-07,
+        "A": 1.5672160810170467e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.00125,
+        "N": 0.0021625000000000004,
+        "B": 0.0,
+        "A": 0.001478125
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:2c0c850b59": {
+    "id": "L:2c0c850b59",
+    "parents": [
+      "NC:N>N",
+      "NC:N>T"
+    ],
+    "depth": 1,
+    "created_at_tick": 53,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 0.00011471166412019538,
+        "T": 0.00010944934655536699,
+        "N": 1.0518903408007398e-08,
+        "B": 7.885307005631745e-08,
+        "A": -3.175973593293749e-10
+      },
+      "mean_relief": {
+        "X": 0.00011471166412019538,
+        "T": 0.00010944934655536699,
+        "N": 1.0518903408007398e-08,
+        "B": 7.885307005631745e-08,
+        "A": -3.175973593293749e-10
+      },
+      "stdev_relief": {
+        "X": 0.00012436277480475902,
+        "T": 5.994418373392801e-05,
+        "N": 3.2557658531537046e-08,
+        "B": 1.1106423218238353e-07,
+        "A": 5.201881029609256e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0005555555555555556,
+        "N": 0.0013222222222222227,
+        "B": 8.750000000000004e-05,
+        "A": 0.0005902777777777778
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*N^3",
+      "dominant_axis:N",
+      "purpose_family:T+N",
+      "origin_signature:T^1*N^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.576",
+      "purpose_grade:0.675",
+      "overall_grade:0.626",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:ff69a042a0": {
+    "id": "L:ff69a042a0",
+    "parents": [
+      "NC:T>N",
+      "NC:T>T"
+    ],
+    "depth": 1,
+    "created_at_tick": 53,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 0.00011471166412019538,
+        "T": 0.00010944934655536699,
+        "N": 1.0518903408007398e-08,
+        "B": 7.885307005631745e-08,
+        "A": -3.175973593293749e-10
+      },
+      "mean_relief": {
+        "X": 0.00011471166412019538,
+        "T": 0.00010944934655536699,
+        "N": 1.0518903408007398e-08,
+        "B": 7.885307005631745e-08,
+        "A": -3.175973593293749e-10
+      },
+      "stdev_relief": {
+        "X": 0.00012436277480475902,
+        "T": 5.994418373392801e-05,
+        "N": 3.2557658531537046e-08,
+        "B": 1.1106423218238353e-07,
+        "A": 5.201881029609256e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0005555555555555556,
+        "N": 0.0013222222222222227,
+        "B": 8.750000000000004e-05,
+        "A": 0.0005902777777777778
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^3*N^1",
+      "dominant_axis:T",
+      "purpose_family:T+N",
+      "origin_signature:T^3*N^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.576",
+      "purpose_grade:0.725",
+      "overall_grade:0.651",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:93d2b78838": {
+    "id": "L:93d2b78838",
+    "parents": [
+      "NC:B>B",
+      "NC:B>N"
+    ],
+    "depth": 1,
+    "created_at_tick": 117,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 0.00011770682683281901,
+        "T": 8.30613289414034e-05,
+        "N": -2.760409534495905e-08,
+        "B": 9.037774352402875e-08,
+        "A": -2.7198730440531437e-10
+      },
+      "mean_relief": {
+        "X": 0.00011770682683281901,
+        "T": 8.30613289414034e-05,
+        "N": -2.760409534495905e-08,
+        "B": 9.037774352402875e-08,
+        "A": -2.7198730440531437e-10
+      },
+      "stdev_relief": {
+        "X": 0.00011008958791312255,
+        "T": 5.839229105421255e-05,
+        "N": 2.399050287887618e-08,
+        "B": 1.3115543271202182e-07,
+        "A": 4.2650473280057077e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0010185185185185184,
+        "N": 0.0030583333333333343,
+        "B": 0.00032361111111111127,
+        "A": 0.0018200231481481479
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^1*B^3",
+      "dominant_axis:B",
+      "purpose_family:N+B",
+      "origin_signature:N^1*B^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.712",
+      "overall_grade:0.644",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:bd09d4afd3": {
+    "id": "L:bd09d4afd3",
+    "parents": [
+      "NC:B>T",
+      "NC:N>B"
+    ],
+    "depth": 1,
+    "created_at_tick": 229,
+    "stats": {
+      "count": 15,
+      "mean_pos_relief": {
+        "X": 0.000154332992218274,
+        "T": 9.034955612600908e-05,
+        "N": -2.3895568970279003e-08,
+        "B": 3.6976332487554507e-08,
+        "A": -1.9887178706569912e-10
+      },
+      "mean_relief": {
+        "X": 0.000154332992218274,
+        "T": 9.034955612600908e-05,
+        "N": -2.3895568970279003e-08,
+        "B": 3.6976332487554507e-08,
+        "A": -1.9887178706569912e-10
+      },
+      "stdev_relief": {
+        "X": 0.00014318197684241965,
+        "T": 6.962198182473392e-05,
+        "N": 1.1936715745107835e-08,
+        "B": 1.350170763140893e-07,
+        "A": 4.858881103780559e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0011944444444444444,
+        "N": 0.005449583333333336,
+        "B": 0.0006991666666666671,
+        "A": 0.0037261284722222223
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*N^1*B^2",
+      "dominant_axis:B",
+      "purpose_family:T+N+B",
+      "origin_signature:T^1*N^1*B^2",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.649",
+      "purpose_grade:0.700",
+      "overall_grade:0.675",
+      "complexity_axes:3",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:f94c7a5126": {
+    "id": "L:f94c7a5126",
+    "parents": [
+      "N:DRAIN_BASELINE",
+      "T:PHASE_DRIFT"
+    ],
+    "depth": 1,
+    "created_at_tick": 356,
+    "stats": {
+      "count": 14,
+      "mean_pos_relief": {
+        "X": 0.00011384546468304789,
+        "T": 5.7146688488624386e-05,
+        "N": 3.6779524587517983e-08,
+        "B": -3.1856283043018625e-08,
+        "A": -1.1027138822927424e-10
+      },
+      "mean_relief": {
+        "X": 0.00011384546468304789,
+        "T": 5.7146688488624386e-05,
+        "N": 3.6779524587517983e-08,
+        "B": -3.1856283043018625e-08,
+        "A": -1.1027138822927424e-10
+      },
+      "stdev_relief": {
+        "X": 0.00016558594937470404,
+        "T": 7.802576319850145e-05,
+        "N": 1.578009274152284e-07,
+        "B": 1.2619576073739004e-07,
+        "A": 3.12833963127425e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.002002976190476191,
+        "N": 0.008546808035714289,
+        "B": 0.0009417857142857147,
+        "A": 0.006571451822916665
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*N^1",
+      "dominant_axis:T",
+      "purpose_family:T+N",
+      "origin_signature:T^1*N^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.459",
+      "purpose_grade:0.700",
+      "overall_grade:0.579",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:8c7be78039": {
+    "id": "L:8c7be78039",
+    "parents": [
+      "NC:N>B",
+      "NC:N>N"
+    ],
+    "depth": 1,
+    "created_at_tick": 376,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 0.00013942384205094978,
+        "T": 5.655264105017637e-05,
+        "N": -3.8817336983834404e-08,
+        "B": 8.101578629171008e-08,
+        "A": -1.0010474282773436e-10
+      },
+      "mean_relief": {
+        "X": 0.00013942384205094978,
+        "T": 5.655264105017637e-05,
+        "N": -3.8817336983834404e-08,
+        "B": 8.101578629171008e-08,
+        "A": -1.0010474282773436e-10
+      },
+      "stdev_relief": {
+        "X": 7.690409227469091e-05,
+        "T": 6.3876393859084e-05,
+        "N": 8.028674654961248e-08,
+        "B": 1.4170408398737206e-07,
+        "A": 5.075100515215569e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0009799382716049383,
+        "N": 0.0031781250000000013,
+        "B": 0.0004127314814814816,
+        "A": 0.002486135223765432
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^3*B^1",
+      "dominant_axis:N",
+      "purpose_family:N+B",
+      "origin_signature:N^3*B^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.576",
+      "purpose_grade:0.600",
+      "overall_grade:0.588",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:3cc732e844": {
+    "id": "L:3cc732e844",
+    "parents": [
+      "N:REDISTRIBUTE",
+      "T:ADVANCE_TICK"
+    ],
+    "depth": 1,
+    "created_at_tick": 500,
+    "stats": {
+      "count": 15,
+      "mean_pos_relief": {
+        "X": 0.00018575098201591302,
+        "T": 7.585481438273716e-05,
+        "N": 2.4442843184869734e-08,
+        "B": 1.1626042333438463e-08,
+        "A": -2.7333232230404736e-10
+      },
+      "mean_relief": {
+        "X": 0.00018575098201591302,
+        "T": 7.585481438273716e-05,
+        "N": 2.4442843184869734e-08,
+        "B": 1.1626042333438463e-08,
+        "A": -2.7333232230404736e-10
+      },
+      "stdev_relief": {
+        "X": 0.00015927837041926528,
+        "T": 8.270158558830504e-05,
+        "N": 1.6787900580419638e-07,
+        "B": 1.3979823692074385e-07,
+        "A": 4.393376455188419e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.001988888888888889,
+        "N": 0.008801125000000005,
+        "B": 0.0010038333333333338,
+        "A": 0.007064887152777776
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*N^1",
+      "dominant_axis:T",
+      "purpose_family:T+N",
+      "origin_signature:T^1*N^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.459",
+      "purpose_grade:0.700",
+      "overall_grade:0.579",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:4eb6113209": {
+    "id": "L:4eb6113209",
+    "parents": [
+      "NC:A>A",
+      "NC:A>N"
+    ],
+    "depth": 1,
+    "created_at_tick": 553,
+    "stats": {
+      "count": 17,
+      "mean_pos_relief": {
+        "X": 5.6803689108137176e-05,
+        "T": 5.3167429473214175e-05,
+        "N": -1.2056803248082668e-07,
+        "B": 2.105685474482005e-08,
+        "A": 1.331315443205636e-10
+      },
+      "mean_relief": {
+        "X": 5.6803689108137176e-05,
+        "T": 5.3167429473214175e-05,
+        "N": -1.2056803248082668e-07,
+        "B": 2.105685474482005e-08,
+        "A": 1.331315443205636e-10
+      },
+      "stdev_relief": {
+        "X": 0.00020457048129120768,
+        "T": 6.141165069959383e-05,
+        "N": 2.9824654145839513e-07,
+        "B": 1.717494091887847e-07,
+        "A": 4.371415628231314e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.00040000000000000013,
+        "B": 0.0,
+        "A": 0.00010000000000000003
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^1*A^3",
+      "dominant_axis:A",
+      "purpose_family:N+A",
+      "origin_signature:N^1*A^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.576",
+      "purpose_grade:0.775",
+      "overall_grade:0.676",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:292d1bb6f4": {
+    "id": "L:292d1bb6f4",
+    "parents": [
+      "NC:N>A",
+      "NC:N>N"
+    ],
+    "depth": 1,
+    "created_at_tick": 569,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 8.916106116472566e-05,
+        "T": 5.441385455282507e-05,
+        "N": -9.754821762978795e-09,
+        "B": 2.2648250689440984e-08,
+        "A": 1.6784248109009063e-10
+      },
+      "mean_relief": {
+        "X": 8.916106116472566e-05,
+        "T": 5.441385455282507e-05,
+        "N": -9.754821762978795e-09,
+        "B": 2.2648250689440984e-08,
+        "A": 1.6784248109009063e-10
+      },
+      "stdev_relief": {
+        "X": 0.0002394224817658081,
+        "T": 5.9902252974060946e-05,
+        "N": 5.410747893600928e-07,
+        "B": 1.6703934500355905e-07,
+        "A": 4.4828441587658423e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.00045000000000000015,
+        "B": 0.0,
+        "A": 0.00012083333333333337
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^3*A^1",
+      "dominant_axis:N",
+      "purpose_family:N+A",
+      "origin_signature:N^3*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.576",
+      "purpose_grade:0.663",
+      "overall_grade:0.619",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:74bf3b8696": {
+    "id": "L:74bf3b8696",
+    "parents": [
+      "NC:A>B",
+      "NC:A>T"
+    ],
+    "depth": 1,
+    "created_at_tick": 688,
+    "stats": {
+      "count": 35,
+      "mean_pos_relief": {
+        "X": 0.00011150965418925242,
+        "T": 3.577959271875518e-05,
+        "N": 5.661201061171625e-08,
+        "B": -3.1847661111998054e-08,
+        "A": 3.198167782496305e-11
+      },
+      "mean_relief": {
+        "X": 0.00011150965418925242,
+        "T": 3.577959271875518e-05,
+        "N": 5.661201061171625e-08,
+        "B": -3.1847661111998054e-08,
+        "A": 3.198167782496305e-11
+      },
+      "stdev_relief": {
+        "X": 0.00016837729243039236,
+        "T": 9.365182647090819e-05,
+        "N": 3.971077955475919e-07,
+        "B": 1.1155114937926447e-07,
+        "A": 1.3257784679124492e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0016607142857142868,
+        "N": 0.005209553571428571,
+        "B": 0.0,
+        "A": 0.005134486607142856
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*B^1*A^2",
+      "dominant_axis:A",
+      "purpose_family:T+B+A",
+      "origin_signature:T^1*B^1*A^2",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.649",
+      "purpose_grade:0.762",
+      "overall_grade:0.706",
+      "complexity_axes:3",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:22ba18f29c": {
+    "id": "L:22ba18f29c",
+    "parents": [
+      "L:93d2b78838",
+      "L:8c7be78039"
+    ],
+    "depth": 2,
+    "created_at_tick": 792,
+    "stats": {
+      "count": 16,
+      "mean_pos_relief": {
+        "X": 5.014486598576514e-05,
+        "T": 5.368323846962332e-05,
+        "N": 4.5353279142473734e-07,
+        "B": 3.4711832182344124e-08,
+        "A": 2.9648560770918144e-11
+      },
+      "mean_relief": {
+        "X": 5.014486598576514e-05,
+        "T": 5.368323846962332e-05,
+        "N": 4.5353279142473734e-07,
+        "B": 3.4711832182344124e-08,
+        "A": 2.9648560770918144e-11
+      },
+      "stdev_relief": {
+        "X": 0.0003360233674228237,
+        "T": 0.00012556604770877603,
+        "N": 1.3573231504710221e-06,
+        "B": 2.437562413238991e-07,
+        "A": 3.9666794621742104e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0029976851851851857,
+        "N": 0.014432031250000005,
+        "B": 0.0023090277777777783,
+        "A": 0.016148093894675922
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^1*B^3",
+      "dominant_axis:B",
+      "purpose_family:N+B",
+      "origin_signature:N^1*B^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.712",
+      "overall_grade:0.644",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:N^3*B^1",
+      "dominant_axis:N",
+      "origin_signature:N^3*B^1",
+      "purpose_lane:meaning",
+      "purpose_grade:0.600",
+      "overall_grade:0.588",
+      "signature:N^4*B^4",
+      "origin_signature:N^4*B^4",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.765",
+      "purpose_grade:0.650",
+      "overall_grade:0.708",
+      "complexity_axes:2",
+      "complexity_slots:8",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:b9dcf6fd07": {
+    "id": "L:b9dcf6fd07",
+    "parents": [
+      "A:ALIGNMENT_PUSH",
+      "N:REDISTRIBUTE"
+    ],
+    "depth": 1,
+    "created_at_tick": 857,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 5.161079765909018e-05,
+        "T": 3.919399063404659e-05,
+        "N": 2.721906550335772e-07,
+        "B": 4.454353583234854e-08,
+        "A": 2.0365152978495453e-10
+      },
+      "mean_relief": {
+        "X": 5.161079765909018e-05,
+        "T": 3.919399063404659e-05,
+        "N": 2.721906550335772e-07,
+        "B": 4.454353583234854e-08,
+        "A": 2.0365152978495453e-10
+      },
+      "stdev_relief": {
+        "X": 0.00023009280308400033,
+        "T": 0.00011579355906474728,
+        "N": 1.1668546526287331e-06,
+        "B": 3.04133264666271e-07,
+        "A": 4.517134978684655e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0005555555555555556,
+        "N": 0.0020284722222222227,
+        "B": 0.0,
+        "A": 0.0010987847222222224
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^1*A^1",
+      "dominant_axis:N",
+      "purpose_family:N+A",
+      "origin_signature:N^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.459",
+      "purpose_grade:0.700",
+      "overall_grade:0.579",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:c984d89b10": {
+    "id": "L:c984d89b10",
+    "parents": [
+      "L:4eb6113209",
+      "L:292d1bb6f4"
+    ],
+    "depth": 2,
+    "created_at_tick": 889,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 6.900150518882882e-05,
+        "T": 4.879725018054953e-05,
+        "N": 2.465363481975242e-07,
+        "B": 9.471005085860458e-08,
+        "A": 1.4942808178375282e-10
+      },
+      "mean_relief": {
+        "X": 6.900150518882882e-05,
+        "T": 4.879725018054953e-05,
+        "N": 2.465363481975242e-07,
+        "B": 9.471005085860458e-08,
+        "A": 1.4942808178375282e-10
+      },
+      "stdev_relief": {
+        "X": 0.00019331127239138272,
+        "T": 0.00016096671890799,
+        "N": 1.4541775680691045e-06,
+        "B": 4.087045403482881e-07,
+        "A": 4.4415989643314965e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 4.6296296296296294e-05,
+        "N": 0.002566059027777779,
+        "B": 0.0,
+        "A": 0.0011570384837962964
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^1*A^3",
+      "dominant_axis:A",
+      "purpose_family:N+A",
+      "origin_signature:N^1*A^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.576",
+      "purpose_grade:0.775",
+      "overall_grade:0.676",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:N^3*A^1",
+      "dominant_axis:N",
+      "origin_signature:N^3*A^1",
+      "purpose_lane:intelligence",
+      "purpose_grade:0.663",
+      "overall_grade:0.619",
+      "signature:N^4*A^4",
+      "origin_signature:N^4*A^4",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.765",
+      "purpose_grade:0.700",
+      "overall_grade:0.733",
+      "complexity_axes:2",
+      "complexity_slots:8",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:afcbb05c3d": {
+    "id": "L:afcbb05c3d",
+    "parents": [
+      "A:DIRECTED_MANIPULATION",
+      "N:DRAIN_BASELINE"
+    ],
+    "depth": 1,
+    "created_at_tick": 969,
+    "stats": {
+      "count": 17,
+      "mean_pos_relief": {
+        "X": 0.00010216725077734267,
+        "T": 5.1826575777659825e-05,
+        "N": -1.1148099986979565e-07,
+        "B": -3.083335092089809e-09,
+        "A": 1.4234408433705674e-10
+      },
+      "mean_relief": {
+        "X": 0.00010216725077734267,
+        "T": 5.1826575777659825e-05,
+        "N": -1.1148099986979565e-07,
+        "B": -3.083335092089809e-09,
+        "A": 1.4234408433705674e-10
+      },
+      "stdev_relief": {
+        "X": 0.00020510109258116313,
+        "T": 0.00013316197635552355,
+        "N": 1.0052428351340815e-06,
+        "B": 3.408367535066162e-07,
+        "A": 4.397432239741673e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 2.4310441510634054e-06,
+        "N": 0.0015550589468912978,
+        "B": 0.0,
+        "A": 0.0006636565343661189
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^1*A^1",
+      "dominant_axis:N",
+      "purpose_family:N+A",
+      "origin_signature:N^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.459",
+      "purpose_grade:0.700",
+      "overall_grade:0.579",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:259e8cfc64": {
+    "id": "L:259e8cfc64",
+    "parents": [
+      "L:ecee8a4a8c",
+      "A:DIRECTED_MANIPULATION"
+    ],
+    "depth": 2,
+    "created_at_tick": 1057,
+    "stats": {
+      "count": 17,
+      "mean_pos_relief": {
+        "X": 0.00014921949380033563,
+        "T": 1.2738991904612048e-05,
+        "N": -7.735679119018212e-08,
+        "B": -1.3317631794523502e-08,
+        "A": -8.062864318301266e-11
+      },
+      "mean_relief": {
+        "X": 0.00014921949380033563,
+        "T": 1.2738991904612048e-05,
+        "N": -7.735679119018212e-08,
+        "B": -1.3317631794523502e-08,
+        "A": -8.062864318301266e-11
+      },
+      "stdev_relief": {
+        "X": 0.00019385517936270545,
+        "T": 9.377771262246926e-05,
+        "N": 5.537506719774852e-07,
+        "B": 1.5606335319188962e-07,
+        "A": 1.4555590042860038e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0018750000000000008,
+        "N": 0.005265625,
+        "B": 0.0,
+        "A": 0.00564296875
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:B^3*A^2",
+      "origin_signature:B^3*A^2",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.612",
+      "purpose_grade:0.790",
+      "overall_grade:0.701",
+      "complexity_axes:2",
+      "complexity_slots:5",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:5791a94b10": {
+    "id": "L:5791a94b10",
+    "parents": [
+      "NC:B>B",
+      "B:INTERFACE_STRENGTHEN"
+    ],
+    "depth": 1,
+    "created_at_tick": 1231,
+    "stats": {
+      "count": 15,
+      "mean_pos_relief": {
+        "X": 4.367513804762826e-05,
+        "T": 1.0833955686927835e-05,
+        "N": 1.416849352619999e-07,
+        "B": -1.923141496527308e-08,
+        "A": -1.2724824762600587e-10
+      },
+      "mean_relief": {
+        "X": 4.367513804762826e-05,
+        "T": 1.0833955686927835e-05,
+        "N": 1.416849352619999e-07,
+        "B": -1.923141496527308e-08,
+        "A": -1.2724824762600587e-10
+      },
+      "stdev_relief": {
+        "X": 0.00014193708657606082,
+        "T": 0.00012110377289206537,
+        "N": 4.7449403568104354e-07,
+        "B": 1.4428261342724437e-07,
+        "A": 1.784491511422167e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.00012000000000000004,
+        "B": 2.333333333333334e-05,
+        "A": 6.6666666666666675e-06
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3",
+      "dominant_axis:B",
+      "purpose_family:B",
+      "origin_signature:B^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.437",
+      "purpose_grade:0.850",
+      "overall_grade:0.643",
+      "complexity_axes:1",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:4aa9398340": {
+    "id": "L:4aa9398340",
+    "parents": [
+      "NC:B>B",
+      "B:INTERFACE_WEAKEN"
+    ],
+    "depth": 1,
+    "created_at_tick": 1311,
+    "stats": {
+      "count": 16,
+      "mean_pos_relief": {
+        "X": 0.00015517419756582668,
+        "T": 3.0684207933502816e-06,
+        "N": -4.836486295138029e-07,
+        "B": -2.4102962510990246e-08,
+        "A": 1.0090525824104066e-10
+      },
+      "mean_relief": {
+        "X": 0.00015517419756582668,
+        "T": 3.0684207933502816e-06,
+        "N": -4.836486295138029e-07,
+        "B": -2.4102962510990246e-08,
+        "A": 1.0090525824104066e-10
+      },
+      "stdev_relief": {
+        "X": 0.00017149637141152075,
+        "T": 9.720301404953013e-05,
+        "N": 7.834916506490767e-07,
+        "B": 1.3302476351187774e-07,
+        "A": 6.188844576240843e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.00011875000000000004,
+        "B": 2.3437500000000007e-05,
+        "A": 6.250000000000001e-06
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3",
+      "dominant_axis:B",
+      "purpose_family:B",
+      "origin_signature:B^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.437",
+      "purpose_grade:0.850",
+      "overall_grade:0.643",
+      "complexity_axes:1",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:c10625ea40": {
+    "id": "L:c10625ea40",
+    "parents": [
+      "NC:A>A",
+      "A:ALIGNMENT_PUSH"
+    ],
+    "depth": 1,
+    "created_at_tick": 1422,
+    "stats": {
+      "count": 15,
+      "mean_pos_relief": {
+        "X": 9.477184616275392e-05,
+        "T": -2.112764032810414e-05,
+        "N": -2.662869415103527e-07,
+        "B": -1.0378398785569887e-08,
+        "A": 8.980060540371686e-11
+      },
+      "mean_relief": {
+        "X": 9.477184616275392e-05,
+        "T": -2.112764032810414e-05,
+        "N": -2.662869415103527e-07,
+        "B": -1.0378398785569887e-08,
+        "A": 8.980060540371686e-11
+      },
+      "stdev_relief": {
+        "X": 0.0001402183409053079,
+        "T": 7.217135091887013e-05,
+        "N": 5.811531376810295e-07,
+        "B": 8.240760455617245e-08,
+        "A": 7.625189604525431e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.00010000000000000003,
+        "B": 0.0,
+        "A": 2.5000000000000008e-05
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:A^3",
+      "dominant_axis:A",
+      "purpose_family:A",
+      "origin_signature:A^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.437",
+      "purpose_grade:0.850",
+      "overall_grade:0.643",
+      "complexity_axes:1",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:5b43dec44a": {
+    "id": "L:5b43dec44a",
+    "parents": [
+      "NC:B>B",
+      "B:PARTITION_SHIFT"
+    ],
+    "depth": 1,
+    "created_at_tick": 1535,
+    "stats": {
+      "count": 17,
+      "mean_pos_relief": {
+        "X": 5.152079098770001e-05,
+        "T": 2.5060099989919015e-05,
+        "N": -3.3311186346151795e-07,
+        "B": -1.3526449480954145e-09,
+        "A": -2.6231100780689537e-10
+      },
+      "mean_relief": {
+        "X": 5.152079098770001e-05,
+        "T": 2.5060099989919015e-05,
+        "N": -3.3311186346151795e-07,
+        "B": -1.3526449480954145e-09,
+        "A": -2.6231100780689537e-10
+      },
+      "stdev_relief": {
+        "X": 0.00024043316329871135,
+        "T": 7.949832648582731e-05,
+        "N": 7.468097600405239e-07,
+        "B": 1.6524318962164753e-07,
+        "A": 1.075686315716833e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.00011764705882352944,
+        "B": 2.352941176470589e-05,
+        "A": 5.882352941176472e-06
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3",
+      "dominant_axis:B",
+      "purpose_family:B",
+      "origin_signature:B^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.437",
+      "purpose_grade:0.850",
+      "overall_grade:0.643",
+      "complexity_axes:1",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:f311d445d5": {
+    "id": "L:f311d445d5",
+    "parents": [
+      "NC:A>A",
+      "A:DIRECTED_MANIPULATION"
+    ],
+    "depth": 1,
+    "created_at_tick": 1614,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 3.77699449731234e-05,
+        "T": 1.1553841949209186e-05,
+        "N": -2.572143085883412e-07,
+        "B": -7.98796006121746e-08,
+        "A": 1.7869784060608853e-10
+      },
+      "mean_relief": {
+        "X": 3.77699449731234e-05,
+        "T": 1.1553841949209186e-05,
+        "N": -2.572143085883412e-07,
+        "B": -7.98796006121746e-08,
+        "A": 1.7869784060608853e-10
+      },
+      "stdev_relief": {
+        "X": 0.0002016231883525629,
+        "T": 6.380022102170207e-05,
+        "N": 6.118248507560436e-07,
+        "B": 1.695870808413072e-07,
+        "A": 5.764484799887433e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.00010000000000000003,
+        "B": 0.0,
+        "A": 2.5000000000000008e-05
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:A^3",
+      "dominant_axis:A",
+      "purpose_family:A",
+      "origin_signature:A^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.437",
+      "purpose_grade:0.850",
+      "overall_grade:0.643",
+      "complexity_axes:1",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:67d989b4a5": {
+    "id": "L:67d989b4a5",
+    "parents": [
+      "NC:A>B",
+      "L:ecee8a4a8c"
+    ],
+    "depth": 2,
+    "created_at_tick": 1777,
+    "stats": {
+      "count": 58,
+      "mean_pos_relief": {
+        "X": 0.00012768606279510626,
+        "T": 3.283759436794599e-05,
+        "N": -5.161539626138025e-08,
+        "B": -2.2528989713950617e-08,
+        "A": -1.5341420314865678e-10
+      },
+      "mean_relief": {
+        "X": 0.00012768606279510626,
+        "T": 3.283759436794599e-05,
+        "N": -5.161539626138025e-08,
+        "B": -2.2528989713950617e-08,
+        "A": -1.5341420314865678e-10
+      },
+      "stdev_relief": {
+        "X": 0.00016166225329297546,
+        "T": 0.0001368982302656641,
+        "N": 7.028905745035014e-07,
+        "B": 1.6731547590080163e-07,
+        "A": 9.241163707383394e-10
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0018750000000000014,
+        "N": 0.005265624999999998,
+        "B": 0.0,
+        "A": 0.005642968749999997
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:B^4*A^2",
+      "origin_signature:B^4*A^2",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.663",
+      "purpose_grade:0.800",
+      "overall_grade:0.732",
+      "complexity_axes:2",
+      "complexity_slots:6",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:115c8cc9a8": {
+    "id": "L:115c8cc9a8",
+    "parents": [
+      "A:ALIGNMENT_PUSH",
+      "B:INTERFACE_WEAKEN"
+    ],
+    "depth": 1,
+    "created_at_tick": 1937,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 0.00010938811679713493,
+        "T": 3.0355407318498777e-05,
+        "N": -1.4740833657437425e-07,
+        "B": -1.2122142452068141e-08,
+        "A": -7.144955027748136e-11
+      },
+      "mean_relief": {
+        "X": 0.00010938811679713493,
+        "T": 3.0355407318498777e-05,
+        "N": -1.4740833657437425e-07,
+        "B": -1.2122142452068141e-08,
+        "A": -7.144955027748136e-11
+      },
+      "stdev_relief": {
+        "X": 9.018509946081684e-05,
+        "T": 0.00016039623721001792,
+        "N": 7.432630734470774e-07,
+        "B": 1.4424738518475507e-07,
+        "A": 1.2265173193499463e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0018414623163345266,
+        "N": 0.00562981625755919,
+        "B": 0.0,
+        "A": 0.0068180414696711236
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^1*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.459",
+      "purpose_grade:0.800",
+      "overall_grade:0.629",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:b42cf40f72": {
+    "id": "L:b42cf40f72",
+    "parents": [
+      "A:ALIGNMENT_PUSH",
+      "B:INTERFACE_STRENGTHEN"
+    ],
+    "depth": 1,
+    "created_at_tick": 2049,
+    "stats": {
+      "count": 16,
+      "mean_pos_relief": {
+        "X": 0.00014259470063090638,
+        "T": 2.0267824213579668e-05,
+        "N": 2.9180788133997886e-07,
+        "B": -5.519609744527834e-08,
+        "A": 3.727757219027705e-11
+      },
+      "mean_relief": {
+        "X": 0.00014259470063090638,
+        "T": 2.0267824213579668e-05,
+        "N": 2.9180788133997886e-07,
+        "B": -5.519609744527834e-08,
+        "A": 3.727757219027705e-11
+      },
+      "stdev_relief": {
+        "X": 0.00017417120930399602,
+        "T": 0.00017097281362749857,
+        "N": 6.225984519246435e-07,
+        "B": 1.722141562371469e-07,
+        "A": 1.4744669373166428e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.001849846737250895,
+        "N": 0.005538768443169393,
+        "B": 0.0,
+        "A": 0.0065242732897533426
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^1*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.459",
+      "purpose_grade:0.800",
+      "overall_grade:0.629",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:3305cd3199": {
+    "id": "L:3305cd3199",
+    "parents": [
+      "L:c984d89b10",
+      "L:afcbb05c3d"
+    ],
+    "depth": 3,
+    "created_at_tick": 2201,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 3.5882604054179716e-05,
+        "T": 0.00022250985402175684,
+        "N": 8.918148217856345e-08,
+        "B": -1.6146585937935328e-08,
+        "A": 3.095137782190481e-10
+      },
+      "mean_relief": {
+        "X": 3.5882604054179716e-05,
+        "T": 0.00022250985402175684,
+        "N": 8.918148217856345e-08,
+        "B": -1.6146585937935328e-08,
+        "A": 3.095137782190481e-10
+      },
+      "stdev_relief": {
+        "X": 0.00029019449733539473,
+        "T": 0.00030566474261790264,
+        "N": 1.038956520412679e-06,
+        "B": 2.675155495968058e-07,
+        "A": 2.0021959361683237e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 4.4974316794673e-05,
+        "N": 0.007334884727657472,
+        "B": 0.0,
+        "A": 0.005170873088096967
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "signature:N^1*A^3",
+      "dominant_axis:A",
+      "purpose_family:N+A",
+      "origin_signature:N^1*A^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.576",
+      "purpose_grade:0.775",
+      "overall_grade:0.676",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:N^3*A^1",
+      "dominant_axis:N",
+      "origin_signature:N^3*A^1",
+      "purpose_lane:intelligence",
+      "purpose_grade:0.663",
+      "overall_grade:0.619",
+      "signature:N^4*A^4",
+      "origin_signature:N^4*A^4",
+      "operator_grade:0.765",
+      "purpose_grade:0.700",
+      "overall_grade:0.733",
+      "complexity_slots:8",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "steering_target_generation:2",
+      "signature:N^1*A^1",
+      "origin_signature:N^1*A^1",
+      "operator_grade:0.459",
+      "overall_grade:0.579",
+      "complexity_slots:2",
+      "signature:N^5*A^5",
+      "origin_signature:N^5*A^5",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:meaning",
+      "operator_grade:0.750",
+      "purpose_grade:0.700",
+      "overall_grade:0.725",
+      "complexity_axes:2",
+      "complexity_slots:10",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3"
+    ]
+  },
+  "L:ee14f1a02b": {
+    "id": "L:ee14f1a02b",
+    "parents": [
+      "A:ALIGNMENT_PUSH",
+      "B:PARTITION_SHIFT"
+    ],
+    "depth": 1,
+    "created_at_tick": 2305,
+    "stats": {
+      "count": 15,
+      "mean_pos_relief": {
+        "X": 0.0001583283736884826,
+        "T": 8.101665450465894e-05,
+        "N": -3.557041415413532e-08,
+        "B": -8.68715744181153e-09,
+        "A": -6.170466700633729e-10
+      },
+      "mean_relief": {
+        "X": 0.0001583283736884826,
+        "T": 8.101665450465894e-05,
+        "N": -3.557041415413532e-08,
+        "B": -8.68715744181153e-09,
+        "A": -6.170466700633729e-10
+      },
+      "stdev_relief": {
+        "X": 0.00020875807125266845,
+        "T": 0.00013378608460268136,
+        "N": 7.471401563852583e-07,
+        "B": 1.7881978775438e-07,
+        "A": 1.2359205901031845e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0018347547796014314,
+        "N": 0.005702654509071029,
+        "B": 0.0,
+        "A": 0.007053056013605347
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^1*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.459",
+      "purpose_grade:0.800",
+      "overall_grade:0.629",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:8b847d7c4a": {
+    "id": "L:8b847d7c4a",
+    "parents": [
+      "L:c984d89b10",
+      "L:b9dcf6fd07"
+    ],
+    "depth": 3,
+    "created_at_tick": 2457,
+    "stats": {
+      "count": 30,
+      "mean_pos_relief": {
+        "X": 4.355084241055404e-05,
+        "T": 4.481757825701724e-05,
+        "N": 1.8176708088796374e-07,
+        "B": -6.001903786737248e-08,
+        "A": 5.443395838380935e-10
+      },
+      "mean_relief": {
+        "X": 4.355084241055404e-05,
+        "T": 4.481757825701724e-05,
+        "N": 1.8176708088796374e-07,
+        "B": -6.001903786737248e-08,
+        "A": 5.443395838380935e-10
+      },
+      "stdev_relief": {
+        "X": 0.00026772673555063866,
+        "T": 0.00022948157303117123,
+        "N": 1.1492382407891613e-06,
+        "B": 2.2533942371749877e-07,
+        "A": 2.4970594958622853e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0008746610839014116,
+        "N": 0.008400064597152056,
+        "B": 0.0,
+        "A": 0.006802603792557352
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:N^1*A^3",
+      "dominant_axis:A",
+      "purpose_family:N+A",
+      "origin_signature:N^1*A^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.576",
+      "purpose_grade:0.775",
+      "overall_grade:0.676",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:N^3*A^1",
+      "dominant_axis:N",
+      "origin_signature:N^3*A^1",
+      "purpose_lane:intelligence",
+      "purpose_grade:0.663",
+      "overall_grade:0.619",
+      "signature:N^4*A^4",
+      "origin_signature:N^4*A^4",
+      "operator_grade:0.765",
+      "purpose_grade:0.700",
+      "overall_grade:0.733",
+      "complexity_slots:8",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "steering_target_generation:2",
+      "signature:N^1*A^1",
+      "origin_signature:N^1*A^1",
+      "operator_grade:0.459",
+      "overall_grade:0.579",
+      "complexity_slots:2",
+      "signature:N^5*A^5",
+      "origin_signature:N^5*A^5",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.750",
+      "purpose_grade:0.700",
+      "overall_grade:0.725",
+      "complexity_axes:2",
+      "complexity_slots:10",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3"
+    ]
+  },
+  "L:a2e0f3447f": {
+    "id": "L:a2e0f3447f",
+    "parents": [
+      "L:67d989b4a5",
+      "A:DIRECTED_MANIPULATION"
+    ],
+    "depth": 3,
+    "created_at_tick": 2625,
+    "stats": {
+      "count": 19,
+      "mean_pos_relief": {
+        "X": 0.0002658178727889834,
+        "T": -1.3245593258148412e-05,
+        "N": -2.0057648475746217e-07,
+        "B": -2.5455910668131275e-08,
+        "A": 7.151408221760019e-10
+      },
+      "mean_relief": {
+        "X": 0.0002658178727889834,
+        "T": -1.3245593258148412e-05,
+        "N": -2.0057648475746217e-07,
+        "B": -2.5455910668131275e-08,
+        "A": 7.151408221760019e-10
+      },
+      "stdev_relief": {
+        "X": 0.0002645662183505753,
+        "T": 0.00018147915918696587,
+        "N": 3.9590172338343365e-07,
+        "B": 1.711968822725387e-07,
+        "A": 2.0386367778414697e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0016737738980071555,
+        "N": 0.007450772545355142,
+        "B": 0.0,
+        "A": 0.012693405068026742
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:B^4*A^2",
+      "origin_signature:B^4*A^2",
+      "operator_action:admissibility_gating",
+      "operator_grade:0.663",
+      "purpose_grade:0.800",
+      "overall_grade:0.732",
+      "complexity_slots:6",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "steering_target_generation:2",
+      "signature:B^4*A^3",
+      "origin_signature:B^4*A^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.699",
+      "purpose_grade:0.793",
+      "overall_grade:0.746",
+      "complexity_axes:2",
+      "complexity_slots:7",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3"
+    ]
+  },
+  "L:f9d39cbee1": {
+    "id": "L:f9d39cbee1",
+    "parents": [
+      "A:ALIGNMENT_PUSH",
+      "X:ADMIT"
+    ],
+    "depth": 1,
+    "created_at_tick": 2802,
+    "stats": {
+      "count": 56,
+      "mean_pos_relief": {
+        "X": 0.00019400696515115305,
+        "T": 3.77133862807238e-05,
+        "N": -3.640397558211905e-08,
+        "B": -8.907540549998065e-08,
+        "A": -4.7694211361738735e-11
+      },
+      "mean_relief": {
+        "X": 0.00019400696515115305,
+        "T": 3.77133862807238e-05,
+        "N": -3.640397558211905e-08,
+        "B": -8.907540549998065e-08,
+        "A": -4.7694211361738735e-11
+      },
+      "stdev_relief": {
+        "X": 0.000216962314039864,
+        "T": 0.00016915891351802656,
+        "N": 6.426670741132991e-07,
+        "B": 2.0195521749513497e-07,
+        "A": 1.271913867160159e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.010000000000000005,
+        "N": 0.010400000000000003,
+        "B": 0.0,
+        "A": 0.0101
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "admit_state",
+      "clear_block",
+      "origin_primary:X",
+      "origin_secondary:X",
+      "origin_signature:X^1",
+      "root_slot:NC:X>X\u00d7NC:X>X",
+      "operation_lineage:OP:4c6504574442",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "signature:X^1*A^1",
+      "dominant_axis:X",
+      "purpose_family:X+A",
+      "origin_signature:X^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.459",
+      "purpose_grade:0.775",
+      "overall_grade:0.617",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:85781f6115": {
+    "id": "L:85781f6115",
+    "parents": [
+      "NC:X>X",
+      "T:ADVANCE_TICK"
+    ],
+    "depth": 1,
+    "created_at_tick": 3034,
+    "stats": {
+      "count": 151,
+      "mean_pos_relief": {
+        "X": 5.552781618416928e-05,
+        "T": 6.874985024387577e-05,
+        "N": 3.980821577704616e-08,
+        "B": 4.391934556482403e-08,
+        "A": 2.732694578572158e-10
+      },
+      "mean_relief": {
+        "X": 5.552781618416928e-05,
+        "T": 6.874985024387577e-05,
+        "N": 3.980821577704616e-08,
+        "B": 4.391934556482403e-08,
+        "A": 2.732694578572158e-10
+      },
+      "stdev_relief": {
+        "X": 0.00023678294769920966,
+        "T": 0.00014923150000053023,
+        "N": 7.186674079352492e-07,
+        "B": 3.0727559374375235e-07,
+        "A": 1.4107158775132117e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.010033112582781462,
+        "N": 0.010734437086092691,
+        "B": 0.00015049668874172169,
+        "A": 0.010000000000000007
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:X^2*T^1",
+      "dominant_axis:X",
+      "purpose_family:X+T",
+      "origin_signature:X^2*T^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.510",
+      "purpose_grade:0.817",
+      "overall_grade:0.663",
+      "complexity_axes:2",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:f87c749eff": {
+    "id": "L:f87c749eff",
+    "parents": [
+      "NC:X>X",
+      "X:ADMIT"
+    ],
+    "depth": 1,
+    "created_at_tick": 3222,
+    "stats": {
+      "count": 68,
+      "mean_pos_relief": {
+        "X": 0.00012911114617783384,
+        "T": 5.663535634322675e-05,
+        "N": 8.819985612222414e-08,
+        "B": 1.6863247421149234e-08,
+        "A": -1.1133781837618885e-10
+      },
+      "mean_relief": {
+        "X": 0.00012911114617783384,
+        "T": 5.663535634322675e-05,
+        "N": 8.819985612222414e-08,
+        "B": 1.6863247421149234e-08,
+        "A": -1.1133781837618885e-10
+      },
+      "stdev_relief": {
+        "X": 0.00021535918967483485,
+        "T": 0.00015879019514741701,
+        "N": 8.119527037439437e-07,
+        "B": 3.0267147892855083e-07,
+        "A": 1.493866972275889e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.010000000000000005,
+        "N": 0.010429411764705876,
+        "B": 9.411764705882359e-05,
+        "A": 0.010013235294117653
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "admit_state",
+      "clear_block",
+      "origin_primary:X",
+      "origin_secondary:X",
+      "origin_signature:X^1",
+      "root_slot:NC:X>X\u00d7NC:X>X",
+      "operation_lineage:OP:4c6504574442",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "signature:X^3",
+      "dominant_axis:X",
+      "purpose_family:X",
+      "origin_signature:X^3",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.437",
+      "purpose_grade:0.850",
+      "overall_grade:0.643",
+      "complexity_axes:1",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:c00074df67": {
+    "id": "L:c00074df67",
+    "parents": [
+      "NC:A>A",
+      "L:a2e0f3447f"
+    ],
+    "depth": 4,
+    "created_at_tick": 3473,
+    "stats": {
+      "count": 14,
+      "mean_pos_relief": {
+        "X": 0.0002285170133374674,
+        "T": 3.408393208767648e-05,
+        "N": -1.352374325918075e-07,
+        "B": -6.461621287108939e-08,
+        "A": -4.6038344789845173e-10
+      },
+      "mean_relief": {
+        "X": 0.0002285170133374674,
+        "T": 3.408393208767648e-05,
+        "N": -1.352374325918075e-07,
+        "B": -6.461621287108939e-08,
+        "A": -4.6038344789845173e-10
+      },
+      "stdev_relief": {
+        "X": 0.00025124137285541167,
+        "T": 8.866802656987073e-05,
+        "N": 5.179743822758784e-07,
+        "B": 3.933283092745379e-07,
+        "A": 2.148990981396001e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.000884657389454105,
+        "N": 0.006307053214210794,
+        "B": 0.0,
+        "A": 0.01687244848323599
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:B^4*A^2",
+      "origin_signature:B^4*A^2",
+      "operator_action:admissibility_gating",
+      "operator_grade:0.663",
+      "purpose_grade:0.800",
+      "overall_grade:0.732",
+      "complexity_slots:6",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "steering_target_generation:2",
+      "signature:B^4*A^3",
+      "origin_signature:B^4*A^3",
+      "purpose_lane:meaning",
+      "operator_grade:0.699",
+      "purpose_grade:0.793",
+      "overall_grade:0.746",
+      "complexity_slots:7",
+      "generation:3",
+      "generation_role:SHEAR",
+      "steering_target_generation:3",
+      "signature:B^4*A^5",
+      "dominant_axis:A",
+      "origin_signature:B^4*A^5",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.735",
+      "purpose_grade:0.806",
+      "overall_grade:0.770",
+      "complexity_axes:2",
+      "complexity_slots:9",
+      "generation:4",
+      "generation_role:BRIDGE",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:4"
+    ]
+  },
+  "L:1ce629bf65": {
+    "id": "L:1ce629bf65",
+    "parents": [
+      "X:ADMIT",
+      "B:PARTITION_SHIFT"
+    ],
+    "depth": 1,
+    "created_at_tick": 3847,
+    "stats": {
+      "count": 61,
+      "mean_pos_relief": {
+        "X": 6.766172606578073e-05,
+        "T": 4.8064992565632976e-05,
+        "N": -4.234173435820556e-08,
+        "B": 3.097134864296146e-08,
+        "A": 8.463762536467526e-11
+      },
+      "mean_relief": {
+        "X": 6.766172606578073e-05,
+        "T": 4.8064992565632976e-05,
+        "N": -4.234173435820556e-08,
+        "B": 3.097134864296146e-08,
+        "A": 8.463762536467526e-11
+      },
+      "stdev_relief": {
+        "X": 0.00023682541597481758,
+        "T": 0.0001688470282140708,
+        "N": 7.216028174506903e-07,
+        "B": 3.024731053966677e-07,
+        "A": 2.013087823435605e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.011480295299098903,
+        "N": 0.013111719682987735,
+        "B": 0.00022842525241558993,
+        "A": 0.013688524590163937
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "admit_state",
+      "clear_block",
+      "origin_primary:X",
+      "origin_secondary:X",
+      "origin_signature:X^1",
+      "root_slot:NC:X>X\u00d7NC:X>X",
+      "operation_lineage:OP:4c6504574442",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "signature:X^1*B^1",
+      "dominant_axis:X",
+      "purpose_family:X+B",
+      "origin_signature:X^1*B^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.459",
+      "purpose_grade:0.725",
+      "overall_grade:0.592",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:231eec864d": {
+    "id": "L:231eec864d",
+    "parents": [
+      "T:ADVANCE_TICK",
+      "X:ADMIT"
+    ],
+    "depth": 1,
+    "created_at_tick": 4291,
+    "stats": {
+      "count": 365,
+      "mean_pos_relief": {
+        "X": 8.461951574544085e-05,
+        "T": 5.166175764920941e-05,
+        "N": 3.4414079761155905e-08,
+        "B": 1.7966550297650663e-08,
+        "A": 5.364251146244978e-11
+      },
+      "mean_relief": {
+        "X": 8.461951574544085e-05,
+        "T": 5.166175764920941e-05,
+        "N": 3.4414079761155905e-08,
+        "B": 1.7966550297650663e-08,
+        "A": 5.364251146244978e-11
+      },
+      "stdev_relief": {
+        "X": 0.00021546585975073436,
+        "T": 0.00013924115723242062,
+        "N": 7.045316808943969e-07,
+        "B": 2.92208281398068e-07,
+        "A": 2.1971276809563625e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.011297754946727512,
+        "N": 0.015876194349315097,
+        "B": 0.0005001255707762574,
+        "A": 0.015356305234493847
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "admit_state",
+      "clear_block",
+      "origin_primary:X",
+      "origin_secondary:X",
+      "origin_signature:X^1",
+      "root_slot:NC:X>X\u00d7NC:X>X",
+      "operation_lineage:OP:4c6504574442",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "signature:X^1*T^1",
+      "dominant_axis:X",
+      "purpose_family:X+T",
+      "origin_signature:X^1*T^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.459",
+      "purpose_grade:0.800",
+      "overall_grade:0.629",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:93e8fd8084": {
+    "id": "L:93e8fd8084",
+    "parents": [
+      "L:231eec864d",
+      "N:REDISTRIBUTE"
+    ],
+    "depth": 2,
+    "created_at_tick": 4637,
+    "stats": {
+      "count": 12,
+      "mean_pos_relief": {
+        "X": -3.458168471077791e-06,
+        "T": 9.59139549527996e-05,
+        "N": 2.1080662222910936e-07,
+        "B": 1.929662647455272e-09,
+        "A": -2.660566075452185e-09
+      },
+      "mean_relief": {
+        "X": -3.458168471077791e-06,
+        "T": 9.59139549527996e-05,
+        "N": 2.1080662222910936e-07,
+        "B": 1.929662647455272e-09,
+        "A": -2.660566075452185e-09
+      },
+      "stdev_relief": {
+        "X": 8.242011049815314e-05,
+        "T": 0.00014544622840285436,
+        "N": 8.569856265304916e-07,
+        "B": 4.041468315555512e-07,
+        "A": 3.822244071011038e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.021124873160832006,
+        "N": 0.053212843535958974,
+        "B": 0.003001071156773217,
+        "A": 0.07529066213513898
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "admit_state",
+      "clear_block",
+      "origin_primary:X",
+      "origin_secondary:X",
+      "origin_signature:X^1",
+      "root_slot:NC:X>X\u00d7NC:X>X",
+      "operation_lineage:OP:4c6504574442",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "signature:X^1*T^1",
+      "dominant_axis:X",
+      "purpose_family:X+T",
+      "origin_signature:X^1*T^1",
+      "operator_grade:0.459",
+      "purpose_grade:0.800",
+      "overall_grade:0.629",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2",
+      "signature:X^1*T^1*N^1",
+      "purpose_family:X+T+N",
+      "origin_signature:X^1*T^1*N^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:intelligence",
+      "operator_grade:0.568",
+      "purpose_grade:0.750",
+      "overall_grade:0.659",
+      "complexity_axes:3",
+      "complexity_slots:3",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3"
+    ]
+  },
+  "L:5bca30a197": {
+    "id": "L:5bca30a197",
+    "parents": [
+      "L:c00074df67",
+      "B:INTERFACE_WEAKEN"
+    ],
+    "depth": 5,
+    "created_at_tick": 5057,
+    "stats": {
+      "count": 13,
+      "mean_pos_relief": {
+        "X": 0.0001479717848803828,
+        "T": 4.9615208779690264e-05,
+        "N": 1.0437273685694166e-07,
+        "B": 1.0531265628218123e-07,
+        "A": -9.281813073198773e-10
+      },
+      "mean_relief": {
+        "X": 0.0001479717848803828,
+        "T": 4.9615208779690264e-05,
+        "N": 1.0437273685694166e-07,
+        "B": 1.0531265628218123e-07,
+        "A": -9.281813073198773e-10
+      },
+      "stdev_relief": {
+        "X": 0.0002736357151548901,
+        "T": 9.832115585675e-05,
+        "N": 5.958873407837022e-07,
+        "B": 1.7292173647845938e-07,
+        "A": 4.388579762232355e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.00027520657466927534,
+        "N": 0.003343075814487125,
+        "B": 0.0,
+        "A": 0.013222053827585427
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:B^4*A^2",
+      "origin_signature:B^4*A^2",
+      "operator_action:admissibility_gating",
+      "operator_grade:0.663",
+      "purpose_grade:0.800",
+      "overall_grade:0.732",
+      "complexity_slots:6",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "steering_target_generation:2",
+      "signature:B^4*A^3",
+      "origin_signature:B^4*A^3",
+      "purpose_lane:meaning",
+      "operator_grade:0.699",
+      "purpose_grade:0.793",
+      "overall_grade:0.746",
+      "complexity_slots:7",
+      "generation:3",
+      "generation_role:SHEAR",
+      "steering_target_generation:3",
+      "signature:B^4*A^5",
+      "dominant_axis:A",
+      "origin_signature:B^4*A^5",
+      "operator_grade:0.735",
+      "purpose_grade:0.806",
+      "overall_grade:0.770",
+      "complexity_slots:9",
+      "generation:4",
+      "generation_role:BRIDGE",
+      "steering_target_generation:4",
+      "signature:B^5*A^5",
+      "origin_signature:B^5*A^5",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.719",
+      "purpose_grade:0.800",
+      "overall_grade:0.760",
+      "complexity_axes:2",
+      "complexity_slots:10",
+      "generation:5",
+      "generation_role:WARP",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:5"
+    ]
+  },
+  "L:98859dfacd": {
+    "id": "L:98859dfacd",
+    "parents": [
+      "L:c00074df67",
+      "B:INTERFACE_STRENGTHEN"
+    ],
+    "depth": 5,
+    "created_at_tick": 5409,
+    "stats": {
+      "count": 15,
+      "mean_pos_relief": {
+        "X": 0.00016594481953893412,
+        "T": 8.387053746282938e-05,
+        "N": 2.3512716710991937e-09,
+        "B": -3.277374807329441e-08,
+        "A": -3.635789686479353e-09
+      },
+      "mean_relief": {
+        "X": 0.00016594481953893412,
+        "T": 8.387053746282938e-05,
+        "N": 2.3512716710991937e-09,
+        "B": -3.277374807329441e-08,
+        "A": -3.635789686479353e-09
+      },
+      "stdev_relief": {
+        "X": 0.000278559089334309,
+        "T": 0.00019354278385008892,
+        "N": 8.983535774943848e-07,
+        "B": 9.887094963466545e-08,
+        "A": 6.2449343923176804e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0002752065746692753,
+        "N": 0.003343075814487125,
+        "B": 0.0,
+        "A": 0.013222053827585427
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:B^4*A^2",
+      "origin_signature:B^4*A^2",
+      "operator_action:admissibility_gating",
+      "operator_grade:0.663",
+      "purpose_grade:0.800",
+      "overall_grade:0.732",
+      "complexity_slots:6",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "steering_target_generation:2",
+      "signature:B^4*A^3",
+      "origin_signature:B^4*A^3",
+      "purpose_lane:meaning",
+      "operator_grade:0.699",
+      "purpose_grade:0.793",
+      "overall_grade:0.746",
+      "complexity_slots:7",
+      "generation:3",
+      "generation_role:SHEAR",
+      "steering_target_generation:3",
+      "signature:B^4*A^5",
+      "dominant_axis:A",
+      "origin_signature:B^4*A^5",
+      "operator_grade:0.735",
+      "purpose_grade:0.806",
+      "overall_grade:0.770",
+      "complexity_slots:9",
+      "generation:4",
+      "generation_role:BRIDGE",
+      "steering_target_generation:4",
+      "signature:B^5*A^5",
+      "origin_signature:B^5*A^5",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.719",
+      "purpose_grade:0.800",
+      "overall_grade:0.760",
+      "complexity_axes:2",
+      "complexity_slots:10",
+      "generation:5",
+      "generation_role:WARP",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:5"
+    ]
+  },
+  "L:d3bc48d701": {
+    "id": "L:d3bc48d701",
+    "parents": [
+      "L:c00074df67",
+      "B:PARTITION_SHIFT"
+    ],
+    "depth": 5,
+    "created_at_tick": 5617,
+    "stats": {
+      "count": 15,
+      "mean_pos_relief": {
+        "X": 0.0001452429629311275,
+        "T": 2.4386442523116983e-05,
+        "N": -2.1078341560064714e-07,
+        "B": -9.544790827108554e-08,
+        "A": 1.490000412776086e-09
+      },
+      "mean_relief": {
+        "X": 0.0001452429629311275,
+        "T": 2.4386442523116983e-05,
+        "N": -2.1078341560064714e-07,
+        "B": -9.544790827108554e-08,
+        "A": 1.490000412776086e-09
+      },
+      "stdev_relief": {
+        "X": 0.0003033559983292106,
+        "T": 0.00018400402468861602,
+        "N": 1.0581349500633674e-06,
+        "B": 2.119818889146609e-07,
+        "A": 6.366361473270788e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0002752065746692753,
+        "N": 0.003343075814487125,
+        "B": 0.0,
+        "A": 0.013222053827585427
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:B^3*A^1",
+      "dominant_axis:B",
+      "purpose_family:B+A",
+      "origin_signature:B^3*A^1",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1",
+      "signature:B^4*A^2",
+      "origin_signature:B^4*A^2",
+      "operator_action:admissibility_gating",
+      "operator_grade:0.663",
+      "purpose_grade:0.800",
+      "overall_grade:0.732",
+      "complexity_slots:6",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "steering_target_generation:2",
+      "signature:B^4*A^3",
+      "origin_signature:B^4*A^3",
+      "purpose_lane:meaning",
+      "operator_grade:0.699",
+      "purpose_grade:0.793",
+      "overall_grade:0.746",
+      "complexity_slots:7",
+      "generation:3",
+      "generation_role:SHEAR",
+      "steering_target_generation:3",
+      "signature:B^4*A^5",
+      "dominant_axis:A",
+      "origin_signature:B^4*A^5",
+      "operator_grade:0.735",
+      "purpose_grade:0.806",
+      "overall_grade:0.770",
+      "complexity_slots:9",
+      "generation:4",
+      "generation_role:BRIDGE",
+      "steering_target_generation:4",
+      "signature:B^5*A^5",
+      "origin_signature:B^5*A^5",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.719",
+      "purpose_grade:0.800",
+      "overall_grade:0.760",
+      "complexity_axes:2",
+      "complexity_slots:10",
+      "generation:5",
+      "generation_role:WARP",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:5"
+    ]
+  },
+  "L:87191af172": {
+    "id": "L:87191af172",
+    "parents": [
+      "T:ADVANCE_TICK",
+      "B:PARTITION_SHIFT"
+    ],
+    "depth": 1,
+    "created_at_tick": 6080,
+    "stats": {
+      "count": 35,
+      "mean_pos_relief": {
+        "X": 0.0001752743826408511,
+        "T": 4.468094428319664e-05,
+        "N": -5.3980853054493595e-08,
+        "B": 4.063438823747886e-09,
+        "A": -1.2723077710603665e-09
+      },
+      "mean_relief": {
+        "X": 0.0001752743826408511,
+        "T": 4.468094428319664e-05,
+        "N": -5.3980853054493595e-08,
+        "B": 4.063438823747886e-09,
+        "A": -1.2723077710603665e-09
+      },
+      "stdev_relief": {
+        "X": 0.00016047542890016689,
+        "T": 0.00012231281985395577,
+        "N": 7.120706276863065e-07,
+        "B": 1.568158468412162e-07,
+        "A": 3.5325129939415435e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.004110856009070294,
+        "N": 0.016664542729591836,
+        "B": 0.00023961904761904773,
+        "A": 0.022795080162273253
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*B^1",
+      "dominant_axis:T",
+      "purpose_family:T+B",
+      "origin_signature:T^1*B^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.459",
+      "purpose_grade:0.825",
+      "overall_grade:0.642",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:314be20801": {
+    "id": "L:314be20801",
+    "parents": [
+      "T:ADVANCE_TICK",
+      "B:INTERFACE_WEAKEN"
+    ],
+    "depth": 1,
+    "created_at_tick": 6576,
+    "stats": {
+      "count": 43,
+      "mean_pos_relief": {
+        "X": 0.0001004760990054718,
+        "T": 3.9180914637259046e-05,
+        "N": -1.8330269213219607e-07,
+        "B": 1.3082703145087197e-08,
+        "A": 2.2146182024231935e-09
+      },
+      "mean_relief": {
+        "X": 0.0001004760990054718,
+        "T": 3.9180914637259046e-05,
+        "N": -1.8330269213219607e-07,
+        "B": 1.3082703145087197e-08,
+        "A": 2.2146182024231935e-09
+      },
+      "stdev_relief": {
+        "X": 0.00022551449978274024,
+        "T": 0.00013539622126964513,
+        "N": 6.803097596615124e-07,
+        "B": 2.875469766147104e-07,
+        "A": 3.225745250010526e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.003928456072351421,
+        "N": 0.01551684229651163,
+        "B": 5.7461240310077546e-05,
+        "A": 0.021536449753714482
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*B^1",
+      "dominant_axis:T",
+      "purpose_family:T+B",
+      "origin_signature:T^1*B^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.459",
+      "purpose_grade:0.825",
+      "overall_grade:0.642",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:a1b81aa299": {
+    "id": "L:a1b81aa299",
+    "parents": [
+      "NC:T>T",
+      "A:DIRECTED_MANIPULATION"
+    ],
+    "depth": 1,
+    "created_at_tick": 7200,
+    "stats": {
+      "count": 124,
+      "mean_pos_relief": {
+        "X": 0.00011108238429066331,
+        "T": 3.501354208167475e-05,
+        "N": -1.749425830013013e-07,
+        "B": 5.97547226301766e-09,
+        "A": -1.6796233038106186e-10
+      },
+      "mean_relief": {
+        "X": 0.00011108238429066331,
+        "T": 3.501354208167475e-05,
+        "N": -1.749425830013013e-07,
+        "B": 5.97547226301766e-09,
+        "A": -1.6796233038106186e-10
+      },
+      "stdev_relief": {
+        "X": 0.0001851214341525683,
+        "T": 0.00014440700550309642,
+        "N": 7.085635083907379e-07,
+        "B": 2.74013812373952e-07,
+        "A": 3.572457831927281e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.004145089285714287,
+        "N": 0.016447310447868693,
+        "B": 0.0,
+        "A": 0.023314248586909586
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^2*A^1",
+      "dominant_axis:T",
+      "purpose_family:T+A",
+      "origin_signature:T^2*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.510",
+      "purpose_grade:0.767",
+      "overall_grade:0.638",
+      "complexity_axes:2",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:efe141e5dd": {
+    "id": "L:efe141e5dd",
+    "parents": [
+      "NC:B>T",
+      "NC:T>A"
+    ],
+    "depth": 1,
+    "created_at_tick": 8096,
+    "stats": {
+      "count": 285,
+      "mean_pos_relief": {
+        "X": 0.00011401527529616871,
+        "T": 3.302858834051004e-05,
+        "N": -1.5567839041161596e-07,
+        "B": 7.101747893825384e-10,
+        "A": 1.4580245942985729e-10
+      },
+      "mean_relief": {
+        "X": 0.00011401527529616871,
+        "T": 3.302858834051004e-05,
+        "N": -1.5567839041161596e-07,
+        "B": 7.101747893825384e-10,
+        "A": 1.4580245942985729e-10
+      },
+      "stdev_relief": {
+        "X": 0.0001908673897813134,
+        "T": 0.00013052158171664077,
+        "N": 6.907974289998633e-07,
+        "B": 3.488181064815036e-07,
+        "A": 3.5699050106636665e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.004633946874904611,
+        "N": 0.019571738926753558,
+        "B": 2.753959316896895e-05,
+        "A": 0.03092077408857765
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^2*B^1*A^1",
+      "dominant_axis:T",
+      "purpose_family:T+B+A",
+      "origin_signature:T^2*B^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.649",
+      "purpose_grade:0.788",
+      "overall_grade:0.718",
+      "complexity_axes:3",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  },
+  "L:5fa96eb6be": {
+    "id": "L:5fa96eb6be",
+    "parents": [
+      "A:ALIGNMENT_PUSH",
+      "T:ADVANCE_TICK"
+    ],
+    "depth": 1,
+    "created_at_tick": 8800,
+    "stats": {
+      "count": 344,
+      "mean_pos_relief": {
+        "X": 0.00011033315137878272,
+        "T": 3.8495708136678456e-05,
+        "N": -2.2706350520468997e-08,
+        "B": 3.831182940660057e-09,
+        "A": 1.143372748195719e-10
+      },
+      "mean_relief": {
+        "X": 0.00011033315137878272,
+        "T": 3.8495708136678456e-05,
+        "N": -2.2706350520468997e-08,
+        "B": 3.831182940660057e-09,
+        "A": 1.143372748195719e-10
+      },
+      "stdev_relief": {
+        "X": 0.0001982426573756861,
+        "T": 0.00012822878943586515,
+        "N": 7.034880368906833e-07,
+        "B": 2.958012264039537e-07,
+        "A": 2.861180273812061e-09
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.009191061942539432,
+        "N": 0.01867475823655951,
+        "B": 0.0004642479896841899,
+        "A": 0.021758394358127153
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^1*A^1",
+      "dominant_axis:T",
+      "purpose_family:T+A",
+      "origin_signature:T^1*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:communication",
+      "operator_grade:0.459",
+      "purpose_grade:0.750",
+      "overall_grade:0.604",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2"
+    ]
+  },
+  "L:07d2f6c6e4": {
+    "id": "L:07d2f6c6e4",
+    "parents": [
+      "NC:X>A",
+      "NC:X>X"
+    ],
+    "depth": 1,
+    "created_at_tick": 9666,
+    "stats": {
+      "count": 416,
+      "mean_pos_relief": {
+        "X": 0.00015133828723447144,
+        "T": 5.8432410416540473e-05,
+        "N": 6.014499045484451e-08,
+        "B": -9.802853628255572e-08,
+        "A": -7.937971133301546e-10
+      },
+      "mean_relief": {
+        "X": 0.00015133828723447144,
+        "T": 5.8432410416540473e-05,
+        "N": 6.014499045484451e-08,
+        "B": -9.802853628255572e-08,
+        "A": -7.937971133301546e-10
+      },
+      "stdev_relief": {
+        "X": 0.00022237561889539538,
+        "T": 0.00013518748614661864,
+        "N": 7.500604998764474e-07,
+        "B": 4.3684391778857143e-07,
+        "A": 3.6018079932656987e-09
+      },
+      "mean_cost": {
+        "X": 0.010144230769230765,
+        "T": 0.016862980769230637,
+        "N": 0.015199519230769155,
+        "B": 0.005072115384615382,
+        "A": 0.02008407451923089
+      },
+      "mean_x_risk": 0.010144230769230765
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:X^3*A^1",
+      "dominant_axis:X",
+      "purpose_family:X+A",
+      "origin_signature:X^3*A^1",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.576",
+      "purpose_grade:0.812",
+      "overall_grade:0.694",
+      "complexity_axes:2",
+      "complexity_slots:4",
+      "generation:1",
+      "generation_role:PRIMARY",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:1"
+    ]
+  }
+}

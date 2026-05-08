@@ -1,0 +1,77 @@
+{
+  "active_effects": [
+    "something feels off beneath the surface",
+    "the wrong-feeling is being remedied below the surface",
+    "energy should stay economical",
+    "subsurface repair focus is contradiction handling"
+  ],
+  "dominant_axis_hint": "A",
+  "generated_at": 1775752128.919343,
+  "generated_from": "process_external_user_turn",
+  "governor_mode": "survival",
+  "intuition_signals": [
+    {
+      "label": "clarify",
+      "summary": "Stay careful and clarify before overcommitting.",
+      "weight": 0.62
+    },
+    {
+      "label": "steady",
+      "summary": "The issue is moving into correction; caution can soften into steadier attention.",
+      "weight": 0.6008
+    },
+    {
+      "label": "slow_down",
+      "summary": "Use a lighter present-frame response while resources are tight.",
+      "weight": 0.55
+    },
+    {
+      "label": "comfort",
+      "summary": "The unease is affective; respond with attunement.",
+      "weight": 0.751
+    }
+  ],
+  "prediction_bias": {
+    "continuity_hint": 0.3273,
+    "mismatch_hint": 0.62,
+    "snapshot_trigger": "interval"
+  },
+  "present_sensory_perspective": {
+    "camera_live": true,
+    "flagged": false,
+    "mic_live": true,
+    "scope": "constant_surface_feed",
+    "summary": "Surface is tracking audio and vision live. Current frame-load=253868, maturity=0.00. Hearing: I can hear moderate speech-like audio in the environment.",
+    "trigger": "interval"
+  },
+  "readiness_bias": 0.28,
+  "source": "live_turn_runtime",
+  "subsurface_owned": {
+    "blocked_tasks": [],
+    "continuity_scope": "durable_recall_and_consolidation",
+    "handoff_status": "cleared",
+    "mem_available_mb": 2231.57,
+    "repair_active": false,
+    "repair_issue": "contradiction handling",
+    "repair_phase": "enforce",
+    "repair_reason": "subsurface applied runtime repair proposal cf2e787a-3985-468d-a1e8-c9ba40b6c18f",
+    "sensory_growth_maturity": 0.0,
+    "sensory_growth_recent": [],
+    "sensory_history_scope": "discard_after_processing",
+    "surface_frame_dependency": "surface_flags_and_5s_snapshots"
+  },
+  "surface_contract": {
+    "continuity_access": "DCE_softened_only",
+    "conversation_scope": "live_surface_conversation_frame",
+    "exact_repair": "subsurface_only",
+    "inquiry_channel": "poedex",
+    "sensory_scope": "constant_surface_feed"
+  },
+  "surface_guidance": "Surface should stay responsive and emotionally attuned while subsurface resolves the pressure source. The caution should start easing because the issue is moving toward remedy.",
+  "turn_context": {
+    "dominant_axis": "T",
+    "input": "Earlier you said: \"maintain; I need a little more context\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
+    "intent": "statement",
+    "response_source": "fallback"
+  }
+}

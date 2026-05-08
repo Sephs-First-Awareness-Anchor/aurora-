@@ -1,0 +1,37 @@
+{
+  "episode_id": "dreampk_2e68c966f5e0",
+  "conversation_ids": [
+    "6850f985-5a34-8009-b03a-9c9c3cb30576",
+    "6850080b-39b4-8009-b0db-7e1664bfa197",
+    "684f6ddf-5918-8009-9b86-2f536fb83e9f",
+    "684e9f6b-1d0c-8009-bcb5-2ce77e925e10",
+    "684e4c6d-3610-8009-bb86-727539ea935c",
+    "684dc251-98e8-8009-a71a-e21a4bdd092a",
+    "684d6aaa-123c-8009-aa7f-f7edc4508994",
+    "684d45ce-e5e4-8009-b8f9-5b553cc3501d",
+    "684c7e00-1574-8009-a83a-13c36e33db42",
+    "684be730-5504-8009-b395-bddfbf83622a"
+  ],
+  "design_mode": "balanced",
+  "rubric_profile": {
+    "coherence_maintenance": 0.2698299826979818,
+    "context_carryover": 0.18631037778010354,
+    "ambiguity_handling": 0.5652609819121447,
+    "contradiction_handling": 0.8031970255335322,
+    "implied_intent_inference": 0.7811173959830223,
+    "misunderstanding_repair": 0.41621077430020204,
+    "uncertainty_signaling": 0.3320721140297365,
+    "boundary_calibration": 0.43758850629100693,
+    "framing_selection": 0.9119837552659458,
+    "emotional_calibration": 0.487126278351922,
+    "semantic_precision": 0.5520513144323527,
+    "adaptive_strategy_selection": 1.0,
+    "compression_elaboration_fit": 0.608059061833236,
+    "perspective_integration": 0.20846706186858147,
+    "multi_turn_stability": 0.8029249629243165
+  },
+  "contextual_modifiers": {},
+  "difficulty_estimate": 0.4425200271197277,
+  "payload_count": 10,
+  "timestamp": 1773043438.2911463
+}

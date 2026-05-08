@@ -1,0 +1,253 @@
+{
+  "updated_at": 1778257518.448476,
+  "updated": "12:25:18",
+  "source": "surface_daemon",
+  "trigger": "interval",
+  "flagged": false,
+  "reason": "",
+  "mic_live": true,
+  "camera_live": true,
+  "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+  "sensory_state": {
+    "maturity": 0.769,
+    "total_frames": 881,
+    "semantic_nodes": 6,
+    "audio": {
+      "tone": {
+        "nodes": 10,
+        "promoted": 5,
+        "maturity": 0.694
+      },
+      "timbre": {
+        "nodes": 5,
+        "promoted": 5,
+        "maturity": 0.736
+      },
+      "rhythm": {
+        "nodes": 4,
+        "promoted": 4,
+        "maturity": 0.766
+      }
+    },
+    "visual": {
+      "hue": {
+        "nodes": 5,
+        "promoted": 5,
+        "maturity": 0.78
+      },
+      "shape": {
+        "nodes": 5,
+        "promoted": 5,
+        "maturity": 0.78
+      },
+      "motion": {
+        "nodes": 4,
+        "promoted": 4,
+        "maturity": 0.78
+      }
+    },
+    "lanes": {
+      "tonal_colour": {
+        "nodes": 2,
+        "promoted": 2
+      },
+      "texture_form": {
+        "nodes": 2,
+        "promoted": 2
+      },
+      "tempo_flow": {
+        "nodes": 2,
+        "promoted": 2
+      }
+    },
+    "recognitions": {
+      "recent": [
+        "heard human speech prosody",
+        "heard excited voice",
+        "heard natural speech rhythm"
+      ],
+      "last_matches": {
+        "audio": {
+          "tone": "21720cf3-5047-4547-b87c-c7f21276fa1b",
+          "timbre": "2594f263-f1f3-48a6-bf60-4c00f1fd68c1",
+          "rhythm": "b338ac24-bcfb-4d42-b60d-b06c4f216437"
+        },
+        "visual": {
+          "hue": null,
+          "shape": null,
+          "motion": null
+        },
+        "semantic": {}
+      }
+    },
+    "lineage_signature": "XTNBA",
+    "runtime_regime": {
+      "axes": {
+        "X": 0.6619999999999985,
+        "T": 0.76535,
+        "N": 0.5851853114963339,
+        "B": 0.66535,
+        "A": 0.5288
+      },
+      "dominant_axis": "T",
+      "governor_weight": 0.682
+    },
+    "language_projection": {
+      "existence_mode": "AGENTIC",
+      "language_register": "enacted",
+      "anchor_pole": "aurora",
+      "secondary_pole": "sunni",
+      "noun_bias": 0.839,
+      "verb_bias": 0.109,
+      "flat_web": true,
+      "relation_type_dominant": "related_to"
+    },
+    "saved_at": 1778093833.7922325
+  },
+  "sensory_vectors": {
+    "audio_20d": [],
+    "vision_57d": []
+  },
+  "sensory_context": {
+    "visual": null,
+    "audio": null,
+    "recent_speech": null,
+    "concepts_active": []
+  },
+  "visual_description": "",
+  "audio_description": "",
+  "recent_speech": "",
+  "latest_guidance": {},
+  "guidance_summary": "",
+  "pending_visual_question": "",
+  "visual_uncertainty_streak": 0,
+  "concepts_active": [],
+  "present_sensory_perspective": {
+    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+    "mic_live": true,
+    "camera_live": true,
+    "scope": "constant_surface_feed",
+    "trigger": "interval",
+    "flagged": false,
+    "recognitions": {
+      "recent": [
+        "heard human speech prosody",
+        "heard excited voice",
+        "heard natural speech rhythm"
+      ],
+      "last_matches": {
+        "audio": {
+          "tone": "21720cf3-5047-4547-b87c-c7f21276fa1b",
+          "timbre": "2594f263-f1f3-48a6-bf60-4c00f1fd68c1",
+          "rhythm": "b338ac24-bcfb-4d42-b60d-b06c4f216437"
+        },
+        "visual": {
+          "hue": null,
+          "shape": null,
+          "motion": null
+        },
+        "semantic": {}
+      }
+    },
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "latest_guidance": {},
+    "guidance_summary": "",
+    "pending_visual_question": "",
+    "visual_uncertainty_streak": 0,
+    "native_meaning_bundle": {
+      "primary": {
+        "meaning_id": "sensory-1778257518448",
+        "created_at": 1778257518.448476,
+        "semantic_roots": [
+          "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+          "heard human speech prosody",
+          "heard excited voice",
+          "heard natural speech rhythm"
+        ],
+        "diagonal_anchor": "Boundary_Operator_of_Meaning",
+        "source_origin": "sensory_multimodal",
+        "modality_origin": "sensory",
+        "source_semantic_stage": "processed_sensory",
+        "sensory_lineage_tags": [
+          "scene:interval",
+          "",
+          ""
+        ],
+        "context_refs": [
+          "sensory_scene",
+          "sensory_crystal",
+          "surface_snapshot"
+        ],
+        "memory_refs": [],
+        "law_bindings": [
+          {
+            "domain_letter": "B",
+            "domain_name": "Meaning",
+            "family": "Boundary",
+            "dimension": "OPERATOR",
+            "score": 0.82,
+            "nc_name": "boundary",
+            "summary": "what frames, contains, or separates sensory meaning"
+          },
+          {
+            "domain_letter": "X",
+            "domain_name": "Information",
+            "family": "Existential",
+            "dimension": "POLARITY",
+            "score": 0.71,
+            "nc_name": "existence",
+            "summary": "what is actually present in sensory reality"
+          }
+        ]
+      }
+    },
+    "native_meaning": {
+      "meaning_id": "sensory-1778257518448",
+      "created_at": 1778257518.448476,
+      "semantic_roots": [
+        "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+        "heard human speech prosody",
+        "heard excited voice",
+        "heard natural speech rhythm"
+      ],
+      "diagonal_anchor": "Boundary_Operator_of_Meaning",
+      "source_origin": "sensory_multimodal",
+      "modality_origin": "sensory",
+      "source_semantic_stage": "processed_sensory",
+      "sensory_lineage_tags": [
+        "scene:interval",
+        "",
+        ""
+      ],
+      "context_refs": [
+        "sensory_scene",
+        "sensory_crystal",
+        "surface_snapshot"
+      ],
+      "memory_refs": [],
+      "law_bindings": [
+        {
+          "domain_letter": "B",
+          "domain_name": "Meaning",
+          "family": "Boundary",
+          "dimension": "OPERATOR",
+          "score": 0.82,
+          "nc_name": "boundary",
+          "summary": "what frames, contains, or separates sensory meaning"
+        },
+        {
+          "domain_letter": "X",
+          "domain_name": "Information",
+          "family": "Existential",
+          "dimension": "POLARITY",
+          "score": 0.71,
+          "nc_name": "existence",
+          "summary": "what is actually present in sensory reality"
+        }
+      ]
+    },
+    "concepts_active": []
+  }
+}

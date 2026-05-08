@@ -1,0 +1,289 @@
+{
+  "version": "1.0",
+  "timestamp": 1772500215.978535,
+  "authors": "Sunni (Sir) Morningstar and Cael Devo",
+  "path_profile": {
+    "language_path_spine": [
+      {
+        "slot": "NC:B>X\u00d7NC:B>B",
+        "lang_affinity": 0.472,
+        "maturity_ratio": 1.0,
+        "dominant_axis": "B",
+        "secondary_axis": "X",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.5
+      },
+      {
+        "slot": "NC:X>B\u00d7NC:X>N",
+        "lang_affinity": 0.4023,
+        "maturity_ratio": 0.954,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4954
+      },
+      {
+        "slot": "NC:X>B\u00d7NC:X>T",
+        "lang_affinity": 0.401,
+        "maturity_ratio": 0.9541,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4954
+      },
+      {
+        "slot": "NC:X>B\u00d7NC:X>B",
+        "lang_affinity": 0.3524,
+        "maturity_ratio": 0.9391,
+        "dominant_axis": "X",
+        "secondary_axis": "B",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4939
+      },
+      {
+        "slot": "NC:X>N\u00d7NC:X>A",
+        "lang_affinity": 0.3521,
+        "maturity_ratio": 0.9481,
+        "dominant_axis": "X",
+        "secondary_axis": "A",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4948
+      },
+      {
+        "slot": "NC:X>N\u00d7NC:X>T",
+        "lang_affinity": 0.3519,
+        "maturity_ratio": 0.9541,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4954
+      },
+      {
+        "slot": "NC:X>N\u00d7NC:X>N",
+        "lang_affinity": 0.3494,
+        "maturity_ratio": 0.9523,
+        "dominant_axis": "X",
+        "secondary_axis": "N",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4952
+      },
+      {
+        "slot": "NC:X>T\u00d7NC:X>N",
+        "lang_affinity": 0.3476,
+        "maturity_ratio": 0.9433,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4943
+      },
+      {
+        "slot": "NC:X>N\u00d7NC:X>B",
+        "lang_affinity": 0.3447,
+        "maturity_ratio": 0.9505,
+        "dominant_axis": "X",
+        "secondary_axis": "B",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4951
+      },
+      {
+        "slot": "NC:X>T\u00d7NC:X>B",
+        "lang_affinity": 0.3402,
+        "maturity_ratio": 0.9404,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.494
+      },
+      {
+        "slot": "NC:X>T\u00d7NC:X>T",
+        "lang_affinity": 0.3339,
+        "maturity_ratio": 0.9208,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4921
+      },
+      {
+        "slot": "NC:X>X\u00d7NC:T>T",
+        "lang_affinity": 0.3263,
+        "maturity_ratio": 0.9087,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": true,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4909
+      },
+      {
+        "slot": "NC:X>X\u00d7NC:T>X",
+        "lang_affinity": 0.326,
+        "maturity_ratio": 0.9088,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": true,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4909
+      },
+      {
+        "slot": "NC:X>T\u00d7NC:T>T",
+        "lang_affinity": 0.3254,
+        "maturity_ratio": 0.9097,
+        "dominant_axis": "T",
+        "secondary_axis": "X",
+        "is_xt_codominant": true,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.491
+      },
+      {
+        "slot": "NC:X>T\u00d7NC:T>X",
+        "lang_affinity": 0.3243,
+        "maturity_ratio": 0.9053,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": true,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4905
+      },
+      {
+        "slot": "NC:T>X\u00d7NC:X>X",
+        "lang_affinity": 0.3242,
+        "maturity_ratio": 0.9049,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": true,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4905
+      },
+      {
+        "slot": "NC:T>X\u00d7NC:X>T",
+        "lang_affinity": 0.3235,
+        "maturity_ratio": 0.9056,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": true,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4906
+      },
+      {
+        "slot": "NC:X>T\u00d7NC:X>X",
+        "lang_affinity": 0.3234,
+        "maturity_ratio": 0.9037,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": true,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4904
+      },
+      {
+        "slot": "NC:X>T\u00d7NC:X>A",
+        "lang_affinity": 0.3127,
+        "maturity_ratio": 0.9492,
+        "dominant_axis": "X",
+        "secondary_axis": "A",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4949
+      },
+      {
+        "slot": "NC:X>X\u00d7NC:X>X",
+        "lang_affinity": 0.3073,
+        "maturity_ratio": 0.9254,
+        "dominant_axis": "X",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.4925
+      },
+      {
+        "slot": "NC:B>T\u00d7NC:B>B",
+        "lang_affinity": 0.3054,
+        "maturity_ratio": 1.0,
+        "dominant_axis": "B",
+        "secondary_axis": "T",
+        "is_xt_codominant": false,
+        "gradient_class": "highway",
+        "net_n_modifier": -0.5
+      }
+    ],
+    "total_highway_slots": 21,
+    "total_occupied_slots": 194,
+    "total_empty_slots": 431,
+    "path_of_least_resistance": "NC:B>X\u00d7NC:B>B",
+    "language_intelligence_gradient": {
+      "base_resistance": 0.08,
+      "highway_relief": 0.4,
+      "t_pull_amplifier": 0.12,
+      "agency_resistance": 0.2,
+      "empty_seed_magnitude": 0.04,
+      "maturity_bonus_cap": 0.1,
+      "highway_affinity_threshold": 0.3
+    }
+  },
+  "pressure_config": {
+    "gradient_summary": {
+      "highway_avg_axis_deltas": {
+        "X": 0.0,
+        "T": -0.04,
+        "N": -0.4937,
+        "B": 0.0,
+        "A": 0.0
+      },
+      "gradient_class_counts": {
+        "highway": 21,
+        "temporal_pull": 6,
+        "neutral": 138,
+        "seeded": 431,
+        "agency_gated": 29
+      },
+      "highway_slot_count": 21
+    },
+    "per_axis_amplifiers": {
+      "X": 1.0,
+      "T": 1.12,
+      "N": 0.6,
+      "B": 1.0,
+      "A": 0.8
+    },
+    "speed_run_config": {
+      "entry_slot": "NC:X>X\u00d7NC:X>X",
+      "target_slot": "NC:X>X\u00d7NC:T>T",
+      "slot_traverse_order": [
+        "NC:X>X\u00d7NC:X>X",
+        "NC:X>X\u00d7NC:T>X",
+        "NC:X>X\u00d7NC:T>T",
+        "NC:X>T\u00d7NC:X>X",
+        "NC:X>T\u00d7NC:X>T",
+        "NC:X>T\u00d7NC:X>N",
+        "NC:X>T\u00d7NC:X>B",
+        "NC:X>T\u00d7NC:X>A",
+        "NC:X>T\u00d7NC:T>X",
+        "NC:X>T\u00d7NC:T>T",
+        "NC:X>N\u00d7NC:X>T",
+        "NC:X>N\u00d7NC:X>N",
+        "NC:X>N\u00d7NC:X>B",
+        "NC:X>N\u00d7NC:X>A",
+        "NC:X>B\u00d7NC:X>T",
+        "NC:X>B\u00d7NC:X>N",
+        "NC:X>B\u00d7NC:X>B",
+        "NC:T>X\u00d7NC:X>X",
+        "NC:T>X\u00d7NC:X>T",
+        "NC:B>X\u00d7NC:B>B",
+        "NC:B>T\u00d7NC:B>B"
+      ],
+      "pressure_ramp_ticks": 200,
+      "plateau_sensitivity": 0.05,
+      "conflict_curriculum_intensity": 0.35,
+      "save_gate_on_language_gain": true
+    }
+  }
+}

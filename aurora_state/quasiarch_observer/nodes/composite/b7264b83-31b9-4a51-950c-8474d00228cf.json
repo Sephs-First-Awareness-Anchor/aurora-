@@ -1,0 +1,81 @@
+{
+  "node_id": "b7264b83-31b9-4a51-950c-8474d00228cf",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.gateway.simulation.run_epoch",
+    "issue": "context_carryover_instability",
+    "logic_tier": "evolutionary_pipeline",
+    "intervention": "context_thread_reinforcement",
+    "intended_effect": "carry context, referents, and claims across turns",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "periodic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.68,
+    "target__recurrence_pattern": 0.6120000000000001,
+    "logic_tier__recurrence_pattern": 0.5780000000000001,
+    "intervention__recurrence_pattern": 0.544,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "b9ef4d89-d146-4532-a464-5b0f06b44fd7",
+    "948f7e77-2b1f-4182-924f-0b37fb0cf48e",
+    "4b4ba127-5bdc-4a4c-bd35-8577f02ba3c6",
+    "ebb56a39-23ff-4176-b47c-8275cbb95d9e",
+    "ff846180-9db3-4427-a3fc-3e11d639461b"
+  ],
+  "parent_ids": [
+    "b9ef4d89-d146-4532-a464-5b0f06b44fd7",
+    "948f7e77-2b1f-4182-924f-0b37fb0cf48e",
+    "4b4ba127-5bdc-4a4c-bd35-8577f02ba3c6",
+    "ebb56a39-23ff-4176-b47c-8275cbb95d9e",
+    "ff846180-9db3-4427-a3fc-3e11d639461b"
+  ],
+  "child_ids": [],
+  "tags": [
+    "dim:coherence_maintenance",
+    "dim:semantic_precision",
+    "corpus_runner_burst",
+    "train",
+    "aurora",
+    "dim:multi_turn_stability",
+    "composite",
+    "dim:context_carryover",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::10da7e9a_ec1f_4526_b3f8_e8dd00f13aed",
+    "ghost_relic_match": 0.9375,
+    "family_key": "issue_family::context_carryover_instability",
+    "issue_category": "context_carryover_instability",
+    "stage": "COMPOSITE",
+    "version": 520,
+    "signature": "8f4e018b87dc035456b4",
+    "is_active_version": false,
+    "supersedes": "516bee2f-7805-4143-9e89-faf71b000a84",
+    "superseded_by": "2ee8d05e-0ded-4f54-be0f-08babc837865"
+  },
+  "created_at": "2026-04-26T14:06:18.205743+00:00",
+  "persisted_at": "2026-04-26T14:10:26.584617+00:00",
+  "is_relic": false,
+  "checksum": "e0c0242ca6a83b14"
+}

@@ -1,0 +1,30 @@
+{
+  "run_id": "20260508_002503",
+  "timestamp": 1778214303.3249006,
+  "timestamp_str": "2026-05-08 00:25:03",
+  "restored_at": "",
+  "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260508_002503",
+  "snapshot": {
+    "sizes": {
+      "surface_pressure": 3806682,
+      "pressure_experiences": 545022,
+      "daemon_log": 288509
+    },
+    "total_state_bytes": 90340756,
+    "low_worth_density": 0.0125,
+    "der_load": 0.4104,
+    "latest_restorable_run_id": "20260507_025806",
+    "triggers": {
+      "log_size_threshold_exceeded": false,
+      "high_low_worth_density": false,
+      "genealogy_backlog": true,
+      "memory_saturation": false,
+      "der_load_increase": false,
+      "coherence_instability": false,
+      "quiet_window": true
+    },
+    "should_run": true
+  },
+  "results": [],
+  "restorable": false
+}

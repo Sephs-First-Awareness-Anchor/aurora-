@@ -1,0 +1,35 @@
+{
+  "active": false,
+  "pid": 33085,
+  "passes": "triple",
+  "pass": "observer",
+  "pass_index": 0,
+  "messages_processed": 0,
+  "total_messages": 183813,
+  "session_messages": 0,
+  "batch_limit": 1000,
+  "pct_corpus": 0.0,
+  "pct_session": 0.0,
+  "last_sim": null,
+  "coherence_avg": null,
+  "last_update": 1777800272.9062743,
+  "last_sim_burst": null,
+  "lesson_plan": null,
+  "events": [
+    {
+      "ts": 1777800077.4263563,
+      "type": "pass_start",
+      "msg": "Starting observer pass"
+    },
+    {
+      "ts": 1777800246.38131,
+      "type": "batch_stop",
+      "msg": "Batch limit reached -- observer @999"
+    },
+    {
+      "ts": 1777800272.9062703,
+      "type": "complete",
+      "msg": "Session complete"
+    }
+  ]
+}

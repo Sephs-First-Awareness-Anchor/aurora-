@@ -1,0 +1,713 @@
+{
+  "path_id": "LIN:proposition_understanding:0538f1cf4d",
+  "target_ability": "proposition_understanding",
+  "selected_strategy": "constraint_recapitulation_v1",
+  "rationale": "Directed recapitulation from 5-constraint seed stages into late-stage proposition understanding without skipping promotion layers.",
+  "created_at": 1773255727.7998595,
+  "stages": [
+    {
+      "stage_id": "claim_atom",
+      "generation": 1,
+      "label": "Claim Atom",
+      "kind": "seed",
+      "dominant_axis": "X",
+      "constraints": [
+        "X"
+      ],
+      "summary": "Minimal admissible proposition shell with subject, relation, and object slots.",
+      "purpose_lane": "meaning",
+      "operator_action": "admissibility_gating",
+      "parents": [],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_ontological_scaffolding.py"
+      ],
+      "ripple_effects": [
+        "Enables claim-shaped storage instead of surface-only fact text.",
+        "Makes admissibility the root of proposition formation."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "working_memory",
+          "key": "claim_atoms",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "oets",
+          "key": "proposition_nodes",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "pipeline",
+          "key": "active_schemas",
+          "mode": "append_unique",
+          "value": "claim_atom"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "turn_binding",
+      "generation": 1,
+      "label": "Turn Binding",
+      "kind": "seed",
+      "dominant_axis": "T",
+      "constraints": [
+        "T"
+      ],
+      "summary": "Carries one proposition shell across adjacent turns without topic collapse.",
+      "purpose_lane": "communication",
+      "operator_action": "temporal_orchestration",
+      "parents": [],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_language_state.py"
+      ],
+      "ripple_effects": [
+        "Creates temporal continuity for later discourse links.",
+        "Lets follow-up turns inherit a stable active proposition."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "working_memory",
+          "key": "temporal_bindings",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "expression",
+          "key": "meaning_anchor_depth",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "multi_turn_stability"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "speaker_boundary",
+      "generation": 1,
+      "label": "Speaker Boundary",
+      "kind": "seed",
+      "dominant_axis": "B",
+      "constraints": [
+        "B",
+        "X"
+      ],
+      "summary": "Separates user, Aurora, and external-source ownership around the same claim shell.",
+      "purpose_lane": "meaning",
+      "operator_action": "boundary_shaping",
+      "parents": [],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_comprehension_gap.py"
+      ],
+      "ripple_effects": [
+        "Prevents one speaker's claim from overwriting another's.",
+        "Creates the first branchable distinction surface for contradiction handling."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "working_memory",
+          "key": "speaker_boundaries",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "gap_system",
+          "key": "referent_repair_depth",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "ambiguity_handling"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "uncertainty_weight",
+      "generation": 1,
+      "label": "Uncertainty Weight",
+      "kind": "seed",
+      "dominant_axis": "N",
+      "constraints": [
+        "N",
+        "X"
+      ],
+      "summary": "Attaches salience, confidence, and compression weight to proposition shells.",
+      "purpose_lane": "meaning",
+      "operator_action": "energy_economics",
+      "parents": [],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_language_state.py"
+      ],
+      "ripple_effects": [
+        "Lets weak claims decay and strong claims persist.",
+        "Makes uncertainty part of proposition state rather than style only."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "working_memory",
+          "key": "weighted_claims",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "expression",
+          "key": "uncertainty_channel",
+          "mode": "max",
+          "value": 0.35
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "uncertainty_signaling"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "repair_choice",
+      "generation": 1,
+      "label": "Repair Choice",
+      "kind": "seed",
+      "dominant_axis": "A",
+      "constraints": [
+        "A",
+        "B"
+      ],
+      "summary": "Chooses ask, defer, infer, or commit when branch pressure rises.",
+      "purpose_lane": "communication",
+      "operator_action": "agency_direction",
+      "parents": [],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_comprehension_gap.py"
+      ],
+      "ripple_effects": [
+        "Turns ambiguity into action policy rather than passive confusion.",
+        "Creates an agency surface for revising meaning paths."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "gap_system",
+          "key": "branch_repair_enabled",
+          "mode": "set",
+          "value": true
+        },
+        {
+          "subsystem": "working_memory",
+          "key": "repair_policies",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "pipeline",
+          "key": "active_schemas",
+          "mode": "append_unique",
+          "value": "repair_choice"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "claim_continuity",
+      "generation": 2,
+      "label": "Claim Continuity",
+      "kind": "coupling",
+      "dominant_axis": "T",
+      "constraints": [
+        "X",
+        "T"
+      ],
+      "summary": "An admissible claim now persists as the same object across turns.",
+      "purpose_lane": "meaning",
+      "operator_action": "temporal_orchestration",
+      "parents": [
+        "claim_atom",
+        "turn_binding"
+      ],
+      "target_files": [
+        "aurora.py"
+      ],
+      "ripple_effects": [
+        "Follow-up reasoning can target the same proposition repeatedly.",
+        "Turn order becomes part of proposition identity."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "working_memory",
+          "key": "active_propositions",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "pipeline",
+          "key": "proposition_threads",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "context_carryover"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "owned_claim",
+      "generation": 2,
+      "label": "Owned Claim",
+      "kind": "coupling",
+      "dominant_axis": "B",
+      "constraints": [
+        "X",
+        "B"
+      ],
+      "summary": "A claim becomes owned by a speaker/source instead of existing as anonymous content.",
+      "purpose_lane": "meaning",
+      "operator_action": "boundary_shaping",
+      "parents": [
+        "claim_atom",
+        "speaker_boundary"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_identity_persistence.py"
+      ],
+      "ripple_effects": [
+        "Speaker attribution becomes native to proposition storage.",
+        "The system can keep multiple incompatible claims without flattening them."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "memory",
+          "key": "source_scoped_claims",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "working_memory",
+          "key": "speaker_owned_claims",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "contradiction_handling"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "repairable_branch",
+      "generation": 2,
+      "label": "Repairable Branch",
+      "kind": "coupling",
+      "dominant_axis": "A",
+      "constraints": [
+        "B",
+        "A"
+      ],
+      "summary": "A boundary split can now trigger targeted repair instead of forcing immediate collapse.",
+      "purpose_lane": "communication",
+      "operator_action": "agency_direction",
+      "parents": [
+        "speaker_boundary",
+        "repair_choice"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_comprehension_gap.py"
+      ],
+      "ripple_effects": [
+        "Competing interpretations can stay live long enough to be resolved.",
+        "Clarification becomes branch management rather than a loose prompt."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "gap_system",
+          "key": "active_branches",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "working_memory",
+          "key": "repairable_branches",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "misunderstanding_repair"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "weighted_claim",
+      "generation": 2,
+      "label": "Weighted Claim",
+      "kind": "coupling",
+      "dominant_axis": "N",
+      "constraints": [
+        "X",
+        "N"
+      ],
+      "summary": "An admissible claim now carries confidence and retention pressure.",
+      "purpose_lane": "meaning",
+      "operator_action": "energy_economics",
+      "parents": [
+        "claim_atom",
+        "uncertainty_weight"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_language_state.py"
+      ],
+      "ripple_effects": [
+        "Weakly grounded claims no longer compete equally with strong claims.",
+        "Uncertainty can shape retrieval, reply tone, and revision priority."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "memory",
+          "key": "weighted_recall_paths",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "expression",
+          "key": "uncertainty_channel",
+          "mode": "max",
+          "value": 0.5
+        },
+        {
+          "subsystem": "pipeline",
+          "key": "weighted_claim_lookup",
+          "mode": "set",
+          "value": true
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "proposition_lineage",
+      "generation": 3,
+      "label": "Proposition Lineage",
+      "kind": "coupling",
+      "dominant_axis": "T",
+      "constraints": [
+        "X",
+        "T",
+        "B"
+      ],
+      "summary": "A proposition becomes a tracked lineage with temporal continuity and speaker ownership.",
+      "purpose_lane": "meaning",
+      "operator_action": "temporal_orchestration",
+      "parents": [
+        "claim_continuity",
+        "owned_claim"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/constraint_genealogy.py"
+      ],
+      "ripple_effects": [
+        "Claims can be revised instead of replaced.",
+        "Contradiction and support edges gain a stable object to point at."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "genealogy",
+          "key": "proposition_lineages",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "oets",
+          "key": "proposition_nodes",
+          "mode": "increment",
+          "value": 2
+        },
+        {
+          "subsystem": "pipeline",
+          "key": "proposition_graph_enabled",
+          "mode": "set",
+          "value": true
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "provenance_weighting",
+      "generation": 3,
+      "label": "Provenance Weighting",
+      "kind": "coupling",
+      "dominant_axis": "N",
+      "constraints": [
+        "X",
+        "B",
+        "N"
+      ],
+      "summary": "Claim confidence now depends on both evidence strength and source ownership.",
+      "purpose_lane": "meaning",
+      "operator_action": "energy_economics",
+      "parents": [
+        "owned_claim",
+        "weighted_claim"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_identity_persistence.py"
+      ],
+      "ripple_effects": [
+        "User-asserted, Aurora-inferred, and external claims can be ranked separately.",
+        "Provenance starts to regulate memory and answer selection."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "memory",
+          "key": "provenance_edges",
+          "mode": "increment",
+          "value": 2
+        },
+        {
+          "subsystem": "working_memory",
+          "key": "source_weighting_enabled",
+          "mode": "set",
+          "value": true
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "semantic_precision"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "belief_revision_graph",
+      "generation": 4,
+      "label": "Belief Revision Graph",
+      "kind": "coupling",
+      "dominant_axis": "A",
+      "constraints": [
+        "X",
+        "T",
+        "B",
+        "A"
+      ],
+      "summary": "Tracked propositions can now branch, repair, retract, and reconverge.",
+      "purpose_lane": "intelligence",
+      "operator_action": "agency_direction",
+      "parents": [
+        "proposition_lineage",
+        "repairable_branch"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/constraint_genealogy.py"
+      ],
+      "ripple_effects": [
+        "Contradictions become navigable graph events instead of dead ends.",
+        "Revision policy becomes native to proposition structure."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "working_memory",
+          "key": "belief_branches",
+          "mode": "increment",
+          "value": 2
+        },
+        {
+          "subsystem": "genealogy",
+          "key": "revision_paths",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "pipeline",
+          "key": "belief_revision_enabled",
+          "mode": "set",
+          "value": true
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "causal_commitment",
+      "generation": 3,
+      "label": "Causal Commitment",
+      "kind": "coupling",
+      "dominant_axis": "A",
+      "constraints": [
+        "X",
+        "T",
+        "A"
+      ],
+      "summary": "The system can choose and preserve causal reading paths through an active proposition.",
+      "purpose_lane": "intelligence",
+      "operator_action": "agency_direction",
+      "parents": [
+        "claim_continuity",
+        "repair_choice"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_ontological_scaffolding.py"
+      ],
+      "ripple_effects": [
+        "Why-questions gain a native path through proposition state.",
+        "Reasoning can carry forward selected causal commitments across turns."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "oets",
+          "key": "causal_edges",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "working_memory",
+          "key": "causal_paths",
+          "mode": "increment",
+          "value": 1
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "implied_intent_inference"
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "causal_proposition_mesh",
+      "generation": 4,
+      "label": "Causal Proposition Mesh",
+      "kind": "coupling",
+      "dominant_axis": "T",
+      "constraints": [
+        "X",
+        "T",
+        "B",
+        "A"
+      ],
+      "summary": "Propositions are now linked by continuity, ownership, and selected causal paths.",
+      "purpose_lane": "intelligence",
+      "operator_action": "temporal_orchestration",
+      "parents": [
+        "proposition_lineage",
+        "causal_commitment"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_ontological_scaffolding.py"
+      ],
+      "ripple_effects": [
+        "Multi-turn reasoning can stay on the same proposition while answering why/how questions.",
+        "Causal support stops being a one-shot surface explanation."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "oets",
+          "key": "causal_edges",
+          "mode": "increment",
+          "value": 2
+        },
+        {
+          "subsystem": "pipeline",
+          "key": "causal_mesh_enabled",
+          "mode": "set",
+          "value": true
+        },
+        {
+          "subsystem": "expression",
+          "key": "meaning_anchor_depth",
+          "mode": "increment",
+          "value": 1
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "stage_id": "proposition_understanding",
+      "generation": 5,
+      "label": "Proposition Understanding",
+      "kind": "coupling",
+      "dominant_axis": "X",
+      "constraints": [
+        "X",
+        "T",
+        "N",
+        "B",
+        "A"
+      ],
+      "summary": "Full proposition substrate: claim identity, temporal continuity, provenance weighting, branching repair, and causal mesh.",
+      "purpose_lane": "meaning",
+      "operator_action": "admissibility_gating",
+      "parents": [
+        "causal_proposition_mesh",
+        "provenance_weighting"
+      ],
+      "target_files": [
+        "aurora.py",
+        "aurora_internal/aurora_ontological_scaffolding.py",
+        "aurora_internal/aurora_language_state.py"
+      ],
+      "ripple_effects": [
+        "Meaning continuity becomes proposition-native instead of topic-word-native.",
+        "Communication, reasoning, and grounding can now evolve against the same shared substrate."
+      ],
+      "system_writebacks": [
+        {
+          "subsystem": "pipeline",
+          "key": "proposition_understanding",
+          "mode": "set",
+          "value": true
+        },
+        {
+          "subsystem": "expression",
+          "key": "proposition_voice_enabled",
+          "mode": "set",
+          "value": true
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "coherence_maintenance"
+        },
+        {
+          "subsystem": "rubric",
+          "key": "target_dimensions",
+          "mode": "append_unique",
+          "value": "multi_turn_stability"
+        }
+      ],
+      "notes": ""
+    }
+  ]
+}

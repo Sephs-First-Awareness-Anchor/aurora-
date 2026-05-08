@@ -1,0 +1,80 @@
+{
+  "node_id": "c6590203-ef32-4884-946d-3911e498c12c",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.articulation",
+    "issue": "unbound_surface_fragment",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "bind_fragment_to_surface_relation",
+    "intended_effect": "bind stranded words to nearby meaning before speech",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "periodic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.425,
+    "target__recurrence_pattern": 0.3825,
+    "logic_tier__recurrence_pattern": 0.36124999999999996,
+    "intervention__recurrence_pattern": 0.34,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "c282924b-7001-459e-9863-17eb81c69c75",
+    "c23a55cd-168f-4125-abd4-f3e49d9c6e3c",
+    "7727a9a5-5069-4a8c-aa9d-a802ea6ea680",
+    "de01bb3e-dd25-4e6a-acba-de20afa0283e"
+  ],
+  "parent_ids": [
+    "c282924b-7001-459e-9863-17eb81c69c75",
+    "c23a55cd-168f-4125-abd4-f3e49d9c6e3c",
+    "7727a9a5-5069-4a8c-aa9d-a802ea6ea680",
+    "de01bb3e-dd25-4e6a-acba-de20afa0283e"
+  ],
+  "child_ids": [],
+  "tags": [
+    "dialogue",
+    "articulation",
+    "binding",
+    "phase:runtime_dialogue",
+    "runtime",
+    "composite",
+    "self_repair",
+    "learning",
+    "coherence",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::63e031b4_5286_4dab_aaec_788207ca6d70",
+    "ghost_relic_match": 0.875,
+    "family_key": "issue_family::unbound_surface_fragment",
+    "issue_category": "unbound_surface_fragment",
+    "stage": "COMPOSITE",
+    "version": 5,
+    "signature": "73f77468979eca35e30d",
+    "is_active_version": true,
+    "supersedes": "8b592fb6-62d8-496b-9d2f-18d24c874c6f",
+    "superseded_by": ""
+  },
+  "created_at": "2026-05-03T19:32:56.867680+00:00",
+  "persisted_at": "2026-05-03T19:32:57.002990+00:00",
+  "is_relic": false,
+  "checksum": "bd013f085b206306"
+}

@@ -1,0 +1,101 @@
+{
+  "node_id": "586e75b3-7077-48ab-8e4a-51102e049ea1",
+  "order": "BASE",
+  "payload": {
+    "target": "aurora.dialogue.lookup",
+    "issue": "factual_grounding_gap",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "lookup_offer",
+    "intended_effect": "offer collaborative evidence gathering before guessing",
+    "observed_effect": "pending_verification"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.3,
+    "observed_effect__issue": 0.0,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7
+  },
+  "resolution_fidelity": 0.3,
+  "base_event_ids": [
+    "586e75b3-7077-48ab-8e4a-51102e049ea1"
+  ],
+  "parent_ids": [],
+  "child_ids": [],
+  "tags": [
+    "runtime",
+    "dialogue",
+    "lookup",
+    "runtime",
+    "phase:runtime_dialogue"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "family_key": "issue_family::factual_grounding_gap",
+    "issue_category": "factual_grounding_gap",
+    "stage": "BASE",
+    "event_signature": "3de4e298108128184400",
+    "is_active_version": true,
+    "event_context": {
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.4,
+          "T": 0.1,
+          "N": 0.1,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "B",
+          "A"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 0.0,
+          "T": 0.0,
+          "N": 0.0,
+          "B": 0.0,
+          "A": 0.0
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.lookup",
+        "phase": "runtime",
+        "system_load": "low",
+        "system_load_score": 0.017,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.05,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 0.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      }
+    }
+  },
+  "created_at": "2026-03-22T14:13:30.124915+00:00",
+  "persisted_at": "2026-03-22T14:13:30.125103+00:00",
+  "is_relic": false,
+  "checksum": "ee5cf6bdd54303ff"
+}

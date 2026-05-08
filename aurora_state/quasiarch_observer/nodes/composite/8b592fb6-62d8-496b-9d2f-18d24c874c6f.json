@@ -1,0 +1,77 @@
+{
+  "node_id": "8b592fb6-62d8-496b-9d2f-18d24c874c6f",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.articulation",
+    "issue": "unbound_surface_fragment",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "bind_fragment_to_surface_relation",
+    "intended_effect": "bind stranded words to nearby meaning before speech",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "sporadic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.3,
+    "target__recurrence_pattern": 0.27,
+    "logic_tier__recurrence_pattern": 0.255,
+    "intervention__recurrence_pattern": 0.24,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "224a8f30-5f5a-4690-93dc-2099f29515f9",
+    "925a992a-da42-44f9-a8a2-1b0eaf84bbc1",
+    "5bf59ea8-f299-4441-83cd-1e171affaf5c"
+  ],
+  "parent_ids": [
+    "224a8f30-5f5a-4690-93dc-2099f29515f9",
+    "925a992a-da42-44f9-a8a2-1b0eaf84bbc1",
+    "5bf59ea8-f299-4441-83cd-1e171affaf5c"
+  ],
+  "child_ids": [],
+  "tags": [
+    "runtime",
+    "phase:runtime_dialogue",
+    "articulation",
+    "binding",
+    "dialogue",
+    "composite",
+    "clarification",
+    "reason:deecho_specificity_rebuild",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::7efbd1a4_d070_417a_b4c3_b5ff6bac6093",
+    "ghost_relic_match": 0.875,
+    "family_key": "issue_family::unbound_surface_fragment",
+    "issue_category": "unbound_surface_fragment",
+    "stage": "COMPOSITE",
+    "version": 4,
+    "signature": "bb3f6af6d47d99faea31",
+    "is_active_version": false,
+    "supersedes": "4b2461d7-04d4-4713-a238-5ef91d446e31",
+    "superseded_by": "c6590203-ef32-4884-946d-3911e498c12c"
+  },
+  "created_at": "2026-05-03T07:43:35.685316+00:00",
+  "persisted_at": "2026-05-03T19:32:57.080286+00:00",
+  "is_relic": false,
+  "checksum": "fd2a72dcc083a667"
+}

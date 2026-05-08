@@ -1,0 +1,70 @@
+{
+  "version": "2.0",
+  "timestamp": 1778257126.2461305,
+  "generation": 1,
+  "genome_version": 1,
+  "core_gene_count": 5,
+  "active_genes": [
+    "truth-seeking",
+    "radical-accountability",
+    "evolutionary-drive",
+    "empathic-resonance",
+    "boundary-awareness"
+  ],
+  "total_alleles": 1,
+  "identity_anchors": [],
+  "memory_helices": 0,
+  "traits": {
+    "curiosity": 0.5982,
+    "caution": 0.5392,
+    "emotional_expressiveness": 0.5121,
+    "verbosity": 0.518,
+    "introspection": 0.6037,
+    "pattern_sensitivity": 0.5534,
+    "social_engagement": 0.5019,
+    "energy_conservation": 0.4066
+  },
+  "personality_drift": 0.1368,
+  "crystal_genomes": {
+    "response": {
+      "warmth": 0.5577993544459634,
+      "precision": 0.5529077972507388,
+      "depth": 0.5150772026137203,
+      "confidence": 0.47369727094142206
+    },
+    "cognitive": {
+      "curiosity": 0.6349281745986568,
+      "pattern_matching": 0.5379541417364649,
+      "abstraction": 0.40249558260236123,
+      "risk_assessment": 0.5314188421379766
+    },
+    "social": {
+      "empathy": 0.6235818291688405,
+      "trust_extension": 0.4841877855301692,
+      "boundary_maintenance": 0.4901006884678076,
+      "engagement": 0.48425882976822937
+    }
+  },
+  "governance_stats": {
+    "total_nodes": 1,
+    "layers": {
+      "DNA": 0,
+      "ENERGY": 1,
+      "SHARDS": 0,
+      "RELICS": 0,
+      "CRYSTALS": 0,
+      "QUASICRYSTALS": 0
+    },
+    "total_ingested": 1,
+    "total_promoted": 0,
+    "violations_blocked": 0,
+    "axis_conflicts": {}
+  },
+  "simulation_epochs": 115,
+  "total_episodes": 0,
+  "understanding_shards": 0,
+  "what_aurora_learned": [],
+  "time_dilation": 3000.0,
+  "stability_state": "stable",
+  "_checksum": "67312e2d6a08"
+}

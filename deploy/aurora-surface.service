@@ -1,0 +1,34 @@
+[Unit]
+Description=Aurora Strata Surface Daemon
+After=network-online.target sound.target aurora-subsurface.service
+Wants=network-online.target aurora-subsurface.service
+ConditionPathExists=__AURORA_ROOT__/aurora_surface_daemon.py
+
+[Service]
+Type=simple
+User=__AURORA_USER__
+Group=__AURORA_USER__
+SupplementaryGroups=input
+WorkingDirectory=__AURORA_ROOT__
+Environment=HOME=__AURORA_HOME__
+Environment=AURORA_SKIP_DEP_INSTALL=1
+Environment=AURORA_DAEMON_VOICE_MODE=alt_toggle
+Environment=AURORA_DAEMON_TOGGLE_KEY=alt
+Environment=CLAUDE_TTS_VOICE=en-GB-SoniaNeural
+Environment=AURORA_KEYBOARD_BACKEND=evdev
+Environment=AURORA_ALLOW_X_CLIENTS=0
+Environment=AURORA_ENABLE_ROOM_OPERATOR=0
+Environment=AURORA_ENABLE_QUIET_WINDOW=0
+Environment=AURORA_TTS_ROUTE=simple_first
+Environment=AURORA_SKIP_HARDWARE_IMPORTS=0
+Environment=PYTHONUNBUFFERED=1
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/__AURORA_UID__/bus
+Environment=XDG_RUNTIME_DIR=/run/user/__AURORA_UID__
+ExecStart=__AURORA_ROOT__/scripts/run_surface_daemon.sh
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

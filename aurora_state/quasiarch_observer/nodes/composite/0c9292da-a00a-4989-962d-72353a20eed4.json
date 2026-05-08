@@ -1,0 +1,77 @@
+{
+  "node_id": "0c9292da-a00a-4989-962d-72353a20eed4",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.gateway.simulation.run_epoch",
+    "issue": "grounding_lookup_instability",
+    "logic_tier": "evolutionary_pipeline",
+    "intervention": "clarify_grounding_loop",
+    "intended_effect": "tighten grounding before committing to an answer",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "sporadic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.3,
+    "target__recurrence_pattern": 0.27,
+    "logic_tier__recurrence_pattern": 0.255,
+    "intervention__recurrence_pattern": 0.24,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "482d633b-a6a0-49d2-907a-84c0d668b137",
+    "9f017f6a-bb68-420b-9d82-83f3325cb60f",
+    "cecd3767-498d-45e6-8937-b9cdd1ffb349"
+  ],
+  "parent_ids": [
+    "482d633b-a6a0-49d2-907a-84c0d668b137",
+    "9f017f6a-bb68-420b-9d82-83f3325cb60f",
+    "cecd3767-498d-45e6-8937-b9cdd1ffb349"
+  ],
+  "child_ids": [],
+  "tags": [
+    "dim:semantic_precision",
+    "train",
+    "aurora",
+    "dim:emotional_calibration",
+    "dim:multi_turn_stability",
+    "corpus_runner_burst",
+    "composite",
+    "dim:context_carryover",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::8677617a_1486_4946_bc09_84ee3148ee2c",
+    "ghost_relic_match": 0.875,
+    "family_key": "issue_family::grounding_lookup_instability",
+    "issue_category": "grounding_lookup_instability",
+    "stage": "COMPOSITE",
+    "version": 4,
+    "signature": "68755a76cca57c155ca9",
+    "is_active_version": false,
+    "supersedes": "8ce439d0-d104-49ca-a81d-cb0a15b6238c",
+    "superseded_by": "0b9270b4-bda7-4aaf-be7c-95b89bb27626"
+  },
+  "created_at": "2026-03-25T02:51:22.598864+00:00",
+  "persisted_at": "2026-03-25T03:02:54.994664+00:00",
+  "is_relic": false,
+  "checksum": "df24ccafa6edacb2"
+}

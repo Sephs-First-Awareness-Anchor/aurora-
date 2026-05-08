@@ -1,0 +1,28 @@
+{
+  "original": "something whole want about the curiosity. There is something gentle here.",
+  "candidate": "",
+  "selected": "something whole want about the curiosity. There is something gentle here.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.86,
+  "candidate_score": 0.0,
+  "original_pressure": 0.398,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.602,
+  "safe": false,
+  "metadata": {
+    "prompt_excerpt": "do you know who that is",
+    "input_interpretation": {
+      "raw_prompt": "do you know who that is",
+      "intent_hint": "question",
+      "topic_terms": [
+        "know"
+      ],
+      "entities": []
+    },
+    "tone": "gentle",
+    "source": "unavailable",
+    "model": "Models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+    "timestamp": 1778254159.8190207
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "generation": 0,
+  "total_visual_processed": 0,
+  "total_audio_processed": 0,
+  "visual_templates": {
+    "face_detected": {
+      "template_id": "vt_96285925003a",
+      "modality": "visual",
+      "name": "face_detected",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4563994
+    },
+    "object_detected": {
+      "template_id": "vt_c9c16105ef42",
+      "modality": "visual",
+      "name": "object_detected",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.456407
+    },
+    "text_detected": {
+      "template_id": "vt_e7ae3f4d2061",
+      "modality": "visual",
+      "name": "text_detected",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4564116
+    },
+    "motion_detected": {
+      "template_id": "vt_ac60da864eb2",
+      "modality": "visual",
+      "name": "motion_detected",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4564154
+    },
+    "color_blob": {
+      "template_id": "vt_670911179c4f",
+      "modality": "visual",
+      "name": "color_blob",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4564192
+    },
+    "edge_pattern": {
+      "template_id": "vt_820ed2c7b382",
+      "modality": "visual",
+      "name": "edge_pattern",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4564228
+    }
+  },
+  "audio_templates": {
+    "human_voice": {
+      "template_id": "at_26d7149366e1",
+      "modality": "audio",
+      "name": "human_voice",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4564278
+    },
+    "music_pattern": {
+      "template_id": "at_b86faf72d4f5",
+      "modality": "audio",
+      "name": "music_pattern",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4565153
+    },
+    "ambient_noise": {
+      "template_id": "at_d34e63436754",
+      "modality": "audio",
+      "name": "ambient_noise",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4565213
+    },
+    "alarm_tone": {
+      "template_id": "at_15ff41d0c257",
+      "modality": "audio",
+      "name": "alarm_tone",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4565256
+    },
+    "impulse_noise": {
+      "template_id": "at_11e4ece917d5",
+      "modality": "audio",
+      "name": "impulse_noise",
+      "feature_signature": {},
+      "acoustic_centroid": [],
+      "visual_centroid": [],
+      "confidence": 1.0,
+      "stability": 1.0,
+      "usage_count": 0,
+      "generation_created": 0,
+      "last_matched": 1771362002.4565294
+    }
+  },
+  "visual_concepts": {
+    "modality": "visual",
+    "concepts": {},
+    "grounding_log": []
+  },
+  "audio_concepts": {
+    "modality": "audio",
+    "concepts": {},
+    "grounding_log": []
+  },
+  "visual_crystal": {
+    "focus": 0.5,
+    "motion_sensitivity": 0.5,
+    "recognition_threshold": 0.5,
+    "detail_orientation": 0.5
+  },
+  "audio_crystal": {
+    "sensitivity": 0.5,
+    "voice_isolation": 0.6,
+    "emotion_detection": 0.5
+  }
+}

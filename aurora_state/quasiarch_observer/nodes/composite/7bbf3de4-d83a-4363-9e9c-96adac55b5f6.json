@@ -1,0 +1,76 @@
+{
+  "node_id": "7bbf3de4-d83a-4363-9e9c-96adac55b5f6",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.gateway.simulation.run_epoch",
+    "issue": "context_carryover_instability",
+    "logic_tier": "evolutionary_pipeline",
+    "intervention": "context_thread_reinforcement",
+    "intended_effect": "carry context, referents, and claims across turns",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "sporadic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.3,
+    "target__recurrence_pattern": 0.27,
+    "logic_tier__recurrence_pattern": 0.255,
+    "intervention__recurrence_pattern": 0.24,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "9d2d86cc-1630-45b6-93be-2a06f8af946a",
+    "c8abf81d-8320-4ee2-be89-b3f0ec5d26e3",
+    "5b39b0fd-0f1b-4bee-a419-4f94aefc489f"
+  ],
+  "parent_ids": [
+    "9d2d86cc-1630-45b6-93be-2a06f8af946a",
+    "c8abf81d-8320-4ee2-be89-b3f0ec5d26e3",
+    "5b39b0fd-0f1b-4bee-a419-4f94aefc489f"
+  ],
+  "child_ids": [],
+  "tags": [
+    "aurora",
+    "train",
+    "dim:multi_turn_stability",
+    "corpus_runner_burst",
+    "dim:semantic_precision",
+    "dim:context_carryover",
+    "composite",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::ceac0b3c_c708_44dd_87b8_1f437223cd2a",
+    "ghost_relic_match": 1.0,
+    "family_key": "issue_family::context_carryover_instability",
+    "issue_category": "context_carryover_instability",
+    "stage": "COMPOSITE",
+    "version": 68,
+    "signature": "a960c9b417f8cf077ce9",
+    "is_active_version": false,
+    "supersedes": "23a034dc-228c-4005-bd82-7099d5d626e5",
+    "superseded_by": "6ea0507a-e53e-4468-a8b6-f5ee55a83cc4"
+  },
+  "created_at": "2026-03-31T14:59:23.743032+00:00",
+  "persisted_at": "2026-03-31T15:04:40.440245+00:00",
+  "is_relic": false,
+  "checksum": "1584528e6af44cc3"
+}

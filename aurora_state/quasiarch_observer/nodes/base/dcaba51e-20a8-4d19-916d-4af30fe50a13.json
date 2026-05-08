@@ -1,0 +1,99 @@
+{
+  "node_id": "dcaba51e-20a8-4d19-916d-4af30fe50a13",
+  "order": "BASE",
+  "payload": {
+    "target": "aurora.dialogue.perspective",
+    "issue": "conversational_grounding_gap",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "core_perspective_synthesis",
+    "intended_effect": "engage from internal state rather than declining",
+    "observed_effect": "resolved_partially"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "dcaba51e-20a8-4d19-916d-4af30fe50a13"
+  ],
+  "parent_ids": [],
+  "child_ids": [],
+  "tags": [
+    "dialogue",
+    "perspective",
+    "runtime",
+    "phase:runtime_dialogue"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "family_key": "issue_family::conversational_grounding_gap",
+    "issue_category": "conversational_grounding_gap",
+    "stage": "BASE",
+    "event_signature": "b26526066b24879d5c0e",
+    "is_active_version": true,
+    "event_context": {
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2857,
+          "T": 0.1429,
+          "N": 0.1429,
+          "B": 0.2857,
+          "A": 0.1429
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "B"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 0.0,
+          "T": 0.0,
+          "N": 0.0,
+          "B": 0.0,
+          "A": 0.0
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.perspective",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.0691,
+        "io_pressure": "low",
+        "io_pressure_score": 0.004,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.2,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 6.0,
+          "study_cycles_used": 0.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0167,
+          "coherence_deficit": 0.0
+        }
+      }
+    }
+  },
+  "created_at": "2026-03-25T19:05:58.385448+00:00",
+  "persisted_at": "2026-03-25T19:05:58.385681+00:00",
+  "is_relic": false,
+  "checksum": "b098ec031a23b5e6"
+}

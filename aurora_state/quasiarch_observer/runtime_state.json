@@ -1,0 +1,3079 @@
+{
+  "mode": "advisory",
+  "gate_confidence": 0.82,
+  "advisory_confidence": 0.62,
+  "issue_counts": {
+    "meaning_tension": 174,
+    "articulation_meaning_drift": 13,
+    "grounding_lookup_instability": 41,
+    "coherence_maintenance": 1040,
+    "context_carryover_instability": 808,
+    "open_question_no_facts": 3,
+    "unspecific_echo_response": 214,
+    "understanding_contract_self_audit": 24,
+    "conversational_grounding_gap": 127,
+    "developmental_pressure_gap": 12,
+    "factual_grounding_gap": 5,
+    "meaning_complexity": 7,
+    "question_answer_misalignment": 31,
+    "unbound_surface_fragment": 65,
+    "knowledge_coverage_gap": 28,
+    "meaning_force": 4
+  },
+  "consultation_counts": {},
+  "consultation_debt": 0.0,
+  "issue_consultation_debt": {
+    "meaning_tension": 0.0,
+    "articulation_meaning_drift": 0.0,
+    "grounding_lookup_instability": 0.0,
+    "coherence_maintenance": 0.0,
+    "context_carryover_instability": 0.0,
+    "open_question_no_facts": 0.0,
+    "unspecific_echo_response": 0.0,
+    "understanding_contract_self_audit": 0.0,
+    "conversational_grounding_gap": 0.0,
+    "developmental_pressure_gap": 0.0,
+    "factual_grounding_gap": 0.0,
+    "meaning_complexity": 0.0,
+    "question_answer_misalignment": 0.0,
+    "unbound_surface_fragment": 0.0,
+    "knowledge_coverage_gap": 0.0,
+    "meaning_force": 0.0
+  },
+  "hypothesis_credit": 0.0,
+  "possibility_pressure": 0.0,
+  "issue_possibility_pressure": {},
+  "recent_events": [
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777935903.9059443,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777935903.9106588,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777935945.835582,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777935945.8378463,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777936468.4175382,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777936468.4191198,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777937449.7959216,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777937449.7985132,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777937971.0689936,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777937971.0703049,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777938050.0089788,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777938050.0117,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777938086.8407595,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777938086.842615,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777939086.5050635,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777939086.5063636,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777939124.8957784,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777939124.8980322,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777939173.14217,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777939173.1483681,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777939210.3863373,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777939210.3882973,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777940190.8822854,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777940190.884521,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777940231.6275811,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777940231.6317906,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777940268.497756,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777940268.5028298,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777940304.9939735,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777940304.9962401,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777941287.9612405,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777941287.9630284,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777941338.1060672,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777941338.108626,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777941375.5736592,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777941375.5755398,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777941412.3772466,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777941412.378541,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777942390.6787274,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777942390.6805787,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777942429.1589103,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777942429.1654391,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777942467.6453762,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777942467.6469276,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777942505.2599983,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777942505.2655377,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777943478.4842014,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777943478.4855509,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777943516.5699248,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777943516.5732498,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777944038.2428644,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777944038.2442124,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777944076.1422698,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777944076.1450975,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777945080.2125096,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777945080.2158499,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777945119.2668629,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777945119.269554,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "timestamp": 1777948159.0721955,
+      "target": "aurora.gateway.simulation.run_epoch",
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "code_call": null,
+      "count": 803,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1613,
+          "T": 0.3548,
+          "N": 0.1613,
+          "B": 0.1613,
+          "A": 0.1613
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.068,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.2,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 5.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1777948674.5786555,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1777948674.5820286,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778071949.3761728,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778071949.3801692,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "timestamp": 1778076256.7859178,
+      "target": "aurora.gateway.simulation.run_epoch",
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "code_call": null,
+      "count": 804,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1613,
+          "T": 0.3548,
+          "N": 0.1613,
+          "B": 0.1613,
+          "A": 0.1613
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.068,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.2,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 5.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778076757.277622,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778076757.2794325,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "timestamp": 1778080671.8159173,
+      "target": "aurora.gateway.simulation.run_epoch",
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "code_call": null,
+      "count": 805,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1613,
+          "T": 0.3548,
+          "N": 0.1613,
+          "B": 0.1613,
+          "A": 0.1613
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.068,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.2,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 5.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778081186.0855827,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778081186.088035,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778081762.4449534,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778081762.4462912,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778081810.3022351,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778081810.3064935,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778082904.0565114,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778082904.0578365,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778082944.6809537,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778082944.6838117,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778082983.9803486,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778082983.9852254,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778083578.1191962,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778083578.1208355,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778084677.713952,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778084677.7152925,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778084722.0787342,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778084722.0806382,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778084760.6786435,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778084760.681201,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778084798.6346166,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778084798.63645,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "timestamp": 1778089244.715358,
+      "target": "aurora.gateway.simulation.run_epoch",
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "code_call": null,
+      "count": 806,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1613,
+          "T": 0.3548,
+          "N": 0.1613,
+          "B": 0.1613,
+          "A": 0.1613
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.068,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.2,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 5.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778089706.4403765,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778089706.4438465,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "timestamp": 1778093322.7353797,
+      "target": "aurora.gateway.simulation.run_epoch",
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "code_call": null,
+      "count": 807,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1613,
+          "T": 0.3548,
+          "N": 0.1613,
+          "B": 0.1613,
+          "A": 0.1613
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.068,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.2,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 5.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "target": "sedimemory.dominant_influence",
+      "data": {
+        "SED:A>OPERATOR": 16,
+        "SED:A>POLARITY": 7,
+        "SED:A>MAGNITUDE": 1
+      },
+      "source": "OBSERVER",
+      "ts": 1778093801.1014066,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6067 (run)"
+    },
+    {
+      "target": "sedimemory.channel_efficiency",
+      "data": {
+        "active_channels": 24,
+        "pending_observations": 6,
+        "total_promoted": 14,
+        "total_dissolved": 0,
+        "total_traversals": 0,
+        "channels_by_axis": {
+          "A": 24
+        },
+        "dominant_slots_active": 3,
+        "promotion_threshold": 5
+      },
+      "source": "OBSERVER",
+      "ts": 1778093801.1049309,
+      "provenance": "OBSERVER",
+      "code_call": "aurora_daemon.py:6073 (run)"
+    },
+    {
+      "timestamp": 1778098590.9795876,
+      "target": "aurora.gateway.simulation.run_epoch",
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "code_call": null,
+      "count": 808,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1613,
+          "T": 0.3548,
+          "N": 0.1613,
+          "B": 0.1613,
+          "A": 0.1613
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.068,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.2,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 5.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    }
+  ],
+  "consultation_history": [],
+  "gate_history": [
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "grounding_lookup_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "grounding_lookup_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "grounding_lookup_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "grounding_lookup_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "grounding_lookup_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "corpus_runner_burst",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    }
+  ],
+  "saved_at": 1778098590.9829416
+}

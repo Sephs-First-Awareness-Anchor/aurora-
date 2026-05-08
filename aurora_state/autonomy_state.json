@@ -1,0 +1,129 @@
+{
+  "level": "EXPLORER",
+  "quotas": {
+    "date": "2026-05-05",
+    "inquiries_used": 0,
+    "study_cycles_used": 0,
+    "observations_used": 0,
+    "speakups_count": 2,
+    "files_read": 0,
+    "dreams_used": 2,
+    "_aurora_evolved_reflection": {
+      "available": false,
+      "reason": "evolved_surface_method_renamed: reflect_aurora_governance_persistence_gateway_dailyquotas_to_dict",
+      "op_id": "reflect_aurora_governance_persistence_gateway_dailyquotas_to_dict",
+      "kind": "reflection"
+    },
+    "_aurora_rewrite_profile": "governance_gateway",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 0,
+      "alignment_gap": 0.747333,
+      "alignment_target_score": 1.29475,
+      "best_coupling_signature": "X^2*T^2*B^1",
+      "constraints": [
+        "existence",
+        "temporal"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 2,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 5,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> Dict[str, Any]",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 1,
+      "effect_modes": [
+        "state_schema_change",
+        "temporal_orchestration_change",
+        "behavioral_execution_surface",
+        "gateway_surface",
+        "core_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed admissible state or persistence shape",
+        "changed ordering, tick flow, or replay behavior",
+        "introduced executable behavior surface",
+        "extended cross-layer routing or gateway effects"
+      ],
+      "genealogy_pressure": 0.409012,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 0,
+      "module": "aurora_governance_persistence_gateway",
+      "op_id": "aurora_governance_persistence_gateway.DailyQuotas.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 1.450604,
+      "representation_score": 0.40614,
+      "rewrite_bias": "governance_routing",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "governance_gateway",
+      "signature": "X^2*T^2*B^1",
+      "surface_score": 0.547417,
+      "sustainability_score": 0.449345,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.747333,
+    "governance_evolution_context": {
+      "coupling_signature": "X^2*T^2*B^1",
+      "genealogy_pressure": 0.409012,
+      "rewrite_bias": "governance_routing"
+    },
+    "governance_routing": {
+      "sustainability_score": 0.449345,
+      "representation_score": 0.40614,
+      "origin_activity": 0
+    },
+    "persistence_burden": {
+      "persistence_tax_factor": 1.450604,
+      "inheritance_breach_count": 1
+    },
+    "governance_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "acceptance_rate": 0.0,
+      "timing_credit": 0.0
+    }
+  },
+  "study_topics": [],
+  "pending_thoughts": [],
+  "curiosity_queue": [],
+  "last_dream_time": 1778010769.7156022
+}

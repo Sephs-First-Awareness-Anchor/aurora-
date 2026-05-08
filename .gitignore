@@ -1,0 +1,61 @@
+# Secrets
+*api_key.txt
+.env
+
+# Backups and duplicates
+*(1)*
+*-1.py
+*v02.py
+*v03.py
+*.bak*
+*.qae_backup
+*.tmp
+backups/
+aurora_state_backup/
+aurora_state_backup2/
+aurora_state_goal/
+aurora_state (1)/
+aurora_internal (1)/
+aurora--main/
+aurora_manifold_directory/
+aurora_logs/
+aurora_output/
+aurora_runtime_output/
+chamber_output/
+chat_dump/
+runs/
+_retired_cbu_stack/
+CrystalZip_Archives/
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Documents (non-Markdown)
+*.pdf
+*.docx
+*.jpg
+*.png
+
+# Logs
+*.log
+*.log.*
+
+# Large weights/models/data
+Models/
+*.pt
+train.txt
+
+# Python junk
+__pycache__/
+.venv/
+*.pyc
+
+# IDE/Tool junk
+.agents/
+.claude/
+.codex/
+.vscode/
+.idea/

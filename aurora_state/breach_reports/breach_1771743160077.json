@@ -1,0 +1,14 @@
+{
+  "type": "monotonic_breach",
+  "phase": "after_save",
+  "target": "aurora_state/aurora_state.json",
+  "violations": [
+    {
+      "field": "total_episodes",
+      "label": "total_episodes",
+      "previous": 1,
+      "current": 0
+    }
+  ],
+  "timestamp": 1771743160.0779762
+}

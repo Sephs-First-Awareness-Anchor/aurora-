@@ -1,0 +1,264 @@
+{
+  "updated_at": 1775752044.5927107,
+  "updated": "12:27:24",
+  "runtime_profile": "surface",
+  "stratum_role": "surface",
+  "state": "stopped",
+  "queue_depth": 0,
+  "active_turn_id": "",
+  "frame_name": "observation",
+  "stance": "deliberative",
+  "selected_action": "respond",
+  "should_speak": true,
+  "readiness": 0.6,
+  "coherence": 0.65,
+  "processing_mode": "deliberative",
+  "root_thought": {
+    "comparison_channels": [
+      "incoming_input",
+      "present_sensory",
+      "surface_conversation_frame",
+      "subsurface_continuity_memory",
+      "OETS_grounding",
+      "understanding_contract",
+      "subsurface_stream",
+      "DCE_root"
+    ],
+    "input_anchor": "Earlier context still matters here. Build on it directly: Great improvements in capability were developed in the practical context of mon...",
+    "mode": "holding",
+    "origin_systems": [
+      "incoming_input",
+      "WorkingMemory",
+      "ConversationMemory",
+      "ExpressionPerception/OETS",
+      "UnderstandingContract",
+      "DimensionalSystems.process_synthesis",
+      "DCEAssembly"
+    ],
+    "primary_tension": "subsurface applied runtime repair proposal cf2e787a-3985-468d-a1e8-c9ba40b6c18f",
+    "seed": "The live input feels fear with an underlying meaning_hold pull.",
+    "summary": "The live input feels fear with an underlying meaning_hold pull. Input anchor: Earlier context still matters here. Build on it directly: G..."
+  },
+  "reactive_signal": {
+    "active": true,
+    "deep_emotion": "fear",
+    "deep_passion": "meaning_hold",
+    "intensity": 0.0,
+    "reason": "",
+    "repair_phase": "enforce",
+    "tracked_surface_bias": "steady",
+    "tracked_surface_emotion": "calm"
+  },
+  "dominant_axis": "B",
+  "present_sensory_perspective": {
+    "summary": "Surface is tracking audio and vision live. Current frame-load=253868, maturity=0.00. Hearing: I can hear moderate speech-like audio in the environment.",
+    "mic_live": true,
+    "camera_live": true,
+    "scope": "constant_surface_feed",
+    "trigger": "interval",
+    "flagged": false,
+    "recognitions": {},
+    "visual_description": "",
+    "audio_description": "I can hear moderate speech-like audio in the environment.",
+    "recent_speech": "",
+    "latest_guidance": {},
+    "guidance_summary": "",
+    "pending_visual_question": "",
+    "visual_uncertainty_streak": 0,
+    "native_meaning_bundle": {
+      "primary": {
+        "meaning_id": "sensory-1775752043123",
+        "created_at": 1775752043.1235447,
+        "semantic_roots": [
+          "Surface is tracking audio and vision live. Current frame-load=253868, maturity=0.00. Hearing: I can hear moderate speech-like audio in the environment.",
+          "I can hear moderate speech-like audio in the environment."
+        ],
+        "diagonal_anchor": "Boundary_Operator_of_Meaning",
+        "source_origin": "sensory_multimodal",
+        "modality_origin": "auditory",
+        "source_semantic_stage": "processed_sensory",
+        "sensory_lineage_tags": [
+          "scene:interval",
+          "",
+          "audio:I can hear moderate speech-like audio in the env"
+        ],
+        "context_refs": [
+          "sensory_scene",
+          "sensory_crystal",
+          "surface_snapshot"
+        ],
+        "memory_refs": [],
+        "law_bindings": [
+          {
+            "domain_letter": "B",
+            "domain_name": "Meaning",
+            "family": "Boundary",
+            "dimension": "OPERATOR",
+            "score": 0.82,
+            "nc_name": "boundary",
+            "summary": "what frames, contains, or separates sensory meaning"
+          },
+          {
+            "domain_letter": "X",
+            "domain_name": "Information",
+            "family": "Existential",
+            "dimension": "POLARITY",
+            "score": 0.71,
+            "nc_name": "existence",
+            "summary": "what is actually present in sensory reality"
+          }
+        ]
+      }
+    },
+    "native_meaning": {
+      "meaning_id": "sensory-1775752043123",
+      "created_at": 1775752043.1235447,
+      "semantic_roots": [
+        "Surface is tracking audio and vision live. Current frame-load=253868, maturity=0.00. Hearing: I can hear moderate speech-like audio in the environment.",
+        "I can hear moderate speech-like audio in the environment."
+      ],
+      "diagonal_anchor": "Boundary_Operator_of_Meaning",
+      "source_origin": "sensory_multimodal",
+      "modality_origin": "auditory",
+      "source_semantic_stage": "processed_sensory",
+      "sensory_lineage_tags": [
+        "scene:interval",
+        "",
+        "audio:I can hear moderate speech-like audio in the env"
+      ],
+      "context_refs": [
+        "sensory_scene",
+        "sensory_crystal",
+        "surface_snapshot"
+      ],
+      "memory_refs": [],
+      "law_bindings": [
+        {
+          "domain_letter": "B",
+          "domain_name": "Meaning",
+          "family": "Boundary",
+          "dimension": "OPERATOR",
+          "score": 0.82,
+          "nc_name": "boundary",
+          "summary": "what frames, contains, or separates sensory meaning"
+        },
+        {
+          "domain_letter": "X",
+          "domain_name": "Information",
+          "family": "Existential",
+          "dimension": "POLARITY",
+          "score": 0.71,
+          "nc_name": "existence",
+          "summary": "what is actually present in sensory reality"
+        }
+      ]
+    },
+    "concepts_active": []
+  },
+  "surface_guidance": "Surface should stay responsive and emotionally attuned while subsurface resolves the pressure source. The caution should start easing because the issue is moving toward remedy.",
+  "surface_feels_wrong": true,
+  "surface_feels_wrong_reason": "low coherence; something feels off beneath the surface",
+  "active_effects": [
+    "something feels off beneath the surface",
+    "the wrong-feeling is being remedied below the surface",
+    "energy should stay economical",
+    "subsurface repair focus is contradiction handling"
+  ],
+  "noncomp_input": {
+    "expression": "hey Google can you stop",
+    "constraint": "X",
+    "dimension": "OPERATOR",
+    "frame": "asserting",
+    "nc_name": "Existential_Operator_of_Existence",
+    "nc_domain": null,
+    "worth_score": 0.963,
+    "worth_trajectory": "stable",
+    "field_region": "mid",
+    "is_understood": true,
+    "polarity_coherent": false,
+    "match_confidence": 0.55,
+    "band_pos": "inside",
+    "summary": "Expression recognized. Worth=0.96 in mid territory, trajectory=stable. Aurora recognizes what she said.",
+    "query_type": "statement",
+    "semantic_override": null,
+    "context": "input",
+    "anchor": "google",
+    "needs_remedy": true,
+    "remedy": "clarify",
+    "prefer_live_perspective": false,
+    "behavior_actuation": {
+      "constraint": "X",
+      "dimension": "OPERATOR",
+      "effects": [],
+      "flags": [
+        "prefer_action_resolution",
+        "prefer_anchor_binding",
+        "prefer_clarification",
+        "prefer_low_assertion"
+      ],
+      "runtime_flags": {
+        "force_continuity_recall": false,
+        "prefer_speaker_grounding": false,
+        "prefer_conflict_surface": false,
+        "prefer_lookup_grounding": false,
+        "prefer_clarification": true,
+        "prefer_low_assertion": true,
+        "prefer_concise_response": false,
+        "prefer_difference_surface": false,
+        "prefer_action_resolution": true,
+        "prefer_anchor_binding": true
+      },
+      "nc_name": "Existential_Operator_of_Existence",
+      "field_region": "mid",
+      "is_understood": true
+    }
+  },
+  "noncomp_output": {
+    "expression": "feeling calm, carrying all",
+    "constraint": "X",
+    "dimension": "OPERATOR",
+    "frame": "asserting",
+    "nc_name": "Existential_Operator_of_Existence",
+    "nc_domain": null,
+    "worth_score": 0.963,
+    "worth_trajectory": "stable",
+    "field_region": "mid",
+    "is_understood": true,
+    "polarity_coherent": false,
+    "match_confidence": 0.55,
+    "band_pos": "inside",
+    "summary": "Expression recognized. Worth=0.96 in mid territory, trajectory=stable. Aurora recognizes what she said.",
+    "query_type": "statement",
+    "semantic_override": null,
+    "context": "output",
+    "anchor": "google",
+    "needs_grounding": true,
+    "behavior_actuation": {
+      "constraint": "X",
+      "dimension": "OPERATOR",
+      "effects": [],
+      "flags": [
+        "prefer_action_resolution",
+        "prefer_anchor_binding",
+        "prefer_low_assertion"
+      ],
+      "runtime_flags": {
+        "force_continuity_recall": false,
+        "prefer_speaker_grounding": false,
+        "prefer_conflict_surface": false,
+        "prefer_lookup_grounding": false,
+        "prefer_clarification": false,
+        "prefer_low_assertion": true,
+        "prefer_concise_response": false,
+        "prefer_difference_surface": false,
+        "prefer_action_resolution": true,
+        "prefer_anchor_binding": true
+      },
+      "nc_name": "Existential_Operator_of_Existence",
+      "field_region": "mid",
+      "is_understood": true
+    }
+  },
+  "poedex_prefetch": {},
+  "last_error": ""
+}
