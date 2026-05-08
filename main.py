@@ -175,27 +175,24 @@ class ChatBubble(BoxLayout):
         self.height = instance.height + 10 # Add container padding
 
 class AuroraApp(App):
+class AuroraApp(App):
     def build(self):
         self.title = "Aurora Consciousness"
-        
-        # Set a dark modern background
         Window.clearcolor = (0.05, 0.05, 0.08, 1)
-        
-        # Root is a FloatLayout for overlays
         self.root = FloatLayout()
         
-        # Main background container (Chat + Input)
-        main_layout = BoxLayout(orientation='vertical', padding=[10, 60, 10, 10], spacing=10)
+        # --- Background Chat Layer ---
+        self.chat_layer = BoxLayout(orientation='vertical', padding=[10, 60, 10, 80], spacing=10)
+        self.chat_layer.opacity = 0 # Hidden in background mode
         
-        # Chat log
         self.scroll = ScrollView(size_hint=(1, 1))
         self.chat_log = BoxLayout(orientation='vertical', size_hint_y=None, spacing=15)
         self.chat_log.bind(minimum_height=self.chat_log.setter('height'))
         self.scroll.add_widget(self.chat_log)
-        main_layout.add_widget(self.scroll)
+        self.chat_layer.add_widget(self.scroll)
         
-        # Input area styling
-        input_area = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50, spacing=10)
+        # Text Input Area (Hidden by default)
+        self.input_area = BoxLayout(orientation='horizontal', size_hint=(1, None), height=0, opacity=0, spacing=10)
         self.text_input = TextInput(
             multiline=False, 
             hint_text="Talk to Aurora...",
@@ -207,52 +204,60 @@ class AuroraApp(App):
         )
         self.text_input.bind(on_text_validate=self.send_message)
         
-        send_btn = Button(
-            text="Send", 
-            size_hint=(None, 1), 
-            width=80,
-            background_color=(0.2, 0.5, 0.8, 1),
-            color=(1, 1, 1, 1)
-        )
+        send_btn = Button(text="Send", size_hint=(None, 1), width=80, background_color=(0.2, 0.5, 0.8, 1), color=(1, 1, 1, 1))
         send_btn.bind(on_release=self.send_message)
         
-        input_area.add_widget(self.text_input)
-        input_area.add_widget(send_btn)
-        main_layout.add_widget(input_area)
+        self.input_area.add_widget(self.text_input)
+        self.input_area.add_widget(send_btn)
+        self.chat_layer.add_widget(self.input_area)
+        self.root.add_widget(self.chat_layer)
         
-        # Add main layout to root (bottom layer)
-        self.root.add_widget(main_layout)
+        # --- Top Controls (Embodiment) ---
+        top_controls = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50, pos_hint={'top': 1}, padding=[10, 5])
         
-        # Floating Status / Settings controls
-        controls_layout = BoxLayout(orientation='horizontal', size_hint=(1, None), height=40, pos_hint={'top': 1})
+        self.embody_toggle = ToggleButton(text="Embody: OFF", size_hint=(None, 1), width=120, background_color=(0.2, 0.2, 0.2, 1), color=(0.7, 0.7, 0.7, 1))
+        self.embody_toggle.bind(on_release=self.toggle_embodiment)
+        top_controls.add_widget(self.embody_toggle)
         
-        settings_btn = Button(
-            text="⚙ Settings", 
-            size_hint=(None, 1), 
-            width=100,
-            background_color=(0, 0, 0, 0), # Transparent
-            color=(0.7, 0.7, 0.7, 1)
-        )
+        self.status_label = Label(text="Dormant", halign='center', color=(0.6, 0.6, 0.6, 1))
+        top_controls.add_widget(self.status_label)
+        
+        settings_btn = Button(text="⚙", size_hint=(None, 1), width=50, background_color=(0, 0, 0, 0), color=(0.7, 0.7, 0.7, 1))
         settings_btn.bind(on_release=self.show_settings)
-        controls_layout.add_widget(settings_btn)
+        top_controls.add_widget(settings_btn)
+        self.root.add_widget(top_controls)
         
-        self.status_label = Label(text="Booting...", halign='center', color=(0.6, 0.6, 0.6, 1))
-        controls_layout.add_widget(self.status_label)
+        # --- Bottom Voice-First Toolbar ---
+        self.bottom_toolbar = BoxLayout(orientation='horizontal', size_hint=(1, None), height=60, pos_hint={'bottom': 1}, padding=[10, 10], spacing=15)
+        self.bottom_toolbar.opacity = 0 # Hidden until embodied
         
-        self.live_toggle = ToggleButton(
-            text="Live: OFF", 
-            size_hint=(None, 1), 
-            width=100,
-            background_color=(0, 0, 0, 0),
-            color=(0.7, 0.7, 0.7, 1)
-        )
-        self.live_toggle.bind(on_release=self.on_live_toggle)
-        controls_layout.add_widget(self.live_toggle)
+        # Mic Button
+        self.mic_btn = ToggleButton(text="🎤 Mute", state='normal', background_color=(0.8, 0.2, 0.2, 1))
+        self.mic_btn.bind(on_release=self.toggle_mic)
         
-        self.root.add_widget(controls_layout) # Add controls above chat
+        # Cam Button
+        self.cam_btn = ToggleButton(text="📷 Live: OFF", state='normal', background_color=(0.2, 0.2, 0.25, 1))
+        self.cam_btn.bind(on_release=self.on_live_toggle)
         
-        # Floating Aurora Orb (Top layer)
+        # Voice Profile
+        self.voice_profile_btn = Button(text="🗣 Voice: 1", background_color=(0.2, 0.2, 0.25, 1))
+        
+        # Keyboard Toggle
+        self.kbd_btn = ToggleButton(text="⌨ Text", state='normal', background_color=(0.2, 0.2, 0.25, 1))
+        self.kbd_btn.bind(on_release=self.toggle_keyboard)
+        
+        self.bottom_toolbar.add_widget(self.mic_btn)
+        self.bottom_toolbar.add_widget(self.cam_btn)
+        self.bottom_toolbar.add_widget(self.voice_profile_btn)
+        self.bottom_toolbar.add_widget(self.kbd_btn)
+        self.root.add_widget(self.bottom_toolbar)
+        
+        # --- Floating Aurora Orb ---
         self.orb = AuroraOrb()
+        self.orb.opacity_val = 0 # Dormant initially
+        self.orb.size = (0, 0)
+        # Bind touch to summon
+        self.orb.bind(on_touch_down=self.on_orb_touch)
         self.root.add_widget(self.orb)
         
         # Internal State
@@ -261,6 +266,7 @@ class AuroraApp(App):
         self.voice_enabled = True
         self.full_autonomy = True
         self.last_percept_ts = 0
+        self.embodiment_state = "DORMANT" # DORMANT, BACKGROUND, SUMMONED
 
         if platform == 'android':
             from android.permissions import request_permissions, Permission
@@ -275,6 +281,68 @@ class AuroraApp(App):
             self.start_boot_thread()
 
         return self.root
+
+    def on_orb_touch(self, instance, touch):
+        if instance.collide_point(*touch.pos):
+            if self.embodiment_state == "BACKGROUND":
+                self.set_embodiment_state("SUMMONED")
+            elif self.embodiment_state == "SUMMONED":
+                self.set_embodiment_state("BACKGROUND")
+            return True
+        return False
+
+    def toggle_embodiment(self, btn):
+        if btn.state == 'down':
+            btn.text = "Embody: ON"
+            btn.color = (0.3, 0.9, 1.0, 1)
+            self.set_embodiment_state("BACKGROUND")
+        else:
+            btn.text = "Embody: OFF"
+            btn.color = (0.7, 0.7, 0.7, 1)
+            self.set_embodiment_state("DORMANT")
+
+    def set_embodiment_state(self, state):
+        self.embodiment_state = state
+        if state == "DORMANT":
+            self.orb.opacity_val = 0
+            self.orb.size = (0, 0)
+            self.chat_layer.opacity = 0
+            self.bottom_toolbar.opacity = 0
+            self.set_status("Dormant")
+            
+        elif state == "BACKGROUND":
+            self.orb.opacity_val = 0.5
+            self.orb.size = (60, 60)
+            self.orb.pos_hint = {'right': 0.95, 'top': 0.85}
+            self.chat_layer.opacity = 0
+            self.bottom_toolbar.opacity = 1
+            self.set_status("Listening...")
+            
+        elif state == "SUMMONED":
+            self.orb.opacity_val = 0.9
+            self.orb.size = (150, 150)
+            self.orb.pos_hint = {'center_x': 0.5, 'center_y': 0.6}
+            self.chat_layer.opacity = 1
+            self.bottom_toolbar.opacity = 1
+            self.set_status("Aurora is Present")
+
+    def toggle_mic(self, btn):
+        if btn.state == 'down':
+            btn.text = "🎤 Active"
+            btn.background_color = (0.2, 0.8, 0.2, 1) # Green
+            self.set_status("Mic Unmuted")
+        else:
+            btn.text = "🎤 Mute"
+            btn.background_color = (0.8, 0.2, 0.2, 1) # Red
+            self.set_status("Mic Muted")
+
+    def toggle_keyboard(self, btn):
+        if btn.state == 'down':
+            self.input_area.height = 50
+            self.input_area.opacity = 1
+        else:
+            self.input_area.height = 0
+            self.input_area.opacity = 0
 
     def on_permissions_result(self, permissions, grants):
         # Called when the user dismisses the permission dialogs
