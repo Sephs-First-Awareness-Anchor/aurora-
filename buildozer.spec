@@ -15,6 +15,9 @@ source.dir = .
 # (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,atlas,json,md,txt,jsonl
 
+# (list) List of exclusions using pattern matching
+source.exclude_patterns = license,README.md,*.zip,*.cz,*.pdf,aurora_hub.py,aurora_room.py,sentinel_gui.py,scripts/*,aurora_logs/*
+
 # (list) List of inclusions using pattern matching
 source.include_patterns = aurora_state/*,aurora_internal/*,aurora_core_ai/*
 
@@ -38,7 +41,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0,hostpython3,requests,numpy,opencv,plyer,aiohttp,edge-tts
+requirements = python3,kivy==2.3.0,hostpython3,requests,numpy,opencv,beautifulsoup4,plyer,aiohttp,edge-tts
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
