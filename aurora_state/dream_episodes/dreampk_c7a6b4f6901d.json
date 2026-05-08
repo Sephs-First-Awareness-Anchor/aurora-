@@ -1,0 +1,93 @@
+{
+  "episode_id": "dreampk_c7a6b4f6901d",
+  "conversation_ids": [
+    "694b2116-ff18-832a-b83a-a17e8c2a99b6",
+    "693bb706-8be4-8331-b03b-8cba0927a5cf",
+    "693a8f93-a854-832e-972b-1e59606edc6b",
+    "69586668-2370-8326-b757-dd5815fecd84",
+    "6937e257-b084-8331-b764-2810791b90b8",
+    "693ad6a9-80a8-8331-b1a6-b6c8922099ce",
+    "6939d0db-bd44-8328-be2d-f4af46a7903f",
+    "694ab754-b084-8328-9f91-a300e34d6e84",
+    "69387088-16e8-8326-8c66-6068e0d57ca8",
+    "6934cf7d-e8ac-8325-b053-a007ba5e7a66"
+  ],
+  "design_mode": "weakness_targeted",
+  "rubric_profile": {
+    "coherence_maintenance": 0.333572124826831,
+    "context_carryover": 0.14173434975194504,
+    "ambiguity_handling": 0.6799999999999999,
+    "contradiction_handling": 0.7653855608599551,
+    "implied_intent_inference": 0.7334723082215342,
+    "misunderstanding_repair": 0.5575517006643037,
+    "uncertainty_signaling": 0.2390896138336871,
+    "boundary_calibration": 0.23769270461220926,
+    "framing_selection": 0.9222910740773926,
+    "emotional_calibration": 0.4893567251461989,
+    "semantic_precision": 0.5794698464379674,
+    "adaptive_strategy_selection": 0.875,
+    "compression_elaboration_fit": 0.4812998323584032,
+    "perspective_integration": 0.20716408209860854,
+    "multi_turn_stability": 0.5017117469733152
+  },
+  "contextual_modifiers": {
+    "target_dimension_count": 2.0,
+    "target_uncertainty_signaling": 0.2390896138336871,
+    "target_boundary_calibration": 0.23769270461220926
+  },
+  "difficulty_estimate": 0.48368055534250987,
+  "payload_count": 10,
+  "timestamp": 1773056710.445017,
+  "constraint_signature": "XTNBAA",
+  "runtime_regime": {
+    "tier3_regime_signature": "XNBA",
+    "tier3_regime": {
+      "signature": "XNBA",
+      "tier": "tier3",
+      "classification": "Quad derivative",
+      "core_meaning": "active structure without time",
+      "description": "XNBA is a Tier 3 operational regime expressing active structure without time."
+    },
+    "weighted_form": {
+      "signature": "XTNBAA",
+      "weighted": true,
+      "dominant_axis": "A",
+      "dominant_count": 2,
+      "specialization": "agency-dominant system",
+      "tolerance_shift": "heightened",
+      "pressure_sensitivity": "elevated on dominant axis",
+      "failure_mode": "Agency overload"
+    }
+  },
+  "language_projection": {
+    "channels": {
+      "selection": {
+        "signature": "BA",
+        "meaning": "selection",
+        "intensity": 0.3419
+      },
+      "expression_force": {
+        "signature": "NA",
+        "meaning": "expression force",
+        "intensity": 0.3742
+      },
+      "sequence": {
+        "signature": "TBA",
+        "meaning": "sequencing",
+        "intensity": 0.2815
+      },
+      "coherence": {
+        "signature": "XTA",
+        "meaning": "coherence",
+        "intensity": 0.2678
+      },
+      "context": {
+        "signature": "XTN",
+        "meaning": "context",
+        "intensity": 0.2177
+      }
+    },
+    "dominant_channel": "expression_force",
+    "summary": "Language is projected from state through BA selection, NA expression force, TBA sequencing, XTA coherence, and XTN context."
+  }
+}

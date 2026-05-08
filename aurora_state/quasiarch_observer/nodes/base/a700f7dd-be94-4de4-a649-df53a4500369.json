@@ -1,0 +1,101 @@
+{
+  "node_id": "a700f7dd-be94-4de4-a649-df53a4500369",
+  "order": "BASE",
+  "payload": {
+    "target": "aurora.dialogue.articulation",
+    "issue": "unbound_surface_fragment",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "bind_fragment_to_surface_relation",
+    "intended_effect": "bind stranded words to nearby meaning before speech",
+    "observed_effect": "resolved_partially"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "a700f7dd-be94-4de4-a649-df53a4500369"
+  ],
+  "parent_ids": [],
+  "child_ids": [],
+  "tags": [
+    "dialogue",
+    "articulation",
+    "binding",
+    "runtime",
+    "phase:runtime_dialogue"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "family_key": "issue_family::unbound_surface_fragment",
+    "issue_category": "unbound_surface_fragment",
+    "stage": "BASE",
+    "event_signature": "30f7c553023d60e1d2d0",
+    "is_active_version": true,
+    "event_context": {
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.articulation",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.0,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.0,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 0.0,
+          "study_cycles_used": 0.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      }
+    }
+  },
+  "created_at": "2026-05-03T07:34:14.297398+00:00",
+  "persisted_at": "2026-05-03T07:34:14.297563+00:00",
+  "is_relic": false,
+  "checksum": "39b26b8929cf4587"
+}

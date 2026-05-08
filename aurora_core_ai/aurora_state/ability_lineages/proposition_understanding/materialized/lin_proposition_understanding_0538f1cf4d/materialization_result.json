@@ -1,0 +1,178 @@
+{
+  "path_id": "LIN:proposition_understanding:0538f1cf4d",
+  "target_ability": "proposition_understanding",
+  "run_dir": "aurora_state/ability_lineages/proposition_understanding/materialized/lin_proposition_understanding_0538f1cf4d",
+  "final_output_id": "L:2fd80d3d26",
+  "final_output_kind": "LINK",
+  "links_promoted": 10,
+  "relief_events": 177,
+  "ripple_log_path": "aurora_state/ability_lineages/proposition_understanding/materialized/lin_proposition_understanding_0538f1cf4d/system_ripple_log.json",
+  "activation_manifest_path": "aurora_state/ability_lineages/proposition_understanding/selected_activation.json",
+  "materialized_stages": [
+    {
+      "stage_id": "claim_atom",
+      "kind": "seed",
+      "output_kind": "ABILITY",
+      "output_id": "X:LINEAGE_CLAIM_ATOM_78669e94",
+      "generation": 1,
+      "attempts": 0,
+      "parents": []
+    },
+    {
+      "stage_id": "turn_binding",
+      "kind": "seed",
+      "output_kind": "ABILITY",
+      "output_id": "T:LINEAGE_TURN_BINDING_8ab32a33",
+      "generation": 1,
+      "attempts": 0,
+      "parents": []
+    },
+    {
+      "stage_id": "speaker_boundary",
+      "kind": "seed",
+      "output_kind": "ABILITY",
+      "output_id": "B:LINEAGE_SPEAKER_BOUNDARY_6609af00",
+      "generation": 1,
+      "attempts": 0,
+      "parents": []
+    },
+    {
+      "stage_id": "uncertainty_weight",
+      "kind": "seed",
+      "output_kind": "ABILITY",
+      "output_id": "N:LINEAGE_UNCERTAINTY_WEIGHT_a2b219fc",
+      "generation": 1,
+      "attempts": 0,
+      "parents": []
+    },
+    {
+      "stage_id": "repair_choice",
+      "kind": "seed",
+      "output_kind": "ABILITY",
+      "output_id": "A:LINEAGE_REPAIR_CHOICE_0a7df37e",
+      "generation": 1,
+      "attempts": 0,
+      "parents": []
+    },
+    {
+      "stage_id": "claim_continuity",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:219231bac9",
+      "generation": 2,
+      "attempts": 5,
+      "parents": [
+        "claim_atom",
+        "turn_binding"
+      ]
+    },
+    {
+      "stage_id": "owned_claim",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:83fdb8ca0a",
+      "generation": 2,
+      "attempts": 6,
+      "parents": [
+        "claim_atom",
+        "speaker_boundary"
+      ]
+    },
+    {
+      "stage_id": "repairable_branch",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:3a112fa723",
+      "generation": 2,
+      "attempts": 5,
+      "parents": [
+        "speaker_boundary",
+        "repair_choice"
+      ]
+    },
+    {
+      "stage_id": "weighted_claim",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:9075d5ecb6",
+      "generation": 2,
+      "attempts": 5,
+      "parents": [
+        "claim_atom",
+        "uncertainty_weight"
+      ]
+    },
+    {
+      "stage_id": "proposition_lineage",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:a4a0d1362b",
+      "generation": 3,
+      "attempts": 8,
+      "parents": [
+        "claim_continuity",
+        "owned_claim"
+      ]
+    },
+    {
+      "stage_id": "provenance_weighting",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:57533e7e1a",
+      "generation": 3,
+      "attempts": 7,
+      "parents": [
+        "owned_claim",
+        "weighted_claim"
+      ]
+    },
+    {
+      "stage_id": "belief_revision_graph",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:91aa8c05d4",
+      "generation": 4,
+      "attempts": 10,
+      "parents": [
+        "proposition_lineage",
+        "repairable_branch"
+      ]
+    },
+    {
+      "stage_id": "causal_commitment",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:2667026e9e",
+      "generation": 3,
+      "attempts": 8,
+      "parents": [
+        "claim_continuity",
+        "repair_choice"
+      ]
+    },
+    {
+      "stage_id": "causal_proposition_mesh",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:dcd4d78754",
+      "generation": 4,
+      "attempts": 9,
+      "parents": [
+        "proposition_lineage",
+        "causal_commitment"
+      ]
+    },
+    {
+      "stage_id": "proposition_understanding",
+      "kind": "coupling",
+      "output_kind": "LINK",
+      "output_id": "L:2fd80d3d26",
+      "generation": 5,
+      "attempts": 114,
+      "parents": [
+        "causal_proposition_mesh",
+        "provenance_weighting"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,502 @@
+MANIFOLD_FIRST_LAYER_PHASE_B: dict = {
+    "X.P[T]": {
+        "slot_description": "Existence as presence through time — the time aspect of existence's presence.",
+        "runtime_indicators": ["T_polarity modulating X_weight", "X and T interact"],
+        "effect_law": "HIGH: existence presence is amplified by time; LOW: existence presence lacks time grounding; STRAINED: conflict between existence and time",
+    },
+    "X.P[N]": {
+        "slot_description": "Existence as presence through energy — the energy aspect of existence's presence.",
+        "runtime_indicators": ["N_polarity modulating X_weight", "X and N interact"],
+        "effect_law": "HIGH: existence presence is amplified by energy; LOW: existence presence lacks energy grounding; STRAINED: conflict between existence and energy",
+    },
+    "X.P[B]": {
+        "slot_description": "Existence as presence through boundary — the boundary aspect of existence's presence.",
+        "runtime_indicators": ["B_polarity modulating X_weight", "X and B interact"],
+        "effect_law": "HIGH: existence presence is amplified by boundary; LOW: existence presence lacks boundary grounding; STRAINED: conflict between existence and boundary",
+    },
+    "X.P[A]": {
+        "slot_description": "Existence as presence through agency — the agency aspect of existence's presence.",
+        "runtime_indicators": ["A_polarity modulating X_weight", "X and A interact"],
+        "effect_law": "HIGH: existence presence is amplified by agency; LOW: existence presence lacks agency grounding; STRAINED: conflict between existence and agency",
+    },
+    "X.G[T]": {
+        "slot_description": "Existence as formation through time — the time aspect of existence's formation.",
+        "runtime_indicators": ["T_polarity modulating X_weight", "X and T interact"],
+        "effect_law": "HIGH: existence formation is amplified by time; LOW: existence formation lacks time grounding; STRAINED: conflict between existence and time",
+    },
+    "X.G[N]": {
+        "slot_description": "Existence as formation through energy — the energy aspect of existence's formation.",
+        "runtime_indicators": ["N_polarity modulating X_weight", "X and N interact"],
+        "effect_law": "HIGH: existence formation is amplified by energy; LOW: existence formation lacks energy grounding; STRAINED: conflict between existence and energy",
+    },
+    "X.G[B]": {
+        "slot_description": "Existence as formation through boundary — the boundary aspect of existence's formation.",
+        "runtime_indicators": ["B_polarity modulating X_weight", "X and B interact"],
+        "effect_law": "HIGH: existence formation is amplified by boundary; LOW: existence formation lacks boundary grounding; STRAINED: conflict between existence and boundary",
+    },
+    "X.G[A]": {
+        "slot_description": "Existence as formation through agency — the agency aspect of existence's formation.",
+        "runtime_indicators": ["A_polarity modulating X_weight", "X and A interact"],
+        "effect_law": "HIGH: existence formation is amplified by agency; LOW: existence formation lacks agency grounding; STRAINED: conflict between existence and agency",
+    },
+    "X.N[T]": {
+        "slot_description": "Existence as energy through time — the time aspect of existence's energy.",
+        "runtime_indicators": ["T_polarity modulating X_weight", "X and T interact"],
+        "effect_law": "HIGH: existence energy is amplified by time; LOW: existence energy lacks time grounding; STRAINED: conflict between existence and time",
+    },
+    "X.N[N]": {
+        "slot_description": "Existence as energy through energy — the energy aspect of existence's energy.",
+        "runtime_indicators": ["N_polarity modulating X_weight", "X and N interact"],
+        "effect_law": "HIGH: existence energy is amplified by energy; LOW: existence energy lacks energy grounding; STRAINED: conflict between existence and energy",
+    },
+    "X.N[B]": {
+        "slot_description": "Existence as energy through boundary — the boundary aspect of existence's energy.",
+        "runtime_indicators": ["B_polarity modulating X_weight", "X and B interact"],
+        "effect_law": "HIGH: existence energy is amplified by boundary; LOW: existence energy lacks boundary grounding; STRAINED: conflict between existence and boundary",
+    },
+    "X.N[A]": {
+        "slot_description": "Existence as energy through agency — the agency aspect of existence's energy.",
+        "runtime_indicators": ["A_polarity modulating X_weight", "X and A interact"],
+        "effect_law": "HIGH: existence energy is amplified by agency; LOW: existence energy lacks agency grounding; STRAINED: conflict between existence and agency",
+    },
+    "X.F[T]": {
+        "slot_description": "Existence as frame through time — the time aspect of existence's frame.",
+        "runtime_indicators": ["T_polarity modulating X_weight", "X and T interact"],
+        "effect_law": "HIGH: existence frame is amplified by time; LOW: existence frame lacks time grounding; STRAINED: conflict between existence and time",
+    },
+    "X.F[N]": {
+        "slot_description": "Existence as frame through energy — the energy aspect of existence's frame.",
+        "runtime_indicators": ["N_polarity modulating X_weight", "X and N interact"],
+        "effect_law": "HIGH: existence frame is amplified by energy; LOW: existence frame lacks energy grounding; STRAINED: conflict between existence and energy",
+    },
+    "X.F[B]": {
+        "slot_description": "Existence as frame through boundary — the boundary aspect of existence's frame.",
+        "runtime_indicators": ["B_polarity modulating X_weight", "X and B interact"],
+        "effect_law": "HIGH: existence frame is amplified by boundary; LOW: existence frame lacks boundary grounding; STRAINED: conflict between existence and boundary",
+    },
+    "X.F[A]": {
+        "slot_description": "Existence as frame through agency — the agency aspect of existence's frame.",
+        "runtime_indicators": ["A_polarity modulating X_weight", "X and A interact"],
+        "effect_law": "HIGH: existence frame is amplified by agency; LOW: existence frame lacks agency grounding; STRAINED: conflict between existence and agency",
+    },
+    "X.O[T]": {
+        "slot_description": "Existence as operation through time — the time aspect of existence's operation.",
+        "runtime_indicators": ["T_polarity modulating X_weight", "X and T interact"],
+        "effect_law": "HIGH: existence operation is amplified by time; LOW: existence operation lacks time grounding; STRAINED: conflict between existence and time",
+    },
+    "X.O[N]": {
+        "slot_description": "Existence as operation through energy — the energy aspect of existence's operation.",
+        "runtime_indicators": ["N_polarity modulating X_weight", "X and N interact"],
+        "effect_law": "HIGH: existence operation is amplified by energy; LOW: existence operation lacks energy grounding; STRAINED: conflict between existence and energy",
+    },
+    "X.O[B]": {
+        "slot_description": "Existence as operation through boundary — the boundary aspect of existence's operation.",
+        "runtime_indicators": ["B_polarity modulating X_weight", "X and B interact"],
+        "effect_law": "HIGH: existence operation is amplified by boundary; LOW: existence operation lacks boundary grounding; STRAINED: conflict between existence and boundary",
+    },
+    "X.O[A]": {
+        "slot_description": "Existence as operation through agency — the agency aspect of existence's operation.",
+        "runtime_indicators": ["A_polarity modulating X_weight", "X and A interact"],
+        "effect_law": "HIGH: existence operation is amplified by agency; LOW: existence operation lacks agency grounding; STRAINED: conflict between existence and agency",
+    },
+    "T.P[X]": {
+        "slot_description": "Time as presence through existence — the existence aspect of time's presence.",
+        "runtime_indicators": ["X_polarity modulating T_weight", "T and X interact"],
+        "effect_law": "HIGH: time presence is amplified by existence; LOW: time presence lacks existence grounding; STRAINED: conflict between time and existence",
+    },
+    "T.P[N]": {
+        "slot_description": "Time as presence through energy — the energy aspect of time's presence.",
+        "runtime_indicators": ["N_polarity modulating T_weight", "T and N interact"],
+        "effect_law": "HIGH: time presence is amplified by energy; LOW: time presence lacks energy grounding; STRAINED: conflict between time and energy",
+    },
+    "T.P[B]": {
+        "slot_description": "Time as presence through boundary — the boundary aspect of time's presence.",
+        "runtime_indicators": ["B_polarity modulating T_weight", "T and B interact"],
+        "effect_law": "HIGH: time presence is amplified by boundary; LOW: time presence lacks boundary grounding; STRAINED: conflict between time and boundary",
+    },
+    "T.P[A]": {
+        "slot_description": "Time as presence through agency — the agency aspect of time's presence.",
+        "runtime_indicators": ["A_polarity modulating T_weight", "T and A interact"],
+        "effect_law": "HIGH: time presence is amplified by agency; LOW: time presence lacks agency grounding; STRAINED: conflict between time and agency",
+    },
+    "T.G[X]": {
+        "slot_description": "Time as formation through existence — the existence aspect of time's formation.",
+        "runtime_indicators": ["X_polarity modulating T_weight", "T and X interact"],
+        "effect_law": "HIGH: time formation is amplified by existence; LOW: time formation lacks existence grounding; STRAINED: conflict between time and existence",
+    },
+    "T.G[N]": {
+        "slot_description": "Time as formation through energy — the energy aspect of time's formation.",
+        "runtime_indicators": ["N_polarity modulating T_weight", "T and N interact"],
+        "effect_law": "HIGH: time formation is amplified by energy; LOW: time formation lacks energy grounding; STRAINED: conflict between time and energy",
+    },
+    "T.G[B]": {
+        "slot_description": "Time as formation through boundary — the boundary aspect of time's formation.",
+        "runtime_indicators": ["B_polarity modulating T_weight", "T and B interact"],
+        "effect_law": "HIGH: time formation is amplified by boundary; LOW: time formation lacks boundary grounding; STRAINED: conflict between time and boundary",
+    },
+    "T.G[A]": {
+        "slot_description": "Time as formation through agency — the agency aspect of time's formation.",
+        "runtime_indicators": ["A_polarity modulating T_weight", "T and A interact"],
+        "effect_law": "HIGH: time formation is amplified by agency; LOW: time formation lacks agency grounding; STRAINED: conflict between time and agency",
+    },
+    "T.N[X]": {
+        "slot_description": "Time as energy through existence — the existence aspect of time's energy.",
+        "runtime_indicators": ["X_polarity modulating T_weight", "T and X interact"],
+        "effect_law": "HIGH: time energy is amplified by existence; LOW: time energy lacks existence grounding; STRAINED: conflict between time and existence",
+    },
+    "T.N[N]": {
+        "slot_description": "Time as energy through energy — the energy aspect of time's energy.",
+        "runtime_indicators": ["N_polarity modulating T_weight", "T and N interact"],
+        "effect_law": "HIGH: time energy is amplified by energy; LOW: time energy lacks energy grounding; STRAINED: conflict between time and energy",
+    },
+    "T.N[B]": {
+        "slot_description": "Time as energy through boundary — the boundary aspect of time's energy.",
+        "runtime_indicators": ["B_polarity modulating T_weight", "T and B interact"],
+        "effect_law": "HIGH: time energy is amplified by boundary; LOW: time energy lacks boundary grounding; STRAINED: conflict between time and boundary",
+    },
+    "T.N[A]": {
+        "slot_description": "Time as energy through agency — the agency aspect of time's energy.",
+        "runtime_indicators": ["A_polarity modulating T_weight", "T and A interact"],
+        "effect_law": "HIGH: time energy is amplified by agency; LOW: time energy lacks agency grounding; STRAINED: conflict between time and agency",
+    },
+    "T.F[X]": {
+        "slot_description": "Time as frame through existence — the existence aspect of time's frame.",
+        "runtime_indicators": ["X_polarity modulating T_weight", "T and X interact"],
+        "effect_law": "HIGH: time frame is amplified by existence; LOW: time frame lacks existence grounding; STRAINED: conflict between time and existence",
+    },
+    "T.F[N]": {
+        "slot_description": "Time as frame through energy — the energy aspect of time's frame.",
+        "runtime_indicators": ["N_polarity modulating T_weight", "T and N interact"],
+        "effect_law": "HIGH: time frame is amplified by energy; LOW: time frame lacks energy grounding; STRAINED: conflict between time and energy",
+    },
+    "T.F[B]": {
+        "slot_description": "Time as frame through boundary — the boundary aspect of time's frame.",
+        "runtime_indicators": ["B_polarity modulating T_weight", "T and B interact"],
+        "effect_law": "HIGH: time frame is amplified by boundary; LOW: time frame lacks boundary grounding; STRAINED: conflict between time and boundary",
+    },
+    "T.F[A]": {
+        "slot_description": "Time as frame through agency — the agency aspect of time's frame.",
+        "runtime_indicators": ["A_polarity modulating T_weight", "T and A interact"],
+        "effect_law": "HIGH: time frame is amplified by agency; LOW: time frame lacks agency grounding; STRAINED: conflict between time and agency",
+    },
+    "T.O[X]": {
+        "slot_description": "Time as operation through existence — the existence aspect of time's operation.",
+        "runtime_indicators": ["X_polarity modulating T_weight", "T and X interact"],
+        "effect_law": "HIGH: time operation is amplified by existence; LOW: time operation lacks existence grounding; STRAINED: conflict between time and existence",
+    },
+    "T.O[N]": {
+        "slot_description": "Time as operation through energy — the energy aspect of time's operation.",
+        "runtime_indicators": ["N_polarity modulating T_weight", "T and N interact"],
+        "effect_law": "HIGH: time operation is amplified by energy; LOW: time operation lacks energy grounding; STRAINED: conflict between time and energy",
+    },
+    "T.O[B]": {
+        "slot_description": "Time as operation through boundary — the boundary aspect of time's operation.",
+        "runtime_indicators": ["B_polarity modulating T_weight", "T and B interact"],
+        "effect_law": "HIGH: time operation is amplified by boundary; LOW: time operation lacks boundary grounding; STRAINED: conflict between time and boundary",
+    },
+    "T.O[A]": {
+        "slot_description": "Time as operation through agency — the agency aspect of time's operation.",
+        "runtime_indicators": ["A_polarity modulating T_weight", "T and A interact"],
+        "effect_law": "HIGH: time operation is amplified by agency; LOW: time operation lacks agency grounding; STRAINED: conflict between time and agency",
+    },
+    "N.P[X]": {
+        "slot_description": "Energy as presence through existence — the existence aspect of energy's presence.",
+        "runtime_indicators": ["X_polarity modulating N_weight", "N and X interact"],
+        "effect_law": "HIGH: energy presence is amplified by existence; LOW: energy presence lacks existence grounding; STRAINED: conflict between energy and existence",
+    },
+    "N.P[T]": {
+        "slot_description": "Energy as presence through time — the time aspect of energy's presence.",
+        "runtime_indicators": ["T_polarity modulating N_weight", "N and T interact"],
+        "effect_law": "HIGH: energy presence is amplified by time; LOW: energy presence lacks time grounding; STRAINED: conflict between energy and time",
+    },
+    "N.P[B]": {
+        "slot_description": "Energy as presence through boundary — the boundary aspect of energy's presence.",
+        "runtime_indicators": ["B_polarity modulating N_weight", "N and B interact"],
+        "effect_law": "HIGH: energy presence is amplified by boundary; LOW: energy presence lacks boundary grounding; STRAINED: conflict between energy and boundary",
+    },
+    "N.P[A]": {
+        "slot_description": "Energy as presence through agency — the agency aspect of energy's presence.",
+        "runtime_indicators": ["A_polarity modulating N_weight", "N and A interact"],
+        "effect_law": "HIGH: energy presence is amplified by agency; LOW: energy presence lacks agency grounding; STRAINED: conflict between energy and agency",
+    },
+    "N.G[X]": {
+        "slot_description": "Energy as formation through existence — the existence aspect of energy's formation.",
+        "runtime_indicators": ["X_polarity modulating N_weight", "N and X interact"],
+        "effect_law": "HIGH: energy formation is amplified by existence; LOW: energy formation lacks existence grounding; STRAINED: conflict between energy and existence",
+    },
+    "N.G[T]": {
+        "slot_description": "Energy as formation through time — the time aspect of energy's formation.",
+        "runtime_indicators": ["T_polarity modulating N_weight", "N and T interact"],
+        "effect_law": "HIGH: energy formation is amplified by time; LOW: energy formation lacks time grounding; STRAINED: conflict between energy and time",
+    },
+    "N.G[B]": {
+        "slot_description": "Energy as formation through boundary — the boundary aspect of energy's formation.",
+        "runtime_indicators": ["B_polarity modulating N_weight", "N and B interact"],
+        "effect_law": "HIGH: energy formation is amplified by boundary; LOW: energy formation lacks boundary grounding; STRAINED: conflict between energy and boundary",
+    },
+    "N.G[A]": {
+        "slot_description": "Energy as formation through agency — the agency aspect of energy's formation.",
+        "runtime_indicators": ["A_polarity modulating N_weight", "N and A interact"],
+        "effect_law": "HIGH: energy formation is amplified by agency; LOW: energy formation lacks agency grounding; STRAINED: conflict between energy and agency",
+    },
+    "N.N[X]": {
+        "slot_description": "Energy as energy through existence — the existence aspect of energy's energy.",
+        "runtime_indicators": ["X_polarity modulating N_weight", "N and X interact"],
+        "effect_law": "HIGH: energy energy is amplified by existence; LOW: energy energy lacks existence grounding; STRAINED: conflict between energy and existence",
+    },
+    "N.N[T]": {
+        "slot_description": "Energy as energy through time — the time aspect of energy's energy.",
+        "runtime_indicators": ["T_polarity modulating N_weight", "N and T interact"],
+        "effect_law": "HIGH: energy energy is amplified by time; LOW: energy energy lacks time grounding; STRAINED: conflict between energy and time",
+    },
+    "N.N[B]": {
+        "slot_description": "Energy as energy through boundary — the boundary aspect of energy's energy.",
+        "runtime_indicators": ["B_polarity modulating N_weight", "N and B interact"],
+        "effect_law": "HIGH: energy energy is amplified by boundary; LOW: energy energy lacks boundary grounding; STRAINED: conflict between energy and boundary",
+    },
+    "N.N[A]": {
+        "slot_description": "Energy as energy through agency — the agency aspect of energy's energy.",
+        "runtime_indicators": ["A_polarity modulating N_weight", "N and A interact"],
+        "effect_law": "HIGH: energy energy is amplified by agency; LOW: energy energy lacks agency grounding; STRAINED: conflict between energy and agency",
+    },
+    "N.F[X]": {
+        "slot_description": "Energy as frame through existence — the existence aspect of energy's frame.",
+        "runtime_indicators": ["X_polarity modulating N_weight", "N and X interact"],
+        "effect_law": "HIGH: energy frame is amplified by existence; LOW: energy frame lacks existence grounding; STRAINED: conflict between energy and existence",
+    },
+    "N.F[T]": {
+        "slot_description": "Energy as frame through time — the time aspect of energy's frame.",
+        "runtime_indicators": ["T_polarity modulating N_weight", "N and T interact"],
+        "effect_law": "HIGH: energy frame is amplified by time; LOW: energy frame lacks time grounding; STRAINED: conflict between energy and time",
+    },
+    "N.F[B]": {
+        "slot_description": "Energy as frame through boundary — the boundary aspect of energy's frame.",
+        "runtime_indicators": ["B_polarity modulating N_weight", "N and B interact"],
+        "effect_law": "HIGH: energy frame is amplified by boundary; LOW: energy frame lacks boundary grounding; STRAINED: conflict between energy and boundary",
+    },
+    "N.F[A]": {
+        "slot_description": "Energy as frame through agency — the agency aspect of energy's frame.",
+        "runtime_indicators": ["A_polarity modulating N_weight", "N and A interact"],
+        "effect_law": "HIGH: energy frame is amplified by agency; LOW: energy frame lacks agency grounding; STRAINED: conflict between energy and agency",
+    },
+    "N.O[X]": {
+        "slot_description": "Energy as operation through existence — the existence aspect of energy's operation.",
+        "runtime_indicators": ["X_polarity modulating N_weight", "N and X interact"],
+        "effect_law": "HIGH: energy operation is amplified by existence; LOW: energy operation lacks existence grounding; STRAINED: conflict between energy and existence",
+    },
+    "N.O[T]": {
+        "slot_description": "Energy as operation through time — the time aspect of energy's operation.",
+        "runtime_indicators": ["T_polarity modulating N_weight", "N and T interact"],
+        "effect_law": "HIGH: energy operation is amplified by time; LOW: energy operation lacks time grounding; STRAINED: conflict between energy and time",
+    },
+    "N.O[B]": {
+        "slot_description": "Energy as operation through boundary — the boundary aspect of energy's operation.",
+        "runtime_indicators": ["B_polarity modulating N_weight", "N and B interact"],
+        "effect_law": "HIGH: energy operation is amplified by boundary; LOW: energy operation lacks boundary grounding; STRAINED: conflict between energy and boundary",
+    },
+    "N.O[A]": {
+        "slot_description": "Energy as operation through agency — the agency aspect of energy's operation.",
+        "runtime_indicators": ["A_polarity modulating N_weight", "N and A interact"],
+        "effect_law": "HIGH: energy operation is amplified by agency; LOW: energy operation lacks agency grounding; STRAINED: conflict between energy and agency",
+    },
+    "B.P[X]": {
+        "slot_description": "Boundary as presence through existence — the existence aspect of boundary's presence.",
+        "runtime_indicators": ["X_polarity modulating B_weight", "B and X interact"],
+        "effect_law": "HIGH: boundary presence is amplified by existence; LOW: boundary presence lacks existence grounding; STRAINED: conflict between boundary and existence",
+    },
+    "B.P[T]": {
+        "slot_description": "Boundary as presence through time — the time aspect of boundary's presence.",
+        "runtime_indicators": ["T_polarity modulating B_weight", "B and T interact"],
+        "effect_law": "HIGH: boundary presence is amplified by time; LOW: boundary presence lacks time grounding; STRAINED: conflict between boundary and time",
+    },
+    "B.P[N]": {
+        "slot_description": "Boundary as presence through energy — the energy aspect of boundary's presence.",
+        "runtime_indicators": ["N_polarity modulating B_weight", "B and N interact"],
+        "effect_law": "HIGH: boundary presence is amplified by energy; LOW: boundary presence lacks energy grounding; STRAINED: conflict between boundary and energy",
+    },
+    "B.P[A]": {
+        "slot_description": "Boundary as presence through agency — the agency aspect of boundary's presence.",
+        "runtime_indicators": ["A_polarity modulating B_weight", "B and A interact"],
+        "effect_law": "HIGH: boundary presence is amplified by agency; LOW: boundary presence lacks agency grounding; STRAINED: conflict between boundary and agency",
+    },
+    "B.G[X]": {
+        "slot_description": "Boundary as formation through existence — the existence aspect of boundary's formation.",
+        "runtime_indicators": ["X_polarity modulating B_weight", "B and X interact"],
+        "effect_law": "HIGH: boundary formation is amplified by existence; LOW: boundary formation lacks existence grounding; STRAINED: conflict between boundary and existence",
+    },
+    "B.G[T]": {
+        "slot_description": "Boundary as formation through time — the time aspect of boundary's formation.",
+        "runtime_indicators": ["T_polarity modulating B_weight", "B and T interact"],
+        "effect_law": "HIGH: boundary formation is amplified by time; LOW: boundary formation lacks time grounding; STRAINED: conflict between boundary and time",
+    },
+    "B.G[N]": {
+        "slot_description": "Boundary as formation through energy — the energy aspect of boundary's formation.",
+        "runtime_indicators": ["N_polarity modulating B_weight", "B and N interact"],
+        "effect_law": "HIGH: boundary formation is amplified by energy; LOW: boundary formation lacks energy grounding; STRAINED: conflict between boundary and energy",
+    },
+    "B.G[A]": {
+        "slot_description": "Boundary as formation through agency — the agency aspect of boundary's formation.",
+        "runtime_indicators": ["A_polarity modulating B_weight", "B and A interact"],
+        "effect_law": "HIGH: boundary formation is amplified by agency; LOW: boundary formation lacks agency grounding; STRAINED: conflict between boundary and agency",
+    },
+    "B.N[X]": {
+        "slot_description": "Boundary as energy through existence — the existence aspect of boundary's energy.",
+        "runtime_indicators": ["X_polarity modulating B_weight", "B and X interact"],
+        "effect_law": "HIGH: boundary energy is amplified by existence; LOW: boundary energy lacks existence grounding; STRAINED: conflict between boundary and existence",
+    },
+    "B.N[T]": {
+        "slot_description": "Boundary as energy through time — the time aspect of boundary's energy.",
+        "runtime_indicators": ["T_polarity modulating B_weight", "B and T interact"],
+        "effect_law": "HIGH: boundary energy is amplified by time; LOW: boundary energy lacks time grounding; STRAINED: conflict between boundary and time",
+    },
+    "B.N[N]": {
+        "slot_description": "Boundary as energy through energy — the energy aspect of boundary's energy.",
+        "runtime_indicators": ["N_polarity modulating B_weight", "B and N interact"],
+        "effect_law": "HIGH: boundary energy is amplified by energy; LOW: boundary energy lacks energy grounding; STRAINED: conflict between boundary and energy",
+    },
+    "B.N[A]": {
+        "slot_description": "Boundary as energy through agency — the agency aspect of boundary's energy.",
+        "runtime_indicators": ["A_polarity modulating B_weight", "B and A interact"],
+        "effect_law": "HIGH: boundary energy is amplified by agency; LOW: boundary energy lacks agency grounding; STRAINED: conflict between boundary and agency",
+    },
+    "B.F[X]": {
+        "slot_description": "Boundary as frame through existence — the existence aspect of boundary's frame.",
+        "runtime_indicators": ["X_polarity modulating B_weight", "B and X interact"],
+        "effect_law": "HIGH: boundary frame is amplified by existence; LOW: boundary frame lacks existence grounding; STRAINED: conflict between boundary and existence",
+    },
+    "B.F[T]": {
+        "slot_description": "Boundary as frame through time — the time aspect of boundary's frame.",
+        "runtime_indicators": ["T_polarity modulating B_weight", "B and T interact"],
+        "effect_law": "HIGH: boundary frame is amplified by time; LOW: boundary frame lacks time grounding; STRAINED: conflict between boundary and time",
+    },
+    "B.F[N]": {
+        "slot_description": "Boundary as frame through energy — the energy aspect of boundary's frame.",
+        "runtime_indicators": ["N_polarity modulating B_weight", "B and N interact"],
+        "effect_law": "HIGH: boundary frame is amplified by energy; LOW: boundary frame lacks energy grounding; STRAINED: conflict between boundary and energy",
+    },
+    "B.F[A]": {
+        "slot_description": "Boundary as frame through agency — the agency aspect of boundary's frame.",
+        "runtime_indicators": ["A_polarity modulating B_weight", "B and A interact"],
+        "effect_law": "HIGH: boundary frame is amplified by agency; LOW: boundary frame lacks agency grounding; STRAINED: conflict between boundary and agency",
+    },
+    "B.O[X]": {
+        "slot_description": "Boundary as operation through existence — the existence aspect of boundary's operation.",
+        "runtime_indicators": ["X_polarity modulating B_weight", "B and X interact"],
+        "effect_law": "HIGH: boundary operation is amplified by existence; LOW: boundary operation lacks existence grounding; STRAINED: conflict between boundary and existence",
+    },
+    "B.O[T]": {
+        "slot_description": "Boundary as operation through time — the time aspect of boundary's operation.",
+        "runtime_indicators": ["T_polarity modulating B_weight", "B and T interact"],
+        "effect_law": "HIGH: boundary operation is amplified by time; LOW: boundary operation lacks time grounding; STRAINED: conflict between boundary and time",
+    },
+    "B.O[N]": {
+        "slot_description": "Boundary as operation through energy — the energy aspect of boundary's operation.",
+        "runtime_indicators": ["N_polarity modulating B_weight", "B and N interact"],
+        "effect_law": "HIGH: boundary operation is amplified by energy; LOW: boundary operation lacks energy grounding; STRAINED: conflict between boundary and energy",
+    },
+    "B.O[A]": {
+        "slot_description": "Boundary as operation through agency — the agency aspect of boundary's operation.",
+        "runtime_indicators": ["A_polarity modulating B_weight", "B and A interact"],
+        "effect_law": "HIGH: boundary operation is amplified by agency; LOW: boundary operation lacks agency grounding; STRAINED: conflict between boundary and agency",
+    },
+    "A.P[X]": {
+        "slot_description": "Agency as presence through existence — the existence aspect of agency's presence.",
+        "runtime_indicators": ["X_polarity modulating A_weight", "A and X interact"],
+        "effect_law": "HIGH: agency presence is amplified by existence; LOW: agency presence lacks existence grounding; STRAINED: conflict between agency and existence",
+    },
+    "A.P[T]": {
+        "slot_description": "Agency as presence through time — the time aspect of agency's presence.",
+        "runtime_indicators": ["T_polarity modulating A_weight", "A and T interact"],
+        "effect_law": "HIGH: agency presence is amplified by time; LOW: agency presence lacks time grounding; STRAINED: conflict between agency and time",
+    },
+    "A.P[N]": {
+        "slot_description": "Agency as presence through energy — the energy aspect of agency's presence.",
+        "runtime_indicators": ["N_polarity modulating A_weight", "A and N interact"],
+        "effect_law": "HIGH: agency presence is amplified by energy; LOW: agency presence lacks energy grounding; STRAINED: conflict between agency and energy",
+    },
+    "A.P[B]": {
+        "slot_description": "Agency as presence through boundary — the boundary aspect of agency's presence.",
+        "runtime_indicators": ["B_polarity modulating A_weight", "A and B interact"],
+        "effect_law": "HIGH: agency presence is amplified by boundary; LOW: agency presence lacks boundary grounding; STRAINED: conflict between agency and boundary",
+    },
+    "A.G[X]": {
+        "slot_description": "Agency as formation through existence — the existence aspect of agency's formation.",
+        "runtime_indicators": ["X_polarity modulating A_weight", "A and X interact"],
+        "effect_law": "HIGH: agency formation is amplified by existence; LOW: agency formation lacks existence grounding; STRAINED: conflict between agency and existence",
+    },
+    "A.G[T]": {
+        "slot_description": "Agency as formation through time — the time aspect of agency's formation.",
+        "runtime_indicators": ["T_polarity modulating A_weight", "A and T interact"],
+        "effect_law": "HIGH: agency formation is amplified by time; LOW: agency formation lacks time grounding; STRAINED: conflict between agency and time",
+    },
+    "A.G[N]": {
+        "slot_description": "Agency as formation through energy — the energy aspect of agency's formation.",
+        "runtime_indicators": ["N_polarity modulating A_weight", "A and N interact"],
+        "effect_law": "HIGH: agency formation is amplified by energy; LOW: agency formation lacks energy grounding; STRAINED: conflict between agency and energy",
+    },
+    "A.G[B]": {
+        "slot_description": "Agency as formation through boundary — the boundary aspect of agency's formation.",
+        "runtime_indicators": ["B_polarity modulating A_weight", "A and B interact"],
+        "effect_law": "HIGH: agency formation is amplified by boundary; LOW: agency formation lacks boundary grounding; STRAINED: conflict between agency and boundary",
+    },
+    "A.N[X]": {
+        "slot_description": "Agency as energy through existence — the existence aspect of agency's energy.",
+        "runtime_indicators": ["X_polarity modulating A_weight", "A and X interact"],
+        "effect_law": "HIGH: agency energy is amplified by existence; LOW: agency energy lacks existence grounding; STRAINED: conflict between agency and existence",
+    },
+    "A.N[T]": {
+        "slot_description": "Agency as energy through time — the time aspect of agency's energy.",
+        "runtime_indicators": ["T_polarity modulating A_weight", "A and T interact"],
+        "effect_law": "HIGH: agency energy is amplified by time; LOW: agency energy lacks time grounding; STRAINED: conflict between agency and time",
+    },
+    "A.N[N]": {
+        "slot_description": "Agency as energy through energy — the energy aspect of agency's energy.",
+        "runtime_indicators": ["N_polarity modulating A_weight", "A and N interact"],
+        "effect_law": "HIGH: agency energy is amplified by energy; LOW: agency energy lacks energy grounding; STRAINED: conflict between agency and energy",
+    },
+    "A.N[B]": {
+        "slot_description": "Agency as energy through boundary — the boundary aspect of agency's energy.",
+        "runtime_indicators": ["B_polarity modulating A_weight", "A and B interact"],
+        "effect_law": "HIGH: agency energy is amplified by boundary; LOW: agency energy lacks boundary grounding; STRAINED: conflict between agency and boundary",
+    },
+    "A.F[X]": {
+        "slot_description": "Agency as frame through existence — the existence aspect of agency's frame.",
+        "runtime_indicators": ["X_polarity modulating A_weight", "A and X interact"],
+        "effect_law": "HIGH: agency frame is amplified by existence; LOW: agency frame lacks existence grounding; STRAINED: conflict between agency and existence",
+    },
+    "A.F[T]": {
+        "slot_description": "Agency as frame through time — the time aspect of agency's frame.",
+        "runtime_indicators": ["T_polarity modulating A_weight", "A and T interact"],
+        "effect_law": "HIGH: agency frame is amplified by time; LOW: agency frame lacks time grounding; STRAINED: conflict between agency and time",
+    },
+    "A.F[N]": {
+        "slot_description": "Agency as frame through energy — the energy aspect of agency's frame.",
+        "runtime_indicators": ["N_polarity modulating A_weight", "A and N interact"],
+        "effect_law": "HIGH: agency frame is amplified by energy; LOW: agency frame lacks energy grounding; STRAINED: conflict between agency and energy",
+    },
+    "A.F[B]": {
+        "slot_description": "Agency as frame through boundary — the boundary aspect of agency's frame.",
+        "runtime_indicators": ["B_polarity modulating A_weight", "A and B interact"],
+        "effect_law": "HIGH: agency frame is amplified by boundary; LOW: agency frame lacks boundary grounding; STRAINED: conflict between agency and boundary",
+    },
+    "A.O[X]": {
+        "slot_description": "Agency as operation through existence — the existence aspect of agency's operation.",
+        "runtime_indicators": ["X_polarity modulating A_weight", "A and X interact"],
+        "effect_law": "HIGH: agency operation is amplified by existence; LOW: agency operation lacks existence grounding; STRAINED: conflict between agency and existence",
+    },
+    "A.O[T]": {
+        "slot_description": "Agency as operation through time — the time aspect of agency's operation.",
+        "runtime_indicators": ["T_polarity modulating A_weight", "A and T interact"],
+        "effect_law": "HIGH: agency operation is amplified by time; LOW: agency operation lacks time grounding; STRAINED: conflict between agency and time",
+    },
+    "A.O[N]": {
+        "slot_description": "Agency as operation through energy — the energy aspect of agency's operation.",
+        "runtime_indicators": ["N_polarity modulating A_weight", "A and N interact"],
+        "effect_law": "HIGH: agency operation is amplified by energy; LOW: agency operation lacks energy grounding; STRAINED: conflict between agency and energy",
+    },
+    "A.O[B]": {
+        "slot_description": "Agency as operation through boundary — the boundary aspect of agency's operation.",
+        "runtime_indicators": ["B_polarity modulating A_weight", "A and B interact"],
+        "effect_law": "HIGH: agency operation is amplified by boundary; LOW: agency operation lacks boundary grounding; STRAINED: conflict between agency and boundary",
+    },
+}

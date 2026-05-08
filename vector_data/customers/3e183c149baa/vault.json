@@ -1,0 +1,93 @@
+{
+  "candidates": {},
+  "drift_profiles": {
+    "CHAOS": {
+      "delta_decay": 0.7,
+      "half_life_hours": 18.0,
+      "noise_sigma": 0.05,
+      "trend_gain": 1.1
+    },
+    "COLLISION": {
+      "delta_decay": 0.75,
+      "half_life_hours": 36.0,
+      "noise_sigma": 0.03,
+      "trend_gain": 0.8
+    },
+    "CONSCIOUSNESS": {
+      "delta_decay": 0.7,
+      "half_life_hours": 24.0,
+      "noise_sigma": 0.04,
+      "trend_gain": 0.85
+    },
+    "ENERGY": {
+      "delta_decay": 0.85,
+      "half_life_hours": 72.0,
+      "noise_sigma": 0.01,
+      "trend_gain": 0.9
+    },
+    "GOVERNANCE": {
+      "delta_decay": 0.9,
+      "half_life_hours": 96.0,
+      "noise_sigma": 0.01,
+      "trend_gain": 0.5
+    },
+    "MOTION": {
+      "delta_decay": 0.8,
+      "half_life_hours": 48.0,
+      "noise_sigma": 0.02,
+      "trend_gain": 1.05
+    },
+    "RECURSION": {
+      "delta_decay": 0.78,
+      "half_life_hours": 30.0,
+      "noise_sigma": 0.03,
+      "trend_gain": 0.95
+    },
+    "SYMMETRY": {
+      "delta_decay": 0.88,
+      "half_life_hours": 60.0,
+      "noise_sigma": 0.02,
+      "trend_gain": 0.75
+    }
+  },
+  "last_ingest_ts": null,
+  "latents": {
+    "latent_trust_fairness_asymmetry": {
+      "confidence": 0.55,
+      "delta": 0.0,
+      "last_seen": 1776889173.9486666,
+      "last_value": null,
+      "law": "SYMMETRY",
+      "meta": {
+        "derived_from": [
+          "SYMMETRY",
+          "CONSCIOUSNESS"
+        ]
+      },
+      "name": "latent_trust_fairness_asymmetry",
+      "provenance": "latent",
+      "ts": 1776889173.9486666,
+      "value": 1.0
+    }
+  },
+  "metadata": {},
+  "offline_since": null,
+  "online": true,
+  "reconciliation_log": [],
+  "variables": {
+    "fomc_hawkish_constraint": {
+      "confidence": 0.85,
+      "delta": 0.0,
+      "last_seen": 1777031456.0770805,
+      "last_value": null,
+      "law": "COLLISION",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "fomc_hawkish_constraint",
+      "provenance": "observed",
+      "ts": 1777031456.0770805,
+      "value": 0.85
+    }
+  }
+}

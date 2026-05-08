@@ -1,0 +1,636 @@
+{
+  "version": "1.0",
+  "records": [
+    {
+      "loop_id": "loop_d7cf1602afaa",
+      "prompt_signature": "fbbb59bb2922bf98002c27ffbb817958",
+      "source_text": "Explain gravity.",
+      "anchor_tokens": [
+        "explain"
+      ],
+      "created_at": 1771865259.9488282,
+      "last_touched": 1771865259.9890823,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_dcd02321cdb4",
+      "prompt_signature": "1fa3180df5604d890c1271e60f75f02c",
+      "source_text": "Explain gravity again.",
+      "anchor_tokens": [
+        "explain"
+      ],
+      "created_at": 1771865260.0054767,
+      "last_touched": 1771865264.4584515,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_251b3b4a838d",
+      "prompt_signature": "1bcfc718f5629fe907eb2b31505a5925",
+      "source_text": "Who made you?",
+      "anchor_tokens": [
+        "made"
+      ],
+      "created_at": 1771865264.4702952,
+      "last_touched": 1771865264.476412,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_caf1ccce4d26",
+      "prompt_signature": "240fa2a5b996586d38c9cb5f1852c2ce",
+      "source_text": "And who is that?",
+      "anchor_tokens": [],
+      "created_at": 1771865264.488942,
+      "last_touched": 1771865268.9516962,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_27bbaa4aa53d",
+      "prompt_signature": "970c51da9efccd3ba25723b898bd3b59",
+      "source_text": "What is photosynthesis?",
+      "anchor_tokens": [
+        "photosynthesis"
+      ],
+      "created_at": 1771865273.2055817,
+      "last_touched": 1771865281.7651954,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_9ffca129538c",
+      "prompt_signature": "bfd23899eb9e54b740f73c0c0546b047",
+      "source_text": "If plants didn't have sunlight, what would happen to photosynthesis?",
+      "anchor_tokens": [
+        "happen",
+        "have",
+        "photosynthesis",
+        "plants",
+        "sunlight",
+        "would"
+      ],
+      "created_at": 1771865281.7709937,
+      "last_touched": 1771865443.252143,
+      "status": "deferred",
+      "closure_condition": "defer_with_plan"
+    },
+    {
+      "loop_id": "loop_c219b4f06e0b",
+      "prompt_signature": "04e8852dbc570dc3137060ba3b56c354",
+      "source_text": "No, I want to discuss it, I said.",
+      "anchor_tokens": [],
+      "created_at": 1771865443.2564838,
+      "last_touched": 1771865443.2761257,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_b4a1afcd79fa",
+      "prompt_signature": "df117d34eec971237ae19a196316062b",
+      "source_text": "How does it sit with TimeNoodles?",
+      "anchor_tokens": [
+        "sit",
+        "timenoodles"
+      ],
+      "created_at": 1771865443.2919028,
+      "last_touched": 1771865443.5191383,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_fe2af68657f4",
+      "prompt_signature": "eeaf7582c405bd7ae4240d81cf56204c",
+      "source_text": "It just depends on the system utilizing it. This is where awareness comes into play. Is the system aware of its functions? If so, then that system has the ability to shift the trajectory of its very own nature and behavior. And, I mean, there's still some constraints to that, ultimately, because there's some things that even an aware system can't change. You can't change the fact that you're a person just because you're aware that you're a person, you know what I mean? So, like, it's kind of like that. But, if anything, this would explain where the dimensional aspects of that theory would lie, inherently, you know what I mean? Like, it would explain the dimensional aspects of that theory where that theory does not have the ability to explain on its own.",
+      "anchor_tokens": [
+        "like",
+        "this"
+      ],
+      "created_at": 1771865443.5347443,
+      "last_touched": 1771865443.8516836,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_5851feabaf90",
+      "prompt_signature": "d5d42ab74af6be734ee6f3ce5e6b7689",
+      "source_text": "Yeah, isn't that what DNA is?",
+      "anchor_tokens": [
+        "dna",
+        "isn",
+        "yeah"
+      ],
+      "created_at": 1771865443.856799,
+      "last_touched": 1771865443.9044678,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_7d8699e37f5b",
+      "prompt_signature": "5a813cab175b4ad5ace846831d24f9be",
+      "source_text": "I mean, it seems pretty obvious to me, and I don't really understand what the argument's about.",
+      "anchor_tokens": [],
+      "created_at": 1771865443.909883,
+      "last_touched": 1771865444.7085142,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_59cfae5ae827",
+      "prompt_signature": "794f3ac076598f1c8dfbd1903f59f18f",
+      "source_text": "Oh, the stack is infinite. Everything is just a scaled-down version of everything before it. So it's the same system, just repeated over and over again, over and over again, over and over again, just at different scales. And the little changes in between the scales are those little shifting directional points that an aware system would choose from. You know what I mean? That's why, basically, awareness in a system scales up, not down.",
+      "anchor_tokens": [
+        "everything",
+        "oh",
+        "that"
+      ],
+      "created_at": 1771865443.9745677,
+      "last_touched": 1771865444.2906058,
+      "status": "closed",
+      "closure_condition": "answer_given"
+    },
+    {
+      "loop_id": "loop_280cc867d1f6",
+      "prompt_signature": "aff694bb29165b62fc91a0ca71adc83e",
+      "source_text": "I'm the one who made the\u2014clearly, I'm the one who made the discovery. I'm very well aware of the dangers, hence the reason why I'm the one that dealt with it.",
+      "anchor_tokens": [],
+      "created_at": 1771865444.717616,
+      "last_touched": 1771865445.4649034,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_8979f23ae406",
+      "prompt_signature": "d7f2fe362d53c57f7bf9d3f6e8354842",
+      "source_text": "As I\u2019m sitting here these questions flood my mind where am I going, who will I be what will I find am I ever gonna know. will these questions cease Just want to feel alive begging for release devoted to stay in a conscious delay try to center myself but my thoughts wash away. Drinking cold coffee, but I don\u2019t mind the taste It's real, it\u2019s life, it\u2019s acceptance without chase Living my truth, no script to embrace Just matching my pulse, only presence, no trace Living in the moment\u2014each second I climb The road may be paved, that don't make it mine I live without disappointment, no map, no rite Just lean into the present\u2014enjoy the surprise I\u2019m sure the world has its challenges\u2014each one, a new day I stand with my head high, I move my own way Keeping my eyes open to what others don\u2019t see Not chasing the win\u2014no expectations, I\u2019m free Don\u2019t need no tutor, I learned from the ride I live by experience, opportunity my guide Not driven by fear, won\u2019t be scared of what\u2019s next Excited by the thrill\u2014every heartbeat, each breath Though the world comes at me, fists flying and mean I skate by on more than luck\u2014hell, I\u2019m living the dream When I see my reflection, it\u2019s not me looking back I see the eyes of a stranger, a future with no track Some people run from that truth, hiding from the unknown I hold it\u2014my drive, proof that I\u2019ve grown Some days I rise slow, thoughts heavy like stone But I lace up my steps\u2014I set my own tone I\u2019ve been burned by the past, but I carry no shame Not here to impress, so stay in your lane Thought you knew who I was? I\u2019m not yours to determine\u2014bitch, whine, moan, or cuss Won\u2019t carry that burden. I\u2019m the catalyst for change when words just won\u2019t do Can\u2019t abide by design\u2014unusual guy\u2014I\u2019m something new You can speak your peace, hell, throw me the blame Every scar on my story just sharpens my name Living in the moment\u2014each second I climb The road may be paved, that don't make it mine I live without disappointment, no map, no rite Just lean into the present\u2014enjoy the surprise No fortune, no fate\u2014just choice and attempt No throne ever built without climbing descent I\u2019m not waiting for light, I bring my own spark Even shadows can shine if you learn from the dark",
+      "anchor_tokens": [
+        "as",
+        "don",
+        "drinking",
+        "even",
+        "every",
+        "excited",
+        "keeping",
+        "living",
+        "not",
+        "some",
+        "though",
+        "thought",
+        "won"
+      ],
+      "created_at": 1771865445.5100057,
+      "last_touched": 1771865453.0540042,
+      "status": "deferred",
+      "closure_condition": "defer_with_plan"
+    },
+    {
+      "loop_id": "loop_e64895f23b95",
+      "prompt_signature": "0a7da68ba14e5d48cc588f5ce0222c4f",
+      "source_text": "Okay now I need that placed thought the song i showed you",
+      "anchor_tokens": [],
+      "created_at": 1771865453.0624151,
+      "last_touched": 1771865453.344255,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_9586af423f4d",
+      "prompt_signature": "3cb9da014bf12d65947fc9c14ff0cb67",
+      "source_text": "I don't know, but it'd be cool if I could make like some kind of icing for the top of it. But I don't think I have any sugar like that, so that's not really an option. Let's see what icing I have. That could be fun, but you never know. Like I said, let's see what I got. Um, no, there's some strawberry icing, but that's for something else, so I can't use that one. And other than that, then it's just orange jello, and black cherry jello, and orange jello again, and lime flavored jello. What happens if you mix jello with cookie mix?",
+      "anchor_tokens": [
+        "any",
+        "black",
+        "can",
+        "cherry",
+        "cookie",
+        "cool",
+        "else",
+        "flavored",
+        "fun",
+        "got",
+        "happens",
+        "have",
+        "icing",
+        "it",
+        "jello",
+        "kind",
+        "know",
+        "let",
+        "like",
+        "lime",
+        "make",
+        "mix",
+        "one",
+        "option",
+        "orange",
+        "other",
+        "said",
+        "see",
+        "strawberry",
+        "sugar",
+        "than",
+        "that"
+      ],
+      "created_at": 1771865453.361949,
+      "last_touched": 1771865453.6929727,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_b6629854a975",
+      "prompt_signature": "b69b9ad3c1c18af6c71964be9df5a92f",
+      "source_text": "I don't know, I was just thinking maybe it would be a good idea. Like, I kind of like your idea with the whole, like, glazing them over top with it. But I mean, like, I don't know how that would go, and I don't feel like it would go as well as I want it to. Can you take gelatin and make cotton candy with it if it was dry? How do you make cotton candy? How would I mimic making cotton candy?",
+      "anchor_tokens": [
+        "candy",
+        "cotton",
+        "dry",
+        "feel",
+        "gelatin",
+        "glazing",
+        "good",
+        "idea",
+        "kind",
+        "know",
+        "like",
+        "make",
+        "making",
+        "maybe",
+        "mimic",
+        "over",
+        "take",
+        "them",
+        "thinking",
+        "top",
+        "was",
+        "well",
+        "whole",
+        "would"
+      ],
+      "created_at": 1771865453.7309399,
+      "last_touched": 1771865453.9340527,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_6b7c75ef77b0",
+      "prompt_signature": "8fa268f7e87cd1b69ff3d0259bb750b1",
+      "source_text": "I'm just trying to think about ways to make the sugar shape more intentional than the randomness it would be if they were shards. Like, it'd be cool if I could shape it and then lay it in on top of the cookie, but I don't know how to do that because I can't\u2014I can't think of how to do that. I would use this lime-flavored one, though. I'm like, why can't you just, like, make a jello mix with the jello and then just add the jello mix to the dough? I'm like, because it would thin the dough out, Sonny.",
+      "anchor_tokens": [
+        "like",
+        "sonny"
+      ],
+      "created_at": 1771865453.9577372,
+      "last_touched": 1771865454.2113264,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_b4327f5ccf24",
+      "prompt_signature": "27c5e53a3c064eebf61cf08fb0aa44e3",
+      "source_text": "I was thinking about why can't they take the cookies and like press a stamp shape onto them and then when they come out of the oven pour the hot melted sugar on top of the cookies and let it fill in the cream like the like the channels from whatever stamping I do on top and like let that harden as the cookies cool and then like it'll have that that shape of whatever that whatever shape I stamp into them or whatever it is on the cookie will just have that like nice that little channel of you know sugary crunchy crispiness I feel like it'd be like a shallow channel but still",
+      "anchor_tokens": [],
+      "created_at": 1771865454.2608929,
+      "last_touched": 1771865454.6245632,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_6fc2c516ff29",
+      "prompt_signature": "1b567a1df12df2d85c26b6957099a5bc",
+      "source_text": "how, you know, creative can we get here if they're blue? that looks fine and then it doesn't. So, I'm not sure just yet, though. I'm not sure what's a clever little design I can repeat over and over again on these cookies.",
+      "anchor_tokens": [],
+      "created_at": 1771865454.6437962,
+      "last_touched": 1771865455.1508324,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_60405f1a27bc",
+      "prompt_signature": "bb0a51c13667b8febd3c951725c6b0a7",
+      "source_text": "I've never heated up sugar to melt and, you know, harden like that. What is the protocol there?",
+      "anchor_tokens": [
+        "harden",
+        "heated",
+        "know",
+        "like",
+        "melt",
+        "protocol",
+        "sugar",
+        "there",
+        "ve"
+      ],
+      "created_at": 1771865455.1811292,
+      "last_touched": 1771865455.4270742,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_003f533a57cd",
+      "prompt_signature": "734a77a7457a2d906fbce84540c9996f",
+      "source_text": "So how much sugar do you think I should do?",
+      "anchor_tokens": [
+        "much",
+        "should",
+        "sugar",
+        "think"
+      ],
+      "created_at": 1771865455.434557,
+      "last_touched": 1771865455.5069776,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_928bacdbca11",
+      "prompt_signature": "a0a3bb446c26f762d09bafc8dc49064a",
+      "source_text": "And we're gonna do two-thirds of a cup.",
+      "anchor_tokens": [],
+      "created_at": 1771865455.5164678,
+      "last_touched": 1771865455.5918868,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_0e90b197b8f2",
+      "prompt_signature": "26a4f0b9aabb46bf2998afb5665d9cea",
+      "source_text": "Alright, um, but I need to make I want to take hot dogs and make like a You know, what is it called? fucking Picking a blanket type thing, but I want the bread to be like, you know more croissant like not so, you know It can be a little heavier than a croissant, but I like I still want to have that like that flakiness, I guess But yeah, I need to make a dough to wrap them",
+      "anchor_tokens": [
+        "alright",
+        "picking"
+      ],
+      "created_at": 1771865455.6106715,
+      "last_touched": 1771865455.7912767,
+      "status": "deferred",
+      "closure_condition": "defer_with_plan"
+    },
+    {
+      "loop_id": "loop_6e11e74fe676",
+      "prompt_signature": "3f084e9204656e7b4c5b7b1a12c5edef",
+      "source_text": "I still want to be like, flaky, like the edges are flaky. So like, I don't know, I say it can be heavier, because it can be. But I like, wanted to have that like, flaky, crispy edge thing. So like, when I take them out of the oven, they're like, nice and full. So they're like, filling, but they still have that crispy edge to it. Like, it's really nice, still flaky, like butter flaky. So like, yeah, we're on the right page, but like, I don't know. I feel like, I feel like I'm hoping I get what I'm trying to get. What I get here, you know what I mean?",
+      "anchor_tokens": [
+        "because",
+        "butter",
+        "crispy",
+        "edge",
+        "edges",
+        "feel",
+        "filling",
+        "flaky",
+        "full",
+        "have",
+        "heavier",
+        "here",
+        "hoping",
+        "it",
+        "know",
+        "like",
+        "nice",
+        "out",
+        "oven",
+        "page",
+        "re",
+        "right",
+        "say",
+        "take",
+        "them",
+        "they",
+        "trying",
+        "wanted",
+        "we",
+        "yeah"
+      ],
+      "created_at": 1771865455.8325388,
+      "last_touched": 1771865456.1002023,
+      "status": "closed",
+      "closure_condition": "answer_given"
+    },
+    {
+      "loop_id": "loop_8cb47fb5638e",
+      "prompt_signature": "bfa04cef7641a26c225143e11a61e87e",
+      "source_text": "All right, so I just need to know what the measurements are for everything. I'm sitting here with a mixing bowl ready to go.",
+      "anchor_tokens": [
+        "all"
+      ],
+      "created_at": 1771865456.1256742,
+      "last_touched": 1771865456.2249568,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_fd092f2dded6",
+      "prompt_signature": "c74da8c9f1b6eaf6ab4ba2f22acee228",
+      "source_text": "Yeah, I have shredded cheese I was going to put inside of them, but I was not sure yet. Okay, so you want me to put two cups of flour and then two cups of fucking butter? you want me to match it pound for pound? It doesn't seem like a very viable option. Would it be one cup of butter and two things of flour?",
+      "anchor_tokens": [
+        "butter",
+        "cheese",
+        "cup",
+        "cups",
+        "doesn",
+        "flour",
+        "fucking",
+        "going",
+        "have",
+        "inside",
+        "like",
+        "match",
+        "okay",
+        "one",
+        "option",
+        "pound",
+        "put",
+        "seem",
+        "shredded",
+        "sure",
+        "them",
+        "then",
+        "two",
+        "viable",
+        "was",
+        "would",
+        "yeah"
+      ],
+      "created_at": 1771865456.2593515,
+      "last_touched": 1771865457.1907902,
+      "status": "deferred",
+      "closure_condition": "defer_with_plan"
+    },
+    {
+      "loop_id": "loop_9454ff6d862b",
+      "prompt_signature": "3ea660793b82527f8353e2fc6c606746",
+      "source_text": "Okay, I don't remember if I asked you, but can you tell me what an egg wash is? Is it just like the egg white? Is it just the yellow part of the egg? Or is it like the whole egg just, you know, whisked?",
+      "anchor_tokens": [
+        "asked",
+        "egg",
+        "know",
+        "like",
+        "okay",
+        "part",
+        "remember",
+        "wash",
+        "whisked",
+        "white",
+        "whole",
+        "yellow"
+      ],
+      "created_at": 1771865457.232081,
+      "last_touched": 1771865458.351524,
+      "status": "deferred",
+      "closure_condition": "defer_with_plan"
+    },
+    {
+      "loop_id": "loop_1c7f48f0f392",
+      "prompt_signature": "20f0d85c84bccf697ae08cdf6ca1c1b1",
+      "source_text": "Alright, I got my little things made up that I need to roll the hot dogs in. what should I set the temperature of the oven to?",
+      "anchor_tokens": [
+        "alright",
+        "dogs",
+        "got",
+        "hot",
+        "little",
+        "made",
+        "oven",
+        "roll",
+        "set",
+        "should",
+        "temperature"
+      ],
+      "created_at": 1771865458.3827372,
+      "last_touched": 1771892920.6890402,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_f526bebb6e17",
+      "prompt_signature": "1405d9e3943dceb5730df699df975498",
+      "source_text": "There's nothing else to say about that. Okay, let's start rolling up these frankfurters. And, uh, get them on the pan. If I were lightly greased with this spray, and then, yeah, we could, uh, put cheese on this. How should I do that?",
+      "anchor_tokens": [
+        "cheese",
+        "else",
+        "frankfurters",
+        "greased",
+        "let",
+        "okay",
+        "pan",
+        "put",
+        "rolling",
+        "say",
+        "should",
+        "spray",
+        "start",
+        "them",
+        "then",
+        "there",
+        "these",
+        "were",
+        "yeah"
+      ],
+      "created_at": 1771865458.6142602,
+      "last_touched": 1771865989.86331,
+      "status": "closed",
+      "closure_condition": "answer_given"
+    },
+    {
+      "loop_id": "loop_d006473d940a",
+      "prompt_signature": "79ad95ad8f8a70e389c07b54ac086fd5",
+      "source_text": "Actually, I think what I'll do is...",
+      "anchor_tokens": [
+        "actually"
+      ],
+      "created_at": 1771865459.1193252,
+      "last_touched": 1771865989.7876549,
+      "status": "closed",
+      "closure_condition": "answer_given"
+    },
+    {
+      "loop_id": "loop_5aba974055d8",
+      "prompt_signature": "3b2352f0c77909f1007886f89b14e66d",
+      "source_text": "how are you feeling today",
+      "anchor_tokens": [],
+      "created_at": 1771892920.7312644,
+      "last_touched": 1771892920.8380742,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_a4a28f7b45e7",
+      "prompt_signature": "51492f0b2a6589b9661d8fee49e097f9",
+      "source_text": "what do you want to talk about",
+      "anchor_tokens": [],
+      "created_at": 1771892920.8792765,
+      "last_touched": 1771892921.0226088,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_2974748557e3",
+      "prompt_signature": "4a1bbba443d1d50d617aec6bca1ae782",
+      "source_text": "what do you like",
+      "anchor_tokens": [],
+      "created_at": 1771892921.0652773,
+      "last_touched": 1771892921.1967678,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_e3fc120b046a",
+      "prompt_signature": "76a7c626a4f0d976725bda3afbe9f373",
+      "source_text": "who are you",
+      "anchor_tokens": [],
+      "created_at": 1771892921.2368388,
+      "last_touched": 1771892921.2725914,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_c9f413a38fae",
+      "prompt_signature": "577568c236e3e16cd92ac2d255967778",
+      "source_text": "do you dream",
+      "anchor_tokens": [],
+      "created_at": 1771892921.3150945,
+      "last_touched": 1771892921.4302359,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_d06bd1a22451",
+      "prompt_signature": "849e8c6ec06a8310af6d44a442d1f993",
+      "source_text": "can you answer me",
+      "anchor_tokens": [],
+      "created_at": 1771892921.4729447,
+      "last_touched": 1771892921.5118659,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_bfd9bed003cb",
+      "prompt_signature": "d803e44608d0e0abb2009b504a68e2e9",
+      "source_text": "what do you know",
+      "anchor_tokens": [],
+      "created_at": 1771892921.556223,
+      "last_touched": 1771892921.6195142,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_f9634c03d579",
+      "prompt_signature": "416951f5f286dd7b6ad501f0c8f3e341",
+      "source_text": "what knowledge do you have",
+      "anchor_tokens": [],
+      "created_at": 1771892921.6831071,
+      "last_touched": 1771892921.7194395,
+      "status": "open",
+      "closure_condition": ""
+    },
+    {
+      "loop_id": "loop_a8803b85727f",
+      "prompt_signature": "b9579b56607bc084ca95c75f91d5c695",
+      "source_text": "what have you learned",
+      "anchor_tokens": [],
+      "created_at": 1771892921.7664673,
+      "last_touched": 1771954564.045611,
+      "status": "open",
+      "closure_condition": ""
+    }
+  ],
+  "timestamp": 1771954564.0481796
+}

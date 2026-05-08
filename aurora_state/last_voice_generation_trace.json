@@ -1,0 +1,19 @@
+{
+  "timestamp": 1778079551.7047079,
+  "input": "The user activated voice mode. Treat this as the start of a spoken conversation.",
+  "candidates": [
+    {
+      "stage": "dual_resp_A",
+      "text": "I understand what you said. I am using that as context for the next turn.",
+      "tone": "observational",
+      "raw_rejected": false,
+      "rejected": false,
+      "cleaned": "I understand what you said. I am using that as context for the next turn."
+    },
+    {
+      "stage": "selected",
+      "source": "dual_resp_A",
+      "text": "I understand what you said. I am using that as context for the next turn."
+    }
+  ]
+}

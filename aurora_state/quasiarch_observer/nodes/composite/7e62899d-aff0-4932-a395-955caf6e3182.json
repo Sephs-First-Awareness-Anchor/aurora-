@@ -1,0 +1,77 @@
+{
+  "node_id": "7e62899d-aff0-4932-a395-955caf6e3182",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.articulation",
+    "issue": "articulation_meaning_drift",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "gpt_articulation_assist",
+    "intended_effect": "compare Aurora draft against a clearer articulation before speaking",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "periodic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.4,
+    "target__recurrence_pattern": 0.36000000000000004,
+    "logic_tier__recurrence_pattern": 0.34,
+    "intervention__recurrence_pattern": 0.32000000000000006,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "b053b428-7bfb-470d-b789-385969749ea8",
+    "1a55f691-18f9-446c-b57f-12c7f6429997",
+    "de3a35ea-b3bb-46b3-83e9-34d5d6e6c35f",
+    "751b3709-8be3-4e8e-90ea-e66397a98919"
+  ],
+  "parent_ids": [
+    "b053b428-7bfb-470d-b789-385969749ea8",
+    "1a55f691-18f9-446c-b57f-12c7f6429997",
+    "de3a35ea-b3bb-46b3-83e9-34d5d6e6c35f",
+    "751b3709-8be3-4e8e-90ea-e66397a98919"
+  ],
+  "child_ids": [],
+  "tags": [
+    "pattern:added_context",
+    "dialogue",
+    "phase:runtime_dialogue",
+    "runtime",
+    "pattern:made_causality_explicit",
+    "self_revision",
+    "articulation",
+    "pattern:articulation_shift",
+    "composite"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "family_key": "issue_family::articulation_meaning_drift",
+    "issue_category": "articulation_meaning_drift",
+    "stage": "COMPOSITE",
+    "version": 1,
+    "signature": "fdd4f3c63b30c7f4f4a9",
+    "is_active_version": false,
+    "supersedes": "",
+    "superseded_by": "28cf0bd8-3dcb-4ed5-b6ff-b84130163d15"
+  },
+  "created_at": "2026-03-21T19:40:46.227162+00:00",
+  "persisted_at": "2026-03-22T10:57:09.239385+00:00",
+  "is_relic": false,
+  "checksum": "32881a9529f8a418"
+}

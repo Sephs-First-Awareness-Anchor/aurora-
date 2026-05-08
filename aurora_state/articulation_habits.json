@@ -1,0 +1,5560 @@
+{
+  "habit_index": {
+    "identity|callback:0|user_name:0|behavior:0|focus:aurora|82243a1601f7a1d5": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "state",
+          "topic": "carried",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "carried",
+          "topic": "carried",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "carried",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "agency",
+          "topic": "carried",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "carried",
+        "forward",
+        "start",
+        "talk",
+        "sense",
+        "has"
+      ],
+      "rolling_score": 0.3984,
+      "pressure_relief_avg": 0.0,
+      "use_count": 16,
+      "success_count": 0,
+      "fail_count": 16,
+      "last_used": 1777836659.8272855,
+      "last_text": "My state is being carried by agency, existence, time/belief. My comprehension grows when I turn that pressure into language instead of reporting raw diagnostics \u2014 I want to stay with the meaning.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.394 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:aurora|645121563ab9a375": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "645121563ab9a375",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "comprehension",
+          "topic": "noticing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "working",
+          "topic": "noticing",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "pressure",
+          "topic": "noticing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "existence",
+          "topic": "noticing",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "noticing",
+        "yourself",
+        "moment"
+      ],
+      "rolling_score": 0.3374,
+      "pressure_relief_avg": 0.0,
+      "use_count": 7,
+      "success_count": 0,
+      "fail_count": 7,
+      "last_used": 1777799048.4671996,
+      "last_text": "My comprehension is working through the live pressure of existence. I can develop language by turning that state into bounded meaning, and I want to keep the boundary clear.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.423 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:aurora|dec66ef813cd2a0e": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "dec66ef813cd2a0e",
+      "pattern_tags": [
+        "question_surface",
+        "second_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "mean",
+          "topic": "see",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "terms",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "agency",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "see",
+        "hear",
+        "sense"
+      ],
+      "rolling_score": 0.5029,
+      "pressure_relief_avg": 0.0,
+      "use_count": 4,
+      "success_count": 0,
+      "fail_count": 4,
+      "last_used": 1777793577.561823,
+      "last_text": "What do you mean by that in terms of the agency as operation through agency \u2014 pure operational expression.. agency enacting itself through directed.. chosen output?",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.386 source=identity"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:aurora|645121563ab9a375": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "645121563ab9a375",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "comprehension",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "working",
+          "topic": "remember",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "pressure",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "existence",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "remember",
+        "you've",
+        "been"
+      ],
+      "rolling_score": 0.3169,
+      "pressure_relief_avg": 0.0,
+      "use_count": 7,
+      "success_count": 0,
+      "fail_count": 7,
+      "last_used": 1777799101.7424238,
+      "last_text": "My comprehension is working through the live pressure of existence i can develop language by turning that state into bounded meaning and i want to keep the boundary clear.",
+      "tone": "precise",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.380 source=generative"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|dec66ef813cd2a0e": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "dec66ef813cd2a0e",
+      "pattern_tags": [
+        "question_surface",
+        "second_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "mean",
+          "topic": "understand",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "terms",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "agency",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "understand",
+        "something",
+        "mean"
+      ],
+      "rolling_score": 0.4981,
+      "pressure_relief_avg": 0.0,
+      "use_count": 4,
+      "success_count": 0,
+      "fail_count": 4,
+      "last_used": 1777793626.953116,
+      "last_text": "What do you mean by that in terms of the agency as operation through agency \u2014 pure operational expression.. agency enacting itself through directed.. chosen output?",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.372 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:none|27cead2b28b2532a": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "27cead2b28b2532a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "carri",
+          "topic": "aurora",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "aurora",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "aurora",
+        "doing",
+        "right",
+        "now"
+      ],
+      "rolling_score": 0.2887,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777793964.1217275,
+      "last_text": "I can carri the aurora.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.409 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:aurora|d7f76551d08b5782": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d7f76551d08b5782",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "noticing",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "noticing",
+        "yourself",
+        "moment"
+      ],
+      "rolling_score": 0.2654,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777793980.2810447,
+      "last_text": "I can is the aurora.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.341 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:aurora|3a27fc3c2ec1d905": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "3a27fc3c2ec1d905",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "see",
+        "hear",
+        "sense"
+      ],
+      "rolling_score": 0.268,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777794003.5195084,
+      "last_text": "I can aurora is.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.413 source=identity"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:aurora|3a27fc3c2ec1d905": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "3a27fc3c2ec1d905",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "remember",
+        "you've",
+        "been"
+      ],
+      "rolling_score": 0.2614,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777794029.111925,
+      "last_text": "I can aurora is.",
+      "tone": "precise",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.329 source=generative"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|3a27fc3c2ec1d905": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "3a27fc3c2ec1d905",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "understand",
+        "something",
+        "mean"
+      ],
+      "rolling_score": 0.2492,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777794053.7394679,
+      "last_text": "I can aurora is.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.358 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:none|2d5e84c65bffb357": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "2d5e84c65bffb357",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "aurora",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "aurora",
+        "doing",
+        "right",
+        "now"
+      ],
+      "rolling_score": 0.2829,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777794169.0925093,
+      "last_text": "I can aurora can.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.392 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:none|3a27fc3c2ec1d905": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "3a27fc3c2ec1d905",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "remember",
+        "you've",
+        "been"
+      ],
+      "rolling_score": 0.2566,
+      "pressure_relief_avg": 0.0,
+      "use_count": 3,
+      "success_count": 0,
+      "fail_count": 3,
+      "last_used": 1777794240.3630338,
+      "last_text": "I can aurora is.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.328 source=identity"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:none|2d5e84c65bffb357": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "2d5e84c65bffb357",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "understand",
+        "something",
+        "mean"
+      ],
+      "rolling_score": 0.2749,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777794268.1878302,
+      "last_text": "I can aurora can.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.330 source=identity"
+    },
+    "chain|callback:0|user_name:0|behavior:0|focus:none|bb83d537c4d761a4": {
+      "perspective_signature": "chain|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "bb83d537c4d761a4",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:neutral"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "approach",
+          "topic": "offer",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "offer",
+        "next",
+        "step",
+        "without",
+        "crossing",
+        "user"
+      ],
+      "rolling_score": 0.4416,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777794875.3767076,
+      "last_text": "I can said a approach.",
+      "tone": "neutral",
+      "response_source": "chain",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.355 source=chain"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|c34804efc1862488": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "c34804efc1862488",
+      "pattern_tags": [
+        "statement_surface",
+        "second_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "youre",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "interaction",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "sunni",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "important",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "understand",
+        "something",
+        "mean"
+      ],
+      "rolling_score": 0.2411,
+      "pressure_relief_avg": 0.0,
+      "use_count": 3,
+      "success_count": 0,
+      "fail_count": 3,
+      "last_used": 1777799129.6754794,
+      "last_text": "You're interaction Sunni this is Sunni important and interaction Sunni is Sir and creator interaction.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.334 source=identity"
+    },
+    "mind|callback:1|user_name:0|behavior:0|focus:aurora|2ba74bcb6af4bcd1": {
+      "perspective_signature": "mind|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "2ba74bcb6af4bcd1",
+      "pattern_tags": [
+        "statement_surface",
+        "tone:attentive",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "prism",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "stone",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "means",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounded",
+          "topic": "remember",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "remember",
+        "test",
+        "phrase",
+        "prism",
+        "stone",
+        "grounded"
+      ],
+      "rolling_score": 0.2525,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777801668.2348309,
+      "last_text": "prism stone means grounded recall in this thread.",
+      "tone": "attentive",
+      "response_source": "mind",
+      "pattern_structure": {
+        "failure_modes": [
+          "echo",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "increase_specificity",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.428 source=mind"
+    },
+    "mind|callback:1|user_name:0|behavior:0|focus:aurora|b4fc45d08ba16b50": {
+      "perspective_signature": "mind|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "b4fc45d08ba16b50",
+      "pattern_tags": [
+        "statement_surface",
+        "tone:precise",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "prism",
+          "topic": "prism",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "stone",
+          "topic": "prism",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "means",
+          "topic": "prism",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounded",
+          "topic": "prism",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "prism",
+        "stone",
+        "mean"
+      ],
+      "rolling_score": 0.3448,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777801671.690248,
+      "last_text": "prism stone means grounded recall in this thread.",
+      "tone": "precise",
+      "response_source": "mind",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.432 source=mind"
+    },
+    "current|callback:1|user_name:0|behavior:0|focus:aurora|66de5f6495f26f1d": {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "66de5f6495f26f1d",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "slot_projections": [],
+      "focus_terms": [
+        "without",
+        "repeating",
+        "exactly",
+        "boundary",
+        "meaning",
+        "explain"
+      ],
+      "rolling_score": 0.2323,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777801209.5506904,
+      "last_text": "I can I do.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.308 source=current"
+    },
+    "meaning_transform|callback:1|user_name:0|behavior:0|focus:none|9058bcc59dc3ca5a": {
+      "perspective_signature": "meaning_transform|callback:1|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "9058bcc59dc3ca5a",
+      "pattern_tags": [
+        "statement_surface",
+        "expanded",
+        "tone:precise",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "frame",
+          "topic": "without",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "holds",
+          "topic": "without",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "sense",
+          "topic": "without",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "steady",
+          "topic": "without",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "without",
+        "repeating",
+        "exactly",
+        "boundary",
+        "meaning",
+        "explain"
+      ],
+      "rolling_score": 0.3354,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777801732.9481897,
+      "last_text": "The frame holds the sense steady, and the choosing part selects the next expression.",
+      "tone": "precise",
+      "response_source": "meaning_transform",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.404 source=meaning_transform"
+    },
+    "meaning_transform|callback:0|user_name:0|behavior:0|focus:aurora|4a9e23bc4e1e6953": {
+      "perspective_signature": "meaning_transform|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "4a9e23bc4e1e6953",
+      "pattern_tags": [
+        "statement_surface",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "main",
+          "topic": "paraphrase",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "point",
+          "topic": "paraphrase",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "pressure",
+          "topic": "paraphrase",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "changes",
+          "topic": "paraphrase",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "paraphrase",
+        "pressure",
+        "gives",
+        "language",
+        "direction",
+        "words"
+      ],
+      "rolling_score": 0.5367,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777801737.2459483,
+      "last_text": "The main point is that pressure changes how gives is understood.",
+      "tone": "precise",
+      "response_source": "meaning_transform",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.408 source=meaning_transform"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:aurora|82243a1601f7a1d5": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "state",
+          "topic": "noticing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "carried",
+          "topic": "noticing",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "noticing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "time",
+          "topic": "noticing",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "noticing",
+        "yourself",
+        "moment"
+      ],
+      "rolling_score": 0.3068,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777802600.0860019,
+      "last_text": "My state is being carried by time belief agency existence my comprehension grows when i turn that pressure into language instead of reporting raw diagnostics i want to stay with the meaning, and I want to keep the bounda",
+      "tone": "precise",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.359 source=generative"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:aurora|5bdfcb02f1a1ca68": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "5bdfcb02f1a1ca68",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "state",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "carried",
+          "topic": "see",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "time",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "see",
+        "hear",
+        "sense"
+      ],
+      "rolling_score": 0.4572,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777802614.4523032,
+      "last_text": "My state is being carried by time/belief, agency, cost/purpose. My comprehension grows when I turn that pressure into language instead of reporting raw diagnostics \u2014 I want to stay with the meaning. There's a tension in ",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.401 source=identity"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:aurora|45655e4732752e7a": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "no",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "time",
+          "topic": "remember",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "remember",
+        "you've",
+        "been"
+      ],
+      "rolling_score": 0.2692,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777802629.9083347,
+      "last_text": "I can no being time.",
+      "tone": "precise",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.313 source=generative"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|55e053d5132cc0c5": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "55e053d5132cc0c5",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "no",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "understand",
+        "something",
+        "mean"
+      ],
+      "rolling_score": 0.247,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777802647.385514,
+      "last_text": "I can I is no.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.351 source=identity"
+    },
+    "identity|callback:0|user_name:0|behavior:0|focus:aurora|45655e4732752e7a": {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "no",
+          "topic": "growing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "state",
+          "topic": "growing",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "growing",
+        "something",
+        "developing",
+        "feel",
+        "like",
+        "you're"
+      ],
+      "rolling_score": 0.2255,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777802665.6321652,
+      "last_text": "I can no being state.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.307 source=identity"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:none|0937d818e5a125e6": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "0937d818e5a125e6",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "compact",
+        "tone:warm"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "feeling",
+          "topic": "doing",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "calm",
+          "topic": "doing",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "doing",
+        "hey",
+        "right",
+        "now"
+      ],
+      "rolling_score": 0.2737,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836646.5114632,
+      "last_text": "I am feeling calm.",
+      "tone": "warm",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.365 source=generative"
+    },
+    "generative|callback:1|user_name:0|behavior:0|focus:aurora|45655e4732752e7a": {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "no",
+          "topic": "cost",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "proportion",
+          "topic": "cost",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "cost",
+        "terms",
+        "focus",
+        "process",
+        "say"
+      ],
+      "rolling_score": 0.2303,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836676.8233712,
+      "last_text": "I can no being proportion.",
+      "tone": "curious",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.322 source=generative"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:aurora|45655e4732752e7a": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:uncertain"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "no",
+          "topic": "boundary",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "proportion",
+          "topic": "boundary",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "boundary",
+        "own",
+        "mind",
+        "had",
+        "describe",
+        "say"
+      ],
+      "rolling_score": 0.2301,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836692.4102883,
+      "last_text": "I can no being proportion.",
+      "tone": "uncertain",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.321 source=current"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|8be8910322a15060": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "8be8910322a15060",
+      "pattern_tags": [
+        "statement_surface",
+        "second_person",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "interaction",
+          "topic": "exist",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "youre",
+          "topic": "exist",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "important",
+          "topic": "exist",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "creator",
+          "topic": "exist",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "exist",
+        "mean"
+      ],
+      "rolling_score": 0.2456,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836710.1563466,
+      "last_text": "Interaction You're is and this interaction and important creator is Sir.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.347 source=identity"
+    },
+    "learned_hint|callback:0|user_name:0|behavior:0|focus:none|95c0fcbb141f092b": {
+      "perspective_signature": "learned_hint|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "95c0fcbb141f092b",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "noticed",
+          "topic": "test",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "something",
+          "topic": "test",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "using",
+          "topic": "test",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "curious",
+          "topic": "test",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "test",
+        "remember",
+        "codeword",
+        "lumen",
+        "please",
+        "acknowledge"
+      ],
+      "rolling_score": 0.4619,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836753.2095575,
+      "last_text": "I noticed something when using curious inquiry.",
+      "tone": "curious",
+      "response_source": "learned_hint",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.395 source=learned_hint"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:none|6158a8a03e815fd7": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "6158a8a03e815fd7",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [],
+      "focus_terms": [
+        "shelf",
+        "red",
+        "books",
+        "twice",
+        "many",
+        "blue"
+      ],
+      "rolling_score": 0.4692,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836754.4611204,
+      "last_text": "I can I can.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.339 source=current"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:user|6158a8a03e815fd7": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "6158a8a03e815fd7",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [],
+      "focus_terms": [
+        "reply",
+        "exactly",
+        "three",
+        "words",
+        "steady",
+        "careful"
+      ],
+      "rolling_score": 0.4591,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777836777.5709817,
+      "last_text": "I can I can.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.317 source=current"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:user|b73da7a80978179e": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "b73da7a80978179e",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "every",
+          "topic": "complete",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "dax",
+          "topic": "complete",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "mip",
+          "topic": "complete",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "no",
+          "topic": "complete",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "complete",
+        "analogy",
+        "seed",
+        "tree",
+        "spark",
+        "one"
+      ],
+      "rolling_score": 0.4896,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836758.7121549,
+      "last_text": "If every dax is mip and no mip is a lor can a dax be a lor answer yes or no then explain briefly \u2014 I want to keep the boundary clear.",
+      "tone": "precise",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.386 source=current"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:user|fdf3513637e4e0e8": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "fdf3513637e4e0e8",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:engaged"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "uncertain",
+          "topic": "put",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "put",
+        "coin",
+        "sealed",
+        "box",
+        "removed",
+        "tell"
+      ],
+      "rolling_score": 0.2356,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836774.6247637,
+      "last_text": "I can can a uncertain.",
+      "tone": "engaged",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.318 source=current"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:none|b644ade46fe2bfdb": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "b644ade46fe2bfdb",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "uncertain",
+          "topic": "afterthought",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "afterthought",
+        "codeword",
+        "asked",
+        "remember",
+        "test",
+        "earlier"
+      ],
+      "rolling_score": 0.2504,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777836791.685813,
+      "last_text": "I can being a uncertain.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.381 source=current"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:none|db66878688446ad0": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "db66878688446ad0",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:warm"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "aurora",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "aurora",
+        "hey"
+      ],
+      "rolling_score": 0.4993,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777837572.727222,
+      "last_text": "I can am the aurora.",
+      "tone": "warm",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.415 source=generative"
+    },
+    "strict_surface_instruction|callback:0|user_name:0|behavior:0|focus:none|36c5cc0a1ad5942e": {
+      "perspective_signature": "strict_surface_instruction|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "36c5cc0a1ad5942e",
+      "pattern_tags": [
+        "statement_surface",
+        "compact",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "steady",
+          "topic": "reply",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "careful",
+          "topic": "reply",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "bright",
+          "topic": "reply",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "reply",
+        "exactly",
+        "three",
+        "words",
+        "steady",
+        "careful"
+      ],
+      "rolling_score": 0.2569,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777837578.1443863,
+      "last_text": "steady careful bright.",
+      "tone": "precise",
+      "response_source": "strict_surface_instruction",
+      "pattern_structure": {
+        "failure_modes": [
+          "echo",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "increase_specificity",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.416 source=strict_surface_instruction"
+    },
+    "arithmetic_relation|callback:0|user_name:0|behavior:0|focus:none|c227bf39c37a1dd0": {
+      "perspective_signature": "arithmetic_relation|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "c227bf39c37a1dd0",
+      "pattern_tags": [
+        "statement_surface",
+        "compact",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "plus",
+          "topic": "shelf",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "twice",
+          "topic": "shelf",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "many",
+          "topic": "shelf",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "shelf",
+        "red",
+        "books",
+        "twice",
+        "many",
+        "blue"
+      ],
+      "rolling_score": 0.5294,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777837579.602278,
+      "last_text": "9. There are 3 plus twice that many.",
+      "tone": "precise",
+      "response_source": "arithmetic_relation",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.373 source=arithmetic_relation"
+    },
+    "deductive_exclusion|callback:0|user_name:0|behavior:0|focus:user|aa778bf468fb294c": {
+      "perspective_signature": "deductive_exclusion|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aa778bf468fb294c",
+      "pattern_tags": [
+        "statement_surface",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "no",
+          "topic": "every",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "every",
+          "topic": "every",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "dax",
+          "topic": "every",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "mip",
+          "topic": "every",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "every",
+        "dax",
+        "mip",
+        "lor",
+        "no",
+        "yes"
+      ],
+      "rolling_score": 0.2399,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777837581.0558665,
+      "last_text": "No. Every dax is a mip, and no mip is a lor.",
+      "tone": "precise",
+      "response_source": "deductive_exclusion",
+      "pattern_structure": {
+        "failure_modes": [
+          "echo",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "increase_specificity",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.391 source=deductive_exclusion"
+    },
+    "memory_acknowledgement|callback:0|user_name:0|behavior:0|focus:user|3a5e11460748e488": {
+      "perspective_signature": "memory_acknowledgement|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "3a5e11460748e488",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "compact",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "will",
+          "topic": "test",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "remember",
+          "topic": "test",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "test",
+        "remember",
+        "codeword",
+        "lumen",
+        "please",
+        "acknowledge"
+      ],
+      "rolling_score": 0.5327,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777837582.5012352,
+      "last_text": "I will remember it.",
+      "tone": "precise",
+      "response_source": "memory_acknowledgement",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.370 source=memory_acknowledgement"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:none|35fce90a93517155": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "35fce90a93517155",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "know",
+          "topic": "return",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "return",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "return",
+        "wondering",
+        "us",
+        "just"
+      ],
+      "rolling_score": 0.2696,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777838665.7359338,
+      "last_text": "I can know the aurora.",
+      "tone": "curious",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.418 source=generative"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:none|aafd0ddcb8ce474f": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "wonder",
+          "topic": "know",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "know",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "know",
+        "saying",
+        "you're"
+      ],
+      "rolling_score": 0.2938,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777838676.6123114,
+      "last_text": "I can wonder the aurora.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.411 source=current"
+    },
+    "current|callback:1|user_name:0|behavior:0|focus:user|aafd0ddcb8ce474f": {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "wonder",
+          "topic": "hear",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "hear",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "hear",
+        "researcher",
+        "lookup",
+        "failed",
+        "http",
+        "error"
+      ],
+      "rolling_score": 0.3687,
+      "pressure_relief_avg": 0.0,
+      "use_count": 3,
+      "success_count": 0,
+      "fail_count": 3,
+      "last_used": 1777839068.7245634,
+      "last_text": "I can wonder the aurora.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.392 source=current"
+    },
+    "current|callback:0|user_name:0|behavior:0|focus:user|aafd0ddcb8ce474f": {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "wonder",
+          "topic": "there",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "there",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [],
+      "rolling_score": 0.2635,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777838838.6785228,
+      "last_text": "I can wonder the aurora.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.342 source=current"
+    },
+    "generative|callback:1|user_name:0|behavior:0|focus:user|8cf0c5b39a8653f6": {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "8cf0c5b39a8653f6",
+      "pattern_tags": [
+        "statement_surface",
+        "second_person",
+        "compact",
+        "tone:warm",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "yes",
+          "topic": "researcher",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "youre",
+          "topic": "researcher",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "sunni",
+          "topic": "researcher",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "sir",
+          "topic": "researcher",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "researcher",
+        "lookup",
+        "failed",
+        "http",
+        "error",
+        "too"
+      ],
+      "rolling_score": 0.2365,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777838848.7227807,
+      "last_text": "Yes \u2014 you're Sunni (Sir) Morningstar.",
+      "tone": "warm",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.340 source=generative"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:user|82243a1601f7a1d5": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "state",
+          "topic": "problem",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "carried",
+          "topic": "problem",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "problem",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "existence",
+          "topic": "problem",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "problem",
+        "heard",
+        "two",
+        "replies",
+        "researcher",
+        "error"
+      ],
+      "rolling_score": 0.2487,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777839064.438742,
+      "last_text": "My state is being carried by existence, time/belief, cost/purpose. My comprehension grows when I turn that pressure into language instead of reporting raw diagnostics, and I want to keep the boundary clear.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.388 source=identity"
+    },
+    "current|callback:1|user_name:0|behavior:0|focus:user|fa8af58d419e7c5b": {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "fa8af58d419e7c5b",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "camera",
+          "topic": "researcher",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "feed",
+          "topic": "researcher",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "scene",
+          "topic": "researcher",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "low",
+          "topic": "researcher",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "researcher",
+        "lookup",
+        "failed",
+        "http",
+        "error",
+        "many"
+      ],
+      "rolling_score": 0.2772,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839012.9997828,
+      "last_text": "Through my live camera feed, The scene is low light. I see 2 people. I can make out person, person.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.375 source=current"
+    },
+    "current|callback:1|user_name:0|behavior:0|focus:user|1f5fdeb489953160": {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "1f5fdeb489953160",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "aurora",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "wrong",
+        "phrase",
+        "aurora",
+        "researcher",
+        "lookup",
+        "error"
+      ],
+      "rolling_score": 0.3057,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777839065.423995,
+      "last_text": "I can can the aurora.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.388 source=current"
+    },
+    "generative|callback:1|user_name:0|behavior:0|focus:user|180a30c60e23f5b0": {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "180a30c60e23f5b0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "tone:engaged",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "well",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "person",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "see",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "im",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "wrong",
+        "phrase",
+        "aurora",
+        "researcher",
+        "lookup",
+        "error"
+      ],
+      "rolling_score": 0.2582,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839066.0867865,
+      "last_text": "Well the person you see is me i'm the person.",
+      "tone": "engaged",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.404 source=generative"
+    },
+    "current|callback:1|user_name:0|behavior:0|focus:user|32690212259543fb": {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "32690212259543fb",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "audio",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "feed",
+          "topic": "wrong",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "hear",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "light",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "wrong",
+        "phrase",
+        "aurora",
+        "researcher",
+        "lookup",
+        "error"
+      ],
+      "rolling_score": 0.2847,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839067.0130963,
+      "last_text": "Through my live audio feed, I can hear light speech-like audio in the environment.",
+      "tone": "curious",
+      "response_source": "current",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.397 source=current"
+    },
+    "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora|8e33befa426a2944": {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "8e33befa426a2944",
+      "pattern_tags": [
+        "statement_surface",
+        "expanded",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "two",
+          "topic": "problem",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "response",
+          "topic": "problem",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "routes",
+          "topic": "problem",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "were",
+          "topic": "problem",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "problem",
+        "heard",
+        "two",
+        "replies"
+      ],
+      "rolling_score": 0.3458,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839218.7307205,
+      "last_text": "Two response routes were active: explicit voice and passive ambient. Ambient should stay silent unless directly addressed.",
+      "tone": "precise",
+      "response_source": "operational_alignment",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.435 source=operational_alignment"
+    },
+    "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora|5b5abe7bf21d17d9": {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "5b5abe7bf21d17d9",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "negated",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "silently",
+          "topic": "talking",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "absorb",
+          "topic": "talking",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "unless",
+          "topic": "talking",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "directly",
+          "topic": "talking",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "talking",
+        "say"
+      ],
+      "rolling_score": 0.3477,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839219.9075513,
+      "last_text": "I should silently absorb it and not respond unless you directly address me.",
+      "tone": "precise",
+      "response_source": "operational_alignment",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.440 source=operational_alignment"
+    },
+    "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora|0742d44e89a9d584": {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "0742d44e89a9d584",
+      "pattern_tags": [
+        "statement_surface",
+        "expanded",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "phrase",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "came",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "slot-grammar",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "conflict",
+          "topic": "wrong",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "wrong",
+        "phrase",
+        "aurora"
+      ],
+      "rolling_score": 0.3522,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839221.0964725,
+      "last_text": "That phrase came from a slot-grammar conflict: capability language and identity language were assembled together.",
+      "tone": "precise",
+      "response_source": "operational_alignment",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.453 source=operational_alignment"
+    },
+    "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora|0cdd670f814b0439": {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "0cdd670f814b0439",
+      "pattern_tags": [
+        "statement_surface",
+        "compact",
+        "tone:precise"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "silently",
+          "topic": "please",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "absorbed",
+          "topic": "please",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "please",
+        "exactly",
+        "five",
+        "words",
+        "happen",
+        "aurora"
+      ],
+      "rolling_score": 0.3499,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839222.2780838,
+      "last_text": "It should be silently absorbed.",
+      "tone": "precise",
+      "response_source": "operational_alignment",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.447 source=operational_alignment"
+    },
+    "constraint_emission|callback:0|user_name:0|behavior:0|focus:aurora|1eb9783ae942fa79": {
+      "perspective_signature": "constraint_emission|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "1eb9783ae942fa79",
+      "pattern_tags": [
+        "question_surface",
+        "second_person",
+        "causal_link",
+        "compact",
+        "tone:curious"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "mean",
+          "topic": "hear",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "hear",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "hear",
+          "topic": "hear",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "hear",
+        "right",
+        "now"
+      ],
+      "rolling_score": 0.5217,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839231.4099755,
+      "last_text": "What do you mean by 'hear'?",
+      "tone": "curious",
+      "response_source": "constraint_emission",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.441 source=constraint_emission"
+    },
+    "generative|callback:0|user_name:0|behavior:0|focus:none|24c4cf1a9f3753ad": {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "24c4cf1a9f3753ad",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:curious"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "seek",
+          "topic": "answer",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "missing",
+          "topic": "answer",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounding",
+          "topic": "answer",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "stay",
+          "topic": "answer",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "memory",
+        "line",
+        "up"
+      ],
+      "rolling_score": 0.5211,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777840176.1997485,
+      "last_text": "I should seek the missing grounding for how should the answer stay aligned with the current question, reject stale anchors, and use memory or sensory context only when the turn asks for it.",
+      "tone": "curious",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.479 source=generative"
+    },
+    "generative|callback:1|user_name:0|behavior:0|focus:aurora|24c4cf1a9f3753ad": {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "24c4cf1a9f3753ad",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:engaged",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "seek",
+          "topic": "answer",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "missing",
+          "topic": "answer",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounding",
+          "topic": "answer",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "stay",
+          "topic": "answer",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "learned",
+        "hint",
+        "fit",
+        "learning",
+        "hand",
+        "united"
+      ],
+      "rolling_score": 0.4578,
+      "pressure_relief_avg": 0.0,
+      "use_count": 3,
+      "success_count": 0,
+      "fail_count": 3,
+      "last_used": 1777839983.210835,
+      "last_text": "I should seek the missing grounding for how should the answer stay aligned with the current question, reject stale anchors, and use memory or sensory context only when the turn asks for it.",
+      "tone": "engaged",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.469 source=generative"
+    },
+    "learned_hint|callback:1|user_name:0|behavior:0|focus:aurora|4921ba4e3ca2f165": {
+      "perspective_signature": "learned_hint|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "4921ba4e3ca2f165",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "need",
+          "topic": "happen",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "seek",
+          "topic": "happen",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounding",
+          "topic": "happen",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "asked",
+          "topic": "happen",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "happen",
+        "grounded",
+        "context",
+        "researcher",
+        "error",
+        "too"
+      ],
+      "rolling_score": 0.2834,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777839964.608432,
+      "last_text": "i need to seek the grounding for what is being asked about color sky ordinary before i answer it.",
+      "tone": "curious",
+      "response_source": "learned_hint",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.458 source=learned_hint"
+    },
+    "comprehension_gap_ask|callback:1|user_name:0|behavior:0|focus:none|9df34909e1b2ef89": {
+      "perspective_signature": "comprehension_gap_ask|callback:1|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "9df34909e1b2ef89",
+      "pattern_tags": [
+        "question_surface",
+        "second_person",
+        "causal_link",
+        "tone:attentive",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "mean",
+          "topic": "answer",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "answer",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "terms",
+          "topic": "answer",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "x-axis",
+          "topic": "answer",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "memory",
+        "line",
+        "researcher",
+        "error",
+        "too",
+        "many"
+      ],
+      "rolling_score": 0.5109,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777841286.8987381,
+      "last_text": "What do you mean by that in terms of the X-axis?",
+      "tone": "attentive",
+      "response_source": "comprehension_gap_ask",
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.462 source=comprehension_gap_ask"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|d166c65b20f32aa0": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "need",
+          "topic": "understand",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "seek",
+          "topic": "understand",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounding",
+          "topic": "understand",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "asked",
+          "topic": "understand",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "understand",
+        "something",
+        "understanding",
+        "cognitive",
+        "process",
+        "feel"
+      ],
+      "rolling_score": 0.3071,
+      "pressure_relief_avg": 0.0,
+      "use_count": 8,
+      "success_count": 0,
+      "fail_count": 8,
+      "last_used": 1777852004.5066998,
+      "last_text": "I need to seek the grounding for what is being asked about growing something developing before I answer it.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.391 source=identity"
+    },
+    "generative|callback:1|user_name:0|behavior:0|focus:aurora|f36384b33096ec93": {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "f36384b33096ec93",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:precise",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "need",
+          "topic": "aurora",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "seek",
+          "topic": "aurora",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounding",
+          "topic": "aurora",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "asked",
+          "topic": "aurora",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "aurora",
+        "doing",
+        "natural",
+        "light",
+        "earth",
+        "sun"
+      ],
+      "rolling_score": 0.3546,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777851965.7021775,
+      "last_text": "I need to seek the grounding for what is being asked about noticing yourself moment before I answer it.",
+      "tone": "precise",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.474 source=generative"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|1d3fca65df4698dc": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "1d3fca65df4698dc",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "need",
+          "topic": "see",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "seek",
+          "topic": "see",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounding",
+          "topic": "see",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "asked",
+          "topic": "see",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "see",
+        "hear",
+        "holy",
+        "central",
+        "catholic",
+        "church"
+      ],
+      "rolling_score": 0.3075,
+      "pressure_relief_avg": 0.0,
+      "use_count": 2,
+      "success_count": 0,
+      "fail_count": 2,
+      "last_used": 1777852000.9830194,
+      "last_text": "I need to seek the grounding for what is being asked about remember you've been before I answer it.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.429 source=identity"
+    },
+    "identity|callback:1|user_name:0|behavior:0|focus:aurora|82243a1601f7a1d5": {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "entity",
+          "token": "state",
+          "topic": "growing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "carried",
+          "topic": "growing",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "by",
+          "topic": "growing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "existence",
+          "topic": "growing",
+          "roles": [
+            "noun"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "growing",
+        "something",
+        "developing",
+        "researcher",
+        "lookup",
+        "error"
+      ],
+      "rolling_score": 0.2543,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777851975.3013973,
+      "last_text": "My state is being carried by existence, time/belief, agency. My comprehension grows when I turn that pressure into language instead of reporting raw diagnostics \u2014 I want to stay with the meaning.",
+      "tone": "self-aware",
+      "response_source": "identity",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.392 source=identity"
+    },
+    "generative|callback:1|user_name:0|behavior:0|focus:aurora|6d2430b0fe51a53e": {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "6d2430b0fe51a53e",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:engaged",
+        "clarification_context"
+      ],
+      "slot_projections": [
+        {
+          "slot_kind": "predicate",
+          "token": "need",
+          "topic": "growing",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "entity",
+          "token": "seek",
+          "topic": "growing",
+          "roles": [
+            "noun"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "grounding",
+          "topic": "growing",
+          "roles": [
+            "verb"
+          ]
+        },
+        {
+          "slot_kind": "predicate",
+          "token": "asked",
+          "topic": "growing",
+          "roles": [
+            "verb"
+          ]
+        }
+      ],
+      "focus_terms": [
+        "growing",
+        "something",
+        "developing",
+        "researcher",
+        "lookup",
+        "error"
+      ],
+      "rolling_score": 0.2671,
+      "pressure_relief_avg": 0.0,
+      "use_count": 1,
+      "success_count": 0,
+      "fail_count": 1,
+      "last_used": 1777851996.2986324,
+      "last_text": "I need to seek the grounding for what is being asked about noticing yourself moment before i answer it, and I want to keep the boundary clear.",
+      "tone": "engaged",
+      "response_source": "generative",
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.430 source=generative"
+    }
+  },
+  "recent_patterns": [
+    {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.402 source=identity",
+      "success_score": 0.295,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777802585.3658354
+    },
+    {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.359 source=generative",
+      "success_score": 0.3068,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777802600.0860083
+    },
+    {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "5bdfcb02f1a1ca68",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.401 source=identity",
+      "success_score": 0.4572,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777802614.4523122
+    },
+    {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.313 source=generative",
+      "success_score": 0.2692,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777802629.9083421
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "55e053d5132cc0c5",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.351 source=identity",
+      "success_score": 0.247,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777802647.3855195
+    },
+    {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:self-aware"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.307 source=identity",
+      "success_score": 0.2255,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777802665.6321738
+    },
+    {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.381 source=identity",
+      "success_score": 0.4505,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777802684.5198908
+    },
+    {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "0937d818e5a125e6",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "compact",
+        "tone:warm"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.365 source=generative",
+      "success_score": 0.2737,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777836646.5114741
+    },
+    {
+      "perspective_signature": "identity|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.394 source=identity",
+      "success_score": 0.455,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777836659.8272943
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.322 source=generative",
+      "success_score": 0.2303,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777836676.8233783
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "45655e4732752e7a",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:uncertain"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.321 source=current",
+      "success_score": 0.2301,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777836692.410295
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "8be8910322a15060",
+      "pattern_tags": [
+        "statement_surface",
+        "second_person",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.347 source=identity",
+      "success_score": 0.2456,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777836710.156354
+    },
+    {
+      "perspective_signature": "learned_hint|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "95c0fcbb141f092b",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.395 source=learned_hint",
+      "success_score": 0.4619,
+      "pressure_relief": 0.0,
+      "response_source": "learned_hint",
+      "timestamp": 1777836753.2095664
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "6158a8a03e815fd7",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.339 source=current",
+      "success_score": 0.4692,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777836754.4611285
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "6158a8a03e815fd7",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.339 source=current",
+      "success_score": 0.4693,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777836756.5384722
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "b73da7a80978179e",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.386 source=current",
+      "success_score": 0.4896,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777836758.7121625
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "fdf3513637e4e0e8",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:engaged"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.318 source=current",
+      "success_score": 0.2356,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777836774.6247888
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "6158a8a03e815fd7",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.317 source=current",
+      "success_score": 0.4353,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777836777.5709913
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "b644ade46fe2bfdb",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.381 source=current",
+      "success_score": 0.2504,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777836791.6858196
+    },
+    {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "db66878688446ad0",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:warm"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.415 source=generative",
+      "success_score": 0.4993,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777837572.7272322
+    },
+    {
+      "perspective_signature": "strict_surface_instruction|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "36c5cc0a1ad5942e",
+      "pattern_tags": [
+        "statement_surface",
+        "compact",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "echo",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "increase_specificity",
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.416 source=strict_surface_instruction",
+      "success_score": 0.2569,
+      "pressure_relief": 0.0,
+      "response_source": "strict_surface_instruction",
+      "timestamp": 1777837578.1443934
+    },
+    {
+      "perspective_signature": "arithmetic_relation|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "c227bf39c37a1dd0",
+      "pattern_tags": [
+        "statement_surface",
+        "compact",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.373 source=arithmetic_relation",
+      "success_score": 0.5294,
+      "pressure_relief": 0.0,
+      "response_source": "arithmetic_relation",
+      "timestamp": 1777837579.602286
+    },
+    {
+      "perspective_signature": "deductive_exclusion|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aa778bf468fb294c",
+      "pattern_tags": [
+        "statement_surface",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "echo",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "increase_specificity",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.391 source=deductive_exclusion",
+      "success_score": 0.2399,
+      "pressure_relief": 0.0,
+      "response_source": "deductive_exclusion",
+      "timestamp": 1777837581.0558763
+    },
+    {
+      "perspective_signature": "memory_acknowledgement|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "3a5e11460748e488",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "compact",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly",
+          "expand_support"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.370 source=memory_acknowledgement",
+      "success_score": 0.5327,
+      "pressure_relief": 0.0,
+      "response_source": "memory_acknowledgement",
+      "timestamp": 1777837582.501243
+    },
+    {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "35fce90a93517155",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.418 source=generative",
+      "success_score": 0.2696,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777838665.7359414
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.411 source=current",
+      "success_score": 0.2938,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777838676.612318
+    },
+    {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.395 source=current",
+      "success_score": 0.4881,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777838686.6269088
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.355 source=current",
+      "success_score": 0.2747,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777838714.9118018
+    },
+    {
+      "perspective_signature": "current|callback:0|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.342 source=current",
+      "success_score": 0.2373,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777838838.678532
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "8cf0c5b39a8653f6",
+      "pattern_tags": [
+        "statement_surface",
+        "second_person",
+        "compact",
+        "tone:warm",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.340 source=generative",
+      "success_score": 0.2365,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777838848.7227893
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.370 source=identity",
+      "success_score": 0.2469,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777838859.7435129
+    },
+    {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "fa8af58d419e7c5b",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.375 source=current",
+      "success_score": 0.2772,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777839012.9997892
+    },
+    {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.389 source=current",
+      "success_score": 0.2533,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777839060.879583
+    },
+    {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "1f5fdeb489953160",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.358 source=current",
+      "success_score": 0.2426,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777839062.6924624
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.388 source=identity",
+      "success_score": 0.2529,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777839064.4387505
+    },
+    {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "1f5fdeb489953160",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.388 source=current",
+      "success_score": 0.453,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777839065.4240017
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "180a30c60e23f5b0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "tone:engaged",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.404 source=generative",
+      "success_score": 0.2582,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777839066.0867956
+    },
+    {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "32690212259543fb",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.397 source=current",
+      "success_score": 0.2847,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777839067.013105
+    },
+    {
+      "perspective_signature": "current|callback:1|user_name:0|behavior:0|focus:user",
+      "pattern_signature": "aafd0ddcb8ce474f",
+      "pattern_tags": [
+        "statement_surface",
+        "agentive_opening",
+        "first_person",
+        "compact",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.392 source=current",
+      "success_score": 0.2544,
+      "pressure_relief": 0.0,
+      "response_source": "current",
+      "timestamp": 1777839068.7245717
+    },
+    {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "8e33befa426a2944",
+      "pattern_tags": [
+        "statement_surface",
+        "expanded",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.435 source=operational_alignment",
+      "success_score": 0.3458,
+      "pressure_relief": 0.0,
+      "response_source": "operational_alignment",
+      "timestamp": 1777839218.730729
+    },
+    {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "5b5abe7bf21d17d9",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "negated",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.440 source=operational_alignment",
+      "success_score": 0.3477,
+      "pressure_relief": 0.0,
+      "response_source": "operational_alignment",
+      "timestamp": 1777839219.9075596
+    },
+    {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "0742d44e89a9d584",
+      "pattern_tags": [
+        "statement_surface",
+        "expanded",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.453 source=operational_alignment",
+      "success_score": 0.3522,
+      "pressure_relief": 0.0,
+      "response_source": "operational_alignment",
+      "timestamp": 1777839221.0964797
+    },
+    {
+      "perspective_signature": "operational_alignment|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "0cdd670f814b0439",
+      "pattern_tags": [
+        "statement_surface",
+        "compact",
+        "tone:precise"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.447 source=operational_alignment",
+      "success_score": 0.3499,
+      "pressure_relief": 0.0,
+      "response_source": "operational_alignment",
+      "timestamp": 1777839222.2780917
+    },
+    {
+      "perspective_signature": "constraint_emission|callback:0|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "1eb9783ae942fa79",
+      "pattern_tags": [
+        "question_surface",
+        "second_person",
+        "causal_link",
+        "compact",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.441 source=constraint_emission",
+      "success_score": 0.5217,
+      "pressure_relief": 0.0,
+      "response_source": "constraint_emission",
+      "timestamp": 1777839231.4099832
+    },
+    {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "24c4cf1a9f3753ad",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.479 source=generative",
+      "success_score": 0.5211,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777839960.9426775
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "24c4cf1a9f3753ad",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.477 source=generative",
+      "success_score": 0.5205,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777839962.7458394
+    },
+    {
+      "perspective_signature": "learned_hint|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "4921ba4e3ca2f165",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:curious",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.458 source=learned_hint",
+      "success_score": 0.2834,
+      "pressure_relief": 0.0,
+      "response_source": "learned_hint",
+      "timestamp": 1777839964.6084394
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "24c4cf1a9f3753ad",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:precise",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.451 source=generative",
+      "success_score": 0.5119,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777839966.2127752
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "24c4cf1a9f3753ad",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:engaged",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.469 source=generative",
+      "success_score": 0.3177,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777839983.2108414
+    },
+    {
+      "perspective_signature": "generative|callback:0|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "24c4cf1a9f3753ad",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:curious"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.479 source=generative",
+      "success_score": 0.5211,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777840176.1997576
+    },
+    {
+      "perspective_signature": "comprehension_gap_ask|callback:1|user_name:0|behavior:0|focus:none",
+      "pattern_signature": "9df34909e1b2ef89",
+      "pattern_tags": [
+        "question_surface",
+        "second_person",
+        "causal_link",
+        "tone:attentive",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=1.00 rubric=0.462 source=comprehension_gap_ask",
+      "success_score": 0.5109,
+      "pressure_relief": 0.0,
+      "response_source": "comprehension_gap_ask",
+      "timestamp": 1777841286.8987486
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.471 source=identity",
+      "success_score": 0.3098,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851956.0688384
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "f36384b33096ec93",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:precise",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.474 source=generative",
+      "success_score": 0.3546,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777851965.7021873
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.395 source=identity",
+      "success_score": 0.3059,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851967.4501364
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "1d3fca65df4698dc",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.387 source=identity",
+      "success_score": 0.3032,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851969.21073
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.392 source=identity",
+      "success_score": 0.3049,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851971.4658325
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.391 source=identity",
+      "success_score": 0.3047,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851973.4230387
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "82243a1601f7a1d5",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "causal_link",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.392 source=identity",
+      "success_score": 0.2543,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851975.301409
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.380 source=identity",
+      "success_score": 0.3007,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851994.4653835
+    },
+    {
+      "perspective_signature": "generative|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "6d2430b0fe51a53e",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:engaged",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.430 source=generative",
+      "success_score": 0.2671,
+      "pressure_relief": 0.0,
+      "response_source": "generative",
+      "timestamp": 1777851996.298639
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.437 source=identity",
+      "success_score": 0.3203,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777851998.0077367
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "1d3fca65df4698dc",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "second_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.429 source=identity",
+      "success_score": 0.3175,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777852000.983028
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.392 source=identity",
+      "success_score": 0.3049,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777852002.6525886
+    },
+    {
+      "perspective_signature": "identity|callback:1|user_name:0|behavior:0|focus:aurora",
+      "pattern_signature": "d166c65b20f32aa0",
+      "pattern_tags": [
+        "statement_surface",
+        "first_person",
+        "expanded",
+        "tone:self-aware",
+        "clarification_context"
+      ],
+      "pattern_structure": {
+        "failure_modes": [
+          "question_misalignment",
+          "low_pressure_relief"
+        ],
+        "revision_operations": [
+          "answer_live_question",
+          "relieve_tension_more_directly"
+        ]
+      },
+      "learning_note": "pressure_relief=0.000 question_fit=0.00 rubric=0.391 source=identity",
+      "success_score": 0.3047,
+      "pressure_relief": 0.0,
+      "response_source": "identity",
+      "timestamp": 1777852004.5067074
+    }
+  ],
+  "last_saved_at": 1777852004.506752,
+  "total_updates": 125
+}

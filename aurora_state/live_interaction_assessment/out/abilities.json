@@ -1,0 +1,4787 @@
+{
+  "X:ADMIT": {
+    "id": "X:ADMIT",
+    "axis": "X",
+    "requires": [
+      "X"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.01,
+      "N": 0.01,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "admit_state",
+      "clear_block",
+      "origin_primary:X",
+      "origin_secondary:X",
+      "origin_signature:X^1",
+      "root_slot:NC:X>X\u00d7NC:X>X",
+      "operation_lineage:OP:4c6504574442",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Allows a previously-blocked state through the admissibility predicate. [origin root_slot=NC:X>X\u00d7NC:X>X; root_parents=NC:X>X,NC:X>X; origin_signature=X^1; operation_lineage_id=OP:4c6504574442; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.350; purpose_grade=0.850; overall_grade=0.600; complexity_axes=1; complexity_slots=1; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.125674,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "X:REJECT": {
+    "id": "X:REJECT",
+    "axis": "X",
+    "requires": [
+      "X"
+    ],
+    "cost": {
+      "X": 0.01,
+      "T": 0.01,
+      "N": 0.0,
+      "B": 0.01,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "reject_state",
+      "enforce_boundary",
+      "origin_primary:X",
+      "origin_secondary:B",
+      "origin_signature:X^1*B^1",
+      "root_slot:NC:X>B\u00d7NC:B>X",
+      "operation_lineage:OP:25a28b16316f",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.474",
+      "purpose_grade:0.725",
+      "overall_grade:0.600",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Denies a state; raises X boundary pressure but lowers manifold contradiction. [origin root_slot=NC:X>B\u00d7NC:B>X; root_parents=NC:X>B,NC:B>X; origin_signature=X^1*B^1; operation_lineage_id=OP:25a28b16316f; operator_action=admissibility_gating; purpose_lane=meaning; operator_grade=0.474; purpose_grade=0.725; overall_grade=0.600; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.125807,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "X:RECLASSIFY": {
+    "id": "X:RECLASSIFY",
+    "axis": "X",
+    "requires": [
+      "X",
+      "B"
+    ],
+    "cost": {
+      "X": 0.02,
+      "T": 0.02,
+      "N": 0.01,
+      "B": 0.01,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.02,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.01,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "reclassify",
+      "reindex",
+      "origin_primary:X",
+      "origin_secondary:B",
+      "origin_signature:X^1*B^1",
+      "root_slot:NC:X>B\u00d7NC:B>X",
+      "operation_lineage:OP:7f6cd377d854",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.474",
+      "purpose_grade:0.725",
+      "overall_grade:0.600",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Moves a state to a different admissibility class without destroying it. [origin root_slot=NC:X>B\u00d7NC:B>X; root_parents=NC:X>B,NC:B>X; origin_signature=X^1*B^1; operation_lineage_id=OP:7f6cd377d854; operator_action=admissibility_gating; purpose_lane=meaning; operator_grade=0.474; purpose_grade=0.725; overall_grade=0.600; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1258712,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "X:RESOLVE_CONTRADICTION": {
+    "id": "X:RESOLVE_CONTRADICTION",
+    "axis": "X",
+    "requires": [
+      "X",
+      "T"
+    ],
+    "cost": {
+      "X": 0.03,
+      "T": 0.04,
+      "N": 0.02,
+      "B": 0.01,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.04,
+      "T": 0.01,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "resolve",
+      "merge_conflict",
+      "origin_primary:X",
+      "origin_secondary:T",
+      "origin_signature:X^1*T^1",
+      "root_slot:NC:X>T\u00d7NC:T>X",
+      "operation_lineage:OP:7bad61b1469e",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.474",
+      "purpose_grade:0.800",
+      "overall_grade:0.637",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Collapses two contradicting states into one admissible state; high X-risk. [origin root_slot=NC:X>T\u00d7NC:T>X; root_parents=NC:X>T,NC:T>X; origin_signature=X^1*T^1; operation_lineage_id=OP:7bad61b1469e; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.474; purpose_grade=0.800; overall_grade=0.637; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1259277,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "T:DEFER": {
+    "id": "T:DEFER",
+    "axis": "T",
+    "requires": [
+      "T"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.01,
+      "N": 0.01,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.01,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "defer",
+      "delay",
+      "origin_primary:T",
+      "origin_secondary:T",
+      "origin_signature:T^1",
+      "root_slot:NC:T>T\u00d7NC:T>T",
+      "operation_lineage:OP:12ad2feca691",
+      "seed_lineage:true",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.350",
+      "purpose_grade:0.800",
+      "overall_grade:0.575",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Pushes an operation to a later tick; relieves immediate T pressure. [origin root_slot=NC:T>T\u00d7NC:T>T; root_parents=NC:T>T,NC:T>T; origin_signature=T^1; operation_lineage_id=OP:12ad2feca691; operator_action=temporal_orchestration; purpose_lane=communication; operator_grade=0.350; purpose_grade=0.800; overall_grade=0.575; complexity_axes=1; complexity_slots=1; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1260972,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "T:BATCH": {
+    "id": "T:BATCH",
+    "axis": "T",
+    "requires": [
+      "T",
+      "N"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.02,
+      "N": 0.03,
+      "B": 0.01,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.01,
+      "N": 0.01,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "batch",
+      "coalesce",
+      "origin_primary:T",
+      "origin_secondary:N",
+      "origin_signature:T^1*N^1",
+      "root_slot:NC:T>N\u00d7NC:N>T",
+      "operation_lineage:OP:28dca87baf4e",
+      "seed_lineage:true",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:intelligence",
+      "operator_grade:0.474",
+      "purpose_grade:0.700",
+      "overall_grade:0.587",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Groups multiple deferred operations into one sequence pass. [origin root_slot=NC:T>N\u00d7NC:N>T; root_parents=NC:T>N,NC:N>T; origin_signature=T^1*N^1; operation_lineage_id=OP:28dca87baf4e; operator_action=temporal_orchestration; purpose_lane=intelligence; operator_grade=0.474; purpose_grade=0.700; overall_grade=0.587; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1261942,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "T:REORDER": {
+    "id": "T:REORDER",
+    "axis": "T",
+    "requires": [
+      "T",
+      "B"
+    ],
+    "cost": {
+      "X": 0.01,
+      "T": 0.02,
+      "N": 0.01,
+      "B": 0.02,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.02,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "reorder",
+      "reprioritize",
+      "origin_primary:T",
+      "origin_secondary:B",
+      "origin_signature:T^1*B^1",
+      "root_slot:NC:T>B\u00d7NC:B>T",
+      "operation_lineage:OP:db685295b785",
+      "seed_lineage:true",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.474",
+      "purpose_grade:0.825",
+      "overall_grade:0.650",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Changes the execution order of pending operations. [origin root_slot=NC:T>B\u00d7NC:B>T; root_parents=NC:T>B,NC:B>T; origin_signature=T^1*B^1; operation_lineage_id=OP:db685295b785; operator_action=temporal_orchestration; purpose_lane=communication; operator_grade=0.474; purpose_grade=0.825; overall_grade=0.650; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.126249,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "T:SIM_TICK": {
+    "id": "T:SIM_TICK",
+    "axis": "T",
+    "requires": [
+      "T"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.01,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "tick",
+      "advance_clock",
+      "origin_primary:T",
+      "origin_secondary:A",
+      "origin_signature:T^1*A^1",
+      "root_slot:NC:T>A\u00d7NC:A>T",
+      "operation_lineage:OP:3d167c08c8f2",
+      "seed_lineage:true",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.474",
+      "purpose_grade:0.750",
+      "overall_grade:0.612",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Advance internal simulation clock by one unit; minimal cost. [origin root_slot=NC:T>A\u00d7NC:A>T; root_parents=NC:T>A,NC:A>T; origin_signature=T^1*A^1; operation_lineage_id=OP:3d167c08c8f2; operator_action=temporal_orchestration; purpose_lane=communication; operator_grade=0.474; purpose_grade=0.750; overall_grade=0.612; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1263022,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "N:REUSE": {
+    "id": "N:REUSE",
+    "axis": "N",
+    "requires": [
+      "N",
+      "B"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.01,
+      "N": 0.0,
+      "B": 0.01,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.01,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "reuse",
+      "cache_hit",
+      "origin_primary:N",
+      "origin_secondary:B",
+      "origin_signature:N^1*B^1",
+      "root_slot:NC:N>B\u00d7NC:B>N",
+      "operation_lineage:OP:d3fc2cd211b4",
+      "seed_lineage:true",
+      "operator_action:energy_economics",
+      "purpose_lane:meaning",
+      "operator_grade:0.474",
+      "purpose_grade:0.650",
+      "overall_grade:0.562",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Re-uses existing computed state; lowers N expenditure. [origin root_slot=NC:N>B\u00d7NC:B>N; root_parents=NC:N>B,NC:B>N; origin_signature=N^1*B^1; operation_lineage_id=OP:d3fc2cd211b4; operator_action=energy_economics; purpose_lane=meaning; operator_grade=0.474; purpose_grade=0.650; overall_grade=0.562; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.126351,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "N:CACHE": {
+    "id": "N:CACHE",
+    "axis": "N",
+    "requires": [
+      "N",
+      "B"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.02,
+      "N": 0.01,
+      "B": 0.02,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.01,
+      "B": 0.01,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "cache",
+      "memoize",
+      "origin_primary:N",
+      "origin_secondary:B",
+      "origin_signature:N^1*B^1",
+      "root_slot:NC:N>B\u00d7NC:B>N",
+      "operation_lineage:OP:f132437dd03e",
+      "seed_lineage:true",
+      "operator_action:energy_economics",
+      "purpose_lane:meaning",
+      "operator_grade:0.474",
+      "purpose_grade:0.650",
+      "overall_grade:0.562",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Stores result for future reuse; upfront B and T cost. [origin root_slot=NC:N>B\u00d7NC:B>N; root_parents=NC:N>B,NC:B>N; origin_signature=N^1*B^1; operation_lineage_id=OP:f132437dd03e; operator_action=energy_economics; purpose_lane=meaning; operator_grade=0.474; purpose_grade=0.650; overall_grade=0.562; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1264014,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "N:REDUCE_STATE": {
+    "id": "N:REDUCE_STATE",
+    "axis": "N",
+    "requires": [
+      "N",
+      "X"
+    ],
+    "cost": {
+      "X": 0.02,
+      "T": 0.02,
+      "N": 0.0,
+      "B": 0.01,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.01,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "prune",
+      "compress_state",
+      "origin_primary:X",
+      "origin_secondary:N",
+      "origin_signature:X^1*N^1",
+      "root_slot:NC:X>N\u00d7NC:N>X",
+      "operation_lineage:OP:9b24f0fdb066",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.474",
+      "purpose_grade:0.750",
+      "overall_grade:0.612",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Removes redundant state nodes; lowers ongoing N overhead. [origin root_slot=NC:X>N\u00d7NC:N>X; root_parents=NC:X>N,NC:N>X; origin_signature=X^1*N^1; operation_lineage_id=OP:9b24f0fdb066; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.474; purpose_grade=0.750; overall_grade=0.612; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.126449,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "N:SPEND": {
+    "id": "N:SPEND",
+    "axis": "N",
+    "requires": [
+      "N"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.01,
+      "N": 0.05,
+      "B": 0.0,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.03,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "spend",
+      "invest",
+      "origin_primary:N",
+      "origin_secondary:N",
+      "origin_signature:N^1",
+      "root_slot:NC:N>N\u00d7NC:N>N",
+      "operation_lineage:OP:52e74a09dcf8",
+      "seed_lineage:true",
+      "operator_action:energy_economics",
+      "purpose_lane:intelligence",
+      "operator_grade:0.350",
+      "purpose_grade:0.650",
+      "overall_grade:0.500",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Deliberate energy expenditure for high-value relief elsewhere. [origin root_slot=NC:N>N\u00d7NC:N>N; root_parents=NC:N>N,NC:N>N; origin_signature=N^1; operation_lineage_id=OP:52e74a09dcf8; operator_action=energy_economics; purpose_lane=intelligence; operator_grade=0.350; purpose_grade=0.650; overall_grade=0.500; complexity_axes=1; complexity_slots=1; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1265013,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "B:SEPARATE": {
+    "id": "B:SEPARATE",
+    "axis": "B",
+    "requires": [
+      "B",
+      "X"
+    ],
+    "cost": {
+      "X": 0.01,
+      "T": 0.02,
+      "N": 0.02,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.01,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "separate",
+      "decouple",
+      "origin_primary:X",
+      "origin_secondary:B",
+      "origin_signature:X^1*B^1",
+      "root_slot:NC:X>B\u00d7NC:B>X",
+      "operation_lineage:OP:890df62d5189",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.474",
+      "purpose_grade:0.725",
+      "overall_grade:0.600",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Draws a clean boundary between two previously coupled regions. [origin root_slot=NC:X>B\u00d7NC:B>X; root_parents=NC:X>B,NC:B>X; origin_signature=X^1*B^1; operation_lineage_id=OP:890df62d5189; operator_action=admissibility_gating; purpose_lane=meaning; operator_grade=0.474; purpose_grade=0.725; overall_grade=0.600; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1265502,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "B:ENCAPSULATE": {
+    "id": "B:ENCAPSULATE",
+    "axis": "B",
+    "requires": [
+      "X",
+      "B"
+    ],
+    "cost": {
+      "X": 0.01,
+      "T": 0.03,
+      "N": 0.02,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.02,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.01,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "boundary_seal",
+      "packetize",
+      "origin_primary:X",
+      "origin_secondary:B",
+      "origin_signature:X^1*B^1",
+      "root_slot:NC:X>B\u00d7NC:B>X",
+      "operation_lineage:OP:f12ca4b5373f",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:meaning",
+      "operator_grade:0.474",
+      "purpose_grade:0.725",
+      "overall_grade:0.600",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Turns raw state into bounded envelope; lowers boundary leakage if successful. [origin root_slot=NC:X>B\u00d7NC:B>X; root_parents=NC:X>B,NC:B>X; origin_signature=X^1*B^1; operation_lineage_id=OP:f12ca4b5373f; operator_action=admissibility_gating; purpose_lane=meaning; operator_grade=0.474; purpose_grade=0.725; overall_grade=0.600; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1265988,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "B:ROUTE": {
+    "id": "B:ROUTE",
+    "axis": "B",
+    "requires": [
+      "B",
+      "T"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.02,
+      "N": 0.01,
+      "B": 0.01,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.02,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "route",
+      "channel",
+      "origin_primary:T",
+      "origin_secondary:B",
+      "origin_signature:T^1*B^1",
+      "root_slot:NC:T>B\u00d7NC:B>T",
+      "operation_lineage:OP:f96dd20dd1ac",
+      "seed_lineage:true",
+      "operator_action:temporal_orchestration",
+      "purpose_lane:communication",
+      "operator_grade:0.474",
+      "purpose_grade:0.825",
+      "overall_grade:0.650",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Directs pressure flow through an established channel. [origin root_slot=NC:T>B\u00d7NC:B>T; root_parents=NC:T>B,NC:B>T; origin_signature=T^1*B^1; operation_lineage_id=OP:f96dd20dd1ac; operator_action=temporal_orchestration; purpose_lane=communication; operator_grade=0.474; purpose_grade=0.825; overall_grade=0.650; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1266458,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "B:SEAL": {
+    "id": "B:SEAL",
+    "axis": "B",
+    "requires": [
+      "B"
+    ],
+    "cost": {
+      "X": 0.01,
+      "T": 0.01,
+      "N": 0.01,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.01,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "seal",
+      "lock_boundary",
+      "origin_primary:B",
+      "origin_secondary:B",
+      "origin_signature:B^1",
+      "root_slot:NC:B>B\u00d7NC:B>B",
+      "operation_lineage:OP:bb78de606104",
+      "seed_lineage:true",
+      "operator_action:boundary_shaping",
+      "purpose_lane:communication",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Freezes a boundary to prevent further leakage. [origin root_slot=NC:B>B\u00d7NC:B>B; root_parents=NC:B>B,NC:B>B; origin_signature=B^1; operation_lineage_id=OP:bb78de606104; operator_action=boundary_shaping; purpose_lane=communication; operator_grade=0.350; purpose_grade=0.850; overall_grade=0.600; complexity_axes=1; complexity_slots=1; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.126695,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "A:COMMIT": {
+    "id": "A:COMMIT",
+    "axis": "A",
+    "requires": [
+      "A",
+      "X"
+    ],
+    "cost": {
+      "X": 0.01,
+      "T": 0.02,
+      "N": 0.02,
+      "B": 0.01,
+      "A": 0.0
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.02
+    },
+    "effect_tags": [
+      "commit",
+      "irreversible",
+      "origin_primary:X",
+      "origin_secondary:A",
+      "origin_signature:X^1*A^1",
+      "root_slot:NC:X>A\u00d7NC:A>X",
+      "operation_lineage:OP:af5388d1489a",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.474",
+      "purpose_grade:0.775",
+      "overall_grade:0.625",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Locks in a chosen path; high A cost paid upfront. [origin root_slot=NC:X>A\u00d7NC:A>X; root_parents=NC:X>A,NC:A>X; origin_signature=X^1*A^1; operation_lineage_id=OP:af5388d1489a; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.474; purpose_grade=0.775; overall_grade=0.625; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.126743,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "A:CHOOSE": {
+    "id": "A:CHOOSE",
+    "axis": "A",
+    "requires": [
+      "A"
+    ],
+    "cost": {
+      "X": 0.01,
+      "T": 0.01,
+      "N": 0.01,
+      "B": 0.01,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "effect_tags": [
+      "choose",
+      "select",
+      "origin_primary:A",
+      "origin_secondary:A",
+      "origin_signature:A^1",
+      "root_slot:NC:A>A\u00d7NC:A>A",
+      "operation_lineage:OP:bd90e51395bd",
+      "seed_lineage:true",
+      "operator_action:agency_direction",
+      "purpose_lane:meaning",
+      "operator_grade:0.350",
+      "purpose_grade:0.850",
+      "overall_grade:0.600",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Evaluates branch options and selects one. [origin root_slot=NC:A>A\u00d7NC:A>A; root_parents=NC:A>A,NC:A>A; origin_signature=A^1; operation_lineage_id=OP:bd90e51395bd; operator_action=agency_direction; purpose_lane=meaning; operator_grade=0.350; purpose_grade=0.850; overall_grade=0.600; complexity_axes=1; complexity_slots=1; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1267924,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "A:ASSERT": {
+    "id": "A:ASSERT",
+    "axis": "A",
+    "requires": [
+      "A",
+      "X"
+    ],
+    "cost": {
+      "X": 0.02,
+      "T": 0.01,
+      "N": 0.01,
+      "B": 0.01,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.02,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "effect_tags": [
+      "assert",
+      "claim_state",
+      "origin_primary:X",
+      "origin_secondary:A",
+      "origin_signature:X^1*A^1",
+      "root_slot:NC:X>A\u00d7NC:A>X",
+      "operation_lineage:OP:d722aa9ea98d",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.474",
+      "purpose_grade:0.775",
+      "overall_grade:0.625",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Stakes a claim on current state as valid; raises X exposure briefly. [origin root_slot=NC:X>A\u00d7NC:A>X; root_parents=NC:X>A,NC:A>X; origin_signature=X^1*A^1; operation_lineage_id=OP:d722aa9ea98d; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.474; purpose_grade=0.775; overall_grade=0.625; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1268435,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "A:OUTLET_PUSH": {
+    "id": "A:OUTLET_PUSH",
+    "axis": "A",
+    "requires": [
+      "A",
+      "B"
+    ],
+    "cost": {
+      "X": 0.0,
+      "T": 0.02,
+      "N": 0.02,
+      "B": 0.01,
+      "A": 0.01
+    },
+    "risk": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.01
+    },
+    "effect_tags": [
+      "outlet",
+      "release",
+      "origin_primary:B",
+      "origin_secondary:A",
+      "origin_signature:B^1*A^1",
+      "root_slot:NC:B>A\u00d7NC:A>B",
+      "operation_lineage:OP:aafd2673d4ca",
+      "seed_lineage:true",
+      "operator_action:boundary_shaping",
+      "purpose_lane:meaning",
+      "operator_grade:0.474",
+      "purpose_grade:0.800",
+      "overall_grade:0.637",
+      "complexity_axes:2",
+      "complexity_slots:2",
+      "generation:1",
+      "generation_role:PRIMARY"
+    ],
+    "notes": "Expels pressure through external outlet; relief only if outlet confirms effectiveness. [origin root_slot=NC:B>A\u00d7NC:A>B; root_parents=NC:B>A,NC:A>B; origin_signature=B^1*A^1; operation_lineage_id=OP:aafd2673d4ca; operator_action=boundary_shaping; purpose_lane=meaning; operator_grade=0.474; purpose_grade=0.800; overall_grade=0.637; complexity_axes=2; complexity_slots=2; generation=1; generation_role=PRIMARY]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1268945,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "L3:extract": {
+    "id": "L3:extract",
+    "axis": "X",
+    "requires": [
+      "X",
+      "T",
+      "N",
+      "B",
+      "A"
+    ],
+    "cost": {
+      "X": 0.02,
+      "T": 0.02,
+      "N": 0.02,
+      "B": 0.02,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "semantic:extract",
+      "layer3",
+      "dimensional_systems",
+      "origin_primary:X",
+      "origin_secondary:T",
+      "origin_signature:X^1*T^1*N^1*B^1*A^1",
+      "root_slot:NC:X>T\u00d7NC:T>X",
+      "operation_lineage:OP:c845ea00a88f",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.801",
+      "purpose_grade:0.670",
+      "overall_grade:0.735",
+      "complexity_axes:5",
+      "complexity_slots:5",
+      "generation:4",
+      "generation_role:BRIDGE"
+    ],
+    "notes": "Layer-3 semantic operation ability for extract. [origin root_slot=NC:X>T\u00d7NC:T>X; root_parents=NC:X>T,NC:T>X; origin_signature=X^1*T^1*N^1*B^1*A^1; operation_lineage_id=OP:c845ea00a88f; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.801; purpose_grade=0.670; overall_grade=0.735; complexity_axes=5; complexity_slots=5; generation=4; generation_role=BRIDGE]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1269453,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "L3:process_concepts": {
+    "id": "L3:process_concepts",
+    "axis": "X",
+    "requires": [
+      "X",
+      "T",
+      "N",
+      "B",
+      "A"
+    ],
+    "cost": {
+      "X": 0.02,
+      "T": 0.02,
+      "N": 0.02,
+      "B": 0.02,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "semantic:process_concepts",
+      "layer3",
+      "dimensional_systems",
+      "origin_primary:X",
+      "origin_secondary:T",
+      "origin_signature:X^1*T^1*N^1*B^1*A^1",
+      "root_slot:NC:X>T\u00d7NC:T>X",
+      "operation_lineage:OP:02f35c87a0c6",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.801",
+      "purpose_grade:0.670",
+      "overall_grade:0.735",
+      "complexity_axes:5",
+      "complexity_slots:5",
+      "generation:4",
+      "generation_role:BRIDGE"
+    ],
+    "notes": "Layer-3 semantic operation ability for process_concepts. [origin root_slot=NC:X>T\u00d7NC:T>X; root_parents=NC:X>T,NC:T>X; origin_signature=X^1*T^1*N^1*B^1*A^1; operation_lineage_id=OP:02f35c87a0c6; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.801; purpose_grade=0.670; overall_grade=0.735; complexity_axes=5; complexity_slots=5; generation=4; generation_role=BRIDGE]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1269944,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "L3:store_semantic": {
+    "id": "L3:store_semantic",
+    "axis": "X",
+    "requires": [
+      "X",
+      "T",
+      "N",
+      "B",
+      "A"
+    ],
+    "cost": {
+      "X": 0.02,
+      "T": 0.02,
+      "N": 0.02,
+      "B": 0.02,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "semantic:store_semantic",
+      "layer3",
+      "dimensional_systems",
+      "origin_primary:X",
+      "origin_secondary:T",
+      "origin_signature:X^1*T^1*N^1*B^1*A^1",
+      "root_slot:NC:X>T\u00d7NC:T>X",
+      "operation_lineage:OP:4cb1a20ed62b",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.801",
+      "purpose_grade:0.670",
+      "overall_grade:0.735",
+      "complexity_axes:5",
+      "complexity_slots:5",
+      "generation:4",
+      "generation_role:BRIDGE"
+    ],
+    "notes": "Layer-3 semantic operation ability for store_semantic. [origin root_slot=NC:X>T\u00d7NC:T>X; root_parents=NC:X>T,NC:T>X; origin_signature=X^1*T^1*N^1*B^1*A^1; operation_lineage_id=OP:4cb1a20ed62b; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.801; purpose_grade=0.670; overall_grade=0.735; complexity_axes=5; complexity_slots=5; generation=4; generation_role=BRIDGE]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1280136,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  },
+  "L3:get_recall_context": {
+    "id": "L3:get_recall_context",
+    "axis": "X",
+    "requires": [
+      "X",
+      "T",
+      "N",
+      "B",
+      "A"
+    ],
+    "cost": {
+      "X": 0.02,
+      "T": 0.02,
+      "N": 0.02,
+      "B": 0.02,
+      "A": 0.02
+    },
+    "risk": {
+      "X": 0.01,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "effect_tags": [
+      "semantic:get_recall_context",
+      "layer3",
+      "dimensional_systems",
+      "origin_primary:X",
+      "origin_secondary:T",
+      "origin_signature:X^1*T^1*N^1*B^1*A^1",
+      "root_slot:NC:X>T\u00d7NC:T>X",
+      "operation_lineage:OP:365d24afe200",
+      "seed_lineage:true",
+      "operator_action:admissibility_gating",
+      "purpose_lane:intelligence",
+      "operator_grade:0.801",
+      "purpose_grade:0.670",
+      "overall_grade:0.735",
+      "complexity_axes:5",
+      "complexity_slots:5",
+      "generation:4",
+      "generation_role:BRIDGE"
+    ],
+    "notes": "Layer-3 semantic operation ability for get_recall_context. [origin root_slot=NC:X>T\u00d7NC:T>X; root_parents=NC:X>T,NC:T>X; origin_signature=X^1*T^1*N^1*B^1*A^1; operation_lineage_id=OP:365d24afe200; operator_action=admissibility_gating; purpose_lane=intelligence; operator_grade=0.801; purpose_grade=0.670; overall_grade=0.735; complexity_axes=5; complexity_slots=5; generation=4; generation_role=BRIDGE]",
+    "_aurora_evolved_reflection": {
+      "method": "reflect_aurora_internal_constraint_genealogy_abilityprofile_to_dict",
+      "kind": "reflection",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "timestamp": 1772957936.1281419,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": []
+      },
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "origin": {
+        "module": "aurora_internal.constraint_genealogy",
+        "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+        "resolved": true,
+        "callable": true
+      }
+    },
+    "_aurora_rewrite_profile": "constraint_genealogy",
+    "_aurora_genealogy_strategy": {
+      "ability_hits": 12,
+      "alignment_gap": 0.714834,
+      "alignment_target_score": 1.201834,
+      "best_coupling_signature": "B^3",
+      "constraints": [
+        "boundary"
+      ],
+      "contract_profile": {
+        "accepts_payload": false,
+        "async_callable": false,
+        "callable": true,
+        "class_target": false,
+        "constraint_density": 1,
+        "contract_mode": "stateful",
+        "doc_hint": "",
+        "effect_density": 4,
+        "kwonly_args": 0,
+        "optional_args": 0,
+        "required_args": 0,
+        "return_hint": "Dict",
+        "signature_text": "(self) -> 'Dict'",
+        "stateful_owner": true,
+        "target_kind": "function",
+        "varargs": false,
+        "varkw": false
+      },
+      "coupling_similarity": 1.0,
+      "cross_diversity_links": 3,
+      "effect_modes": [
+        "interface_boundary_change",
+        "behavioral_execution_surface",
+        "lineage_surface",
+        "internal_subsystem_surface"
+      ],
+      "effect_phrases": [
+        "changed module interfaces or coupling boundaries",
+        "introduced executable behavior surface",
+        "extended lineage memory or ancestry introspection"
+      ],
+      "genealogy_pressure": 0.75101,
+      "inheritance_breach_count": 1,
+      "kind": "reflection",
+      "link_hits": 24,
+      "module": "aurora_internal.constraint_genealogy",
+      "op_id": "aurora_internal.constraint_genealogy.AbilityProfile.to_dict",
+      "origin_activity": 0,
+      "persistence_tax_factor": 2.550513,
+      "representation_score": 0.567611,
+      "rewrite_bias": "lineage_memory",
+      "rewrite_feedback": {
+        "acceptance_rate": 0.0,
+        "accepted_count": 0,
+        "adaptation_mode": "integrative",
+        "adoption_count": 0,
+        "confidence": 0.0,
+        "mean_mutation_score": 0.0,
+        "rejected_count": 0,
+        "rejection_rate": 0.0,
+        "timing_credit": 0.0,
+        "timing_penalty": 0.0,
+        "trial_count": 0
+      },
+      "rewrite_profile": "constraint_genealogy",
+      "signature": "B^3",
+      "surface_score": 0.487,
+      "sustainability_score": 0.356849,
+      "target_kind": "function"
+    },
+    "_aurora_rewrite_feedback": {
+      "acceptance_rate": 0.0,
+      "accepted_count": 0,
+      "adaptation_mode": "integrative",
+      "adoption_count": 0,
+      "confidence": 0.0,
+      "mean_mutation_score": 0.0,
+      "rejected_count": 0,
+      "rejection_rate": 0.0,
+      "timing_credit": 0.0,
+      "timing_penalty": 0.0,
+      "trial_count": 0
+    },
+    "_aurora_alignment_gap": 0.714834,
+    "lineage_memory": {
+      "coupling_signature": "B^3",
+      "link_hits": 24,
+      "ability_hits": 12
+    },
+    "state_transition_pressure": {
+      "pressure": 0.75101,
+      "persistence_tax_factor": 2.550513
+    },
+    "evolutionary_context": {
+      "coupling_signature": "B^3",
+      "genealogy_pressure": 0.75101,
+      "rewrite_bias": "lineage_memory",
+      "cross_diversity_links": 3
+    },
+    "lineage_adaptation": {
+      "mode": "integrative",
+      "confidence": 0.0,
+      "trial_count": 0,
+      "accepted_count": 0,
+      "adoption_count": 0
+    }
+  }
+}

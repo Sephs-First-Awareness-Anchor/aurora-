@@ -1,0 +1,21 @@
+[Unit]
+Description=Aurora Strata Hub Dashboard
+After=graphical-session.target
+PartOf=graphical-session.target
+ConditionPathExists=__AURORA_ROOT__/aurora_hub.py
+
+[Service]
+Type=simple
+WorkingDirectory=__AURORA_ROOT__
+Environment=HOME=__AURORA_HOME__
+Environment=DISPLAY=:0
+Environment=XDG_RUNTIME_DIR=/run/user/__AURORA_UID__
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/__AURORA_UID__/bus
+ExecStart=__AURORA_ROOT__/scripts/run_hub.sh
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,14 @@
+{
+  "type": "monotonic_breach",
+  "phase": "after_save",
+  "target": "aurora_state/aurora_state.json",
+  "violations": [
+    {
+      "field": "generation",
+      "label": "generation",
+      "previous": 3,
+      "current": 2
+    }
+  ],
+  "timestamp": 1771741397.6127846
+}

@@ -1,0 +1,201 @@
+{
+  "candidates": {},
+  "drift_profiles": {
+    "CHAOS": {
+      "delta_decay": 0.7,
+      "half_life_hours": 18.0,
+      "noise_sigma": 0.05,
+      "trend_gain": 1.1
+    },
+    "COLLISION": {
+      "delta_decay": 0.75,
+      "half_life_hours": 36.0,
+      "noise_sigma": 0.03,
+      "trend_gain": 0.8
+    },
+    "CONSCIOUSNESS": {
+      "delta_decay": 0.7,
+      "half_life_hours": 24.0,
+      "noise_sigma": 0.04,
+      "trend_gain": 0.85
+    },
+    "ENERGY": {
+      "delta_decay": 0.85,
+      "half_life_hours": 72.0,
+      "noise_sigma": 0.01,
+      "trend_gain": 0.9
+    },
+    "GOVERNANCE": {
+      "delta_decay": 0.9,
+      "half_life_hours": 96.0,
+      "noise_sigma": 0.01,
+      "trend_gain": 0.5
+    },
+    "MOTION": {
+      "delta_decay": 0.8,
+      "half_life_hours": 48.0,
+      "noise_sigma": 0.02,
+      "trend_gain": 1.05
+    },
+    "RECURSION": {
+      "delta_decay": 0.78,
+      "half_life_hours": 30.0,
+      "noise_sigma": 0.03,
+      "trend_gain": 0.95
+    },
+    "SYMMETRY": {
+      "delta_decay": 0.88,
+      "half_life_hours": 60.0,
+      "noise_sigma": 0.02,
+      "trend_gain": 0.75
+    }
+  },
+  "last_ingest_ts": null,
+  "latents": {},
+  "metadata": {},
+  "offline_since": null,
+  "online": true,
+  "reconciliation_log": [],
+  "variables": {
+    "crude_oil_price_load": {
+      "confidence": 0.85,
+      "delta": 0.0,
+      "last_seen": 1776885274.402707,
+      "last_value": null,
+      "law": "COLLISION",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "crude_oil_price_load",
+      "provenance": "observed",
+      "ts": 1776885274.402707,
+      "value": 0.72
+    },
+    "delivery_velocity": {
+      "confidence": 0.85,
+      "delta": 0.0,
+      "last_seen": 1776885274.3880513,
+      "last_value": null,
+      "law": "MOTION",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "delivery_velocity",
+      "provenance": "observed",
+      "ts": 1776885274.3880513,
+      "value": 0.88
+    },
+    "interest_rate_delta": {
+      "confidence": 0.85,
+      "delta": 0.0,
+      "last_seen": 1776885274.3952005,
+      "last_value": null,
+      "law": "MOTION",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "interest_rate_delta",
+      "provenance": "observed",
+      "ts": 1776885274.3952005,
+      "value": 0.05
+    },
+    "pipeline_stability_index": {
+      "confidence": 0.4,
+      "delta": 0.0,
+      "last_seen": 1776885274.402707,
+      "last_value": null,
+      "law": "ENERGY",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "pipeline_stability_index",
+      "provenance": "observed",
+      "ts": 1776885274.402707,
+      "value": 0.9
+    },
+    "port_congestion_index": {
+      "confidence": 0.4,
+      "delta": 0.0,
+      "last_seen": 1776885274.3880513,
+      "last_value": null,
+      "law": "ENERGY",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "port_congestion_index",
+      "provenance": "observed",
+      "ts": 1776885274.3880513,
+      "value": 0.75
+    },
+    "seasonal_demand_pressure": {
+      "confidence": 0.85,
+      "delta": 0.0,
+      "last_seen": 1776885274.402707,
+      "last_value": null,
+      "law": "ENERGY",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "seasonal_demand_pressure",
+      "provenance": "observed",
+      "ts": 1776885274.402707,
+      "value": 0.45
+    },
+    "shipping_volume_stress": {
+      "confidence": 0.85,
+      "delta": 0.0,
+      "last_seen": 1776885274.3880513,
+      "last_value": null,
+      "law": "ENERGY",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "shipping_volume_stress",
+      "provenance": "observed",
+      "ts": 1776885274.3880513,
+      "value": 0.82
+    },
+    "tech_sector_liquidity": {
+      "confidence": 0.4,
+      "delta": 0.0,
+      "last_seen": 1776885274.3952005,
+      "last_value": null,
+      "law": "ENERGY",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "tech_sector_liquidity",
+      "provenance": "observed",
+      "ts": 1776885274.3952005,
+      "value": 0.65
+    },
+    "uninsured_deposit_ratio": {
+      "confidence": 0.4,
+      "delta": 0.0,
+      "last_seen": 1776885274.3952005,
+      "last_value": null,
+      "law": "ENERGY",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "uninsured_deposit_ratio",
+      "provenance": "observed",
+      "ts": 1776885274.3952005,
+      "value": 0.3
+    },
+    "vessel_oversize_risk": {
+      "confidence": 0.4,
+      "delta": 0.0,
+      "last_seen": 1776885274.3880513,
+      "last_value": null,
+      "law": "ENERGY",
+      "meta": {
+        "raw_type": "float"
+      },
+      "name": "vessel_oversize_risk",
+      "provenance": "observed",
+      "ts": 1776885274.3880513,
+      "value": 0.4
+    }
+  }
+}

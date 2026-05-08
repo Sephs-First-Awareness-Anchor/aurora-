@@ -1,0 +1,101 @@
+{
+  "node_id": "25b29e2e-f504-4a05-85d6-7fbe44d9a35a",
+  "order": "BASE",
+  "payload": {
+    "target": "aurora.gateway.simulation.run_epoch",
+    "issue": "grounding_lookup_instability",
+    "logic_tier": "evolutionary_pipeline",
+    "intervention": "clarify_grounding_loop",
+    "intended_effect": "tighten grounding before committing to an answer",
+    "observed_effect": "resolved_partially"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "25b29e2e-f504-4a05-85d6-7fbe44d9a35a"
+  ],
+  "parent_ids": [],
+  "child_ids": [],
+  "tags": [
+    "aurora",
+    "train",
+    "corpus_runner_burst",
+    "dim:semantic_precision",
+    "dim:multi_turn_stability",
+    "dim:context_carryover"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "family_key": "issue_family::grounding_lookup_instability",
+    "issue_category": "grounding_lookup_instability",
+    "stage": "BASE",
+    "event_signature": "7a395d1cf64d5a491037",
+    "is_active_version": true,
+    "event_context": {
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2936,
+          "T": 0.1631,
+          "N": 0.1631,
+          "B": 0.2283,
+          "A": 0.1519
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "B"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 0.8853
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.017,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.05,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 0.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      }
+    }
+  },
+  "created_at": "2026-03-22T05:53:47.620454+00:00",
+  "persisted_at": "2026-03-22T05:53:47.620626+00:00",
+  "is_relic": false,
+  "checksum": "5975a11983b0a930"
+}

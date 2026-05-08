@@ -1,0 +1,90 @@
+{
+  "app": "chats_criteria",
+  "continuity": {
+    "latest": {
+      "at": "2026-04-24T08:46:24Z",
+      "fingerprint": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "kind": "chat_share",
+      "source": "claude_code",
+      "stats": {
+        "assistant_messages": 0,
+        "messages_total": 0,
+        "user_messages": 0
+      },
+      "title": "claude:session_018V"
+    },
+    "systems": {},
+    "top_terms": {}
+  },
+  "created_at": "2026-04-24T08:45:46Z",
+  "history": {
+    "0d5b6efef6af2fc1405ed27f5106cc270893f6aa": {
+      "at": "2026-04-24T08:46:24Z",
+      "event": "ingest_chat",
+      "fingerprint": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "source": "claude_code",
+      "stats": {
+        "assistant_messages": 0,
+        "messages_total": 0,
+        "user_messages": 0
+      },
+      "title": "claude:session_018V"
+    },
+    "1fa2b507eb52818dedc14b3e5ceef0c6543a7146": {
+      "at": "2026-04-24T08:45:46Z",
+      "event": "ingest_chat",
+      "fingerprint": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "source": "claude_code",
+      "stats": {
+        "assistant_messages": 0,
+        "messages_total": 0,
+        "user_messages": 0
+      },
+      "title": "claude:session_018V"
+    },
+    "5f39dbceb5f2ef4d97b1b020bdbeafb96fc6eecc": {
+      "at": "2026-04-24T08:46:17Z",
+      "event": "ingest_chat",
+      "fingerprint": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "source": "claude_code",
+      "stats": {
+        "assistant_messages": 0,
+        "messages_total": 0,
+        "user_messages": 0
+      },
+      "title": "claude:session_018V"
+    },
+    "ec027a372ca1579d59b2d4ba49bf9d61b8d8609b": {
+      "at": "2026-04-24T08:46:22Z",
+      "event": "ingest_chat",
+      "fingerprint": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+      "source": "claude_code",
+      "stats": {
+        "assistant_messages": 0,
+        "messages_total": 0,
+        "user_messages": 0
+      },
+      "title": "claude:session_018V"
+    }
+  },
+  "schema_version": 5,
+  "systems": {},
+  "threads": {
+    "da39a3ee5e6b4b0d3255bfef95601890afd80709": {
+      "first_seen": "2026-04-24T08:45:46Z",
+      "highlights": {},
+      "last_seen": "2026-04-24T08:46:24Z",
+      "messages": [],
+      "source": "claude_code",
+      "stats_last": {
+        "assistant_messages": 0,
+        "messages_total": 0,
+        "user_messages": 0
+      },
+      "stats_max": {},
+      "title": "claude:session_018V",
+      "top_terms_max": {}
+    }
+  },
+  "updated_at": "2026-04-24T08:46:24Z"
+}

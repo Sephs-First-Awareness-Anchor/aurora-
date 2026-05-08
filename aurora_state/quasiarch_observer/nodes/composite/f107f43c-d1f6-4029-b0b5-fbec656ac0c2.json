@@ -1,0 +1,77 @@
+{
+  "node_id": "f107f43c-d1f6-4029-b0b5-fbec656ac0c2",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.question_attunement",
+    "issue": "question_answer_misalignment",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "question_attunement_rebuild",
+    "intended_effect": "make the response answer the asked question or gather the missing variable needed to answer it",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "sporadic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.3,
+    "target__recurrence_pattern": 0.27,
+    "logic_tier__recurrence_pattern": 0.255,
+    "intervention__recurrence_pattern": 0.24,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "529676d1-1754-45f6-8654-64eae92d661f",
+    "a6a1a39f-2acb-4e9c-80fc-874f31f139a5",
+    "d24a9c42-e593-493a-a05e-6ea076c28db3"
+  ],
+  "parent_ids": [
+    "529676d1-1754-45f6-8654-64eae92d661f",
+    "a6a1a39f-2acb-4e9c-80fc-874f31f139a5",
+    "d24a9c42-e593-493a-a05e-6ea076c28db3"
+  ],
+  "child_ids": [],
+  "tags": [
+    "question_attunement",
+    "reason:question_attunement_rebuild",
+    "runtime",
+    "phase:runtime_dialogue",
+    "dialogue",
+    "composite",
+    "clarification",
+    "reason:deecho_specificity_rebuild",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::55e3da5d_ad92_46f2_9449_e012296c7a02",
+    "ghost_relic_match": 0.4,
+    "family_key": "issue_family::question_answer_misalignment",
+    "issue_category": "question_answer_misalignment",
+    "stage": "COMPOSITE",
+    "version": 2,
+    "signature": "ccd25f76ac6a87f1b47e",
+    "is_active_version": true,
+    "supersedes": "3bfa4ab0-08a9-4ed7-9328-55041349004b",
+    "superseded_by": ""
+  },
+  "created_at": "2026-05-03T07:24:31.339187+00:00",
+  "persisted_at": "2026-05-03T07:24:31.459564+00:00",
+  "is_relic": false,
+  "checksum": "7bc36b8be60ac2a4"
+}

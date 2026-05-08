@@ -1,0 +1,367 @@
+{
+  "node_id": "ae7fe673-556b-4690-83a2-13eca0163bb9",
+  "order": "BASE",
+  "payload": {
+    "target": "aurora.autonomy.dream",
+    "issue": "developmental_pressure_gap",
+    "logic_tier": "evolutionary_pipeline",
+    "intervention": "autonomous_dream_episode",
+    "intended_effect": "simulate developmental pressure and produce transferable adaptations during idle time",
+    "observed_effect": "resolved_partially"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "ae7fe673-556b-4690-83a2-13eca0163bb9"
+  ],
+  "parent_ids": [],
+  "child_ids": [],
+  "tags": [
+    "dream",
+    "simulation",
+    "autonomy",
+    "background",
+    "ability_id:N:CODE_EVOLVE_5678eafd01",
+    "mutation_id:DREAM:dev_def_d1c66b418763",
+    "seed_lineage_id:episode_725a924cef83",
+    "ability_id:N:CODE_EVOLVE_60c47e339f",
+    "mutation_id:DREAM:dev_def_04eaab74c225",
+    "ability_id:N:CODE_EVOLVE_09782815ab",
+    "mutation_id:DREAM:dev_def_bee4e15706da",
+    "ability_id:A:CODE_EVOLVE_d1ea3c1b8c",
+    "mutation_id:DREAM:dev_def_5a4cede5d8e2",
+    "ability_id:N:CODE_EVOLVE_44f2cbfb10",
+    "mutation_id:DREAM:dev_def_16b74e1cb2a7",
+    "ability_id:B:CODE_EVOLVE_6ddd2e959c",
+    "mutation_id:DREAM:dev_def_2473cd77777c",
+    "ability_id:N:CODE_EVOLVE_aa0b3428ef",
+    "mutation_id:DREAM:dev_lev_0dd7892ae1c9",
+    "ability_id:B:CODE_EVOLVE_8909ed032c",
+    "mutation_id:DREAM:dev_lev_b05a6b3190eb",
+    "ability_id:B:CODE_EVOLVE_da1c799ebe",
+    "mutation_id:DREAM:dev_lev_79336ae2345f",
+    "ability_id:B:CODE_EVOLVE_4acc532641",
+    "mutation_id:DREAM:dev_lev_5894ecf34d3e",
+    "ability_id:A:CODE_EVOLVE_0a4497293f",
+    "mutation_id:DREAM:dev_lev_4acbba36a618",
+    "ability_id:B:CODE_EVOLVE_799d6bb6ee",
+    "mutation_id:DREAM:dev_lev_bf899f4dfbec"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "family_key": "issue_family::developmental_pressure_gap",
+    "issue_category": "developmental_pressure_gap",
+    "stage": "BASE",
+    "event_signature": "7ef8432b22e9b34db010",
+    "is_active_version": true,
+    "event_context": {
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.125,
+          "T": 0.25,
+          "N": 0.25,
+          "B": 0.25,
+          "A": 0.125
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T",
+          "N",
+          "B"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 0.0,
+          "T": 0.0,
+          "N": 0.0,
+          "B": 0.0,
+          "A": 0.0
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.autonomy.dream",
+        "phase": "dream",
+        "system_load": "low",
+        "system_load_score": 0.0578,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.17,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 1.0,
+          "autosave_active": 0.0,
+          "dreams_used": 1.0,
+          "study_cycles_used": 0.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_def_d1c66b418763",
+          "mutation_name": "dream_evidence:rubric_deficit",
+          "mutation_id": "DREAM:dev_def_d1c66b418763",
+          "operator_key": "",
+          "ability_id": "N:CODE_EVOLVE_5678eafd01",
+          "operation_lineage_id": "DREAMOP:8f68ed996b3d",
+          "registered": true,
+          "accepted": false,
+          "constraints": [
+            "context_carryover"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_governance_persistence_gateway.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_def_04eaab74c225",
+          "mutation_name": "dream_evidence:rubric_deficit",
+          "mutation_id": "DREAM:dev_def_04eaab74c225",
+          "operator_key": "",
+          "ability_id": "N:CODE_EVOLVE_60c47e339f",
+          "operation_lineage_id": "DREAMOP:cdee4335e111",
+          "registered": true,
+          "accepted": false,
+          "constraints": [
+            "uncertainty_signaling"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_governance_persistence_gateway.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_def_bee4e15706da",
+          "mutation_name": "dream_evidence:rubric_deficit",
+          "mutation_id": "DREAM:dev_def_bee4e15706da",
+          "operator_key": "",
+          "ability_id": "N:CODE_EVOLVE_09782815ab",
+          "operation_lineage_id": "DREAMOP:45e2aac87124",
+          "registered": true,
+          "accepted": false,
+          "constraints": [
+            "boundary_calibration"
+          ],
+          "target_files": [
+            "aurora_governance_persistence_gateway.py",
+            "aurora_behavioral_identity.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_def_5a4cede5d8e2",
+          "mutation_name": "dream_evidence:rubric_deficit",
+          "mutation_id": "DREAM:dev_def_5a4cede5d8e2",
+          "operator_key": "",
+          "ability_id": "A:CODE_EVOLVE_d1ea3c1b8c",
+          "operation_lineage_id": "DREAMOP:dbebdbe59d65",
+          "registered": true,
+          "accepted": false,
+          "constraints": [
+            "adaptive_strategy_selection"
+          ],
+          "target_files": [
+            "aurora_simulation_engine.py",
+            "aurora_governance_persistence_gateway.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_def_16b74e1cb2a7",
+          "mutation_name": "dream_evidence:rubric_deficit",
+          "mutation_id": "DREAM:dev_def_16b74e1cb2a7",
+          "operator_key": "",
+          "ability_id": "N:CODE_EVOLVE_44f2cbfb10",
+          "operation_lineage_id": "DREAMOP:868b505f6f07",
+          "registered": true,
+          "accepted": false,
+          "constraints": [
+            "compression_elaboration_fit"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_expression_perception.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_def_2473cd77777c",
+          "mutation_name": "dream_evidence:rubric_deficit",
+          "mutation_id": "DREAM:dev_def_2473cd77777c",
+          "operator_key": "",
+          "ability_id": "B:CODE_EVOLVE_6ddd2e959c",
+          "operation_lineage_id": "DREAMOP:69ad349e1ba0",
+          "registered": true,
+          "accepted": false,
+          "constraints": [
+            "perspective_integration"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_simulation_engine.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_lev_0dd7892ae1c9",
+          "mutation_name": "dream_evidence:leverage_hit",
+          "mutation_id": "DREAM:dev_lev_0dd7892ae1c9",
+          "operator_key": "",
+          "ability_id": "N:CODE_EVOLVE_aa0b3428ef",
+          "operation_lineage_id": "DREAMOP:f8331b8d7dc6",
+          "registered": true,
+          "accepted": true,
+          "constraints": [
+            "context_carryover"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_governance_persistence_gateway.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_lev_b05a6b3190eb",
+          "mutation_name": "dream_evidence:leverage_hit",
+          "mutation_id": "DREAM:dev_lev_b05a6b3190eb",
+          "operator_key": "",
+          "ability_id": "B:CODE_EVOLVE_8909ed032c",
+          "operation_lineage_id": "DREAMOP:a60118091c4b",
+          "registered": true,
+          "accepted": true,
+          "constraints": [
+            "uncertainty_signaling"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_governance_persistence_gateway.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_lev_79336ae2345f",
+          "mutation_name": "dream_evidence:leverage_hit",
+          "mutation_id": "DREAM:dev_lev_79336ae2345f",
+          "operator_key": "",
+          "ability_id": "B:CODE_EVOLVE_da1c799ebe",
+          "operation_lineage_id": "DREAMOP:a3b6da072d8f",
+          "registered": true,
+          "accepted": true,
+          "constraints": [
+            "perspective_integration"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_simulation_engine.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_lev_5894ecf34d3e",
+          "mutation_name": "dream_evidence:leverage_hit",
+          "mutation_id": "DREAM:dev_lev_5894ecf34d3e",
+          "operator_key": "",
+          "ability_id": "B:CODE_EVOLVE_4acc532641",
+          "operation_lineage_id": "DREAMOP:4891eca53851",
+          "registered": true,
+          "accepted": true,
+          "constraints": [
+            "boundary_calibration"
+          ],
+          "target_files": [
+            "aurora_governance_persistence_gateway.py",
+            "aurora_behavioral_identity.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_lev_4acbba36a618",
+          "mutation_name": "dream_evidence:leverage_hit",
+          "mutation_id": "DREAM:dev_lev_4acbba36a618",
+          "operator_key": "",
+          "ability_id": "A:CODE_EVOLVE_0a4497293f",
+          "operation_lineage_id": "DREAMOP:d3d6694d9614",
+          "registered": true,
+          "accepted": true,
+          "constraints": [
+            "adaptive_strategy_selection"
+          ],
+          "target_files": [
+            "aurora_simulation_engine.py",
+            "aurora_governance_persistence_gateway.py"
+          ]
+        },
+        {
+          "source": "code_chamber",
+          "source_episode_id": "episode_725a924cef83",
+          "seed_lineage_id": "episode_725a924cef83",
+          "evidence_id": "dev_lev_bf899f4dfbec",
+          "mutation_name": "dream_evidence:leverage_hit",
+          "mutation_id": "DREAM:dev_lev_bf899f4dfbec",
+          "operator_key": "",
+          "ability_id": "B:CODE_EVOLVE_799d6bb6ee",
+          "operation_lineage_id": "DREAMOP:6403d8769902",
+          "registered": true,
+          "accepted": true,
+          "constraints": [
+            "compression_elaboration_fit"
+          ],
+          "target_files": [
+            "aurora.py",
+            "aurora_expression_perception.py"
+          ]
+        }
+      ]
+    }
+  },
+  "created_at": "2026-03-26T04:01:47.203280+00:00",
+  "persisted_at": "2026-03-26T04:01:47.203597+00:00",
+  "is_relic": false,
+  "checksum": "94a0ac03bedf334a"
+}

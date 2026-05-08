@@ -1,0 +1,14 @@
+{
+  "type": "monotonic_breach",
+  "target": "aurora_state/aurora_oets_web.json",
+  "violations": [
+    {
+      "field": "total_research_cycles",
+      "label": "total_research_cycles",
+      "previous": 239,
+      "current": 0
+    }
+  ],
+  "phase": "after_save",
+  "timestamp": 1771849843.1659057
+}

@@ -1,0 +1,81 @@
+{
+  "node_id": "98e782b9-3ee0-4664-ae85-22afdf09777a",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.clarification",
+    "issue": "unspecific_echo_response",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "echo_specificity_rebuild",
+    "intended_effect": "replace mirrored user wording with a specific unresolved target",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "periodic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.85,
+    "target__recurrence_pattern": 0.765,
+    "logic_tier__recurrence_pattern": 0.7224999999999999,
+    "intervention__recurrence_pattern": 0.68,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "1b852196-7c31-4c76-8592-73eb20412ca8",
+    "e422ba68-f5ac-4d26-ae02-3628a6e0f0df",
+    "3ef60624-9d6b-41f8-9a62-cbe1e4980a9d",
+    "d5f2079d-7d8b-45af-b469-73fed8b82dd6",
+    "0f0e4398-3d9c-4dd4-9d75-2bac7ed86dd1",
+    "f697622d-fac2-42ff-9d5f-1ec7e33c6498"
+  ],
+  "parent_ids": [
+    "1b852196-7c31-4c76-8592-73eb20412ca8",
+    "e422ba68-f5ac-4d26-ae02-3628a6e0f0df",
+    "3ef60624-9d6b-41f8-9a62-cbe1e4980a9d",
+    "d5f2079d-7d8b-45af-b469-73fed8b82dd6",
+    "0f0e4398-3d9c-4dd4-9d75-2bac7ed86dd1",
+    "f697622d-fac2-42ff-9d5f-1ec7e33c6498"
+  ],
+  "child_ids": [],
+  "tags": [
+    "dialogue",
+    "phase:runtime_dialogue",
+    "clarification",
+    "runtime",
+    "reason:deecho_specificity_rebuild",
+    "composite",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::ec01152f_22a4_4a51_b748_263e2550d591",
+    "ghost_relic_match": 0.9333,
+    "family_key": "issue_family::unspecific_echo_response",
+    "issue_category": "unspecific_echo_response",
+    "stage": "COMPOSITE",
+    "version": 26,
+    "signature": "cff4bafdd6890ca84d0a",
+    "is_active_version": false,
+    "supersedes": "3b9c6205-7733-493f-ab26-835e4b718549",
+    "superseded_by": "911b682a-e1e4-401e-80de-59a3f7613b4b"
+  },
+  "created_at": "2026-03-31T08:32:08.327640+00:00",
+  "persisted_at": "2026-03-31T09:45:02.767815+00:00",
+  "is_relic": false,
+  "checksum": "0048504441a6ea35"
+}

@@ -1,0 +1,75 @@
+{
+  "node_id": "3b9c6205-7733-493f-ab26-835e4b718549",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.clarification",
+    "issue": "unspecific_echo_response",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "echo_specificity_rebuild",
+    "intended_effect": "replace mirrored user wording with a specific unresolved target",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "sporadic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.3,
+    "target__recurrence_pattern": 0.27,
+    "logic_tier__recurrence_pattern": 0.255,
+    "intervention__recurrence_pattern": 0.24,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "091644d4-eb7e-477b-b1f2-f018a55ab9e8",
+    "b40c6a68-ec13-4873-a8cb-a18373caafe4",
+    "30283334-6deb-465e-8a01-0ec91cd37005"
+  ],
+  "parent_ids": [
+    "091644d4-eb7e-477b-b1f2-f018a55ab9e8",
+    "b40c6a68-ec13-4873-a8cb-a18373caafe4",
+    "30283334-6deb-465e-8a01-0ec91cd37005"
+  ],
+  "child_ids": [],
+  "tags": [
+    "clarification",
+    "phase:runtime_dialogue",
+    "runtime",
+    "dialogue",
+    "reason:deecho_specificity_rebuild",
+    "composite",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::55e3da5d_ad92_46f2_9449_e012296c7a02",
+    "ghost_relic_match": 1.0,
+    "family_key": "issue_family::unspecific_echo_response",
+    "issue_category": "unspecific_echo_response",
+    "stage": "COMPOSITE",
+    "version": 25,
+    "signature": "b36d5e1b33211eab5b47",
+    "is_active_version": false,
+    "supersedes": "27527584-275d-4075-bb15-2d3a499604a4",
+    "superseded_by": "98e782b9-3ee0-4664-ae85-22afdf09777a"
+  },
+  "created_at": "2026-03-31T06:34:30.461968+00:00",
+  "persisted_at": "2026-03-31T08:32:08.374774+00:00",
+  "is_relic": false,
+  "checksum": "ad35700491806b7c"
+}

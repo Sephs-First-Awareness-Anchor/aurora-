@@ -1,0 +1,29 @@
+## `aurora_internal/quasiarch_observer/dimensional_memory.py` (Continued)
+
+**Classes & Key Methods**:
+* `FileStorageBackend`: JSON-file-based storage backend for node, edge, and index operations.
+* `DimensionalMemory`: Public interface for the persistence layer, handling save, retrieve, caching, indices updating, and lineage reconstruction.
+* `IntegratedMemoryPipeline`: Fuses `CrystalLifecycle` processing with the `DimensionalMemory` persistence mapping, allowing ingestion and formation to automatically trace and record events cleanly.
+
+---
+
+## `aurora_internal/quasiarch_observer/dimensional_processing.py`
+
+**Purpose**: The metabolism and lifecycle engine governing crystal evolution. It handles operations like taking base events and instantiating Base Crystals, graduating them through Composite and Higher-Order forms, collapsing them into overarching Quasicrystals, and executing rotations. 
+
+**Classes & Key Methods**:
+* `CrystalFormation`: Initiates crystal structures from raw diagnostic events and resolves contradiction paths.
+* `CrystalPromotion`: Handles step transitions across levels based on distributions, failures, and strategy confidence.
+* `CrystalRotation`: Executes shift-perspective analyses on quasicrystals to derive new hypotheses.
+* `StrategyHypothesisGenerator`: Matches fresh intervention events against historically established quasi-archetypes to recommend doctrine applications.
+* `CrystalLifecycle`: Complete orchestrator object controlling the full session formation.
+
+---
+
+## `aurora_internal/quasiarch_observer/ghost_relics.py`
+
+**Purpose**: Implements ghost relic acceleration. As old crystals collapse or are superseded, their structural core forms a "relic." This ghost structure doesn't reactivate directly but influences and accelerates the formation of new crystals when similar patterns begin emerging again.
+
+**Classes & Key Methods**:
+* `GhostRelic`: Represents the archived template structure.
+* `GhostRelicSystem`: Manages searching for and applying the best matching historical templates.

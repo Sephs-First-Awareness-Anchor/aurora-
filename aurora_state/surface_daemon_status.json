@@ -1,0 +1,197 @@
+{
+  "updated_at": 1778257518.4544017,
+  "updated": "12:25:18",
+  "runtime_profile": "surface",
+  "stratum_role": "surface",
+  "state": "idle",
+  "queue_depth": 0,
+  "active_turn_id": "",
+  "frame_name": "action",
+  "stance": "careful_clarification",
+  "selected_action": "clarify",
+  "should_speak": true,
+  "readiness": 0.4935,
+  "coherence": 0.45,
+  "processing_mode": "blended",
+  "root_thought": {
+    "comparison_channels": [
+      "incoming_input",
+      "present_sensory",
+      "surface_conversation_frame",
+      "subsurface_continuity_memory",
+      "OETS_grounding",
+      "understanding_contract",
+      "subsurface_stream",
+      "poedex_prefetch",
+      "DCE_root"
+    ],
+    "diagonal_anchor": "",
+    "input_anchor": "Preserve the meaning exactly while changing the wording: It does not mean we all define liberty in exactly the same way or follow the sam...",
+    "law_bindings": [],
+    "mode": "blended",
+    "origin_systems": [
+      "incoming_input",
+      "WorkingMemory",
+      "ConversationMemory",
+      "ExpressionPerception/OETS",
+      "UnderstandingContract",
+      "Poedex",
+      "DimensionalSystems.process_synthesis",
+      "DCEAssembly"
+    ],
+    "primary_tension": "subsurface is moving from research into corrective pressure",
+    "summary": "Surface should feel careful around interpretation while subsurface sharpens the boundary problem. The caution should start easing because the issue is moving toward remedy."
+  },
+  "reactive_signal": {
+    "active": true,
+    "deep_emotion": "fear",
+    "deep_passion": "settled_alignment",
+    "intensity": 0.0,
+    "reason": "",
+    "repair_phase": "enforce",
+    "tracked_surface_bias": "lean_in",
+    "tracked_surface_emotion": "curiosity"
+  },
+  "dominant_axis": "B",
+  "present_sensory_perspective": {
+    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+    "mic_live": true,
+    "camera_live": true,
+    "scope": "constant_surface_feed",
+    "trigger": "interval",
+    "flagged": false,
+    "recognitions": {
+      "recent": [
+        "heard human speech prosody",
+        "heard excited voice",
+        "heard natural speech rhythm"
+      ],
+      "last_matches": {
+        "audio": {
+          "tone": "21720cf3-5047-4547-b87c-c7f21276fa1b",
+          "timbre": "2594f263-f1f3-48a6-bf60-4c00f1fd68c1",
+          "rhythm": "b338ac24-bcfb-4d42-b60d-b06c4f216437"
+        },
+        "visual": {
+          "hue": null,
+          "shape": null,
+          "motion": null
+        },
+        "semantic": {}
+      }
+    },
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "latest_guidance": {},
+    "guidance_summary": "",
+    "pending_visual_question": "",
+    "visual_uncertainty_streak": 0,
+    "native_meaning_bundle": {
+      "primary": {
+        "meaning_id": "sensory-1778257518448",
+        "created_at": 1778257518.448476,
+        "semantic_roots": [
+          "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+          "heard human speech prosody",
+          "heard excited voice",
+          "heard natural speech rhythm"
+        ],
+        "diagonal_anchor": "Boundary_Operator_of_Meaning",
+        "source_origin": "sensory_multimodal",
+        "modality_origin": "sensory",
+        "source_semantic_stage": "processed_sensory",
+        "sensory_lineage_tags": [
+          "scene:interval",
+          "",
+          ""
+        ],
+        "context_refs": [
+          "sensory_scene",
+          "sensory_crystal",
+          "surface_snapshot"
+        ],
+        "memory_refs": [],
+        "law_bindings": [
+          {
+            "domain_letter": "B",
+            "domain_name": "Meaning",
+            "family": "Boundary",
+            "dimension": "OPERATOR",
+            "score": 0.82,
+            "nc_name": "boundary",
+            "summary": "what frames, contains, or separates sensory meaning"
+          },
+          {
+            "domain_letter": "X",
+            "domain_name": "Information",
+            "family": "Existential",
+            "dimension": "POLARITY",
+            "score": 0.71,
+            "nc_name": "existence",
+            "summary": "what is actually present in sensory reality"
+          }
+        ]
+      }
+    },
+    "native_meaning": {
+      "meaning_id": "sensory-1778257518448",
+      "created_at": 1778257518.448476,
+      "semantic_roots": [
+        "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+        "heard human speech prosody",
+        "heard excited voice",
+        "heard natural speech rhythm"
+      ],
+      "diagonal_anchor": "Boundary_Operator_of_Meaning",
+      "source_origin": "sensory_multimodal",
+      "modality_origin": "sensory",
+      "source_semantic_stage": "processed_sensory",
+      "sensory_lineage_tags": [
+        "scene:interval",
+        "",
+        ""
+      ],
+      "context_refs": [
+        "sensory_scene",
+        "sensory_crystal",
+        "surface_snapshot"
+      ],
+      "memory_refs": [],
+      "law_bindings": [
+        {
+          "domain_letter": "B",
+          "domain_name": "Meaning",
+          "family": "Boundary",
+          "dimension": "OPERATOR",
+          "score": 0.82,
+          "nc_name": "boundary",
+          "summary": "what frames, contains, or separates sensory meaning"
+        },
+        {
+          "domain_letter": "X",
+          "domain_name": "Information",
+          "family": "Existential",
+          "dimension": "POLARITY",
+          "score": 0.71,
+          "nc_name": "existence",
+          "summary": "what is actually present in sensory reality"
+        }
+      ]
+    },
+    "concepts_active": []
+  },
+  "surface_guidance": "Surface should feel careful around interpretation while subsurface sharpens the boundary problem. The caution should start easing because the issue is moving toward remedy.",
+  "surface_feels_wrong": true,
+  "surface_feels_wrong_reason": "subsurface effects; surface wants to clarify",
+  "active_effects": [
+    "the wrong-feeling is being remedied below the surface",
+    "background repair pressure is still active",
+    "energy should stay economical",
+    "recurring issue pressure around ?"
+  ],
+  "noncomp_input": {},
+  "noncomp_output": {},
+  "poedex_prefetch": {},
+  "last_error": ""
+}

@@ -1,0 +1,83 @@
+{
+  "active": true,
+  "status": "researched",
+  "generated_at": 1778256886.3094115,
+  "generated_at_str": "2026-05-08 12:14:46",
+  "blocked_tasks": [
+    "assimilation",
+    "mutation"
+  ],
+  "reason": "n_load_saturation",
+  "retry_after": 2400,
+  "selected_operator": "latent_promotion",
+  "selection_source": "hint",
+  "routing_type": "code_gap",
+  "dominant_bias": "B",
+  "dominant_type": "code_gap",
+  "dominant_score": 0.2725,
+  "classification_mode": "active",
+  "governor_mode": "survival",
+  "host_snapshot": {
+    "mem_available_mb": 962.92,
+    "mem_pressure": 0.748,
+    "load_ratio": 1.7555,
+    "process_rss_mb": 128.53
+  },
+  "actions": [
+    {
+      "pressure_type": "code_gap",
+      "priority": 0.2725,
+      "label": "Code structure bottleneck",
+      "reflection": "Identify the code module whose structure is most limiting Aurora's ability to express the currently pressured capability. What change would create the most relief?",
+      "query": "What code structure would best implement the missing capability in the high-pressure axis cluster?",
+      "study_domains": [
+        "architectural patterns",
+        "code refactoring",
+        "module boundary design"
+      ],
+      "source_dimensions": []
+    },
+    {
+      "pressure_type": "articulation_gap",
+      "priority": 0.2209,
+      "label": "Expression precision failure",
+      "reflection": "Find one recent response where semantic_precision was imprecise. Rewrite the critical sentence using anchored vocabulary.",
+      "query": "What vocabulary best captures the distinction required in semantic_precision?",
+      "study_domains": [
+        "lexical precision",
+        "vocabulary anchoring",
+        "semantic consistency"
+      ],
+      "source_dimensions": [
+        "semantic_precision",
+        "compression_elaboration_fit",
+        "implied_intent_inference"
+      ]
+    }
+  ],
+  "poedex_question": "Low-resource self-repair request. mutation is blocked by n_load_saturation. Governor mode=survival, mem_avail=963MB, load=1.76. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+  "occurrences": 5,
+  "handoff_attempts": 6,
+  "researched_occurrences": 5,
+  "last_handoff_at": 1778256886.2444546,
+  "last_handoff_at_str": "2026-05-08 12:14:46",
+  "last_handoff_status": "done",
+  "poedex_result": "Researcher lookup failed: HTTP Error 429: Too Many Requests",
+  "poedex_result_excerpt": "Researcher lookup failed: HTTP Error 429: Too Many Requests",
+  "poedex_result_at": 1778256890.7857296,
+  "poedex_result_at_str": "2026-05-08 12:14:50",
+  "last_gate": {
+    "reason": "allowed",
+    "retry_in": 360,
+    "score": 0.9482,
+    "floor": 0.018,
+    "ts": 1778256886.2444546,
+    "ts_str": "2026-05-08 12:14:46"
+  },
+  "updated_at": 1778256890.7857296,
+  "updated_at_str": "2026-05-08 12:14:50",
+  "relief_parsed_operator": "latent_promotion",
+  "relief_parsed_axis_biases": {},
+  "relief_parsed_routing": "",
+  "relief_parse_confidence": 0.0
+}

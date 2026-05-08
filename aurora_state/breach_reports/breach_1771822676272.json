@@ -1,0 +1,14 @@
+{
+  "type": "monotonic_breach",
+  "target": "aurora_state/aurora_oets_web.json",
+  "violations": [
+    {
+      "field": "total_relations_created",
+      "label": "total_relations_created",
+      "previous": 13305,
+      "current": 13257
+    }
+  ],
+  "phase": "after_save",
+  "timestamp": 1771822676.2725961
+}

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<!-- Authors: Sunni (Sir) Morningstar & Cael Devo -->
+<!-- Constraint Language Prototype — five-axis emission, strict spec -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constraint Language Prototype — X·T·N·B·A</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Courier New',Courier,monospace;background:#0a0a10;color:#e0e0ee;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+:root{
+  --x:#22c55e;--t:#3b82f6;--n:#f97316;--b:#ec4899;--a:#a78bfa;
+  --bg:#0a0a10;--bg2:#0e0e18;--bg3:#12121f;
+  --border:#1e1e30;--border2:#2a2a40;
+  --text:#e0e0ee;--text2:#8888aa;--text3:#44445a;
+}
+#header{padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--x);box-shadow:0 0 6px var(--x)}
+.htitle{font-size:12px;color:var(--text2);letter-spacing:.1em}
+.hsub{margin-left:auto;font-size:10px;color:var(--text3)}
+#body{display:flex;flex:1;overflow:hidden}
+#chatpanel{flex:1;display:flex;flex-direction:column;border-right:1px solid var(--border)}
+#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+#msgs::-webkit-scrollbar{width:3px}
+#msgs::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.empty{margin:auto;text-align:center;color:var(--text3);font-size:12px;line-height:1.9}
+.empty .oc{font-size:26px;margin-bottom:10px}
+#inputrow{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:var(--bg2)}
+#inp{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;font-family:inherit;resize:none;outline:none;transition:border .15s}
+#inp:focus{border-color:#3a3a60}
+#emitbtn{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text3);padding:8px 16px;cursor:default;font-size:12px;font-family:inherit;transition:all .15s;white-space:nowrap}
+#emitbtn.active{border-color:var(--x);color:var(--x);cursor:pointer;background:#22c55e0d}
+#emitbtn.active:hover{background:#22c55e18}
+.bubble-wrap{display:flex;flex-direction:column;gap:3px}
+.bubble-wrap.user{align-items:flex-end}
+.bubble-wrap.bot{align-items:flex-start}
+.bubble{max-width:88%;padding:9px 13px;border-radius:8px;font-size:13px;line-height:1.65;border:1px solid var(--border)}
+.bubble.user{background:var(--bg3);color:#b0c0b0}
+.bubble.bot{background:var(--bg2);color:var(--text)}
+.frametog{background:none;border:none;cursor:pointer;font-size:10px;color:var(--text3);padding:1px 4px;font-family:inherit;transition:color .1s}
+.frametog:hover{color:var(--text2)}
+.framedetail{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;font-size:11px;max-width:88%;line-height:1.75}
+.framedetail.open{display:block}
+.framerow{display:flex;gap:8px}
+.frameax{min-width:13px;font-weight:bold}
+.frameval{color:var(--text2)}
+.framemeta{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);color:var(--text3);font-size:10px}
+.typing{display:flex;gap:6px;align-items:center;padding:4px 0}
+.typing-dot{width:6px;height:6px;border-radius:50%;animation:dp 1s ease-in-out infinite}
+.typing-label{font-size:11px;color:var(--text3);margin-left:4px}
+@keyframes dp{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:1;transform:scale(1.2)}}
+#panel{width:260px;display:flex;flex-direction:column;background:var(--bg2);overflow-y:auto;flex-shrink:0}
+#panel::-webkit-scrollbar{width:3px}
+#panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.phead{padding:9px 13px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);letter-spacing:.08em;flex-shrink:0}
+#panelbody{padding:11px 13px;display:flex;flex-direction:column;gap:13px}
+.axblock{}
+.axlabel{display:flex;justify-content:space-between;margin-bottom:5px}
+.axname{font-size:12px;font-weight:bold}
+.axsub{font-size:10px;color:var(--text3)}
+.barrow{margin-bottom:4px}
+.barhead{display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px}
+.barlabel{color:var(--text3)}
+.barval{color:var(--text2)}
+.bartrack{height:4px;background:var(--bg3);border-radius:2px;position:relative;overflow:hidden}
+.barmid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border2);z-index:2}
+.barfill{position:absolute;height:100%;border-radius:2px;transition:all .35s ease}
+.divider{border-top:1px solid var(--border);padding-top:11px;margin-top:2px}
+.seclabel{font-size:10px;color:var(--text3);letter-spacing:.08em;margin-bottom:7px}
+.kv{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.kk{color:var(--text3)}
+.kv-val{color:var(--text2)}
+.slotrow{display:flex;gap:8px;font-size:11px;margin-bottom:2px}
+.slotax{min-width:13px;font-weight:bold}
+.slotval{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div class="dot"></div>
+  <span class="htitle">constraint emission prototype</span>
+  <span class="hsub">X·T·N·B·A / 31-pressure field / five-axis slot contract</span>
+</div>
+
+<div id="body">
+  <div id="chatpanel">
+    <div id="msgs">
+      <div class="empty">
+        <div class="oc">◌</div>
+        <div>No active emission</div>
+        <div style="font-size:11px;margin-top:5px;color:var(--text3)">Send input to derive axis state and emit</div>
+      </div>
+    </div>
+    <div id="inputrow">
+      <textarea id="inp" rows="2" placeholder="Send input to derive axis state and emit…"></textarea>
+      <button id="emitbtn">emit</button>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div class="phead">live constraint state</div>
+    <div id="panelbody"></div>
+  </div>
+</div>
+
+<script>
+// ── SPEC CONSTANTS ──────────────────────────────────────────
+const RESONANCE_FLOOR=.15,POLARITY_DEAD_BAND=.05,POLARITY_WEAK=.20,
+TRAJECTORY_MOVING=.20,HEAT_MILD_FOCUS=.30,HEAT_STRONG_FOCUS=.60,
+MAGNITUDE_PRESENT=.10,MAGNITUDE_HEDGE=.30;
+
+const AXES={
+  X:{l:"Existence",s:"reference",c:"var(--x)"},
+  T:{l:"Temporal",s:"sequence",c:"var(--t)"},
+  N:{l:"Energy",s:"focus",c:"var(--n)"},
+  B:{l:"Boundary",s:"negation",c:"var(--b)"},
+  A:{l:"Agency",s:"selection",c:"var(--a)"}
+};
+
+const NULL_AX={
+  X:{polarity:0,magnitude:0,trajectory:0},
+  T:{polarity:0,magnitude:0,trajectory:0},
+  N:{polarity:0,magnitude:0,heat:0},
+  B:{polarity:0,magnitude:0},
+  A:{polarity:0,magnitude:0,modal_force:"neutral"}
+};
+
+// ── FIVE-AXIS SLOT CONTRACT ──────────────────────────────────
+
+function eX(X,ht){
+  const{polarity:p,magnitude:m}=X;
+  if(m<MAGNITUDE_PRESENT&&!ht)return{det:null,sup:true};
+  if(m<MAGNITUDE_PRESENT&&ht)return{det:"that",sup:false};
+  if(p<-POLARITY_WEAK&&m>MAGNITUDE_HEDGE)return{det:"no",sup:false};
+  if(p>POLARITY_WEAK&&ht)return{det:"the",sup:false};
+  if(p>POLARITY_WEAK&&!ht)return{det:"a",sup:false};
+  return{det:ht?"the":"a",sup:false};
+}
+
+function eT(T){
+  const{trajectory:tr,magnitude:m}=T;
+  let tense="present";
+  if(tr>TRAJECTORY_MOVING)tense="future";
+  if(tr<-TRAJECTORY_MOVING)tense="past";
+  let conn=null;
+  if(m>=.40)conn=tr>.1?"then":tr<-.1?"still":"now";
+  return{tense,conn};
+}
+
+function eN(N){
+  const h=N.heat||0;
+  if(h<HEAT_MILD_FOCUS)return{int:null,fr:false};
+  if(h<HEAT_STRONG_FOCUS)return{int:"actually",fr:true};
+  return{int:"really",fr:true};
+}
+
+function eB(B){
+  const{polarity:p,magnitude:m}=B;
+  if(p<-POLARITY_WEAK)return{neg:true,q:null};
+  if(p>POLARITY_WEAK&&m>MAGNITUDE_HEDGE)return{neg:false,q:"only"};
+  return{neg:false,q:null};
+}
+
+function eA(A,iS){
+  const pm=iS?.[0]||"IS";
+  const{modal_force:mf="neutral",magnitude:m,polarity:p}=A;
+  const am={
+    IS:{a:"",n:"don't"},ISNT:{a:"",n:"am not"},
+    CAN:{a:"can",n:"can't"},CANT:{a:"can't",n:"can"},
+    DO:{a:"",n:"don't"},DONT:{a:"don't",n:""},
+    SAW:{a:"",n:"don't"},SAUNT:{a:"",n:"don't"},
+    DID:{a:"did",n:"didn't"},DIDNT:{a:"didn't",n:"did"}
+  };
+  let{a,n}=am[pm]||{a:"",n:"don't"};
+  if(mf==="uncertain"&&!a)a="might";
+  if(mf==="uncertain"&&n==="don't")n="might not";
+  if(p>POLARITY_DEAD_BAND&&m<MAGNITUDE_HEDGE&&!a)a="think";
+  const sub=(p<-POLARITY_WEAK&&m>MAGNITUDE_HEDGE)?"it":"I";
+  return{sub,a,na:n,iS:pm};
+}
+
+function buildSlots(ax,ht,iS){
+  return{x:eX(ax.X,ht),t:eT(ax.T),n:eN(ax.N),b:eB(ax.B),a:eA(ax.A,iS)};
+}
+
+// ── UTTERANCE ASSEMBLER ─────────────────────────────────────
+
+function assemble(sl,co,sa,sk,sq){
+  if(sk&&sq)return sq;
+  const{x,t,n,b,a}=sl;
+  const{entity_word:ew,predicate_word:pw,depth_score:ds=0}=co||{};
+  if(sa==="ACKNOWLEDGMENT")return["Yeah.","Right.","I see.","Okay.","Got it."][Math.floor(Math.random()*5)];
+  if(sa==="REFUSAL")return`I ${a.na||"can't"}.`;
+  if(ds<RESONANCE_FLOOR&&!pw&&!ew)return sq||"I don't have a clear sense of that.";
+  const pts=[];
+  pts.push(a.sub);
+  const ng=b.neg;
+  if(t.tense==="future")pts.push(ng?"won't":"will");
+  else if(t.tense==="past"){const av=a.a||"did";pts.push(ng?(a.na||"didn't"):av);}
+  else{if(a.a)pts.push(ng?a.na:a.a);else if(ng)pts.push(a.na||"don't");}
+  if(n.int)pts.push(n.int);
+  if(pw)pts.push(pw);
+  if(b.q&&!ng)pts.push(b.q);
+  if(!x.sup&&ew){if(x.det&&x.det!=="no")pts.push(x.det);pts.push(ew);}
+  if(t.conn)pts.push(t.conn);
+  let u=pts.filter(Boolean).join(" ").replace(/\s+/g," ").trim();
+  u=u.charAt(0).toUpperCase()+u.slice(1);
+  if(!/[.?!]$/.test(u))u+=sa==="QUESTION"?"?":".";
+  return u;
+}
+
+// ── SYSTEM PROMPT ───────────────────────────────────────────
+
+const SYS=`You are the constraint analysis engine for a constraint-native language prototype built on Constraint Language First Principles. The five constraint axes:
+- X (Existence/Reference): reference — polarity: definite(+)/indefinite(−), magnitude: how strongly referenced
+- T (Temporal/Sequence): sequence — trajectory: future(+1)/past(−1)/present(0)
+- N (Energy/Focus): heat 0=quiet to 1=intense emphasis; never selects vocabulary
+- B (Boundary/Negation): negation when polarity<−0.20, scope restriction when polarity>+0.20
+- A (Agency/Selection): person+modal — modal_force: assertive/uncertain/neutral
+
+I-State canonical pairs (IS/ISNT, CAN/CANT, DO/DONT, SAW/SAUNT, DID/DIDNT)
+
+Return ONLY valid JSON, no markdown, no preamble:
+{
+  "axes":{
+    "X":{"polarity":float,"magnitude":float,"trajectory":float},
+    "T":{"polarity":float,"magnitude":float,"trajectory":float},
+    "N":{"polarity":float,"magnitude":float,"heat":float},
+    "B":{"polarity":float,"magnitude":float},
+    "A":{"polarity":float,"magnitude":float,"modal_force":"assertive|uncertain|neutral"}
+  },
+  "topic":"core topic noun or null",
+  "speech_act":"ASSERTION|ACKNOWLEDGMENT|REFUSAL|AGREEMENT|DISAGREEMENT|SEEKING",
+  "active_i_states":["IS|CAN|DO|SAW|DID|ISNT|CANT|DONT|SAUNT|DIDNT"],
+  "content":{
+    "entity_word":"1-2 word topic noun for X slot or null",
+    "predicate_word":"short verb phrase for bot epistemic stance: know about/understand/recall/see/think about — NEVER the user's action",
+    "depth_score":float 0-1
+  },
+  "seeking":boolean,
+  "seeking_question":"natural seeking question if seeking=true, else null — prefix with IDENTITY: for self-reference questions"
+}
+
+Critical rules:
+- predicate_word = what the BOT does (know, understand, recall, see) NOT what the user does
+- seeking = true when depth_score < 0.15 or topic is genuinely unknown
+- seeking_question must be a natural human question, never a meta-narration
+- Very short or casual input = ACKNOWLEDGMENT, seeking=false
+- For self-reference (what are you, your name) prefix seeking_question with IDENTITY:`;
+
+// ── STATE & HISTORY ─────────────────────────────────────────
+
+let history=[];
+let curAxes=JSON.parse(JSON.stringify(NULL_AX));
+let busy=false;
+
+// ── PANEL RENDERER ──────────────────────────────────────────
+
+function renderPanel(ax,fr,la){
+  const pb=document.getElementById("panelbody");
+  let h="";
+
+  for(const[k,m]of Object.entries(AXES)){
+    const st=ax[k]||{};
+    const pol=+(st.polarity||0);
+    const mag=+(st.magnitude||0);
+    const ex=k==="N"?+(st.heat||0):+(st.trajectory||0);
+    const exl=k==="N"?"heat":"traj";
+    h+=`<div class="axblock">
+      <div class="axlabel">
+        <span class="axname" style="color:${m.c}">[${k}] ${m.l}</span>
+        <span class="axsub">${m.s}</span>
+      </div>
+      ${barHtml("pol",pol,true,m.c)}
+      ${barHtml("mag",mag,false,m.c)}
+      ${barHtml(exl,ex,k!=="N",m.c)}
+    </div>`;
+  }
+
+  if(la){
+    h+=`<div class="divider">
+      <div class="seclabel">last frame</div>`;
+    for(const[k,v]of[
+      ["act",la.speech_act],
+      ["topic",la.topic||"—"],
+      ["i-state",(la.active_i_states||[]).slice(0,2).join(" ")||"—"],
+      ["entity",la.content?.entity_word||"—"],
+      ["predicate",la.content?.predicate_word||"—"],
+      ["depth",Math.round((la.content?.depth_score||0)*100)+"%"],
+      ["seeking",la.seeking?"yes":"no"]
+    ]){
+      h+=`<div class="kv"><span class="kk">${k}</span><span class="kv-val">${v}</span></div>`;
+    }
+
+    if(fr){
+      h+=`<div style="margin-top:9px;border-top:1px solid var(--border);padding-top:7px">
+        <div class="seclabel">slot frame</div>`;
+      for(const[k,v]of[
+        ["X",fr.x.sup?"suppressed":`${fr.x.det||"∅"} + entity`],
+        ["T",`${fr.t.tense}${fr.t.conn?" +"+fr.t.conn:""}`],
+        ["N",fr.n.int||(fr.n.fr?"fronted":"standard")],
+        ["B",fr.b.neg?"neg":(fr.b.q||"clear")],
+        ["A",`${fr.a.sub} [${fr.a.iS}]${fr.a.a?" "+fr.a.a:""}`]
+      ]){
+        h+=`<div class="slotrow"><span class="slotax" style="color:${AXES[k].c}">${k}</span><span class="slotval">${v}</span></div>`;
+      }
+      h+="</div>";
+    }
+    h+="</div>";
+  }
+
+  pb.innerHTML=h;
+}
+
+function barHtml(label,val,bipolar,color){
+  const pct=Math.min(100,Math.abs(val||0)*100);
+  const isN=(val||0)<0;
+  const fill=bipolar
+    ?`<div class="barmid"></div><div class="barfill" style="left:${isN?50-pct/2:50}%;width:${pct/2}%;background:${color};opacity:.8"></div>`
+    :`<div class="barfill" style="left:0;width:${pct}%;background:${color};opacity:.7"></div>`;
+  return `<div class="barrow">
+    <div class="barhead"><span class="barlabel">${label}</span><span class="barval">${(+(val||0)).toFixed(2)}</span></div>
+    <div class="bartrack">${fill}</div>
+  </div>`;
+}
+
+// ── MESSAGE RENDERER ─────────────────────────────────────────
+
+function addMsg(role,text,analysis,frame){
+  const empty=document.querySelector(".empty");
+  if(empty)empty.remove();
+
+  const msgs=document.getElementById("msgs");
+  const wrap=document.createElement("div");
+  wrap.className="bubble-wrap "+(role==="user"?"user":"bot");
+
+  const bubble=document.createElement("div");
+  bubble.className="bubble "+(role==="user"?"user":"bot");
+  bubble.textContent=text;
+  wrap.appendChild(bubble);
+
+  if(role!=="user"&&frame&&analysis){
+    const tog=document.createElement("button");
+    tog.className="frametog";
+    tog.textContent="▸ frame";
+    wrap.appendChild(tog);
+
+    const detail=document.createElement("div");
+    detail.className="framedetail";
+
+    let dh="";
+    for(const[k,v]of[
+      ["X",frame.x.sup?"suppressed":`det="${frame.x.det||"∅"}" entity="${analysis.content?.entity_word||"—"}"`],
+      ["T",`tense=${frame.t.tense} conn=${frame.t.conn||"—"}`],
+      ["N",`heat=${(analysis.axes?.N?.heat||0).toFixed(2)} fronted=${frame.n.fr}`],
+      ["B",`neg=${frame.b.neg} qual=${frame.b.q||"—"}`],
+      ["A",`subj=${frame.a.sub} [${frame.a.iS}] aux="${frame.a.a||"∅"}"`]
+    ]){
+      dh+=`<div class="framerow"><span class="frameax" style="color:${AXES[k].c}">${k}</span><span class="frameval">${v}</span></div>`;
+    }
+    dh+=`<div class="framemeta">act=${analysis.speech_act} depth=${Math.round((analysis.content?.depth_score||0)*100)}% seeking=${analysis.seeking?"y":"n"}</div>`;
+    detail.innerHTML=dh;
+    wrap.appendChild(detail);
+
+    let open=false;
+    tog.onclick=()=>{
+      open=!open;
+      tog.textContent=open?"▾ frame":"▸ frame";
+      detail.classList.toggle("open",open);
+    };
+  }
+
+  msgs.appendChild(wrap);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showTyping(){
+  const msgs=document.getElementById("msgs");
+  const d=document.createElement("div");
+  d.id="typing";d.className="typing";
+  const axKeys=["X","T","N","B","A"];
+  axKeys.forEach((k,i)=>{
+    const s=document.createElement("span");
+    s.className="typing-dot";
+    s.style.cssText=`background:${AXES[k].c};animation-delay:${i*.12}s`;
+    d.appendChild(s);
+  });
+  const lbl=document.createElement("span");
+  lbl.className="typing-label";lbl.textContent="deriving axis state";
+  d.appendChild(lbl);
+  msgs.appendChild(d);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function removeTyping(){
+  const t=document.getElementById("typing");
+  if(t)t.remove();
+}
+
+function setBusy(b){
+  busy=b;
+  const btn=document.getElementById("emitbtn");
+  if(b){btn.className="";btn.textContent="…";}
+  else updateBtn();
+}
+
+function updateBtn(){
+  const inp=document.getElementById("inp");
+  const btn=document.getElementById("emitbtn");
+  btn.className=inp.value.trim()&&!busy?"active":"";
+  btn.textContent="emit";
+}
+
+// ── SEND ─────────────────────────────────────────────────────
+
+async function send(){
+  const inp=document.getElementById("inp");
+  const txt=inp.value.trim();
+  if(!txt||busy)return;
+  inp.value="";updateBtn();
+  addMsg("user",txt,null,null);
+  setBusy(true);showTyping();
+  history.push({role:"user",content:txt});
+
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:700,
+        system:SYS,
+        messages:history
+      })
+    });
+
+    const data=await res.json();
+    const raw=data.content?.find(b=>b.type==="text")?.text||"{}";
+    history.push({role:"assistant",content:raw});
+
+    let a;
+    try{a=JSON.parse(raw.replace(/```json|```/g,"").trim());}
+    catch{
+      a={axes:NULL_AX,topic:null,speech_act:"ACKNOWLEDGMENT",
+         active_i_states:["IS"],content:{entity_word:null,predicate_word:null,depth_score:0},
+         seeking:false,seeking_question:null};
+    }
+
+    let text,frame=null;
+    if(a.seeking_question?.startsWith("IDENTITY:")){
+      text=a.seeking_question.replace("IDENTITY:","").trim();
+    } else {
+      frame=buildSlots(a.axes||NULL_AX,!!a.topic,a.active_i_states);
+      text=assemble(frame,a.content,a.speech_act,a.seeking,a.seeking_question);
+    }
+
+    curAxes=a.axes||NULL_AX;
+    removeTyping();
+    renderPanel(curAxes,frame,a);
+    addMsg("bot",text,a,frame);
+
+  }catch(e){
+    removeTyping();
+    addMsg("bot","Emission error: "+e.message,null,null);
+  }
+
+  setBusy(false);
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+
+document.getElementById("inp").addEventListener("input",updateBtn);
+document.getElementById("inp").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}
+});
+document.getElementById("emitbtn").addEventListener("click",send);
+renderPanel(NULL_AX,null,null);
+</script>
+</body>
+</html>

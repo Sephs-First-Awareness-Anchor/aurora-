@@ -1,0 +1,77 @@
+{
+  "node_id": "1a38c170-7ee2-4f89-9e3e-e8442085dc47",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.perspective",
+    "issue": "conversational_grounding_gap",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "core_perspective_synthesis",
+    "intended_effect": "engage from internal state rather than declining",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "sporadic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.36124999999999996,
+    "target__recurrence_pattern": 0.325125,
+    "logic_tier__recurrence_pattern": 0.30706249999999996,
+    "intervention__recurrence_pattern": 0.28900000000000003,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "c353b643-8129-4896-8323-27a1ee215aa8",
+    "d70f8fd8-7b04-4bcd-b748-c50d27250ce1",
+    "0bb5bccb-9e10-424a-af9f-0570c644de6c"
+  ],
+  "parent_ids": [
+    "c353b643-8129-4896-8323-27a1ee215aa8",
+    "d70f8fd8-7b04-4bcd-b748-c50d27250ce1",
+    "0bb5bccb-9e10-424a-af9f-0570c644de6c"
+  ],
+  "child_ids": [],
+  "tags": [
+    "perspective",
+    "phase:runtime_dialogue",
+    "runtime",
+    "dialogue",
+    "composite",
+    "self_repair",
+    "learning",
+    "coherence",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::72555c42_a846_41d5_bb37_cd428324b513",
+    "ghost_relic_match": 0.7059,
+    "family_key": "issue_family::conversational_grounding_gap",
+    "issue_category": "conversational_grounding_gap",
+    "stage": "COMPOSITE",
+    "version": 10,
+    "signature": "c9f91d3cd89b985ae959",
+    "is_active_version": true,
+    "supersedes": "0b9031b5-ac8e-4750-91d7-6298dcbbfc6b",
+    "superseded_by": ""
+  },
+  "created_at": "2026-04-04T08:58:44.996865+00:00",
+  "persisted_at": "2026-04-04T08:58:45.079000+00:00",
+  "is_relic": false,
+  "checksum": "38981584df2a8a34"
+}

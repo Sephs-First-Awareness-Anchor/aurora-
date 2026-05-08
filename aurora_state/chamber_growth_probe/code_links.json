@@ -1,0 +1,291 @@
+{
+  "summary": {
+    "repo_root": "/storage/emulated/0/Aurora",
+    "tick_count": 0,
+    "relief_events": 0,
+    "accepted_count": 0,
+    "rejected_count": 0,
+    "links_promoted": 0,
+    "total_links": 0,
+    "lineage_nodes": 1,
+    "lineage_deepest_generation": 1,
+    "lineage_accepted_nodes": 1,
+    "lineage_ripple_roots": 0,
+    "operator_gradients": {
+      "X": 0.0,
+      "T": 0.0,
+      "N": 0.0,
+      "B": 0.0,
+      "A": 0.0
+    },
+    "governor": {
+      "events_since_promotion": 0,
+      "promotions": 0,
+      "stagnation_gain": 0.0,
+      "top_operator_success_ema": [],
+      "tolerance": {}
+    },
+    "events_file": "/storage/emulated/0/Aurora/aurora_state/chamber_growth_probe/code_events.jsonl"
+  },
+  "links": {},
+  "pair_counts": {},
+  "pair_stats": {},
+  "lineage": {
+    "nodes": 1,
+    "edges": 0,
+    "children_roots": 0,
+    "recent": [
+      {
+        "mutation_id": "CMUT:test123",
+        "lineage_id": "OP:test123",
+        "parents": [],
+        "generation": 1,
+        "constraint_combo_id": "agency+boundary",
+        "constraints": [
+          "agency",
+          "boundary"
+        ],
+        "accepted": true,
+        "net_benefit": 0.42,
+        "timestamp": 1.0,
+        "history": {
+          "target_scope": {
+            "files": [
+              "/storage/emulated/0/Aurora/aurora_runtime.py"
+            ],
+            "modules": [
+              "aurora_runtime"
+            ],
+            "subsystems": [
+              "core"
+            ]
+          },
+          "evolutionary_effects": {
+            "classification": "accepted_local_adaptation"
+          },
+          "growth_lineage": {
+            "mutation_id": "CMUT:test123",
+            "lineage_source": "code_evolution_chamber",
+            "operator_key": "",
+            "constraint_combo_id": "",
+            "constraints": [
+              "agency",
+              "boundary"
+            ],
+            "target_scope": {
+              "files": [
+                "/storage/emulated/0/Aurora/aurora_runtime.py"
+              ],
+              "modules": [
+                "aurora_runtime"
+              ],
+              "subsystems": [
+                "core"
+              ]
+            },
+            "target_kind": "mutation",
+            "present_in_system": true
+          },
+          "ripple_effects": {
+            "origin_module": "aurora_runtime",
+            "origin_owner": "core",
+            "propagated_modules": [
+              "aurora_runtime"
+            ],
+            "propagated_subsystems": [
+              "core"
+            ],
+            "cross_diversity_links": 2,
+            "derived_from_origin_descendants": 1,
+            "growth_events": [
+              {
+                "stage": "mutation_observed",
+                "operator_key": "",
+                "modules": [
+                  "aurora_runtime"
+                ],
+                "subsystems": [
+                  "core"
+                ],
+                "files": [
+                  "/storage/emulated/0/Aurora/aurora_runtime.py"
+                ]
+              }
+            ]
+          },
+          "developmental_summary": {
+            "growth_reflected": true,
+            "system_reflection_required": true,
+            "effect_classification": "accepted_local_adaptation",
+            "system_impact_score": 0.42,
+            "reflection_strength": 0.33
+          }
+        },
+        "ancestor_chain": [],
+        "ripple_effects": {
+          "origin_module": "aurora_runtime",
+          "origin_owner": "core",
+          "propagated_modules": [],
+          "propagated_subsystems": [],
+          "cross_diversity_links": 2,
+          "derived_from_origin_descendants": 1,
+          "growth_events": [
+            {
+              "stage": "mutation_observed",
+              "operator_key": "",
+              "modules": [
+                "aurora_runtime"
+              ],
+              "subsystems": [
+                "core"
+              ],
+              "files": [
+                "/storage/emulated/0/Aurora/aurora_runtime.py"
+              ]
+            }
+          ],
+          "descendant_count": 0,
+          "accepted_descendant_count": 0,
+          "descendant_acceptance_rate": 0.0,
+          "descendant_net_benefit_sum": 0.0
+        }
+      }
+    ],
+    "top_ripple_roots": [
+      {
+        "mutation_id": "CMUT:test123",
+        "lineage_id": "OP:test123",
+        "generation": 1,
+        "accepted": true,
+        "descendant_count": 0,
+        "descendant_acceptance_rate": 0.0,
+        "propagated_modules": [],
+        "propagated_subsystems": []
+      }
+    ]
+  },
+  "lineage_nodes": {
+    "CMUT:test123": {
+      "mutation_id": "CMUT:test123",
+      "lineage_id": "OP:test123",
+      "parents": [],
+      "generation": 1,
+      "constraint_combo_id": "agency+boundary",
+      "constraints": [
+        "agency",
+        "boundary"
+      ],
+      "accepted": true,
+      "net_benefit": 0.42,
+      "timestamp": 1.0,
+      "history": {
+        "target_scope": {
+          "files": [
+            "/storage/emulated/0/Aurora/aurora_runtime.py"
+          ],
+          "modules": [
+            "aurora_runtime"
+          ],
+          "subsystems": [
+            "core"
+          ]
+        },
+        "evolutionary_effects": {
+          "classification": "accepted_local_adaptation"
+        },
+        "growth_lineage": {
+          "mutation_id": "CMUT:test123",
+          "lineage_source": "code_evolution_chamber",
+          "operator_key": "",
+          "constraint_combo_id": "agency+boundary",
+          "constraints": [
+            "agency",
+            "boundary"
+          ],
+          "target_scope": {
+            "files": [
+              "/storage/emulated/0/Aurora/aurora_runtime.py"
+            ],
+            "modules": [
+              "aurora_runtime"
+            ],
+            "subsystems": [
+              "core"
+            ]
+          },
+          "target_kind": "mutation",
+          "present_in_system": true
+        },
+        "ripple_effects": {
+          "origin_module": "aurora_runtime",
+          "origin_owner": "core",
+          "propagated_modules": [
+            "aurora_runtime"
+          ],
+          "propagated_subsystems": [
+            "core"
+          ],
+          "cross_diversity_links": 2,
+          "derived_from_origin_descendants": 1,
+          "growth_events": [
+            {
+              "stage": "mutation_observed",
+              "operator_key": "",
+              "modules": [
+                "aurora_runtime"
+              ],
+              "subsystems": [
+                "core"
+              ],
+              "files": [
+                "/storage/emulated/0/Aurora/aurora_runtime.py"
+              ]
+            }
+          ]
+        },
+        "developmental_summary": {
+          "growth_reflected": true,
+          "system_reflection_required": true,
+          "effect_classification": "accepted_local_adaptation",
+          "system_impact_score": 0.42,
+          "reflection_strength": 0.33
+        }
+      }
+    }
+  },
+  "lineage_children": {},
+  "operator_gradients": {
+    "X": 0.0,
+    "T": 0.0,
+    "N": 0.0,
+    "B": 0.0,
+    "A": 0.0
+  },
+  "latest_pressure": {
+    "X": 0.0,
+    "T": 0.0,
+    "N": 0.0,
+    "B": 0.0,
+    "A": 0.0
+  },
+  "latest_relief": {
+    "X": 0.0,
+    "T": 0.0,
+    "N": 0.0,
+    "B": 0.0,
+    "A": 0.0
+  },
+  "latest_timing_feedback": {
+    "apply_duration_s": 0.0,
+    "agency_time_credit": 0.0,
+    "temporal_overhead_penalty": 0.0,
+    "applied_time_difference_s": 0.0
+  },
+  "governor": {
+    "events_since_promotion": 0,
+    "promotions": 0,
+    "stagnation_gain": 0.0,
+    "top_operator_success_ema": [],
+    "tolerance": {}
+  }
+}
