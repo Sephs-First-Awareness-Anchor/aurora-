@@ -26,7 +26,7 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y git zip unzip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev automake autopoint gettext libltdl-dev
+        sudo apt install -y git zip unzip python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo6 cmake libffi-dev libssl-dev automake autopoint gettext libltdl-dev
         python -m pip install --upgrade pip
         python -m pip install "Cython>=3.0.0,<3.1.0" virtualenv
         python -m pip install git+https://github.com/kivy/buildozer.git@master
@@ -40,8 +40,8 @@ jobs:
 
     - name: Build with Buildozer
       run: |
-        # Buildozer will automatically accept licenses if set in spec
-        buildozer android debug
+        # Call buildozer as a module to avoid PATH issues
+        python3 -m buildozer.scripts.client android debug
       env:
         # Increase logging
         BUILDOZER_WARN_ON_ROOT: 0
