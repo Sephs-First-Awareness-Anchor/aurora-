@@ -38,7 +38,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy,requests,numpy,opencv,pydantic,typing-extensions,chardet,idna,urllib3,certifi,plyer,aiohttp,aiosignal,attrs,frozenlist,multidict,yarl,edge-tts
+requirements = python3,kivy==2.3.0,hostpython3,requests,numpy,opencv,pydantic,typing-extensions,chardet,idna,urllib3,certifi,plyer,aiohttp,aiosignal,attrs,frozenlist,multidict,yarl,edge-tts
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -101,13 +101,13 @@ android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAME
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-android.api = 33
+android.api = 34
 
 # (int) Minimum API your APK / AAB will support.
 android.minapi = 21
 
 # (int) Android SDK version to use
-android.sdk = 33
+android.sdk = 34
 
 # (str) Android NDK version to use
 android.ndk = 25b
@@ -321,7 +321,7 @@ android.allow_backup = True
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
-#p4a.branch = master
+p4a.branch = master
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD
