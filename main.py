@@ -13,7 +13,7 @@ from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.popup import Popup
-from kivy.clock import Clock
+from kivy.clock import Clock, mainthread
 from kivy.utils import platform
 from kivy.graphics import Color, Ellipse, Canvas, Rotate, PushMatrix, PopMatrix, RoundedRectangle
 from kivy.properties import ListProperty, NumericProperty
@@ -330,11 +330,62 @@ class AuroraApp(App):
         if btn.state == 'down':
             btn.text = "🎤 Active"
             btn.background_color = (0.2, 0.8, 0.2, 1) # Green
-            self.set_status("Mic Unmuted")
+            self.set_status("Mic Unmuted - Listening...")
+            self.start_listening()
         else:
             btn.text = "🎤 Mute"
             btn.background_color = (0.8, 0.2, 0.2, 1) # Red
             self.set_status("Mic Muted")
+            self.stop_listening()
+
+    def start_listening(self):
+        if platform == 'android':
+            try:
+                from plyer import stt
+                stt.start()
+                stt.set_result_callback(self.on_stt_results)
+                stt.set_error_callback(self.on_stt_error)
+            except Exception as e:
+                self.add_bubble(f"Voice Error: {str(e)}", "system")
+        else:
+            self.add_bubble("Voice recording not supported on desktop UI yet.", "system")
+            # Automatically toggle back off
+            self.mic_btn.state = 'normal'
+            self.toggle_mic(self.mic_btn)
+
+    def stop_listening(self):
+        if platform == 'android':
+            try:
+                from plyer import stt
+                stt.stop()
+            except Exception:
+                pass
+
+    @mainthread
+    def on_stt_results(self, results):
+        if results and results[0]:
+            user_text = results[0]
+            self.add_bubble(user_text, "user")
+            
+            # Wake word check if in BACKGROUND
+            lower_text = user_text.lower()
+            if self.embodiment_state == "BACKGROUND" and "aurora" in lower_text:
+                self.set_embodiment_state("SUMMONED")
+            
+            if self.systems:
+                self.set_status("Thinking...")
+                threading.Thread(target=self.process_turn_thread, args=(user_text,), daemon=True).start()
+        
+        # If mic is still active, restart listening (continuous mode)
+        if self.mic_btn.state == 'down':
+            # Small delay to prevent rapid looping
+            Clock.schedule_once(lambda dt: self.start_listening(), 0.5)
+
+    @mainthread
+    def on_stt_error(self, error):
+        # Ignore common timeout errors to keep listening
+        if self.mic_btn.state == 'down':
+            Clock.schedule_once(lambda dt: self.start_listening(), 1.0)
 
     def toggle_keyboard(self, btn):
         if btn.state == 'down':
