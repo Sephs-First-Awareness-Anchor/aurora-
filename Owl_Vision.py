@@ -17,7 +17,7 @@ override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     output = TextView(this).apply {
-        textSize = 15f
+        textSize = 15
         setPadding(32, 48, 32, 32)
         text = "Stereo Camera Probe\n\nChecking permission..."
     }

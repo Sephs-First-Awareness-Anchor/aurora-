@@ -1,18 +1,18 @@
 {
-  "timestamp": 1778238864.3191128,
-  "timestamp_str": "2026-05-08 07:14:24",
-  "status": "distilled",
-  "summary": "run 20260508_071424 | 0B purged | 0 crystals",
+  "timestamp": 1778260846.3605573,
+  "timestamp_str": "2026-05-08 13:20:46",
+  "status": "idle",
+  "summary": "idle",
   "trigger_snapshot": {
     "sizes": {
-      "surface_pressure": 3815281,
+      "surface_pressure": 3823881,
       "pressure_experiences": 545022,
-      "daemon_log": 365012
+      "daemon_log": 419553
     },
-    "total_state_bytes": 90512473,
+    "total_state_bytes": 90643007,
     "low_worth_density": 0.0125,
-    "der_load": 0.4082,
-    "latest_restorable_run_id": "20260508_015224",
+    "der_load": 0.4072,
+    "latest_restorable_run_id": "20260508_071424",
     "triggers": {
       "log_size_threshold_exceeded": false,
       "high_low_worth_density": false,
@@ -20,9 +20,9 @@
       "memory_saturation": false,
       "der_load_increase": false,
       "coherence_instability": false,
-      "quiet_window": true
+      "quiet_window": false
     },
-    "should_run": true
+    "should_run": false
   },
   "bytes_purged": 0,
   "links_promoted": 0,
@@ -33,50 +33,10 @@
   "knot_count": 0,
   "wave_count": 0,
   "drift_count": 0,
-  "results": [
-    {
-      "source": "surface_pressure",
-      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/surface_pressure_log.jsonl",
-      "parser": "jsonl",
-      "status": "under_threshold",
-      "current_bytes": 3815281,
-      "bytes_purged": 0,
-      "records_purged": 0,
-      "archive_file": "",
-      "crystals": [],
-      "micro_residuals": [],
-      "shape_counts": {}
-    },
-    {
-      "source": "pressure_experiences",
-      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/pressure_experiences.jsonl",
-      "parser": "jsonl",
-      "status": "under_threshold",
-      "current_bytes": 545022,
-      "bytes_purged": 0,
-      "records_purged": 0,
-      "archive_file": "",
-      "crystals": [],
-      "micro_residuals": [],
-      "shape_counts": {}
-    },
-    {
-      "source": "daemon_log",
-      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/daemon.log",
-      "parser": "log",
-      "status": "under_threshold",
-      "current_bytes": 365094,
-      "bytes_purged": 0,
-      "records_purged": 0,
-      "archive_file": "",
-      "crystals": [],
-      "micro_residuals": [],
-      "shape_counts": {}
-    }
-  ],
-  "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260508_071424",
-  "run_id": "20260508_071424",
+  "results": [],
+  "archive_dir": "",
+  "run_id": "",
   "restorable": true,
   "latest_restorable_run_id": "20260508_071424",
-  "distillation_status": "20260508_071424 ready"
+  "distillation_status": "idle"
 }
