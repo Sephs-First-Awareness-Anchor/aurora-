@@ -737,7 +737,7 @@ _reg("corpus_download","Download a new training corpus (JSON/CSV/TXT) from a URL
 def _corpus_train(corpus_name: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Trigger a training loop on a previously downloaded corpus file."""
     from pathlib import Path
-    import subprocess, sys
+    import threading
     if not corpus_name: return ToolResult("corpus_train", "", False, "corpus_name required")
     
     corp_path = Path(__file__).resolve().parents[1] / "aurora_state" / "corpora" / corpus_name
@@ -745,13 +745,29 @@ def _corpus_train(corpus_name: str = "", systems: Optional[Dict[str, Any]] = Non
         return ToolResult("corpus_train", "", False, f"Corpus {corpus_name} not found in storage.")
     
     try:
-        # Run corpus_runner.py as a background process to avoid blocking
-        runner = Path(__file__).resolve().parents[1] / "corpus_runner.py"
-        proc = subprocess.Popen(
-            [sys.executable, str(runner), "--corpus", str(corp_path), "--passes", "observer"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        return ToolResult("corpus_train", f"Training started in background (PID {proc.pid}) on {corpus_name}.", True)
+        # Run corpus ingestion in a background thread to work on Android (subprocess fails in Kivy)
+        def run_training():
+            try:
+                # We need to import the runner logic directly
+                import sys
+                sys.path.append(str(Path(__file__).resolve().parents[1]))
+                from corpus_runner import run_corpus_ingestion, LearningCadence
+                
+                cadence = LearningCadence(
+                    heartbeat_every=5, identity_every=50, voice_every=50,
+                    consolidation_every=300, simulation_every=500, save_every=1000, evolve_every=100
+                )
+                run_corpus_ingestion(
+                    systems=systems, corpus_path=str(corp_path), cadence=cadence,
+                    passes="observer", verbose=False, dpme_verbose=False,
+                    coherence_window=200, unlock_avg=0.62, unlock_min=0.45, warmup_epochs=3
+                )
+            except Exception as e:
+                with open("training_error.log", "a") as f:
+                    f.write(f"Training thread failed: {e}\n")
+
+        threading.Thread(target=run_training, daemon=True).start()
+        return ToolResult("corpus_train", f"Training started in background on {corpus_name}.", True)
     except Exception as exc:
         return ToolResult("corpus_train", "", False, str(exc))
 

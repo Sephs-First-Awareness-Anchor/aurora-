@@ -567,12 +567,41 @@ class AuroraApp(App):
             time.sleep(10)
             if not self.systems or not self.full_autonomy:
                 continue
-                
-            if self.live_mode and time.time() - self.last_percept_ts > 45:
-                self.perform_live_percept()
-                self.last_percept_ts = time.time()
 
-    def perform_live_percept(self):
+            # 1. Tick the auxiliary modules to advance physics and entropy
+            try:
+                # If she has the attention engine, feed it a blank tick to let tension build
+                attn_engine = self.systems.get("attention_engine")
+                if attn_engine:
+                    # Mock internal drift tick
+                    pass
+            except Exception:
+                pass
+
+            # 2. Autonomous Curiosity (run every ~30 seconds if dormant)
+            try:
+                from aurora_curiosity_engine import curiosity_cycle
+                # Use last_percept_ts as a general activity tracker
+                if time.time() - self.last_percept_ts > 30:
+                    self.last_percept_ts = time.time()
+                    # Only run curiosity if she's not actively summoned (to save battery/distraction)
+                    if self.embodiment_state != "SUMMONED":
+                        curiosity_result = curiosity_cycle(self.systems)
+                        if curiosity_result and curiosity_result.get("response"):
+                            # If curiosity produced an interesting thought, she might speak it
+                            # if resonance/heat is high enough
+                            heat = self.systems.get("lattice").get_global_heat() if self.systems.get("lattice") else 0.5
+                            if heat > 0.6:
+                                Clock.schedule_once(lambda dt, c=curiosity_result["response"]: self.on_aurora_response(c, update_orb=True), 0)
+            except Exception:
+                pass
+
+            # 3. Live Vision Mode
+            if self.live_mode and time.time() - getattr(self, '_last_live_ts', 0) > 45:
+                self.perform_live_percept()
+                self._last_live_ts = time.time()
+
+    def boot_aurora_thread(self):
         try:
             percept_context = "I am observing my environment. [SENSORY_DATA] source: mobile_camera observation: steady presence."
             result = process_external_user_turn(self.systems, percept_context, source_label="live_mode_sensory")
