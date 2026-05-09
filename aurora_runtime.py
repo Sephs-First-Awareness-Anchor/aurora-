@@ -599,6 +599,7 @@ class StackSystems:
     entropy_detector:         Optional[Any] = None
     primitive_extractor:      Optional[Any] = None
     comprehension_gap_system: Optional[Any] = None
+    attention_engine:         Optional[Any] = None
     braided_substrate:        Optional[Any] = None
     language_orchestra:       Optional[Any] = None
 
@@ -984,14 +985,16 @@ def boot_stack(state_dir:  str = "aurora_state",
     try:
         from aurora_internal.aurora_entropy_detector import make_entropy_detector
         from aurora_internal.aurora_comprehension_gap import ComprehensionGapSystem
+        from aurora_internal.aurora_attention_engine import AttentionEngine
         from aurora_internal.aurora_braided_substrate import BraidedSubstrateLayer
         from aurora_internal.aurora_language_state import ExpressionEvolutionOrchestra
 
         systems.entropy_detector = make_entropy_detector()
         systems.comprehension_gap_system = ComprehensionGapSystem()
+        systems.attention_engine = AttentionEngine()
         systems.braided_substrate = BraidedSubstrateLayer()
         systems.language_orchestra = ExpressionEvolutionOrchestra()
-        _log("AUX    Cognition Modules", True, "entropy+gap+substrate+language online")
+        _log("AUX    Cognition Modules", True, "entropy+gap+attention+substrate+language online")
     except Exception as e:
         _log("AUX    Cognition Modules", False, str(e))
 
@@ -1633,6 +1636,7 @@ class UniverseSteerer:
         self._last_braid_snapshot: Optional[Dict[str, Any]] = None
         self._last_language_status: Optional[Dict[str, Any]] = None
         self._last_primitive_vocab: Optional[Dict[str, Any]] = None
+        self._last_attention_frame: Optional[Any] = None
         self._last_leverage_band: Optional[str] = None
         self._base_flip_thresholds: Dict[Any, float] = {}
         self._effective_flip_thresholds: Dict[str, float] = {}
@@ -2105,7 +2109,46 @@ class UniverseSteerer:
         bias_engine = getattr(self._s, "bias_engine", None)
         entropy_detector = getattr(self._s, "entropy_detector", None)
         primitive_extractor = getattr(self._s, "primitive_extractor", None)
+        attention_engine = getattr(self._s, "attention_engine", None)
         lang = getattr(self._s, "language_orchestra", None)
+
+        # Unified Attention Engine (Dual-Tier Meaning Formation)
+        if attention_engine is not None:
+            try:
+                # 1. Subsurface Tension: Get introspective drift from chamber
+                internal_drift = self._s.pressure_snapshot()
+                
+                # 2. Surface Salience: Get external intensity from perception
+                external_stimuli = {"intensity": 0.0, "tags": []}
+                if self._s.has("perception"):
+                    external_stimuli = self._s.perception.get_surface_salience()
+                
+                # 3. Resolve focus if a stimulus was provided in the tick() call
+                if stimulus_text and stimulus_text != "tick":
+                    external_stimuli["intensity"] = max(external_stimuli.get("intensity", 0.0), 0.7)
+                    if "aurora" in stimulus_text.lower():
+                        external_stimuli["addressed"] = True
+                    external_stimuli["tags"] = external_stimuli.get("tags", []) + ["stimulus"]
+
+                # 4. Tick the engine
+                if internal_drift is not None:
+                    frame = attention_engine.tick(tick, external_stimuli, internal_drift)
+                    self._last_attention_frame = frame
+                    
+                    # 5. Meaning Formation Trigger
+                    nucleus = attention_engine.get_meaning_nucleus()
+                    if nucleus:
+                        # Signal OETS to consolidate high-resonance relationships
+                        if self._s.has("perception") and self._s.perception.oets:
+                            # Direct her research focus to the current attention anchors
+                            if nucleus["anchors"]:
+                                try:
+                                    self._s.perception.oets.consolidate()
+                                    # Future: feed nucleus["anchors"] into identify_research_targets
+                                except Exception:
+                                    pass
+            except Exception:
+                self._last_attention_frame = None
 
         # Always-on leverage scalar path: consume leverage each tick and apply
         # ephemeral flip-threshold nudges across constraints.
@@ -4220,6 +4263,19 @@ class UniverseSteerer:
         print(f"    Offspring links   : {int(lcov.get('offspring_relations', 0))}")
         print(f"    Unmapped perf ops : {int(lcov.get('unmapped_perf_count', 0))}")
         print(f"    Mapped untracked  : {int(lcov.get('mapped_untracked_count', 0))}")
+
+        # Auxiliary cognition
+        if self._last_attention_frame:
+            print("\n  ATTENTION FOCUS")
+            f = self._last_attention_frame
+            axes_str = ", ".join([str(getattr(c, "name", c)) for c in f.focus_axes])
+            print(f"    State              : {f.state.value}")
+            print(f"    Resonance          : {f.resonance:.4f}")
+            print(f"    Surface Salience   : {f.surface_salience:.4f}")
+            print(f"    Subsurface Tension : {f.subsurface_tension:.4f}")
+            print(f"    Focus Axes         : [{axes_str}]")
+            if f.anchors:
+                print(f"    Active Anchors     : {', '.join(f.anchors)}")
 
         # Live pressure snapshot
         self.pressure_report()
