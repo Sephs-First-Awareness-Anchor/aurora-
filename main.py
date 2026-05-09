@@ -632,16 +632,32 @@ class AuroraApp(App):
             threading.Thread(target=self.speak_thread, args=(content,), daemon=True).start()
 
     def speak_thread(self, text):
+        # Pause listening while speaking to prevent an echo loop
+        was_listening = (self.mic_btn.state == 'down')
+        if was_listening:
+            self.stop_listening()
+            
         if tts:
             try:
                 # Local system TTS via plyer
                 tts.speak(text)
+                
+                # Estimate duration based on word count to know when to turn mic back on
+                # (Since plyer.tts.speak is often non-blocking on some platforms)
+                duration_s = max(1.0, len(text.split()) * 0.4)
+                if was_listening:
+                    time.sleep(duration_s)
+                    
             except Exception:
                 pass
         else:
             # Fallback to edge-tts if internet is available and ffplay is present
             # but on Android, system TTS is preferred.
             pass
+            
+        # Resume listening
+        if was_listening:
+            Clock.schedule_once(lambda dt: self.start_listening(), 0.5)
 
     def add_bubble(self, text, sender):
         bubble = ChatBubble(text=text, sender=sender)

@@ -1289,15 +1289,42 @@ class SemanticIntentCompiler:
             if options:
                 options.sort(key=lambda x: x[1], reverse=True)
                 choice = random.choice(options[:3])[0]
+                
+                # Apply basic generative morphological rules to prevent "word salad"
+                if role == TokenRole.OBJECT and choice not in ("i", "me", "you", "it", "this", "that", "aurora"):
+                    # Add an article for raw objects
+                    if not assembled or assembled[-1] not in ("the", "a", "an", "my", "your", "our"):
+                        assembled.append("the")
+                
+                if role == TokenRole.DESCRIPTOR and choice.endswith("ing"):
+                    # progressive descriptors often need 'is' or 'am'
+                    if assembled and assembled[-1] in ("i", "we", "they"):
+                        assembled.append("am" if assembled[-1] == "i" else "are")
+                    elif assembled and assembled[-1] not in ("is", "was", "be", "been"):
+                        assembled.append("is")
+                
                 assembled.append(choice)
             else:
-                if role == TokenRole.AGENT: assembled.append("i")
-                elif role == TokenRole.ACTION: assembled.append("resolve")
-                elif role == TokenRole.CONNECTOR: assembled.append("through")
+                # Generative fallbacks based on role to maintain grammatical integrity
+                if role == TokenRole.AGENT: 
+                    assembled.append("I")
+                elif role == TokenRole.ACTION: 
+                    assembled.append("process")
+                elif role == TokenRole.OBJECT:
+                    if not assembled or assembled[-1] not in ("the", "a", "an", "my", "your", "our"):
+                        assembled.append("the")
+                    assembled.append("meaning")
+                elif role == TokenRole.CONNECTOR: 
+                    assembled.append("and")
+                elif role == TokenRole.DESCRIPTOR:
+                    assembled.append("clearly")
+                elif role == TokenRole.CONTEXT:
+                    assembled.append("perhaps")
 
         sentence = " ".join(assembled).strip()
         if not sentence: return fragments.replace(";", ",")
         
+        # Capitalize and punctuate
         return sentence[0].upper() + sentence[1:] + "."
 
     def _should_synthesize_fragments(self, text: str, intent: IntentObject) -> bool:
