@@ -81,6 +81,13 @@ def detect_corpus_format(path: Path) -> str:
     """Scan file beginning and return format key: 'openai_json', 'jsonl', 'csv', 'txt'."""
     ext = path.suffix.lower()
     
+    if ext == ".jsonl":
+        return "jsonl"
+    if ext == ".json":
+        return "openai_json"
+    if ext == ".csv":
+        return "csv"
+    
     # Peek at first 2KB
     try:
         with open(path, "r", encoding="utf-8", errors="ignore") as f:
@@ -91,27 +98,10 @@ def detect_corpus_format(path: Path) -> str:
     if not head:
         return "empty"
 
-    # Check for OpenAI JSON structure
-    if head.startswith("[") or head.startswith("{"):
-        try:
-            data = json.loads(head if head.endswith("}") or head.endswith("]") else head + " ]")
-            # If it's a list or has conversation-like keys
-            if isinstance(data, list) or "conversations" in data:
-                return "openai_json"
-        except Exception:
-            pass
-        
-        # Check for JSONL (multiple { } lines)
-        lines = head.splitlines()
-        if len(lines) > 1:
-            try:
-                json.loads(lines[0])
-                json.loads(lines[1])
-                return "jsonl"
-            except Exception:
-                pass
+    if head.startswith("{") and "}" in head and "\n{" in head:
+        return "jsonl"
 
-    if ext == ".csv" or ("," in head and "\n" in head):
+    if "," in head and "\n" in head:
         return "csv"
 
     return "txt"
@@ -142,8 +132,13 @@ def _parse_openai_json(path: Path):
         if isinstance(data, list): convs = data
         elif isinstance(data, dict):
             convs = data.get("conversations") or data.get("data") or []
-        
+            
         for c in convs:
+            # Handle the simple flat list of pairs
+            if "user" in c and "assistant" in c:
+                yield (c["user"], c["assistant"])
+                continue
+                
             # This is specific to the complex 'mapping' structure in OpenAI exports
             # We'll try to find a simpler list of messages first
             msgs = c.get("messages")
@@ -159,8 +154,6 @@ def _parse_openai_json(path: Path):
                         yield (last_user, content)
                         last_user = None
             else:
-                # Fallback to the reconstruction logic seen in corpus_runner
-                # (simplified here for brevity, would usually call the existing runner helper)
                 pass
     except Exception:
         pass
