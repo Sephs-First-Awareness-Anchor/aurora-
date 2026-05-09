@@ -1519,6 +1519,8 @@ class SentenceComposer:
 
     # Seed the pool
     def _seed_pool(self):
+        """Seed the pool (handled externally)."""
+        pass
 
     # ================================================================
     # OETS BRIDGE â€” Connect to ontological understanding
