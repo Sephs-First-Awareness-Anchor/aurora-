@@ -98,19 +98,16 @@ fullscreen = 0
 #icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
 # (list) Permissions
-android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECORD_AUDIO,MODIFY_AUDIO_SETTINGS,WAKE_LOCK,ACCESS_FINE_LOCATION,POST_NOTIFICATIONS,SEND_SMS,CALL_PHONE,READ_CONTACTS,VIBRATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE
+android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECORD_AUDIO,MODIFY_AUDIO_SETTINGS,WAKE_LOCK,ACCESS_FINE_LOCATION,POST_NOTIFICATIONS,SEND_SMS,CALL_PHONE,READ_CONTACTS,VIBRATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,SYSTEM_ALERT_WINDOW
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
 
 # (int) Target Android API, should be as high as possible.
-android.api = 34
+android.api = 33
 
 # (int) Minimum API your APK / AAB will support.
 android.minapi = 24
-
-# (int) Android SDK version to use
-android.sdk = 34
 
 # (str) Android NDK version to use
 android.ndk = 25b
