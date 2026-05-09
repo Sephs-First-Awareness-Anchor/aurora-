@@ -62,6 +62,7 @@ class AttentionFrame:
     focus_axes: List[Constraint] # Which constraints are driving the focus
     anchors: List[str]           # Key concepts or external stimuli involved
     state: AttentionState
+    heat: float = 0.0            # Normalized intensity of this frame (0-1)
 
 class AttentionEngine:
     def __init__(self, threshold: float = 0.55):
@@ -81,23 +82,16 @@ class AttentionEngine:
              internal_drift: DifferenceSnapshot) -> AttentionFrame:
         """
         Processes one system tick and resolves the current attention focus.
-        
-        Args:
-            external_stimuli: dict from Perception (e.g. {'user_intensity': 0.8, 'novel_objects': 2})
-            internal_drift: Snapshot from the Difference Buffer.
         """
         
         # 1. Resolve Surface Salience (External)
-        # Intensity of user input, visual motion, or environmental "loudness"
         raw_salience = external_stimuli.get("intensity", 0.0)
-        # Direct address (her name) increases salience significantly
         if external_stimuli.get("addressed", False):
-            raw_salience = max(raw_salience, 0.9)
+            raw_salience = max(raw_salience, 0.95) # High priority for direct address
             
         self._salience_ema = (raw_salience * self._ema_alpha) + (self._salience_ema * (1 - self._ema_alpha))
 
         # 2. Resolve Subsurface Tension (Internal)
-        # Sum of absolute drifts from the Difference Buffer
         drift_values = [abs(v) for v in internal_drift.values.values()]
         raw_tension = sum(drift_values) / len(drift_values) if drift_values else 0.0
         
@@ -115,7 +109,7 @@ class AttentionEngine:
             state = AttentionState.FORMING
             
         # 5. Identify Focus Axes
-        focus_axes = internal_drift.alarming(threshold=0.4)
+        focus_axes = internal_drift.alarming(threshold=0.35)
 
         # 6. Build Frame
         frame = AttentionFrame(
@@ -125,7 +119,8 @@ class AttentionEngine:
             resonance=round(resonance, 4),
             focus_axes=focus_axes,
             anchors=external_stimuli.get("tags", []),
-            state=state
+            state=state,
+            heat=round(max(self._salience_ema, self._tension_ema), 4)
         )
         
         self.current_frame = frame
@@ -140,7 +135,6 @@ class AttentionEngine:
     def get_meaning_nucleus(self) -> Optional[Dict[str, Any]]:
         """
         If current state is FORMING, returns the nucleus for meaning formation.
-        This is the signal to OETS to create a new relational link.
         """
         if not self.current_frame or self.current_frame.state != AttentionState.FORMING:
             return None
@@ -148,6 +142,7 @@ class AttentionEngine:
         return {
             "origin": "attention_engine",
             "resonance": self.current_frame.resonance,
+            "heat": self.current_frame.heat,
             "axes": [c.name for c in self.current_frame.focus_axes],
             "anchors": self.current_frame.anchors,
             "timestamp": time.time()

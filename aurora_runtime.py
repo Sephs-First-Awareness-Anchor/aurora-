@@ -2138,6 +2138,25 @@ class UniverseSteerer:
                     # 5. Meaning Formation Trigger
                     nucleus = attention_engine.get_meaning_nucleus()
                     if nucleus:
+                        res = nucleus["resonance"]
+                        axes = nucleus["axes"]
+                        
+                        # --- Feedback: Emotional (L3 DER) ---
+                        if self._s.has("dimensional"):
+                            self._s.dimensional.der.register_attention_pulse(res, axes)
+                        
+                        # --- Feedback: Reasoning (DPME) ---
+                        if self._s.has("dpme"):
+                            self._s.dpme.apply_attentional_guidance(res, axes)
+                            
+                        # --- Feedback: Identity (L6) ---
+                        if self._s.has("identity"):
+                            self._s.identity.reinforce_identity(res, axes)
+                            
+                        # --- Feedback: Expression (L5) ---
+                        if self._s.has("perception"):
+                            self._s.perception.set_attentional_focus(nucleus)
+
                         # Signal OETS to consolidate high-resonance relationships
                         if self._s.has("perception") and self._s.perception.oets:
                             # Direct her research focus to the current attention anchors
