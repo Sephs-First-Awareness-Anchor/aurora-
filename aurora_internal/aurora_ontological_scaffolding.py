@@ -1758,12 +1758,22 @@ class OntologicalScaffoldingEngine:
         self.research = ResearchStudyMode(self.web, self.cluster_engine)
         self.metrics = UnderstandingMetrics(self.web, self.cluster_engine)
 
+        # Enhancement: Relational Comparison Engine
+        try:
+            from aurora_internal.aurora_relational_comparison import RelationalComparisonEngine
+            self.comparison_engine = RelationalComparisonEngine(self.web)
+        except ImportError:
+            self.comparison_engine = None
+
         # Scaffolded template management
         self.scaffolded_templates: Dict[str, ScaffoldedTemplate] = {}
 
         # Announce thresholds for study cycle speak-up
         self._announce_threshold_connections: int = 3
         self._announce_threshold_confidence: float = 0.65
+
+        # Seed the 'self' anchor for default grounding
+        self.web.add_node("self", "noun", meaning="The central identity and body of Aurora.", lineage="architectural")
 
         # Bridge state
         self._initialized = False
@@ -1895,6 +1905,29 @@ class OntologicalScaffoldingEngine:
                          self.web.nodes[w].role in ("noun", "verb", "adjective", "adverb")]
         if len(content_words) >= 2:
             self.web.infer_relations_from_context(content_words, tone)
+
+        # Enhancement: Relational Comparison Loop
+        if self.comparison_engine:
+            for word in content_words:
+                # 1. Select the best target (context word or 'self')
+                target = self.comparison_engine.select_best_comparison_target(word, content_words)
+                
+                # 2. Perform comparison
+                if target == "self":
+                    # For now, we mock the active pressures (will be wired to L3 in runtime)
+                    mock_pressures = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5}
+                    delta = self.comparison_engine.ground_to_self(word, mock_pressures)
+                else:
+                    delta = self.comparison_engine.compare(word, target)
+                
+                # 3. If significant relation found, record it
+                if delta.similarity > 0.4:
+                    self.web.add_relation(
+                        word, target, delta.relational_type,
+                        strength=delta.similarity,
+                        confidence=0.5,
+                        knowledge_source="relational_comparison"
+                    )
 
     # ================================================================
     # RESEARCH BRIDGE — Connect to internet
