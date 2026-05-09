@@ -168,6 +168,21 @@ class SelfGroundingFallback:
 
         # 4. FALLBACK: compare against self-state and process continuity
         try:
+            # Enhancement: use the central comparison engine if available
+            perception = systems.get("perception")
+            oets = getattr(perception, "oets", None) if perception else None
+            if oets and hasattr(oets, "comparison_engine"):
+                active_pressures = pipeline_state.get("axis_activation") or {}
+                delta = oets.comparison_engine.ground_to_self(concept_low, active_pressures)
+                if delta.similarity > 0.3:
+                    return SelfGroundedInterpretation(
+                        anchor_type="self",
+                        self_delta=delta.description,
+                        confidence=delta.similarity,
+                        grounding_source="relational_comparison_engine:self",
+                    )
+
+            # Legacy fallback
             pv = pipeline_state.get("axis_activation") or {}
             dominant = pipeline_state.get("dominant_axis", "")
             if dominant:
