@@ -108,6 +108,8 @@ def build_intention_frame(
         "desktop_macro": ("agency", "A"),
         "desktop_clipboard": ("environmental", "T"),
         "desktop_media_capture": ("curiosity", "X"),
+        "corpus_download": ("self_improvement", "X"),
+        "corpus_train": ("self_improvement", "T"),
     }
     intention_class, triggering_axis = _tool_intention_map.get(tool_name, ("grounding", dominant_axis))
     if intent_override:

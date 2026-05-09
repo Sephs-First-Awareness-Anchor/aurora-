@@ -869,6 +869,10 @@ _VOICE_COMMAND_PATTERNS = [
     ([r"make a call to (.*)", r"call (.*)"],                            "mobile_call"),
     ([r"read contacts", r"find contact (.*)"],                          "mobile_contacts"),
     ([r"check wifi", r"toggle wifi", r"turn on wifi"],                  "mobile_wifi"),
+    
+    # Corpus Management
+    ([r"download new corpus from (.*)", r"fetch new corpus from (.*)"], "corpus_download"),
+    ([r"start training on (.*)", r"train on (.*)"],                     "corpus_train"),
 ]
 
 import re
@@ -1024,6 +1028,17 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             return "WiFi status checked."
         except Exception:
             return "WiFi access requires PyJnius deep hooks."
+
+    # --- Corpus Commands ---
+    if command_key == "corpus_download":
+        from aurora_internal.tool_registry import _corpus_download
+        res = _corpus_download(url=p1, systems=systems)
+        return res.data if res.success else f"Corpus download failed: {res.note}"
+        
+    if command_key == "corpus_train":
+        from aurora_internal.tool_registry import _corpus_train
+        res = _corpus_train(corpus_name=p1, systems=systems)
+        return res.data if res.success else f"Training failed to start: {res.note}"
 
     # --- Core Engine Commands ---
     if command_key == "switchvoice":
