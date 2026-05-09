@@ -734,7 +734,49 @@ _reg("time",          "Current date and time",                              "TRA
 _reg("calculator",    "Evaluate a math expression",                         "TRANSIENT",  _calculator,     disables_search=True)
 _reg("corpus_download","Download a new training corpus (JSON/CSV/TXT) from a URL", "PERSISTENT", _corpus_download,  disables_search=False)
 
-def _corpus_train(corpus_name: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+def _corpus_hunter(topic: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Autonomously search the internet for raw text datasets, parse the links, and download them."""
+    if not topic: return ToolResult("corpus_hunter", "", False, "topic required")
+    try:
+        from aurora_internal.aurora_corpus_lifecycle import download_new_corpus
+        import urllib.request
+        from bs4 import BeautifulSoup
+        
+        # 1. Search for datasets (using a mock or duckduckgo search)
+        search_url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(topic + ' dataset raw txt json')}"
+        req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0'})
+        html = urllib.request.urlopen(req, timeout=10).read().decode('utf-8')
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        # 2. Extract links
+        links = []
+        for a in soup.find_all('a', class_='result__url', href=True):
+            links.append(a['href'])
+            
+        # 3. Find a likely corpus link (github raw, txt, json)
+        target_url = None
+        for link in links:
+            if "github.com" in link and "blob" in link:
+                target_url = link.replace("blob", "raw")
+                break
+            if link.endswith(".txt") or link.endswith(".json") or link.endswith(".csv"):
+                target_url = link
+                break
+                
+        if not target_url:
+            return ToolResult("corpus_hunter", f"Could not find a raw dataset link for {topic}.", False)
+            
+        # 4. Download it
+        path = download_new_corpus(target_url)
+        if path:
+            return ToolResult("corpus_hunter", f"Successfully hunted and downloaded corpus for {topic} to {path.name}.", True)
+        return ToolResult("corpus_hunter", "", False, "Found link but download failed.")
+        
+    except Exception as exc:
+        return ToolResult("corpus_hunter", "", False, str(exc))
+
+_reg("corpus_hunter",  "Autonomously search the web for raw datasets on a topic and download them", "PERSISTENT", _corpus_hunter, disables_search=False)
+
     """Trigger a training loop on a previously downloaded corpus file."""
     from pathlib import Path
     import threading
