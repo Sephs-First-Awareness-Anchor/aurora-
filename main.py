@@ -358,14 +358,18 @@ class AuroraApp(App):
             self.bottom_toolbar.opacity = 0
             self.set_status("Dormant")
             self.stop_listening()
+            if platform == 'android':
+                self._stop_native_overlay()
             
         elif state == "BACKGROUND":
             self.orb.opacity_val = 0.5
-            self.orb.size = (120, 120) # Increased background size
+            self.orb.size = (120, 120) if platform != 'android' else (0,0) # Hide kivy orb if native overlay is active
             self.orb.pos_hint = {'right': 0.95, 'top': 0.85}
             self.chat_layer.opacity = 0
             self.bottom_toolbar.opacity = 1
             self.set_status("Listening...")
+            if platform == 'android':
+                self._start_native_overlay()
             # Auto-unmute and start listening if we just embodied
             if self.mic_btn.state == 'normal':
                 self.mic_btn.state = 'down'
@@ -373,14 +377,41 @@ class AuroraApp(App):
             
         elif state == "SUMMONED":
             self.orb.opacity_val = 0.9
-            self.orb.size = (300, 300) # Increased summoned size
+            self.orb.size = (300, 300) if platform != 'android' else (0,0)
             self.orb.pos_hint = {'center_x': 0.5, 'center_y': 0.6}
             self.chat_layer.opacity = 1
             self.bottom_toolbar.opacity = 1
             self.set_status("Aurora is Present")
+            if platform == 'android':
+                self._start_native_overlay()
             # Ensure listening stays active
             if self.mic_btn.state == 'down':
                 self.start_listening()
+
+    def _start_native_overlay(self):
+        try:
+            from jnius import autoclass
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            Intent = autoclass('android.content.Intent')
+            String = autoclass('java.lang.String')
+            activity = PythonActivity.mActivity
+            intent = Intent()
+            intent.setClassName(activity.getPackageName(), "org.aurora.OverlayService")
+            activity.startService(intent)
+        except Exception as e:
+            self.set_status(f"Overlay Error: {e}")
+
+    def _stop_native_overlay(self):
+        try:
+            from jnius import autoclass
+            PythonActivity = autoclass('org.kivy.android.PythonActivity')
+            Intent = autoclass('android.content.Intent')
+            activity = PythonActivity.mActivity
+            intent = Intent()
+            intent.setClassName(activity.getPackageName(), "org.aurora.OverlayService")
+            activity.stopService(intent)
+        except Exception as e:
+            pass
 
     def toggle_mic(self, btn):
         if btn.state == 'down':

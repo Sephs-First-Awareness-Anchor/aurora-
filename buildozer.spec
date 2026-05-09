@@ -177,28 +177,13 @@ android.accept_sdk_license = True
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-#android.add_src =
-
-# (list) Android AAR archives to add
-#android.add_aars =
-
-# (list) Put these files or directories in the apk assets directory.
-# Either form may be used, and assets need not be in 'source.include_exts'.
-# 1) android.add_assets = source_asset_relative_path
-# 2) android.add_assets = source_asset_path:destination_asset_relative_path
-#android.add_assets =
+android.add_src = src/android/java
 
 # (list) Put these files or directories in the apk res directory.
-# The option may be used in three ways, the value may contain one or zero ':'
-# Some examples:
-# 1) A file to add to resources, legal resource names contain ['a-z','0-9','_']
-# android.add_resources = my_icons/all-inclusive.png:drawable/all_inclusive.png
-# 2) A directory, here  'legal_icons' must contain resources of one kind
-# android.add_resources = legal_icons:drawable
-# 3) A directory, here 'legal_resources' must contain one or more directories, 
-# each of a resource kind:  drawable, xml, etc...
-# android.add_resources = legal_resources
-#android.add_resources =
+android.add_resources = src/android/res
+
+# (list) List of services to declare
+services = AuroraOverlay:org.aurora.OverlayService
 
 # (list) Gradle dependencies to add
 #android.gradle_dependencies =
