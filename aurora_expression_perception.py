@@ -2622,6 +2622,25 @@ class ExpressionPerceptionEngine:
         if self.evo:
             self.evo.save_all()
 
+    def get_surface_salience(self) -> Dict[str, Any]:
+        """Return a snapshot of current external salience markers."""
+        # Simple implementation: derive from recent patterns and manifold state
+        # In a real run, this would be fed by live visual/audio intensity.
+        salience = 0.0
+        tags = []
+        
+        # Check for user text recently seen
+        if self.evo and hasattr(self.evo, "_last_user_text") and self.evo._last_user_text:
+            salience = 0.8
+            tags = ["user_input"]
+            # Clear or decay so it doesn't stay high forever
+            
+        return {
+            "intensity": salience,
+            "tags": tags,
+            "pattern_density": self.total_perceptions % 100 / 100.0 # Mock drift
+        }
+
     # ====================================================================
     # PERCEPTION PIPELINE
     # ====================================================================
