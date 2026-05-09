@@ -871,6 +871,7 @@ _VOICE_COMMAND_PATTERNS = [
     ([r"check wifi", r"toggle wifi", r"turn on wifi"],                  "mobile_wifi"),
     
     # Corpus Management
+    ([r"hunt for a corpus on (.*)", r"find dataset on (.*)", r"search for a corpus on (.*)"], "corpus_hunter"),
     ([r"download new corpus from (.*)", r"fetch new corpus from (.*)"], "corpus_download"),
     ([r"start training on (.*)", r"train on (.*)"],                     "corpus_train"),
 ]
@@ -1030,6 +1031,11 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
             return "WiFi access requires PyJnius deep hooks."
 
     # --- Corpus Commands ---
+    if command_key == "corpus_hunter":
+        from aurora_internal.tool_registry import _corpus_hunter
+        res = _corpus_hunter(topic=p1, systems=systems)
+        return res.data if res.success else f"Corpus hunt failed: {res.note}"
+
     if command_key == "corpus_download":
         from aurora_internal.tool_registry import _corpus_download
         res = _corpus_download(url=p1, systems=systems)

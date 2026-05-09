@@ -35,6 +35,8 @@ Here is the complete list of voice commands you can use. Note that the phrasing 
 *   **Internal State:** `"Check self state"` | `"Internal state"`
 
 ## Corpus & Training Management
+*   **Hunt for Corpus:** `"Hunt for a corpus on [Topic]"` | `"Find dataset on [Topic]"`
+    *(Autonomously scrapes the web for raw datasets matching the topic and downloads them).*
 *   **Download Corpus:** `"Download new corpus from [URL]"`
     *(Fetches new data and automatically rotates old files out).*
 *   **Start Training:** `"Start training on [Filename]"`
