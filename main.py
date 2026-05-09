@@ -275,6 +275,9 @@ class AuroraApp(App):
                 Permission.READ_EXTERNAL_STORAGE,
                 Permission.WRITE_EXTERNAL_STORAGE,
                 Permission.ACCESS_FINE_LOCATION,
+                Permission.SEND_SMS,
+                Permission.CALL_PHONE,
+                Permission.READ_CONTACTS,
             ], self.on_permissions_result)
         else:
             self.start_boot_thread()
@@ -491,6 +494,17 @@ class AuroraApp(App):
 
     def process_turn_thread(self, user_text):
         try:
+            # First, check for local offline tool commands
+            from aurora_voice import _detect_voice_command, _execute_voice_command
+            cmd_key, p1, p2 = _detect_voice_command(user_text)
+            
+            if cmd_key:
+                # Execute tool locally (offline/fast)
+                content = _execute_voice_command(cmd_key, p1, p2, self.systems)
+                Clock.schedule_once(lambda dt: self.on_aurora_response(content, update_orb=False), 0)
+                return
+
+            # Otherwise, route to LLM
             result = process_external_user_turn(self.systems, user_text)
             resp_A = result.get('resp_A')
             content = getattr(resp_A, 'content', '...') if resp_A else '...'
@@ -500,6 +514,8 @@ class AuroraApp(App):
             
             Clock.schedule_once(lambda dt: self.on_aurora_response(content, update_orb=True, activation=activation), 0)
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             Clock.schedule_once(lambda dt: self.on_aurora_response(f"Error: {str(e)}"), 0)
 
     def on_aurora_response(self, content, update_orb=False, activation=None):

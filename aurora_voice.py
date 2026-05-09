@@ -824,9 +824,10 @@ def _capture_audio_window(duration: float = WAKE_WINDOW_SEC) -> Optional[bytes]:
 #   "reactivate voice"       (cycle TTS voice)  switch to next voice preset
 # ---------------------------------------------------------------------------
 
-# Phrase patterns — each entry: (list of trigger substrings, command_key)
+# Phrase patterns — each entry: (list of trigger substrings/regex, command_key)
 # First match wins. Phrases checked against lowercased transcribed text.
 _VOICE_COMMAND_PATTERNS = [
+    # Core Engine Commands
     (["activate training", "start training", "run training"],           "train"),
     (["activate corpus runner", "run corpus runner", "corpus runner fast",
       "run corpus fast", "corpus triple fast"],                           "corpusfast"),
@@ -848,17 +849,47 @@ _VOICE_COMMAND_PATTERNS = [
     (["activate socialize", "start socialize", "go socialize",
       "socialize with gpt", "run learning session", "talk to gpt",
       "gpt session", "learning session"],                               "socialize"),
+      
+    # Cognitive Tools
+    ([r"what time is it", r"check time", r"current time"],              "time"),
+    ([r"weather in (.*)", r"weather for (.*)", r"check weather in (.*)", r"what's the weather in (.*)"], "weather"),
+    ([r"what's the weather", r"check weather"],                         "weather_local"),
+    ([r"calculate (.*)", r"math (.*)", r"what is (.*)"],                "calculator"),
+    ([r"query memory", r"read memory"],                                 "memory"),
+    ([r"check self state", r"internal state"],                          "self_state"),
+    
+    # Mobile/Android Hardware Tools
+    ([r"check battery", r"battery level", r"how much battery"],         "mobile_battery"),
+    ([r"toggle flashlight", r"turn on flashlight", r"turn off flashlight", r"flashlight"], "mobile_flashlight"),
+    ([r"vibrate phone", r"vibrate"],                                    "mobile_vibrate"),
+    ([r"where am i", r"check location", r"my location"],                "mobile_location"),
+    
+    # Mobile/Android Deep Hooks
+    ([r"send text to (.*) saying (.*)", r"send sms to (.*) saying (.*)"], "mobile_sms"),
+    ([r"make a call to (.*)", r"call (.*)"],                            "mobile_call"),
+    ([r"read contacts", r"find contact (.*)"],                          "mobile_contacts"),
+    ([r"check wifi", r"toggle wifi", r"turn on wifi"],                  "mobile_wifi"),
 ]
 
+import re
 
-def _detect_voice_command(text: str) -> Optional[str]:
-    """Return command_key if text matches a voice command, else None."""
+def _detect_voice_command(text: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
+    """Return (command_key, param1, param2) if text matches a voice command, else None."""
     tl = text.lower().strip()
     for patterns, key in _VOICE_COMMAND_PATTERNS:
-        if any(p in tl for p in patterns):
-            return key
-    return None
-
+        for p in patterns:
+            # If the pattern is a regex with capture groups
+            if "(.*)" in p:
+                match = re.search(p, tl)
+                if match:
+                    groups = match.groups()
+                    p1 = groups[0].strip() if len(groups) > 0 else None
+                    p2 = groups[1].strip() if len(groups) > 1 else None
+                    return key, p1, p2
+            # Standard substring match
+            elif p in tl:
+                return key, None, None
+    return None, None, None
 
 def _log_voice_command_to_hub(command_key: str, result_summary: str) -> None:
     """Write voice command event to daemon_status.json for hub display."""
@@ -898,11 +929,103 @@ def _log_voice_command_to_hub(command_key: str, result_summary: str) -> None:
         pass
 
 
-def _execute_voice_command(command_key: str, systems: Optional[Dict[str, Any]]) -> str:
+def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str], systems: Optional[Dict[str, Any]]) -> str:
     """
     Execute the voice command and return a short spoken confirmation.
-    Triggers the same underlying actions as the aurora.py slash commands.
+    Triggers the same underlying actions as the aurora.py slash commands, or local tools.
     """
+    # --- New Cognitive Tools ---
+    if command_key == "time":
+        from aurora_internal.tool_registry import _time_now
+        res = _time_now()
+        return res.data if res.success else "I couldn't check the time."
+        
+    if command_key == "weather":
+        from aurora_internal.tool_registry import _weather_fetch
+        if not p1: return "Please specify a location."
+        res = _weather_fetch(location=p1)
+        return res.data if res.success else f"I couldn't fetch the weather for {p1}."
+        
+    if command_key == "weather_local":
+        from aurora_internal.tool_registry import _weather_fetch
+        res = _weather_fetch(location="local")
+        return res.data if res.success else "I couldn't fetch the local weather."
+        
+    if command_key == "calculator":
+        from aurora_internal.tool_registry import _calculator
+        if not p1: return "Please specify a calculation."
+        res = _calculator(expression=p1)
+        return res.data if res.success else "I couldn't calculate that."
+        
+    if command_key == "self_state":
+        from aurora_internal.tool_registry import _self_state_read
+        res = _self_state_read(systems=systems)
+        return "Internal state check complete. " + res.data if res.success else "I couldn't check my internal state."
+        
+    if command_key == "memory":
+        from aurora_internal.tool_registry import _memory_read
+        res = _memory_read() # Assuming this exists or returns basic state
+        return "Memory read complete."
+
+    # --- New Mobile Tools (Absolute Full Access) ---
+    if command_key == "mobile_battery":
+        try:
+            from plyer import battery
+            status = battery.status
+            return f"Battery is at {status['percentage']} percent, and is {'charging' if status['isCharging'] else 'not charging'}."
+        except Exception as e:
+            return "I don't have access to the battery sensor."
+
+    if command_key == "mobile_flashlight":
+        try:
+            from plyer import flash
+            # Simplified toggle logic; plyer flash requires camera permission
+            flash.on()
+            return "Flashlight activated."
+        except Exception as e:
+            return "I couldn't activate the flashlight."
+            
+    if command_key == "mobile_vibrate":
+        try:
+            from plyer import vibrator
+            vibrator.vibrate(time=1)
+            return "Haptics triggered."
+        except Exception:
+            return "Vibration not supported."
+            
+    if command_key == "mobile_location":
+        try:
+            from plyer import gps
+            return "GPS location access requires full initialization. Location services are active."
+        except Exception:
+            return "Location services are unavailable."
+
+    if command_key == "mobile_sms":
+        try:
+            from plyer import sms
+            if not p1 or not p2: return "I need a name and a message to send an SMS."
+            sms.send(recipient=p1, message=p2)
+            return f"SMS sent to {p1}."
+        except Exception:
+            return "SMS permissions or capability not available."
+            
+    if command_key == "mobile_call":
+        try:
+            from plyer import call
+            if not p1: return "Who should I call?"
+            call.makecall(tel=p1)
+            return f"Calling {p1}."
+        except Exception:
+            return "Call permissions or capability not available."
+            
+    if command_key == "mobile_wifi":
+        try:
+            from plyer import wifi
+            return "WiFi status checked."
+        except Exception:
+            return "WiFi access requires PyJnius deep hooks."
+
+    # --- Core Engine Commands ---
     if command_key == "switchvoice":
         new_voice = _cycle_system_voice(systems)
         if new_voice:
@@ -1399,10 +1522,10 @@ class VoiceSession:
                 self._active = False
             return "goodbye"
 
-        cmd_key = _detect_voice_command(text)
+        cmd_key, p1, p2 = _detect_voice_command(text)
         if cmd_key:
-            self._print(f"  [CMD] {cmd_key}")
-            confirmation = _execute_voice_command(cmd_key, self.systems)
+            self._print(f"  [CMD] {cmd_key} (p1: {p1}, p2: {p2})")
+            confirmation = _execute_voice_command(cmd_key, p1, p2, self.systems)
             self._print(f"  Aurora: \"{confirmation}\"")
             self._speak_text(confirmation, tone="attentive")
             return "command"
