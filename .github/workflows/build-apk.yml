@@ -15,6 +15,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Cache Buildozer directory
+      uses: actions/cache@v4
+      with:
+        path: .buildozer
+        key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          buildozer-${{ runner.os }}-
+
     - name: Build with Buildozer
       run: |
         # The container already has buildozer and all dependencies.
