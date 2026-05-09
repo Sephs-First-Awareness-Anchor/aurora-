@@ -478,8 +478,32 @@ class AuroraApp(App):
             self.input_area.opacity = 0
 
     def on_permissions_result(self, permissions, grants):
-        # Called when the user dismisses the permission dialogs
+        # Called when the user dismisses the standard permission dialogs
+        if platform == 'android':
+            self.check_overlay_permission()
         self.start_boot_thread()
+
+    def check_overlay_permission(self):
+        """Special check for Draw Over Other Apps permission (API 23+)."""
+        from jnius import autoclass
+        from android import api_version
+        
+        Settings = autoclass('android.provider.Settings')
+        activity = PythonActivity.mActivity
+        
+        # SYSTEM_ALERT_WINDOW is a special permission that needs a specific settings screen
+        if not Settings.canDrawOverlays(activity):
+            self.add_bubble("Aurora needs 'Draw over other apps' permission to function as an overlay. Please enable it in the next screen.", "system")
+            
+            # Use a short delay to let the user read the bubble before switching screens
+            def open_settings(dt):
+                Uri = autoclass('android.net.Uri')
+                Intent = autoclass('android.content.Intent')
+                intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:" + activity.getPackageName()))
+                activity.startActivity(intent)
+            
+            Clock.schedule_once(open_settings, 3.0)
 
     def start_boot_thread(self):
         threading.Thread(target=self.boot_aurora_thread, daemon=True).start()
