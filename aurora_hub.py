@@ -6530,6 +6530,28 @@ def _build_ui():
     notebook.add(tab_room_outer, text="  Aurora's Room  ")
     tab_room = _make_scrollable_inner(tab_room_outer)
 
+    # ══════════════════════════════════════════════════════════════════════════
+    # VOICE COMMANDS TAB
+    # ══════════════════════════════════════════════════════════════════════════
+    tab_voice_cmds_outer = tk.Frame(notebook, bg=BG)
+    notebook.add(tab_voice_cmds_outer, text="  Voice Commands  ")
+    
+    voice_txt = tk.Text(tab_voice_cmds_outer, bg=BG_LOG, fg=TEXT, font=("Courier New", 10), wrap=tk.WORD, borderwidth=0, padx=20, pady=20)
+    voice_scroll = tk.Scrollbar(tab_voice_cmds_outer, command=voice_txt.yview, bg=BG_PANEL, troughcolor=BG)
+    voice_txt.configure(yscrollcommand=voice_scroll.set)
+    voice_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+    voice_txt.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+    
+    try:
+        cmd_path = _BASE_DIR / "VOICE_COMMANDS.md"
+        if cmd_path.exists():
+            voice_txt.insert(tk.END, cmd_path.read_text())
+        else:
+            voice_txt.insert(tk.END, "VOICE_COMMANDS.md not found.")
+    except Exception as e:
+        voice_txt.insert(tk.END, f"Error loading voice commands: {e}")
+    voice_txt.config(state=tk.DISABLED)
+
     room_hdr = tk.Frame(tab_room, bg=BG_PANEL, pady=5, padx=12)
     room_hdr.pack(fill=tk.X)
     tk.Label(room_hdr, text="◈  AURORA'S ROOM  —  observer view", bg=BG_PANEL,
