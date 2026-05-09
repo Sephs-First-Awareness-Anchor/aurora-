@@ -46,8 +46,22 @@ import time
 import argparse
 from difflib import SequenceMatcher
 from collections import deque
-from typing import Any, Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional, Iterator
 
+# =============================================================================
+# Corpus Lifecycle Helpers (Universal Parser + Downloader)
+# =============================================================================
+
+def _get_corpus_iterator(corpus_path: str) -> Iterator[Tuple[str, str]]:
+    """Universal format detector and iterator."""
+    try:
+        from aurora_internal.aurora_corpus_lifecycle import universal_corpus_iterator
+        from pathlib import Path
+        return universal_corpus_iterator(Path(corpus_path))
+    except ImportError:
+        # Fallback to legacy loader if lifecycle module missing (for safety)
+        print("  [CORPUS] Lifecycle module not found, using legacy loader.")
+        return iter([]) # Placeholder
 
 # =============================================================================
 # OETS Persistence Helper
@@ -1022,26 +1036,35 @@ def run_corpus_ingestion(
             vocab = systems["perception"].lexicon.size
             print(f"  [WARMUP] Complete. Vocabulary: {vocab}\n")
 
-    # Load corpus â€” sanitize at load time
-    conversations = _load_openai_conversations(corpus_path)
+    # Load corpus â€” universal format detection
     if verbose:
-        print(f"  [CORPUS] Loaded {len(conversations)} conversations")
+        print(f"  [CORPUS] Initializing universal stream for: {corpus_path}")
 
     stream: List[Tuple[str, str]] = []
     dropped_count = 0
 
-    for conv in conversations:
-        msgs = _extract_messages_from_conversation(conv)
-        for role, text in msgs:
-            clean = sanitize_corpus_text(text)
-            if clean and len(clean.split()) >= 3:
-                stream.append((role, clean))
-            else:
-                dropped_count += 1
+    # We flatten the universal iterator into the stream list
+    for role_or_user, text_or_assistant in _get_corpus_iterator(corpus_path):
+        # Handle formats that might give us pairs or role-labeled single messages
+        # (The universal iterator yields (user, assistant) pairs for simple formats)
+        
+        # 1. User Message
+        clean_u = sanitize_corpus_text(role_or_user)
+        if clean_u and len(clean_u.split()) >= 3:
+            stream.append(("user", clean_u))
+        else:
+            dropped_count += 1
+            
+        # 2. Assistant Message
+        clean_a = sanitize_corpus_text(text_or_assistant)
+        if clean_a and len(clean_a.split()) >= 3:
+            stream.append(("assistant", clean_a))
+        else:
+            dropped_count += 1
 
     if verbose:
         print(f"  [CORPUS] Extracted {len(stream)} messages "
-              f"(dropped {dropped_count} code-only messages)\n")
+              f"(dropped {dropped_count} invalid/code fragments)\n")
 
     if not stream:
         if verbose:
@@ -1379,8 +1402,10 @@ IMPORTANT: Always use --passes triple (default) for first runs.
   Running responder or reverse alone on a fresh system produces garbage.
         """)
 
-    ap.add_argument("--corpus", type=str, required=True,
-                    help="Path to OpenAI export conversations.json")
+    ap.add_argument("--corpus", type=str,
+                    help="Path to corpus file (JSON, JSONL, CSV, TXT)")
+    ap.add_argument("--url", type=str,
+                    help="URL to download a new corpus from (e.g., raw GitHub or dataset link)")
     ap.add_argument("--passes", type=str, default="triple",
                     help="observer|responder|reverse|double|triple (default: triple)")
     ap.add_argument("--quiet", action="store_true")
@@ -1405,6 +1430,27 @@ IMPORTANT: Always use --passes triple (default) for first runs.
     args = ap.parse_args()
     verbose = not args.quiet
 
+    # Handle URL download if provided
+    corpus_path = args.corpus
+    if args.url:
+        try:
+            from aurora_internal.aurora_corpus_lifecycle import download_new_corpus
+            downloaded = download_new_corpus(args.url)
+            if downloaded:
+                corpus_path = str(downloaded)
+                if verbose:
+                    print(f"  [CORPUS] Using downloaded file: {corpus_path}")
+            else:
+                print("  [CORPUS] Download failed. Aborting.")
+                return
+        except ImportError:
+            print("  [CORPUS] Lifecycle module missing. Cannot download from URL.")
+            return
+
+    if not corpus_path:
+        print("  [ERROR] Either --corpus or --url must be provided.")
+        return
+
     cadence = LearningCadence(
         heartbeat_every=args.heartbeat_every,
         identity_every=args.identity_every,
@@ -1419,7 +1465,7 @@ IMPORTANT: Always use --passes triple (default) for first runs.
 
     run_corpus_ingestion(
         systems=systems,
-        corpus_path=args.corpus,
+        corpus_path=corpus_path,
         cadence=cadence,
         passes=args.passes,
         verbose=verbose,

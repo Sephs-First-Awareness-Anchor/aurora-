@@ -34,6 +34,12 @@ Here is the complete list of voice commands you can use. Note that the phrasing 
 *   **Memory:** `"Query memory"` | `"Read memory"`
 *   **Internal State:** `"Check self state"` | `"Internal state"`
 
+## Corpus & Training Management
+*   **Download Corpus:** `"Download new corpus from [URL]"`
+    *(Fetches new data and automatically rotates old files out).*
+*   **Start Training:** `"Start training on [Filename]"`
+    *(Launches the training engine on a specific downloaded file).*
+
 ## Core Engine Actions
 *(Legacy triggers for her cognitive loops and training)*
 

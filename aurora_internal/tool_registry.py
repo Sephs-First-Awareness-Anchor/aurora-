@@ -716,9 +716,47 @@ def _reg(name: str, description: str, mode_floor: str,
     _REGISTRY[name] = _ToolDef(name, description, mode_floor, fn, disables_search)
 
 
-_reg("weather",       "Current weather for a location (wttr.in)",          "PERSISTENT", _weather_fetch,  disables_search=True)
+def _corpus_download(url: str = "", filename: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Download a new training corpus from a URL. Automatically rotates old ones."""
+    if not url:
+        return ToolResult("corpus_download", "", False, "no URL provided")
+    try:
+        from aurora_internal.aurora_corpus_lifecycle import download_new_corpus
+        path = download_new_corpus(url, filename or None)
+        if path:
+            return ToolResult("corpus_download", f"Successfully downloaded new corpus to {path.name}. Storage rotated.", True)
+        return ToolResult("corpus_download", "", False, "download failed")
+    except Exception as exc:
+        return ToolResult("corpus_download", "", False, str(exc))
+
+_reg("weather",       "Fetch live weather for a location",                               "PERSISTENT", _weather_fetch,      disables_search=False)
 _reg("time",          "Current date and time",                              "TRANSIENT",  _time_now,       disables_search=True)
 _reg("calculator",    "Evaluate a math expression",                         "TRANSIENT",  _calculator,     disables_search=True)
+_reg("corpus_download","Download a new training corpus (JSON/CSV/TXT) from a URL", "PERSISTENT", _corpus_download,  disables_search=False)
+
+def _corpus_train(corpus_name: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Trigger a training loop on a previously downloaded corpus file."""
+    from pathlib import Path
+    import subprocess, sys
+    if not corpus_name: return ToolResult("corpus_train", "", False, "corpus_name required")
+    
+    corp_path = Path(__file__).resolve().parents[1] / "aurora_state" / "corpora" / corpus_name
+    if not corp_path.exists():
+        return ToolResult("corpus_train", "", False, f"Corpus {corpus_name} not found in storage.")
+    
+    try:
+        # Run corpus_runner.py as a background process to avoid blocking
+        runner = Path(__file__).resolve().parents[1] / "corpus_runner.py"
+        proc = subprocess.Popen(
+            [sys.executable, str(runner), "--corpus", str(corp_path), "--passes", "observer"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        return ToolResult("corpus_train", f"Training started in background (PID {proc.pid}) on {corpus_name}.", True)
+    except Exception as exc:
+        return ToolResult("corpus_train", "", False, str(exc))
+
+_reg("corpus_train",   "Start a training loop on a downloaded corpus",                      "PERSISTENT", _corpus_train,     disables_search=True)
+
 _reg("self_state",    "Aurora's current internal runtime state",            "BOUNDED",    _self_state_read, disables_search=True)
 _reg("schedule_read", "Aurora's daemon schedule — uptime/generation/events","BOUNDED",    _schedule_read,  disables_search=True)
 _reg("memory_read",   "Aurora's recalled fragments and active OETS concepts","BOUNDED",   _memory_read,    disables_search=True)
