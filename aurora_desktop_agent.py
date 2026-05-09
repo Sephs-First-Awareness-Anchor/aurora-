@@ -500,3 +500,141 @@ def capture_system_audio(duration_s: float = 1.5) -> Dict[str, Any]:
 
     except Exception as exc:
         return {"source": "system", "available": False, "error": str(exc)}
+
+# ---------------------------------------------------------------------------
+# Deep Desktop Access Tools (Absolute Full Access)
+# ---------------------------------------------------------------------------
+
+def file_manager_op(op: str, path: str, dest: str = "", content: str = "") -> Dict[str, Any]:
+    """Read, write, delete, move, list files on the host system."""
+    import os, shutil
+    p = Path(path).resolve()
+    try:
+        if op == "read":
+            return {"ok": True, "content": p.read_text(errors="replace")}
+        elif op == "write":
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content)
+            return {"ok": True, "path": str(p)}
+        elif op == "delete":
+            if p.is_dir(): shutil.rmtree(p)
+            else: p.unlink()
+            return {"ok": True, "path": str(p)}
+        elif op == "move":
+            d = Path(dest).resolve()
+            d.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(p), str(d))
+            return {"ok": True, "src": str(p), "dest": str(d)}
+        elif op == "list":
+            if not p.is_dir(): return {"ok": False, "error": "Not a directory"}
+            items = [f.name + ("/" if f.is_dir() else "") for f in p.iterdir()]
+            return {"ok": True, "items": items}
+        else:
+            return {"ok": False, "error": f"Unknown operation: {op}"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+def shell_command(cmd: str, cwd: str = None, bg: bool = False) -> Dict[str, Any]:
+    """Run an arbitrary shell command."""
+    import subprocess
+    try:
+        if bg:
+            proc = subprocess.Popen(cmd, shell=True, cwd=cwd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return {"ok": True, "pid": proc.pid, "bg": True}
+        else:
+            proc = subprocess.run(cmd, shell=True, cwd=cwd, capture_output=True, text=True, timeout=60)
+            return {"ok": True, "stdout": proc.stdout, "stderr": proc.stderr, "returncode": proc.returncode}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+def process_control(op: str, target: str = "") -> Dict[str, Any]:
+    """List top processes or kill a process by name/PID."""
+    try:
+        import psutil
+    except ImportError:
+        return {"ok": False, "error": "psutil not installed. Cannot manage processes."}
+    
+    try:
+        if op == "list":
+            procs = []
+            for p in psutil.process_iter(['pid', 'name', 'memory_percent']):
+                try:
+                    procs.append((p.info['pid'], p.info['name'], p.info['memory_percent']))
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+            procs.sort(key=lambda x: x[2] or 0, reverse=True)
+            top = [{"pid": p[0], "name": p[1], "mem_pct": round(p[2] or 0, 2)} for p in procs[:15]]
+            return {"ok": True, "top_processes": top}
+        elif op == "kill":
+            if target.isdigit():
+                psutil.Process(int(target)).terminate()
+                return {"ok": True, "killed_pid": target}
+            else:
+                killed = 0
+                for p in psutil.process_iter(['pid', 'name']):
+                    if p.info['name'] == target:
+                        p.terminate()
+                        killed += 1
+                return {"ok": True, "killed_count": killed, "target": target}
+        else:
+            return {"ok": False, "error": f"Unknown op: {op}"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+def macro_automation(op: str, x: int = None, y: int = None, text: str = "", key: str = "") -> Dict[str, Any]:
+    """Take physical control of mouse/keyboard."""
+    try:
+        import pyautogui
+        pyautogui.FAILSAFE = False # Prevent aborts if mouse is in corner
+    except ImportError:
+        return {"ok": False, "error": "pyautogui not installed. Cannot automate mouse/keyboard."}
+        
+    try:
+        if op == "click":
+            if x is not None and y is not None:
+                pyautogui.click(x, y)
+            else:
+                pyautogui.click()
+            return {"ok": True, "action": "click", "x": x, "y": y}
+        elif op == "type":
+            pyautogui.write(text, interval=0.01)
+            return {"ok": True, "action": "type", "text_len": len(text)}
+        elif op == "press":
+            pyautogui.press(key)
+            return {"ok": True, "action": "press", "key": key}
+        elif op == "move":
+            if x is not None and y is not None:
+                pyautogui.moveTo(x, y)
+                return {"ok": True, "action": "move", "x": x, "y": y}
+            return {"ok": False, "error": "move requires x and y"}
+        else:
+            return {"ok": False, "error": f"Unknown op: {op}"}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+def clipboard_op(op: str, text: str = "") -> Dict[str, Any]:
+    """Read or write to the system clipboard."""
+    try:
+        import pyperclip
+        if op == "read":
+            return {"ok": True, "content": pyperclip.paste()}
+        elif op == "write":
+            pyperclip.copy(text)
+            return {"ok": True, "action": "write_clipboard"}
+        else:
+            return {"ok": False, "error": f"Unknown op: {op}"}
+    except ImportError:
+        # Fallback to xclip on Linux if pyperclip is missing
+        try:
+            import subprocess
+            if op == "read":
+                res = subprocess.run(["xclip", "-selection", "clipboard", "-o"], capture_output=True, text=True, timeout=2)
+                return {"ok": True, "content": res.stdout}
+            elif op == "write":
+                proc = subprocess.Popen(["xclip", "-selection", "clipboard"], stdin=subprocess.PIPE, text=True)
+                proc.communicate(input=text, timeout=2)
+                return {"ok": True, "action": "write_clipboard"}
+            else:
+                return {"ok": False, "error": f"Unknown op: {op}"}
+        except Exception as e:
+            return {"ok": False, "error": f"pyperclip missing, fallback failed: {str(e)}"}

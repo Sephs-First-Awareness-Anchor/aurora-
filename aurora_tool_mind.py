@@ -102,6 +102,12 @@ def build_intention_frame(
         "desktop_browser_action": ("environmental", "X"),
         "desktop_launch_app": ("environmental", "X"),
         "desktop_system_action": ("environmental", "B"),
+        "desktop_file_manager": ("environmental", "B"),
+        "desktop_shell_command": ("agency", "A"),
+        "desktop_process_control": ("self_check", "N"),
+        "desktop_macro": ("agency", "A"),
+        "desktop_clipboard": ("environmental", "T"),
+        "desktop_media_capture": ("curiosity", "X"),
     }
     intention_class, triggering_axis = _tool_intention_map.get(tool_name, ("grounding", dominant_axis))
     if intent_override:

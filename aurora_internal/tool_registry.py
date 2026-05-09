@@ -818,12 +818,86 @@ def _desktop_system_action(op: str = "", confirm: bool = False, systems: Optiona
     except Exception as exc:
         return ToolResult("desktop_system_action", "", False, str(exc))
 
+def _desktop_file_manager(op: str = "", path: str = "", dest: str = "", content: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Read, write, move, delete, list files on the host file system."""
+    if not op or not path: return ToolResult("desktop_file_manager", "", False, "op and path required")
+    try:
+        from aurora_desktop_agent import file_manager_op
+        res = file_manager_op(op, path, dest, content)
+        data = " | ".join(f"{k}={v}" for k,v in res.items() if k not in ("ok", "error", "content"))
+        if "content" in res: data += f"\n{res['content']}"
+        return ToolResult("desktop_file_manager", data, bool(res.get("ok")), res.get("error",""))
+    except Exception as exc:
+        return ToolResult("desktop_file_manager", "", False, str(exc))
+
+def _desktop_shell_command(cmd: str = "", cwd: str = None, bg: bool = False, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Execute arbitrary Bash/PowerShell commands on the host."""
+    if not cmd: return ToolResult("desktop_shell_command", "", False, "cmd required")
+    try:
+        from aurora_desktop_agent import shell_command
+        res = shell_command(cmd, cwd, bg)
+        if res.get("bg"):
+            data = f"pid={res.get('pid')} | Background process started."
+        else:
+            data = f"stdout:\n{res.get('stdout')}\n\nstderr:\n{res.get('stderr')}\nexitcode:{res.get('returncode')}"
+        return ToolResult("desktop_shell_command", data, bool(res.get("ok")), res.get("error",""))
+    except Exception as exc:
+        return ToolResult("desktop_shell_command", "", False, str(exc))
+
+def _desktop_process_control(op: str = "", target: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """list top memory/CPU processes or kill by name/PID."""
+    if not op: return ToolResult("desktop_process_control", "", False, "op required")
+    try:
+        from aurora_desktop_agent import process_control
+        res = process_control(op, target)
+        data = " | ".join(f"{k}={v}" for k,v in res.items() if k not in ("ok", "error"))
+        return ToolResult("desktop_process_control", data, bool(res.get("ok")), res.get("error",""))
+    except Exception as exc:
+        return ToolResult("desktop_process_control", "", False, str(exc))
+
+def _desktop_macro(op: str = "", x: int = None, y: int = None, text: str = "", key: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """click, type, press, move to automate the host OS GUI (requires pyautogui)."""
+    if not op: return ToolResult("desktop_macro", "", False, "op required")
+    try:
+        from aurora_desktop_agent import macro_automation
+        res = macro_automation(op, x, y, text, key)
+        data = " | ".join(f"{k}={v}" for k,v in res.items() if k not in ("ok", "error"))
+        return ToolResult("desktop_macro", data, bool(res.get("ok")), res.get("error",""))
+    except Exception as exc:
+        return ToolResult("desktop_macro", "", False, str(exc))
+
+def _desktop_clipboard(op: str = "", text: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """read or write to the host OS clipboard."""
+    if not op: return ToolResult("desktop_clipboard", "", False, "op required")
+    try:
+        from aurora_desktop_agent import clipboard_op
+        res = clipboard_op(op, text)
+        data = res.get("content", f"op={op} successful")
+        return ToolResult("desktop_clipboard", data, bool(res.get("ok")), res.get("error",""))
+    except Exception as exc:
+        return ToolResult("desktop_clipboard", "", False, str(exc))
+
+def _desktop_media_capture(duration_s: float = 1.5, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Listen to the internal system audio (what is currently playing on the laptop)."""
+    try:
+        from aurora_desktop_agent import capture_system_audio
+        res = capture_system_audio(duration_s=float(duration_s))
+        data = f"activity={res.get('activity')} | rms_db={res.get('rms_db')}"
+        return ToolResult("desktop_media_capture", data, bool(res.get("available")), res.get("error",""))
+    except Exception as exc:
+        return ToolResult("desktop_media_capture", "", False, str(exc))
+
 _reg("desktop_open_url",      "Open any URL in a visible browser window",                              "BOUNDED",    _desktop_open_url,       disables_search=False)
 _reg("desktop_search",        "Search Google/YouTube/GitHub/Reddit via browser",                       "BOUNDED",    _desktop_search,         disables_search=False)
 _reg("desktop_browser_action","Click/type/press/read/screenshot within the open browser page",         "BOUNDED",    _desktop_browser_action, disables_search=False)
 _reg("desktop_launch_app",    "Launch a desktop application (chrome, terminal, vscode, etc.)",         "BOUNDED",    _desktop_launch_app,     disables_search=False)
 _reg("desktop_system_action", "System ops: volume, brightness, lock. Reboot/shutdown need confirm=True","BOUNDED",   _desktop_system_action,  disables_search=True)
-
+_reg("desktop_file_manager",  "Read, write, move, delete, list files anywhere on host OS",             "BOUNDED",    _desktop_file_manager,   disables_search=True)
+_reg("desktop_shell_command", "Run arbitrary Bash/PowerShell shell commands on host OS",               "BOUNDED",    _desktop_shell_command,  disables_search=True)
+_reg("desktop_process_control","List top memory/CPU processes or kill by name/PID",                    "BOUNDED",    _desktop_process_control,disables_search=True)
+_reg("desktop_macro",         "Take raw control of mouse/keyboard (click, type, press, move)",         "BOUNDED",    _desktop_macro,          disables_search=True)
+_reg("desktop_clipboard",     "Read or write to the host OS clipboard",                                "BOUNDED",    _desktop_clipboard,      disables_search=True)
+_reg("desktop_media_capture", "Listen to the host system internal audio output",                       "BOUNDED",    _desktop_media_capture,  disables_search=True)
 
 def call(name: str, **kwargs: Any) -> ToolResult:
     td = _REGISTRY.get(name)
