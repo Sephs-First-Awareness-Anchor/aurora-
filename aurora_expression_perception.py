@@ -1511,8 +1511,14 @@ class SentenceComposer:
         self._expression_count = 0
         self._total_scaffolded_fills = 0                # How many fills used OETS
 
-        # Seed the pool
-        self._seed_pool()
+        self._attentional_anchors: List[str] = []
+
+    def set_attentional_focus(self, focus: Dict[str, Any]):
+        """Prioritize words and concepts based on attention resonance."""
+        self._attentional_anchors = focus.get("anchors", [])
+
+    # Seed the pool
+    def _seed_pool(self):
 
     # ================================================================
     # OETS BRIDGE â€” Connect to ontological understanding
@@ -2533,8 +2539,16 @@ class ExpressionPerceptionEngine:
         # Personality traits from L6 (set via set_personality)
         self._personality_traits: Optional[Dict[str, float]] = None
 
+        self._attentional_focus: Optional[Dict[str, Any]] = None
+
         # IVM lattice reference for heat checks (set via set_ivm)
         self._ivm_lattice = None
+
+    def set_attentional_focus(self, focus: Dict[str, Any]):
+        """Pass the Attention Engine's nucleus to the expression layer."""
+        self._attentional_focus = focus
+        if self.composer:
+            self.composer.set_attentional_focus(focus)
 
     def set_personality(self, traits: Dict[str, float]):
         """Accept personality traits from L6 for expression shaping."""

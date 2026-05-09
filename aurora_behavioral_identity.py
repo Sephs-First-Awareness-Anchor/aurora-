@@ -1100,6 +1100,38 @@ class BehavioralIdentityEngine:
         sc.add_facet("engagement", 0.5)
         self.crystals["social"] = sc
 
+    def reinforce_identity(self, resonance: float, axes: List[str]):
+        """
+        Reinforce identity anchors and genes aligned with the current attention focus.
+        High resonance causes identity traits to drift toward the focus axes.
+        """
+        # 1. Trait reinforcement
+        axis_to_trait = {
+            "X": "pattern_sensitivity",
+            "T": "introspection",
+            "N": "energy_conservation",
+            "B": "caution",
+            "A": "curiosity"
+        }
+        
+        for ax in axes:
+            trait_name = axis_to_trait.get(ax)
+            if trait_name and trait_name in self.traits:
+                trait = self.traits[trait_name]
+                # High resonance reinforces the trait base value
+                reinforcement = resonance * 0.05
+                trait.base_value = _clamp(trait.base_value + reinforcement, trait.min_value, trait.max_value)
+                trait.current_value = _clamp(trait.current_value + reinforcement, trait.min_value, trait.max_value)
+
+        # 2. Gene activation reinforcement
+        # Resonance acts as a potential activator for dormant genes aligned with focus
+        if resonance > 0.8:
+            for gene in self.dna.genome.core_genes:
+                if gene.activation_state == "dormant" and gene.core_trait in [axis_to_trait.get(ax) for ax in axes]:
+                    # Random chance to activate based on resonance
+                    if random.random() < (resonance - 0.7):
+                        gene.activation_state = "active"
+
     # ====================================================================
     # GENERATION EVOLUTION
     # ====================================================================

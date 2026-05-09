@@ -1210,6 +1210,24 @@ class EnergyRegulatorSystem:
         if len(self.thermal_history) > 100:
             self.thermal_history = self.thermal_history[-50:]
 
+    def register_attention_pulse(self, resonance: float, axes: List[str]):
+        """
+        Receive an attention pulse from Layer 4.5.
+        Resonance acts as a positive amplifier for emotional and creative pools.
+        Axes determine which facets get a direct energy boost.
+        """
+        # Boost emotional and creative pools proportional to resonance
+        boost = resonance * 0.5
+        self.pools['emotional'].inject(boost * 0.6)
+        self.pools['creative'].inject(boost * 0.4)
+        
+        # Directly energize facets aligned with the focus axes
+        for fid, facet in self.registered_facets.items():
+            facet_axes = facet.get_facet_points().keys()
+            # If facet shares an axis with the attention focus, give it a direct boost
+            if any(ax in axes for ax in facet_axes):
+                self.facet_energy[fid] = min(5.0, self.facet_energy.get(fid, 0.0) + boost)
+
     @property
     def pools(self) -> Dict[str, _PoolView]:
         """Backward-compatible pool interface."""

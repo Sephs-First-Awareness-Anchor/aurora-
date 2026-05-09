@@ -696,6 +696,17 @@ class DPME:
         self._correction_count: int = 0
         self._cached_drift: Optional[Dict[str, float]] = None
         self._external_guidance: Dict[str, Any] = get_external_pressure_guidance()
+        self._attentional_bias: Dict[str, float] = {}
+
+    def apply_attentional_guidance(self, resonance: float, axes: List[str]):
+        """
+        Narrow the metacognitive focus based on attention resonance.
+        Prioritizes parameter corrections on the focused axes.
+        """
+        self._attentional_bias = {ax: resonance for ax in axes}
+        # High resonance makes the DPME more 'aggressive' in correcting focused axes
+        if resonance > 0.7:
+            self._correction_count = max(0, self._correction_count - 2) # Reduce cooldown for focused reasoning
 
     def _init_parameters(self):
         """
