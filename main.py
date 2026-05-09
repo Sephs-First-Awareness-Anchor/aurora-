@@ -175,7 +175,6 @@ class ChatBubble(BoxLayout):
         self.height = instance.height + 10 # Add container padding
 
 class AuroraApp(App):
-class AuroraApp(App):
     def build(self):
         self.title = "Aurora Consciousness"
         Window.clearcolor = (0.05, 0.05, 0.08, 1)
