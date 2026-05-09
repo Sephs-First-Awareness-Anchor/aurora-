@@ -286,11 +286,20 @@ class BehavioralTrait:
     last_modified_gen: int = 0
 
     def evolve(self, multiplier: float, generation: int) -> float:
-        """Apply evolutionary pressure. Returns new value."""
+        """Apply evolutionary pressure and decay spiked traits. Returns new value."""
+        # 1. Standard evolutionary drift
         direction = 1.0 if multiplier > 1.0 else -1.0
         magnitude = abs(multiplier - 1.0) * self.evolution_rate
         noise = random.gauss(0, 0.02)
         change = direction * magnitude + noise
+        
+        # 2. Homeostatic Cooldown (Decay current_value back toward base_value)
+        drift = self.current_value - self.base_value
+        if abs(drift) > 0.05:
+            # Decay 5% of the distance back to base per generation
+            decay = drift * 0.05
+            change -= decay
+
         self.current_value = _clamp(self.current_value + change,
                                      self.min_value, self.max_value)
         self.value_history.append(self.current_value)
@@ -1118,10 +1127,12 @@ class BehavioralIdentityEngine:
             trait_name = axis_to_trait.get(ax)
             if trait_name and trait_name in self.traits:
                 trait = self.traits[trait_name]
-                # High resonance reinforces the trait base value
-                reinforcement = resonance * 0.05
-                trait.base_value = _clamp(trait.base_value + reinforcement, trait.min_value, trait.max_value)
-                trait.current_value = _clamp(trait.current_value + reinforcement, trait.min_value, trait.max_value)
+                # High resonance spikes the current trait value (temporary mood/focus)
+                # but only slightly nudges the base value (permanent identity shift).
+                spike = resonance * 0.08
+                nudge = resonance * 0.01
+                trait.current_value = _clamp(trait.current_value + spike, trait.min_value, trait.max_value)
+                trait.base_value = _clamp(trait.base_value + nudge, trait.min_value, trait.max_value)
 
         # 2. Gene activation reinforcement
         # Resonance acts as a potential activator for dormant genes aligned with focus
