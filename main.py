@@ -33,6 +33,50 @@ try:
 except ImportError:
     tts = None
 
+# Native Android Speech Recognition via Jnius
+if platform == 'android':
+    from jnius import autoclass, PythonJavaClass, java_method
+    from android.runnable import run_on_ui_thread
+    
+    Context = autoclass('android.content.Context')
+    Intent = autoclass('android.content.Intent')
+    RecognizerIntent = autoclass('android.speech.RecognizerIntent')
+    SpeechRecognizer = autoclass('android.speech.SpeechRecognizer')
+    PythonActivity = autoclass('org.kivy.android.PythonActivity')
+
+    class AndroidSpeechListener(PythonJavaClass):
+        __javainterfaces__ = ['android/speech/RecognitionListener']
+
+        def __init__(self, callback, rms_callback):
+            super().__init__()
+            self.callback = callback
+            self.rms_callback = rms_callback
+
+        @java_method('(Landroid/os/Bundle;)V')
+        def onReadyForSpeech(self, params): pass
+        @java_method('()V')
+        def onBeginningOfSpeech(self): pass
+        @java_method('(F)V')
+        def onRmsChanged(self, rmsdB):
+            self.rms_callback(rmsdB)
+        @java_method('([B)V')
+        def onBufferReceived(self, buffer): pass
+        @java_method('()V')
+        def onEndOfSpeech(self): pass
+        @java_method('(I)V')
+        def onError(self, error):
+            # Error codes: 7 = No match, 8 = Busy
+            self.callback(None, error=error)
+        @java_method('(Landroid/os/Bundle;)V')
+        def onResults(self, results):
+            texts = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+            if texts:
+                self.callback(texts.get(0))
+        @java_method('(Landroid/os/Bundle;)V')
+        def onPartialResults(self, partialResults): pass
+        @java_method('(ILandroid/os/Bundle;)V')
+        def onEvent(self, eventType, params): pass
+
 class AuroraOrb(FloatLayout):
     # Constraint axes colors: X (Silver), T (Violet), N (Green), B (Gold), A (Pink)
     AXIS_COLORS = {
@@ -43,17 +87,19 @@ class AuroraOrb(FloatLayout):
         'A': (1.0, 0.2, 0.6),   # Pink/Magenta
     }
 
+    audio_scale = NumericProperty(1.0)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.size_hint = (None, None)
-        self.size = (150, 150)
+        self.size = (250, 250) # Increased size
         self.pos_hint = {'center_x': 0.5, 'top': 0.95} # Default to top center
         
         self.colors = [self.AXIS_COLORS['A'], self.AXIS_COLORS['N']]
         self.opacity_val = 0.8
         self.time = 0
         
-        self.bind(pos=self._update_canvas, size=self._update_canvas)
+        self.bind(pos=self._update_canvas, size=self._update_canvas, audio_scale=self._update_canvas)
         Clock.schedule_interval(self._animate, 1/60.0)
         
         # For dragging
@@ -81,7 +127,7 @@ class AuroraOrb(FloatLayout):
 
     def _update_canvas(self, *args):
         center_x, center_y = self.center
-        base_size = min(self.width, self.height)
+        base_size = min(self.width, self.height) * self.audio_scale
         
         self.canvas.before.clear()
         with self.canvas.before:
@@ -212,37 +258,37 @@ class AuroraApp(App):
         self.root.add_widget(self.chat_layer)
         
         # --- Top Controls (Embodiment) ---
-        top_controls = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50, pos_hint={'top': 1}, padding=[10, 5])
+        top_controls = BoxLayout(orientation='horizontal', size_hint=(1, None), height=80, pos_hint={'top': 1}, padding=[15, 10])
         
-        self.embody_toggle = ToggleButton(text="Embody: OFF", size_hint=(None, 1), width=120, background_color=(0.2, 0.2, 0.2, 1), color=(0.7, 0.7, 0.7, 1))
+        self.embody_toggle = ToggleButton(text="Embody: OFF", size_hint=(None, 1), width=180, font_size='18sp', background_color=(0.2, 0.2, 0.2, 1), color=(0.7, 0.7, 0.7, 1))
         self.embody_toggle.bind(on_release=self.toggle_embodiment)
         top_controls.add_widget(self.embody_toggle)
         
-        self.status_label = Label(text="Dormant", halign='center', color=(0.6, 0.6, 0.6, 1))
+        self.status_label = Label(text="Dormant", halign='center', font_size='16sp', color=(0.6, 0.6, 0.6, 1))
         top_controls.add_widget(self.status_label)
         
-        settings_btn = Button(text="⚙", size_hint=(None, 1), width=50, background_color=(0, 0, 0, 0), color=(0.7, 0.7, 0.7, 1))
+        settings_btn = Button(text="⚙", size_hint=(None, 1), width=80, font_size='24sp', background_color=(0, 0, 0, 0), color=(0.7, 0.7, 0.7, 1))
         settings_btn.bind(on_release=self.show_settings)
         top_controls.add_widget(settings_btn)
         self.root.add_widget(top_controls)
         
         # --- Bottom Voice-First Toolbar ---
-        self.bottom_toolbar = BoxLayout(orientation='horizontal', size_hint=(1, None), height=60, pos_hint={'bottom': 1}, padding=[10, 10], spacing=15)
+        self.bottom_toolbar = BoxLayout(orientation='horizontal', size_hint=(1, None), height=100, pos_hint={'bottom': 1}, padding=[15, 15], spacing=20)
         self.bottom_toolbar.opacity = 0 # Hidden until embodied
         
         # Mic Button
-        self.mic_btn = ToggleButton(text="🎤 Mute", state='normal', background_color=(0.8, 0.2, 0.2, 1))
+        self.mic_btn = ToggleButton(text="🎤 Mute", state='normal', font_size='16sp', background_color=(0.8, 0.2, 0.2, 1))
         self.mic_btn.bind(on_release=self.toggle_mic)
         
         # Cam Button
-        self.cam_btn = ToggleButton(text="📷 Live: OFF", state='normal', background_color=(0.2, 0.2, 0.25, 1))
+        self.cam_btn = ToggleButton(text="📷 Live: OFF", state='normal', font_size='16sp', background_color=(0.2, 0.2, 0.25, 1))
         self.cam_btn.bind(on_release=self.on_live_toggle)
         
         # Voice Profile
-        self.voice_profile_btn = Button(text="🗣 Voice: 1", background_color=(0.2, 0.2, 0.25, 1))
+        self.voice_profile_btn = Button(text="🗣 Voice", font_size='16sp', background_color=(0.2, 0.2, 0.25, 1))
         
         # Keyboard Toggle
-        self.kbd_btn = ToggleButton(text="⌨ Text", state='normal', background_color=(0.2, 0.2, 0.25, 1))
+        self.kbd_btn = ToggleButton(text="⌨ Text", state='normal', font_size='16sp', background_color=(0.2, 0.2, 0.25, 1))
         self.kbd_btn.bind(on_release=self.toggle_keyboard)
         
         self.bottom_toolbar.add_widget(self.mic_btn)
@@ -311,22 +357,30 @@ class AuroraApp(App):
             self.chat_layer.opacity = 0
             self.bottom_toolbar.opacity = 0
             self.set_status("Dormant")
+            self.stop_listening()
             
         elif state == "BACKGROUND":
             self.orb.opacity_val = 0.5
-            self.orb.size = (60, 60)
+            self.orb.size = (120, 120) # Increased background size
             self.orb.pos_hint = {'right': 0.95, 'top': 0.85}
             self.chat_layer.opacity = 0
             self.bottom_toolbar.opacity = 1
             self.set_status("Listening...")
+            # Auto-unmute and start listening if we just embodied
+            if self.mic_btn.state == 'normal':
+                self.mic_btn.state = 'down'
+                self.toggle_mic(self.mic_btn)
             
         elif state == "SUMMONED":
             self.orb.opacity_val = 0.9
-            self.orb.size = (150, 150)
+            self.orb.size = (300, 300) # Increased summoned size
             self.orb.pos_hint = {'center_x': 0.5, 'center_y': 0.6}
             self.chat_layer.opacity = 1
             self.bottom_toolbar.opacity = 1
             self.set_status("Aurora is Present")
+            # Ensure listening stays active
+            if self.mic_btn.state == 'down':
+                self.start_listening()
 
     def toggle_mic(self, btn):
         if btn.state == 'down':
@@ -343,30 +397,55 @@ class AuroraApp(App):
     def start_listening(self):
         if platform == 'android':
             try:
-                from plyer import stt
-                stt.start()
-                stt.set_result_callback(self.on_stt_results)
-                stt.set_error_callback(self.on_stt_error)
+                self._native_stt_start()
             except Exception as e:
                 self.add_bubble(f"Voice Error: {str(e)}", "system")
         else:
             self.add_bubble("Voice recording not supported on desktop UI yet.", "system")
-            # Automatically toggle back off
             self.mic_btn.state = 'normal'
             self.toggle_mic(self.mic_btn)
 
+    @run_on_ui_thread
+    def _native_stt_start(self):
+        activity = PythonActivity.mActivity
+        if not hasattr(self, 'recognizer') or self.recognizer is None:
+            self.recognizer = SpeechRecognizer.createSpeechRecognizer(activity)
+            self.stt_listener = AndroidSpeechListener(self.on_stt_results_native, self.on_rms_changed)
+            self.recognizer.setRecognitionListener(self.stt_listener)
+        
+        intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, True)
+        self.recognizer.startListening(intent)
+
     def stop_listening(self):
         if platform == 'android':
-            try:
-                from plyer import stt
-                stt.stop()
-            except Exception:
-                pass
+            self._native_stt_stop()
+
+    @run_on_ui_thread
+    def _native_stt_stop(self):
+        if hasattr(self, 'recognizer') and self.recognizer:
+            self.recognizer.stopListening()
+
+    def on_rms_changed(self, rmsdB):
+        # rmsdB is typically -2 to 10. Normalize to a 1.0 to 1.5 scale for the Orb
+        # Using exponential smoothing for cleaner visual pulsing
+        target_scale = 1.0 + (max(0, rmsdB + 2) / 12.0) * 0.5
+        self.orb.audio_scale = self.orb.audio_scale * 0.7 + target_scale * 0.3
 
     @mainthread
-    def on_stt_results(self, results):
-        if results and results[0]:
-            user_text = results[0]
+    def on_stt_results_native(self, text, error=None):
+        # Reset scale when not speaking
+        self.orb.audio_scale = 1.0
+        
+        if error:
+            # Code 7 is "No match", often happens if silent. Just restart.
+            if self.mic_btn.state == 'down':
+                Clock.schedule_once(lambda dt: self.start_listening(), 0.5)
+            return
+
+        if text:
+            user_text = text
             self.add_bubble(user_text, "user")
             
             # Wake word check if in BACKGROUND
@@ -380,14 +459,15 @@ class AuroraApp(App):
         
         # If mic is still active, restart listening (continuous mode)
         if self.mic_btn.state == 'down':
-            # Small delay to prevent rapid looping
             Clock.schedule_once(lambda dt: self.start_listening(), 0.5)
 
-    @mainthread
+    def on_stt_results(self, results):
+        # Legacy for plyer compatibility if needed, but we use _native now
+        pass
+
     def on_stt_error(self, error):
-        # Ignore common timeout errors to keep listening
-        if self.mic_btn.state == 'down':
-            Clock.schedule_once(lambda dt: self.start_listening(), 1.0)
+        # Legacy
+        pass
 
     def toggle_keyboard(self, btn):
         if btn.state == 'down':
