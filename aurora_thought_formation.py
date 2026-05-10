@@ -47,10 +47,23 @@ class ActiveSelfState:
     # Tick at capture time
     tick: int = 0
 
+    # Cache for ActiveSelfState to avoid redundant loading within the same tick/turn
+    _CACHE: Optional["ActiveSelfState"] = None
+    _CACHE_TIMESTAMP: float = 0.0
+    _CACHE_TICK: int = -1
+
     @classmethod
-    def load(cls, systems: Dict[str, Any]) -> "ActiveSelfState":
-        """Build ActiveSelfState from live systems dict."""
+    def load(cls, systems: Dict[str, Any], use_cache: bool = True) -> "ActiveSelfState":
+        """Build ActiveSelfState from live systems dict with TTL caching."""
+        now = time.time()
+        lat = systems.get("lattice")
+        current_tick = int(lat.generation) if lat and hasattr(lat, "generation") else -1
+        
+        if use_cache and cls._CACHE and (now - cls._CACHE_TIMESTAMP < 0.5) and (cls._CACHE_TICK == current_tick):
+            return cls._CACHE
+
         state = cls()
+        state.tick = current_tick
         # I-State predicate values
         try:
             ci = systems.get("core_identity")
@@ -98,6 +111,10 @@ class ActiveSelfState:
                 state.tick = int(lat.generation)
         except Exception:
             pass
+
+        cls._CACHE = state
+        cls._CACHE_TIMESTAMP = now
+        cls._CACHE_TICK = state.tick
         return state
 
 

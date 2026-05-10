@@ -3752,6 +3752,20 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     _axis_activation = _field_balancer.rebalanced_activation(_axis_activation_raw)
     _field_balancer.update(_axis_activation, systems)
     _dominant_axis = _axis_projector.dominant(_axis_activation)
+    
+    # ---- PASS 2: SEMANTIC REASONING (Pressure -> Concept) -----------
+    # Interpret raw axis drift into abstract concepts using OETS.
+    _semantic_context = {}
+    if systems.get("dpme") and oets:
+        try:
+            # Sync DPME with current activation
+            systems["dpme"].apply_attentional_guidance(1.0, [_dominant_axis])
+            systems["dpme"].resolve_semantic_tension(oets)
+            _semantic_context = getattr(systems["dpme"], "_semantic_context", {})
+            if _semantic_context and pipeline_state is not None:
+                pipeline_state["semantic_interpretation"] = _semantic_context
+        except Exception:
+            pass
 
     # Feed axis context into telemetry so classify_fail_dimensions() can
     # weight fail severities by the constraint geometry of this turn.
@@ -6659,46 +6673,43 @@ def _save_learned_skill_state(systems: Dict[str, Any], verbose: bool = True) -> 
 # INTERACTIVE CHAT REPL
 # ============================================================================
 
-def _full_save(systems: Dict[str, Any], verbose: bool = True):
+def _full_save(systems: Dict[str, Any], verbose: bool = True, async_save: bool = True):
     """Save all state: standard snapshot + OETS web + memory + identity + sensory + autonomy."""
-    aurora = systems['aurora']
-    enhanced = systems.get('enhanced_persist')
-    aurora.save_state()
-    if systems.get('perception'):
-        systems['perception'].save_lexicon()
-    if enhanced:
-        results = enhanced.save_all(systems)
-        if verbose:
-            saved = [k for k, v in results.items() if v]
-            print(f"  [SAVE] Saved: {', '.join(saved)}")
-    # Save sensory competency state
-    sensory = systems.get('sensory')
-    if sensory:
-        sensory.save_state()
-        if verbose:
-            print(f"  [SAVE] Saved: sensory_competency")
-    # Save autonomy state
-    autonomy = systems.get('autonomy')
-    if autonomy:
-        autonomy._save_state()
-        if verbose:
-            print(f"  [SAVE] Saved: autonomy")
-    # Save expression evolution state
-    perception = systems.get('perception')
-    if perception and hasattr(perception, 'save_evo_state'):
+    def run_save():
         try:
-            perception.save_evo_state()
+            aurora = systems['aurora']
+            enhanced = systems.get('enhanced_persist')
+            aurora.save_state()
+            if systems.get('perception'):
+                systems['perception'].save_lexicon()
+            if enhanced:
+                results = enhanced.save_all(systems)
+                if verbose:
+                    saved = [k for k, v in results.items() if v]
+                    # print(f"  [SAVE] Saved: {', '.join(saved)}")
+            # Save sensory competency state
+            sensory = systems.get('sensory')
+            if sensory:
+                sensory.save_state()
+            # Save autonomy state
+            autonomy = systems.get('autonomy')
+            if autonomy:
+                autonomy._save_state()
+            # Save expression evolution state
+            perception = systems.get('perception')
+            if perception and hasattr(perception, 'save_evo_state'):
+                perception.save_evo_state()
+            # Save lexicon
+            if perception and hasattr(perception, 'lexicon'):
+                perception.lexicon.save()
         except Exception:
             pass
-    # Save lexicon so vocabulary survives restarts
-    if perception and hasattr(perception, 'lexicon'):
-        try:
-            _lex = perception.lexicon
-            _lex.save()
-            if verbose:
-                print(f"  [SAVE] Lexicon: {_lex.size} words saved")
-        except Exception:
-            pass
+
+    if async_save:
+        import threading
+        threading.Thread(target=run_save, daemon=True, name="AsyncPersistenceWorker").start()
+    else:
+        run_save()
 
     # Save learned skill state (cross-modal mappings)
     _save_learned_skill_state(systems, verbose=verbose)

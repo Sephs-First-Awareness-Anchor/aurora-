@@ -87,6 +87,11 @@ class RelationalComparisonEngine:
         # e.g. if N (Energy) is high, she identifies with concepts that have high potential/cost
         pressure_sim = 1.0 - abs(node.emotional_valence - self_valence)
         
+        # Tag the node with current focus axes if resonance is high
+        for ax, val in active_pressures.items():
+            if val > 0.6 and ax not in node.associated_axes:
+                node.associated_axes.append(ax)
+        
         return RelationalDelta(
             similarity=round(pressure_sim, 4),
             pressure_delta=round(abs(node.emotional_valence - self_valence), 4),

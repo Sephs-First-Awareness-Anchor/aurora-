@@ -3412,6 +3412,16 @@ class AutonomyEngine:
         self.on_dream_complete: Optional[Callable[[Dict], None]] = None
         self.on_observation: Optional[Callable[[str], None]] = None
 
+        # Enhancement: Will Loop state
+        self._last_intent_time: Dict[str, float] = {}
+        self._intent_cooldowns: Dict[str, float] = {
+            "curiosity": 300,   # 5 minutes
+            "grounding": 600,   # 10 minutes
+            "self_check": 1800, # 30 minutes
+            "agency": 3600,     # 1 hour
+            "environmental": 900 # 15 minutes
+        }
+
         self.last_dream_time: float = 0.0
 
         # Dream evolution orchestrator
@@ -3532,16 +3542,19 @@ class AutonomyEngine:
             try:
                 self.quotas.reset_if_new_day()
 
-                # Check for proactive speakup
+                # 1. NEW: Process Attention-driven Will Intent
+                self._process_attention_will()
+
+                # 2. Check for proactive speakup
                 if self.level.value >= AutonomyLevel.CONVERSANT.value:
                     self._check_speakup()
 
-                # Check for autonomous study
+                # 3. Check for autonomous study
                 if self.level.value >= AutonomyLevel.LEARNER.value:
                     self._check_study()
                     self._check_dreams()
 
-                # Check for observations
+                # 4. Check for observations
                 if self.level.value >= AutonomyLevel.OBSERVER.value:
                     self._check_observations()
 
@@ -3552,7 +3565,56 @@ class AutonomyEngine:
                 logger.error(f"[AUTONOMY] Background loop error: {e}")
                 self._stop_event.wait(timeout=10.0)
 
-    def _in_quiet_window(self) -> bool:
+    def _process_attention_will(self):
+        """Check the Attention Engine for new intentions and gate them."""
+        attn = self.systems.get("attention_engine")
+        if not attn: return
+        
+        # 'Attention -> Intention'
+        will_intent = attn.generate_will()
+        if not will_intent: return
+        
+        # 'Intention -> Commit/Defer (Gating)'
+        # 1. Check Cooldown
+        last_time = self._last_intent_time.get(will_intent.class_name, 0)
+        cooldown = self._intent_cooldowns.get(will_intent.class_name, 600)
+        if time.time() - last_time < cooldown:
+            return
+            
+        # 2. Check Governor (Load/Heat)
+        governor = self.systems.get("governor")
+        if governor:
+            # If system is too hot or load is high, defer the intention
+            status = governor.status()
+            heat = float(status.get("thermal_load", 0.0))
+            if heat > 0.85: 
+                logger.debug(f"[AUTONOMY] Deferring intent {will_intent.class_name} due to high heat: {heat:.2f}")
+                return
+        
+        # 3. Commit
+        self.commit_will_intent(will_intent)
+
+    def commit_will_intent(self, intent: Any):
+        """Execute the committed intention and reflect."""
+        self._last_intent_time[intent.class_name] = time.time()
+        
+        logger.info(f"[AUTONOMY] Committing Will Intent: {intent.class_name} (Goal: {intent.goal})")
+        self.action_log.log("will_intent", f"{intent.class_name}: {intent.goal}")
+        
+        # Act: Pick tool + goal
+        if intent.tool_name:
+            # In a real daemon, we would inject this tool call into the pipeline
+            # For now, we log the commit. 
+            # If it's a 'speech' intent, we use on_speakup
+            if intent.class_name == "curiosity" and self.on_speakup:
+                self.on_speakup(f"I feel a peak in resonance on my {', '.join(intent.trigger_axes)} axes. I should explore this.")
+            
+            # Record the autonomous tool request
+            if hasattr(self, "systems") and "aurora" in self.systems:
+                # Mock tool call injection
+                pass
+
+    def _gather_context(self) -> Dict[str, Any]:
         """Return True if current hour is inside the quiet window."""
         if not self.boundaries.quiet_window_enabled:
             return False

@@ -2148,6 +2148,9 @@ class UniverseSteerer:
                         # --- Feedback: Reasoning (DPME) ---
                         if self._s.has("dpme"):
                             self._s.dpme.apply_attentional_guidance(res, axes)
+                            # Pass 2: Semantic Reasoning
+                            if self._s.has("perception") and self._s.perception.oets:
+                                self._s.dpme.resolve_semantic_tension(self._s.perception.oets)
                             
                         # --- Feedback: Identity (L6) ---
                         if self._s.has("identity"):

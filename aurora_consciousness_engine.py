@@ -697,6 +697,22 @@ class DPME:
         self._cached_drift: Optional[Dict[str, float]] = None
         self._external_guidance: Dict[str, Any] = get_external_pressure_guidance()
         self._attentional_bias: Dict[str, float] = {}
+        self._semantic_context: Dict[str, List[str]] = {} # axis -> list of related concepts
+
+    def resolve_semantic_tension(self, oets_engine: Any):
+        """
+        Pass 2 (Semantic): Interpret current physical drift into abstract concepts.
+        Queries OETS for nodes that resonate with the currently biased axes.
+        """
+        if not oets_engine: return
+        
+        self._semantic_context = {}
+        for ax, weight in self._attentional_bias.items():
+            if weight > 0.5:
+                # Find concepts in OETS that share this pressure signature
+                # This uses the OETS cluster/node metadata
+                matches = oets_engine.web.get_nodes_by_axis(ax, limit=3)
+                self._semantic_context[ax] = [n.word for n in matches]
 
     def apply_attentional_guidance(self, resonance: float, axes: List[str]):
         """

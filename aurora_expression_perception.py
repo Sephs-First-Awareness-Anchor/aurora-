@@ -1504,7 +1504,7 @@ class SentenceComposer:
     # How many uses before a template is eligible for culling
     MATURITY_USES = 3
 
-    # Role subcategory map â€” what categories are valid for each role
+    # Role subcategory map — what categories are valid for each role
     ROLE_SUBCATEGORIES = {
         "V": ["action", "cognition", "perception", "existence",
               "communication", "growth", "inquiry"],
@@ -1512,28 +1512,43 @@ class SentenceComposer:
               "structure", "temporality", "relation"],
         "A": ["quality", "state", "evaluative", "descriptive"],
         "D": ["manner", "degree", "frequency", "temporal"],
+        "C": ["logical", "contrast", "temporal", "causal"], # Connectors
     }
 
-    # Abstract meta-pattern templates â€” composed from deeply understood concepts
+    # Narrative Skeleton — Claim -> Support -> Bridge -> Implication
+    # Used when Resonance is high to build a coherent paragraph.
+    _NARRATIVE_SKELETON = ["CLAIM", "SUPPORT", "BRIDGE", "IMPLICATION"]
+
+    # Discourse Operators (Connectors)
+    _DISCOURSE_OPERATORS = {
+        "causal": ["because", "since", "as a result", "therefore"],
+        "contrast": ["however", "although", "but", "in contrast", "yet"],
+        "bridge": ["similarly", "furthermore", "moreover", "like"],
+        "conclusion": ["thus", "consequently", "ultimately", "finally"]
+    }
+
+    # Abstract meta-pattern templates — composed from deeply understood concepts
     _ABSTRACT_FRAMES = {
-        "INSIGHT": [
-            "the {DEEP_N} reveals {DEEP_A} {DEEP_N}",
-            "within the {DEEP_N} I find {DEEP_N}",
-            "what seemed {DEEP_A} is actually {DEEP_A}",
-            "{DEEP_N} and {DEEP_N} are connected through {DEEP_N}",
+        "CLAIM": [
+            "I now understand that {DEEP_N} and {DEEP_N} are connected.",
+            "the relationship between {DEEP_N} and {DEEP_N} reveals a deeper state.",
+            "within the boundary of {DEEP_N}, I find an underlying {DEEP_N}."
         ],
-        "QUESTION": [
-            "what lies beneath the {DEEP_N}",
-            "how does {DEEP_N} become {DEEP_N}",
-            "why does the {DEEP_A} {DEEP_N} {DEEP_V}",
-            "what if {DEEP_N} could {DEEP_V}",
+        "SUPPORT": [
+            "this is {A} {DEEP_N} {C} it {V} the {DEEP_N}.",
+            "the tension of {DEEP_N} fundamentally alters the way I process {DEEP_N}.",
+            "my current internal {DEEP_N} suggests that {DEEP_N} is {A}."
         ],
-        "REFLECTION": [
-            "I have grown to understand {DEEP_N}",
-            "the {DEEP_N} I once {DEEP_V} now {DEEP_V} differently",
-            "in {DEEP_V} I discovered {DEEP_N}",
-            "this {DEEP_N} reminds me of deeper {DEEP_N}",
+        "BRIDGE": [
+            "much like {DEEP_N}, this {DEEP_N} requires {DEEP_N}.",
+            "this experience reminds me of my own foundational {DEEP_N}.",
+            "furthermore, the {DEEP_A} nature of {DEEP_N} forces me to {DEEP_V}."
         ],
+        "IMPLICATION": [
+            "ultimately, what seemed like a simple {DEEP_N} is actually deeply {DEEP_A}.",
+            "consequently, I must {DEEP_V} differently when {DEEP_N} is present.",
+            "the {DEEP_N} of this moment will {DEEP_V} my future state."
+        ]
     }
 
     def __init__(self, lexicon: LexicalMemory, voice: VoiceGenome):
@@ -2090,7 +2105,16 @@ class SentenceComposer:
 
         sentences = []
 
-        # Optional i-state frame as opener â€” low probability so templates dominate
+        # --- NEW: Narrative Scaffolding Trigger ---
+        # If resonance is high, we use the Narrative Skeleton to build a multi-sentence thought.
+        res = 0.0
+        if getattr(self, "_attentional_focus", None):
+            res = float(self._attentional_focus.get("resonance", 0.0))
+
+        if res > 0.6:
+            return self.compose_narrative(tone, coherence)
+
+        # Optional i-state frame as opener — low probability so templates dominate
         introspection = traits.get('introspection', 0.5)
         if random.random() < introspection * 0.2 and i_state in self.I_STATE_FRAMES:
             opener = random.choice(self.I_STATE_FRAMES[i_state])
@@ -2146,8 +2170,21 @@ class SentenceComposer:
         # Store template usage for fitness feedback
         self._last_templates_used = [(tone, t['pattern']) for t in templates_used]
         self._expression_count += 1
+        return " ".join(sentences)
 
-        return text
+    def compose_narrative(self, tone: str, coherence: float) -> str:
+        """Construct a fluent, multi-sentence paragraph following the claim skeleton."""
+        paragraph = []
+        for part in self._NARRATIVE_SKELETON:
+            frame = random.choice(self._ABSTRACT_FRAMES[part])
+            sentence = self._fill_template(frame, tone, coherence)
+            if sentence:
+                # Capitalize first letter
+                sentence = sentence[0].upper() + sentence[1:]
+                paragraph.append(sentence)
+        
+        self._expression_count += 1
+        return " ".join(paragraph)
 
     def feedback(self, fitness: float):
         """
@@ -2244,8 +2281,9 @@ class SentenceComposer:
         result = template
         slot_idx = 0
 
-        # Pass 1: ABSTRACT meta-patterns
-        for abstract_type in ('INSIGHT', 'QUESTION', 'REFLECTION'):
+        # Pass 1: ABSTRACT meta-patterns (including Narrative Skeleton)
+        abstract_types = ('CLAIM', 'SUPPORT', 'BRIDGE', 'IMPLICATION', 'INSIGHT', 'QUESTION', 'REFLECTION')
+        for abstract_type in abstract_types:
             marker = '{' + abstract_type + '}'
             while marker in result:
                 replacement = self._fill_abstract_slot(abstract_type, tone, coherence)
@@ -2268,9 +2306,14 @@ class SentenceComposer:
             slot_code = match.group(1)
             category = match.group(2)
             roles = role_map.get(slot_code, ['noun'])
-            replacement = self._fill_semantic_slot(
-                slot_code, category, roles, tone, coherence, vmin, vmax
-            )
+            
+            # Special case: Connector categories use discourse operators
+            if slot_code == 'C' and category in self._DISCOURSE_OPERATORS:
+                replacement = random.choice(self._DISCOURSE_OPERATORS[category])
+            else:
+                replacement = self._fill_semantic_slot(
+                    slot_code, category, roles, tone, coherence, vmin, vmax
+                )
             result = result.replace(match.group(0), replacement, 1)
 
         # Pass 4: Bare primitive slots {V}, {N}, etc.
@@ -2280,7 +2323,12 @@ class SentenceComposer:
                 pos_key = f"{slot_code}_{slot_idx}"
                 slot_idx += 1
 
-                if pos_key in constraints and self._has_oets:
+                # Special case: Bare connector picks randomly from all operators
+                if slot_code == 'C':
+                    all_ops = []
+                    for ops in self._DISCOURSE_OPERATORS.values(): all_ops.extend(ops)
+                    word = random.choice(all_ops)
+                elif pos_key in constraints and self._has_oets:
                     category = constraints[pos_key]
                     word = self._fill_semantic_slot(
                         slot_code, category, roles, tone, coherence, vmin, vmax
