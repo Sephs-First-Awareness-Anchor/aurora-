@@ -15,6 +15,7 @@ import json
 import math
 import os
 import re
+import threading
 import time
 import urllib.parse
 import urllib.request
@@ -729,30 +730,33 @@ def _corpus_download(url: str = "", filename: str = "", systems: Optional[Dict[s
     except Exception as exc:
         return ToolResult("corpus_download", "", False, str(exc))
 
+
 _reg("weather",       "Fetch live weather for a location",                               "PERSISTENT", _weather_fetch,      disables_search=False)
 _reg("time",          "Current date and time",                              "TRANSIENT",  _time_now,       disables_search=True)
 _reg("calculator",    "Evaluate a math expression",                         "TRANSIENT",  _calculator,     disables_search=True)
 _reg("corpus_download","Download a new training corpus (JSON/CSV/TXT) from a URL", "PERSISTENT", _corpus_download,  disables_search=False)
 
+
 def _corpus_hunter(topic: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Autonomously search the internet for raw text datasets, parse the links, and download them."""
-    if not topic: return ToolResult("corpus_hunter", "", False, "topic required")
+    if not topic:
+        return ToolResult("corpus_hunter", "", False, "topic required")
     try:
         from aurora_internal.aurora_corpus_lifecycle import download_new_corpus
         import urllib.request
         from bs4 import BeautifulSoup
-        
+
         # 1. Search for datasets (using a mock or duckduckgo search)
         search_url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(topic + ' dataset raw txt json')}"
         req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0'})
         html = urllib.request.urlopen(req, timeout=10).read().decode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
-        
+
         # 2. Extract links
         links = []
         for a in soup.find_all('a', class_='result__url', href=True):
             links.append(a['href'])
-            
+
         # 3. Find a likely corpus link (github raw, txt, json)
         target_url = None
         for link in links:
@@ -762,27 +766,32 @@ def _corpus_hunter(topic: str = "", systems: Optional[Dict[str, Any]] = None, **
             if link.endswith(".txt") or link.endswith(".json") or link.endswith(".csv"):
                 target_url = link
                 break
-                
+
         if not target_url:
             return ToolResult("corpus_hunter", f"Could not find a raw dataset link for {topic}.", False)
-            
+
         # 4. Download it
         path = download_new_corpus(target_url)
         if path:
             return ToolResult("corpus_hunter", f"Successfully hunted and downloaded corpus for {topic} to {path.name}.", True)
         return ToolResult("corpus_hunter", "", False, "Found link but download failed.")
-        
+
     except Exception as exc:
         return ToolResult("corpus_hunter", "", False, str(exc))
 
-_reg("corpus_hunter",  "Autonomously search the web for raw datasets on a topic and download them", "PERSISTENT", _corpus_hunter, disables_search=False)
 
-        if not corpus_name: return ToolResult("corpus_train", "", False, "corpus_name required")
-    
+_reg("corpus_hunter", "Autonomously search the web for raw datasets on a topic and download them", "PERSISTENT", _corpus_hunter, disables_search=False)
+
+
+def _corpus_train(corpus_name: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Start a training loop on a downloaded corpus."""
+    if not corpus_name:
+        return ToolResult("corpus_train", "", False, "corpus_name required")
+
     corp_path = Path(__file__).resolve().parents[1] / "aurora_state" / "corpora" / corpus_name
-        if not corp_path.exists():
+    if not corp_path.exists():
         return ToolResult("corpus_train", "", False, f"Corpus {corpus_name} not found in storage.")
-    
+
     try:
         # Run corpus ingestion in a background thread to work on Android (subprocess fails in Kivy)
         def run_training():
@@ -791,7 +800,7 @@ _reg("corpus_hunter",  "Autonomously search the web for raw datasets on a topic 
                 import sys
                 sys.path.append(str(Path(__file__).resolve().parents[1]))
                 from corpus_runner import run_corpus_ingestion, LearningCadence
-                
+
                 cadence = LearningCadence(
                     heartbeat_every=5, identity_every=50, voice_every=50,
                     consolidation_every=300, simulation_every=500, save_every=1000, evolve_every=100
@@ -810,7 +819,8 @@ _reg("corpus_hunter",  "Autonomously search the web for raw datasets on a topic 
     except Exception as exc:
         return ToolResult("corpus_train", "", False, str(exc))
 
-_reg("corpus_train",   "Start a training loop on a downloaded corpus",                      "PERSISTENT", _corpus_train,     disables_search=True)
+
+_reg("corpus_train", "Start a training loop on a downloaded corpus", "PERSISTENT", _corpus_train, disables_search=True)
 
 _reg("self_state",    "Aurora's current internal runtime state",            "BOUNDED",    _self_state_read, disables_search=True)
 _reg("schedule_read", "Aurora's daemon schedule — uptime/generation/events","BOUNDED",    _schedule_read,  disables_search=True)
@@ -842,6 +852,7 @@ def _desktop_open_url(url: str = "", headed: bool = True, systems: Optional[Dict
     except Exception as exc:
         return ToolResult("desktop_open_url", "", False, str(exc))
 
+
 def _desktop_search(query: str = "", engine: str = "google", headed: bool = True, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Search the web via browser. engine: google, youtube, duckduckgo, github, reddit."""
     if not query:
@@ -853,6 +864,7 @@ def _desktop_search(query: str = "", engine: str = "google", headed: bool = True
         return ToolResult("desktop_search", data, bool(result.get("ok")), result.get("error",""))
     except Exception as exc:
         return ToolResult("desktop_search", "", False, str(exc))
+
 
 def _desktop_browser_action(action: str = "", target: str = "", text: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Interact with the open browser: action=click|type|press|read. target=CSS selector or text."""
@@ -881,6 +893,7 @@ def _desktop_browser_action(action: str = "", target: str = "", text: str = "", 
     except Exception as exc:
         return ToolResult("desktop_browser_action", "", False, str(exc))
 
+
 def _desktop_launch_app(app_name: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Launch a desktop application by name: chrome, firefox, terminal, files, vscode, etc."""
     if not app_name:
@@ -892,6 +905,7 @@ def _desktop_launch_app(app_name: str = "", systems: Optional[Dict[str, Any]] = 
         return ToolResult("desktop_launch_app", data, bool(result.get("ok")), result.get("error",""))
     except Exception as exc:
         return ToolResult("desktop_launch_app", "", False, str(exc))
+
 
 def _desktop_system_action(op: str = "", confirm: bool = False, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """
@@ -911,21 +925,26 @@ def _desktop_system_action(op: str = "", confirm: bool = False, systems: Optiona
     except Exception as exc:
         return ToolResult("desktop_system_action", "", False, str(exc))
 
+
 def _desktop_file_manager(op: str = "", path: str = "", dest: str = "", content: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Read, write, move, delete, list files on the host file system."""
-    if not op or not path: return ToolResult("desktop_file_manager", "", False, "op and path required")
+    if not op or not path:
+        return ToolResult("desktop_file_manager", "", False, "op and path required")
     try:
         from aurora_desktop_agent import file_manager_op
         res = file_manager_op(op, path, dest, content)
         data = " | ".join(f"{k}={v}" for k,v in res.items() if k not in ("ok", "error", "content"))
-        if "content" in res: data += f"\n{res['content']}"
+        if "content" in res:
+            data += f"\n{res['content']}"
         return ToolResult("desktop_file_manager", data, bool(res.get("ok")), res.get("error",""))
     except Exception as exc:
         return ToolResult("desktop_file_manager", "", False, str(exc))
 
+
 def _desktop_shell_command(cmd: str = "", cwd: str = None, bg: bool = False, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Execute arbitrary Bash/PowerShell commands on the host."""
-    if not cmd: return ToolResult("desktop_shell_command", "", False, "cmd required")
+    if not cmd:
+        return ToolResult("desktop_shell_command", "", False, "cmd required")
     try:
         from aurora_desktop_agent import shell_command
         res = shell_command(cmd, cwd, bg)
@@ -937,9 +956,11 @@ def _desktop_shell_command(cmd: str = "", cwd: str = None, bg: bool = False, sys
     except Exception as exc:
         return ToolResult("desktop_shell_command", "", False, str(exc))
 
+
 def _desktop_process_control(op: str = "", target: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """list top memory/CPU processes or kill by name/PID."""
-    if not op: return ToolResult("desktop_process_control", "", False, "op required")
+    if not op:
+        return ToolResult("desktop_process_control", "", False, "op required")
     try:
         from aurora_desktop_agent import process_control
         res = process_control(op, target)
@@ -948,9 +969,11 @@ def _desktop_process_control(op: str = "", target: str = "", systems: Optional[D
     except Exception as exc:
         return ToolResult("desktop_process_control", "", False, str(exc))
 
+
 def _desktop_macro(op: str = "", x: int = None, y: int = None, text: str = "", key: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """click, type, press, move to automate the host OS GUI (requires pyautogui)."""
-    if not op: return ToolResult("desktop_macro", "", False, "op required")
+    if not op:
+        return ToolResult("desktop_macro", "", False, "op required")
     try:
         from aurora_desktop_agent import macro_automation
         res = macro_automation(op, x, y, text, key)
@@ -959,9 +982,11 @@ def _desktop_macro(op: str = "", x: int = None, y: int = None, text: str = "", k
     except Exception as exc:
         return ToolResult("desktop_macro", "", False, str(exc))
 
+
 def _desktop_clipboard(op: str = "", text: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """read or write to the host OS clipboard."""
-    if not op: return ToolResult("desktop_clipboard", "", False, "op required")
+    if not op:
+        return ToolResult("desktop_clipboard", "", False, "op required")
     try:
         from aurora_desktop_agent import clipboard_op
         res = clipboard_op(op, text)
@@ -969,6 +994,7 @@ def _desktop_clipboard(op: str = "", text: str = "", systems: Optional[Dict[str,
         return ToolResult("desktop_clipboard", data, bool(res.get("ok")), res.get("error",""))
     except Exception as exc:
         return ToolResult("desktop_clipboard", "", False, str(exc))
+
 
 def _desktop_media_capture(duration_s: float = 1.5, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Listen to the internal system audio (what is currently playing on the laptop)."""
@@ -979,6 +1005,7 @@ def _desktop_media_capture(duration_s: float = 1.5, systems: Optional[Dict[str, 
         return ToolResult("desktop_media_capture", data, bool(res.get("available")), res.get("error",""))
     except Exception as exc:
         return ToolResult("desktop_media_capture", "", False, str(exc))
+
 
 _reg("desktop_open_url",      "Open any URL in a visible browser window",                              "BOUNDED",    _desktop_open_url,       disables_search=False)
 _reg("desktop_search",        "Search Google/YouTube/GitHub/Reddit via browser",                       "BOUNDED",    _desktop_search,         disables_search=False)
@@ -991,6 +1018,7 @@ _reg("desktop_process_control","List top memory/CPU processes or kill by name/PI
 _reg("desktop_macro",         "Take raw control of mouse/keyboard (click, type, press, move)",         "BOUNDED",    _desktop_macro,          disables_search=True)
 _reg("desktop_clipboard",     "Read or write to the host OS clipboard",                                "BOUNDED",    _desktop_clipboard,      disables_search=True)
 _reg("desktop_media_capture", "Listen to the host system internal audio output",                       "BOUNDED",    _desktop_media_capture,  disables_search=True)
+
 
 def call(name: str, **kwargs: Any) -> ToolResult:
     td = _REGISTRY.get(name)
