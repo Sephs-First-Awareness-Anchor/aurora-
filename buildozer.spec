@@ -18,9 +18,6 @@ source.include_exts = py,png,jpg,kv,atlas,json,md,txt,jsonl
 # (list) List of exclusions using pattern matching
 source.exclude_patterns = license,README.md,*.zip,*.cz,*.pdf,aurora_hub.py,aurora_room.py,sentinel_gui.py,scripts/*,aurora_logs/*
 
-# (list) List of inclusions using pattern matching
-source.include_patterns = aurora_state/*,aurora_internal/*,aurora_core_ai/*
-
 # (list) Source files to exclude (let empty to not exclude any directory)
 #source.exclude_exts = spec
 
@@ -98,7 +95,7 @@ fullscreen = 0
 #icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
 # (list) Permissions
-android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECORD_AUDIO,MODIFY_AUDIO_SETTINGS,WAKE_LOCK,ACCESS_FINE_LOCATION,POST_NOTIFICATIONS,SEND_SMS,CALL_PHONE,READ_CONTACTS,VIBRATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,SYSTEM_ALERT_WINDOW,FOREGROUND_SERVICE,FOREGROUND_SERVICE_SPECIAL_USE
+android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECORD_AUDIO,MODIFY_AUDIO_SETTINGS,WAKE_LOCK,ACCESS_FINE_LOCATION,POST_NOTIFICATIONS,SEND_SMS,CALL_PHONE,READ_CONTACTS,VIBRATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,SYSTEM_ALERT_WINDOW,FOREGROUND_SERVICE
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
