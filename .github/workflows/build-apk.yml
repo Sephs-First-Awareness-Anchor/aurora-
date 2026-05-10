@@ -13,36 +13,39 @@ jobs:
       options: --user root
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Cache Buildozer directory
-      uses: actions/cache@v4
-      with:
-        path: .buildozer
-        key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
-        restore-keys: |
-          buildozer-${{ runner.os }}-
-  
-    - name: Find sdkmanager
-      run: |
-       find ".buildozer" -name sdkmanager -type f
- 
-    - name: Install Android SDK platform 33
-      run: |
-       export ANDROIDSDK=".buildozer/android/platform/android-sdk"
-       yes | "$ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager" --licenses
-       "$ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-33" "build-tools;33.0.2"
-  
-    - name: Build with Buildozer
-      run: |
-        # The container already has buildozer and all dependencies.
-        # We just need to trigger the build.
-        buildozer android debug
-      env:
-        BUILDOZER_WARN_ON_ROOT: 0
+      - name: Cache Buildozer directory
+        uses: actions/cache@v4
+        with:
+          path: .buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          restore-keys: |
+            buildozer-${{ runner.os }}-
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: aurora-apk
-        path: bin/*.apk
+      - name: Install Android SDK platform 33
+        run: |
+          set -e
+
+          SDKMANAGER="$(find / -name sdkmanager -type f 2>/dev/null | head -n 1)"
+          echo "Found sdkmanager at: $SDKMANAGER"
+
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager not found"
+            exit 1
+          fi
+
+          yes | "$SDKMANAGER" --licenses || true
+          "$SDKMANAGER" "platforms;android-33" "build-tools;33.0.2"
+
+      - name: Build with Buildozer
+        env:
+          BUILDOZER_WARN_ON_ROOT: 0
+        run: |
+          buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurora-apk
+          path: bin/*.apk
