@@ -1,31 +1,30 @@
 {
-  "original": "mayor mothers it indeed rhymes they moving goatee maccabi everywhere through talkeentna. slang elephants it adopted vader they discriminating with against part through expression.",
+  "original": "Tourniquets amount this amphibians",
   "candidate": "",
-  "selected": "mayor mothers it indeed rhymes they moving goatee maccabi everywhere through talkeentna. slang elephants it adopted vader they discriminating with against part through expression.",
+  "selected": "Tourniquets amount this amphibians",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.92,
+  "original_score": 0.69,
   "candidate_score": 0.0,
-  "original_pressure": 0.316,
+  "original_pressure": 0.422,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
+  "pressure_relief": -0.578,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "That is crazy, can anyone even understand that?",
+    "prompt_excerpt": "What does it mean to you to understand something?",
     "input_interpretation": {
-      "raw_prompt": "That is crazy, can anyone even understand that?",
+      "raw_prompt": "What does it mean to you to understand something?",
       "intent_hint": "question",
       "topic_terms": [
-        "crazy",
-        "anyone",
-        "even",
+        "does",
+        "mean",
         "understand"
       ],
       "entities": []
     },
-    "tone": "curious",
+    "tone": "gentle",
     "source": "unavailable",
     "model": "Models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
-    "timestamp": 1778377733.9889417
+    "timestamp": 1778441225.3199317
   }
 }

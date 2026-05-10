@@ -2,14 +2,14 @@
   "version": "1.0",
   "cursor": {
     "file_id": "",
-    "file_path": "medium_batch.json",
+    "file_path": "/tmp/aurora_runs/corpus_slice_3.json",
     "byte_offset": 0,
-    "line_index": 3992,
+    "line_index": 499,
     "chunk_id": "",
     "pass_name": "observer",
-    "total_items_processed": 8,
-    "last_item_hash": "d947b4d4",
-    "last_save_time": 1777837044.1293418
+    "total_items_processed": 1,
+    "last_item_hash": "9ee8eff9",
+    "last_save_time": 1778439615.98132
   },
   "stats": {
     "defs_learned": 0,
@@ -18,9 +18,9 @@
     "memory_commits": 0,
     "quarantined": 0,
     "rejected": 0,
-    "session_start": 1777837044.1293454,
-    "total_save_count": 1144
+    "session_start": 1778439615.9813228,
+    "total_save_count": 1
   },
-  "timestamp": 1778378406.980052,
-  "checksum": "9841e53c200f4f2099d697e78a2afba1"
+  "timestamp": 1778440216.1640604,
+  "checksum": "f37dd52c54bd6681c8663319a65ed5dd"
 }

@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1778410171.9432352,
-  "generation": 0,
-  "genome_version": 0,
+  "timestamp": 1778440472.5507233,
+  "generation": 47,
+  "genome_version": 47,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -11,60 +11,71 @@
     "empathic-resonance",
     "boundary-awareness"
   ],
-  "total_alleles": 0,
-  "identity_anchors": [],
+  "total_alleles": 20,
+  "identity_anchors": [
+    "When I use curious inquiry, conversations tend to deepen"
+  ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.6,
-    "caution": 0.5,
-    "emotional_expressiveness": 0.5,
-    "verbosity": 0.5,
-    "introspection": 0.6,
-    "pattern_sensitivity": 0.5,
-    "social_engagement": 0.5,
-    "energy_conservation": 0.4
+    "curiosity": 0.7673,
+    "caution": 0.7116,
+    "emotional_expressiveness": 0.5357,
+    "verbosity": 0.6685,
+    "introspection": 0.6485,
+    "pattern_sensitivity": 0.6151,
+    "social_engagement": 0.6073,
+    "energy_conservation": 0.3344
   },
-  "personality_drift": 0.0,
+  "personality_drift": 0.9195,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6,
-      "precision": 0.5,
-      "depth": 0.5,
-      "confidence": 0.5
+      "warmth": 0.7173799694061097,
+      "precision": 0.7667718601871298,
+      "depth": 0.44199999999999995,
+      "confidence": 0.5765270655485689
     },
     "cognitive": {
-      "curiosity": 0.6,
-      "pattern_matching": 0.5,
-      "abstraction": 0.4,
-      "risk_assessment": 0.5
+      "curiosity": 0.7894884428895247,
+      "pattern_matching": 0.6355031549371253,
+      "abstraction": 0.46728090392247423,
+      "risk_assessment": 0.8021813805370446
     },
     "social": {
-      "empathy": 0.6,
-      "trust_extension": 0.5,
-      "boundary_maintenance": 0.5,
-      "engagement": 0.5
+      "empathy": 0.807969929432977,
+      "trust_extension": 0.7127756174507248,
+      "boundary_maintenance": 0.5513216508288579,
+      "engagement": 0.5610850284337553
     }
   },
   "governance_stats": {
-    "total_nodes": 0,
+    "total_nodes": 978,
     "layers": {
       "DNA": 0,
-      "ENERGY": 0,
+      "ENERGY": 978,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 0,
+    "total_ingested": 978,
     "total_promoted": 0,
     "violations_blocked": 0,
     "axis_conflicts": {}
   },
-  "simulation_epochs": 0,
-  "total_episodes": 0,
-  "understanding_shards": 0,
-  "what_aurora_learned": [],
-  "time_dilation": 3000.0,
+  "simulation_epochs": 4,
+  "total_episodes": 28,
+  "understanding_shards": 34,
+  "what_aurora_learned": [
+    "When I use thoughtful reflection, conversations tend to deepen",
+    "When I use curious inquiry, conversations tend to deepen",
+    "When I use warm acknowledgment, conversations tend to deepen",
+    "When I use deep exploration, conversations tend to deepen",
+    "When I use curious inquiry, conversations tend to deepen",
+    "When I use curious inquiry, conversations tend to deepen",
+    "When I use empathetic resonance, conversations tend to deepen",
+    "When I use direct clarity, conversations tend to deepen"
+  ],
+  "time_dilation": 10000000.0,
   "stability_state": "stable",
-  "_checksum": "1be48bcc8ed6"
+  "_checksum": "a3b663c705d2"
 }
