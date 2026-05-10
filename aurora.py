@@ -3312,10 +3312,11 @@ def _evolutionary_response_refinement(
             refined = f"{refined} {reflective}"
 
     # Keep responses bounded by evolving sentence target (avoid runaway verbosity).
-    max_words = max(18, min(60, sentence_target * 2))
-    words = refined.split()
-    if len(words) > max_words:
-        refined = " ".join(words[:max_words]).rstrip(' ,;') + "..."
+    # REMOVED CAP: Allow comprehensive responses as requested by user.
+    # max_words = max(18, min(60, sentence_target * 2))
+    # words = refined.split()
+    # if len(words) > max_words:
+    #     refined = " ".join(words[:max_words]).rstrip(' ,;') + "..."
 
     try:
         from aurora_articulation import smooth_with_decision
