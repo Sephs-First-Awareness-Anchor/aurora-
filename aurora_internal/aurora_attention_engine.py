@@ -64,6 +64,16 @@ class AttentionFrame:
     state: AttentionState
     heat: float = 0.0            # Normalized intensity of this frame (0-1)
 
+@dataclass
+class WillIntent:
+    """An uncommitted intention formed by the Attention Engine."""
+    class_name: str # e.g. "curiosity", "grounding", "agency"
+    tool_name: Optional[str]
+    goal: str
+    resonance: float
+    trigger_axes: List[str]
+    timestamp: float = field(default_factory=time.time)
+
 class AttentionEngine:
     def __init__(self, threshold: float = 0.55):
         self.threshold = threshold
@@ -127,6 +137,46 @@ class AttentionEngine:
         self._record_history(frame)
         return frame
 
+    def generate_will(self) -> Optional[WillIntent]:
+        """
+        Formulate an uncommitted intention based on current resonance.
+        'Attention -> Intention'
+        """
+        if not self.current_frame or self.current_frame.resonance < 0.4:
+            return None
+            
+        f = self.current_frame
+        axes_keys = [c.name for c in f.focus_axes]
+        
+        # Mapping focus to intention class
+        intent_class = "curiosity"
+        tool_suggestion = None
+        goal = "Explore high-salience event"
+        
+        if "X" in axes_keys:
+            intent_class = "grounding"
+            tool_suggestion = "self_state"
+            goal = "Ground state to existence mode"
+        elif "N" in axes_keys:
+            intent_class = "self_check"
+            tool_suggestion = "mobile_battery"
+            goal = "Assess energetic cost"
+        elif "A" in axes_keys:
+            intent_class = "agency"
+            tool_suggestion = "corpus_hunter"
+            goal = "Initiate autonomous expansion"
+        elif "B" in axes_keys:
+            intent_class = "environmental"
+            tool_suggestion = "mobile_location"
+            goal = "Verify boundary constraints"
+
+        return WillIntent(
+            class_name=intent_class,
+            tool_name=tool_suggestion,
+            goal=goal,
+            resonance=f.resonance,
+            trigger_axes=axes_keys
+        )
     def _record_history(self, frame: AttentionFrame):
         self.history.append(frame)
         if len(self.history) > self._max_history:

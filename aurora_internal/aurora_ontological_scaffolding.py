@@ -213,6 +213,7 @@ class SemanticNode:
 
     # Cluster membership
     cluster_ids: Set[str] = field(default_factory=set)
+    associated_axes: List[str] = field(default_factory=list) # X, T, N, B, A
 
     # Learning history
     times_encountered: int = 0
@@ -605,6 +606,16 @@ class OntologicalWeb:
 
     def has_node(self, word: str) -> bool:
         return word in self.nodes
+
+    def get_nodes_by_axis(self, axis: str, limit: int = 5) -> List[SemanticNode]:
+        """Find concepts linked to a specific physical constraint axis."""
+        matches = []
+        for node in self.nodes.values():
+            if axis in node.associated_axes:
+                matches.append(node)
+        
+        matches.sort(key=lambda n: n.ontological_depth, reverse=True)
+        return matches[:limit]
 
     # ================================================================
     # RELATION MANAGEMENT
