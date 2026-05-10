@@ -371,7 +371,7 @@ class AuroraApp(App):
             
         elif state == "BACKGROUND":
             self.orb.opacity_val = 0.5
-            self.orb.size = (120, 120) if platform != 'android' else (0,0) # Hide kivy orb if native overlay is active
+            self.orb.size = (120, 120) if platform != 'android' else (0, 0)
             self.orb.pos_hint = {'right': 0.95, 'top': 0.85}
             self.chat_layer.opacity = 0
             self.bottom_toolbar.opacity = 1
@@ -382,10 +382,10 @@ class AuroraApp(App):
             if self.mic_btn.state == 'normal':
                 self.mic_btn.state = 'down'
                 self.toggle_mic(self.mic_btn)
-            
+
         elif state == "SUMMONED":
             self.orb.opacity_val = 0.9
-            self.orb.size = (300, 300) if platform != 'android' else (0,0)
+            self.orb.size = (250, 250)  # Always show Kivy orb in-app, even on Android
             self.orb.pos_hint = {'center_x': 0.5, 'center_y': 0.6}
             self.chat_layer.opacity = 1
             self.bottom_toolbar.opacity = 1
@@ -398,10 +398,12 @@ class AuroraApp(App):
 
     def _start_native_overlay(self):
         try:
-            from jnius import autoclass
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            Intent = autoclass('android.content.Intent')
+            Settings = autoclass('android.provider.Settings')
             activity = PythonActivity.mActivity
+            if not Settings.canDrawOverlays(activity):
+                self.set_status("Need 'Draw over other apps' permission")
+                self.check_overlay_permission()
+                return
             intent = Intent()
             intent.setClassName(activity.getPackageName(), "org.aurora.aurora.OverlayService")
             activity.startService(intent)
