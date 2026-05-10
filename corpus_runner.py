@@ -951,10 +951,10 @@ class LearningCadence:
                  heartbeat_every: int = 5,
                  identity_every: int = 50,
                  voice_every: int = 50,
-                 consolidation_every: int = 300,
+                 consolidation_every: int = 50, # Frequent consolidation
                  simulation_every: int = 500,
-                 save_every: int = 1000,
-                 evolve_every: int = 100):
+                 save_every: int = 10, # SAVE EVERY 10 MESSAGES
+                 evolve_every: int = 50):
         self.heartbeat_every = heartbeat_every
         self.identity_every = identity_every
         self.voice_every = voice_every
@@ -1129,6 +1129,8 @@ def run_corpus_ingestion(
                 print(f"  [SAVE] at message {counter:,}")
             aurora.save_state()
             _save_oets(systems, verbose=verbose)
+            if systems.get("perception"):
+                systems["perception"].save_lexicon()
 
     # Checkpoint reference (from systems or boot_aurora)
     _checkpoint = systems.get("checkpoint")
@@ -1377,6 +1379,8 @@ def run_corpus_ingestion(
 
     aurora.save_state()
     _save_oets(systems, verbose=verbose)
+    if systems.get("perception"):
+        systems["perception"].save_lexicon()
 
     if verbose:
         print("  [CORPUS] Ingestion complete.\n")

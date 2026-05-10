@@ -950,9 +950,9 @@ class TimeDilationGovernor:
     MAX_DILATION = 10_000_000.0
     START_DILATION = 3000.0
 
-    RAMP_UP_RATE = 1.15
-    THROTTLE_RATE = 0.7
-    EMERGENCY_RATE = 0.75       # was 0.4 — softened so critical events don't crater instantly
+    RAMP_UP_RATE = 1.85 # Increased from 1.15 to speed up training
+    THROTTLE_RATE = 0.8
+    EMERGENCY_RATE = 0.85
 
     CRITICAL_FITNESS = 0.2
     UNSTABLE_VARIANCE = 0.15

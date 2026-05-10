@@ -1,6 +1,6 @@
 {
   "heat": "COOL",
-  "updated": "13:38:39",
+  "updated": "15:20:13",
   "runtime_profile": "subsurface",
   "stratum_role": "subsurface",
   "browser_today": "disabled",
@@ -18,7 +18,7 @@
     "B": 1.0,
     "A": 1.0
   },
-  "dilation_factor": 1.322,
+  "dilation_factor": 9.358,
   "dilation_state": "optimal",
   "telemetry_fails": [],
   "telemetry_weakest": "?",
@@ -27,8 +27,8 @@
   "fail_summary": [
     {
       "dim": "context_carryover",
-      "fails": 777,
-      "avg_sev": 0.478
+      "fails": 786,
+      "avg_sev": 0.476
     },
     {
       "dim": "implied_intent_inference",
@@ -60,41 +60,41 @@
   "interaction_quasi_ready": false,
   "interaction_observed_effect": "resolved_partially",
   "interaction_quasi_count": 0,
-  "runtime_governor_mode": "survival",
+  "runtime_governor_mode": "open",
   "runtime_governor_axes": {
-    "X": 0.7498,
+    "X": 1.0,
     "T": 1.0,
-    "N": 0.932,
-    "B": 0.5611,
+    "N": 1.0,
+    "B": 1.0,
     "A": 1.0
   },
   "runtime_energy_balance": {
     "raw_N": 1.0,
-    "xt_support": 0.8381,
-    "temporal_maturity": 0.5074,
-    "balanced_N": 0.932
+    "xt_support": 1.0,
+    "temporal_maturity": 1.0,
+    "balanced_N": 1.0
   },
   "runtime_host": {
     "cpu_count": 4,
-    "load_1m": 10.0015,
-    "load_5m": 6.1396,
-    "load_ratio": 2.5,
-    "mem_available_mb": 1180.55,
-    "mem_pressure": 0.691,
-    "disk_free_ratio": 0.0742,
-    "process_rss_mb": 59.49
+    "load_1m": 0.9395,
+    "load_5m": 0.9292,
+    "load_ratio": 0.2349,
+    "mem_available_mb": 742.3,
+    "mem_pressure": 0.8057,
+    "disk_free_ratio": 0.0613,
+    "process_rss_mb": 149.63
   },
   "runtime_recent_blocked": [],
-  "runtime_last_heavy_run_age": 553.6,
-  "generation": 5,
+  "runtime_last_heavy_run_age": 108.7,
+  "generation": 65,
   "sensory_mic_active": true,
-  "sensory_camera_active": false,
-  "surface_snapshot_at": 1778261917.7956765,
+  "sensory_camera_active": true,
+  "surface_snapshot_at": 1778354409.0669653,
   "surface_snapshot_trigger": "interval",
   "surface_snapshot_flagged": false,
   "surface_snapshot_reason": "",
-  "surface_snapshot_summary": "Surface is tracking live audio. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
-  "surface_snapshot_age_s": 1.86,
+  "surface_snapshot_summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+  "surface_snapshot_age_s": 4.88,
   "subsurface_repair_phase": "enforce",
   "subsurface_repair_issue": "semantic_precision",
   "subsurface_repair_reason": "subsurface is moving from research into corrective pressure",

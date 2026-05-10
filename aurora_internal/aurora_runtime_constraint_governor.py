@@ -485,10 +485,10 @@ class RuntimeConstraintGovernor:
         n_budget = float(budgets["axes"].get("N", 0.5))
         t_budget = float(budgets["axes"].get("T", 0.5))
         if n_budget < 0.25 or t_budget < 0.25:
-            return 30.0
+            return 5.0 # Reduced from 30.0
         if n_budget < 0.45 or t_budget < 0.40:
-            return 20.0
-        return 15.0
+            return 2.0 # Reduced from 20.0
+        return 0.5 # Reduced from 15.0
 
     def status(self) -> Dict[str, Any]:
         recent = list(self._decision_history)[-12:]
