@@ -777,10 +777,10 @@ def _corpus_hunter(topic: str = "", systems: Optional[Dict[str, Any]] = None, **
 
 _reg("corpus_hunter",  "Autonomously search the web for raw datasets on a topic and download them", "PERSISTENT", _corpus_hunter, disables_search=False)
 
-    if not corpus_name: return ToolResult("corpus_train", "", False, "corpus_name required")
+        if not corpus_name: return ToolResult("corpus_train", "", False, "corpus_name required")
     
     corp_path = Path(__file__).resolve().parents[1] / "aurora_state" / "corpora" / corpus_name
-    if not corp_path.exists():
+        if not corp_path.exists():
         return ToolResult("corpus_train", "", False, f"Corpus {corpus_name} not found in storage.")
     
     try:
