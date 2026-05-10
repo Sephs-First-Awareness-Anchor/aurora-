@@ -41,7 +41,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy==2.3.0,hostpython3,requests,numpy,opencv,beautifulsoup4,plyer,aiohttp,edge-tts
+requirements = python3,kivy==2.3.0,hostpython3,requests,numpy,opencv,beautifulsoup4,plyer,aiohttp,edge-tts,pyjnius
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -98,7 +98,7 @@ fullscreen = 0
 #icon.adaptive_background.filename = %(source.dir)s/data/icon_bg.png
 
 # (list) Permissions
-android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECORD_AUDIO,MODIFY_AUDIO_SETTINGS,WAKE_LOCK,ACCESS_FINE_LOCATION,POST_NOTIFICATIONS,SEND_SMS,CALL_PHONE,READ_CONTACTS,VIBRATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,SYSTEM_ALERT_WINDOW
+android.permissions = INTERNET,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE,CAMERA,RECORD_AUDIO,MODIFY_AUDIO_SETTINGS,WAKE_LOCK,ACCESS_FINE_LOCATION,POST_NOTIFICATIONS,SEND_SMS,CALL_PHONE,READ_CONTACTS,VIBRATE,ACCESS_WIFI_STATE,CHANGE_WIFI_STATE,SYSTEM_ALERT_WINDOW,FOREGROUND_SERVICE,FOREGROUND_SERVICE_SPECIAL_USE
 
 # (list) features (adds uses-feature -tags to manifest)
 #android.features = android.hardware.usb.host
@@ -151,7 +151,7 @@ android.accept_sdk_license = True
 
 # (str) Extra xml to write directly inside the <manifest><application> tag of AndroidManifest.xml
 # use that parameter to provide a filename from where to load your custom XML arguments:
-#android.extra_manifest_application_arguments = ./src/android/extra_manifest_application_arguments.xml
+android.extra_manifest_application_arguments = src/android/manifest/service.xml
 
 # (str) Full name including package path of the Java class that implements Python Service
 # use that parameter to set custom Java class which extends PythonService
@@ -183,7 +183,7 @@ android.add_src = src/android/java
 android.add_resources = src/android/res
 
 # (list) List of services to declare
-services = AuroraOverlay:org.aurora.OverlayService
+#services = NAME:ENTRYPOINT_TO_PY,NAME2:ENTRYPOINT2_TO_PY
 
 # (list) Gradle dependencies to add
 #android.gradle_dependencies =
