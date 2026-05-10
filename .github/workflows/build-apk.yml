@@ -23,24 +23,33 @@ jobs:
           restore-keys: |
             buildozer-${{ runner.os }}-
 
-      - name: Install Android SDK platform 33
+      - name: Install Android command line tools and API 33
         run: |
           set -e
 
-          SDKMANAGER="$(find / -name sdkmanager -type f 2>/dev/null | head -n 1)"
-          echo "Found sdkmanager at: $SDKMANAGER"
+          apt-get update
+          apt-get install -y wget unzip
 
-          if [ -z "$SDKMANAGER" ]; then
-            echo "sdkmanager not found"
-            exit 1
-          fi
+          export ANDROID_HOME="$HOME/.buildozer/android/platform/android-sdk"
+          export ANDROIDSDK="$ANDROID_HOME"
 
-          yes | "$SDKMANAGER" --licenses || true
-          "$SDKMANAGER" "platforms;android-33" "build-tools;33.0.2"
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O /tmp/cmdline-tools.zip
+          unzip -q /tmp/cmdline-tools.zip -d /tmp/android-cmdline-tools
+
+          rm -rf "$ANDROID_HOME/cmdline-tools/latest"
+          mkdir -p "$ANDROID_HOME/cmdline-tools/latest"
+          mv /tmp/android-cmdline-tools/cmdline-tools/* "$ANDROID_HOME/cmdline-tools/latest/"
+
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" --licenses || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" "platforms;android-33" "build-tools;33.0.2"
 
       - name: Build with Buildozer
         env:
           BUILDOZER_WARN_ON_ROOT: 0
+          ANDROID_HOME: /github/home/.buildozer/android/platform/android-sdk
+          ANDROIDSDK: /github/home/.buildozer/android/platform/android-sdk
         run: |
           buildozer -v android debug
 
