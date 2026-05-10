@@ -470,14 +470,14 @@ class ConsciousLearner:
                                obs: ConversationObservation) -> str:
         concept_name = selected.primary_concept.value.replace('_', ' ')
         if obs.avatar_engaged and obs.conversation_deepened:
-            return f"When I use {concept_name}, conversations tend to deepen"
+            return f"action; {concept_name}; conversations; deepen; connection"
         if obs.connection_felt_stronger:
-            return f"{concept_name.capitalize()} helps build connection"
+            return f"fact; {concept_name}; build; connection; presence"
         if obs.tension_arose:
-            return f"{concept_name.capitalize()} can create tension — use carefully"
+            return f"state; {concept_name}; tension; caution; boundary"
         if obs.avatar_pulled_back:
-            return f"{concept_name.capitalize()} may push people away in this context"
-        return f"I noticed something when using {concept_name}"
+            return f"state; {concept_name}; distance; avoid; impact"
+        return f"fact; noticed; {concept_name}; use; reflection"
 
     def _find_similar(self, concept: ResponseConcept,
                       context_type: str) -> Optional[UnderstandingShard]:

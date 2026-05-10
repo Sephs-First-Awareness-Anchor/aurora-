@@ -7838,14 +7838,24 @@ def _repair_unarticulated_surface_response(
         return normalized
 
     if ("doesn't answer" in user_low or "does not answer" in user_low or has_unbound_contraction) and has_context_need:
-        if open_phrase:
-            return f"That does not answer your question. Context continuity is needed around '{open_phrase} ...'."
-        return "That does not answer your question. Context continuity is needed before I can answer it."
+        # Generative context failure response
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="inquiry", emotion_tone="reflective")
+        _f_fragments = f"action; clarification; context; needed; {open_phrase or 'this'}"
+        try:
+            return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+        except Exception:
+            return normalized
 
-    if has_context_need and open_phrase:
-        return f"Context continuity is needed around '{open_phrase} ...'."
     if has_context_need:
-        return "Context continuity is needed before I can answer it."
+        # Generative context failure response
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="inquiry", emotion_tone="reflective")
+        _f_fragments = f"action; context; missing; {open_phrase or 'understanding'}"
+        try:
+            return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+        except Exception:
+            return normalized
 
     if parts:
         rebound = ". ".join(parts)
@@ -20524,7 +20534,17 @@ def _run_reasoning_pipeline(
     validation = gw._validate(packet, mode)
     if getattr(validation, "verdict", None) is not None and str(validation.verdict).endswith("REJECTED"):
         gw.total_rejected += 1
-        return _MiniResp("I cannot process this input -- it conflicts with my core principles.", "firm", 0.9), None, offered_lookup
+        # Generative rejection
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="action", emotion_tone="firm")
+        _f_fragments = "action; reject; conflict; principle; boundary"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            if _f_text:
+                return _MiniResp(_f_text, "firm", 0.9), None, offered_lookup
+        except Exception:
+            pass
+        return None, None, offered_lookup
     processed2 = getattr(validation, "filtered_content", None) or processed
     if str(getattr(validation, "verdict", "") or "").endswith("FILTERED"):
         gw.total_filtered += 1

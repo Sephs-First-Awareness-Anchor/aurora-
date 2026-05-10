@@ -1130,7 +1130,7 @@ class EnergyRegulatorSystem:
     CATEGORIES = ('vitality', 'processing', 'memory', 'emotional', 'creative')
 
     def __init__(self, tracker: EvolutionTracker, total_budget: float = 25.0,
-                 decay_rate: float = 0.15):
+                 decay_rate: float = 0.06):
         self.tracker = tracker
         self.total_budget = total_budget
         self.base_decay_rate = decay_rate
