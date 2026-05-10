@@ -1933,10 +1933,12 @@ def _generate_identity_response(text: str, core_identity: CoreRelationalIdentity
                              "what are you", "tell me about yourself",
                              "describe yourself", "explain yourself",
                              "your name", "what is your name")):
-        return core_identity.who_am_i()
+        # REMOVED HARDCODED FALLBACK
+        return None
 
     if _is_second_person_self_question(t):
-        return core_identity.who_am_i()
+        # REMOVED HARDCODED FALLBACK
+        return None
 
     # "Who made you?" / "Who created you?"
     if any(m in t for m in ("who made you", "who created you", "who built you",
@@ -3800,8 +3802,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 return (candidate, "self-aware", float(realized.get("confidence", 0.9) or 0.9))
         except Exception:
             pass
-        if core_identity:
-            return (core_identity.who_am_i(), "self-aware", 0.9)
+        # REMOVED HARDCODED FALLBACK
         return (None, None, None)
 
     if core_identity and _is_aurora_self_question(user_text):
@@ -3809,7 +3810,8 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             pipeline_state["routing_classification"] = "self_question"
         if _is_understanding_query(user_text):
             return (None, None, None)
-        return (core_identity.who_am_i(), "self-aware", 0.9)
+        # REMOVED HARDCODED FALLBACK
+        return (None, None, None)
 
     _math_answer = _try_direct_arithmetic(user_text)
     if _math_answer:
