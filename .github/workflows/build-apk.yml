@@ -25,9 +25,9 @@ jobs:
   
     - name: Install Android SDK platform 33
       run: |
-       yes | $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager --licenses
-       $ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
-   
+       yes | $ANDROIDSDK/tools/bin/sdkmanager --licenses
+       $ANDROIDSDK/tools/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
+  
     - name: Build with Buildozer
       run: |
         # The container already has buildozer and all dependencies.
