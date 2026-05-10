@@ -25,11 +25,11 @@ jobs:
   
     - name: Find sdkmanager
       run: |
-       find "$HOME/.buildozer" -name sdkmanager -type f
+       find ".buildozer" -name sdkmanager -type f
  
     - name: Install Android SDK platform 33
       run: |
-       export ANDROIDSDK="$HOME/.buildozer/android/platform/android-sdk"
+       export ANDROIDSDK=".buildozer/android/platform/android-sdk"
        yes | "$ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager" --licenses
        "$ANDROIDSDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-33" "build-tools;33.0.2"
   
