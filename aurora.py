@@ -5988,9 +5988,25 @@ def dual_question_pipeline(
                 tick=_tick_val,
             ))
 
-        # 5. Integrate — produces ThoughtState BEFORE candidates run
+        # 4. Integrate — produces ThoughtState BEFORE candidates run
         _raw_thought = _space.integrate()
         _thought_state = get_continuity().carry_forward(_raw_thought)
+
+        # ---- NEW: UNIVERSAL PASS 2 SEMANTIC REASONING -----------
+        # We now run semantic interpretation on EVERY turn to ensure Aurora
+        # is always thinking in concepts, not just raw axis vectors.
+        if systems.get("dpme") and perception and perception.oets:
+            try:
+                # Narrow reasoning focus based on current dominant pressure
+                _dom = _axis_projector.dominant(_raw_thought.constraint_vector.values)
+                systems["dpme"].apply_attentional_guidance(1.0, [_dom])
+                systems["dpme"].resolve_semantic_tension(perception.oets)
+                _sem = getattr(systems["dpme"], "_semantic_context", {})
+                if _sem:
+                    # Store it so L5 and candidates can access the abstract context
+                    systems["_latest_semantic_interpretation"] = _sem
+            except Exception:
+                pass
 
         # Store on systems so candidate paths and tools can access it
         systems["_active_thought_state"] = _thought_state
@@ -6041,11 +6057,8 @@ def dual_question_pipeline(
         f_log.write(f"Comprehension done. text: {bool(comp_text)}\n")
         f_log.write("Calling _select_tool...\n")
     if comp_text:
-        voice_mode_active = os.environ.get("AURORA_VOICE_MODE_ACTIVE", "").strip().lower() in ("1", "true", "yes", "on")
-        if voice_mode_active and intent not in {"greeting", "fact_assertion", "name_question", "recall_question"} and not is_self_question:
-            comp_text = ""
-        elif voice_mode_active and len(comp_text.split()) < 4 and intent not in {"greeting", "fact_assertion"}:
-            comp_text = ""
+        # LOGGING
+        pass # Keep comp_text intact to allow responding in voice mode
 
     comp_cand = None
     if comp_text:

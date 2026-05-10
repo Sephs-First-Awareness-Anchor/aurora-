@@ -72,7 +72,7 @@ _SKIP_HARDWARE_IMPORTS = _env_flag("AURORA_SKIP_HARDWARE_IMPORTS")
 _OETS_AVAILABLE = False
 if not _SKIP_OETS_IMPORTS:
     try:
-        from aurora_ontological_scaffolding import (
+        from aurora_internal.aurora_ontological_scaffolding import (
             OntologicalScaffoldingEngine, ResearchResult
         )
         _OETS_AVAILABLE = True
@@ -83,7 +83,7 @@ if not _SKIP_OETS_IMPORTS:
 _LANG_STATE_AVAILABLE = False
 if not _SKIP_LANG_IMPORTS:
     try:
-        from aurora_language_state import (
+        from aurora_internal.aurora_language_state import (
             ExpressionEvolutionOrchestra, LSVMetrics
         )
         _LANG_STATE_AVAILABLE = True
@@ -850,7 +850,6 @@ class LexicalMemory:
     def save(self, path: str = "aurora_state/lexicon.json"):
         """Save the lexicon to disk."""
         try:
-            # print(f"  [LEX] Saving {len(self.entries)} words to {path}")
             data = {
                 "version": "1.0",
                 "entries": {
@@ -860,14 +859,17 @@ class LexicalMemory:
                         "emotional_valence": e.emotional_valence,
                         "lineage": e.lineage,
                         "usage_count": e.usage_count,
-                        "creation_ts": e.creation_ts
+                        "last_used": e.last_used,
                     } for w, e in self.entries.items()
                 }
             }
-            with open(path, "w", encoding="utf-8") as f:
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=2)
+            os.replace(tmp, path)
             return True
-        except Exception:
+        except Exception as exc:
+            print(f"  [LEX] save failed: {exc}")
             return False
 
     def load(self, path: str = "aurora_state/lexicon.json"):
@@ -884,11 +886,11 @@ class LexicalMemory:
                         word=w,
                         meaning=d.get("meaning", ""),
                         role=d.get("role", "noun"),
-                        valence=d.get("emotional_valence", 0.0),
+                        emotional_valence=d.get("emotional_valence", 0.0),
                         lineage=d.get("lineage", "unknown")
                     )
                     self.entries[w].usage_count = d.get("usage_count", 0)
-                    self.entries[w].creation_ts = d.get("creation_ts", time.time())
+                    self.entries[w].last_used = d.get("last_used", d.get("creation_ts", time.time()))
             return True
         except Exception:
             return False
@@ -2238,7 +2240,7 @@ class SentenceComposer:
         # Co-occurrence bonding: words in successful expressions
         # get relational connections strengthened
         if fitness >= 0.55 and len(words) >= 2:
-            from aurora_ontological_scaffolding import RelationType
+            from aurora_internal.aurora_ontological_scaffolding import RelationType
             content_words = [w for w in words
                             if web.has_node(w) and infer_word_role(w) in
                             ('verb', 'noun', 'adjective')]
@@ -3589,7 +3591,7 @@ def verify_layer5():
 
         # Check co-expression bonding
         if len(pre_feedback_words) >= 2:
-            from aurora_ontological_scaffolding import RelationType
+            from aurora_internal.aurora_ontological_scaffolding import RelationType
             content = [w for w in pre_feedback_words
                        if oets.web.has_node(w) and
                        infer_word_role(w) in ('verb', 'noun', 'adjective')]
@@ -3795,7 +3797,7 @@ from aurora_behavioral_identity import (
 # OETS for semantic grounding (optional)
 _OETS_AVAILABLE = False
 try:
-    from aurora_ontological_scaffolding import (
+    from aurora_internal.aurora_ontological_scaffolding import (
         OntologicalScaffoldingEngine, SemanticNode, SemanticRelation, RelationType
     )
     _OETS_AVAILABLE = True
