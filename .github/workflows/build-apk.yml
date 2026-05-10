@@ -15,11 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clear Buildozer Cache
+        run: rm -rf .buildozer
+
       - name: Cache Buildozer directory
         uses: actions/cache@v4
         with:
           path: .buildozer
-          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec', 'src/android/manifest/service.xml') }}
           restore-keys: |
             buildozer-${{ runner.os }}-
 
