@@ -678,4 +678,54 @@ class AuroraApp(App):
             # Otherwise, route to LLM
             result = process_external_user_turn(self.systems, user_text)
             resp_A = result.get('resp_A')
-            content = getattr(resp_A, 'content', '...') if resp_A else '..
+            content = getattr(resp_A, 'content', '...') if resp_A else '...'
+
+            # Extract axis activation for orb color shifting
+            activation = result.get('noncomp_output', {}).get('axis_activation', {})
+
+            Clock.schedule_once(lambda dt: self.on_aurora_response(content, update_orb=True, activation=activation), 0)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            Clock.schedule_once(lambda dt: self.on_aurora_response(f"Error: {str(e)}"), 0)
+
+    def on_aurora_response(self, content, update_orb=False, activation=None):
+        self.add_bubble(content, "aurora")
+        self.set_status("Aurora is Online")
+        if update_orb and activation:
+            self.orb.update_state(activation)
+
+        if self.voice_enabled:
+            threading.Thread(target=self.speak_thread, args=(content,), daemon=True).start()
+
+    def speak_thread(self, text):
+        # Pause listening while speaking to prevent an echo loop
+        was_listening = (self.mic_btn.state == 'down')
+        if was_listening:
+            self.stop_listening()
+            self.set_status("Speaking...")
+
+        if tts:
+            try:
+                # Local system TTS via plyer
+                tts.speak(text)
+
+                # Increase duration estimate to ensure she doesn't hear herself
+                duration_s = max(1.5, len(text.split()) * 0.5)
+                if was_listening:
+                    time.sleep(duration_s)
+
+            except Exception:
+                pass
+
+        # Resume listening
+        if was_listening:
+            Clock.schedule_once(lambda dt: self.start_listening(), 0.8)
+
+    def add_bubble(self, text, sender):
+        bubble = ChatBubble(text=text, sender=sender)
+        self.chat_log.add_widget(bubble)
+        Clock.schedule_once(lambda dt: setattr(self.scroll, 'scroll_y', 0), 0.1)
+
+if __name__ == '__main__':
+    AuroraApp().run()
