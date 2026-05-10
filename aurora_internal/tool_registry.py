@@ -777,9 +777,6 @@ def _corpus_hunter(topic: str = "", systems: Optional[Dict[str, Any]] = None, **
 
 _reg("corpus_hunter",  "Autonomously search the web for raw datasets on a topic and download them", "PERSISTENT", _corpus_hunter, disables_search=False)
 
-    """Trigger a training loop on a previously downloaded corpus file."""
-    from pathlib import Path
-    import threading
     if not corpus_name: return ToolResult("corpus_train", "", False, "corpus_name required")
     
     corp_path = Path(__file__).resolve().parents[1] / "aurora_state" / "corpora" / corpus_name
