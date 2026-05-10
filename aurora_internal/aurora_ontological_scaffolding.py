@@ -1906,9 +1906,13 @@ class OntologicalScaffoldingEngine:
         if len(content_words) >= 2:
             self.web.infer_relations_from_context(content_words, tone)
 
-        # Enhancement: Relational Comparison Loop
+        # Enhancement: Relational Comparison Loop (Optimized for speed)
         if self.comparison_engine:
-            for word in content_words:
+            # Sort words by depth and take only the top 3 to prevent processing bottlenecks
+            sorted_words = sorted(content_words, 
+                                  key=lambda w: self.web.nodes[w].ontological_depth, 
+                                  reverse=True)[:3]
+            for word in sorted_words:
                 # 1. Select the best target (context word or 'self')
                 target = self.comparison_engine.select_best_comparison_target(word, content_words)
                 

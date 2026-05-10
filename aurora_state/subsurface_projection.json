@@ -1,14 +1,14 @@
 {
   "source": "subsurface_daemon",
-  "generated_at": 1778261919.6581187,
+  "generated_at": 1778354413.9476533,
   "dominant_axis_hint": "X",
-  "governor_mode": "survival",
-  "readiness_bias": 0.28,
+  "governor_mode": "open",
+  "readiness_bias": 0.52,
   "surface_guidance": "Surface should feel careful around interpretation while subsurface sharpens the boundary problem. The caution should start easing because the issue is moving toward remedy.",
   "present_sensory_perspective": {
-    "summary": "Surface is tracking live audio. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
     "mic_live": true,
-    "camera_live": false,
+    "camera_live": true,
     "scope": "constant_surface_feed",
     "trigger": "interval",
     "flagged": false
@@ -37,11 +37,6 @@
       "summary": "Deeper structural repair is already underway below awareness."
     },
     {
-      "label": "slow_down",
-      "weight": 0.55,
-      "summary": "Use a lighter present-frame response while resources are tight."
-    },
-    {
       "label": "clarify",
       "weight": 0.58,
       "summary": "The unease is boundary-shaped; clarify before committing hard to meaning."
@@ -50,7 +45,6 @@
   "active_effects": [
     "the wrong-feeling is being remedied below the surface",
     "background repair pressure is still active",
-    "energy should stay economical",
     "recurring issue pressure around ?",
     "subsurface repair focus is semantic precision"
   ],
@@ -65,7 +59,7 @@
       "assimilation"
     ],
     "handoff_status": "researched",
-    "mem_available_mb": 1180.55,
+    "mem_available_mb": 742.3,
     "sensory_history_scope": "discard_after_processing",
     "continuity_scope": "durable_recall_and_consolidation",
     "surface_frame_dependency": "surface_flags_and_5s_snapshots"

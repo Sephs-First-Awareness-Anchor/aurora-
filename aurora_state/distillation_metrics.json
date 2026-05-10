@@ -1,18 +1,18 @@
 {
-  "timestamp": 1778260846.3605573,
-  "timestamp_str": "2026-05-08 13:20:46",
+  "timestamp": 1778350220.1376019,
+  "timestamp_str": "2026-05-09 14:10:20",
   "status": "idle",
   "summary": "idle",
   "trigger_snapshot": {
     "sizes": {
-      "surface_pressure": 3823881,
+      "surface_pressure": 3826749,
       "pressure_experiences": 545022,
-      "daemon_log": 419553
+      "daemon_log": 165719
     },
-    "total_state_bytes": 90643007,
+    "total_state_bytes": 90706078,
     "low_worth_density": 0.0125,
-    "der_load": 0.4072,
-    "latest_restorable_run_id": "20260508_071424",
+    "der_load": 0.406,
+    "latest_restorable_run_id": "20260509_131335",
     "triggers": {
       "log_size_threshold_exceeded": false,
       "high_low_worth_density": false,
@@ -37,6 +37,6 @@
   "archive_dir": "",
   "run_id": "",
   "restorable": true,
-  "latest_restorable_run_id": "20260508_071424",
+  "latest_restorable_run_id": "20260509_131335",
   "distillation_status": "idle"
 }

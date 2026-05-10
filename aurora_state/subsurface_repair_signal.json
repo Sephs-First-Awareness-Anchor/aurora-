@@ -1,6 +1,6 @@
 {
-  "updated_at": 1778260211.1141443,
-  "updated_at_str": "2026-05-08 13:10:11",
+  "updated_at": 1778354154.5500507,
+  "updated_at_str": "2026-05-09 15:15:54",
   "phase": "enforce",
   "issue": "semantic_precision",
   "reason": "subsurface is moving from research into corrective pressure",
@@ -11,8 +11,8 @@
     "fail_summary": [
       {
         "dim": "context_carryover",
-        "fails": 776,
-        "avg_sev": 0.478
+        "fails": 785,
+        "avg_sev": 0.476
       },
       {
         "dim": "implied_intent_inference",

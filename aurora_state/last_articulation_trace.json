@@ -1,28 +1,31 @@
 {
-  "original": "something whole want about the curiosity. There is something gentle here.",
+  "original": "mayor mothers it indeed rhymes they moving goatee maccabi everywhere through talkeentna. slang elephants it adopted vader they discriminating with against part through expression.",
   "candidate": "",
-  "selected": "something whole want about the curiosity. There is something gentle here.",
+  "selected": "mayor mothers it indeed rhymes they moving goatee maccabi everywhere through talkeentna. slang elephants it adopted vader they discriminating with against part through expression.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.86,
+  "original_score": 0.92,
   "candidate_score": 0.0,
-  "original_pressure": 0.398,
+  "original_pressure": 0.316,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.602,
+  "pressure_relief": -0.684,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "do you know who that is",
+    "prompt_excerpt": "That is crazy, can anyone even understand that?",
     "input_interpretation": {
-      "raw_prompt": "do you know who that is",
+      "raw_prompt": "That is crazy, can anyone even understand that?",
       "intent_hint": "question",
       "topic_terms": [
-        "know"
+        "crazy",
+        "anyone",
+        "even",
+        "understand"
       ],
       "entities": []
     },
-    "tone": "gentle",
+    "tone": "curious",
     "source": "unavailable",
     "model": "Models/qwen2.5-1.5b-instruct-q4_k_m.gguf",
-    "timestamp": 1778254159.8190207
+    "timestamp": 1778377733.9889417
   }
 }

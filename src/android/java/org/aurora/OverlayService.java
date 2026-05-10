@@ -28,7 +28,9 @@ public class OverlayService extends Service {
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         orbView = new ImageView(this);
-        // Assuming we created a drawable named orb_shape.xml
+        // Fallback color in case drawable is missing
+        orbView.setBackgroundColor(0x88A020F0); // Semi-transparent Purple
+        
         int id = getResources().getIdentifier("orb_shape", "drawable", getPackageName());
         if (id != 0) {
             orbView.setImageResource(id);
@@ -41,11 +43,13 @@ public class OverlayService extends Service {
             layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
         }
 
+        // Use fixed pixel size for the overlay to ensure it's visible
+        int size = (int) (80 * getResources().getDisplayMetrics().density);
+
         final WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
+                size, size,
                 layoutFlag,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.TRANSLUCENT);
 
         params.gravity = Gravity.TOP | Gravity.LEFT;

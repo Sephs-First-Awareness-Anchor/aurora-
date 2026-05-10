@@ -1,0 +1,40 @@
+{
+  "run_id": "20260509_131335",
+  "timestamp": 1778346815.6061141,
+  "timestamp_str": "2026-05-09 13:13:35",
+  "restored_at": "",
+  "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260509_131335",
+  "snapshot": {
+    "sizes": {
+      "surface_pressure": 3826749,
+      "pressure_experiences": 545022,
+      "daemon_log": 542571
+    },
+    "total_state_bytes": 90800570,
+    "low_worth_density": 0.0125,
+    "der_load": 0.406,
+    "latest_restorable_run_id": "20260509_020846",
+    "triggers": {
+      "log_size_threshold_exceeded": true,
+      "high_low_worth_density": false,
+      "genealogy_backlog": true,
+      "memory_saturation": false,
+      "der_load_increase": false,
+      "coherence_instability": false,
+      "quiet_window": false
+    },
+    "should_run": true
+  },
+  "results": [
+    {
+      "source": "daemon_log",
+      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/daemon.log",
+      "parser": "log",
+      "bytes_purged": 385473,
+      "records_purged": 6125,
+      "archive_file": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260509_131335/daemon_log.purged",
+      "status": "distilled"
+    }
+  ],
+  "restorable": true
+}

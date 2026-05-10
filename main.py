@@ -47,25 +47,30 @@ if platform == 'android':
     class AndroidSpeechListener(PythonJavaClass):
         __javainterfaces__ = ['android/speech/RecognitionListener']
 
-        def __init__(self, callback, rms_callback):
+        def __init__(self, callback, rms_callback, status_callback):
             super().__init__()
             self.callback = callback
             self.rms_callback = rms_callback
+            self.status_callback = status_callback
 
         @java_method('(Landroid/os/Bundle;)V')
-        def onReadyForSpeech(self, params): pass
+        def onReadyForSpeech(self, params):
+            self.status_callback("Ready...")
         @java_method('()V')
-        def onBeginningOfSpeech(self): pass
+        def onBeginningOfSpeech(self):
+            self.status_callback("Listening...")
         @java_method('(F)V')
         def onRmsChanged(self, rmsdB):
             self.rms_callback(rmsdB)
         @java_method('([B)V')
         def onBufferReceived(self, buffer): pass
         @java_method('()V')
-        def onEndOfSpeech(self): pass
+        def onEndOfSpeech(self):
+            self.status_callback("Processing...")
         @java_method('(I)V')
         def onError(self, error):
-            # Error codes: 7 = No match, 8 = Busy
+            # 7 = No match, 8 = Busy, 3 = Audio error, 5 = Client error
+            self.status_callback(f"Mic Error: {error}")
             self.callback(None, error=error)
         @java_method('(Landroid/os/Bundle;)V')
         def onResults(self, results):
@@ -73,7 +78,10 @@ if platform == 'android':
             if texts:
                 self.callback(texts.get(0))
         @java_method('(Landroid/os/Bundle;)V')
-        def onPartialResults(self, partialResults): pass
+        def onPartialResults(self, partialResults):
+            texts = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+            if texts:
+                self.status_callback(f"...{texts.get(0)}")
         @java_method('(ILandroid/os/Bundle;)V')
         def onEvent(self, eventType, params): pass
 
@@ -441,7 +449,7 @@ class AuroraApp(App):
         activity = PythonActivity.mActivity
         if not hasattr(self, 'recognizer') or self.recognizer is None:
             self.recognizer = SpeechRecognizer.createSpeechRecognizer(activity)
-            self.stt_listener = AndroidSpeechListener(self.on_stt_results_native, self.on_rms_changed)
+            self.stt_listener = AndroidSpeechListener(self.on_stt_results_native, self.on_rms_changed, self.set_status)
             self.recognizer.setRecognitionListener(self.stt_listener)
         
         intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -696,28 +704,24 @@ class AuroraApp(App):
         was_listening = (self.mic_btn.state == 'down')
         if was_listening:
             self.stop_listening()
+            self.set_status("Speaking...")
             
         if tts:
             try:
                 # Local system TTS via plyer
                 tts.speak(text)
                 
-                # Estimate duration based on word count to know when to turn mic back on
-                # (Since plyer.tts.speak is often non-blocking on some platforms)
-                duration_s = max(1.0, len(text.split()) * 0.4)
+                # Increase duration estimate to ensure she doesn't hear herself
+                duration_s = max(1.5, len(text.split()) * 0.5) 
                 if was_listening:
                     time.sleep(duration_s)
                     
             except Exception:
                 pass
-        else:
-            # Fallback to edge-tts if internet is available and ffplay is present
-            # but on Android, system TTS is preferred.
-            pass
-            
+        
         # Resume listening
         if was_listening:
-            Clock.schedule_once(lambda dt: self.start_listening(), 0.5)
+            Clock.schedule_once(lambda dt: self.start_listening(), 0.8)
 
     def add_bubble(self, text, sender):
         bubble = ChatBubble(text=text, sender=sender)

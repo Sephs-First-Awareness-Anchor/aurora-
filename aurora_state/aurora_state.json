@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1778377734.2032647,
-  "generation": 211,
-  "genome_version": 211,
+  "timestamp": 1778410171.9432352,
+  "generation": 0,
+  "genome_version": 0,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -11,56 +11,54 @@
     "empathic-resonance",
     "boundary-awareness"
   ],
-  "total_alleles": 20,
+  "total_alleles": 0,
   "identity_anchors": [],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.41,
-    "emotional_expressiveness": 0.36,
-    "verbosity": 0.2836,
-    "introspection": 0.468,
-    "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
-    "energy_conservation": 0.3023
+    "curiosity": 0.6,
+    "caution": 0.5,
+    "emotional_expressiveness": 0.5,
+    "verbosity": 0.5,
+    "introspection": 0.6,
+    "pattern_sensitivity": 0.5,
+    "social_engagement": 0.5,
+    "energy_conservation": 0.4
   },
-  "personality_drift": 1.0041,
+  "personality_drift": 0.0,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.8367533784100565,
-      "precision": 0.9869586828271555,
-      "depth": 0.908771139586777,
-      "confidence": 0.3318863597236541
+      "warmth": 0.6,
+      "precision": 0.5,
+      "depth": 0.5,
+      "confidence": 0.5
     },
     "cognitive": {
-      "curiosity": 0.6734496587526696,
-      "pattern_matching": 0.5077353912674074,
-      "abstraction": 0.9962521062436792,
-      "risk_assessment": 0.3365814451327811
+      "curiosity": 0.6,
+      "pattern_matching": 0.5,
+      "abstraction": 0.4,
+      "risk_assessment": 0.5
     },
     "social": {
-      "empathy": 0.6018120240612636,
-      "trust_extension": 0.39632934691403066,
-      "boundary_maintenance": 0.6547730389648106,
-      "engagement": 0.5536889406116852
+      "empathy": 0.6,
+      "trust_extension": 0.5,
+      "boundary_maintenance": 0.5,
+      "engagement": 0.5
     }
   },
   "governance_stats": {
-    "total_nodes": 414,
+    "total_nodes": 0,
     "layers": {
       "DNA": 0,
-      "ENERGY": 414,
+      "ENERGY": 0,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 414,
+    "total_ingested": 0,
     "total_promoted": 0,
     "violations_blocked": 0,
-    "axis_conflicts": {
-      "existence": 1
-    }
+    "axis_conflicts": {}
   },
   "simulation_epochs": 0,
   "total_episodes": 0,
@@ -68,5 +66,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "6249981f91a7"
+  "_checksum": "1be48bcc8ed6"
 }

@@ -4777,6 +4777,7 @@ def boot_aurora(state_dir: str = "aurora_state", verbose: bool = True, **kwargs)
         build_layer5_associative_modules,
     )
     perception = ExpressionPerceptionEngine(contract)
+    perception.lexicon.load(os.path.join(state_dir, "lexicon.json"))
     systems['perception'] = perception
     _register_layer(systems, 'L5', 'Expression & Perception', 'perception', perception, {
         'perceive': 'perceive',
@@ -6663,6 +6664,8 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
     aurora = systems['aurora']
     enhanced = systems.get('enhanced_persist')
     aurora.save_state()
+    if systems.get('perception'):
+        systems['perception'].save_lexicon()
     if enhanced:
         results = enhanced.save_all(systems)
         if verbose:

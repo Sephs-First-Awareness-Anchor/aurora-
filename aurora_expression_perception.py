@@ -847,6 +847,52 @@ class LexicalMemory:
     def size(self) -> int:
         return len(self.entries)
 
+    def save(self, path: str = "aurora_state/lexicon.json"):
+        """Save the lexicon to disk."""
+        try:
+            # print(f"  [LEX] Saving {len(self.entries)} words to {path}")
+            data = {
+                "version": "1.0",
+                "entries": {
+                    w: {
+                        "meaning": e.meaning,
+                        "role": e.role,
+                        "emotional_valence": e.emotional_valence,
+                        "lineage": e.lineage,
+                        "usage_count": e.usage_count,
+                        "creation_ts": e.creation_ts
+                    } for w, e in self.entries.items()
+                }
+            }
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            return True
+        except Exception:
+            return False
+
+    def load(self, path: str = "aurora_state/lexicon.json"):
+        """Load the lexicon from disk, merging with existing seeds."""
+        if not os.path.exists(path):
+            return False
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            entries = data.get("entries", {})
+            for w, d in entries.items():
+                if w not in self.entries:
+                    self.entries[w] = LexicalEntry(
+                        word=w,
+                        meaning=d.get("meaning", ""),
+                        role=d.get("role", "noun"),
+                        valence=d.get("emotional_valence", 0.0),
+                        lineage=d.get("lineage", "unknown")
+                    )
+                    self.entries[w].usage_count = d.get("usage_count", 0)
+                    self.entries[w].creation_ts = d.get("creation_ts", time.time())
+            return True
+        except Exception:
+            return False
+
 
 # ============================================================================
 # SECTION 6: EXPRESSION PIPELINE Ã¢â‚¬â€ WISDOM SHARDS
@@ -2637,6 +2683,12 @@ class ExpressionPerceptionEngine:
         """Persist expression evolution state."""
         if self.evo:
             self.evo.save_all()
+
+    def save_lexicon(self, path: Optional[str] = None):
+        """Persist the lexicon to disk."""
+        if self.lexicon:
+            return self.lexicon.save(path or "aurora_state/lexicon.json")
+        return False
 
     def get_surface_salience(self) -> Dict[str, Any]:
         """Return a snapshot of current external salience markers."""

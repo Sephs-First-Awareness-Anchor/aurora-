@@ -1,13 +1,13 @@
 {
   "active": true,
   "status": "researched",
-  "generated_at": 1778261365.9346886,
-  "generated_at_str": "2026-05-08 13:29:25",
+  "generated_at": 1778354306.469515,
+  "generated_at_str": "2026-05-09 15:18:26",
   "blocked_tasks": [
     "assimilation"
   ],
   "reason": "b_concurrency_cooldown",
-  "retry_after": 1800,
+  "retry_after": 900,
   "selected_operator": "latent_promotion",
   "selection_source": "hint",
   "routing_type": "code_gap",
@@ -15,12 +15,12 @@
   "dominant_type": "code_gap",
   "dominant_score": 0.2725,
   "classification_mode": "active",
-  "governor_mode": "survival",
+  "governor_mode": "open",
   "host_snapshot": {
-    "mem_available_mb": 696.41,
-    "mem_pressure": 0.8177,
-    "load_ratio": 1.3754,
-    "process_rss_mb": 145.82
+    "mem_available_mb": 817.55,
+    "mem_pressure": 0.786,
+    "load_ratio": 0.2358,
+    "process_rss_mb": 148.59
   },
   "actions": [
     {
@@ -54,27 +54,27 @@
       ]
     }
   ],
-  "poedex_question": "Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=survival, mem_avail=696MB, load=1.38. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-  "occurrences": 1,
-  "handoff_attempts": 1,
-  "researched_occurrences": 1,
-  "last_handoff_at": 1778261365.8313706,
-  "last_handoff_at_str": "2026-05-08 13:29:25",
+  "poedex_question": "Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=818MB, load=0.24. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+  "occurrences": 14,
+  "handoff_attempts": 14,
+  "researched_occurrences": 14,
+  "last_handoff_at": 1778354305.1589525,
+  "last_handoff_at_str": "2026-05-09 15:18:26",
   "last_handoff_status": "done",
-  "poedex_result": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=survival, mem_avail=6",
-  "poedex_result_excerpt": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=survival, mem_avail=6",
-  "poedex_result_at": 1778261371.5574205,
-  "poedex_result_at_str": "2026-05-08 13:29:31",
+  "poedex_result": "Researcher lookup failed: HTTP Error 429: Too Many Requests",
+  "poedex_result_excerpt": "Researcher lookup failed: HTTP Error 429: Too Many Requests",
+  "poedex_result_at": 1778354307.6749532,
+  "poedex_result_at_str": "2026-05-09 15:18:27",
   "last_gate": {
     "reason": "allowed",
-    "retry_in": 360,
-    "score": 0.9973,
+    "retry_in": 180,
+    "score": 0.9916,
     "floor": 0.018,
-    "ts": 1778261365.8313706,
-    "ts_str": "2026-05-08 13:29:25"
+    "ts": 1778354305.1589525,
+    "ts_str": "2026-05-09 15:18:26"
   },
-  "updated_at": 1778261371.6017566,
-  "updated_at_str": "2026-05-08 13:29:31",
+  "updated_at": 1778354307.6749532,
+  "updated_at_str": "2026-05-09 15:18:27",
   "relief_parsed_operator": "latent_promotion",
   "relief_parsed_axis_biases": {},
   "relief_parsed_routing": "",
