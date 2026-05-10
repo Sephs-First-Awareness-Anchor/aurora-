@@ -1,6 +1,1 @@
-<service
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:name="org.aurora.OverlayService"
-    android:enabled="true"
-    android:exported="false"
-    android:foregroundServiceType="mediaPlayback" />
+<service android:name="org.aurora.aurora.OverlayService" android:enabled="true" android:exported="false" />

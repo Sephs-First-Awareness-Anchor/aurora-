@@ -135,6 +135,16 @@ def boot_aurora(state_dir: str = "aurora_state", verbose: bool = True) -> Dict[s
         else:
             print("  [STATE] Fresh boot â€” no prior state")
 
+    # Load persisted lexicon (trained vocabulary from prior corpus runs)
+    _lex_path = os.path.join(state_dir, "lexicon.json")
+    if os.path.exists(_lex_path):
+        _before = perception.lexicon.size
+        perception.lexicon.load(_lex_path)
+        if verbose:
+            print(f"  [LEXICON] Loaded {perception.lexicon.size} words "
+                  f"(was {_before} seeds)")
+
+
     # Checkpoint Manager â€” crash-safe resumption
     checkpoint = None
     try:
@@ -1380,7 +1390,19 @@ def run_corpus_ingestion(
     aurora.save_state()
     _save_oets(systems, verbose=verbose)
     if systems.get("perception"):
-        systems["perception"].save_lexicon()
+        _perc = systems["perception"]
+        # Guard: only overwrite lexicon.json if we actually grew vocab
+        _lex_save_path = "aurora_state/lexicon.json"
+        _disk_count = 0
+        try:
+            import json as _j
+            _disk_count = len(_j.load(open(_lex_save_path)).get("entries", {}))
+        except Exception:
+            pass
+        if _perc.lexicon.size >= _disk_count:
+            _perc.save_lexicon()
+        elif verbose:
+            print(f"  [LEXICON] Save skipped - memory({_perc.lexicon.size}) < disk({_disk_count})")
 
     if verbose:
         print("  [CORPUS] Ingestion complete.\n")
