@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<service 
+<service
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:name="org.aurora.OverlayService"
     android:enabled="true"
     android:exported="false"
