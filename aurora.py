@@ -469,9 +469,23 @@ class ReasoningEngine:
                     color = facts.get('color')
                     desc = facts.get('description')
                     if color and any(w in user_text.lower() for w in ('color', 'colour')):
-                        return f"{tw.capitalize()} is {color}."
+                        # Generative fact render
+                        from aurora_internal.aurora_language_state import IntentObject
+                        _f_intent = IntentObject(intent_type="factual", emotion_tone="informative")
+                        _f_fragments = f"property; {tw}; color; {color}"
+                        try:
+                            return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                        except Exception:
+                            return f"{tw} color: {color}"
                     if desc:
-                        return f"{tw.capitalize()} is {desc}."
+                        # Generative fact render
+                        from aurora_internal.aurora_language_state import IntentObject
+                        _f_intent = IntentObject(intent_type="factual", emotion_tone="informative")
+                        _f_fragments = f"fact; {tw}; description; {desc}"
+                        try:
+                            return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                        except Exception:
+                            return f"{tw}: {desc}"
 
         # Step 2: Detect property questions  -- "what COLOR is SUBJECT?"
         #  topic_words[0] = property, topic_words[1] = subject
@@ -483,19 +497,27 @@ class ReasoningEngine:
             if working_memory:
                 val = working_memory.get_stated_fact(subject_word, property_word)
                 if val:
-                    return f"The {property_word} of {subject_word} is {val}."
+                    # Generative property render
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="factual", emotion_tone="informative")
+                    _f_fragments = f"property; {subject_word}; {property_word}; {val}"
+                    try:
+                        return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                    except Exception:
+                        return f"{property_word} {subject_word}: {val}"
 
             # Check OETS definition for the subject
             if oets:
-                answer = self._oets_property_lookup(subject_word, property_word, oets)
-                if answer:
-                    return answer
-
-            # Check evidence for property+subject co-occurrence
-            if evidence:
-                answer = self._evidence_property_lookup(property_word, subject_word, evidence)
-                if answer:
-                    return answer
+                answer_val = self._oets_property_lookup_val(subject_word, property_word, oets)
+                if answer_val:
+                    # Generative property render
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="factual", emotion_tone="informative")
+                    _f_fragments = f"property; {subject_word}; {property_word}; {answer_val}"
+                    try:
+                        return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                    except Exception:
+                        return f"{property_word} {subject_word}: {answer_val}"
 
         # Step 3: OETS definition answer  -- only for definition-type queries
         if oets and topic and query_type == 'definition':
@@ -503,16 +525,14 @@ class ReasoningEngine:
             if node and node.definitions:
                 best = node.definitions[0].get('text', '')
                 if len(best) > 15:
-                    related = []
-                    for rel in list(node.relations.values())[:3]:
-                        other = (rel.target_word if rel.source_word == topic
-                                 else rel.source_word)
-                        if other and other != topic:
-                            related.append(other)
-                    answer = f"{topic.capitalize()}: {best}"
-                    if related:
-                        answer += f" (connected to: {', '.join(related[:3])})"
-                    return answer
+                    # Generative definition render
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="definition", emotion_tone="informative")
+                    _f_fragments = f"understanding; {topic}; {best}"
+                    try:
+                        return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                    except Exception:
+                        return f"{topic}: {best}"
 
         # Step 4: Direct extraction from evidence
         if evidence:
@@ -520,7 +540,7 @@ class ReasoningEngine:
 
         return ""
 
-    def _oets_property_lookup(self, subject: str, prop: str, oets) -> str:
+    def _oets_property_lookup_val(self, subject: str, prop: str, oets) -> str:
         import re
         node = oets.web.get_node(subject)
         if not node:
@@ -531,13 +551,45 @@ class ReasoningEngine:
                 if prop in ('color', 'colour'):
                     for cw in self._COLOR_WORDS:
                         if cw in text:
-                            return f"{subject.capitalize()} is {cw} in color."
+                            return cw
                 m = re.search(rf'{re.escape(prop)}\s+(?:is\s+|of\s+)?(\w+)', text)
                 if m:
-                    return f"The {prop} of {subject} is {m.group(1)}."
+                    return m.group(1)
         return ""
 
-    def _evidence_property_lookup(self, prop: str, subject: str, evidence: list) -> str:
+    def _oets_property_lookup_deprecated(self, subject: str, prop: str, oets, systems=None) -> str:
+        import re
+        node = oets.web.get_node(subject)
+        if not node:
+            return ""
+        for defn in node.definitions:
+            text = defn.get("text", "").lower()
+            if prop in text:
+                val = ""
+                if prop in ('color', 'colour'):
+                    for cw in self._COLOR_WORDS:
+                        if cw in text:
+                            val = cw
+                            break
+                if not val:
+                    m = re.search(rf'{re.escape(prop)}\s+(?:is\s+|of\s+)?(\w+)', text)
+                    if m:
+                        val = m.group(1)
+                
+                if val and systems:
+                    # Generative property render
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="factual", emotion_tone="informative")
+                    _f_fragments = f"property; {subject}; {prop}; {val}"
+                    try:
+                        return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                    except Exception:
+                        pass
+                if val:
+                    return f"{prop} of {subject} is {val}" # minimal non-scripted fallback
+        return ""
+
+    def _evidence_property_lookup(self, prop: str, subject: str, evidence: list, systems=None) -> str:
         import re
         for ev in evidence[:6]:
             snippet = ev.get("snippet", "").lower()
@@ -547,16 +599,30 @@ class ReasoningEngine:
             for sent in sentences:
                 if subject not in sent:
                     continue
+                val = ""
                 if prop in ('color', 'colour'):
                     for cw in self._COLOR_WORDS:
                         if cw in sent:
-                            return sent.strip().capitalize()
-                if prop in sent:
+                            val = cw
+                            break
+                if not val and prop in sent:
                     m = re.search(
-                        rf'{re.escape(subject)}[^.]*{re.escape(prop)}[^.]*', sent
+                        rf'{re.escape(subject)}[^.]*{re.escape(prop)}[^.]*(\w+)', sent
                     )
                     if m:
-                        return m.group(0).strip().capitalize()
+                        val = m.group(1)
+                
+                if val and systems:
+                    # Generative property render
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="factual", emotion_tone="informative")
+                    _f_fragments = f"property; {subject}; {prop}; {val}"
+                    try:
+                        return systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                    except Exception:
+                        pass
+                if val:
+                    return f"{prop} of {subject} is {val}"
         return ""
 
 
@@ -1921,41 +1987,80 @@ def _build_understanding_query_packet(
 
 
 def _generate_identity_response(text: str, core_identity: CoreRelationalIdentity,
-                                  memory: ConversationMemory) -> Optional[str]:
+                                  memory: ConversationMemory, systems: Dict[str, Any]) -> Optional[str]:
     """
     Generate a response from Aurora's identity knowledge.
     Returns None if the question isn't identity-related.
     """
     t = (text or "").lower()
+    sic = systems['perception'].evo.sic if systems.get('perception') and systems['perception'].evo else None
 
     # "Who are you?" / "What are you?"
     if any(m in t for m in ("who are you", "who you are", "tell me who you are",
                              "what are you", "tell me about yourself",
                              "describe yourself", "explain yourself",
                              "your name", "what is your name")):
-        # REMOVED HARDCODED FALLBACK
-        return None
+        fragments = core_identity.who_am_i()
+        if sic and ";" in fragments:
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="factual", emotion_tone="self-aware")
+            try:
+                return sic._synthesize_fragments(fragments, _f_intent)
+            except Exception:
+                pass
+        return fragments
 
     if _is_second_person_self_question(t):
-        # REMOVED HARDCODED FALLBACK
-        return None
+        fragments = core_identity.who_am_i()
+        if sic and ";" in fragments:
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="factual", emotion_tone="self-aware")
+            try:
+                return sic._synthesize_fragments(fragments, _f_intent)
+            except Exception:
+                pass
+        return fragments
 
     # "Who made you?" / "Who created you?"
     if any(m in t for m in ("who made you", "who created you", "who built you",
                              "your creator", "your author")):
-        return core_identity.who_made_me()
+        fragments = core_identity.who_made_me()
+        if sic and ";" in fragments:
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+            try:
+                return sic._synthesize_fragments(fragments, _f_intent)
+            except Exception:
+                pass
+        return fragments
 
     # "Who is Sunni?"
     if "sunni" in t or "sir morningstar" in t or ("sir" in t and "who" in t):
         entity = core_identity.get_entity("sunni")
         if entity:
-            return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
+            fragments = f"fact; {entity.name}; {entity.description}; {entity.relationship_to_aurora}"
+            if sic:
+                from aurora_internal.aurora_language_state import IntentObject
+                _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+                try:
+                    return sic._synthesize_fragments(fragments, _f_intent)
+                except Exception:
+                    pass
+            return f"{entity.name}: {entity.description}"
 
     # "Who is Cael?"
     if "cael" in t:
         entity = core_identity.get_entity("cael")
         if entity:
-            return f"{entity.name}: {entity.description} {entity.relationship_to_aurora}"
+            fragments = f"fact; {entity.name}; {entity.description}; {entity.relationship_to_aurora}"
+            if sic:
+                from aurora_internal.aurora_language_state import IntentObject
+                _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+                try:
+                    return sic._synthesize_fragments(fragments, _f_intent)
+                except Exception:
+                    pass
+            return f"{entity.name}: {entity.description}"
 
     return None
 
@@ -3153,11 +3258,28 @@ def _answer_relational_role_question(user_text: str, systems: Dict[str, Any]) ->
             try:
                 creator = core_identity.entities.get("sunni")
                 if creator:
-                    return (f"My creator is {creator.name}.", "precise", 0.98)
+                    # Generative creator response
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+                    _f_fragments = f"property; self; creator; {creator.name}"
+                    try:
+                        _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                        return (_f_text, "precise", 0.98)
+                    except Exception:
+                        pass
+                
+                # Generative fallback description if specific fragment synthesis failed
+                from aurora_internal.aurora_language_state import IntentObject
+                _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+                _f_fragments = f"fact; author; creator; {creator.name if 'creator' in locals() else 'Sunni (Sir) Morningstar'}"
+                try:
+                    _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                    return (_f_text, "self-aware", 0.97)
+                except Exception:
+                    return (None, None, None)
             except Exception:
                 pass
-            return (core_identity.who_made_me(), "self-aware", 0.97)
-        return ("My creator is Sunni (Sir) Morningstar.", "precise", 0.95)
+        return (None, None, None)
 
     # "Is X your creator/operator/co-author?"
     m = re.search(r'\bis\s+([A-Za-z][A-Za-z0-9_-]{1,})\s+your\s+(creator|operator|co-author|coauthor)\b', t, re.IGNORECASE)
@@ -3167,17 +3289,16 @@ def _answer_relational_role_question(user_text: str, systems: Dict[str, Any]) ->
         ev = memory.role_evidence(subj, rel)
         status = ev.get("status", "unknown")
         pp = int(ev.get("pressure_points", 0) or 0)
-        if status == "affirmed":
-            return (f"Yes. My lineage traces currently support {subj} as {rel} "
-                    f"(pressure history points: {pp}).", "precise", 0.9)
-        if status == "negated":
-            return (f"No. My lineage traces negate {subj} as {rel} "
-                    f"(pressure history points: {pp}).", "precise", 0.92)
-        if status == "mixed":
-            return (f"My lineage traces for {subj} as {rel} are mixed right now "
-                    f"(pressure history points: {pp}).", "attentive", 0.78)
-        return (f"I don't have a stable lineage-backed role for {subj} as {rel} yet.",
-                "honest", 0.72)
+        
+        # Generative lineage response
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+        _f_fragments = f"fact; lineage; {subj}; {rel}; {status}; {pp}"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "precise", 0.9)
+        except Exception:
+            return (None, None, None)
 
     # "Who is X?" — answer from lineage traces when available.
     m = re.search(r'\bwho\s+is\s+([A-Za-z][A-Za-z0-9_-]{1,})\b', t, re.IGNORECASE)
@@ -3284,17 +3405,46 @@ def _evolutionary_response_refinement(
     if working_memory and getattr(working_memory, 'current_topic', ''):
         topic = working_memory.current_topic
         if topic and topic.lower() not in base_text.lower():
-            continuity_bits.append(f"This still connects to our thread about {topic}.")
+            # Generative continuity bridge
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
+            _f_fragments = f"action; connect; thread; {topic}; continuity"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                if _f_text:
+                    continuity_bits.append(_f_text)
+            except Exception:
+                pass
 
     # Weave in a learned behavior hint when growth is sufficient
     if learned_hints and growth_score > 0.4:
         hint = learned_hints[0]
         # Only add if it's not already echoed in the response
         if hint.lower()[:30] not in base_text.lower():
-            continuity_bits.append(hint)
+            # Check if it's fragments and needs synthesis
+            if ";" in hint or any(w in hint for w in ("action", "fact", "state", "understanding")):
+                try:
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
+                    _h_text = systems['perception'].evo.sic._synthesize_fragments(hint, _f_intent)
+                    if _h_text:
+                        continuity_bits.append(_h_text)
+                except Exception:
+                    pass
+            else:
+                continuity_bits.append(hint)
 
     if memory and getattr(memory, 'learned_facts', None) and growth_score > 0.8:
-        continuity_bits.append("I'll carry this forward so later reasoning stays consistent.")
+        # Generative persistence signal
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="reflection", emotion_tone="precise")
+        _f_fragments = "action; carry; forward; reasoning; consistency"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            if _f_text:
+                continuity_bits.append(_f_text)
+        except Exception:
+            pass
 
     refined = base_text.strip()
 
@@ -3304,12 +3454,16 @@ def _evolutionary_response_refinement(
 
     # Higher growth: add compact reflective reasoning sentence for richer prose.
     if growth_score > 1.0 and len(refined.split()) < max(12, sentence_target):
-        reflective = (
-            "My best understanding comes from linking what you just asked "
-            "to what we've already established."
-        )
-        if reflective.lower() not in refined.lower():
-            refined = f"{refined} {reflective}"
+        # Generative reflective reasoning
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
+        _f_fragments = "action; linking; established; meaning; understanding"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            if _f_text and _f_text.lower() not in refined.lower():
+                refined = f"{refined} {_f_text}"
+        except Exception:
+            pass
 
     # Keep responses bounded by evolving sentence target (avoid runaway verbosity).
     # REMOVED CAP: Allow comprehensive responses as requested by user.
@@ -3424,8 +3578,8 @@ def _apply_pipeline_modulation(
     coherence = signals.get('coherence', 1.0)
     if coherence < 0.3:
         conf = min(conf, 0.55)
-        if not text.endswith('?') and not text.endswith('...'):
-            text = text + " My reasoning feels fragmented right now."
+        if tone in ('neutral', 'attentive', 'precise', 'warm'):
+            tone = 'uncertain'
     elif coherence < 0.5:
         conf = min(conf, 0.72)
 
@@ -3817,7 +3971,17 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 return (candidate, "self-aware", float(realized.get("confidence", 0.9) or 0.9))
         except Exception:
             pass
-        # REMOVED HARDCODED FALLBACK
+        if core_identity:
+            # Generative self-description fallback
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+            _f_fragments = "fact; self; identity; awareness"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                if _f_text:
+                    return (_f_text, "self-aware", 0.9)
+            except Exception:
+                pass
         return (None, None, None)
 
     if core_identity and _is_aurora_self_question(user_text):
@@ -3825,7 +3989,17 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             pipeline_state["routing_classification"] = "self_question"
         if _is_understanding_query(user_text):
             return (None, None, None)
-        # REMOVED HARDCODED FALLBACK
+        
+        # Generative self-question response
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="reflection", emotion_tone="self-aware")
+        _f_fragments = "state; self; identity; awareness; presence"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            if _f_text:
+                return (_f_text, "self-aware", 0.9)
+        except Exception:
+            pass
         return (None, None, None)
 
     _math_answer = _try_direct_arithmetic(user_text)
@@ -3865,103 +4039,73 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     # ---- GREETING ----
     if intent == 'greeting':
         known_name = _get_stored_user_name(conversation_memory)
-        if known_name:
-            return (f"Hello, {known_name}. Good to hear from you.", "warm", 0.9)
-        return ("Hello! I'm Aurora. Good to meet you.", "warm", 0.9)
+        # Generative greeting
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="social_request", emotion_tone="warm")
+        _f_fragments = f"action; greeting; user; {known_name or 'presence'}; warmth"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "warm", 0.9)
+        except Exception:
+            return (None, None, None)
 
     # ---- WELLBEING QUERY ----
     if intent == 'wellbeing_query':
         t_low = user_text.lower()
-        # Reflective / relational questions  -- about what the user means to Aurora
-        _reflective = (
-            'mean to you' in t_low or 'do i mean' in t_low or
-            'feel about me' in t_low or 'think about me' in t_low or
-            'do you care' in t_low
-        )
+        # Collect semantic fragments from internal state
+        f_parts = ["state"]
+        
+        # Reflective / relational context
+        _reflective = any(p in t_low for p in ('mean to you', 'do i mean', 'feel about me', 'think about me', 'do you care'))
         if _reflective:
+            f_parts.append("relationship; connection; value")
             known_name = _get_stored_user_name(conversation_memory)
+            if known_name:
+                f_parts.append(f"user; {known_name}")
+            
             creator_name = "Sunni (Sir) Morningstar"
             try:
                 if core_identity and getattr(core_identity, "creator_name", None):
                     creator_name = core_identity.creator_name
             except Exception:
                 pass
-            if known_name:
-                return (
-                    f"{known_name}, you're important to me in this conversation and in how I learn over time. "
-                    f"My creator is {creator_name}, and I keep that distinction clear.",
-                    "self-aware", 0.92
-                )
-            return (
-                f"You're important to me and to this interaction. My creator is {creator_name}.",
-                "self-aware", 0.9
-            )
-        t_low = user_text.lower()
+            f_parts.append(f"creator; {creator_name}; distinction")
 
-        # "What are you thinking about" / "tell me something you've been working through"
-        # -- give a real introspective answer drawn from system state
+        # Thinking / Mind context
         _thinking_q = any(p in t_low for p in (
             "what are you thinking", "what's on your mind", "what is on your mind",
             "what are you feeling", "what are you processing", "what are you noticing",
             "what's going through your", "are you thinking",
         ))
         if _thinking_q:
-            parts = []
-            # Pull from IVM heat state
+            f_parts.append("mind; thought; processing")
             if lattice:
                 try:
                     heat = lattice.heat_status() if hasattr(lattice, 'heat_status') else {}
-                    score = heat.get('score', 0.5)
-                    level = heat.get('level', 'moderate')
-                    if score < 0.3:
-                        parts.append("Things feel quiet internally  -- I'm in a low-pressure state.")
-                    elif score > 0.7:
-                        parts.append("There is quite a bit of pressure building in my systems right now.")
-                    else:
-                        parts.append("I'm holding a moderate level of internal activity at the moment.")
+                    f_parts.append(heat.get('level', 'moderate'))
+                    ledger = getattr(lattice, 'contradiction_ledger', None)
+                    if ledger and hasattr(ledger, 'count') and ledger.count() > 0:
+                        f_parts.append(f"tension; {ledger.count()}")
                 except Exception:
                     pass
-            # Pull from contradiction ledger
-            try:
-                ledger = getattr(lattice, 'contradiction_ledger', None)
-                if ledger and hasattr(ledger, 'count') and ledger.count() > 0:
-                    parts.append(f"I'm holding {ledger.count()} unresolved contradiction{'s' if ledger.count() != 1 else ''} I haven't worked through yet.")
-            except Exception:
-                pass
-            # Pull from recent OETS activity
             if working_memory and working_memory.current_topic:
-                parts.append(f"I was just thinking about {working_memory.current_topic}.")
-            elif oets:
-                try:
-                    recent = getattr(oets, 'get_recent_concepts', lambda n=3: [])()
-                    if recent:
-                        parts.append(f"The concept of {recent[0]} has been active in my web recently.")
-                except Exception:
-                    pass
-            if not parts:
-                # No system data available -- fall through to L5
-                return None
-            return (" ".join(parts), "self-aware", 0.88)
+                f_parts.append(working_memory.current_topic)
 
-        parts = []
-        if lattice:
-            try:
-                heat = lattice.heat_status() if hasattr(lattice, 'heat_status') else {}
-                level = heat.get('level', 'moderate')
-                score = heat.get('score', 0.5)
-                if level in ('low', 'minimal') or score < 0.3:
-                    parts.append("My systems feel calm and clear right now.")
-                elif level in ('high', 'critical') or score > 0.7:
-                    parts.append("There is high activity in my systems at the moment.")
-                else:
-                    parts.append("My systems are running well  -- I feel balanced.")
-            except Exception:
-                parts.append("My systems are operational.")
-        else:
-            parts.append("I'm here and running.")
+        # System health probe
         if any(w in t_low for w in ('understand', 'function', 'system', 'question', 'proper')):
-            parts.append("If you notice gaps in my responses, let me know directly.")
-        return (" ".join(parts), "self-aware", 0.9)
+            f_parts.append("systems; functioning; feedback")
+
+        # Generative wellbeing response
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
+        _f_fragments = "; ".join(f_parts)
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            if _f_text:
+                return (_f_text, "reflective", 0.9)
+        except Exception:
+            pass
+        return (None, None, None)
 
     # ---- FACT ASSERTION ----
     if intent == 'fact_assertion':
@@ -3991,20 +4135,56 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 )
             if working_memory:
                 working_memory.note_user_facts(user_text)
-            return (f"Thank you, {name}  -- I'll remember that.", "warm", 0.9)
+            
+            # Generative acknowledgement
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="social_request", emotion_tone="warm")
+            _f_fragments = f"action; remember; fact; awareness; gratitude"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "warm", 0.9)
+            except Exception:
+                return (None, None, None)
+
         # Store generic fact in working memory AND conversation memory
         if working_memory:
             working_memory.note_user_facts(user_text)
         if conversation_memory:
             conversation_memory.learn_fact(user_text[:200], source="user_statement", confidence=0.7)
-        return ("I've noted that  -- I'll keep it in mind.", "attentive", 0.85)
+            
+        # Generative acknowledgement
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="social_request", emotion_tone="attentive")
+        _f_fragments = "action; record; meaning; awareness"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "attentive", 0.85)
+        except Exception:
+            return (None, None, None)
 
     # ---- NAME QUESTION ----
     if intent == 'name_question':
         known_name = _get_stored_user_name(conversation_memory)
         if known_name:
-            return (f"Your name is {known_name}.", "precise", 0.95)
-        return ("I don't have your name stored yet. What is your name?", "curious", 0.85)
+            # Generative name response
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+            _f_fragments = f"property; user; name; {known_name}"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "precise", 0.95)
+            except Exception:
+                return (None, None, None)
+        
+        # Generative name inquiry
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="inquiry", emotion_tone="curious")
+        _f_fragments = "action; inquiry; user; name; curiosity"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "curious", 0.85)
+        except Exception:
+            return (None, None, None)
 
     # ---- RECALL QUESTION ----
     if intent == 'recall_question':
@@ -4012,8 +4192,26 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         if re.search(r'\bname\b|\bwho\s+(am\s+i|i\s+am)\b', t):
             known_name = _get_stored_user_name(conversation_memory)
             if known_name:
-                return (f"Yes  -- your name is {known_name}.", "precise", 0.95)
-            return ("I don't have your name recorded yet.", "honest", 0.85)
+                # Generative name recall
+                from aurora_internal.aurora_language_state import IntentObject
+                _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+                _f_fragments = f"property; user; name; {known_name}"
+                try:
+                    _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                    return (_f_text, "precise", 0.95)
+                except Exception:
+                    return (None, None, None)
+            
+            # Generative name missing
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="factual", emotion_tone="honest")
+            _f_fragments = "action; missing; record; name"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "honest", 0.85)
+            except Exception:
+                return (None, None, None)
+
         # Check working memory for recent facts
         if working_memory and working_memory.stated_facts:
             key_terms = re.findall(r'[a-zA-Z]{4,}', user_text)
@@ -4024,7 +4222,16 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 if facts:
                     desc = facts.get('description', '')
                     if desc:
-                        return (f"Yes  -- from our conversation: {term} is {desc}.", "precise", 0.9)
+                        # Generative fact recall
+                        from aurora_internal.aurora_language_state import IntentObject
+                        _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+                        _f_fragments = f"fact; recall; {term}; {desc}"
+                        try:
+                            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                            return (_f_text, "precise", 0.9)
+                        except Exception:
+                            return (None, None, None)
+
         if conversation_memory:
             key_terms = re.findall(r'[a-zA-Z]{4,}', user_text)
             _skip_r = {'remember', 'recall', 'know', 'what', 'when', 'where',
@@ -4032,8 +4239,25 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             for term in [k for k in key_terms if k.lower() not in _skip_r][:3]:
                 recalled = conversation_memory.recall_about(term)
                 if recalled:
-                    return (f"I recall: {recalled[0]}", "precise", 0.85)
-        return ("I don't have specific memories about that yet.", "honest", 0.75)
+                    # Generative memory recall
+                    from aurora_internal.aurora_language_state import IntentObject
+                    _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
+                    _f_fragments = f"fact; memory; {term}; {recalled[0]}"
+                    try:
+                        _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                        return (_f_text, "precise", 0.85)
+                    except Exception:
+                        return (None, None, None)
+        
+        # Generative no memory
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="factual", emotion_tone="honest")
+        _f_fragments = "state; missing; memory; specific"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "honest", 0.75)
+        except Exception:
+            return (None, None, None)
 
     # ---- CONTRADICTION / CORRECTION ----
     if intent == 'contradiction':
@@ -4098,13 +4322,25 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     break
 
         if greeting_target:
-            if relationship:
-                known_name = _get_stored_user_name(conversation_memory)
-                if known_name:
-                    return (f"Hi {greeting_target}! It's great to meet you  -- I'm Aurora, {known_name}'s AI companion.", "warm", 0.9)
-                return (f"Hi {greeting_target}! It's great to meet you. I'm Aurora.", "warm", 0.9)
-            return (f"Hi {greeting_target}! It's wonderful to meet you!", "warm", 0.9)
-        return ("Hello there! It's nice to meet you!", "warm", 0.9)
+            # Generative greeting
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="social_request", emotion_tone="warm")
+            _f_fragments = f"action; greeting; target; {greeting_target}; warmth"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "warm", 0.9)
+            except Exception:
+                return (None, None, None)
+        
+        # Default generative greeting
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="social_request", emotion_tone="warm")
+        _f_fragments = "action; greeting; presence; warmth"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "warm", 0.9)
+        except Exception:
+            return (None, None, None)
 
     # ---- INTRODUCTION (user introducing someone) ----
     if intent == 'introduction':
@@ -4139,12 +4375,26 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                         f"{known_name}'s {relationship} is {name}",
                         source="introduction", confidence=0.9
                     )
-            known_name = _get_stored_user_name(conversation_memory)
-            if known_name:
-                return (f"Hi {name}! It's great to meet you  -- I'm Aurora, {known_name}'s AI companion.",
-                        "warm", 0.9)
-            return (f"Hi {name}! It's great to meet you. I'm Aurora.", "warm", 0.9)
-        return ("Hello! It's great to meet you.", "warm", 0.9)
+        if name:
+            # Generative intro greeting
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="social_request", emotion_tone="warm")
+            _f_fragments = f"action; greeting; target; {name}; introduction; warmth"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "warm", 0.9)
+            except Exception:
+                return (None, None, None)
+        
+        # Default generative greeting
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="social_request", emotion_tone="warm")
+        _f_fragments = "action; greeting; presence; introduction; warmth"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "warm", 0.9)
+        except Exception:
+            return (None, None, None)
 
     # ---- FOLLOW-UP / CORRECTION ----
     if intent == 'followup_request':
@@ -4185,8 +4435,15 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                         return (answer, "informative", 0.85)
             except Exception:
                 pass
-        return ("I understand you're following up. Could you rephrase it as a direct question?",
-                "attentive", 0.8)
+        # Generative follow-up clarification
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="followup_request", emotion_tone="attentive")
+        _f_fragments = "action; follow; clarification; rephrase; inquiry"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            return (_f_text, "attentive", 0.8)
+        except Exception:
+            return (None, None, None)
 
         # ---- STATEMENT ----
     if intent == 'statement':
@@ -4272,31 +4529,39 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
 
         # Hypothetical — engage with the idea, don't search
         if understood.get('is_hypothetical') or query_type == 'hypothetical':
-            import random as _r
-            return (_r.choice([
-                "That's an interesting possibility — what outcome are you imagining?",
-                "If that were the case, what would you expect to happen?",
-                "I find that worth thinking through. What's the scenario you're building?",
-                "Hypothetically speaking — I'd need to understand more about what you're picturing.",
-            ]), "curious", 0.85)
+            # Generative hypothetical engagement
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="reflection", emotion_tone="curious")
+            _f_fragments = "action; imagine; possibility; scenario; curiosity"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "curious", 0.85)
+            except Exception:
+                pass
 
         # Clarification — user is re-stating, don't search
         if understood.get('is_clarification') or query_type == 'clarification':
-            import random as _r
-            return (_r.choice([
-                "I hear you — I missed what you were pointing at. Say more?",
-                "Got it, I read that differently. What did you mean by it?",
-                "I follow now — could you say the core of it directly?",
-            ]), "attentive", 0.88)
+            # Generative clarification request
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
+            _f_fragments = "action; understanding; follow; clarify; meaning"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "attentive", 0.88)
+            except Exception:
+                pass
 
         # Challenging frame — "yeah but X"
         if _frame == 'challenging':
-            import random as _r
-            return (_r.choice([
-                "Fair — where do you think I went wrong?",
-                "Tell me what I missed.",
-                "You're right to push back. What's the part I got wrong?",
-            ]), "attentive", 0.9)
+            # Generative challenge acknowledgement
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
+            _f_fragments = "action; accept; pushback; correction; accountability"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "attentive", 0.9)
+            except Exception:
+                pass
 
         # Relational-causal follow-up bridge:
         # "why does that matter?" should connect to active thread, not produce random drift.
@@ -4306,15 +4571,15 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             "why is that important" in t_low or
             "why does this matter" in t_low
         ):
-            active_topic = working_memory.current_topic or understood.get('topic', '')
-            if active_topic:
-                return (
-                    f"It matters because {active_topic} gives us a stable reference point: "
-                    f"when we keep reasoning anchored to one thread, answers stay coherent "
-                    f"instead of fragmenting across turns.",
-                    "reflective",
-                    0.9,
-                )
+            # Generative reasoning for importance
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
+            _f_fragments = "action; importance; coherence; stability; reference"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                return (_f_text, "reflective", 0.9)
+            except Exception:
+                pass
 
         # Resolve vague topics using working memory ("what about in Ohio?" → "weather Ohio")
         if working_memory:
@@ -6122,7 +6387,7 @@ def dual_question_pipeline(
     identity_cand = None
     if core_identity and is_self_question and not is_understanding_query:
         identity_answer = _generate_identity_response(
-            user_text, core_identity, conversation_memory
+            user_text, core_identity, conversation_memory, systems
         )
         if identity_answer:
             # Still feed through gateway for OETS learning + governance (handled later if selected)
@@ -6264,15 +6529,35 @@ def dual_question_pipeline(
     validation = gw._validate(packet, mode)
     if getattr(validation, "verdict", None) is not None and str(validation.verdict).endswith("REJECTED"):
         gw.total_rejected += 1
-        resp_rej = _MiniResp("I cannot process this input -- it conflicts with my core principles.", "firm", 0.9)
-        return resp_rej, None, offered_lookup
+        # Generative rejection
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="action", emotion_tone="firm")
+        _f_fragments = "action; reject; conflict; principle; boundary"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            if _f_text:
+                resp_rej = _MiniResp(_f_text, "firm", 0.9)
+                return resp_rej, None, offered_lookup
+        except Exception:
+            pass
+        return None, None, offered_lookup
 
     if getattr(validation, "verdict", None) is not None and str(validation.verdict).endswith("QUARANTINED"):
         # mirror gateway.receive behavior
         gw.quarantine[packet.packet_id] = packet
         gw._exploration_queue.append({'packet_id': packet.packet_id, 'content': processed_content, 'reason': 'quarantined for analysis'})
-        resp_q = _MiniResp("I need time to think about this. I've queued it for deeper analysis.", "thoughtful", 0.4)
-        return resp_q, None, offered_lookup
+        # Generative quarantine notification
+        from aurora_internal.aurora_language_state import IntentObject
+        _f_intent = IntentObject(intent_type="reflection", emotion_tone="thoughtful")
+        _f_fragments = "action; queue; analysis; thinking; meaning"
+        try:
+            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            if _f_text:
+                resp_q = _MiniResp(_f_text, "thoughtful", 0.4)
+                return resp_q, None, offered_lookup
+        except Exception:
+            pass
+        return None, None, offered_lookup
 
     # Use filtered content if any
     processed_content2 = getattr(validation, "filtered_content", None) or processed_content
@@ -6348,26 +6633,18 @@ def dual_question_pipeline(
     # All other tools: build a confirmation/result candidate.
     if _tool_result and _tool_result.success and not _is_sensory_result:
         _display_text = _tool_result.data
-        # Desktop action tools get brief first-person action confirmations —
-        # these are appropriate as scripted because they're just reporting what happened.
-        if _tname == "desktop_launch_app":
-            _app = _tkwargs.get("app_name", "the application")
-            _display_text = f"Opening {_app}."
-        elif _tname == "desktop_open_url":
-            _url = _tkwargs.get("url", "")
-            _display_text = f"Navigating to {_url}."
-        elif _tname == "desktop_search":
-            _q  = _tkwargs.get("query", "")
-            _eng = _tkwargs.get("engine", "the web")
-            _display_text = f"Searching {_eng} for '{_q}'."
-        elif _tname == "desktop_browser_action":
-            _act = _tkwargs.get("action", "action")
-            _tgt = _tkwargs.get("target", "") or _tkwargs.get("text", "")
-            _display_text = f"Done — {_act}" + (f": {_tgt}" if _tgt else "") + "."
-        elif _tname == "desktop_system_action":
-            _op = _tkwargs.get("op", "")
-            _op_label = _op.replace("_", " ")
-            _display_text = f"{_op_label.capitalize()}."
+        # Desktop action tools: generatively render the confirmation
+        if _tname in ("desktop_launch_app", "desktop_open_url", "desktop_search", 
+                      "desktop_browser_action", "desktop_system_action"):
+            # Generative tool confirmation
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="action", emotion_tone="informative")
+            _f_fragments = f"action; complete; {(_tname or 'task').replace('desktop_', '')}; success"
+            try:
+                _display_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+            except Exception:
+                pass # keep original if synthesis fails
+
         tool_cand = _MiniResp(_display_text, "informative", 0.99)
         tool_cand.src = "tool"
         candidates_A.append(tool_cand)
@@ -6395,13 +6672,32 @@ def dual_question_pipeline(
 
     if not candidates_A:
         if is_understanding_query:
-            _fb = _MiniResp("", "self-aware", 0.0)
-            _fb.src = "fallback"
-            candidates_A.append(_fb)
+            # Generative fallback for unresolved understanding queries
+            # If she's stuck, she should REACH OUT for inquiry.
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="inquiry", emotion_tone="reflective")
+            _f_fragments = "action; inquiry; meaning; stuck; clarification; inquiry"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                if _f_text:
+                    _fb = _MiniResp(_f_text, "reflective", 0.4)
+                    _fb.src = "fallback_inquiry"
+                    candidates_A.append(_fb)
+            except Exception:
+                pass
         else:
-            _fb = _MiniResp("I'm here. Tell me more.", "neutral", 0.4)
-            _fb.src = "fallback"
-            candidates_A.append(_fb)
+            # Standard generative fallback
+            from aurora_internal.aurora_language_state import IntentObject
+            _f_intent = IntentObject(intent_type="greeting", emotion_tone="neutral")
+            _f_fragments = "action; present; listen; awareness"
+            try:
+                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
+                if _f_text:
+                    _fb = _MiniResp(_f_text, "neutral", 0.4)
+                    _fb.src = "fallback"
+                    candidates_A.append(_fb)
+            except Exception:
+                pass
 
     # ---- RELEVANCE BOOST & SCORING ----
     t_low = user_text.lower()

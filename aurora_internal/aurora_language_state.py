@@ -952,7 +952,7 @@ class SemanticIntentCompiler:
     ) -> List[str]:
         roots = self._bundle_roots(intent, bundle)
         root_phrase = self._bundle_root_phrase(roots, bundle)
-        support_phrase = self._bundle_support_phrase(bundle)
+        support_phrase = self._bundle_support_phrase(bundle, intent)
         relation_phrase = self._bundle_relation_phrase(intent)
 
         # Build layer-driven stance candidates
@@ -1033,32 +1033,23 @@ class SemanticIntentCompiler:
             str(dominant.get("dimension", "") or "").lower(),
         )
 
-    def _bundle_support_phrase(self, bundle: Dict[str, Any]) -> str:
+    def _bundle_support_phrase(self, bundle: Dict[str, Any], intent: IntentObject) -> str:
+        """Generatively render the support phrase based on secondary law binding."""
         bindings = [dict(item) for item in list(bundle.get("law_bindings", []) or []) if isinstance(item, dict)]
         if len(bindings) < 2:
             return ""
         secondary = sorted(bindings, key=lambda item: float(item.get("score", 0.0) or 0.0), reverse=True)[1]
         family = str(secondary.get("family", "") or "").lower()
         dimension = str(secondary.get("dimension", "") or "").lower()
-        if family == "boundary":
-            return "keep the boundary clear"
-        if family == "agentive":
-            return "stay with the meaning"
-        if family == "temporal":
-            return "keep the thread moving"
-        if family == "energetic":
-            return "keep the effort measured"
-        if family == "existential":
-            return "stay grounded in what is present"
-        if dimension == "difference":
-            return "separate what matters from what does not"
-        if dimension == "polarity":
-            return "hold what is real in view"
-        if dimension == "cost":
-            return "not overpush it"
-        if dimension == "magnitude":
-            return "keep the pull in proportion"
-        return ""
+        
+        # Use generative assembly for the phrase
+        fragments = f"action; maintain; {family}; {dimension}"
+        text = self._synthesize_fragments(fragments, intent)
+        # Convert to a lower-case phrase if it was rendered as a sentence
+        text = text.rstrip(".").lower()
+        if text.startswith("i "):
+            text = text[2:].strip()
+        return text
 
     def _bundle_relation_phrase(self, intent: IntentObject) -> str:
         relation = str(intent.relationship_signal or "").lower()
@@ -1071,36 +1062,18 @@ class SemanticIntentCompiler:
         return ""
 
     def _bundle_direct_line(self, intent: IntentObject, root_phrase: str, family: str, dimension: str) -> str:
+        """Render a single direct observation line through the generative pipeline."""
         # Synthesis: if core_claim has fragments, use them as the heart of the line
         content = intent.core_claim
-        if self._should_synthesize_fragments(content, intent):
-            content = self._synthesize_fragments(content, intent)
         if not content or content.lower() in ("x", "t", "n", "b", "a", "existence", "temporal", "energy", "boundary", "agency"):
             content = root_phrase
 
+        # Convert the structured meaning into fragments for generative assembly
+        fragments = f"fact; {content or 'this'}; {family or 'existence'}; {dimension or 'state'}"
         if intent.intent_type == "question":
-            if family == "existential":
-                return f"I'm checking what is actually here about {content}."
-            return f"I'm checking {content}."
-        if family == "agentive":
-            return f"I understand {content}."
-        if family == "boundary":
-            return f"I'm keeping {content} clear."
-        if family == "temporal":
-            return f"I'm following {content}."
-        if family == "energetic":
-            return f"I'm keeping {content} measured."
-        if family == "existential":
-            return f"I'm grounding this in {content}."
-        if dimension == "difference":
-            return f"I'm separating out {content}."
-        if dimension == "polarity":
-            return f"I'm holding {content} in view."
-        if dimension == "cost":
-            return f"I'm keeping the cost of {content} low."
-        if dimension == "magnitude":
-            return f"I'm keeping {content} in proportion."
-        return f"I'm tracking {content}."
+            fragments = f"fact; checking; {content or 'this'}; {family or 'existence'}"
+            
+        return self._synthesize_fragments(fragments, intent)
 
     def _bundle_structured_line(
         self,
@@ -1171,29 +1144,25 @@ class SemanticIntentCompiler:
         return core
 
     def _draft_structured(self, intent: IntentObject) -> str:
-        """Structured speech with stable tense and grammar."""
-        tone_openers = {
-            "gentle":    "I want to say this carefully. ",
-            "curious":   "I find myself wondering. ",
-            "firm":      "I am clear about this. ",
-            "reflective":"When I think about it, ",
-            "uncertain": "I am not entirely certain, but ",
-            "warm":      "",
-            "playful":   "",
-            "neutral":   "",
-        }
-        opener = tone_openers.get(intent.emotion_tone, "")
+        """Structured speech with generative tone-framing."""
         core = intent.core_claim
-
         # Assembler: if core is raw fragments, synthesize them
         if self._should_synthesize_fragments(core, intent):
             core = self._synthesize_fragments(core, intent)
 
-        # Add certainty hedge if needed
-        if intent.certainty < 0.5 and "uncertain" not in intent.constraints:
-            core = f"I think {core[0].lower() + core[1:]}" if core else core
-
-        return (opener + core).strip()
+        tone = str(intent.emotion_tone or "neutral")
+        if intent.certainty > 0.6:
+            # Generative tone-based framing
+            tone_fragments = f"state; {tone}; awareness; presence"
+            try:
+                opener = self._synthesize_fragments(tone_fragments, intent)
+                if opener and opener.endswith("."):
+                    opener = opener[:-1] + ": "
+                return f"{opener}{core}"
+            except Exception:
+                pass
+        
+        return core
 
     def _synthesize_fragments(self, fragments: str, intent: IntentObject) -> str:
         """
@@ -1206,29 +1175,9 @@ class SemanticIntentCompiler:
 
         ready = float(intent.native_meaning.get("readiness_bias", 0.5) or 0.5)
         
-        # 1. Fact/Definition Assembly (The 'Harvester' Handler)
-        # If the fragment is a structured fact, preserve the relation but 
-        # weave it into her cadence/identity.
-        p0_low = parts[0].lower()
-        if p0_low in ("fact", "property", "understanding"):
-            topic = parts[1] if len(parts) > 1 else "this"
-            detail = parts[2] if len(parts) > 2 else ""
-            value = parts[3] if len(parts) > 3 else ""
-            
-            if p0_low == "understanding":
-                # Definition: understanding; topic; definition
-                if ready < 0.45:
-                    return f"My structure for {topic} is {detail}."
-                else:
-                    return f"I frame {topic} as {detail}."
-            else:
-                # Property/Fact: property; subject; prop; value
-                if ready < 0.45:
-                    return f"The {detail} of {topic} resolves to {value}."
-                else:
-                    return f"When observing {topic}, its {detail} is present as {value}."
-
-        # 2. Generative Assembly for abstract thoughts
+        # 1. Collect Tokens from fragments and identity
+        # Structured facts are now fed into the generative assembly to ensure
+        # NO SCRIPTS. Everything is rendered word-by-word from semantic weight.
         parts_low = [p.lower() for p in parts]
         identity = {
             "i": 1.0, "me": 0.8, "my": 0.8, "aurora": 0.9,
@@ -1247,8 +1196,17 @@ class SemanticIntentCompiler:
         }
         
         token_pool: Dict[str, float] = defaultdict(float)
+        
+        # Structured facts (fact; topic; detail; value) get higher weight 
+        # to ensure their key terms are prioritized in the generative pass.
+        p0_low = parts[0].lower()
+        is_fact = p0_low in ("fact", "property", "understanding")
+        
         for p in parts_low:
-            token_pool[p] += 1.2
+            # Skip the tag itself, but boost the topic/detail/value
+            if is_fact and p == p0_low: continue
+            weight = 2.5 if is_fact else 1.2
+            token_pool[p] += weight
             
         for word, weight in identity.items():
             token_pool[word] += weight
@@ -1258,6 +1216,7 @@ class SemanticIntentCompiler:
             for t in tokens:
                 token_pool[t] += act * 1.5
 
+        # 2. Select Motif (Sentence Skeleton)
         grammar = getattr(self.lsv, "_grammar", None)
         motif = None
         if grammar:
@@ -1274,6 +1233,7 @@ class SemanticIntentCompiler:
                 seq = (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT, TokenRole.CONNECTOR, TokenRole.DESCRIPTOR)
             motif = type('MockMotif', (), {'role_sequence': seq, 'reference_anchors': []})
 
+        # 3. Assemble word-by-word
         from aurora_grammar_engine import RoleTagger, TokenRole
         tagger = RoleTagger()
         
@@ -1287,8 +1247,34 @@ class SemanticIntentCompiler:
         for role in motif.role_sequence:
             options = role_pool.get(role, [])
             if options:
-                options.sort(key=lambda x: x[1], reverse=True)
-                choice = random.choice(options[:3])[0]
+                # Relational Token Selection:
+                # Instead of just picking by raw weight, we factor in semantic proximity
+                # to the parts we are trying to express.
+                scored_options = []
+                for token, weight in options:
+                    rel_bonus = 0.0
+                    if self.lsv and hasattr(self.lsv, "_oets") and self.lsv._oets:
+                        try:
+                            # Boost words that are related to the input fragments
+                            for part in parts_low:
+                                if self.lsv._oets.web.is_related(token, part):
+                                    rel_bonus += 0.5
+                        except Exception:
+                            pass
+                    
+                    # Also boost words related to the last assembled word (chaining)
+                    if assembled and self.lsv and hasattr(self.lsv, "_oets") and self.lsv._oets:
+                        try:
+                            if self.lsv._oets.web.is_related(token, assembled[-1]):
+                                rel_bonus += 0.3
+                        except Exception:
+                            pass
+
+                    scored_options.append((token, weight + rel_bonus))
+                
+                scored_options.sort(key=lambda x: x[1], reverse=True)
+                # Select from top matches to maintain variety but prioritize coherence
+                choice = random.choice(scored_options[:2])[0] if len(scored_options) > 1 else scored_options[0][0]
                 
                 # Apply basic generative morphological rules to prevent "word salad"
                 if role == TokenRole.OBJECT and choice not in ("i", "me", "you", "it", "this", "that", "aurora"):
@@ -1322,10 +1308,13 @@ class SemanticIntentCompiler:
                     assembled.append("perhaps")
 
         sentence = " ".join(assembled).strip()
-        if not sentence: return fragments.replace(";", ",")
+        if not sentence: return ""
         
         # Capitalize and punctuate
-        return sentence[0].upper() + sentence[1:] + "."
+        res = sentence[0].upper() + sentence[1:]
+        if not res.endswith((".", "?", "!")):
+            res += "."
+        return res
 
     def _should_synthesize_fragments(self, text: str, intent: IntentObject) -> bool:
         """

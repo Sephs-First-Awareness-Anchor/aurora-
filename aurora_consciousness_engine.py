@@ -989,10 +989,10 @@ class DPME:
 
         # ---- DER CORRECTIONS (facet-level via category) ----
 
-        # Coherence dropping â†’ inject processing energy
+        # Coherence dropping → inject processing energy
         if drift['coherence_delta'] < -0.005:
             adj = self.adjust(
-                'der', 'cat_processing', 0.2,
+                'der', 'cat_processing', 0.5,
                 'counteract coherence decay via processing energy'
             )
             if adj:
@@ -1526,7 +1526,8 @@ class ConsciousnessEngine:
             proc_energy = self.dimensional.der.category_energy('processing')
             if proc_energy > 0:
                 # Consume processing energy to restore coherence (0.015 restores the 0.014 decay)
-                restoration = min(0.015, proc_energy * 0.05)
+                # Efficiency increased to 0.15 to ensure stability.
+                restoration = min(0.02, proc_energy * 0.15)
                 self.entropy.state.coherence = min(1.0, self.entropy.state.coherence + restoration)
                 self.dimensional.der.drain_from_category('processing', restoration)
 
