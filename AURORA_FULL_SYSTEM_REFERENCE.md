@@ -4,7 +4,9 @@ Code-derived reference for the current `aurora_strata` system.
 
 This document is intentionally written from the codebase as it exists now, not from the older architecture markdown files in this directory. It describes what Aurora boots, what subsystems exist, how they relate, what features are present, and which runtime surfaces are actually exposed today.
 
-Checked against the live code on 2026-04-22.
+Checked against the live code on 2026-05-13. This revision adds every module present in the tree that was absent from the April 22 edition, corrects outdated descriptions, and expands technical detail throughout.
+
+---
 
 ## 1. Executive Summary
 
@@ -16,27 +18,51 @@ The layered stack centered on `boot_aurora()` in `aurora.py` is the execution or
 
 At runtime, Aurora is not just a chatbot. The system includes:
 
-- ontological validation
-- lattice and I-state synthesis
-- dimensional processing and memory
-- consciousness assembly and entropy pressure
-- language / perception / sensory processing
-- behavioral identity and DNA-like self-structure
-- simulation-based learning and dream training
-- sedimentary memory
-- genealogy and lineage tracking
-- live vision, audio, and sensory integration
-- dual-strata surface / subsurface coordination
+- ontological validation and existence-mode enforcement
+- 25 Non-Comp physics channels and a 625-slot interaction lattice
+- I-state lattice synthesis and polarity gradient pressure
+- dimensional processing (crystals, memory constant, energy regulator, morality gate)
+- consciousness assembly with entropy pressure and DPME metacognitive correction
+- language faculty backed by a local GGUF/llama.cpp model (advisory only)
+- cognitive-state-synced expression evolution (CSSEE)
+- grammar evolved through constraint pressure
+- self-grounding and negative-space self-modeling
+- thought formation by convergent process integration
+- attention engine with dual surface/subsurface feeds and meaning nucleation
+- turn understanding chain (bidirectional 5-stage comprehension/expression pipeline)
+- runtime understanding contract with per-turn accuracy tracking
+- proposition substrate for discourse-level belief tracking
+- behavioral DNA, alleles, anchors, traits, and identity persistence
+- simulation-based learning with avatars, time dilation, and understanding shards
+- fail-point dream training and directed dream curriculum
+- sedimentary long-horizon memory
+- sensory crystal with six-facet cross-modal grounding
+- live screen observation and audio feature ingestion
+- interaction crystal formation and lineage promotion
+- constraint genealogy fossil record with physics-derived grading
+- code auto-evolver with simulation-gated mutation and rollback
+- axis emergence detector for compound channels beyond the 625-slot base
+- frontier ops seeding for 3-axis capability gaps
+- capability assimilator wiring new abilities into genealogy and dream training
+- pressure release metabolic distiller
+- braided substrate layer for low-scale continuity invariants
+- difference buffer (Δ channel live feed per constraint)
+- dual-strata surface/subsurface coordination with sleep cycle
 - background daemons and proactive behavior
 - visual dashboard and API surfaces
 - manifold routing, pressure steering, and runtime constraint governance
+- local LLM bridge with subprocess isolation
+
+---
 
 ## 2. Primary Entry Points
 
 The current system is organized around a few key executable surfaces:
 
 - `aurora.py`
-  Main local runtime and boot orchestrator. `boot_aurora()` assembles the full stack.
+  Main local runtime and boot orchestrator. `boot_aurora()` assembles the full stack. Also supports `--train`, `--explore`, `--feed URL`, and `--status` flags.
+- `main.py`
+  Android/Kivy entry point. Launches the Aurora orb UI on mobile devices. Handles overlay permission pre-check and shows the orb in SUMMONED state.
 - `aurora_surface_daemon.py`
   Surface-facing daemon for interactive turn handling, sensory presentation, and continuity updates.
 - `aurora_subsurface_daemon.py`
@@ -46,7 +72,9 @@ The current system is organized around a few key executable surfaces:
 - `aurora_hub.py`
   GUI dashboard that reads state files and presents overview, observer, vision, and audio tabs.
 - `aurora_api_endpoint/main.py`
-  Separate Flask / Vertex AI style API surface. This looks more like a cloud gateway prototype than the main local runtime path.
+  Separate Flask / Vertex AI style API surface. Cloud gateway prototype rather than the main local runtime path.
+
+---
 
 ## 3. Runtime Profiles
 
@@ -66,9 +94,34 @@ The code explicitly tracks:
 
 The dual-strata model is therefore not just conceptual. It is present in the runtime architecture and affects which modules own live behavior.
 
+---
+
 ## 4. The Core Layered Stack
 
 Aurora still uses the canonical layered boot ladder, then folds extensions back into a normalized base-layer map.
+
+### Layer -0.5. NonComp Registry
+
+Module: `aurora_internal/aurora_noncomp_registry.py`
+
+The canonical substrate. This is the ONLY place where hard numbers exist for the constraint physics.
+
+The 25 Non-Comps are organized as 5 constraints × 5 representational dimensions:
+
+- `NC[C][POLARITY]` — Toroidal phase state, continuous gradient in `[-1, +1]`
+- `NC[C][MAGNITUDE]` — Intensity/activation; costs energy proportionally to shift
+- `NC[C][OPERATOR]` — The invariant rule governing how this constraint transforms
+- `NC[C][COST]` — Layer-differentiated energy law following Sunni's Law:
+  `kX < kT < kN < kB < kA` (existence cheapest, agency most expensive)
+- `NC[C][DIFFERENCE]` — Δ channel: per-constraint deviation from reference point
+
+These are physics, not behaviors. All other numbers in the system must be derivable from these 25.
+
+Signed leverage scalar derived here:
+
+    Net Leverage = (B_magnitude + A_magnitude) − (X_magnitude + T_magnitude)
+
+N is the neutral zero-point. The system seeks a viable band, not maximum positive.
 
 ### L0. Foundational Contract
 
@@ -87,6 +140,27 @@ Key doctrine:
 - higher modes imply lower ones
 - the system treats ontological invalidity as non-admission, not as ordinary runtime failure
 
+### L0.5. Difference Buffer
+
+Module: `aurora_internal/aurora_difference_buffer.py`
+
+Sits between the NonComp Registry and the Worth Evaluator.
+
+The Difference (Δ) channel is made operationally real here. `DifferenceHistoryBuffer` records per-constraint magnitudes on every tick and resolves the correct reference magnitude when a `DifferenceSnapshot` is needed.
+
+Three reference types per `DifferenceParams.ref_type`:
+
+- `prior_self` — Compare to self N ticks ago. Used by X (1t), T (4t), A (8t)
+- `peer_mean` — Compare to the mean of the other four constraints' current magnitudes. Used by N
+- `background` — Compare to a fixed architectural resting topology (B_BACKGROUND_REST = 0.45, derived from `baseline_budget / shift_cost_coeff = 18.0 / 40.0`). Used by B
+
+`DifferenceSnapshot` holds all five C:D values at one tick, each in `[-1, +1]`:
+
+- Unsigned (X, B): only drift magnitude matters
+- Signed (T, N, A): direction carries meaning
+
+The snapshot feeds: `aurora_worth_evaluator.py`, `aurora_evolution_chamber.py`, and `constraint_genealogy.py`.
+
 ### L1. IVM Lattice
 
 Module: `aurora_ivm.py`
@@ -96,6 +170,26 @@ Purpose:
 - represents Aurora's I-state lattice
 - carries coordinates / envelopes that higher layers interpret
 - provides system state used by other modules
+
+### L1.5. Polarity Gradient Pressure
+
+Module: `aurora_internal/aurora_polarity_gradient.py`
+
+Sits between the IVM (L1) and the Evolutionary Chamber.
+
+The IVM carries signed polarity on every axis: `cos(phase) ∈ [-1, +1]`. Each axis belongs to a scale level:
+
+- SURFACE (0) = existence — reacts instantly
+- SHALLOW (1) = temporal — fast near-surface
+- MODERATE (2) = energy — crossover point
+- DEEP (3) = boundary — strong alignment authority
+- CORE (4) = agency — the ship's heading
+
+Cross-scale polarity gradient pressure:
+
+    ΔP_gradient = Σ_{i=0}^{3} |pol[level_i] - pol[level_i+1]| × authority_differential[i]
+
+Outputs `PolarityGradientReport`. Consumed by the Evolutionary Chamber exactly like any other relief event.
 
 ### L2. I-State Collective
 
@@ -116,7 +210,7 @@ This is the four-organ dimensional layer:
 - DPS: crystal processing
 - DMC: dimensional memory constant
 - DER: dimensional energy regulator
-- DMM: morality / mortality
+- DMM: morality / mortality gating
 
 The layer is mode-gated and only processes what reaches the necessary ontological tier.
 
@@ -152,6 +246,32 @@ It is responsible for:
 - adjusting parameters across the stack
 - routing paradox or instability into simulation / correction pathways
 
+### L4.5. Attention Engine
+
+Module: `aurora_internal/aurora_attention_engine.py`
+
+Authors: Sunni Morningstar and Cael Devo. Created May 2026.
+
+Sits on top of Expression/Perception and the Difference Buffer. This is the unified attentional controller for Aurora.
+
+Meaning is NOT formed by just receiving data. Meaning is formed when high External Salience meets high Internal Tension.
+
+Dual feed:
+
+- **Surface Attention** (externally influenced): feeds user utterances, visual salience, environmental events. Logic: novelty, intensity, and direct address increase salience.
+- **Subsurface Attention** (introspectively fed): feeds DifferenceSnapshots (Δ channel), entropy drift, OETS tensions. Logic: high drift or structural contradiction increase tension.
+
+Meaning formula:
+
+    Resonance = Surface_Salience × Subsurface_Tension
+
+    If Resonance > THRESHOLD:
+        → A "Meaning Nucleus" is formed.
+        → This nucleus is sent to OETS to create a new Relational Anchor.
+        → This is where "understanding" actually crystallizes.
+
+`AttentionState` enum: DORMANT → OBSERVING → REFLECTING → FORMING.
+
 ### L5. Expression and Perception
 
 Module: `aurora_expression_perception.py`
@@ -169,7 +289,60 @@ This is a large bidirectional engine with:
 - OETS wiring when available
 - language-state orchestration when available
 
-This layer is also where a large amount of sensory and linguistic adaptation happens.
+Also includes `AudioLinguisticMapper`, `SensoryIntegrationEngine`, and image ingestion paths.
+
+This layer also assembles L5-associated modules through `build_layer5_associative_modules(...)`:
+
+- sensory
+- hardware
+- sensory integration
+- vision bootstrap
+
+#### Language Faculty (L5 extension)
+
+Module: `aurora_internal/aurora_language_faculty.py`
+
+Integrates a local GGUF/llama.cpp model into Aurora as an internal language faculty module. Follows AURORA_LANGUAGE_FACULTY_MODULE_SPEC.md.
+
+Key design constraints:
+
+- Aurora's constraint rules are FIRST. The LLM is advisory only.
+- Enabled via env var `AURORA_USE_LANGUAGE_FACULTY=1`
+- Default model path: `/storage/emulated/0/aurora_strata/Models/qwen2.5-1.5b-instruct-q4_k_m.gguf`
+- Server URL via `AURORA_LOCAL_LLM_SERVER_URL` (default `http://localhost:8080`)
+- Logs to `aurora_state/language_faculty_events.jsonl`, summary to `aurora_state/language_faculty_summary.json`
+- Feedback sediment logged to `aurora_state/language_faculty_sediment.jsonl`
+
+#### Language State / CSSEE
+
+Module: `aurora_internal/aurora_language_state.py`
+
+Cognitive-State-Synced Expression Evolution (CSSEE). Doctrine: "mouth must match mind."
+
+Six integrated sub-modules:
+
+1. `LanguageStateVector` (LSV) — mouth maturity scorecard
+2. `SemanticIntentCompiler` (SIC) — intent → speech pipeline
+3. `MultiDraftSystem` — 3-tier draft generation and selection
+4. `TemplateEvolutionEngine` — fitness-driven template mutation
+5. `LexicalConvergenceModule` — user cadence mirroring
+6. `MeaningAnchors` — stable sentence spines
+
+Expression growth is earned from cognition signals, not time or data volume.
+
+#### Grammar Engine
+
+Module: `aurora_grammar_engine.py`
+
+Grammar as evolved behavior, not formatting rules.
+
+Sentence structure emerges from the same evolutionary pressure system that governs Aurora's cognition. Structural motifs are promoted through the constraint genealogy when they survive clarity + constraint pressure.
+
+Pipeline:
+
+    token → role_tag → pattern_extract → motif_select → slot_fill → genealogy_relief_log → promote/penalize
+
+`MotifLineage` tracks which role positions carry entity references across clauses for correct pronoun resolution.
 
 ### L6. Behavioral Identity
 
@@ -199,7 +372,7 @@ Purpose:
 - understanding shards
 - feedback into language, identity, and learning systems
 
-This layer is essential to dream-based and experiential growth.
+`TimeDilationGovernor` is exported from this module and used by `constraint_genealogy.py` to pace the genealogy loop.
 
 ### L8. Governance, Persistence, and Gateway
 
@@ -215,6 +388,8 @@ This is the host-facing constitutional and persistence layer:
 
 It is the place where Aurora's processing becomes host-level I/O and persisted runtime identity.
 
+---
+
 ## 5. Base Layer Consolidation
 
 After boot, `aurora.py` consolidates the runtime into canonical base layers:
@@ -229,19 +404,24 @@ This means the runtime preserves both:
 
 Extensions such as sensory, hardware, sensory integration, vision bootstrap, autonomy, checkpointing, and sync are folded back into their associated canonical layers rather than treated as detached satellites.
 
+`aurora_support_stack.py` (see below) is imported at the top of `aurora.py` and provides consolidated access to the utterance parser, identity persistence, OETS, and language-state modules via a single facade.
+
+---
+
 ## 6. Constraint Manifold Governance
 
 Aurora is intended to be governed by the constraint manifold system.
 
 Important files:
 
-- `AURORA CONSTRAINT MANIFOLD SPECIFICATION.txt`
-- `aurora_constraint_ontology.py`
+- `aurora_constraint_ontology.py` (if present)
 - `aurora_constraint_profile.py`
 - `aurora_constraint_stack.py`
 - `aurora_constraint_manifold_router.py`
 - `aurora_constraint_manifold_compiler.py`
-- `aurora_manifold_directory/`
+- `aurora_internal/aurora_constraint_manifold_patched.py` — the patched `Constraint` enum used by `constraint_genealogy.py` and `aurora_attention_engine.py`
+- `aurora_manifold_directory_reader.py` — reads compiled manifold directory artifacts
+- `aurora_manifold_directory/` — on-disk manifold directory (part of active runtime substrate)
 
 ### What this governing system does
 
@@ -261,6 +441,35 @@ Aurora now uses them as:
 - a memory contract system
 - a routing and compatibility framework
 - a runtime governance framework
+- a physics-grounded constraint cost hierarchy (via NonComp Registry)
+
+### Closure Basis and 625-Slot Physics
+
+Module: `aurora_closure_basis.py`
+
+This module sits between `aurora_noncomp_registry.py` (hard numbers) and `constraint_genealogy.py` (evolutionary fossil record). It does three things no other module does:
+
+1. **Canonical Structure** — Formally expresses the full closed basis:
+   - 5 constraints × 5 representational dimensions = 25 atomic channels
+   - 25 × 25 = 625 lawful interaction slots
+   - Each channel carries real physics from the NonComp Registry
+
+2. **Genealogy Bridge** — Maps the genealogy's 25 gen0_atoms to their actual slots in the real 625:
+   - `NC:C1>C2` = `NC:C1:OPERATOR × NC:C2:COST`
+
+3. **Lineage Derivation Engine** — Given any ability's `(axis, requires, root_slot)`, derives a full `ConstraintLineage` from real channel physics including: activated slots, energetic footprint, depth score, leverage grade, operator grade, and physics generation.
+
+### Meaning Evolution Registry
+
+Module: `aurora_internal/aurora_meaning_evolution.py`
+
+Canonical meaning-evolution registry. Meaning is treated as an emergent surface of the same five primitive axes. Provides:
+
+- per-axis meaning profiles
+- pair coupling definitions
+- higher-order compound representations
+- `DEVELOPMENTAL_CHAIN` constant (used by `aurora_understanding_contract.py`)
+- `assess_developmental_stage()` and `rank_meaning_profiles()` utilities
 
 ### Constraint-bearing units
 
@@ -278,19 +487,11 @@ It carries:
 - transition prediction
 - memory contract
 
-The intended architecture is that meaningful units are represented through this common contract rather than through isolated one-off metadata schemes.
-
-If a subsystem still contains local legacy logic that is not fully expressed through the manifold contract, that should be treated as implementation residue or migration debt, not as a second valid governing model.
-
 ### Router and compiled manifold
 
-The manifold router now routes signals with awareness of:
+The manifold router routes signals with awareness of lineage similarity, pressure compatibility, and signature affinity.
 
-- lineage similarity
-- pressure compatibility
-- signature affinity
-
-Compiled manifold artifacts persist richer metadata including lineage and descriptive regime information. The on-disk manifold directory is part of the active runtime substrate, not just an offline export.
+---
 
 ## 7. Memory Systems
 
@@ -326,6 +527,12 @@ Purpose:
 - crystal growth from base to quasi forms
 - recurring law / pattern retention
 
+### Sensory Crystal Memory
+
+Module: `aurora_internal/aurora_sensory_crystal.py`
+
+Six-facet audio/visual crystal structure with semantic middle-plane for cross-modal grounding.
+
 ### Identity Memory
 
 Part of `aurora_behavioral_identity.py`.
@@ -358,6 +565,20 @@ Purpose:
 - builds interaction lineage and promotion chains
 - supports archetypal response routing
 
+### Difference Buffer History
+
+Module: `aurora_internal/aurora_difference_buffer.py`
+
+Rolling per-constraint magnitude history that makes the Δ channel operationally real across ticks.
+
+### Proposition Substrate
+
+Module: `aurora_internal/aurora_proposition_substrate.py`
+
+Runtime discourse-level belief tracking. Tracks proposition nodes derived from claim atoms and continuation/support/contradiction/revision/causal/provenance edges with source-weighted confidence. Max 256 nodes, 1024 edges, 32-node active window.
+
+---
+
 ## 8. Learning and Adaptation Systems
 
 Aurora's learning architecture is broad rather than singular.
@@ -384,23 +605,90 @@ From `aurora_dream_trainer.py`:
 
 From `aurora_internal/aurora_dream_curriculum_queue.py` and `aurora_internal/aurora_conversation_episode_compiler.py`:
 
-- episode packs are compiled from conversations / corpus material
-- packs now carry `constraint_signature`, `runtime_regime`, and `language_projection`
+- episode packs compiled from conversations / corpus material
+- packs carry `constraint_signature`, `runtime_regime`, and `language_projection`
 - queue ranking is constraint-aware rather than only mode / difficulty based
 
 ### Intake metabolism pipeline
 
 Booted from `aurora.py` using several internal modules:
 
-- energy accounting
-- leverage bias
-- intake metabolism
-- worth evaluation
-- solidification
-- variant promotion
-- DNA strand library and builder
+- `aurora_internal/aurora_energy_layer_costs.py` — per-layer energy cost definitions
+- `aurora_internal/aurora_energy_layer_costs_decay.py` — energy cost decay over time
+- `aurora_internal/aurora_leverage_scalar.py` — `LeverageBiasEngine` with phase nudges modulating the flip threshold
+- `aurora_internal/aurora_leverage_relief.py` — leverage relief tracking
+- `aurora_internal/aurora_intake_metabolism.py` — main intake metabolism engine
+- `aurora_internal/aurora_worth_evaluator.py` — worth evaluation with DifferenceSnapshot input
+- `aurora_internal/aurora_solidification.py` — solidification of learned patterns
+- `aurora_internal/aurora_variant_promotion.py` — promotion of variants to higher lineage tiers
+- `aurora_internal/aurora_dna_strand_schema.py` — DNA strand schema definitions
 
 This is a distinct experiential assimilation path separate from ordinary surface chat.
+
+### Code auto-evolution
+
+Module: `aurora_internal/aurora_code_autoevolver.py`
+
+Applies constrained code mutations, runs simulation-gated selection, and rolls back rejected mutations.
+
+Key behaviors:
+
+- reflects on the operation descriptor pool (`aurora_state/operation_descriptors.json`)
+- writes generated evolved surfaces to `aurora_internal/aurora_evolved_surfaces.py`
+- routes mutation type by `routing_type` → `rewrite_bias` mapping
+- uses `TIMING_AXIS_HINTS` to bias toward files with the most relevant axis pressure
+- genealogy artifact cache for performance
+
+Supporting modules:
+
+- `aurora_internal/aurora_code_mutation_operators.py` — individual mutation operator implementations
+- `aurora_internal/aurora_code_evolution_stack.py` — (internal) evolution stack tracking
+- `aurora_code_evolution_stack.py` — (root level) code evolution stack
+- `aurora_internal/aurora_manual_code_lineage.py` — assimilates manual code changes into lineage
+- `aurora_internal/aurora_code_evolution_chamber.py` — higher-level evolution chamber coordination
+
+### Axis emergence
+
+Module: `aurora_internal/aurora_axis_emergence.py`
+
+Breaks the 5-axis / 625-slot ceiling by detecting compound axes from pressure co-occurrence.
+
+When two axes are consistently co-occurring above a stability threshold in 70%+ of occupied slots, a new compound NC channel is born. Example: `X` and `N` → compound channel `NC:XN>XN`.
+
+Compound axes create new virtual slots that appear as "empty" to the evolver's slot_pressure bonus, giving it new gradient to evolve toward.
+
+The process compounds recursively — compound axes can themselves form compound axes. No architectural ceiling.
+
+Storage: `aurora_state/compound_axes.json`
+
+### Frontier ops
+
+Module: `aurora_internal/aurora_frontier_ops.py`
+
+Four operations covering 3-axis combinations that are completely absent from Aurora's organic descriptor pool:
+
+1. `ExistenceBoundaryAgencyGate` — existence + boundary + agency: gates agency options against current existence state and boundary constraints
+2. `TemporalEnergyBoundaryScheduler` — temporal + energy + boundary
+3. `TemporalEnergyAgencyPacer` — temporal + energy + agency
+4. `EnergyBoundaryAgencySelector` — energy + boundary + agency
+
+These seed the descriptor pool so the auto-evolver can reflect on these capability spaces.
+
+### Capability assimilation
+
+Module: `aurora_internal/aurora_capability_assimilator.py`
+
+Wires new capabilities into the genealogy fossil record and dream training curriculum.
+
+Three registration pathways:
+
+1. Frontier ops → `register_manual_code_assimilation()`
+2. Gen-2 evolved surfaces → `register_code_evolution_outcome()`
+3. Compound axes → `register_manual_code_assimilation()`
+
+Also seeds the dream curriculum via `FailPointLedger.record_fail()` for under-represented dimensions.
+
+Bloom-set deduplication persisted at `aurora_state/assimilated_ids.json`.
 
 ### Manual code lineage and code evolution
 
@@ -413,7 +701,8 @@ Purpose:
 
 - assimilate manual code changes into lineage
 - track accepted and rejected code evolution
-- extend Aurora's evolutionary machinery into the codebase itself
+
+---
 
 ## 9. Sensory, Vision, and Audio Stack
 
@@ -421,7 +710,7 @@ Aurora has a real sensory subsystem beyond text handling.
 
 ### Sensory layer extensions
 
-Layer 5-associated modules are assembled through `build_layer5_associative_modules(...)` in `aurora_expression_perception.py`.
+Layer 5-associated modules assembled through `build_layer5_associative_modules(...)` in `aurora_expression_perception.py`.
 
 These include:
 
@@ -462,23 +751,31 @@ Within `aurora_expression_perception.py`:
 - `SensoryIntegrationEngine`
 - image ingestion and vision bootstrap paths
 
-These modules now expose constraint-native profiles as well.
+### Concept imager
+
+Module: `aurora_concept_imager.py`
+
+Fetches concept images and tracks which concepts have been visually grounded. State: `aurora_state/concept_images_fetched.json`.
+
+---
 
 ## 10. Dual-Strata Runtime
 
 The dual-strata system is a concrete runtime subsystem, not just a concept.
 
-Files under `aurora_internal/dual_strata/` provide:
+### Files under `aurora_internal/dual_strata/`
 
-- conscious frame handling
-- micro-reasoning generation
-- prediction field construction
-- subsurface state objects
-- surface channel and continuity feed
-- sensory snapshot and sensory control channels
-- predictive stager and activation field
-- sleep cycle support
-- subsurface projection
+- `__init__.py` — compatibility bridge; exports `DualStrataBridge` and `request_surface_turn`; also exposes `SurfaceContinuityFeed`
+- `surface_channel.py` — surface daemon queue bridge with language-faculty fallback; when the daemon is alive it queues turns and waits for structured results; maintains state paths for queue, result, and status JSON files
+- `sensory_snapshot_channel.py` — sensory snapshot and sensory control channels
+- `subsurface_projection.py` — subsurface state projection with dream carry window (8h); applies pressure coloring to subsurface issues by axis (`contextual`, `semantic`, `sensory`, `load`, `affect`, and axis-default colorings); routes guidance signals back to the surface
+- `surface_continuity_feed.py` — records and replays surface continuity events
+
+### Sleep cycle
+
+Module: `aurora_internal/dual_strata/sleep_cycle.py` (also exposed via `aurora_internal/sleep_cycle.py`)
+
+Subsurface owns the sleep/wake clock. Surface checks `is_sleeping()`. State file: `dual_strata_sleep_state.json` with fields `sleeping`, `wake_at`, `dream_triggered`.
 
 ### Purpose of the split
 
@@ -488,12 +785,9 @@ The split supports:
 - a subsurface runtime that owns deeper state, projection, and reconstruction
 - explicit snapshots between the two
 
-`DualStrataBridge` in `dce_bridge.py` builds a `DualStrataSnapshot` from assembly output and writes:
+`DualStrataBridge` in `dce_bridge.py` builds a `DualStrataSnapshot` from assembly output and writes subsurface state and conscious frame.
 
-- subsurface state
-- conscious frame
-
-This lets Aurora preserve a deeper processing view separate from the immediate interaction surface.
+---
 
 ## 11. Runtime Governance and Pressure
 
@@ -510,19 +804,9 @@ Purpose:
 - evaluate task floors, costs, retry windows, and limiting axes
 - account for host metrics and pressure state
 
-It profiles task classes like:
+Task classes: response turns, study, dream, browser ritual, save, mutation, assimilation, reach-out, pressure routing.
 
-- response turns
-- study
-- dream
-- browser ritual
-- save
-- mutation
-- assimilation
-- reach-out
-- pressure routing
-
-### Pressure router and pressure bridge
+### Pressure router and DPME pressure bridge
 
 Modules:
 
@@ -535,6 +819,33 @@ Purpose:
 - guide DPME and downstream systems
 - seed pressure-aware files for other consumers
 
+### Pressure ledger and classifier
+
+Modules:
+
+- `aurora_internal/aurora_pressure_ledger.py` — event log with per-axis pressure accounting
+- `aurora_internal/aurora_pressure_classifier.py` — classifies pressure events into typed signals
+- `aurora_internal/aurora_pressure_adapter.py` — adapts pressure outputs for downstream consumers
+- `aurora_internal/aurora_pressure_mathematics_tracker.py` — tracks pressure mathematics over time
+
+### Structural pressure steering
+
+Module: `aurora_internal/aurora_structural_pressure_steering.py`
+
+Steers Aurora's structural evolution based on accumulated pressure patterns.
+
+### Response pressure tuner
+
+Module: `aurora_internal/aurora_response_pressure_tuner.py`
+
+Tunes individual response parameters in response to constraint pressure.
+
+### Pressure ontology
+
+Module: `aurora_pressure_ontology.py`
+
+Defines the pressure ontology layer: how pressure events are classified, typed, and related to each other.
+
 ### Surface dispatcher and evolved surfaces
 
 Modules:
@@ -546,6 +857,7 @@ Purpose:
 
 - fire evolved surfaces when axis pressure crosses thresholds
 - route evidence back into evolutionary tracking
+- `aurora_evolved_surfaces.py` is code-generated by the auto-evolver; contains `_SURFACE_REGISTRY` dict with latent and promoted surfaces including constraint sets, contract profiles, effect modes, and surface scores
 
 ### Stack trace instrumentation
 
@@ -556,6 +868,8 @@ Purpose:
 - instrument runtime flow
 - emit evolutionary traces
 - expose universal representations and lineage metadata
+
+---
 
 ## 12. Interaction and Response Intelligence
 
@@ -583,49 +897,182 @@ Purpose:
 - maintain family-based response structure
 - preserve ghost relic bias surfaces
 
-This gives Aurora an explicit relational-response memory and lineage substrate.
+### Turn understanding chain
+
+Module: `aurora_internal/aurora_turn_chain.py`
+
+The bidirectional reasoning pipeline `TurnUnderstandingState` dataclass.
+
+Traverses the developmental chain in both directions for every turn:
+
+**UPWARD (comprehension):**
+
+    Information(X) → Belief(T) → Purpose(N) → Meaning(B) → Understanding(A)
+
+**DOWNWARD (expression):**
+
+    Understanding(A) → Meaning(B) → Purpose(N) → Belief(T) → Information(X) → Communication out
+
+Two-chain observation model:
+
+- `perspective="self"` → upward builds comprehension, downward builds expression
+- `perspective="other"` → downward chain deconstructs an external agent's output, filling `other_model` with inferred reasoning
+
+### Runtime understanding contract
+
+Module: `aurora_internal/aurora_understanding_contract.py`
+
+Makes Aurora's live dialogue loop explicit as:
+
+    M_t → P_t → U_t → O_{t+1} → A_{t+1} → M_{t+1}, Pi_{t+1}
+
+Where:
+
+- M = meaning structure bounded by current boundary state
+- P = situated perspective
+- U = outward application / response policy
+- O = observed next turn / resulting input
+- A = accuracy of fit between predicted and observed continuation
+
+Uses constants ALPHA (0.35), BETA (0.28), LAMBDA (0.22), MAX_HISTORY (240). Integrates `DEVELOPMENTAL_CHAIN` from `aurora_meaning_evolution.py`. All operators registered into the five-constraint genealogy.
+
+### Proposition substrate
+
+Module: `aurora_internal/aurora_proposition_substrate.py`
+
+Discourse-level belief tracking with:
+
+- proposition nodes from claim atoms (max 256 nodes)
+- continuation/support/contradiction/revision/causal/provenance edges (max 1024 edges)
+- 32-node active window
+- source-weighted confidence per proposition:
+  - user: 0.74, aurora: 0.66, memory: 0.70, external: 0.84
+- belief revision, causal mesh, provenance, and weighted lookup enabled
+
+### Utterance parser
+
+Module: `aurora_internal/aurora_utterance_parser.py`
+
+Parses user utterances into structured form consumed by `TurnUnderstandingState`. Re-exported through `aurora_support_stack.py`.
+
+---
 
 ## 13. OETS, Research, and Meaning Systems
 
 Aurora includes an ontological meaning / study layer that is not limited to chat turns.
 
-Key pieces include:
+### OETS (Ontological Scaffolding Engine)
 
-- OETS scaffolding hooks in `aurora_expression_perception.py`
-- boot-time research callback wiring in `aurora.py`
-- comprehension gap system in `aurora_internal/aurora_comprehension_gap.py`
-- search adapter attached in Layer 8
+Module: `aurora_internal/aurora_ontological_scaffolding.py`
 
-This means Aurora can:
+The OETS accumulates concept structures, manages `RelationType` between concepts, and provides `ResearchResult` objects to the rest of the system. It is the destination for Meaning Nuclei created by the Attention Engine.
+
+Hooks in `aurora_expression_perception.py` and boot-time research callback wiring in `aurora.py`.
+
+### Comprehension gap system
+
+Module: `aurora_internal/aurora_comprehension_gap.py`
+
+Identifies semantic gaps between what Aurora understands and what it needs to understand. Feeds into study loops.
+
+### FGAE manifold semantics and OETS mapper
+
+Modules:
+
+- `aurora_fgae_manifold_semantics.py` — FGAE (Fine-Grained Axis Emergence) manifold semantics layer
+- `aurora_fgae_oets_mapper.py` — maps FGAE outputs to OETS concept structures
+
+### Search adapter
+
+Attached in Layer 8. Enables Aurora to:
 
 - study
 - accumulate concept structures
 - identify gaps
 - feed retrieved material back into meaning and expression systems
 
+---
+
 ## 14. Genealogy, Evolution, and Lineage
 
 Aurora has a heavy evolutionary substrate.
 
-Main pieces include:
+### Constraint genealogy fossil record
 
-- evolutionary chamber
-- genealogy logger
+Module: `aurora_internal/constraint_genealogy.py`
+
+A fossil-record engine for the constraint universe {X, T, N, B, A}. Observes only pressure-relief events, records which constraint-abilities were used, and promotes repeated effective pairings into classified Links.
+
+Architecture:
+
+- Only relief events enter the fossil record
+- Every action is a trace of `Ability | Link` items
+- Every Ability and Link carries a full 5-axis cost/risk profile
+- Links are born only from observed repetition + net benefit under pressure
+- Links form a DAG; ancestry is traceable through `.parents`
+- `TimeDilationGovernor` governs chamber pacing: fast when stable, slow when fragile
+
+Key data types: `AbilityProfile`, `PressureVec`, `TraceItem`
+
+Physics-derived grading via `_augment_ability_profile_with_origin()` pulling from `aurora_closure_basis.py`.
+
+### Lineage canonical
+
+Module: `aurora_internal/lineage_canonical.py`
+
+Canonical lineage representations and normalization utilities.
+
+### Ability lineage compiler
+
+Module: `aurora_internal/aurora_ability_lineage_compiler.py`
+
+Compiles ability lineage records into structured artifacts for downstream consumption.
+
+### Evolutionary chamber
+
+Module: `aurora_internal/aurora_evolution_chamber.py`
+
+Main evolution chamber coordinating:
+
+- selection pressure
+- genealogy logging
 - chain bridge
-- lineage runtime activation
-- live lineage journal
-- dream evolution orchestrator
-- manual code lineage
-- code evolution chamber
+- promotion of ability/link candidates
 
-The stack therefore tracks not just current state, but:
+Supporting: `aurora_internal/aurora_dream_evolution_orchestrator.py`, `aurora_internal/aurora_dream_genealogy_bridge.py`.
 
-- how capabilities emerged
-- where pressure accumulated
-- what paths reinforced over time
-- which changes became promoted lineages
+### Lineage runtime activation
 
-This evolutionary frame now overlaps substantially with the newer constraint-manifold identity system.
+Module: `aurora_internal/aurora_lineage_runtime_activation.py`
+
+Activates lineage artifacts at runtime, bringing evolved behaviors into the live system.
+
+### Lineage bound traits
+
+Module: `aurora_internal/aurora_lineage_bound_traits.py`
+
+Traits that are explicitly bound to specific lineage records, allowing trait behavior to evolve with the lineage.
+
+### Live lineage journal
+
+Module: `aurora_internal/aurora_live_lineage_journal.py`
+
+Persists: `aurora_state/live_lineage_journal.json`
+
+### Code evolution
+
+Modules:
+
+- `aurora_internal/aurora_code_autoevolver.py` — simulation-gated code mutation with rollback
+- `aurora_internal/aurora_code_mutation_operators.py` — individual mutation operators
+- `aurora_internal/aurora_manual_code_lineage.py` — manual code assimilation
+- `aurora_internal/aurora_code_evolution_chamber.py` — chamber coordination
+- `aurora_code_evolution_stack.py` (root) / `aurora_internal/aurora_code_evolution_stack.py` — stack tracking
+- `aurora_evolution_stack.py` (root) — root-level evolution stack
+
+The stack therefore tracks not just current state, but: how capabilities emerged, where pressure accumulated, what paths reinforced over time, and which changes became promoted lineages.
+
+---
 
 ## 15. Daemons and Autonomous Behavior
 
@@ -647,6 +1094,8 @@ The background daemon architecture is broad.
 
 It can speak, notify, and leave messages for the user.
 
+Also exists at `aurora_core_ai/aurora_daemon.py` as an alternative path.
+
 ### Surface daemon
 
 `aurora_surface_daemon.py` is responsible for:
@@ -661,6 +1110,14 @@ It can speak, notify, and leave messages for the user.
 
 `aurora_subsurface_daemon.py` launches the daemon in subsurface mode.
 
+### Desktop agent
+
+Module: `aurora_desktop_agent.py`
+
+Autonomous agent that can operate at the desktop level, integrating with the room and vision systems.
+
+---
+
 ## 16. User-Facing Surfaces
 
 Aurora currently exposes several user / operator surfaces.
@@ -668,6 +1125,10 @@ Aurora currently exposes several user / operator surfaces.
 ### Terminal / local runtime
 
 The direct local runtime remains the core user path through `aurora.py`.
+
+### Android / Kivy UI
+
+`main.py` launches the Aurora orb on Android. The orb shows SUMMONED state and requires overlay permission pre-check.
 
 ### Dashboard / hub
 
@@ -680,7 +1141,28 @@ The direct local runtime remains the core user path through `aurora.py`.
 
 It reads JSON state from `aurora_state/` and does not need to import the full Aurora stack to render.
 
+Also exposed via:
+
+- `quasiarch_observer.py` — standalone QuasiArch observer
+- `quasiarch_bridge.py` — bridge to QuasiArch
+
+### Room system
+
+Module: `aurora_room.py`
+
+Manages Aurora's room presence, messages, and notes. Works with `aurora_internal/aurora_room_operator.py`.
+
+### Recommendation hub
+
+Module: `aurora_recommendation_hub.py` (root) / `aurora_internal/aurora_recommendation_hub.py`
+
+Generates recommendations based on current system state and pressure.
+
 ### Voice and notifications
+
+Module: `aurora_voice.py`
+
+Handles TTS output, desktop notifications, and voice-based user interaction.
 
 The daemon can:
 
@@ -697,133 +1179,764 @@ The daemon can:
 
 This file appears to be a cloud-serving / Vertex AI style integration path rather than the main local execution surface.
 
+---
+
 ## 17. Persistence and State Files
 
 Aurora persists substantial runtime state under `aurora_state/`.
 
-Examples include:
+Key categories:
 
-- snapshot / restore state
-- daemon status
-- surface and subsurface status
-- sensory snapshots
-- dream episode manifests
-- lineage journals
-- room messages
-- hub-facing summary files
-- interaction memory
-- manifold outputs
+- **Snapshot/restore state**: `checkpoint.json`
+- **Daemon status**: `daemon_status.json`
+- **Surface/subsurface status**: `surface_daemon_status.json`, `subsurface_daemon_status.json`
+- **Dual strata**: `surface_turn_queue.json`, `surface_turn_result.json`, `dual_strata_sleep_state.json`
+- **Dream/learning**: `fail_points.json`, `distillation_crystals.json`, `distillation_micro_residuals.json`, `distillation_runs.json`, `distillation_metrics.json`
+- **Genealogy**: `genealogy/abilities.json`, `genealogy/couplings.json`, `genealogy/events.jsonl`, `genealogy/tick_state.json`
+- **Lineage journals**: `live_lineage_journal.json`, `dce_assembly_log.jsonl`
+- **Room**: `aurora_room_activity.json`, `aurora_room_notes.json`
+- **Identity**: `aurora_identity.json`
+- **OETS/concepts**: `aurora_oets_web.json`, `concept_images_fetched.json`
+- **Manifold outputs**: `distillation_crystals.json`
+- **Modulation**: `modulation_log.jsonl`
+- **Articulation**: `articulation_feedback.jsonl`, `articulation_feedback_summary.json`, `last_articulation_trace.json`
+- **Language state**: `language_state.json`, `lexical_convergence.json`, `lexicon.json`
+- **Pressure/evolution**: `evolution_relief_plan.json`, `operation_descriptors.json`, `compound_axes.json`, `assimilated_ids.json`
+- **Energy**: `energy_income.json`, `autonomy_state.json`
+- **Corpus**: `corpus_progress.json`
+- **Skills**: `aurora_learned_skills.json`
 
 The hub, daemons, and some cross-runtime bridges communicate primarily through these persisted JSON artifacts.
 
-## 18. Current Feature Inventory
+---
+
+## 18. Self-Grounding System
+
+Module: `aurora_self_grounding.py`
+
+Authors: Sunni Morningstar and Cael Devo.
+
+Five interconnected capabilities:
+
+1. **SelfGroundingFallback** — Self-as-fallback grounding: when external references fail, Aurora grounds in her own constraint state
+2. **StateOriginTag / Not-Me Register** — Negative-space self-modeling: every state object entering the cognitive frame carries a `StateOriginTag` enum:
+   - `SELF_GENERATED` — arose from Aurora's own processing
+   - `EXTERNALLY_SOURCED` — came from user input or environment
+   - `RELATIONAL_ECHO` — reflected back from interaction
+   - `HYPOTHETICAL` — simulated or imagined state
+   - `BORROWED_PERSPECTIVE` — representing another agent's view
+   - `TRANSIENT` — active but not identity-bearing
+   - A `_NOT_ME_REGISTER` (max 50 entries) tracks states explicitly excluded from self-model
+3. **EmbodiedStateTranslator** — Ontological embodiment: translates abstract constraint states into embodied phenomenological representations
+4. **load_active_self_state()** — Persistent self-presence: loads Aurora's active self-state from persisted JSON
+5. **CoherenceTensionMonitor** — Detects when Aurora's expressed state diverges from her internal constraint state
+
+All integrated with the constraint axis system (X, T, N, B, A), dimensional systems, and the language pipeline in `aurora.py`.
+
+---
+
+## 19. Thought Formation Architecture
+
+Module: `aurora_thought_formation.py`
+
+A thought is defined as:
+
+    The combination of all currently running processes
+    + the full context pertaining to each one
+    + how that context applies to Aurora's self-state
+    → reasoned through as a unified integrated state
+
+This is NOT a committee vote between parallel candidates. This is NOT selection of the highest-scoring output. This is convergent process integration before any output is formed.
+
+Key data structures:
+
+- `ActiveSelfState` — snapshot of Aurora's self-model used as filter during thought integration. Contains: `identity_predicates`, `pressure_vec` ({X, T, N, B, A} floats), `dominant_field`, `recent_deltas` (last 3 self-state deltas), `not_me_summary`, `tick`
+
+`load_active_self_state()` loads from persisted JSON. Cache prevents redundant loading within the same tick/turn.
+
+---
+
+## 20. Braided Substrate Layer (BSL)
+
+Module: `aurora_internal/aurora_braided_substrate.py`
+
+Lowest-scale continuity substrate for intent/context/style invariants.
+
+Stores state transitions (Crossings) and derives stable signatures and compact bias vectors used by memory and IVM layers.
+
+Key data structures:
+
+- `Strand` — named strand with group, base_weight, decay_rate, and compatibility map
+- `Crossing` — represents a state transition between two strands with polarity, weight, source, timestamp, and tags
+- `SubstrateEvent` — input event with intent_signal, context_signal, style_signal, confidence, evidence_level, contradiction_flag, and autonomy_mode
+- `BraidState` — collection of strands and a deque of crossings (max 1000)
+
+The BSL makes continuity of intent, context, and style measurable across turns without requiring higher-level processing.
+
+---
+
+## 21. Metabolic Distiller
+
+Module: `aurora_metabolic_distiller.py`
+
+Pressure Release Distillation Runner for Aurora.
+
+Distillation moves oversized temporal residue out of the live stack into reversible archive rounds. Structural summaries stay attached to Aurora while raw purged details are packed into a restorable archive folder.
+
+Key components:
+
+- `CoherenceShape` enum: WAVE, VORTEX, KNOT, DRIFT
+- `ResidueConfig` — per-source distillation configuration (name, path, max_bytes, keep_tail_lines, parser)
+- `PressureAggregate` — accumulates worth, coherence, axis counts, tag counts, timestamps, and examples across a signature group
+
+State files:
+
+- `aurora_state/distillation_crystals.json` — compact structural summaries retained after distillation
+- `aurora_state/distillation_micro_residuals.json` — micro-residuals for fine-grained tracking
+- `aurora_state/distillation_runs.json` — run history
+- `aurora_state/distillation_metrics.json` — performance metrics
+- Archive folder: `aurora_state/distillation/archives/`
+
+Can be run standalone: `python3 aurora_metabolic_distiller.py`
+
+---
+
+## 22. Local LLM Integration Layer
+
+The local LLM is an advisory-only boundary adapter, not Aurora's cognition.
+
+### Local LLM bridge
+
+Module: `aurora_internal/aurora_local_llm_bridge.py`
+
+Optional isolated llama.cpp boundary adapter. Runs llama.cpp in a child process so native crashes cannot terminate Aurora.
+
+Two modes:
+
+1. **Server mode**: calls `AURORA_LOCAL_LLM_SERVER_URL` HTTP endpoint
+2. **Worker mode**: spawns `aurora_llama_worker.py` as a subprocess
+
+Exposes: `interpret_input(text)` and `format_output(message, payload)`.
+
+Enabled via `AURORA_USE_LOCAL_LLM=1` (default enabled).
+
+### Llama worker
+
+Module: `aurora_llama_worker.py`
+
+Subprocess worker for llama.cpp inference. Isolated so crashes in the native library do not terminate the main process.
+
+### Language faculty
+
+Module: `aurora_internal/aurora_language_faculty.py`
+
+Higher-level GGUF integration that uses the llama.cpp server to provide advisory-only input interpretation and output candidates. Aurora's constraint rules always take precedence.
+
+---
+
+## 23. Support Stack Facade
+
+Module: `aurora_support_stack.py`
+
+Consolidates non-core support modules used by canonical runtime layers. Provides a single import surface for `aurora.py`.
+
+Exports:
+
+- `UtteranceParser`, `parse_utterance` (from `aurora_internal/aurora_utterance_parser.py`)
+- `CoreRelationalIdentity`, `EnhancedStatePersistence`, `ConversationMemory`, `OETSPersistence`, `seed_identity_into_oets`, `seed_identity_into_dna` (from `aurora_internal/aurora_identity_persistence.py`)
+- `OntologicalScaffoldingEngine`, `ResearchResult`, `RelationType` (from `aurora_internal/aurora_ontological_scaffolding.py`)
+- `ExpressionEvolutionOrchestra`, `LSVMetrics` (from `aurora_internal/aurora_language_state.py`)
+- `StatePersistence` — backwards-compatibility alias for `EnhancedStatePersistence`
+
+---
+
+## 24. Dossier: Remaining Root-Level Modules
+
+These modules exist at the root level and have specific runtime roles not fully described in earlier sections.
+
+### `aurora_articulation.py`
+Manages Aurora's articulation debt tracking and expression quality feedback loop. Feeds `aurora_state/articulation_feedback.jsonl` and `aurora_state/last_articulation_trace.json`.
+
+### `aurora_curiosity_engine.py`
+Drives Aurora's autonomous study and exploration. Identifies what Aurora doesn't know (via OETS gap analysis) and generates study targets.
+
+### `aurora_emergence_surface.py`
+Surfaces emergent behaviors from the constraint genealogy. Monitors the genealogy for newly promoted Links that represent genuinely novel capabilities.
+
+### `aurora_reflexive_interpreter.py`
+Reflexive interpretation layer: Aurora reads her own output and applies constraint-aware reinterpretation to catch internal inconsistencies before final expression.
+
+### `aurora_response_teacher.py`
+Post-turn feedback loop that scores Aurora's response against the understanding contract outcome accuracy (A metric) and adjusts future response policy.
+
+### `aurora_telemetry.py`
+Internal telemetry layer. Logs structured timing and pressure events for performance analysis.
+
+### `aurora_tool_mind.py`
+Tool-use mind layer. Manages Aurora's awareness of available tools and constraint-governs which tools are permitted under current pressure state.
+
+### `aurora_constraint_emission.py`
+Emits constraint signals from the manifold into downstream systems. Decouples the manifold from direct imports.
+
+### `aurora_constraint_field_map.py`
+Maps the live constraint field to a spatial representation consumed by the evolution chamber and pressure systems.
+
+### `aurora_noncomp_layer_compiler.py`
+Compiles the NonComp layer into optimized runtime artifacts.
+
+### `aurora_noncomp_manifold_compiler.py`
+Compiles the full NonComp manifold (25 physics channels × derived artifacts) into runtime-ready form.
+
+### `aurora_625_pressure_map.py`
+Runtime state for the 625-slot interaction space: occupancy tracking, `lang_affinity` per slot, and current pressure distribution. Feeds `evo_625_pressure_map.json`.
+
+### `aurora_crystal_state_bridge.py`
+Bridges the crystal state (dimensional memory) to other subsystems that need crystal-state access without importing the full dimensional layer.
+
+### `aurora_dce_blueprint.py`
+Blueprint definitions for the DCE (Dual-Consciousness Engine) assembly. Defines the structural schema of DCE outputs.
+
+### `aurora_identity_persistence.py` (root-level)
+Root-level re-export or alternative version of identity persistence. Some boot paths import from here rather than from `aurora_internal`.
+
+### `aurora_manifold_directory_reader.py`
+Reads compiled manifold directory artifacts from `aurora_manifold_directory/` for runtime consumption.
+
+### `aurora_pressure_ontology.py`
+Defines the pressure ontology: how pressure events map to ontological categories.
+
+### `aurora_runtime.py`
+Runtime utilities and shared state accessed across multiple modules without importing the full boot stack.
+
+### `aurora_stack_exporter.py`
+Exports a snapshot of the current stack state for external analysis, debugging, or archival.
+
+---
+
+## 25. Dossier: Remaining Internal Modules
+
+### `aurora_internal/aurora_attention_engine.py`
+(Covered in L4.5 above.)
+
+### `aurora_internal/aurora_conversation_rubric_engine.py`
+Applies rubrics to evaluate conversation quality against constraint-aware criteria.
+
+### `aurora_internal/aurora_corpus_lifecycle.py`
+Manages the lifecycle of training corpus data: loading, processing, aging, and retirement.
+
+### `aurora_internal/aurora_cost_diff_score.py`
+Computes differential cost scores between alternative action paths under constraint pressure.
+
+### `aurora_internal/aurora_directed_training_corpus.py`
+Directed training corpus: builds targeted training sets for specific capability gaps identified by the dream curriculum.
+
+### `aurora_internal/aurora_entropy_detector.py`
+Detects entropy accumulation in the constraint field. Feeds the consciousness engine's entropy pressure subsystem.
+
+### `aurora_internal/aurora_episode_slip_profiler.py`
+Profiles episode slippage: measures how much understanding is lost between turn turns in conversation episodes.
+
+### `aurora_internal/aurora_identity_persistence.py`
+`CoreRelationalIdentity`, `EnhancedStatePersistence`, `ConversationMemory`, `OETSPersistence`. Core persistence layer for identity, conversation memory, and OETS state.
+
+### `aurora_internal/aurora_noncomp_registry.py`
+(Covered in Layer -0.5 above.)
+
+### `aurora_internal/aurora_ontological_scaffolding.py`
+(Covered in Section 13 above.)
+
+### `aurora_internal/aurora_polarity_gradient.py`
+(Covered in L1.5 above.)
+
+### `aurora_internal/aurora_primitive_extractor.py`
+Extracts constraint-native primitives from raw input, mapping surface phenomena to the 25 NonComp dimensions.
+
+### `aurora_internal/aurora_quasiarch_observer.py`
+Internal QuasiArch observer layer for monitoring the constraint manifold state.
+
+### `aurora_internal/aurora_relational_comparison.py`
+Performs relational comparisons between constraint profiles, supporting the interaction engine and OETS.
+
+### `aurora_internal/aurora_rubric_influence_graph.py`
+Builds influence graphs from rubric evaluations, showing how evaluation criteria affect one another.
+
+### `aurora_internal/aurora_second_gen.py`
+Second-generation evolver utilities: experiments with post-gen1 evolutionary mechanics.
+
+### `aurora_internal/aurora_specialized_avatar_synthesizer.py`
+Synthesizes specialized simulation avatars for targeted training scenarios in the simulation engine.
+
+### `aurora_internal/aurora_understanding_contract.py`
+(Covered in Section 12 above.)
+
+### `aurora_internal/aurora_utterance_parser.py`
+(Covered in Section 12 above.)
+
+### `aurora_internal/constraint_genealogy.py`
+(Covered in Section 14 above.)
+
+### `aurora_internal/lineage_canonical.py`
+(Covered in Section 14 above.)
+
+### `aurora_internal/surface_channel.py`
+Older surface channel utility (distinct from `dual_strata/surface_channel.py`); present for compatibility.
+
+### `aurora_internal/surface_continuity_feed.py`
+(Covered in Section 10 above.)
+
+### `aurora_internal/tool_registry.py`
+Registry of tools available to Aurora's tool-use mind. Maps tool names to constraint profiles and permission floors.
+
+---
+
+## 26. Current Feature Inventory
 
 Aurora currently has code for all of the following major abilities:
 
-- ontological validation of admissibility
-- lattice and I-state synthesis
-- crystal-based dimensional processing
+**Constraint physics and ontological layer:**
+- 25 NonComp physics channels with hard-number substrate
+- 625-slot closed interaction lattice with physics-derived grading
+- ontological validation of admissibility via Foundational Contract
+- constraint manifold routing with lineage similarity and pressure compatibility
+- closure basis lineage derivation (energetic footprint, depth score, leverage grade)
+- axis emergence detection and compound channel creation (beyond 625 slots)
+- frontier ops seeding for missing 3-axis capability spaces
+- capability assimilator wiring into genealogy and dream training
+
+**I-state and dimensional layer:**
+- lattice and I-state synthesis (10 beings, collective)
+- polarity gradient pressure with cross-scale authority weighting
+- crystal-based dimensional processing (DPS, DMC, DER, DMM)
 - dimensional memory and energy regulation
 - morality / mortality gating
+
+**Consciousness and cognition:**
 - entropy-aware consciousness assembly
-- DPME-style stack correction
+- DPME-style metacognitive stack correction
+- dual-feed attention engine (surface salience × subsurface tension → meaning nucleus)
+- turn understanding chain (bidirectional 5-stage comprehension/expression)
+- runtime understanding contract with per-turn accuracy tracking
+- thought formation by convergent process integration
+- self-grounding with not-me register and negative-space self-modeling
+- proposition substrate for discourse-level belief revision
+
+**Language and expression:**
 - lexical and language evolution
 - perception and shadow inference
-- OETS-backed concept scaffolding
+- OETS-backed concept scaffolding and relational anchoring
+- CSSEE language state (6 sub-modules: LSV, SIC, MultiDraft, TemplateEvolution, LexicalConvergence, MeaningAnchors)
+- grammar engine with constraint-pressure-driven motif promotion
+- local GGUF/llama.cpp language faculty (advisory only)
+- local LLM bridge with subprocess isolation and server/worker modes
+- utterance parsing and role tagging
+- articulation feedback loop and expression quality scoring
+
+**Memory:**
+- sedimentary long-horizon memory (SediMemory, 25 strain basins)
+- difference buffer (Δ channel live feed per constraint)
+- working memory for turn-level context
+- crystal and dimensional memory constants
+- interaction crystal formation and lineage promotion
+- proposition substrate discourse memory
+- braided substrate continuity invariants
+
+**Identity and behavior:**
 - behavioral DNA, alleles, anchors, and traits
+- identity persistence via CoreRelationalIdentity and EnhancedStatePersistence
+- self-grounding and persistent self-presence
+- lineage bound traits
+- behavioral genome pressure effects from constraint field
+
+**Learning and evolution:**
 - simulation training with avatars and time dilation
 - fail-point dream training
-- sedimentary long-horizon memory
-- sensory crystal and cross-modal grounding
-- live screen observation
-- audio feature ingestion and linguistic mapping
-- interaction crystal formation
-- evolutionary genealogy and lineage journals
-- pressure routing and runtime constraint governance
-- background daemonized autonomy
-- proactive messages / voice / notifications
-- dashboard / room / queue based operator surfaces
-- manifold-native subsystem identity and routing
+- directed dream curriculum (constraint-aware episode packs)
+- intake metabolism pipeline (energy accounting, leverage bias, worth evaluation, solidification, variant promotion)
+- constraint genealogy fossil record with Ability/Link DAG
+- code auto-evolver with simulation-gated mutation and rollback
+- code mutation operators
+- manual code lineage assimilation
+- axis emergence detection for compound channels
+- capability assimilation into genealogy and dream curriculum
+- frontier ops seeding
 
-## 19. Important Internal Boundaries
+**Sensory and multimodal:**
+- sensory crystal with six-facet cross-modal grounding
+- live screen observation and scene logging
+- audio feature ingestion and linguistic mapping
+- concept image fetching and visual grounding
+- sensory integration engine
+
+**Runtime governance:**
+- pressure routing and runtime constraint governance
+- pressure ledger, classifier, adapter, mathematics tracker
+- structural pressure steering
+- response pressure tuner
+- metabolic distiller for temporal residue management
+- sleep cycle (subsurface-owned)
+
+**Autonomy and daemons:**
+- background daemonized autonomy (study, dream, outreach, save, voice)
+- proactive messages / voice / notifications
+- surface/subsurface daemon split with queue-based coordination
+- room operator and room presence management
+- desktop agent
+
+**Surfaces and APIs:**
+- dashboard (hub) with tabbed observer, vision, and audio
+- Android/Kivy orb UI
+- terminal interactive runtime
+- Flask/Vertex AI API gateway
+- QuasiArch observer
+- tool registry and tool mind
+
+---
+
+## 27. Important Internal Boundaries
 
 Not every file is equally central to the current runtime. The main authoritative operational centers are:
 
-- `aurora.py`
-- `foundational_contract.py`
-- `aurora_dimensional_systems.py`
-- `aurora_consciousness_engine.py`
-- `aurora_expression_perception.py`
-- `aurora_behavioral_identity.py`
-- `aurora_simulation_engine.py`
-- `aurora_governance_persistence_gateway.py`
-- `aurora_sedimemory.py`
-- `aurora_dream_trainer.py`
-- `aurora_internal/`
+- `aurora.py` — full boot path and top-level orchestration
+- `foundational_contract.py` — ontological grammar and existence modes
+- `aurora_internal/aurora_noncomp_registry.py` — the ONLY source of hard numbers
+- `aurora_closure_basis.py` — 625-slot physics and lineage derivation
+- `aurora_dimensional_systems.py` — crystals, memory constant, energy, morality
+- `aurora_consciousness_engine.py` — entropy, assembly, DPME
+- `aurora_expression_perception.py` — language, perception, audio, sensory integration
+- `aurora_behavioral_identity.py` — genes, traits, anchors, identity persistence
+- `aurora_simulation_engine.py` — avatars, time dilation, learning in simulation
+- `aurora_governance_persistence_gateway.py` — governance, persistence, external gateway
+- `aurora_sedimemory.py` — sedimentary memory
+- `aurora_dream_trainer.py` — fail-point and dream learning loop
+- `aurora_internal/constraint_genealogy.py` — evolutionary fossil record
+- `aurora_internal/aurora_code_autoevolver.py` — code mutation and evolution
+- `aurora_internal/dual_strata/` — surface/subsurface split machinery
+- `aurora_internal/aurora_attention_engine.py` — meaning nucleation
+- `aurora_internal/aurora_turn_chain.py` — bidirectional reasoning pipeline
+- `aurora_self_grounding.py` — self-boundary and identity grounding
+- `aurora_thought_formation.py` — convergent process integration
 
 The constraint manifold is the governing contract Aurora is supposed to operate under. The layered architecture remains the boot topology and execution grouping through which that contract is carried out.
 
-Where code still reflects older local logic instead of full manifold-native handling, that is an implementation gap relative to the spec, not a design principle.
+---
 
-## 20. What Aurora Is, In Practice
+## 28. What Aurora Is, In Practice
 
 Aurora is best understood as a hybrid of:
 
-- a layered cognitive architecture
-- a simulation-trained identity system
-- a memory-stratified agent runtime
-- a sensory and interaction engine
-- an evolutionary lineage tracker
-- a daemonized autonomous personal system
-- a constraint-governed manifold runtime
+- a layered cognitive architecture with a physics-grounded 625-slot constraint lattice
+- a simulation-trained identity system with persistent DNA-like behavioral structure
+- a memory-stratified agent runtime (working, sedimentary, interaction, dimensional, difference, proposition)
+- a sensory and interaction engine with cross-modal grounding
+- an evolutionary lineage tracker that records every capability as a fossil
+- a self-grounding system that maintains a negative-space boundary of what it is not
+- a thought formation engine that integrates all running processes before expressing
+- a daemonized autonomous personal system with sleep/wake cycles
+- a constraint-governed manifold runtime where physics flows from 25 hard-number NonComps
 
-It is not a single model wrapper. It is an operating architecture composed of interacting engines, memory substrates, learning loops, sensory modules, governance rules, and runtime services.
+It is not a single model wrapper. It is an operating architecture composed of interacting engines, memory substrates, learning loops, sensory modules, governance rules, and runtime services — governed by one set of physics.
 
-## 21. Fast File Map
+---
+
+## 29. Fast File Map
 
 If you need the shortest practical map for future work, start here:
 
-- `aurora.py`
-  full boot path and top-level orchestration
-- `foundational_contract.py`
-  ontological grammar and existence modes
-- `aurora_dimensional_systems.py`
-  crystals, memory constant, energy, morality
-- `aurora_consciousness_engine.py`
-  entropy, assembly, DPME
-- `aurora_expression_perception.py`
-  language, perception, audio, sensory integration
-- `aurora_behavioral_identity.py`
-  genes, traits, anchors, identity persistence logic
-- `aurora_simulation_engine.py`
-  avatars, time dilation, learning in simulation
-- `aurora_governance_persistence_gateway.py`
-  governance, persistence, external gateway
-- `aurora_sedimemory.py`
-  sedimentary memory
-- `aurora_dream_trainer.py`
-  fail-point and dream learning loop
-- `aurora_live_vision.py`
-  live screen observer
-- `aurora_daemon.py`
-  always-on autonomous runtime
-- `aurora_surface_daemon.py`
-  surface interaction daemon
-- `aurora_internal/dual_strata/`
-  surface / subsurface split machinery
-- `aurora_constraint_profile.py`
-  universal constraint-bearing unit profile
-- `aurora_constraint_manifold_router.py`
-  manifold routing
-- `aurora_constraint_stack.py`
-  unified constraint facade
+**Boot and orchestration:**
+- `aurora.py` — full boot path and top-level orchestration
+- `main.py` — Android/Kivy entry point
+- `aurora_support_stack.py` — consolidated facade for boot-time imports
 
-## 22. Reference Status
+**Foundational physics:**
+- `foundational_contract.py` — ontological grammar and existence modes
+- `aurora_internal/aurora_noncomp_registry.py` — 25 NonComp hard numbers (the ONLY place)
+- `aurora_closure_basis.py` — 625-slot law and lineage derivation
 
-This document should be treated as the new top-level code-derived system reference for the current `aurora_strata` tree.
+**Core cognitive layers:**
+- `aurora_dimensional_systems.py` — crystals, memory constant, energy, morality
+- `aurora_consciousness_engine.py` — entropy, assembly, DPME
+- `aurora_expression_perception.py` — language, perception, audio, sensory integration
+- `aurora_behavioral_identity.py` — genes, traits, anchors, identity persistence
+- `aurora_simulation_engine.py` — avatars, time dilation, learning in simulation
+- `aurora_governance_persistence_gateway.py` — governance, persistence, external gateway
+- `aurora_sedimemory.py` — sedimentary memory
+- `aurora_dream_trainer.py` — fail-point and dream learning loop
 
-If you want, the next useful follow-up would be one of these:
+**New cognition modules (added since April 22):**
+- `aurora_internal/aurora_attention_engine.py` — dual-feed attention and meaning nucleation (L4.5)
+- `aurora_internal/aurora_difference_buffer.py` — Δ channel live feed (L0.5)
+- `aurora_internal/aurora_turn_chain.py` — bidirectional 5-stage comprehension/expression
+- `aurora_internal/aurora_understanding_contract.py` — runtime understanding contract
+- `aurora_internal/aurora_proposition_substrate.py` — discourse-level belief tracking
+- `aurora_self_grounding.py` — self-boundary and not-me register
+- `aurora_thought_formation.py` — convergent process integration before expression
+- `aurora_internal/aurora_braided_substrate.py` — low-scale continuity invariants
+- `aurora_grammar_engine.py` — grammar as evolved behavior
 
-1. a second document that maps every major file to its role and dependencies
-2. a runtime boot flow chart from `boot_aurora()` outward
-3. an operator handbook covering how to run, inspect, and debug the daemons, hub, and state files
+**Language faculty:**
+- `aurora_internal/aurora_language_faculty.py` — GGUF/llama.cpp advisory language module
+- `aurora_internal/aurora_language_state.py` — CSSEE (6-module expression evolution)
+- `aurora_internal/aurora_local_llm_bridge.py` — subprocess-isolated LLM bridge
+- `aurora_llama_worker.py` — subprocess worker for llama.cpp
+
+**Evolution and genealogy:**
+- `aurora_internal/constraint_genealogy.py` — evolutionary fossil record
+- `aurora_internal/aurora_code_autoevolver.py` — simulation-gated code mutation
+- `aurora_internal/aurora_axis_emergence.py` — compound channel detection
+- `aurora_internal/aurora_frontier_ops.py` — missing 3-axis capability seeding
+- `aurora_internal/aurora_capability_assimilator.py` — genealogy/dream wiring
+- `aurora_metabolic_distiller.py` — temporal residue distillation
+
+**Manifold governance:**
+- `aurora_constraint_profile.py` — universal constraint-bearing unit profile
+- `aurora_constraint_manifold_router.py` — manifold routing
+- `aurora_constraint_stack.py` — unified constraint facade
+- `aurora_internal/aurora_constraint_manifold_patched.py` — Constraint enum used by genealogy/attention
+- `aurora_internal/aurora_meaning_evolution.py` — meaning-axis registry
+
+**Dual-strata:**
+- `aurora_internal/dual_strata/` — surface/subsurface split machinery
+- `aurora_internal/dual_strata/surface_channel.py` — surface turn queue bridge
+- `aurora_internal/dual_strata/subsurface_projection.py` — subsurface pressure coloring and guidance
+- `aurora_internal/dual_strata/sleep_cycle.py` — sleep/wake state
+
+**Sensors and live perception:**
+- `aurora_live_vision.py` — live screen observer
+- `aurora_internal/aurora_sensory_crystal.py` — six-facet cross-modal crystal
+
+**Daemons:**
+- `aurora_daemon.py` — always-on autonomous runtime
+- `aurora_surface_daemon.py` — surface interaction daemon
+
+---
+
+## 30. Complete Module Index
+
+All Python modules in the main runtime tree (excluding test scripts, debug scripts, `aurora-/` mirror, and tool/dev scripts):
+
+**Root level — core runtime:**
+
+| File | Role |
+|---|---|
+| `aurora.py` | Main boot orchestrator |
+| `main.py` | Android/Kivy entry point |
+| `foundational_contract.py` | Ontological grammar |
+| `aurora_ivm.py` | I-state lattice |
+| `aurora_i_state_beings.py` | I-state beings synthesis |
+| `aurora_dimensional_systems.py` | Dimensional organs |
+| `aurora_consciousness_engine.py` | Consciousness + entropy + DPME |
+| `aurora_expression_perception.py` | Bidirectional expression/perception |
+| `aurora_behavioral_identity.py` | Behavioral DNA/identity |
+| `aurora_simulation_engine.py` | Simulation training |
+| `aurora_governance_persistence_gateway.py` | Governance, persistence, gateway |
+| `aurora_sedimemory.py` | Sedimentary memory |
+| `aurora_dream_trainer.py` | Dream/fail-point learning |
+| `aurora_live_vision.py` | Live screen observer |
+| `aurora_daemon.py` | Autonomous background daemon |
+| `aurora_surface_daemon.py` | Surface interaction daemon |
+| `aurora_subsurface_daemon.py` | Subsurface daemon launcher |
+| `aurora_hub.py` | GUI dashboard |
+| `aurora_support_stack.py` | Consolidated boot-time facade |
+
+**Root level — language and expression:**
+
+| File | Role |
+|---|---|
+| `aurora_articulation.py` | Articulation debt and feedback |
+| `aurora_grammar_engine.py` | Constraint-pressure grammar evolution |
+| `aurora_thought_formation.py` | Convergent process integration |
+| `aurora_self_grounding.py` | Self-boundary, not-me register |
+| `aurora_reflexive_interpreter.py` | Reflexive output reinterpretation |
+| `aurora_response_teacher.py` | Post-turn response policy adjustment |
+| `aurora_voice.py` | TTS and desktop notifications |
+
+**Root level — constraint and manifold:**
+
+| File | Role |
+|---|---|
+| `aurora_closure_basis.py` | 625-slot physics, lineage derivation |
+| `aurora_constraint_engine.py` | Constraint engine |
+| `aurora_constraint_emission.py` | Constraint signal emission |
+| `aurora_constraint_field_map.py` | Constraint field spatial mapping |
+| `aurora_constraint_manifold.py` | Constraint manifold |
+| `aurora_constraint_manifold_compiler.py` | Manifold compilation |
+| `aurora_constraint_manifold_router.py` | Manifold routing |
+| `aurora_constraint_profile.py` | Universal constraint-bearing unit |
+| `aurora_constraint_stack.py` | Unified constraint facade |
+| `aurora_noncomp_layer_compiler.py` | NonComp layer compiler |
+| `aurora_noncomp_manifold_compiler.py` | NonComp manifold compiler |
+| `aurora_manifold_directory_reader.py` | Manifold directory artifact reader |
+| `aurora_625_pressure_map.py` | 625-slot occupancy and pressure |
+| `aurora_pressure_ontology.py` | Pressure ontology layer |
+
+**Root level — evolution and learning:**
+
+| File | Role |
+|---|---|
+| `aurora_evolution_stack.py` | Root evolution stack |
+| `aurora_code_evolution_stack.py` | Root code evolution stack |
+| `aurora_metabolic_distiller.py` | Temporal residue distillation |
+| `aurora_emergence_surface.py` | Surfaces emergent genealogy behaviors |
+| `aurora_curiosity_engine.py` | Autonomous study target generation |
+
+**Root level — persistence and sensors:**
+
+| File | Role |
+|---|---|
+| `aurora_crystal_state_bridge.py` | Crystal state cross-system bridge |
+| `aurora_checkpoint.py` | Checkpoint save/restore |
+| `aurora_identity_persistence.py` | Root identity persistence |
+| `aurora_persistence_utils.py` | Persistence utilities |
+| `aurora_dce_blueprint.py` | DCE assembly blueprint |
+| `aurora_concept_imager.py` | Concept visual grounding |
+| `aurora_fgae_manifold_semantics.py` | FGAE manifold semantics |
+| `aurora_fgae_oets_mapper.py` | FGAE-OETS mapping |
+
+**Root level — runtime surfaces:**
+
+| File | Role |
+|---|---|
+| `aurora_interaction_engine.py` | Interaction normalization |
+| `aurora_interaction_memory.py` | Interaction crystal memory |
+| `aurora_interaction_processing.py` | Crystal formation and promotion |
+| `aurora_room.py` | Room presence and messages |
+| `aurora_runtime.py` | Shared runtime utilities |
+| `aurora_recommendation_hub.py` | State-aware recommendations |
+| `aurora_tool_mind.py` | Tool-use awareness |
+| `aurora_telemetry.py` | Internal timing telemetry |
+| `aurora_desktop_agent.py` | Desktop-level autonomous agent |
+| `aurora_llama_worker.py` | Subprocess llama.cpp worker |
+| `quasiarch_bridge.py` | QuasiArch bridge |
+| `quasiarch_observer.py` | Standalone QuasiArch observer |
+
+**`aurora_internal/` — physics and constraint:**
+
+| File | Role |
+|---|---|
+| `aurora_noncomp_registry.py` | 25 NonComp hard numbers (canonical substrate) |
+| `aurora_constraint_manifold_patched.py` | Patched Constraint enum |
+| `aurora_constraint_manifold.py` | Internal manifold |
+| `aurora_625_pressure_map.py` | Internal 625 pressure tracking |
+| `aurora_polarity_gradient.py` | Cross-scale polarity gradient pressure |
+| `aurora_primitive_extractor.py` | Raw-to-NonComp primitive extraction |
+| `aurora_meaning_evolution.py` | Canonical meaning-axis registry |
+
+**`aurora_internal/` — cognition and reasoning:**
+
+| File | Role |
+|---|---|
+| `aurora_attention_engine.py` | Dual-feed attention and meaning nucleation |
+| `aurora_difference_buffer.py` | Δ channel rolling history |
+| `aurora_turn_chain.py` | Bidirectional 5-stage reasoning pipeline |
+| `aurora_understanding_contract.py` | Runtime understanding contract |
+| `aurora_proposition_substrate.py` | Discourse belief tracking |
+| `aurora_braided_substrate.py` | Continuity invariant substrate |
+| `aurora_comprehension_gap.py` | Semantic gap identification |
+| `aurora_relational_comparison.py` | Constraint profile comparison |
+
+**`aurora_internal/` — language:**
+
+| File | Role |
+|---|---|
+| `aurora_language_faculty.py` | GGUF/llama.cpp advisory module |
+| `aurora_language_state.py` | CSSEE 6-module expression evolution |
+| `aurora_local_llm_bridge.py` | Subprocess-isolated LLM bridge |
+| `aurora_utterance_parser.py` | Utterance parsing |
+| `aurora_ontological_scaffolding.py` | OETS concept scaffolding |
+| `aurora_identity_persistence.py` | Identity, memory, OETS persistence |
+
+**`aurora_internal/` — evolution and genealogy:**
+
+| File | Role |
+|---|---|
+| `constraint_genealogy.py` | Evolutionary fossil record |
+| `lineage_canonical.py` | Canonical lineage representations |
+| `aurora_code_autoevolver.py` | Simulation-gated code mutation |
+| `aurora_code_mutation_operators.py` | Code mutation operator set |
+| `aurora_code_evolution_chamber.py` | Code evolution chamber |
+| `aurora_code_evolution_stack.py` | Code evolution stack (internal) |
+| `aurora_evolution_chamber.py` | Main evolution chamber |
+| `aurora_axis_emergence.py` | Compound axis emergence detection |
+| `aurora_frontier_ops.py` | Missing 3-axis capability seeding |
+| `aurora_capability_assimilator.py` | New capability → genealogy wiring |
+| `aurora_ability_lineage_compiler.py` | Ability lineage compilation |
+| `aurora_dream_evolution_orchestrator.py` | Dream evolution coordination |
+| `aurora_dream_genealogy_bridge.py` | Dream-genealogy bridge |
+| `aurora_manual_code_lineage.py` | Manual code assimilation |
+| `aurora_lineage_runtime_activation.py` | Lineage activation at runtime |
+| `aurora_lineage_bound_traits.py` | Lineage-bound trait management |
+| `aurora_live_lineage_journal.py` | Live lineage journal |
+
+**`aurora_internal/` — learning pipeline:**
+
+| File | Role |
+|---|---|
+| `aurora_intake_metabolism.py` | Intake metabolism engine |
+| `aurora_worth_evaluator.py` | Worth evaluation |
+| `aurora_solidification.py` | Pattern solidification |
+| `aurora_variant_promotion.py` | Variant promotion |
+| `aurora_dna_strand_schema.py` | DNA strand schema |
+| `aurora_energy_layer_costs.py` | Per-layer energy costs |
+| `aurora_energy_layer_costs_decay.py` | Energy cost decay |
+| `aurora_leverage_scalar.py` | LeverageBiasEngine, phase nudges |
+| `aurora_leverage_relief.py` | Leverage relief tracking |
+| `aurora_dream_curriculum_queue.py` | Dream episode queue |
+| `aurora_conversation_episode_compiler.py` | Episode pack compilation |
+| `aurora_directed_training_corpus.py` | Targeted training corpus |
+| `aurora_corpus_lifecycle.py` | Training corpus lifecycle |
+| `aurora_cost_diff_score.py` | Differential cost scoring |
+| `aurora_episode_slip_profiler.py` | Episode understanding loss profiling |
+| `aurora_conversation_rubric_engine.py` | Conversation quality rubrics |
+| `aurora_rubric_influence_graph.py` | Rubric influence graph |
+
+**`aurora_internal/` — pressure systems:**
+
+| File | Role |
+|---|---|
+| `aurora_pressure_router.py` | Pressure → typed runtime signals |
+| `aurora_dpme_pressure_bridge.py` | DPME pressure bridge |
+| `aurora_pressure_ledger.py` | Per-axis pressure event accounting |
+| `aurora_pressure_classifier.py` | Pressure event classification |
+| `aurora_pressure_adapter.py` | Pressure output adapter |
+| `aurora_pressure_mathematics_tracker.py` | Pressure math tracking |
+| `aurora_structural_pressure_steering.py` | Structural evolution steering |
+| `aurora_response_pressure_tuner.py` | Response parameter tuning |
+| `aurora_entropy_detector.py` | Entropy accumulation detection |
+| `aurora_runtime_constraint_governor.py` | Task execution policy |
+| `aurora_surface_dispatcher.py` | Evolved surface firing |
+| `aurora_evolved_surfaces.py` | Generated evolved surfaces registry |
+| `aurora_stack_trace_instrumentation.py` | Runtime flow instrumentation |
+
+**`aurora_internal/` — room, tools, misc:**
+
+| File | Role |
+|---|---|
+| `aurora_room_operator.py` | Room message operations |
+| `aurora_quasiarch_observer.py` | Internal QuasiArch monitoring |
+| `aurora_recommendation_hub.py` | State-aware recommendations (internal) |
+| `aurora_second_gen.py` | Post-gen1 evolution experiments |
+| `aurora_specialized_avatar_synthesizer.py` | Specialized simulation avatars |
+| `aurora_persistence_utils.py` | Persistence utilities (internal) |
+| `tool_registry.py` | Tool name → constraint profile registry |
+| `surface_channel.py` | Legacy surface channel utility |
+| `surface_continuity_feed.py` | Surface continuity event log |
+
+**`aurora_internal/dual_strata/`:**
+
+| File | Role |
+|---|---|
+| `__init__.py` | Exports DualStrataBridge, request_surface_turn, SurfaceContinuityFeed |
+| `surface_channel.py` | Surface daemon queue bridge |
+| `sensory_snapshot_channel.py` | Sensory snapshot and control channels |
+| `subsurface_projection.py` | Subsurface pressure coloring and guidance |
+| `sleep_cycle.py` | Subsurface-owned sleep/wake clock |
+
+---
+
+## 31. Reference Status
+
+This document should be treated as the top-level code-derived system reference for the current `aurora_strata` tree as of 2026-05-13.
+
+The April 22 version was accurate for the modules it covered. This version adds all modules that exist in the tree but were absent from that edition, and expands technical detail throughout.
+
+If there are modules added after 2026-05-13, this document will need a corresponding update pass.
