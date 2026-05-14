@@ -9,9 +9,15 @@ import re
 # Path + env — configured BEFORE any aurora import
 # ---------------------------------------------------------------------------
 _HERE = os.path.dirname(os.path.abspath(__file__))
-for _p in (_HERE, os.path.join(_HERE, 'aurora_core_ai')):
+_CORE_AI = os.path.join(_HERE, 'aurora_core_ai')
+
+# aurora_core_ai/ is the authoritative cognitive stack.
+# Root is support-only fallback for modules not yet in core_ai.
+for _p in (_HERE, _CORE_AI):
     if _p not in sys.path:
         sys.path.insert(0, _p)
+# After the loop sys.path order is: [aurora_core_ai, _HERE, ...]
+# so all imports prefer aurora_core_ai/ over root-level duplicates.
 
 os.environ['AURORA_SKIP_DEP_INSTALL'] = '1'
 
