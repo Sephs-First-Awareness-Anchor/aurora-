@@ -190,6 +190,9 @@ class AuroraFace(Widget):
         self._redraw()
 
     def _redraw(self, *args):
+        if self.height < 4 or self.width < 4 or self.opacity < 0.01:
+            self.canvas.before.clear()
+            return
         cx, cy = self.center
         w, h   = self.width, self.height
         t      = self.time
@@ -355,6 +358,9 @@ class AuroraOrb(FloatLayout):
         return super().on_touch_up(touch)
 
     def _redraw(self, *args):
+        if self.opacity_val < 0.01 or self.width < 4 or self.height < 4:
+            self.canvas.before.clear()
+            return
         cx, cy = self.center
         base   = min(self.width, self.height) * self.audio_scale
         t, st  = self.time, self._state
@@ -533,14 +539,15 @@ class AuroraApp(App):
 
         if platform == 'android':
             from android.permissions import request_permissions, Permission
+            # Defer overlay receiver and TTS to after permissions are granted.
+            # Calling them here (before the dialog clears) races with the Android
+            # UI thread and can trigger ANR / JNI crashes on some devices.
             request_permissions([
                 Permission.CAMERA, Permission.RECORD_AUDIO,
                 Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE,
                 Permission.ACCESS_FINE_LOCATION, Permission.SEND_SMS,
                 Permission.CALL_PHONE, Permission.READ_CONTACTS,
             ], self.on_permissions_result)
-            self._setup_overlay_receiver()
-            self._init_android_tts()
         else:
             self.start_boot_thread()
 
@@ -786,7 +793,11 @@ class AuroraApp(App):
     # Boot
     # ------------------------------------------------------------------
     def on_permissions_result(self, permissions, grants):
-        if platform == 'android': self.check_overlay_permission()
+        if platform == 'android':
+            # Now safe to init hardware — permissions dialog is fully dismissed
+            self._setup_overlay_receiver()
+            self._init_android_tts()
+            self.check_overlay_permission()
         self.start_boot_thread()
 
     def check_overlay_permission(self):
