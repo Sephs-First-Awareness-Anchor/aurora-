@@ -164,6 +164,9 @@ class AuroraFace(Widget):
         self._state = state; self._state_time = 0.0
 
     def _tick(self, dt):
+        if self.height < 4 or self.opacity < 0.01:
+            return  # skip all work when invisible — prevents ANR on Android
+
         self.time        += dt
         self._state_time += dt
 
@@ -375,6 +378,8 @@ class AuroraOrb(FloatLayout):
             Ellipse(size=(cs, cs), pos=(cx - cs/2, cy - cs/2))
 
     def _tick(self, dt):
+        if self.opacity_val < 0.01 or self.width < 4:
+            return  # skip when invisible — prevents ANR on Android
         self.time += dt; self._redraw()
 
     def update_state(self, axes_activation):
@@ -628,6 +633,8 @@ class AuroraApp(App):
             self.bottom_toolbar.opacity = 0
             self.face.height            = 0
             self.face.opacity           = 0
+            self.face.canvas.before.clear()
+            self.orb.canvas.before.clear()
             self.orb.opacity_val        = 0.0
             self.orb.size               = (0, 0)
             self.face.set_state("DORMANT")
