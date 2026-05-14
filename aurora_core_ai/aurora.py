@@ -20177,18 +20177,37 @@ def _run_reasoning_pipeline(
             _perc_a5 = systems.get("perception")
             _resp_draft = str(getattr(state, "response_content", "") or "")
             if _perc_a5 and _resp_draft and hasattr(_perc_a5, "express"):
-                _sib_tone = ""
+                # begin_expression() just stamped the SIB onto the composer.
+                # Build a minimal AssemblyResult so express() fires correctly
+                # and the SIB-informed fidelity signal is generated.
                 try:
-                    from aurora_semantic_intention_bridge import SemanticIntentionBridge
-                    _ts = systems.get('_current_thought_state')
-                    if _ts:
-                        _sib_tone = SemanticIntentionBridge().get_axis_tone(_ts)
+                    from types import SimpleNamespace as _SN_expr
+                    from aurora_consciousness_engine import AssemblyResult as _AR_expr
+                    _conf_expr = float(getattr(state, 'response_confidence', 0.5) or 0.5)
+                    _mock_assy = _AR_expr(
+                        synthesis=_SN_expr(active_count=10),
+                        frame_applied='expression_refinement',
+                        adjusted_axes=dict(getattr(_perc_a5, '_axis_activation', {}) or {}),
+                        coherence=_conf_expr,
+                        entropy_state={},
+                        ds_stats={},
+                        dominant_axis=str(getattr(_perc_a5, '_dominant_axis', '') or ''),
+                    )
+                    _expr_result = _perc_a5.express(
+                        _mock_assy,
+                        i_state='i_is',
+                        mode='sim',
+                        moral_alignment=_conf_expr,
+                        intent_match=_conf_expr,
+                    )
+                    _expressed = str(_expr_result.get('expression', '') or '')
+                    if _expressed and len(_expressed.split()) >= 4:
+                        state.response_content = _expressed
+                    # Surface fidelity for downstream inspection
+                    systems['_last_fidelity_score'] = float(_expr_result.get('fidelity_score', 0.0) or 0.0)
+                    systems['_last_keyword_coverage'] = float(_expr_result.get('keyword_coverage', 0.0) or 0.0)
                 except Exception:
                     pass
-                _tone_final = _sib_tone or str(getattr(state, "response_tone", "neutral") or "neutral")
-                _expressed = _perc_a5.express(_resp_draft, tone=_tone_final)
-                if _expressed and isinstance(_expressed, str) and len(_expressed.split()) >= 4:
-                    state.response_content = _expressed
         except Exception:
             pass
 
@@ -26299,6 +26318,9 @@ def _run_live_response_turn(
         'root_thought': dict(_dual_strata_runtime_out.get('root_thought') or {}),
         'processing_mode': str(_dual_strata_runtime_out.get('processing_mode', '') or ''),
         'reactive_signal': dict(_dual_strata_runtime_out.get('reactive_signal') or {}),
+        # Semantic fidelity from SIB-informed expression pass
+        'fidelity_score':   float(systems.get('_last_fidelity_score', 0.0) or 0.0),
+        'keyword_coverage': float(systems.get('_last_keyword_coverage', 0.0) or 0.0),
     }
 
 
