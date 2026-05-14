@@ -327,6 +327,25 @@ def begin_expression(systems: Dict[str, Any]) -> None:
         except Exception:
             pass
 
+        # Wire SemanticIntentionBridge — drive composer from ThoughtState
+        try:
+            from aurora_semantic_intention_bridge import SemanticIntentionBridge
+            thought_state = systems.get('_current_thought_state')
+            expression_guidance = systems.get('_expression_guidance')
+            perception = systems.get('perception')
+            composer = getattr(perception, 'composer', None) if perception else None
+            if thought_state is not None and composer is not None:
+                sib = SemanticIntentionBridge()
+                intention = sib.extract(
+                    thought_state,
+                    expression_guidance=expression_guidance,
+                    systems=systems,
+                )
+                sib.apply(intention, composer)
+                systems['_current_semantic_intention'] = intention
+        except Exception:
+            pass
+
     except Exception:
         systems['_expression_layer'] = None
         systems['_expression_guidance'] = None

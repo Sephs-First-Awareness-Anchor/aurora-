@@ -1558,6 +1558,7 @@ class SentenceComposer:
 
         # OETS reference  -- wired later via set_oets()
         self._oets = None
+        self._semantic_intention = None  # Set by SemanticIntentionBridge.apply()
 
         # Expression tracking for feedback loop
         self._last_templates_used: List[Tuple[str, str]] = []
@@ -2102,6 +2103,24 @@ class SentenceComposer:
         if not pool:
             pool = self.pool.get('neutral', [])
 
+        # Pre-filter pool by semantic bias tags if intention is set
+        if self._semantic_intention and self._semantic_intention.template_bias_tags:
+            bias_tags = set(self._semantic_intention.template_bias_tags)
+            biased = [
+                t for t in pool
+                if any(tag in t.get('source', '') or
+                       tag in t.get('pattern', '').lower()
+                       for tag in bias_tags)
+            ]
+            if len(biased) >= 2:
+                pool = biased + [t for t in pool if t not in biased]
+
+        # Adjust sentence_count by intention confidence if set
+        if self._semantic_intention and self._semantic_intention.confidence > 0:
+            conf = self._semantic_intention.confidence
+            base_count = 1 + int(conf * 2) + int(verbosity > 0.6)
+            sentence_count = max(1, min(4, base_count))
+
         templates_used = []
         for _ in range(max(1, sentence_count)):
             if not pool:
@@ -2136,6 +2155,23 @@ class SentenceComposer:
                 if q:
                     sentences.append(q)
 
+        # If unresolved weight is high, append inquiry frame
+        if (self._semantic_intention and
+                self._semantic_intention.unresolved_weight > 0.3 and
+                random.random() < self._semantic_intention.unresolved_weight * 0.5):
+            q_pool = self.pool.get('curious', self.pool.get('neutral', []))
+            if q_pool:
+                q_weights = [max(0.05, t['fitness']) for t in q_pool]
+                q_tmpl = random.choices(q_pool, weights=q_weights, k=1)[0]
+                q = self._fill_template(
+                    q_tmpl['pattern'], 'curious', coherence,
+                    q_tmpl.get('semantic_constraints', {}),
+                    q_tmpl.get('cluster_references', []),
+                    q_tmpl.get('scaffolding_level', 0)
+                )
+                if q:
+                    sentences.append(q)
+
         text = " ".join(sentences)
 
         # Pace trimming
@@ -2156,6 +2192,18 @@ class SentenceComposer:
         """
         for tone, pattern in getattr(self, '_last_templates_used', []):
             self.record_fitness(tone, pattern, fitness)
+
+        # Reinforce templates that matched semantic intention tags
+        if (self._semantic_intention and
+                self._semantic_intention.template_bias_tags and
+                fitness >= 0.55):
+            bias_tags = set(self._semantic_intention.template_bias_tags)
+            tone_pool = self.pool.get(
+                list(self.pool.keys())[0] if self.pool else 'neutral', []
+            )
+            for t in tone_pool:
+                if any(tag in t.get('source', '') for tag in bias_tags):
+                    t['fitness'] = min(1.0, t['fitness'] + 0.03 * fitness)
 
         # OETS feedback: words learn from how well they performed
         if self._has_oets and self._last_words_used:
@@ -3014,6 +3062,17 @@ class ExpressionPerceptionEngine:
         # set_context already filters noise, but we also filtered here.
         if context_words:
             self.composer.set_context(context_words)
+
+        # Merge: if a SemanticIntention is already set, prepend Aurora's own
+        # meaning keywords before user context words so her meaning drives
+        # slot selection while user-word influence is preserved.
+        try:
+            existing_intention = getattr(self.composer, '_semantic_intention', None)
+            if existing_intention and existing_intention.content_keywords:
+                merged = existing_intention.content_keywords + context_words
+                self.composer.set_context(merged[:15])
+        except Exception:
+            pass
 
         # Absorb sentence patterns from what she hears
         if text and len(text.split()) >= 3:

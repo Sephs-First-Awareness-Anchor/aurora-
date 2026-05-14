@@ -20163,6 +20163,13 @@ def _run_reasoning_pipeline(
     _preserve_literal_response = bool(systems.pop("_preserve_literal_response_once", False))
     _skip_surface_expression = bool(systems.pop("_skip_surface_expression_once", False))
 
+    # ---- BRAID: Anchor expression layer before perception.express() ----
+    try:
+        from aurora_braid_wiring import begin_expression
+        begin_expression(systems)
+    except Exception:
+        pass
+
     if not _preserve_literal_response:
         try:
             if _skip_surface_expression:
@@ -20170,11 +20177,28 @@ def _run_reasoning_pipeline(
             _perc_a5 = systems.get("perception")
             _resp_draft = str(getattr(state, "response_content", "") or "")
             if _perc_a5 and _resp_draft and hasattr(_perc_a5, "express"):
-                _expressed = _perc_a5.express(_resp_draft, tone=str(getattr(state, "response_tone", "neutral") or "neutral"))
+                _sib_tone = ""
+                try:
+                    from aurora_semantic_intention_bridge import SemanticIntentionBridge
+                    _ts = systems.get('_current_thought_state')
+                    if _ts:
+                        _sib_tone = SemanticIntentionBridge().get_axis_tone(_ts)
+                except Exception:
+                    pass
+                _tone_final = _sib_tone or str(getattr(state, "response_tone", "neutral") or "neutral")
+                _expressed = _perc_a5.express(_resp_draft, tone=_tone_final)
                 if _expressed and isinstance(_expressed, str) and len(_expressed.split()) >= 4:
                     state.response_content = _expressed
         except Exception:
             pass
+
+    # ---- BRAID: Checkpoint after expression generated ----
+    try:
+        from aurora_braid_wiring import checkpoint_expression
+        _braid_draft = str(getattr(state, "response_content", "") or "")
+        checkpoint_expression(systems, expression_text=_braid_draft)
+    except Exception:
+        pass
 
     # ---- SURFACE DISPATCHER — fire evolved surfaces on axis pressure ----
     # Runs every turn. Internal COOLDOWN_TICKS=8 prevents same surface repeating.
@@ -20446,6 +20470,13 @@ def _run_reasoning_pipeline(
                 )
         except Exception:
             pass
+
+    # ---- BRAID: Complete expression loop — RE-ENTRY signal ----
+    try:
+        from aurora_braid_wiring import complete_expression
+        complete_expression(systems, state)
+    except Exception:
+        pass
 
     # Build resp_A
     resp_A = _MiniResp(state.response_content, state.response_tone, state.response_confidence)
@@ -24143,6 +24174,13 @@ def boot_aurora(
 
     _install_support_constraint_surfaces(systems)
 
+    # ---- THOUGHT BRAID — continuous cognitive thread ----
+    try:
+        from aurora_braid_wiring import boot_thought_braid
+        boot_thought_braid(systems, verbose=verbose)
+    except Exception:
+        pass
+
     return systems
 
 
@@ -25276,6 +25314,13 @@ def _run_live_response_turn(
 
     if turn_tick is None:
         turn_tick = int(getattr(working_memory, 'turn_count', 0) or 0) + 1
+
+    # ---- BRAID: Tap thought state for this turn ----
+    try:
+        from aurora_braid_wiring import begin_response_turn
+        begin_response_turn(systems, user_text=user_text, turn_tick=turn_tick)
+    except Exception:
+        pass
 
     # ---- STRATA-AWARE INTAKE: Resolve Vitals BEFORE parsing Signal ----
     # 1. Pull the Subsurface DCE Convergence (Root Thought)
