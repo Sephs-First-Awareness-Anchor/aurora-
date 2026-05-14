@@ -4,6 +4,27 @@ import threading
 import time
 import math
 import re
+import traceback
+
+# ---------------------------------------------------------------------------
+# Crash logger — writes to a file readable after the crash
+# ---------------------------------------------------------------------------
+def _log_crash(label, exc=None):
+    try:
+        import os as _os
+        log_dir = _os.path.join(_os.path.expanduser('~'), 'aurora_crash_logs')
+        _os.makedirs(log_dir, exist_ok=True)
+        path = _os.path.join(log_dir, 'crash.txt')
+        with open(path, 'a') as f:
+            import time as _t
+            f.write(f'\n[{_t.strftime("%H:%M:%S")}] {label}\n')
+            if exc:
+                import traceback as _tb
+                f.write(_tb.format_exc() + '\n')
+    except Exception:
+        pass
+
+_log_crash('main.py top-level start')
 
 # ---------------------------------------------------------------------------
 # Path + env — configured BEFORE any aurora import
@@ -13,15 +34,15 @@ _CORE_AI = os.path.join(_HERE, 'aurora_core_ai')
 
 # aurora_core_ai/ is the authoritative cognitive stack.
 # Root is support-only fallback for modules not yet in core_ai.
+# NOTE: _HERE goes FIRST so the loop ends with aurora_core_ai at position 0.
 for _p in (_HERE, _CORE_AI):
     if _p not in sys.path:
         sys.path.insert(0, _p)
-# After the loop sys.path order is: [aurora_core_ai, _HERE, ...]
-# so all imports prefer aurora_core_ai/ over root-level duplicates.
 
 os.environ['AURORA_SKIP_DEP_INSTALL'] = '1'
 
-from kivy.app import App
+_log_crash('kivy imports start')
+
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
@@ -53,15 +74,26 @@ if platform != 'android':
         return fn
 
 if platform == 'android':
-    from jnius import autoclass, PythonJavaClass, java_method
-    from android.runnable import run_on_ui_thread
+    _log_crash('android jnius imports start')
+    try:
+        from jnius import autoclass, PythonJavaClass, java_method
+        from android.runnable import run_on_ui_thread
+        _log_crash('jnius ok')
+    except Exception as _e:
+        _log_crash('jnius FAILED', _e); raise
 
-    Context           = autoclass('android.content.Context')
-    Intent            = autoclass('android.content.Intent')
-    RecognizerIntent  = autoclass('android.speech.RecognizerIntent')
-    SpeechRecognizer  = autoclass('android.speech.SpeechRecognizer')
-    PythonActivity    = autoclass('org.kivy.android.PythonActivity')
-    _JavaTTS          = autoclass('android.speech.tts.TextToSpeech')
+    try:
+        Context           = autoclass('android.content.Context')
+        _log_crash('Context ok')
+        Intent            = autoclass('android.content.Intent')
+        RecognizerIntent  = autoclass('android.speech.RecognizerIntent')
+        SpeechRecognizer  = autoclass('android.speech.SpeechRecognizer')
+        PythonActivity    = autoclass('org.kivy.android.PythonActivity')
+        _log_crash('PythonActivity ok')
+        _JavaTTS          = autoclass('android.speech.tts.TextToSpeech')
+        _log_crash('_JavaTTS ok')
+    except Exception as _e:
+        _log_crash('autoclass FAILED', _e); raise
 
     class _TTSInitListener(PythonJavaClass):
         __javainterfaces__ = ['android/speech/tts/TextToSpeech$OnInitListener']
@@ -429,6 +461,18 @@ class ChatBubble(BoxLayout):
 # ---------------------------------------------------------------------------
 class AuroraApp(App):
     def build(self):
+        _log_crash('build() start')
+        try:
+            return self._build_inner()
+        except Exception as _e:
+            _log_crash('build() CRASHED', _e)
+            root = BoxLayout(orientation='vertical')
+            root.add_widget(Label(
+                text=f'Startup error — see ~/aurora_crash_logs/crash.txt\n{_e}',
+                color=(1, 0.3, 0.3, 1), halign='center'))
+            return root
+
+    def _build_inner(self):
         self.title = "Aurora"
         Window.clearcolor = (0.03, 0.03, 0.06, 1)
         self.root = FloatLayout()
@@ -793,6 +837,7 @@ class AuroraApp(App):
     # Boot
     # ------------------------------------------------------------------
     def on_permissions_result(self, permissions, grants):
+        _log_crash('on_permissions_result fired')
         if platform == 'android':
             # Now safe to init hardware — permissions dialog is fully dismissed
             self._setup_overlay_receiver()
