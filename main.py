@@ -110,8 +110,10 @@ def _clean_response(text: str) -> str:
     if not text:
         return text
     t = re.sub(r'\[[A-Z_]{3,}\]', '', text).strip()
-    # Token dump: "word; word; word" pattern → discard
-    if re.match(r'^[\w\s\-]+(?:;\s*[\w\s\-]+){2,}\.?$', t):
+    # Discard raw constraint token dumps only: 5+ bare single-word tokens (no spaces
+    # within each token) separated by semicolons — e.g. "action; listen; awareness; emerge; self"
+    # This avoids discarding valid phrases like "Yes; I understand; that's present."
+    if re.match(r'^\w+(?:;\s*\w+){4,}\.?$', t):
         return ""
     return re.sub(r'\s{2,}', ' ', t).strip()
 
