@@ -1428,6 +1428,123 @@ def infer_word_valence(word: str, context_tone: str = 'neutral') -> float:
     return tone_bias.get(context_tone, 0.0)
 
 
+@dataclass
+class ResponseBlueprint:
+    """Pre-composition structural plan for a multi-sentence response."""
+    role_sequence: List[str]
+    topic_thread: List[str]
+    pivot_budget: int
+    semantic_lane: str
+    confidence: float
+
+    @staticmethod
+    def _plan_role_sequence(sentence_count: int, intention: Any, unresolved_weight: float) -> List[str]:
+        semantic_lane = getattr(intention, 'semantic_lane', 'communication') if intention else 'communication'
+        if sentence_count == 1:
+            return ["ANCHOR"]
+        elif sentence_count == 2:
+            if unresolved_weight > 0.3:
+                return ["ANCHOR", "CLOSE_OPEN"]
+            return ["ANCHOR", "DEVELOP"]
+        elif sentence_count == 3:
+            if semantic_lane == "inquiry":
+                return ["ANCHOR", "BRIDGE", "CLOSE_OPEN"]
+            elif unresolved_weight > 0.3:
+                return ["ANCHOR", "DEVELOP", "CLOSE_OPEN"]
+            return ["ANCHOR", "DEVELOP", "CLOSE"]
+        else:
+            return ["ANCHOR", "DEVELOP", "BRIDGE", "CLOSE"]
+
+    @classmethod
+    def build(cls, sentence_count: int, intention: Any, composer: Any) -> 'ResponseBlueprint':
+        unresolved_w = getattr(intention, 'unresolved_weight', 0.0) if intention else 0.0
+        role_sequence = cls._plan_role_sequence(sentence_count, intention, unresolved_w)
+        if intention and getattr(intention, 'content_keywords', None):
+            topic_thread = list(intention.content_keywords[:3])
+        else:
+            topic_thread = list(getattr(composer, '_context_keywords', [])[:3])
+        pivot_budget = max(1, sentence_count // 3)
+        semantic_lane = getattr(intention, 'semantic_lane', 'communication') if intention else 'communication'
+        confidence = float(getattr(intention, 'confidence', 0.5) if intention else 0.5)
+        return cls(
+            role_sequence=role_sequence,
+            topic_thread=topic_thread,
+            pivot_budget=pivot_budget,
+            semantic_lane=semantic_lane,
+            confidence=confidence,
+        )
+
+
+@dataclass
+class CoherenceTracker:
+    """Per-response inter-sentence coherence state."""
+    prior_topics: List[str] = field(default_factory=list)
+    prior_slot_types: List[str] = field(default_factory=list)
+    last_was_question: bool = False
+    sentences_composed: int = 0
+    topic_continuity_score: float = 0.0
+
+    def update(self, sentence_text: str, slots_used: List[str]) -> None:
+        words = re.findall(r'\b\w{4,}\b', sentence_text.lower())
+        self.prior_topics.extend(words)
+        for s in slots_used:
+            if s not in self.prior_slot_types:
+                self.prior_slot_types.append(s)
+        self.prior_slot_types = self.prior_slot_types[-10:]
+        self.last_was_question = sentence_text.strip().endswith('?')
+        self.sentences_composed += 1
+
+    def topic_overlap(self, sentence_text: str, topic_thread: List[str]) -> float:
+        if not topic_thread:
+            return 0.0
+        text_lower = sentence_text.lower()
+        hits = sum(1 for w in topic_thread if w in text_lower)
+        return hits / len(topic_thread)
+
+    def template_is_redundant(self, template: Dict[str, Any], topic_thread: List[str]) -> bool:
+        if not self.prior_slot_types:
+            return False
+        pattern = template.get('pattern', '')
+        slot_types = re.findall(r'\{([A-Z](?::[a-z_]+)?)\}', pattern)
+        if not slot_types:
+            return False
+        heavy = {s for s in set(self.prior_slot_types) if self.prior_slot_types.count(s) > 2}
+        if not heavy:
+            return False
+        all_heavy = all(s in heavy for s in slot_types)
+        constraints = template.get('semantic_constraints', {})
+        has_topic_slot = any(
+            any(tw[:4] in str(v) for tw in topic_thread if len(tw) >= 4)
+            for v in constraints.values()
+        )
+        return all_heavy and not has_topic_slot
+
+
+def _role_to_tone(role: str, base_tone: str) -> str:
+    """Map structural role to expression tone pool."""
+    return {
+        "ANCHOR":     base_tone,
+        "DEVELOP":    base_tone,
+        "BRIDGE":     "reflective",
+        "CLOSE":      base_tone,
+        "CLOSE_OPEN": "curious",
+    }.get(role, base_tone)
+
+
+def _template_role_score(template: Dict[str, Any], role: str) -> float:
+    """Score a template's fit for a structural role based on pattern structure."""
+    pattern = template.get('pattern', '')
+    if role == "ANCHOR":
+        return 1.0 if pattern.startswith("I {") else 0.3
+    elif role == "DEVELOP":
+        return 1.0 if '{C}' in pattern else 0.4
+    elif role == "BRIDGE":
+        return 1.0 if '{P}' in pattern else 0.3
+    elif role in ("CLOSE", "CLOSE_OPEN"):
+        return 1.0 if re.search(r'\{[NA][^}]*\}[.,!?]?$', pattern) else 0.3
+    return 0.5
+
+
 class SentenceComposer:
     """
     Composes grammatical sentences from Aurora's evolving template pool.
@@ -1565,6 +1682,7 @@ class SentenceComposer:
         self._last_words_used: List[str] = []           # Words chosen during composition
         self._last_word_sources: Dict[str, str] = {}    # word ' slot_type/category
         self._expression_count = 0
+        self._last_response_coherence = 0.5
         self._total_scaffolded_fills = 0                # How many fills used OETS
 
         # Seed the pool
@@ -2121,25 +2239,91 @@ class SentenceComposer:
             base_count = 1 + int(conf * 2) + int(verbosity > 0.6)
             sentence_count = max(1, min(4, base_count))
 
+        # Build response blueprint — structural plan for this response
+        _blueprint = None
+        _tracker = None
+        try:
+            _intention = getattr(self, '_semantic_intention', None)
+            _unresolved_w = (
+                _intention.unresolved_weight if _intention else 0.0
+            )
+            _blueprint = ResponseBlueprint.build(
+                sentence_count=sentence_count,
+                intention=_intention,
+                composer=self,
+            )
+            _tracker = CoherenceTracker()
+        except Exception:
+            pass
+
         templates_used = []
-        for _ in range(max(1, sentence_count)):
+        role_sequence = (
+            _blueprint.role_sequence if _blueprint else
+            ["ANCHOR"] + ["DEVELOP"] * max(0, sentence_count - 2) + ["CLOSE"]
+        )
+        topic_thread = _blueprint.topic_thread if _blueprint else []
+        pivot_budget = _blueprint.pivot_budget if _blueprint else 1
+
+        for role_idx, role in enumerate(role_sequence[:sentence_count]):
             if not pool:
                 break
-            # Fitness-weighted selection with scaffolding bonus
+
+            # Get role-appropriate tone pool
+            role_tone = _role_to_tone(role, tone)
+            role_pool = self.pool.get(role_tone, pool)
+            if not role_pool:
+                role_pool = pool
+
+            # Score each template for this role + blueprint
             weights = []
-            for t in pool:
+            for t in role_pool:
                 w = max(0.05, t['fitness'])
                 w += t.get('scaffolding_level', 0) * 0.05
+
+                # Role alignment bonus
+                w += _template_role_score(t, role) * 0.2
+
+                # Topic thread bonus
+                if topic_thread and t.get('semantic_constraints'):
+                    for cat in t['semantic_constraints'].values():
+                        if any(tw[:4] in cat for tw in topic_thread if len(tw) >= 4):
+                            w *= 1.3
+                            break
+
+                # Redundancy penalty
+                if _tracker and _tracker.template_is_redundant(t, topic_thread):
+                    w *= 0.4
+
+                # Question suppression: if last was question, suppress curious pool
+                if _tracker and _tracker.last_was_question:
+                    if 'curious' in t.get('source', '') or '?' in t.get('pattern', ''):
+                        w *= 0.2
+
                 weights.append(w)
 
-            chosen = random.choices(pool, weights=weights, k=1)[0]
+            chosen = random.choices(role_pool, weights=weights, k=1)[0]
             templates_used.append(chosen)
-            filled = self._fill_template(chosen['pattern'], tone, coherence,
-                                         chosen.get('semantic_constraints', {}),
-                                         chosen.get('cluster_references', []),
-                                         chosen.get('scaffolding_level', 0))
+
+            filled = self._fill_template(
+                chosen['pattern'], role_tone, coherence,
+                chosen.get('semantic_constraints', {}),
+                chosen.get('cluster_references', []),
+                chosen.get('scaffolding_level', 0)
+            )
+
             if filled:
+                # CLOSE_OPEN: ensure inquiry signal present
+                if role == "CLOSE_OPEN" and "?" not in filled:
+                    filled = filled.rstrip('.') + "?"
+
                 sentences.append(filled)
+
+                # Update coherence tracker
+                if _tracker:
+                    slots_used = [
+                        s for s in re.findall(r'\{([A-Z](?::[a-z_]+)?)\}', chosen['pattern'])
+                    ]
+                    _tracker.update(filled, slots_used)
 
         # Optional question if curious trait is high
         curiosity = traits.get('curiosity', 0.5)
@@ -2171,6 +2355,15 @@ class SentenceComposer:
                 )
                 if q:
                     sentences.append(q)
+
+        # Store response coherence score for feedback
+        _response_coherence = 0.5
+        try:
+            if _tracker and _blueprint and _blueprint.topic_thread:
+                _response_coherence = _tracker.topic_continuity_score
+        except Exception:
+            pass
+        self._last_response_coherence = _response_coherence
 
         text = " ".join(sentences)
 
@@ -2208,6 +2401,20 @@ class SentenceComposer:
         # OETS feedback: words learn from how well they performed
         if self._has_oets and self._last_words_used:
             self._expression_feedback_to_oets(fitness)
+
+        # Blend response coherence into template fitness
+        try:
+            _coherence = getattr(self, '_last_response_coherence', 0.5)
+            if _coherence != 0.5:
+                for tone_key, tone_pool in self.pool.items():
+                    for t in tone_pool:
+                        if t.get('uses', 0) > 0:
+                            if _coherence > 0.65 and fitness >= 0.5:
+                                t['fitness'] = min(1.0, t['fitness'] + 0.01)
+                            elif _coherence < 0.35 and fitness < 0.5:
+                                t['fitness'] = max(0.0, t['fitness'] - 0.01)
+        except Exception:
+            pass
 
     # ================================================================
     # EXPRESSION ' OETS FEEDBACK LOOP
@@ -2618,6 +2825,14 @@ class ExpressionPerceptionEngine:
         self.voice = VoiceGenome()
         self.composer = SentenceComposer(self.lexicon, self.voice)
 
+        # Language structure fitness scorer — measures semantic fidelity in training
+        self._lang_fitness: Optional[Any] = None
+        try:
+            from aurora_language_structure_fitness import LanguageStructureFitness
+            self._lang_fitness = LanguageStructureFitness()
+        except Exception:
+            pass
+
         # OETS  -- Ontological Evolutionary Template Scaffolding
         self.oets: Optional['OntologicalScaffoldingEngine'] = None
         if _OETS_AVAILABLE:
@@ -2867,8 +3082,23 @@ class ExpressionPerceptionEngine:
         except Exception:
             pass
 
-        # 5. Feed fitness back to the templates that produced this expression
-        self.composer.feedback(eval_result['enhanced_fitness'])
+        # 5. Feed fitness back — blended with semantic fidelity score
+        _feedback_fitness = eval_result['enhanced_fitness']
+        _struct_result = None
+        try:
+            if self._lang_fitness is not None:
+                _intention = getattr(self.composer, '_semantic_intention', None)
+                if _intention is not None:
+                    _struct_result = self._lang_fitness.score(
+                        expression_text=expression,
+                        intention=_intention,
+                        base_fitness=_feedback_fitness,
+                        composer=self.composer,
+                    )
+                    _feedback_fitness = _struct_result.combined_fitness
+        except Exception:
+            pass
+        self.composer.feedback(_feedback_fitness)
 
         # 6. Voice shaping
         voice_params = self.voice.to_dict()
@@ -2917,6 +3147,13 @@ class ExpressionPerceptionEngine:
             except Exception:
                 pass  # degrade gracefully  -- original expression is already set
 
+        try:
+            _fidelity = _struct_result.fidelity_score if _struct_result is not None else 0.0
+            _kw_coverage = _struct_result.keyword_coverage if _struct_result is not None else 0.0
+        except Exception:
+            _fidelity = 0.0
+            _kw_coverage = 0.0
+
         return {
             'expression': expression,
             'offspring_id': offspring.offspring_id,
@@ -2933,6 +3170,9 @@ class ExpressionPerceptionEngine:
             'draft_reason':  evo_result.get('draft_reason', ''),
             'intent':        evo_result.get('intent', {}),
             'anchored':      evo_result.get('anchored', False),
+            # Semantic fidelity outputs
+            'fidelity_score':   _fidelity,
+            'keyword_coverage': _kw_coverage,
         }
 
     def _build_expression(self, offspring: ExpressionOffspring,
@@ -2979,7 +3219,17 @@ class ExpressionPerceptionEngine:
                                         valence=valence, lineage="oets"
                                     )
                                 enriched.append(w)
-            self.composer.set_context(enriched[:20])
+            # Merge: preserve SIB intention keywords at front, OETS enrichment fills tail.
+            try:
+                sib_keywords = []
+                _sib_intent = getattr(self.composer, '_semantic_intention', None)
+                if _sib_intent and _sib_intent.content_keywords:
+                    sib_keywords = list(_sib_intent.content_keywords)
+                oets_only = [w for w in enriched if w not in sib_keywords]
+                merged_context = (sib_keywords + oets_only)[:20]
+                self.composer.set_context(merged_context)
+            except Exception:
+                self.composer.set_context(enriched[:20])
 
             # Telemetry: OETS coverage → semantic_precision confidence
             try:
