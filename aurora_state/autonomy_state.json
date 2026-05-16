@@ -9,10 +9,40 @@
     "files_read": 0,
     "dreams_used": 2,
     "_aurora_evolved_reflection": {
-      "available": false,
-      "reason": "evolved_surface_method_renamed: reflect_aurora_governance_persistence_gateway_dailyquotas_to_dict",
+      "method": "reflect_aurora_governance_persistence_gateway_dailyquotas_to_dict",
+      "kind": "compatibility_alias",
       "op_id": "reflect_aurora_governance_persistence_gateway_dailyquotas_to_dict",
-      "kind": "reflection"
+      "signature": "",
+      "constraints": [
+        "boundary"
+      ],
+      "expected_axes": [
+        "B"
+      ],
+      "contract_profile": {},
+      "effect_modes": [
+        "interface_boundary_change"
+      ],
+      "effect_phrases": [
+        "legacy evolved-surface binding preserved across promotion"
+      ],
+      "surface_score": 0.0,
+      "genealogy_pressure": 0.0,
+      "timestamp": 1778887478.9945533,
+      "payload_present": true,
+      "kwargs_keys": [],
+      "system_summary": {
+        "available": false,
+        "active_components": [],
+        "axis_pressure": {}
+      },
+      "axis_pressure_snapshot": {},
+      "origin": {
+        "module": "aurora_internal.aurora_evolved_surfaces",
+        "op_id": "reflect_aurora_governance_persistence_gateway_dailyquotas_to_dict",
+        "resolved": true,
+        "callable": false
+      }
     },
     "_aurora_rewrite_profile": "governance_gateway",
     "_aurora_genealogy_strategy": {

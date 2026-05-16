@@ -2354,4 +2354,312 @@ class RuntimeUnderstandingContract:
             "cost": dict(cost_state),
             "policy_delta": policy_delta,
         }
-_STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
+
+    # =========================================================================
+    # REFLECTION RE-ENTRY SEQUENCE (AURORA_COGNITIVE_PHYSICS.md §6 & §7)
+    #
+    # Mandatory sequence: STATE → EXPRESSION → RE-ENTRY → RECONCILIATION → UNDERSTANDING
+    #
+    # Laws from the physics document:
+    #   MAY NOT: Skip RECONCILIATION — STATE to UNDERSTANDING directly is invalid
+    #   MAY NOT: Begin before Thought has reached full convergence
+    #   MAY NOT: Run more than one unresolved RE-ENTRY cycle without flagging tension
+    #   MAY NOT: Allow Emotion to author UNDERSTANDING
+    #   MAY NOT: Silence unresolved tension — every contradiction must surface or be flagged
+    #
+    # After Understanding, the downward modulation cascade is mandatory:
+    #   Identity → Memory (geological write) → Pressure topology reset →
+    #   Prediction priors → Salience thresholds → Composite crystal weights
+    # =========================================================================
+
+    def run_reflection_cycle(
+        self,
+        systems: Dict[str, Any],
+        user_text: str,
+        candidate_response: str,
+        *,
+        constraint_state: Optional[Dict[str, Any]] = None,
+        session_id: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Enforce the mandatory Reflection re-entry sequence before Understanding.
+
+        Returns a dict with keys:
+          reached_understanding (bool): True only if RECONCILIATION succeeded
+          tension_flags (list): Non-empty if RECONCILIATION failed
+          reflection_step (str): Last step completed
+          understanding (dict): The resolved field state if reached; empty otherwise
+        """
+        result: Dict[str, Any] = {
+            "reached_understanding": False,
+            "tension_flags": [],
+            "reflection_step": "STATE",
+            "understanding": {},
+        }
+
+        # ── STEP 1: STATE ── capture the current full constraint state
+        state_snapshot = self._capture_reflection_state(systems)
+        result["reflection_step"] = "EXPRESSION"
+
+        # ── STEP 2: EXPRESSION ── surface what the current state is generating
+        expression = {
+            "candidate": str(candidate_response or "")[:480],
+            "meaning_topic": str(self.state.get("M", {}).get("active_topic", "") or ""),
+            "boundary_ambiguity": float(self.state.get("B", {}).get("ambiguity", 0.0) or 0.0),
+            "cost_total": float(self.state.get("N", {}).get("total", 0.0) or 0.0),
+            "accuracy_score": float(self.state.get("A", {}).get("score", 0.5) or 0.5),
+            "perspective_speaker": str(self.state.get("P", {}).get("primary_speaker", "") or ""),
+        }
+        result["reflection_step"] = "RE_ENTRY"
+
+        # ── STEP 3: RE-ENTRY ── feed the expression back as new constraint input
+        reentry = self._compute_reentry_delta(state_snapshot, expression, systems)
+        result["reflection_step"] = "RECONCILIATION"
+
+        # ── STEP 4: RECONCILIATION ── resolve tension between original state and re-entered output
+        tension = self._compute_tension(state_snapshot, reentry)
+        reconciled, flags = self._attempt_reconciliation(tension)
+
+        if not reconciled:
+            self._flag_tension(systems, flags, state_snapshot, session_id=session_id)
+            result["tension_flags"] = flags
+            result["reflection_step"] = "RECONCILIATION_FAILED"
+            return result
+
+        # ── STEP 5: UNDERSTANDING ── field at equilibrium; all noncomp manifolds coherent
+        result["reflection_step"] = "UNDERSTANDING"
+        understanding = self._emit_understanding(
+            state_snapshot=state_snapshot,
+            reentry=reentry,
+            tension=tension,
+            session_id=session_id,
+        )
+        result["reached_understanding"] = True
+        result["understanding"] = understanding
+
+        # Mandatory downward modulation cascade
+        self._trigger_downward_cascade(systems, understanding)
+        return result
+
+    def _capture_reflection_state(self, systems: Dict[str, Any]) -> Dict[str, Any]:
+        """STATE step: snapshot the full current constraint state."""
+        return {
+            "M": copy.deepcopy(self.state.get("M", {})),
+            "P": copy.deepcopy(self.state.get("P", {})),
+            "X": copy.deepcopy(self.state.get("X", {})),
+            "T": copy.deepcopy(self.state.get("T", {})),
+            "N": copy.deepcopy(self.state.get("N", {})),
+            "B": copy.deepcopy(self.state.get("B", {})),
+            "A": copy.deepcopy(self.state.get("A", {})),
+            "Pi": copy.deepcopy(self.state.get("Pi", {})),
+            "time_index": int(self.state.get("time_index", 0) or 0),
+            "timestamp": round(time.time(), 4),
+        }
+
+    def _compute_reentry_delta(
+        self,
+        state_snapshot: Dict[str, Any],
+        expression: Dict[str, Any],
+        systems: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """RE-ENTRY step: compute constraint displacement from feeding expression back."""
+        prior_accuracy = float(state_snapshot.get("A", {}).get("score", 0.5) or 0.5)
+        prior_cost = float(state_snapshot.get("N", {}).get("total", 0.25) or 0.25)
+        expressed_accuracy = float(expression.get("accuracy_score", 0.5) or 0.5)
+        expressed_cost = float(expression.get("cost_total", 0.25) or 0.25)
+
+        return {
+            "accuracy_delta": round(expressed_accuracy - prior_accuracy, 4),
+            "cost_delta": round(expressed_cost - prior_cost, 4),
+            "boundary_ambiguity": float(expression.get("boundary_ambiguity", 0.0) or 0.0),
+            "meaning_topic": str(expression.get("meaning_topic", "") or ""),
+            "candidate_length": len(str(expression.get("candidate", "") or "")),
+        }
+
+    def _compute_tension(
+        self,
+        state_snapshot: Dict[str, Any],
+        reentry: Dict[str, Any],
+    ) -> Dict[str, float]:
+        """Compute tension between the original state and the re-entered output."""
+        accuracy_tension = abs(float(reentry.get("accuracy_delta", 0.0) or 0.0))
+        cost_tension = max(0.0, float(reentry.get("cost_delta", 0.0) or 0.0))
+        boundary_tension = float(reentry.get("boundary_ambiguity", 0.0) or 0.0)
+
+        # Meaning continuity tension: if topic changed, tension rises
+        prior_topic = str(state_snapshot.get("M", {}).get("active_topic", "") or "")
+        reentry_topic = str(reentry.get("meaning_topic", "") or "")
+        topic_tension = 0.0 if (not prior_topic or prior_topic == reentry_topic) else 0.4
+
+        return {
+            "accuracy": round(accuracy_tension, 4),
+            "cost": round(cost_tension, 4),
+            "boundary": round(boundary_tension, 4),
+            "meaning": round(topic_tension, 4),
+            "total": round((accuracy_tension + cost_tension + boundary_tension + topic_tension) / 4.0, 4),
+        }
+
+    def _attempt_reconciliation(
+        self, tension: Dict[str, float]
+    ) -> tuple:
+        """
+        RECONCILIATION step: attempt to resolve tension.
+
+        Returns (reconciled: bool, flags: list).
+        Reconciliation fails if total tension exceeds the resolution threshold.
+        Flags enumerate the specific axes where tension is unresolved.
+        """
+        TENSION_THRESHOLD = 0.55
+        flags: list = []
+
+        if float(tension.get("accuracy", 0.0)) > 0.40:
+            flags.append("accuracy_tension_unresolved")
+        if float(tension.get("cost", 0.0)) > 0.35:
+            flags.append("cost_tension_unresolved")
+        if float(tension.get("boundary", 0.0)) > 0.45:
+            flags.append("boundary_tension_unresolved")
+        if float(tension.get("meaning", 0.0)) > 0.30:
+            flags.append("meaning_continuity_break")
+
+        reconciled = float(tension.get("total", 0.0)) <= TENSION_THRESHOLD and not flags
+        return reconciled, flags
+
+    def _flag_tension(
+        self,
+        systems: Dict[str, Any],
+        flags: list,
+        state_snapshot: Dict[str, Any],
+        *,
+        session_id: str = "",
+    ) -> None:
+        """
+        Tension must never be silently suppressed.
+        Record unresolved tension in history and notify any connected systems.
+        """
+        tension_record = {
+            "time": round(time.time(), 3),
+            "phase": "reflection_tension",
+            "time_index": int(self.state.get("time_index", 0) or 0),
+            "session_id": str(session_id or ""),
+            "flags": list(flags),
+            "state_snapshot_time_index": int(state_snapshot.get("time_index", 0) or 0),
+            "law": "RECONCILIATION_REQUIRED — Understanding may not be emitted from unreconciled tension",
+        }
+        self._history_append(tension_record)
+
+        # Surface tension into any connected tension bus (soft dispatch)
+        tension_bus = systems.get("_tension_bus") or systems.get("tension_bus")
+        if tension_bus and hasattr(tension_bus, "register_tension"):
+            try:
+                tension_bus.register_tension(flags, state_snapshot)
+            except Exception:
+                pass
+
+    def _emit_understanding(
+        self,
+        *,
+        state_snapshot: Dict[str, Any],
+        reentry: Dict[str, Any],
+        tension: Dict[str, float],
+        session_id: str = "",
+    ) -> Dict[str, Any]:
+        """
+        UNDERSTANDING step: emit the resolved field state.
+        Only called after RECONCILIATION succeeds.
+        """
+        return {
+            "time_index": int(self.state.get("time_index", 0) or 0),
+            "session_id": str(session_id or ""),
+            "timestamp": round(time.time(), 4),
+            "resolved_accuracy": float(self.state.get("A", {}).get("score", 0.5) or 0.5),
+            "resolved_cost": float(self.state.get("N", {}).get("total", 0.25) or 0.25),
+            "resolved_meaning_topic": str(self.state.get("M", {}).get("active_topic", "") or ""),
+            "resolved_boundary_ambiguity": float(self.state.get("B", {}).get("ambiguity", 0.0) or 0.0),
+            "tension_at_resolution": dict(tension),
+            "reentry_delta": dict(reentry),
+            "prior_state_time_index": int(state_snapshot.get("time_index", 0) or 0),
+            "crystal_level": "understanding",
+            "law": "AURORA_COGNITIVE_PHYSICS §7 Understanding — field at equilibrium across all noncomp manifolds",
+        }
+
+    def _trigger_downward_cascade(
+        self, systems: Dict[str, Any], understanding: Dict[str, Any]
+    ) -> None:
+        """
+        DOWNWARD MODULATION CASCADE (AURORA_COGNITIVE_PHYSICS.md §8).
+
+        After every Understanding, mandatory cascade reconfigures all lower crystal levels:
+          1. Identity → King Quasicrystal reconfiguration
+          2. Memory → geological stratum write
+          3. Pressure topology → discharge and reset across all noncomp manifolds
+          4. Prediction priors → reset from resolved ground truth
+          5. Salience thresholds → recalibration for next turn
+          6. Composite crystal weights → update
+          7. Constraint Basis → recalibration for next turn
+
+        All dispatches are soft: missing methods are skipped, never silently failed.
+        """
+        cascade_record = {
+            "time": round(time.time(), 3),
+            "phase": "downward_cascade",
+            "time_index": int(understanding.get("time_index", 0) or 0),
+            "understanding_summary": {
+                "accuracy": understanding.get("resolved_accuracy"),
+                "cost": understanding.get("resolved_cost"),
+                "topic": understanding.get("resolved_meaning_topic"),
+            },
+            "dispatches": [],
+        }
+
+        def _soft(target_key: str, method: str, *args):
+            obj = systems.get(target_key)
+            if obj and hasattr(obj, method):
+                try:
+                    getattr(obj, method)(*args)
+                    cascade_record["dispatches"].append(f"{target_key}.{method}:ok")
+                except Exception as exc:
+                    cascade_record["dispatches"].append(f"{target_key}.{method}:err:{exc}")
+            else:
+                cascade_record["dispatches"].append(f"{target_key}.{method}:not_found")
+
+        # 1. Identity field: King Quasicrystal reconfiguration
+        #    The NoncompField is the live 125-noncomp × 625-slot Identity field.
+        _soft("identity_field", "accept_understanding_update", understanding)
+        _soft("behavioral_identity", "accept_understanding_update", understanding)
+        _soft("identity_persistence", "accept_understanding_update", understanding)
+
+        # 2. Memory: geological stratum write (deepest — near-immutable)
+        _soft("sedimemory", "geological_write", understanding)
+
+        # 3. Pressure topology: discharge and reset
+        _soft("consciousness", "reset_pressure_topology", understanding)
+        _soft("consciousness_engine", "reset_pressure_topology", understanding)
+
+        # 4. Prediction priors: reset from resolved ground truth
+        _soft("prediction_field", "reset_from_understanding", understanding)
+
+        # 5. Salience thresholds: recalibrate for next turn
+        _soft("consciousness", "recalibrate_salience", understanding)
+        _soft("consciousness_engine", "recalibrate_salience", understanding)
+        # Tensor layer: SalienceCrystal threshold recalibrated from resolved state
+        _soft("tensor_expressions", "recalibrate_salience", understanding)
+
+        # 6. Composite crystal weights: update all five tensor expression crystals
+        # This is the "composite crystal expression weights updated" in §8.
+        # TensorExpressionLayer.receive_understanding() recalibrates all crystals.
+        _soft("tensor_expressions", "receive_understanding", understanding)
+        # Also dispatch to expression/perception layer (legacy)
+        _soft("expression_perception", "update_crystal_weights", understanding)
+
+        # 6b. Prediction priors: reset from resolved ground truth (tensor layer)
+        # PredictionCrystal(T+N) holds temporal priors that must reset after Understanding.
+        _soft("tensor_expressions", "reset_prediction_priors", understanding)
+
+        # 7. Constraint Basis: recalibrate — next turn begins from here
+        # Dispatches to dimensional (DER/DMM) and genealogy trackers.
+        _soft("genealogy", "accept_understanding_update", understanding)
+        _soft("constraint_genealogy", "accept_understanding_update", understanding)
+        # Dimensional layer owns the live constraint basis
+        _soft("dimensional", "recalibrate_from_understanding", understanding)
+
+        self._history_append(cascade_record)

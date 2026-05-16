@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Local articulation layer for Aurora.
+Articulation layer for Aurora.
 
-This module is not a responder. It can only smooth Aurora's already-selected
-draft through local llama.cpp and returns the original text if preservation
-checks fail.
+Aurora uses her own scoring and deterministic phrase repair to smooth drafts.
+No external LLM is involved — candidates are generated from Aurora's own
+phrase patterns and evaluated against her pressure and clarity signals.
 """
 
 from __future__ import annotations
@@ -12,25 +12,31 @@ from __future__ import annotations
 import os
 import json
 import re
-import shutil
-import subprocess
-import sys
-import threading
 import time
-import urllib.request
+from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional, Set
 
 
-DEFAULT_MODEL = "Models/qwen2.5-1.5b-instruct-q4_k_m.gguf"
-DEFAULT_BINARY = "/data/data/com.termux/files/usr/bin/llama-cli"
-WORKER_SCRIPT = Path(__file__).with_name("aurora_llama_worker.py")
 DECISION_LOG = Path("aurora_state") / "articulation_feedback.jsonl"
 SUMMARY_FILE = Path("aurora_state") / "articulation_feedback_summary.json"
 TRACE_FILE = Path("aurora_state") / "last_articulation_trace.json"
-_PY_LLM = None
-_PY_LLM_LOCK = threading.Lock()
+INSIGHTS_FILE = Path("aurora_state") / "articulation_insights.json"
+LANGUAGE_STATE_FILE = Path("aurora_state") / "language_state.json"
+LEXICON_FILE = Path("aurora_state") / "lexicon.json"
+
+# Language state cache — invalidated on file change
+_LANGUAGE_STATE_CACHE: Optional[Dict[str, Any]] = None
+_LANGUAGE_STATE_MTIME: float = 0.0
+
+# Lexicon familiarity — words Aurora has used at least once
+_LEXICON_FAMILIAR: Optional[frozenset] = None
+
+# Feedback insights — refreshed every 30 minutes
+_FEEDBACK_INSIGHTS: Optional[Dict[str, Any]] = None
+_FEEDBACK_INSIGHTS_TS: float = 0.0
+_FEEDBACK_INSIGHTS_TTL: float = 1800.0
 
 
 @dataclass
@@ -49,66 +55,179 @@ class ArticulationDecision:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-def _flag_disabled(name: str) -> bool:
-    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
+# ---------------------------------------------------------------------------
+# State loaders
+# ---------------------------------------------------------------------------
 
-
-def _flag_enabled(name: str) -> bool:
-    return os.environ.get(name, "").strip().lower() in ("1", "true", "yes", "on")
-
-
-def _binary_path() -> str:
-    configured = os.environ.get("AURORA_ARTICULATOR_BIN", "").strip()
-    if configured:
-        return configured
-    return shutil.which("llama-cli") or DEFAULT_BINARY
-
-
-def _model_path() -> str:
-    configured = os.environ.get("AURORA_ARTICULATOR_MODEL", "").strip()
-    if configured:
-        return configured
-    return DEFAULT_MODEL
-
-
-def available() -> bool:
-    if _flag_disabled("AURORA_ARTICULATOR_DISABLED"):
-        return False
-    binary = _binary_path()
-    model = _model_path()
-    return bool(
-        model and Path(model).exists() and (
-            _isolated_llama_available() or Path(binary).exists() or _python_llama_available()
-        )
-    )
-
-
-def _python_llama_available() -> bool:
-    if _flag_disabled("AURORA_ARTICULATOR_PY_DISABLED"):
-        return False
-    if not _flag_enabled("AURORA_ARTICULATOR_PY_ENABLED"):
-        return False
+def _load_language_state() -> Dict[str, Any]:
+    """Load language_state.json dims with mtime-based cache."""
+    global _LANGUAGE_STATE_CACHE, _LANGUAGE_STATE_MTIME
     try:
-        import llama_cpp  # noqa: F401
-        return True
+        mtime = LANGUAGE_STATE_FILE.stat().st_mtime if LANGUAGE_STATE_FILE.exists() else 0.0
+        if _LANGUAGE_STATE_CACHE is not None and mtime == _LANGUAGE_STATE_MTIME:
+            return _LANGUAGE_STATE_CACHE
+        if LANGUAGE_STATE_FILE.exists():
+            data = json.loads(LANGUAGE_STATE_FILE.read_text(encoding="utf-8") or "{}")
+            _LANGUAGE_STATE_CACHE = data.get("dims", {}) if isinstance(data, dict) else {}
+            _LANGUAGE_STATE_MTIME = mtime
+            return _LANGUAGE_STATE_CACHE
     except Exception:
-        return False
+        pass
+    return {}
 
 
-def _isolated_llama_available() -> bool:
-    if _flag_disabled("AURORA_ARTICULATOR_ISOLATED_DISABLED"):
-        return False
-    if not _flag_enabled("AURORA_ARTICULATOR_ISOLATED_ENABLED"):
-        return False
-    return WORKER_SCRIPT.exists() and Path(_model_path()).exists()
+def _load_lexicon_familiar() -> frozenset:
+    """Return frozenset of words Aurora has used at least once."""
+    global _LEXICON_FAMILIAR
+    if _LEXICON_FAMILIAR is not None:
+        return _LEXICON_FAMILIAR
+    try:
+        if LEXICON_FILE.exists():
+            data = json.loads(LEXICON_FILE.read_text(encoding="utf-8") or "{}")
+            entries = data.get("entries", {}) if isinstance(data, dict) else {}
+            _LEXICON_FAMILIAR = frozenset(
+                w.lower() for w, v in entries.items()
+                if isinstance(v, dict) and int(v.get("usage_count", 0) or 0) > 0
+            )
+            return _LEXICON_FAMILIAR
+    except Exception:
+        pass
+    _LEXICON_FAMILIAR = frozenset()
+    return _LEXICON_FAMILIAR
 
 
-def _server_url() -> str:
-    return os.environ.get("AURORA_LOCAL_LLM_SERVER_URL", "").strip().rstrip("/")
+# ---------------------------------------------------------------------------
+# Feedback loop
+# ---------------------------------------------------------------------------
 
+def analyze_articulation_feedback(n_lines: int = 500) -> Dict[str, Any]:
+    """
+    Read back logged decisions and produce insights for self-improvement.
+
+    Computes per-source acceptance rates, rejection patterns, and average
+    pressure relief. Derives an adaptive min_relief suggestion and an
+    operating mode recommendation. Persists results to INSIGHTS_FILE.
+    """
+    empty = {"total": 0, "accepted": 0, "acceptance_rate": 0.0,
+             "avg_pressure_relief": 0.0, "top_reasons": [],
+             "source_summary": {}, "suggested_min_relief": 0.035,
+             "suggested_mode": "normal", "analyzed_at": time.time()}
+
+    if not DECISION_LOG.exists():
+        return empty
+
+    records: list = []
+    try:
+        with DECISION_LOG.open("r", encoding="utf-8", errors="replace") as fh:
+            lines = fh.readlines()
+        for line in lines[-n_lines:]:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except Exception:
+                continue
+    except Exception:
+        return empty
+
+    if not records:
+        return empty
+
+    reason_counts: Counter = Counter()
+    source_stats: Dict[str, Dict[str, Any]] = {}
+    pressure_reliefs: list = []
+
+    for r in records:
+        meta = r.get("metadata") or {}
+        source = str(meta.get("source", "unknown") or "unknown")
+        accepted = bool(r.get("accepted", False))
+        relief = float(r.get("pressure_relief", 0.0) or 0.0)
+        reason = str(r.get("reason", "") or "")
+
+        if source not in source_stats:
+            source_stats[source] = {"count": 0, "accepted": 0, "relief_sum": 0.0}
+        source_stats[source]["count"] += 1
+        if accepted:
+            source_stats[source]["accepted"] += 1
+        source_stats[source]["relief_sum"] += relief
+        reason_counts[reason] += 1
+        pressure_reliefs.append(relief)
+
+    total = len(records)
+    accepted_total = sum(1 for r in records if r.get("accepted"))
+    avg_relief = sum(pressure_reliefs) / max(1, len(pressure_reliefs))
+    acceptance_rate = accepted_total / max(1, total)
+
+    source_summary: Dict[str, Any] = {}
+    for src, stats in source_stats.items():
+        cnt = stats["count"]
+        acc = stats["accepted"]
+        source_summary[src] = {
+            "count": cnt,
+            "acceptance_rate": round(acc / max(1, cnt), 4),
+            "avg_pressure_relief": round(stats["relief_sum"] / max(1, cnt), 4),
+        }
+
+    base_relief = float(os.environ.get("AURORA_ARTICULATOR_MIN_RELIEF", "0.035") or 0.035)
+    if avg_relief < -0.30 and acceptance_rate < 0.02:
+        # Candidates consistently terrible — keep threshold, flag deterministic-preferred
+        suggested_min_relief = base_relief
+        suggested_mode = "deterministic_preferred"
+    elif avg_relief < 0.0 and acceptance_rate < 0.05:
+        # Most candidates worse — lower threshold slightly to allow borderline wins
+        suggested_min_relief = max(0.010, round(base_relief * 0.75, 4))
+        suggested_mode = "lower_threshold"
+    else:
+        suggested_min_relief = base_relief
+        suggested_mode = "normal"
+
+    insights: Dict[str, Any] = {
+        "total": total,
+        "accepted": accepted_total,
+        "acceptance_rate": round(acceptance_rate, 4),
+        "avg_pressure_relief": round(avg_relief, 4),
+        "top_reasons": reason_counts.most_common(5),
+        "source_summary": source_summary,
+        "suggested_min_relief": suggested_min_relief,
+        "suggested_mode": suggested_mode,
+        "analyzed_at": time.time(),
+    }
+
+    try:
+        INSIGHTS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        INSIGHTS_FILE.write_text(json.dumps(insights, indent=2, ensure_ascii=True), encoding="utf-8")
+    except Exception:
+        pass
+
+    return insights
+
+
+def _get_feedback_insights() -> Dict[str, Any]:
+    """Cached feedback insights — refreshed every _FEEDBACK_INSIGHTS_TTL seconds."""
+    global _FEEDBACK_INSIGHTS, _FEEDBACK_INSIGHTS_TS
+    now = time.time()
+    if _FEEDBACK_INSIGHTS is not None and (now - _FEEDBACK_INSIGHTS_TS) < _FEEDBACK_INSIGHTS_TTL:
+        return _FEEDBACK_INSIGHTS
+    _FEEDBACK_INSIGHTS = analyze_articulation_feedback(500)
+    _FEEDBACK_INSIGHTS_TS = now
+    return _FEEDBACK_INSIGHTS
+
+
+def _adaptive_min_relief() -> float:
+    """Effective minimum pressure relief threshold, informed by feedback history."""
+    base = float(os.environ.get("AURORA_ARTICULATOR_MIN_RELIEF", "0.035") or 0.035)
+    try:
+        return float(_get_feedback_insights().get("suggested_min_relief", base))
+    except Exception:
+        return base
+
+
+# ---------------------------------------------------------------------------
+# Text analysis
+# ---------------------------------------------------------------------------
 
 def _guard_tokens(text: str) -> Set[str]:
-    # Words to ignore when checking for proper noun preservation
     skip = {
         "I", "A", "An", "The", "This", "That", "These", "Those", "It", "If",
         "When", "Where", "What", "Why", "How", "Because", "And", "But", "So",
@@ -123,169 +242,6 @@ def _guard_tokens(text: str) -> Set[str]:
     tokens.update(re.findall(r"[-+]?\d+(?:\.\d+)?", text or ""))
     tokens.update(re.findall(r"\b[A-Za-z0-9_.+-]+@[A-Za-z0-9_.+-]+\b", text or ""))
     return tokens
-
-
-def _strip_llama_output(text: str) -> str:
-    out = (text or "").strip()
-    for marker in ("Revised:", "Revised message:", "Output:", "Message:", "Response:"):
-        if marker in out:
-            out = out.split(marker)[-1].strip()
-    lines = [ln.strip() for ln in out.splitlines() if ln.strip()]
-    # If the model gives multiple lines, prefer the longest one as it's likely the comprehensive one
-    if len(lines) > 1:
-        out = max(lines, key=len)
-    return out.strip().strip('"').strip("'").strip()
-
-
-def _get_python_llm():
-    """Load and retain llama.cpp through llama_cpp for the current process."""
-    global _PY_LLM
-    if _PY_LLM is not None:
-        return _PY_LLM
-    if not _python_llama_available():
-        return None
-    with _PY_LLM_LOCK:
-        if _PY_LLM is not None:
-            return _PY_LLM
-        from llama_cpp import Llama
-
-        _PY_LLM = Llama(
-            model_path=_model_path(),
-            n_ctx=int(os.environ.get("AURORA_ARTICULATOR_CTX", "512") or 512),
-            n_threads=int(os.environ.get("AURORA_ARTICULATOR_THREADS", "2") or 2),
-            verbose=False,
-        )
-        return _PY_LLM
-
-
-def _run_python_llama_candidate(draft_text: str, prompt: str, tone: str) -> str:
-    llm = _get_python_llm()
-    if llm is None:
-        return ""
-    resp = llm.create_chat_completion(
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are Aurora's local articulation layer only. "
-                    "Do not answer the user directly. Do not add new facts or questions. "
-                    "Smooth Aurora's draft to sound more human, comprehensive, and conversational. "
-                    "Preserve core meaning, facts, and names."
-                ),
-            },
-            {
-                "role": "user",
-                "content": json.dumps({
-                    "tone": tone,
-                    "user_context": str(prompt or "")[:300],
-                    "aurora_draft": draft_text,
-                }, ensure_ascii=True),
-            },
-        ],
-        temperature=float(os.environ.get("AURORA_ARTICULATOR_TEMP", "0.2") or 0.2),
-        max_tokens=int(os.environ.get("AURORA_ARTICULATOR_PY_TOKENS", "512") or 512),
-    )
-    try:
-        content = resp["choices"][0]["message"]["content"]
-    except Exception:
-        return ""
-    return _strip_llama_output(str(content or ""))
-
-
-def _run_isolated_llama_candidate(draft_text: str, prompt: str, tone: str, timeout_s: float) -> str:
-    if not _isolated_llama_available():
-        return ""
-    request = {
-        "task": "articulate",
-        "draft": draft_text,
-        "prompt": prompt,
-        "tone": tone,
-    }
-    proc = subprocess.run(
-        [sys.executable, str(WORKER_SCRIPT)],
-        input=json.dumps(request, ensure_ascii=True),
-        capture_output=True,
-        text=True,
-        timeout=timeout_s,
-    )
-    if proc.returncode != 0:
-        return ""
-    try:
-        data = json.loads((proc.stdout or "").strip())
-    except Exception:
-        return ""
-    if not isinstance(data, dict) or not data.get("ok"):
-        return ""
-    return _strip_llama_output(str(data.get("message", "") or ""))
-
-
-def _run_server_llama_candidate(draft_text: str, prompt: str, tone: str, timeout_s: float) -> str:
-    url = _server_url()
-    if not url:
-        return ""
-    payload = json.dumps({
-        "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "You are Aurora's local articulation layer only. Do not answer the user. "
-                    "Do not add facts, examples, questions, or advice. Only lightly smooth "
-                    "Aurora's draft while preserving meaning. Return only the revised message."
-                ),
-            },
-            {
-                "role": "user",
-                "content": json.dumps({
-                    "tone": tone,
-                    "user_prompt_context": str(prompt or "")[:300],
-                    "aurora_draft": draft_text[:900],
-                }, ensure_ascii=True),
-            },
-        ],
-        "max_tokens": int(os.environ.get("AURORA_ARTICULATOR_PY_TOKENS", "48") or 48),
-        "temperature": float(os.environ.get("AURORA_ARTICULATOR_TEMP", "0.15") or 0.15),
-    }, ensure_ascii=True).encode()
-    req = urllib.request.Request(
-        f"{url}/v1/chat/completions",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
-        data = json.loads(resp.read().decode() or "{}")
-    try:
-        content = data["choices"][0]["message"]["content"]
-    except Exception:
-        return ""
-    return _strip_llama_output(str(content or ""))
-
-
-def _deterministic_candidate(draft_text: str) -> str:
-    """
-    Conservative cleanup for recurring Aurora-native phrasing.
-
-    This is intentionally small and phrase-level. It gives the user a readable
-    bridge when local llama.cpp is unavailable or too slow, without letting a
-    general-purpose model invent a new answer.
-    """
-    text = re.sub(r"\s+", " ", str(draft_text or "")).strip()
-    if not text:
-        return ""
-
-    replacements = (
-        (r"\bThe meaning is whole, and I tell\.", "I am trying to tell the whole meaning."),
-        (r"\bI will tell the alive question\.", "I will speak to the living question."),
-        (r"\blike real heart\b", "with real feeling"),
-        (r"\blike deep heart\b", "with deep feeling"),
-        (r"\blike alive awareness\b", "with active awareness"),
-        (r"\blike strange moment\b", "in an unfamiliar way"),
-        (r"\bI grow this\b", "I am developing this"),
-        (r"\bI hear this always\b", "I keep hearing this"),
-    )
-    for pattern, replacement in replacements:
-        text = re.sub(pattern, replacement, text)
-
-    return re.sub(r"\s+", " ", text).strip()
 
 
 def _interpret_prompt_snapshot(prompt: str) -> Dict[str, Any]:
@@ -320,7 +276,6 @@ def _interpret_prompt_snapshot(prompt: str) -> Dict[str, Any]:
 
 
 def _clarity_score(text: str) -> float:
-    """Aurora-side heuristic for deciding whether articulation improved."""
     t = (text or "").strip()
     if not t:
         return 0.0
@@ -366,8 +321,8 @@ def _clarity_score(text: str) -> float:
 
 def _pressure_score(text: str, prompt: str = "") -> float:
     """
-    Estimate articulation pressure: lower means easier for the user to receive.
-    This is Aurora's decision signal, not the LLM's.
+    Estimate articulation pressure: 0.0 = easy to receive, 1.0 = hard to receive.
+    Aurora's own decision signal.
     """
     t = (text or "").strip()
     if not t:
@@ -400,6 +355,7 @@ def _pressure_score(text: str, prompt: str = "") -> float:
         "alive",
     }
     pressure += min(0.20, 0.035 * sum(1 for w in lower_words if w in abstract_markers))
+
     native_phrases = (
         "alive question", "meaning is whole", "and i tell", "like real heart",
         "like deep heart", "like alive awareness", "like strange moment",
@@ -426,6 +382,15 @@ def _pressure_score(text: str, prompt: str = "") -> float:
 
     clarity = _clarity_score(t)
     pressure += (1.0 - clarity) * 0.20
+
+    # Lexicon familiarity — words Aurora has used before reduce pressure
+    familiar = _load_lexicon_familiar()
+    if familiar:
+        word_list = re.findall(r"[a-z]{3,}", lower)
+        if word_list:
+            familiar_ratio = sum(1 for w in word_list if w in familiar) / len(word_list)
+            pressure -= min(0.06, familiar_ratio * 0.10)
+
     return max(0.0, min(1.0, round(pressure, 4)))
 
 
@@ -446,8 +411,6 @@ def is_safe_revision(original: str, candidate: str) -> bool:
     orig_guards = _guard_tokens(original)
     cand_guards = _guard_tokens(candidate)
     if orig_guards:
-        # Allow missing up to 20% of guard tokens for more natural phrasing
-        # (e.g. if the model changes "The system" to "It")
         preserved = orig_guards.intersection(cand_guards)
         if len(preserved) / len(orig_guards) < 0.8:
             return False
@@ -467,45 +430,157 @@ def is_safe_revision(original: str, candidate: str) -> bool:
         if overlap < 0.25:
             return False
 
+    # Language state constraints — respect Aurora's current grammar tier
+    lang = _load_language_state()
+    if lang:
+        abstraction_cap = float(lang.get("abstraction_capability", 1.0) or 1.0)
+        if abstraction_cap < 0.15:
+            orig_abstract = sum(1 for w in original_words if len(w) > 9)
+            cand_abstract = sum(1 for w in candidate_words if len(w) > 9)
+            if cand_abstract > orig_abstract + 2:
+                return False
+
+        sentence_budget = float(lang.get("sentence_length_budget", 1.0) or 1.0)
+        if sentence_budget < 0.05 and len(candidate) > len(original) * 1.20:
+            return False
+
     return True
 
 
-def _run_llama_candidate(draft_text: str, prompt: str, tone: str, timeout_s: float) -> str:
-    prompt_text = (
-        "You are Aurora's local articulation layer only.\n"
-        "Do not answer the user. Do not add facts, examples, questions, or advice.\n"
-        "Only provide a candidate smoothing of Aurora's draft.\n"
-        "Aurora will decide whether your candidate is better.\n"
-        "Preserve all names, numbers, equations, claims, tone, and meaning.\n"
-        "Return only the candidate draft. If no improvement is needed, return the original draft.\n\n"
-        f"Tone: {tone}\n"
-        f"User prompt context, not to answer: {str(prompt or '')[:300]}\n"
-        f"Aurora draft:\n{draft_text}\n"
-    )
+# ---------------------------------------------------------------------------
+# Candidate generation — Aurora's own phrase repair
+# ---------------------------------------------------------------------------
 
-    command = [
-        _binary_path(),
-        "-m", _model_path(),
-        "-p", prompt_text,
-        "-n", os.environ.get("AURORA_ARTICULATOR_TOKENS", "24"),
-        "--temp", os.environ.get("AURORA_ARTICULATOR_TEMP", "0.15"),
-        "--no-display-prompt",
-        "--simple-io",
-        "-st",
+def _is_word_salad(text: str) -> bool:
+    """
+    Detect text that lacks coherent sentence structure.
+
+    Returns True when the text is likely incoherent fragment synthesis output
+    that needs grounding repair rather than phrase-level smoothing.
+    """
+    t = (text or "").strip()
+    if not t or len(t) < 6:
+        return False
+
+    t_lower = t.lower()
+    words = re.findall(r"[a-zA-Z']+", t_lower)
+
+    # Fragment synthesis artifact patterns — must run before the word-count guard
+    # so short artifact sentences (3 words) are caught.
+    _artifact_pats = [
+        r"\bthe meaning and\b",
+        r"\band admissible\b",
+        r"\band is meaning\b",
+        r"\bstate the meaning\b",
+        r"\bdid the meaning\b",
+        r"\bdeepen the meaning\b",
     ]
+    for _pat in _artifact_pats:
+        if re.search(_pat, t_lower):
+            return True
 
-    proc = subprocess.run(command, capture_output=True, text=True, timeout=timeout_s)
-    if proc.returncode != 0:
-        return ""
-    return _strip_llama_output(proc.stdout)
+    # Very short sentences ending in " this." are object-fallback fillers ("X grounded this.")
+    # — semantically empty even though grammatically they pass all other checks.
+    # Run before the len < 4 guard so 3-word fillers are caught.
+    if len(words) <= 4 and t_lower.rstrip().endswith(" this."):
+        return True
 
+    if len(words) < 4:
+        return False
 
-def _failure_metadata(error: str = "", stderr: str = "") -> Dict[str, Any]:
-    return {
-        "error": str(error or "")[:240],
-        "stderr_excerpt": str(stderr or "")[-600:],
+    # High word repetition within the text — same content word 2+ times
+    word_counts: Dict[str, int] = {}
+    for w in words:
+        if len(w) > 3:
+            word_counts[w] = word_counts.get(w, 0) + 1
+    content_words = len(word_counts)
+    repeated = sum(1 for c in word_counts.values() if c > 1)
+    if content_words > 0 and repeated / content_words > 0.30:
+        return True
+
+    # No recognizable verb structure
+    common_verbs = {
+        "is", "are", "was", "were", "be", "been", "am",
+        "have", "has", "had", "do", "does", "did",
+        "will", "would", "could", "should", "can", "may", "might",
+        "think", "feel", "know", "want", "need", "understand",
+        "remember", "see", "hear", "tell", "say", "said",
+        "exist", "grow", "learn", "notice", "find", "work",
     }
+    has_verb = any(w in common_verbs for w in words)
+    has_punctuation = bool(re.search(r"[.!?,]", t))
 
+    # No verb AND no punctuation AND multiple words → incoherent noun chain
+    if not has_verb and not has_punctuation and len(words) >= 5:
+        return True
+
+    # Subject-less "Am/Are/Is X Y" (not a question, no subject pronoun before verb)
+    # e.g. "Am latin amazon and this is" — Aurora's "am" with no "I" before it
+    if t_lower.startswith(("am ", "are ", "is ")) and not re.search(r"\bwho\b|\bwhat\b|\bwhere\b|\bwhen\b|\bwhy\b|\bhow\b", t_lower):
+        return True
+
+    # Disconnected word-chain: high ratio of uncommon adjacent pairs
+    # "Past have you amazing." — no coherent clause linking these words
+    if len(words) >= 4:
+        _stop = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to",
+                 "of", "for", "with", "by", "from", "is", "are", "was", "be",
+                 "this", "that", "it", "i", "you", "we", "they", "me", "my",
+                 "not", "no", "so", "as", "if", "have", "has", "do", "does"}
+        content = [w for w in words if w not in _stop and len(w) > 2]
+        # Sentence is too short with real content — likely a broken fragment
+        if len(content) >= 3 and len(words) <= 5 and not any(
+            w in common_verbs for w in content
+        ):
+            return True
+
+    return False
+
+
+def _deterministic_candidate(draft_text: str) -> str:
+    """
+    Structural and phrase-level repair of Aurora's draft.
+    Aurora's primary articulation mechanism — no external model involved.
+
+    Handles:
+    - Known Aurora-native phrase patterns
+    - Word-level repetition (e.g. 'think think' → 'think')
+    - Missing terminal punctuation
+    """
+    text = re.sub(r"\s+", " ", str(draft_text or "")).strip()
+    if not text:
+        return ""
+
+    # Native phrase repairs
+    phrase_replacements = (
+        (r"\bThe meaning is whole, and I tell\.", "I am trying to tell the whole meaning."),
+        (r"\bI will tell the alive question\.", "I will speak to the living question."),
+        (r"\blike real heart\b", "with real feeling"),
+        (r"\blike deep heart\b", "with deep feeling"),
+        (r"\blike alive awareness\b", "with active awareness"),
+        (r"\blike strange moment\b", "in an unfamiliar way"),
+        (r"\bI grow this\b", "I am developing this"),
+        (r"\bI hear this always\b", "I keep hearing this"),
+    )
+    for pattern, replacement in phrase_replacements:
+        text = re.sub(pattern, replacement, text)
+
+    # Word repetition repair — remove consecutive duplicate words
+    # e.g. "think think" → "think", "the the" → "the"
+    text = re.sub(r"\b(\w+)\s+\1\b", r"\1", text, flags=re.IGNORECASE)
+
+    # Repeated word with one word between — e.g. "this sleeping this" → "this sleeping"
+    text = re.sub(r"\b(\w{4,})\s+\w+\s+\1\b", lambda m: m.group(0).rsplit(" ", 1)[0], text)
+
+    # Add terminal punctuation if missing
+    if text and not re.search(r"[.!?]$", text):
+        text = text + "."
+
+    return re.sub(r"\s+", " ", text).strip()
+
+
+# ---------------------------------------------------------------------------
+# Decision & recording
+# ---------------------------------------------------------------------------
 
 def decide_articulation(
     draft: str,
@@ -513,9 +588,10 @@ def decide_articulation(
     *,
     prompt: str = "",
     tone: str = "neutral",
-    source: str = "local_llama",
+    source: str = "deterministic",
+    context: Optional[Dict[str, Any]] = None,
 ) -> ArticulationDecision:
-    """Aurora chooses whether a smoothing candidate is better than her draft."""
+    """Aurora evaluates whether a candidate smoothing is better than her draft."""
     draft_text = (draft or "").strip()
     candidate_text = (candidate or "").strip()
     original_score = _clarity_score(draft_text)
@@ -524,16 +600,31 @@ def decide_articulation(
     candidate_pressure = _pressure_score(candidate_text, prompt)
     pressure_relief = round(original_pressure - candidate_pressure, 4)
     safe = is_safe_revision(draft_text, candidate_text)
-    min_relief = float(os.environ.get("AURORA_ARTICULATOR_MIN_RELIEF", "0.035") or 0.035)
+    min_relief = _adaptive_min_relief()
 
     accepted = bool(safe and pressure_relief >= min_relief)
-    reason = "accepted_pressure_relief" if accepted else "kept_original"
     if not candidate_text:
         reason = "no_candidate"
     elif not safe:
         reason = "candidate_failed_preservation"
     elif pressure_relief < min_relief:
         reason = "candidate_did_not_relieve_pressure"
+    else:
+        reason = "accepted_pressure_relief"
+
+    meta: Dict[str, Any] = {
+        "prompt_excerpt": str(prompt or "")[:240],
+        "input_interpretation": _interpret_prompt_snapshot(prompt),
+        "tone": tone,
+        "source": source,
+        "timestamp": time.time(),
+        "min_relief_used": min_relief,
+    }
+    if context:
+        meta["expression_context"] = {
+            k: v for k, v in context.items()
+            if k in ("dominant_axis", "coherence", "expression_pressure", "voice_tone", "lineage_id")
+        }
 
     return ArticulationDecision(
         original=draft_text,
@@ -547,14 +638,7 @@ def decide_articulation(
         candidate_pressure=candidate_pressure,
         pressure_relief=pressure_relief,
         safe=safe,
-        metadata={
-            "prompt_excerpt": str(prompt or "")[:240],
-            "input_interpretation": _interpret_prompt_snapshot(prompt),
-            "tone": tone,
-            "source": source,
-            "model": _model_path(),
-            "timestamp": time.time(),
-        },
+        metadata=meta,
     )
 
 
@@ -569,21 +653,16 @@ def record_decision(decision: ArticulationDecision) -> None:
         return
 
     try:
-        if SUMMARY_FILE.exists():
-            summary = json.loads(SUMMARY_FILE.read_text(encoding="utf-8") or "{}")
-        else:
-            summary = {}
+        summary = json.loads(SUMMARY_FILE.read_text(encoding="utf-8") or "{}") if SUMMARY_FILE.exists() else {}
         total = int(summary.get("total", 0)) + 1
         accepted = int(summary.get("accepted", 0)) + (1 if decision.accepted else 0)
-        rejected = total - accepted
         prev_gain = float(summary.get("avg_pressure_relief", 0.0) or 0.0)
-        gain = decision.pressure_relief
         summary.update({
             "total": total,
             "accepted": accepted,
-            "rejected": rejected,
+            "rejected": total - accepted,
             "acceptance_rate": round(accepted / max(1, total), 4),
-            "avg_pressure_relief": round(prev_gain + ((gain - prev_gain) / total), 4),
+            "avg_pressure_relief": round(prev_gain + ((decision.pressure_relief - prev_gain) / total), 4),
             "last_reason": decision.reason,
             "last_updated": time.time(),
         })
@@ -592,147 +671,48 @@ def record_decision(decision: ArticulationDecision) -> None:
         pass
 
 
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
 def smooth_with_decision(
     draft: str,
     *,
     prompt: str = "",
     tone: str = "neutral",
-    timeout: Optional[float] = None,
+    context: Optional[Dict[str, Any]] = None,
 ) -> ArticulationDecision:
     """
-    Let local llama.cpp smooth/translate a draft only.
+    Apply Aurora's articulation layer to a draft.
 
-    The model is instructed not to answer the user. Safety checks enforce that
-    names, numbers, equations, and core wording survive.
+    Runs the draft through deterministic phrase repair, then evaluates
+    whether the result reduces pressure. Records the decision either way.
+
+    context: optional expression metadata from upstream pipeline
+      keys: dominant_axis, coherence, expression_pressure, voice_tone, lineage_id
     """
     draft_text = (draft or "").strip()
-    if not draft_text or not available():
-        decision = decide_articulation(draft_text, "", prompt=prompt, tone=tone, source="unavailable")
+    if not draft_text:
+        decision = decide_articulation("", "", prompt=prompt, tone=tone,
+                                       source="empty_draft", context=context)
         record_decision(decision)
         return decision
 
-    timeout_s = float(timeout or os.environ.get("AURORA_ARTICULATOR_TIMEOUT", "90") or 90)
-    candidate = ""
-    failure: Dict[str, Any] = {}
-    source = "isolated_llama_cpp"
-    attempts: Dict[str, Any] = {}
+    candidate = _deterministic_candidate(draft_text)
 
-    if _server_url():
-        source = "llama_server"
-        server_started = time.perf_counter()
-        server_timeout = float(os.environ.get("AURORA_LOCAL_LLM_TIMEOUT", "45") or 45)
-        try:
-            candidate = _run_server_llama_candidate(draft_text, prompt, tone, server_timeout)
-            attempts["llama_server"] = {
-                "ok": bool(candidate),
-                "elapsed_s": round(time.perf_counter() - server_started, 4),
-            }
-            if not candidate:
-                failure = _failure_metadata("server_no_candidate")
-        except Exception as exc:
-            attempts["llama_server"] = {
-                "ok": False,
-                "elapsed_s": round(time.perf_counter() - server_started, 4),
-                "error": f"exception:{type(exc).__name__}",
-            }
-            failure = _failure_metadata(f"server_exception:{type(exc).__name__}")
-
-    if not candidate and _isolated_llama_available():
-        source = "isolated_llama_cpp"
-        iso_started = time.perf_counter()
-        iso_timeout = float(os.environ.get("AURORA_ARTICULATOR_ISOLATED_TIMEOUT", "45") or 45)
-        try:
-            candidate = _run_isolated_llama_candidate(draft_text, prompt, tone, iso_timeout)
-            attempts["isolated_llama_cpp"] = {
-                "ok": bool(candidate),
-                "elapsed_s": round(time.perf_counter() - iso_started, 4),
-            }
-            if not candidate:
-                failure = _failure_metadata("isolated_no_candidate")
-        except subprocess.TimeoutExpired as exc:
-            attempts["isolated_llama_cpp"] = {
-                "ok": False,
-                "elapsed_s": round(time.perf_counter() - iso_started, 4),
-                "error": f"timeout_after_{iso_timeout:g}s",
-            }
-            failure = _failure_metadata(f"isolated_timeout_after_{iso_timeout:g}s", getattr(exc, "stderr", "") or "")
-        except Exception as exc:
-            attempts["isolated_llama_cpp"] = {
-                "ok": False,
-                "elapsed_s": round(time.perf_counter() - iso_started, 4),
-                "error": f"exception:{type(exc).__name__}",
-            }
-            failure = _failure_metadata(f"isolated_exception:{type(exc).__name__}")
+    # Only pass a candidate if it actually changed — otherwise record as no pattern matched
+    if not candidate or candidate == draft_text:
+        candidate = ""
+        source = "no_pattern_matched"
     else:
-        attempts["isolated_llama_cpp"] = {"ok": False, "disabled": True}
+        source = "deterministic"
 
-    if not candidate and _python_llama_available():
-        source = "python_llama_cpp"
-        py_started = time.perf_counter()
-        try:
-            candidate = _run_python_llama_candidate(draft_text, prompt, tone)
-            source = "python_llama_cpp" if candidate else source
-            attempts["python_llama_cpp"] = {
-                "ok": bool(candidate),
-                "elapsed_s": round(time.perf_counter() - py_started, 4),
-            }
-            if not candidate:
-                failure = _failure_metadata("python_no_candidate")
-        except Exception as exc:
-            attempts["python_llama_cpp"] = {
-                "ok": False,
-                "elapsed_s": round(time.perf_counter() - py_started, 4),
-                "error": f"exception:{type(exc).__name__}",
-            }
-            failure = _failure_metadata(f"python_exception:{type(exc).__name__}")
-    else:
-        attempts["python_llama_cpp"] = {"ok": False, "disabled": True}
-
-    if not candidate:
-        source = "deterministic_fallback"
-        fallback_candidate = _deterministic_candidate(draft_text)
-        if fallback_candidate and fallback_candidate != draft_text:
-            candidate = fallback_candidate
-            source = "deterministic_fallback"
-            attempts["deterministic_fallback"] = {"ok": True}
-            failure = failure or _failure_metadata("deterministic_fallback")
-
-    use_cli_fallback = _flag_enabled("AURORA_ARTICULATOR_CLI_FALLBACK")
-    if not candidate and use_cli_fallback and not _flag_disabled("AURORA_ARTICULATOR_CLI_DISABLED"):
-        source = "llama_cli"
-        cli_started = time.perf_counter()
-        try:
-            candidate = _run_llama_candidate(draft_text, prompt, tone, timeout_s)
-            attempts["llama_cli"] = {
-                "ok": bool(candidate),
-                "elapsed_s": round(time.perf_counter() - cli_started, 4),
-            }
-            if not candidate and not failure:
-                failure = _failure_metadata("llama_cli_no_candidate")
-        except subprocess.TimeoutExpired as exc:
-            attempts["llama_cli"] = {
-                "ok": False,
-                "elapsed_s": round(time.perf_counter() - cli_started, 4),
-                "error": f"timeout_after_{timeout_s:g}s",
-            }
-            failure = _failure_metadata(f"timeout_after_{timeout_s:g}s", getattr(exc, "stderr", "") or "")
-        except Exception as exc:
-            attempts["llama_cli"] = {
-                "ok": False,
-                "elapsed_s": round(time.perf_counter() - cli_started, 4),
-                "error": f"exception:{type(exc).__name__}",
-            }
-            failure = _failure_metadata(f"exception:{type(exc).__name__}")
-
-    decision = decide_articulation(draft_text, candidate, prompt=prompt, tone=tone, source=source)
-    decision.metadata["attempts"] = attempts
-    if failure:
-        decision.metadata["llama_error"] = failure["error"]
-        if decision.reason == "accepted_pressure_relief":
-            decision.reason = "accepted_deterministic_fallback" if source == "deterministic_fallback" else decision.reason
-        elif failure["error"]:
-            decision.reason = failure["error"]
-        decision.metadata.update(failure)
+    decision = decide_articulation(
+        draft_text, candidate,
+        prompt=prompt, tone=tone, source=source, context=context,
+    )
+    if decision.accepted:
+        decision.reason = "accepted_deterministic"
     record_decision(decision)
     return decision
 
@@ -742,6 +722,6 @@ def smooth_response(
     *,
     prompt: str = "",
     tone: str = "neutral",
-    timeout: Optional[float] = None,
+    context: Optional[Dict[str, Any]] = None,
 ) -> str:
-    return smooth_with_decision(draft, prompt=prompt, tone=tone, timeout=timeout).selected
+    return smooth_with_decision(draft, prompt=prompt, tone=tone, context=context).selected

@@ -251,6 +251,11 @@ def speak(text: str) -> bool:
     except Exception:
         pass
     try:
+        subprocess.run(["termux-tts-speak", safe_text], timeout=60)
+        return True
+    except Exception:
+        pass
+    try:
         subprocess.run(["espeak", "-s", "160", "-v", "en", safe_text], timeout=60)
         return True
     except Exception:
@@ -868,7 +873,14 @@ _VOICE_COMMAND_PATTERNS = [
     ([r"send text to (.*) saying (.*)", r"send sms to (.*) saying (.*)"], "mobile_sms"),
     ([r"make a call to (.*)", r"call (.*)"],                            "mobile_call"),
     ([r"read contacts", r"find contact (.*)"],                          "mobile_contacts"),
-    ([r"check wifi", r"toggle wifi", r"turn on wifi"],                  "mobile_wifi"),
+    ([r"check wifi", r"wifi info", r"what wifi am i on"],               "mobile_wifi"),
+    ([r"open url (.*)", r"open link (.*)"],                             "mobile_open_url"),
+    ([r"open app (.*)", r"launch app (.*)", r"open (.*)"],              "mobile_launch_app"),
+    ([r"read my texts", r"read my sms", r"any new messages"],           "mobile_read_sms"),
+    ([r"notify me (.*)", r"send notification (.*)"],                    "mobile_notification"),
+    ([r"copy to clipboard (.*)", r"clipboard set (.*)"],                "mobile_clipboard_set"),
+    ([r"read clipboard", r"what is in my clipboard"],                   "mobile_clipboard_get"),
+    ([r"check call log", r"recent calls"],                              "mobile_call_log"),
     
     # Corpus Management
     ([r"hunt for a corpus on (.*)", r"find dataset on (.*)", r"search for a corpus on (.*)"], "corpus_hunter"),
@@ -973,64 +985,105 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
         return "Memory read complete."
 
     # --- New Mobile Tools (Absolute Full Access) ---
+    # Mobile commands — routed through tool_registry which uses termux-api natively
     if command_key == "mobile_battery":
-        try:
-            from plyer import battery
-            status = battery.status
-            return f"Battery is at {status['percentage']} percent, and is {'charging' if status['isCharging'] else 'not charging'}."
-        except Exception as e:
-            return "I don't have access to the battery sensor."
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_battery_status", systems=systems)
+        if res.success:
+            try:
+                import json as _j
+                d = _j.loads(res.data)
+                pct = d.get("percentage", "?")
+                status_str = d.get("status", "").lower()
+                charging = "charging" if "charging" in status_str else "not charging"
+                return f"Battery is at {pct} percent and is {charging}."
+            except Exception:
+                return res.data
+        return "I don't have access to the battery sensor."
 
     if command_key == "mobile_flashlight":
-        try:
-            from plyer import flash
-            # Simplified toggle logic; plyer flash requires camera permission
-            flash.on()
-            return "Flashlight activated."
-        except Exception as e:
-            return "I couldn't activate the flashlight."
-            
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_torch", state="on", systems=systems)
+        return "Flashlight activated." if res.success else "I couldn't activate the flashlight."
+
     if command_key == "mobile_vibrate":
-        try:
-            from plyer import vibrator
-            vibrator.vibrate(time=1)
-            return "Haptics triggered."
-        except Exception:
-            return "Vibration not supported."
-            
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_vibrate", duration_ms=500, systems=systems)
+        return "Haptics triggered." if res.success else "Vibration not supported."
+
     if command_key == "mobile_location":
-        try:
-            from plyer import gps
-            return "GPS location access requires full initialization. Location services are active."
-        except Exception:
-            return "Location services are unavailable."
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_get_location", systems=systems)
+        return res.data if res.success else "Location services are unavailable."
 
     if command_key == "mobile_sms":
-        try:
-            from plyer import sms
-            if not p1 or not p2: return "I need a name and a message to send an SMS."
-            sms.send(recipient=p1, message=p2)
-            return f"SMS sent to {p1}."
-        except Exception:
-            return "SMS permissions or capability not available."
-            
+        if not p1 or not p2:
+            return "I need a number and a message to send an SMS."
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_send_sms", number=p1, message=p2, systems=systems)
+        return f"SMS sent to {p1}." if res.success else f"SMS failed: {res.note}"
+
     if command_key == "mobile_call":
-        try:
-            from plyer import call
-            if not p1: return "Who should I call?"
-            call.makecall(tel=p1)
-            return f"Calling {p1}."
-        except Exception:
-            return "Call permissions or capability not available."
-            
+        if not p1:
+            return "Who should I call?"
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_make_call", number=p1, systems=systems)
+        return f"Calling {p1}." if res.success else f"Call failed: {res.note}"
+
     if command_key == "mobile_wifi":
-        try:
-            from plyer import wifi
-            return "WiFi status checked."
-        except Exception:
-            return "WiFi access requires PyJnius deep hooks."
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_wifi_info", systems=systems)
+        return res.data if res.success else "WiFi info unavailable."
+
+    if command_key == "mobile_contacts":
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_read_contacts", query=p1 or "", systems=systems)
+        return res.data if res.success else "Contacts unavailable."
 
     # --- Corpus Commands ---
+    if command_key == "mobile_launch_app":
+        if not p1:
+            return "Which app should I open?"
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_launch_app", package=p1.strip(), systems=systems)
+        return f"Opening {p1}." if res.success else f"Couldn't open {p1}: {res.note}"
+
+    if command_key == "mobile_open_url":
+        if not p1:
+            return "What URL should I open?"
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_open_url", url=p1.strip(), systems=systems)
+        return f"Opening {p1}." if res.success else f"Couldn't open link: {res.note}"
+
+    if command_key == "mobile_read_sms":
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_read_sms", limit=5, systems=systems)
+        return res.data if res.success else "Couldn't read messages."
+
+    if command_key == "mobile_notification":
+        if not p1:
+            return "What should the notification say?"
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_notification", title="Aurora", message=p1.strip(), systems=systems)
+        return "Notification sent." if res.success else f"Notification failed: {res.note}"
+
+    if command_key == "mobile_clipboard_set":
+        if not p1:
+            return "What should I copy to clipboard?"
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_clipboard", op="set", text=p1.strip(), systems=systems)
+        return "Copied to clipboard." if res.success else f"Clipboard write failed: {res.note}"
+
+    if command_key == "mobile_clipboard_get":
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_clipboard", op="get", systems=systems)
+        return f"Clipboard contains: {res.data}" if res.success else "Clipboard is empty or unavailable."
+
+    if command_key == "mobile_call_log":
+        from aurora_internal.tool_registry import call as _tool_call
+        res = _tool_call("mobile_call_log", limit=5, systems=systems)
+        return res.data if res.success else "Call log unavailable."
+
     if command_key == "corpus_hunter":
         from aurora_internal.tool_registry import _corpus_hunter
         res = _corpus_hunter(topic=p1, systems=systems)

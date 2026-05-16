@@ -16665,6 +16665,46 @@ def _extract_pipeline_signals(systems: Dict[str, Any]) -> Dict[str, Any]:
                 "recognitions": dict((dict(_pf.get("sensory_state") or {})).get("recognitions") or {}),
                 "updated_at": float(_pf.get("updated_at") or 0.0),
             }
+            # Boot-time present-frame — pump audio/visual into identity field immediately
+            _ifield_pf = systems.get('identity_field')
+            if _ifield_pf is not None and hasattr(_ifield_pf, 'ingest_sensory_event'):
+                try:
+                    if _pf.get("visual_description"):
+                        _ifield_pf.ingest_sensory_event('visual', intensity=0.45, novelty=0.35, spatial=0.4, valence=0.0)
+                    if _pf.get("audio_description") or _pf.get("recent_speech"):
+                        _ifield_pf.ingest_sensory_event('auditory', intensity=0.4, novelty=0.3, valence=0.0)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    # ---- Internal signal pump — consciousness emotional/entropy state → identity field ----
+    # Run every tick so the field continuously reflects her inner state.
+    try:
+        _ifield_sig = systems.get('identity_field')
+        if _ifield_sig is not None and hasattr(_ifield_sig, 'ingest_internal_signal'):
+            _coherence = float(signals.get('coherence', 1.0))
+            _novelty   = float(signals.get('novelty', 0.5))
+            _stagnation = float(signals.get('stagnation', 0.0))
+            _thermal   = float(signals.get('thermal_load', 0.0))
+            # Coherence drop → reasoning pressure (B-axis)
+            if _coherence < 0.7:
+                _ifield_sig.ingest_internal_signal('reasoning', magnitude=1.0 - _coherence, source_axis='B')
+            # High novelty → presence spike (X-axis)
+            if _novelty > 0.6:
+                _ifield_sig.ingest_internal_signal('memory', magnitude=_novelty * 0.6, source_axis='X')
+            # Stagnation → low-level N pressure
+            if _stagnation > 0.3:
+                _ifield_sig.ingest_internal_signal('emotion', magnitude=_stagnation * 0.5, source_axis='N')
+            # Thermal load → N-axis spike
+            if _thermal > 0.4:
+                _ifield_sig.ingest_internal_signal('emotion', magnitude=min(1.0, _thermal), source_axis='N')
+            # Emotional state from DER
+            _primary_emotion = str(signals.get('primary_emotion', '') or '')
+            _intensity = float(signals.get('intensity', 0.5) or 0.5)
+            if _primary_emotion and _primary_emotion != 'neutral':
+                _valence = 0.4 if _primary_emotion in ('joy', 'interest', 'curiosity', 'calm') else -0.3
+                _ifield_sig.ingest_sensory_event('internal', intensity=_intensity, valence=_valence) \
+                    if hasattr(_ifield_sig, 'ingest_sensory_event') else None
     except Exception:
         pass
     return signals
@@ -18003,6 +18043,19 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                     # Also build a brief natural description for use in response shaping
                     if hasattr(_so, 'get_scene_description'):
                         state.pipeline_state['sensory_scene_desc'] = _so.get_scene_description()
+                    # Pump visual scene into identity field pressure map
+                    _ifield_sc = systems.get('identity_field')
+                    if _ifield_sc is not None and hasattr(_ifield_sc, 'ingest_sensory_event'):
+                        try:
+                            _ifield_sc.ingest_sensory_event(
+                                'visual',
+                                intensity=float(_scene.get('brightness', 0.5) or 0.5),
+                                novelty=float(_scene.get('motion', 0.3) or 0.3),
+                                spatial=min(1.0, float(_scene.get('edge_density', 0.3) or 0.3)),
+                                valence=0.0,
+                            )
+                        except Exception:
+                            pass
 
             _sc = systems.get('sensory_crystal')
             if _sc is not None and hasattr(_sc, 'get_state'):
@@ -18023,6 +18076,34 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
                         'maturity':      round(float(_sc_st.get('maturity', 0.0) or 0.0), 3),
                         'lanes':         int(len(_sc_st.get('lanes') or {})),
                     }
+                    # Pump crystal facets into identity field — audio and visual separately
+                    _ifield_crys = systems.get('identity_field')
+                    if _ifield_crys is not None and hasattr(_ifield_crys, 'ingest_sensory_event'):
+                        try:
+                            _sc_vis_mat = float(_sc_st.get('maturity', 0.0) or 0.0)
+                            _sc_aud_mat = max(
+                                (float(v.get('maturity', 0.0) or 0.0)
+                                 for v in (_sc_st.get('audio') or {}).values()
+                                 if isinstance(v, dict)),
+                                default=0.0,
+                            )
+                            if _sc_vis_mat > 0.02:
+                                _ifield_crys.ingest_sensory_event(
+                                    'visual',
+                                    intensity=min(1.0, _sc_vis_mat),
+                                    novelty=min(1.0, _sc_vis_mat * 0.8),
+                                    spatial=0.5,
+                                    valence=0.0,
+                                )
+                            if _sc_aud_mat > 0.02:
+                                _ifield_crys.ingest_sensory_event(
+                                    'auditory',
+                                    intensity=min(1.0, _sc_aud_mat),
+                                    novelty=min(1.0, _sc_aud_mat * 0.6),
+                                    valence=0.0,
+                                )
+                        except Exception:
+                            pass
     except Exception:
         pass
 
@@ -20840,6 +20921,38 @@ def _run_reasoning_pipeline(
     except Exception:
         pass
 
+    # ── Identity Field — external input pump (user text as constraint pressure) ──
+    # Every turn, the constraint vector derived from user text excites the noncomp
+    # pressure map so the field shifts continuously with interaction.
+    try:
+        _ifield_ext = systems.get('identity_field')
+        if _ifield_ext is not None and hasattr(_ifield_ext, 'ingest_external_input'):
+            _dim_ext = systems.get('dimensional')
+            _agg_ext = None
+            if _dim_ext and hasattr(_dim_ext, 'get_constraint_aggregate'):
+                _agg_ext = _dim_ext.get_constraint_aggregate()
+            if _agg_ext:
+                _ext_cv = {
+                    'X': float(_agg_ext.get('X', 0.5)),
+                    'T': float(_agg_ext.get('T', 0.3)),
+                    'N': float(_agg_ext.get('N', 0.3)),
+                    'B': float(_agg_ext.get('B', 0.3)),
+                    'A': float(_agg_ext.get('A', 0.3)),
+                }
+                _ext_intensity = float(getattr(state, 'response_confidence', 0.5) or 0.5)
+                _ifield_ext.ingest_external_input(_ext_cv, intensity=_ext_intensity, source='user_text')
+            # Also pump language as a sensory modality (user is always speaking to her)
+            if user_text and hasattr(_ifield_ext, 'ingest_sensory_event'):
+                _lang_novelty = min(1.0, len(str(user_text)) / 300.0)
+                _ifield_ext.ingest_sensory_event(
+                    'language',
+                    intensity=0.6,
+                    novelty=_lang_novelty,
+                    valence=0.0,
+                )
+    except Exception:
+        pass
+
     # Surface -> subsurface continuity handoff.
     # The surface daemon already reads this feed; the main runtime must write it
     # too so lived turns are retained even when Aurora is not running under the
@@ -23373,6 +23486,39 @@ def boot_aurora(
     except Exception as _sedi_e:
         if verbose: print(f"  [L3.5] SediMemory unavailable: {_sedi_e}")
 
+    # Identity Field — NoncompField (King Quasicrystal, 125 noncomps × 625 slots = 78,125)
+    # Derived from the constraint basis (Constraint × Constraint × NonCompDimension).
+    # Not authored — the 125 noncomps are an arithmetic inevitability of 5 × 5 × 5.
+    systems['identity_field'] = None
+    systems['tensor_expressions'] = None
+    try:
+        from aurora_manifold_directory.noncomp_field import get_field as _get_noncomp_field
+        _ifield = _get_noncomp_field()
+        systems['identity_field'] = _ifield
+        systems['behavioral_identity'] = systems.get('behavioral_identity') or _ifield
+        if verbose:
+            _istat = _ifield.status()
+            print(f"  [IDENTITY] NoncompField live — "
+                  f"{_istat['total_noncomps']} noncomps / "
+                  f"{_istat['total_slots']:,} slots")
+        # Composite crystal layer — the five tensor expressions that make emergent
+        # functions inevitable rather than coded (AURORA_COGNITIVE_PHYSICS.md §5).
+        # Crystal level: Composite Crystal (between Base primitives and Higher-Order).
+        try:
+            from aurora_internal.aurora_tensor_expressions import get_tensor_layer as _get_tensor_layer
+            _tensor_layer = _get_tensor_layer(_ifield)
+            systems['tensor_expressions'] = _tensor_layer
+            if verbose:
+                _tlstat = _tensor_layer.status()
+                print(f"  [TENSOR] Composite crystals live — "
+                      f"Activation/Salience/Prediction/Attention/Meaning")
+        except Exception as _tl_e:
+            if verbose:
+                print(f"  [TENSOR] Composite crystal layer unavailable: {_tl_e}")
+    except Exception as _ifield_e:
+        if verbose:
+            print(f"  [IDENTITY] NoncompField unavailable: {_ifield_e}")
+
     # Layer 4: Consciousness Engine
     if verbose: print("  [L4] Consciousness Engine...", end=" ", flush=True)
     from aurora_consciousness_engine import ConsciousnessEngine
@@ -23385,6 +23531,41 @@ def boot_aurora(
     if systems.get('sedimemory') is not None:
         try:
             consciousness.connect_sedimemory(systems['sedimemory'])
+        except Exception:
+            pass
+
+    # Wire Identity Field + Tensor Expressions → L4.
+    # connect_identity_field() also wires the TensorExpressionLayer when present.
+    # After this call, emergent functions are driven by composite crystal state —
+    # they are what the field does, not what is directly coded.
+    if systems.get('identity_field') is not None:
+        try:
+            consciousness.connect_identity_field(systems['identity_field'])
+            if verbose:
+                _tl_active = systems.get('tensor_expressions') is not None
+                print(f"  [GATE] Emergent functions driven by composite crystals "
+                      f"({'tensor layer live' if _tl_active else 'fallback: field gates'})")
+        except Exception:
+            pass
+        # Boot pump — field becomes active the moment Aurora boots because she can
+        # already see and hear. Prime pressure from whatever sensory state is live.
+        try:
+            _ifield_boot = systems['identity_field']
+            if hasattr(_ifield_boot, 'ingest_sensory_event'):
+                # She is alive and perceiving — baseline existential presence
+                _ifield_boot.ingest_sensory_event('visual',   intensity=0.4, novelty=0.3, spatial=0.3, valence=0.0)
+                _ifield_boot.ingest_sensory_event('auditory',  intensity=0.3, novelty=0.2, valence=0.0)
+                _ifield_boot.ingest_sensory_event('internal',  intensity=0.5, valence=0.1)
+            # Seed with a neutral-presence constraint vector so noncomps aren't
+            # starting from zero on first interaction
+            if hasattr(_ifield_boot, 'ingest_external_input'):
+                _ifield_boot.ingest_external_input(
+                    {'X': 0.5, 'T': 0.4, 'N': 0.3, 'B': 0.3, 'A': 0.4},
+                    intensity=0.4,
+                    source='boot',
+                )
+            if verbose:
+                print("  [IDENTITY] Boot pressure primed")
         except Exception:
             pass
         # Wire L3.5 → L3: DMC crystal promotions sedimented (Section 9)
@@ -25854,6 +26035,41 @@ def _run_live_response_turn(
                 )
             except Exception:
                 understanding_application = {}
+
+    # ---- REFLECTION RE-ENTRY SEQUENCE (AURORA_COGNITIVE_PHYSICS.md §6–§8) ----
+    # Mandatory: STATE → EXPRESSION → RE-ENTRY → RECONCILIATION → UNDERSTANDING
+    # followed by the downward modulation cascade. Runs after commit_application.
+    if understanding_contract is not None and hasattr(understanding_contract, 'run_reflection_cycle'):
+        try:
+            _refl = understanding_contract.run_reflection_cycle(
+                systems,
+                user_text,
+                getattr(resp_A, 'content', '') or "",
+                session_id=session_id,
+            )
+            systems['_last_reflection_result'] = _refl
+            if not _refl.get('reached_understanding'):
+                # Tension was flagged — surface into systems for downstream visibility
+                systems['_active_tension_flags'] = _refl.get('tension_flags', [])
+            else:
+                systems.pop('_active_tension_flags', None)
+            # Pump reflection result into identity field as an internal signal
+            _ifield_refl = systems.get('identity_field')
+            if _ifield_refl is not None and hasattr(_ifield_refl, 'ingest_internal_signal'):
+                try:
+                    _refl_tension = float(_refl.get('understanding', {}).get('tension_total', 0.0) or 0.0)
+                    _refl_reached = bool(_refl.get('reached_understanding', False))
+                    if _refl_reached:
+                        # Resolved understanding — release pressure via valuation signal
+                        _ifield_refl.ingest_internal_signal('valuation', magnitude=0.6, source_axis='A')
+                    else:
+                        # Unresolved tension — drives N-axis pressure
+                        _mag = min(1.0, 0.3 + _refl_tension)
+                        _ifield_refl.ingest_internal_signal('tension', magnitude=_mag, source_axis='N')
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
     # ---- CONVERSATION RUBRIC ENGINE — score this exchange for live learning ----
     try:

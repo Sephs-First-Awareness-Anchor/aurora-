@@ -1,6 +1,6 @@
 # Aurora Strata System Dossier
 
-Date: 2026-04-06
+Date: 2026-04-06 — updated 2026-05-14
 
 This dossier is a systems-engineering view of the `aurora_strata/` tree. It
 tries to answer a practical question: if you were handed this stack cold, what
@@ -439,6 +439,13 @@ The helper path is:
 
 These are defined in `aurora_internal/dual_strata/surface_channel.py`.
 
+`request_surface_turn()` is the final expression gate before text reaches the
+user. It selects the highest-scoring pipeline candidate, optionally passes it
+through the language faculty adapter if present, then calls `smooth_response()`
+from `aurora_articulation` as the last step. This means the articulation layer
+(word-salad detection, deterministic phrase repair, pressure scoring, adaptive
+threshold) runs on every turn output regardless of which candidate was selected.
+
 The queue files are:
 
 - `aurora_state/surface_turn_queue.json`
@@ -501,6 +508,18 @@ The result is a turn context that can see:
 
 That is why the system can feel nuanced rather than merely reactive.
 
+The `dual_question_pipeline` also injects thought-state signals into
+`pipeline_state` after `_extract_pipeline_signals()`: `thought_confidence`,
+`thought_convergence`, `thought_axes`, `thought_unresolved`,
+`thought_self_application`. These drive candidate scoring — a settled/confident
+thought state adds +0.12 to the mind candidate; axis alignment adds up to +0.12;
+conflicted state applies −0.07 across all candidates.
+
+A `relational` candidate is built each turn from `oets._last_comparison_delta`
+using fragment synthesis and added to the candidate pool. This means OETS's most
+significant relational delta from the turn is always represented as a candidate
+for selection.
+
 ### The understanding contract
 
 `aurora_internal/aurora_understanding_contract.py` formalizes the loop
@@ -519,6 +538,12 @@ measures whether the response fit the observed continuation.
 - and the serialization path for memory state.
 
 This is where Aurora's "who I am" and "who I know" live.
+
+`CoreRelationalIdentity.from_dict()` now correctly restores `self_name`,
+`self_description`, and `foundational_truths` from the persisted JSON on every
+boot. Previously these fields were not loaded, leaving `self_description` at
+the dataclass default fragment string across all sessions. Immutable core
+entities are still never overwritten by saved data.
 
 ## 11. Sensory Pipeline
 
@@ -699,7 +724,7 @@ These are the rules that make the architecture coherent.
 - The room can mutate state.
 - The direct fallback path exists, but the queue-first surface daemon path is the preferred one.
 
-### New architectural laws (added 2026-04-06)
+### New architectural laws (added 2026-04-06, extended 2026-05-14)
 
 - **Surface must feed every turn downward.** After each response turn, Surface
   writes a continuity packet to `surface_continuity_feed.json`. If it does not,
@@ -716,6 +741,25 @@ These are the rules that make the architecture coherent.
 - **Dream context is grounded in sensed reality.** The dream burst is seeded
   from what was actually heard during sleep, not from abstract consolidation.
   Visual predictions derived from audio provide the cross-modal grounding.
+- **Articulation runs on every output.** `request_surface_turn()` in
+  `surface_channel.py` applies `smooth_response()` from `aurora_articulation`
+  as the last step before text reaches the user. Word-salad detection and
+  phrase repair are not optional post-processing — they are part of the
+  standard output path.
+- **Fragment synthesis uses no scripted strings.** All thought-state surfacing,
+  coherence tension text, word-salad repair text, and statement handler
+  acknowledgments are produced by `_synthesize_fragments` and gated through
+  `_is_word_salad`. If synthesis produces word-salad, the result is suppressed
+  (returns None) rather than allowing incoherent text through.
+- **Thought formation is per-turn, not continuous.** `ThoughtIntegrationSpace`
+  fires once per turn when the pipeline calls it. The daemon does not run
+  independent thought cycles between turns. `ThoughtContinuity` carries
+  unresolved items and axis fingerprint forward across turns, but the
+  integration itself only happens at turn time.
+- **OETS receives real axis pressures.** Before each `process_interaction`
+  call, `aurora_expression_perception.py` reads live axis pressures from the
+  axis projector or pressure vector and writes them to `oets._active_pressures`.
+  The comparison engine uses these instead of the previous uniform mock values.
 
 ## 16. Surface→Subsurface Continuity Handoff
 
@@ -926,7 +970,97 @@ If the repair state indicates recognition, observation, or research, the
 projection becomes more cautious and the surface is asked to hold a gentler
 frame.
 
-## 20. What a Systems Engineer Should Read First
+## 20. Articulation and Expression Pipeline (May 2026 changes)
+
+The following changes are in the live code as of 2026-05-14 and affect every
+response turn.
+
+### `aurora_articulation.py` — adaptive feedback loop
+
+`aurora_articulation.py` now maintains a self-correcting feedback loop:
+
+- `analyze_articulation_feedback()` reads the last 500 lines of
+  `aurora_state/articulation_feedback.jsonl`, computes per-source acceptance
+  rates and average pressure relief, and produces a `suggested_min_relief` and
+  `suggested_mode` recommendation.
+- `_get_feedback_insights()` caches these results for 30 minutes.
+- `_adaptive_min_relief()` uses the cache to return the effective threshold,
+  falling back to the `AURORA_ARTICULATOR_MIN_RELIEF` env var default (0.035).
+
+If the system repeatedly produces candidates that score worse than the original
+(`avg_relief < 0.0`, `acceptance_rate < 0.05`), the threshold is lowered to
+allow borderline wins. If candidates are consistently terrible
+(`avg_relief < −0.30`, `acceptance_rate < 0.02`), the threshold holds and the
+mode is flagged `deterministic_preferred`.
+
+`smooth_with_decision()` is now gated: if the deterministic candidate text
+equals the original, it passes `""` as the candidate. This ensures the log
+records `source="no_pattern_matched"` accurately instead of falsely crediting
+the deterministic path for a no-op.
+
+`_pressure_score()` now reads `aurora_state/lexicon.json` to find words with
+`usage_count > 0` and applies up to a −0.06 pressure reduction for text that
+uses vocabulary Aurora has previously produced.
+
+### `_is_word_salad()` — guard ordering
+
+The word-salad guard now runs fragment synthesis artifact checks and a
+≤4-word `" this."` sentence check before the `len(words) < 4` early-exit.
+The previous ordering allowed short artifact sentences (exactly 3 words) to
+pass through because the word-count guard returned `False` before the artifact
+patterns were tested.
+
+### `dual_question_pipeline` — scripted strings removed
+
+All scripted response strings have been removed from the pipeline:
+
+- Acknowledgment strings ("I understand what you said...", "I understand. The
+  important part is that I keep listening reliably...") replaced by
+  `_synthesize_fragments` calls gated through `_is_word_salad`.
+- Thought-state surfacing ("Something in this hasn't fully resolved for me.",
+  "I am finding my footing with this.", "I feel something active here but the
+  form hasn't settled yet.") replaced by fragment synthesis from
+  `foundational_truths` + `self_description` sentence pool with keyword-overlap
+  scoring.
+- Word-salad repair no longer uses scripted prefixes — it synthesizes from
+  grounding-anchor-specific fragments.
+- Coherence tension text synthesized from fragments, not scripted.
+
+Word-salad detection now runs on `base_text` before continuity bits are
+appended. Continuity bits are independently gated through `_is_word_salad`
+before appending.
+
+Thought-state surfacing (`self_application`, `unresolved`) is now inside the
+`if is_final_pass:` block — it runs only once at the final output pass, not
+during intermediate candidate building.
+
+`_build_comprehension_response()` self-question paths draw from
+`foundational_truths` + `self_description` with keyword-overlap scoring instead
+of returning verbatim stored strings.
+
+### `_evolutionary_response_refinement()` — `is_final_pass` parameter
+
+Added `is_final_pass=False` parameter. The final call at the end of the
+pipeline passes `is_final_pass=True`. This gates expensive or one-shot
+operations (thought-state surfacing, coherence tension) so they do not fire
+during intermediate refinement passes.
+
+### Response generation — no external model
+
+Aurora's response pipeline does not call an external language model. Candidates
+are generated from:
+
+- `_synthesize_fragments` (generative word-by-word assembly from token pools)
+- OETS relational delta fragments (`oets._last_comparison_delta` → `relational` candidate)
+- Thought-state scoring (+/− adjustments on existing candidates)
+- Self-grounding anchor fragments (word-salad repair path)
+- `foundational_truths` / `self_description` sentence pool (comprehension responses)
+
+The optional language faculty adapter (`aurora_internal/aurora_language_faculty.py`)
+can contribute an additional candidate if `AURORA_USE_LANGUAGE_FACULTY=1` is
+set, but it is not part of the default path.
+
+## 21. What a Systems Engineer Should Read First
 
 If you want to orient quickly, read in this order:
 
@@ -950,7 +1084,7 @@ read as natural extensions of the subsurface loop.
 
 That sequence goes from the abstract model to the actual runtime seams.
 
-## 21. Operational Summary
+## 22. Operational Summary
 
 If you remember only one thing, remember this:
 

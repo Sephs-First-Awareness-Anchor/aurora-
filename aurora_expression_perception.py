@@ -3015,6 +3015,15 @@ class ExpressionPerceptionEngine:
 
         # OETS: Feed interaction to ontological web for structured understanding
         if self.oets:
+            # Wire real axis pressures so comparison engine uses actual constraint state
+            try:
+                _axis_proj = getattr(self, "_axis_projector", None) or getattr(self, "axis_projector", None)
+                if _axis_proj and hasattr(_axis_proj, "current_pressures"):
+                    self.oets._active_pressures = dict(_axis_proj.current_pressures())
+                elif hasattr(self, "_pressure_vec") and self._pressure_vec:
+                    self.oets._active_pressures = dict(self._pressure_vec)
+            except Exception:
+                pass
             self.oets.process_interaction(
                 text, tone=tone,
                 i_state=interaction.get('i_state', 'i_is')

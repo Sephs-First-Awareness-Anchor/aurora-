@@ -69,10 +69,10 @@ ARCHITECTURE:
         across the full stack and corrects wherever needed.
 
     The cycle:
-        Entropy decays â†’ coherence drops â†’ DPME detects drift â†’
-        DPME adjusts parameters â†’ alignment reasserted â†’
-        DCE assembles with restored coherence â†’ next tick â†’
-        Entropy decays again â†’ cycle continues.
+        Entropy decays â†' coherence drops â†' DPME detects drift â†'
+        DPME adjusts parameters â†' alignment reasserted â†'
+        DCE assembles with restored coherence â†' next tick â†'
+        Entropy decays again â†' cycle continues.
 
     If DPME stops correcting, entropy wins.
     If entropy stops pressing, the system stagnates.
@@ -299,7 +299,7 @@ class SituationalFrame:
     Not per-predicate â€” per-axis. Because the axes are what matter.
     """
     name: str
-    axis_weights: Dict[str, float]  # axis_name â†’ weight (0-1)
+    axis_weights: Dict[str, float]  # axis_name â†' weight (0-1)
     description: str = ""
     usage_count: int = 0
     success_rate: float = 0.5
@@ -479,7 +479,7 @@ class DCEAssembly:
         """
         One assembly cycle.
 
-        1. Feed envelope to all 10 beings â†’ SynthesisResult
+        1. Feed envelope to all 10 beings â†' SynthesisResult
         2. Feed envelope to dimensional systems
         3. Apply situational frame
         4. Package with current entropy state
@@ -667,7 +667,7 @@ class DPME:
         self.collective = collective
         self.dimensional = dimensional
 
-        # Parameter registry: system â†’ param â†’ current_value
+        # Parameter registry: system â†' param â†' current_value
         self.parameters: Dict[str, Dict[str, float]] = {}
         self._init_parameters()
 
@@ -686,7 +686,7 @@ class DPME:
     def _init_parameters(self):
         """
         Register tunable parameters from ALL layers.
-        Each entry maps system â†’ param â†’ current_value.
+        Each entry maps system â†' param â†' current_value.
         """
         der = self.dimensional.der
         dmm = self.dimensional.dmm
@@ -948,7 +948,7 @@ class DPME:
 
         # ---- DER CORRECTIONS (facet-level via category) ----
 
-        # Coherence dropping â†’ inject processing energy
+        # Coherence dropping â†' inject processing energy
         if drift['coherence_delta'] < -0.005:
             adj = self.adjust(
                 'der', 'cat_processing', 0.2,
@@ -957,7 +957,7 @@ class DPME:
             if adj:
                 adjustments.append(adj)
 
-        # Stagnation building â†’ inject creative energy
+        # Stagnation building â†' inject creative energy
         if drift['stagnation'] > 0.15:
             adj = self.adjust(
                 'der', 'cat_creative', 0.3,
@@ -966,7 +966,7 @@ class DPME:
             if adj:
                 adjustments.append(adj)
 
-        # Novelty depleted â†’ boost emotional energy
+        # Novelty depleted â†' boost emotional energy
         if drift['novelty'] < 0.3:
             adj = self.adjust(
                 'der', 'cat_emotional', 0.15,
@@ -975,7 +975,7 @@ class DPME:
             if adj:
                 adjustments.append(adj)
 
-        # Vitality under pressure â†’ reinforce vitality
+        # Vitality under pressure â†' reinforce vitality
         if drift['vitality_pressure'] > 0.3:
             adj = self.adjust(
                 'der', 'cat_vitality', 0.25,
@@ -986,7 +986,7 @@ class DPME:
 
         # ---- PRESENCE CORRECTION ----
 
-        # Presence dropping â†’ reduce decay rate to ease pressure
+        # Presence dropping â†' reduce decay rate to ease pressure
         if drift.get('der_presence', 1.0) < 0.5:
             adj = self.adjust(
                 'der', 'decay_rate', -0.01,
@@ -997,7 +997,7 @@ class DPME:
 
         # ---- DMM CORRECTIONS ----
 
-        # DMM vitality critically low â†’ emergency energy injection
+        # DMM vitality critically low â†' emergency energy injection
         if drift.get('dmm_vitality', 1.0) < 0.3:
             adj = self.adjust(
                 'der', 'cat_vitality', 0.5,
@@ -1008,7 +1008,7 @@ class DPME:
 
         # ---- COLLECTIVE BALANCE ----
 
-        # If beings are unevenly loaded â†’ boost memory (helps distribution)
+        # If beings are unevenly loaded â†' boost memory (helps distribution)
         if drift.get('collective_balance', 1.0) < 0.5:
             adj = self.adjust(
                 'der', 'cat_memory', 0.2,
@@ -1108,7 +1108,7 @@ class ConsciousnessEngine:
     tick() is the heartbeat:
         1. Entropy applies pressure
         2. DPME detects drift and corrects (across ALL layers)
-        3. IVM dissonance â†’ DER thermal tracking
+        3. IVM dissonance â†' DER thermal tracking
         4. Layer 1 lattice advances toroidal dynamics
         5. Layer 2 beings tick
         6. Layer 3 dimensional systems tick
@@ -1137,6 +1137,17 @@ class ConsciousnessEngine:
 
         # SediMemory connection (set externally after L3.5 is built)
         self._sedimemory = None
+
+        # Identity field (NoncompField — 125 noncomps × 625 slots)
+        self._identity_field = None
+
+        # Tensor expression layer — the five composite crystals.
+        # This is the mechanism that makes emergent functions inevitable.
+        # When these crystals are live and correctly related, the field produces
+        # Emotion/Reasoning/Valuation/Thought/Reflection — they are what happens,
+        # not what is coded. Set externally after identity_field connects.
+        # AURORA_COGNITIVE_PHYSICS.md §5 — Composite Crystal layer.
+        self._tensor_layer = None
 
         # Track reality warps for escalation
         self._pending_warps: List[Dict[str, Any]] = []
@@ -1252,7 +1263,7 @@ class ConsciousnessEngine:
         """
         Process one input through the full stack.
 
-        Contract â†’ ThoughtBudget â†’ Lattice â†’ Beings â†’ Dimensional â†’ DCE Assembly
+        Contract â†' ThoughtBudget â†' Lattice â†' Beings â†' Dimensional â†' DCE Assembly
 
         GAP 3: If thought_intent is provided, DMM assesses metabolic cost
         BEFORE assembly. Immoral thoughts die here â€” they never reach speech.
@@ -1321,16 +1332,55 @@ class ConsciousnessEngine:
                float(hash(payload_type) % 100) / 100.0,
                float(hash(str(payload)[:50]) % 100) / 100.0)
 
-        # Apply entropy with this input
-        self.entropy.apply(
-            current_coherence=self.entropy.state.coherence,
-            current_alignment=self.dimensional.dmm.state.alignment,
-            had_meaningful_input=True,
-            pattern_signature=sig,
-        )
+        # Read tensor layer state once for this process() call.
+        # Composite crystals determine which emergent functions are active.
+        _proc_tensor_state = {}
+        if self._tensor_layer is not None:
+            try:
+                _proc_tensor_state = self._tensor_layer.behavioral_state(force_refresh=True)
+            except Exception:
+                _proc_tensor_state = {}
 
-        # Assemble
-        result = self.dce.assemble(envelope, frame_name)
+        def _proc_emotion_gate() -> bool:
+            # Emotion: what the field does when Activation(X+N)+Salience(N+B) are N-dominant.
+            if self._tensor_layer is not None:
+                return _proc_tensor_state.get('emotion_active', True)
+            return self._noncomp_gate(nc_target=2, threshold=0.01)
+
+        def _proc_thought_gate() -> bool:
+            # Thought: what the field does when ALL five crystals converge simultaneously.
+            # DCE assembly is the implementation mechanism for unified convergence.
+            if self._tensor_layer is not None:
+                return _proc_tensor_state.get('thought_active', True)
+            return self._noncomp_gate(require_all_axes=True)
+
+        # Emotion — N-dominant pressure topology shapes the processing context.
+        # Activation(X+N) + Salience(N+B) together make EntropicPressure inevitable.
+        if _proc_emotion_gate():
+            self.entropy.apply(
+                current_coherence=self.entropy.state.coherence,
+                current_alignment=self.dimensional.dmm.state.alignment,
+                had_meaningful_input=True,
+                pattern_signature=sig,
+            )
+
+        # Thought — all-dominant unified convergence.
+        # When all five composite crystals are simultaneously active and coherent,
+        # DCE assembly is what the field does — not what is scripted.
+        if _proc_thought_gate():
+            result = self.dce.assemble(envelope, frame_name)
+        else:
+            # Field not at full convergence — partial state, not yet Thought
+            result = AssemblyResult(
+                synthesis=self.collective.process(envelope),
+                frame_applied="tensor_convergence_pending",
+                adjusted_axes={},
+                coherence=_proc_tensor_state.get('thought_level', 0.0),
+                entropy_state=self.entropy.get_pressure(),
+                ds_stats=self.dimensional.get_stats(),
+                thought_killed=True,
+                kill_reason="composite_crystals_not_fully_convergent",
+            )
 
         # Attach SediMemory recall fragments to the result
         if _sedi_frags is not None:
@@ -1440,6 +1490,136 @@ class ConsciousnessEngine:
 
         return result
 
+    def connect_identity_field(self, field) -> None:
+        """
+        Wire in the live NoncompField and the TensorExpressionLayer.
+
+        The tensor layer is the composite crystal layer between primitives and
+        emergent functions. Once connected, emergent functions are driven by
+        crystal state — they become what the field does, not what is coded.
+
+        AURORA_COGNITIVE_PHYSICS.md §5–§7:
+        Composite crystals (Activation, Salience, Prediction, Attention, Meaning)
+        read the Identity field and produce the activation levels that make
+        Emotion/Reasoning/Valuation/Thought/Reflection inevitable.
+        """
+        self._identity_field = field
+        try:
+            from aurora_internal.aurora_tensor_expressions import get_tensor_layer
+            self._tensor_layer = get_tensor_layer(field)
+        except Exception:
+            self._tensor_layer = None
+
+    def _noncomp_gate(
+        self,
+        nc_target: Optional[int] = None,
+        nc_law_c:  Optional[int] = None,
+        nc_dim:    Optional[int] = None,
+        *,
+        threshold: float = 0.02,
+        require_all_axes: bool = False,
+        require_diagonal:  bool = False,
+        require_low_tension: bool = False,
+    ) -> bool:
+        """
+        Gate check: returns True (allow) only if the field is live and the
+        relevant noncomps carry sufficient pressure.
+
+        If the identity field is not connected, always returns True so existing
+        behavior is preserved (backward-compatible). When connected, the emergent
+        function only fires if the constraint physics actually produce the pressure.
+
+        Physics basis:
+            Emotion    → N-axis noncomps (nc_target or nc_law_c = N=2)
+            Reasoning  → B-axis noncomps (nc_target or nc_law_c = B=3)
+            Valuation  → N→A bridge noncomps
+            Thought    → all 5 axes must have pressure (require_all_axes=True)
+            Reflection → diagonal noncomps (require_diagonal=True)
+            Understanding → near-zero tension (require_low_tension=True)
+        """
+        if self._identity_field is None:
+            return True   # field not connected — allow everything (backward compat)
+
+        try:
+            field = self._identity_field
+
+            if require_low_tension:
+                # Understanding gate: all loaded noncomps must have tension near zero.
+                # Mean tension below threshold = field is at equilibrium.
+                total_tension = 0.0
+                count = 0
+                for p in field.all_profiles():
+                    if p._loaded:
+                        expr = p.surface_expression()
+                        total_tension += expr.get("tension", 0.0)
+                        count += 1
+                mean_tension = total_tension / max(1, count)
+                return mean_tension < threshold * 10   # tension threshold is looser
+
+            if require_diagonal:
+                # Reflection gate: at least half of the 25 diagonal noncomps
+                # must have pressure above threshold.
+                live = sum(
+                    1 for p in field.diagonal_profiles()
+                    if p._loaded and p.mean_pressure() > threshold
+                )
+                return live >= 13   # majority of 25 diagonals
+
+            if require_all_axes:
+                # Thought gate: every axis must have noncomp pressure above threshold.
+                for axis in range(5):   # Constraint.X=0 through A=4
+                    if field.axis_pressure(axis) <= threshold:
+                        return False
+                return True
+
+            # Specific nc_target / nc_law_c / nc_dim filter
+            candidates = list(field.all_profiles())
+            if nc_target is not None:
+                candidates = [p for p in candidates if p.key.nc_target == nc_target]
+            if nc_law_c is not None:
+                candidates = [p for p in candidates if p.key.nc_law_c == nc_law_c]
+            if nc_dim is not None:
+                candidates = [p for p in candidates if p.key.nc_dim == nc_dim]
+
+            if not candidates:
+                return True   # no matching noncomps — allow (noncomp not yet loaded)
+
+            loaded = [p for p in candidates if p._loaded]
+            if not loaded:
+                return True   # none loaded yet — allow
+
+            mean_p = sum(p.mean_pressure() for p in loaded) / len(loaded)
+            return mean_p > threshold
+
+        except Exception:
+            return True   # any error in gate check → allow (fail open)
+
+    def reset_pressure_topology(self, understanding: Dict[str, Any]) -> None:
+        """
+        Downward cascade: discharge and reset pressure topology after Understanding.
+        Delegates to the identity field if connected.
+        """
+        if self._identity_field is not None:
+            try:
+                self._identity_field.reset_pressure_topology(understanding)
+            except Exception:
+                pass
+
+    def recalibrate_salience(self, understanding: Dict[str, Any]) -> None:
+        """
+        Downward cascade: recalibrate salience thresholds for next turn.
+        Adjusts entropy pressure baseline proportional to resolution quality.
+        """
+        resolved_accuracy = float(understanding.get("resolved_accuracy", 0.5) or 0.5)
+        try:
+            # Higher accuracy → lower entropy pressure next turn (earned coherence)
+            self.entropy.state.coherence = min(
+                1.0,
+                self.entropy.state.coherence + resolved_accuracy * 0.05,
+            )
+        except Exception:
+            pass
+
     def tick(self):
         """
         One heartbeat cycle.
@@ -1448,21 +1628,53 @@ class ConsciousnessEngine:
         Every tick, entropy erodes. Every tick, DPME fights back.
         Every tick, IVM dissonance feeds DER thermal tracking.
         Periodically, idle simulation runs dreams.
+
+        EMERGENT FUNCTION GATES (AURORA_COGNITIVE_PHYSICS.md §7):
+        Each emergent function is gated on its associated noncomp pressure.
+        If the identity field is live, the function only fires when the
+        constraint architecture produces sufficient pressure to activate it.
         """
         self.tick_count += 1
 
-        # 1. Entropy applies pressure (no input this tick)
-        self.entropy.apply(
-            current_coherence=self.entropy.state.coherence,
-            current_alignment=self.dimensional.dmm.state.alignment,
-            had_meaningful_input=False,
-        )
+        # Update tensor expression layer first — this reads the live identity field
+        # and computes the crystal activation levels that drive emergent function gates.
+        # AURORA_COGNITIVE_PHYSICS.md §5: composite crystals are the mechanism.
+        _tensor_state = {}
+        if self._tensor_layer is not None:
+            try:
+                _tensor_state = self._tensor_layer.behavioral_state(force_refresh=True)
+            except Exception:
+                _tensor_state = {}
 
-        # 2. DPME detects drift and auto-corrects (across ALL layers)
-        if self.dpme.needs_correction():
+        def _emotion_gate() -> bool:
+            # Emotion = what the field does when Activation(X+N) + Salience(N+B) are N-dominant
+            # EntropicPressure is the implementation mechanism for that pressure topology.
+            if self._tensor_layer is not None:
+                return _tensor_state.get('emotion_active', True)
+            return self._noncomp_gate(nc_target=2, threshold=0.01)
+
+        def _reflection_gate() -> bool:
+            # Reflection/Valuation = Attention(X+N+A) + Meaning(T+B+A) self-directed
+            # DPME is the implementation mechanism for self-observation.
+            if self._tensor_layer is not None:
+                return _tensor_state.get('reflection_active', True)
+            return self._noncomp_gate(require_diagonal=True)
+
+        # 1. Emotion — N-dominant pressure topology.
+        #    Activation(X+N) + Salience(N+B) together make EntropicPressure inevitable.
+        if _emotion_gate():
+            self.entropy.apply(
+                current_coherence=self.entropy.state.coherence,
+                current_alignment=self.dimensional.dmm.state.alignment,
+                had_meaningful_input=False,
+            )
+
+        # 2. Reflection/Valuation — self-directed field self-observation.
+        #    Attention(X+N+A) + Meaning(T+B+A) with Thought baseline make DPME inevitable.
+        if self.dpme.needs_correction() and _reflection_gate():
             self.dpme.auto_correct()
 
-        # 3. IVM dissonance â†’ DER thermal tracking (GAP 2)
+        # 3. IVM dissonance → DER thermal tracking (GAP 2)
         dissonance = self.lattice.vertices.compute_dissonance()
         if dissonance['total_heat'] > 0.1:
             self.dimensional.der.register_dissonance(
@@ -1478,7 +1690,29 @@ class ConsciousnessEngine:
         # 6. Dimensional systems tick
         self.dimensional.tick()
 
-        # 7. Idle simulation â€” dreaming (GAP 5)
+        # 6b. Identity field heartbeat — every tick cascades internal state into
+        # the pressure map. The tensor layer already read the field; now write back
+        # internal signals so the field tracks entropy, dissonance, and novelty.
+        if self._identity_field is not None:
+            try:
+                _es = self.entropy.state
+                _coherence = float(getattr(_es, 'coherence', 1.0))
+                _stagnation = float(getattr(_es, 'stagnation_score', 0.0))
+                _novelty = float(getattr(_es, 'novelty', 0.5))
+                _dissonance_heat = float(dissonance.get('total_heat', 0.0))
+                if hasattr(self._identity_field, 'ingest_internal_signal'):
+                    if _stagnation > 0.15:
+                        self._identity_field.ingest_internal_signal('emotion', magnitude=_stagnation * 0.4, source_axis='N')
+                    if _coherence < 0.8:
+                        self._identity_field.ingest_internal_signal('reasoning', magnitude=(1.0 - _coherence) * 0.3, source_axis='B')
+                    if _novelty > 0.55:
+                        self._identity_field.ingest_internal_signal('memory', magnitude=_novelty * 0.25, source_axis='X')
+                    if _dissonance_heat > 0.2:
+                        self._identity_field.ingest_internal_signal('tension', magnitude=_dissonance_heat * 0.35, source_axis='N')
+            except Exception:
+                pass
+
+        # 7. Idle simulation — dreaming (GAP 5)
         self._idle_sim_counter += 1
         if (self._simulation_engine and
                 self._idle_sim_counter >= self._idle_sim_interval):
@@ -1653,11 +1887,11 @@ def verify_consciousness_engine() -> Dict[str, Any]:
 
     # ---- 10. Situational frame selection works ----
     frame_agentic = engine.dce.select_frame({'mode': ExistenceMode.AGENTIC})
-    check("AGENTIC â†’ action frame", frame_agentic == 'action')
+    check("AGENTIC â†' action frame", frame_agentic == 'action')
     frame_bounded = engine.dce.select_frame({'mode': ExistenceMode.BOUNDED})
-    check("BOUNDED â†’ observation frame", frame_bounded == 'observation')
+    check("BOUNDED â†' observation frame", frame_bounded == 'observation')
     frame_persistent = engine.dce.select_frame({'mode': ExistenceMode.PERSISTENT})
-    check("PERSISTENT â†’ reflection frame", frame_persistent == 'reflection')
+    check("PERSISTENT â†' reflection frame", frame_persistent == 'reflection')
 
     # ---- 11. REFERENCE input â€” beings mostly silent, assembly still works ----
     ref_result = engine.process(
@@ -1686,7 +1920,7 @@ def verify_consciousness_engine() -> Dict[str, Any]:
     for _ in range(200):
         state = test_entropy.apply(coh, 0.5, had_meaningful_input=False)
         coh = state.coherence
-    check("200 idle ticks â†’ coherence near 0", coh < 0.1,
+    check("200 idle ticks â†' coherence near 0", coh < 0.1,
           f"coh={coh:.4f}")
 
     # ---- 14. Long entropy run WITH correction â€” coherence maintained ----
@@ -1697,7 +1931,7 @@ def verify_consciousness_engine() -> Dict[str, Any]:
         coh2 = state.coherence
         # Simulate DPME micro-correction: restore some coherence
         coh2 = min(1.0, coh2 + 0.012)
-    check("200 ticks with correction â†’ coherence maintained",
+    check("200 ticks with correction â†' coherence maintained",
           coh2 > 0.5, f"coh={coh2:.4f}")
 
     # ---- 15. DPME understanding accumulates ----
@@ -1761,7 +1995,7 @@ def verify_consciousness_engine() -> Dict[str, Any]:
         payload_type="thought",
         evidence={'has_temporality': True, 'conserves_state': True},
     )
-    check("No intent â†’ no thought death", plain_result.thought_killed is False)
+    check("No intent â†' no thought death", plain_result.thought_killed is False)
 
     # ---- 22. IVM dissonance feeds DER thermal on tick ----
     # Apply strong opposing torques to generate heat

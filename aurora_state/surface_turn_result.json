@@ -1,14 +1,237 @@
 {
   "status": "ok",
-  "id": "test_1778184671629",
-  "source": "test_injection",
-  "processed_at": 1778184677.7160826,
-  "input": "what time is it",
-  "response_text": "Current date and time: Thursday, May 07 2026 \u2014 04:11 PM",
-  "response_tone": "informative",
-  "response_confidence": 0.92,
-  "response_source": "tool",
-  "runtime_contract": {},
+  "id": "sensory_1778783886185",
+  "source": "sensory_autonomy",
+  "processed_at": 1778783887.6679761,
+  "input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783886.183403, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or separates sensory meaning\"}, {\"dimension\": \"POLARITY\", \"domain_letter\": \"X\", \"domain_name\": \"Information\", \"family\": \"Existential\", \"nc_name\": \"existence\", \"score\": 0.71, \"summary\": \"what is actually present in sensory reality\"}], \"meaning_id\": \"sensory-1778783886183\", \"memory_refs\": [], \"modality_origin\": \"visual\", \"semantic_roots\": [\"Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480\", \"a moderately lit, high-contrast live camera frame at 640 by 480\", \"heard human speech prosody\", \"heard excited voice\", \"heard natural speech rhythm\"], \"sensory_lineage_tags\": [\"scene:interval\", \"visual:a moderately lit, high-contrast live camera fram\", \"\"], \"source_origin\": \"sensory_multimodal\", \"source_semantic_stage\": \"processed_sensory\"}, \"novelty\": 0.86, \"recent_speech\": \"\", \"recognitions\": [\"heard human speech prosody\", \"heard excited voice\", \"heard natural speech rhythm\"], \"source\": \"sensory_autonomy\", \"summary\": \"Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480\", \"visual_description\": \"a moderately lit, high-contrast live camera frame at 640 by 480\"}",
+  "response_text": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+  "response_tone": "self-aware",
+  "response_confidence": 0.55,
+  "response_source": "unified_main",
+  "pipeline_error": "",
+  "runtime_contract": {
+    "kind": "unified_turn_meaning",
+    "user_text": "[PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783886.183403, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or separates sensory meaning\"}, {\"dimension\": \"POLARITY\", \"domain_letter\": \"X\", \"domain_name\": \"Information\", \"family\": \"Existential\", \"nc_name\": \"existence\", \"score\": 0.71, \"summary\": \"what is actually present in sensory reality\"}], \"meaning_id\": \"sensory-1778783886183\", \"memory_refs\": [], \"modality_origin\": \"visual\", \"semantic_roots\": [\"Surface is tracking audio and vision live. Current frame-load=881,...",
+    "intent": "general",
+    "tone": "self-aware",
+    "thought_state": {
+      "dominant_thread": [
+        "identity",
+        "emotional",
+        "memory",
+        "linguistic"
+      ],
+      "supporting_context": [],
+      "conflicts": [
+        [
+          "identity",
+          "memory"
+        ],
+        [
+          "emotional",
+          "memory"
+        ],
+        [
+          "identity",
+          "linguistic"
+        ],
+        [
+          "emotional",
+          "linguistic"
+        ]
+      ],
+      "unified_interpretation": "Operating on: self-model; DER emotional state; conversation and working memory | Active processes: memory, linguistic, emotional, identity | Triggered by: [PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"con, axis_activation | Unresolved tension: 4 conflict(s) between processes | Dominant pressure: A-axis (0.65)",
+      "self_application": "This touches how I understand myself. My A-axis pressure (0.65) shapes this.",
+      "unresolved": [
+        "tension: identity vs linguistic",
+        "tension: emotional vs memory",
+        "tension: identity vs memory",
+        "tension: emotional vs linguistic"
+      ],
+      "confidence": 0.2361,
+      "axis_fingerprint": [
+        "A",
+        "T",
+        "B"
+      ],
+      "partial": false,
+      "skipped": false
+    },
+    "grounding": {
+      "anchor_type": "self",
+      "self_delta": "relates to my boundary and clarity (dominant B-axis)",
+      "confidence": 0.4,
+      "grounding_source": "self-state fallback: Aurora, B-axis dominant",
+      "content": "relates to my boundary and clarity in this B-axis frame"
+    },
+    "pipeline_state": {
+      "axis_activation": {
+        "X": 0.2003,
+        "T": 0.1754,
+        "N": 0.2087,
+        "B": 0.2488,
+        "A": 0.1667
+      },
+      "dominant_axis": "boundary",
+      "coherence": 1.0,
+      "novelty": 1.0,
+      "stagnation": 0.0,
+      "assembly_quality": 1.0,
+      "paradoxes": []
+    },
+    "conscious_frame": {
+      "frame_name": "",
+      "stance": "",
+      "selected_action": "",
+      "processing_mode": "",
+      "root_thought": {},
+      "explicit_notes": []
+    },
+    "subsurface_projection": {
+      "source": "subsurface_daemon",
+      "surface_guidance": "Keep interpretation careful while subsurface sharpens the boundary problem. The caution can start easing because the issue is moving toward remedy.",
+      "dominant_axis_hint": "X",
+      "readiness_bias": 0.52,
+      "active_effects": [
+        "the wrong-feeling is being remedied below the surface",
+        "recurring issue pressure around ?",
+        "subsurface repair focus is semantic precision",
+        "subsurface sensory associations are strengthening below awareness"
+      ],
+      "intuition_signals": [
+        {
+          "label": "steady",
+          "weight": 0.464,
+          "summary": "The issue is moving into correction; caution can soften into steadier attention."
+        },
+        {
+          "label": "clarify",
+          "weight": 0.58,
+          "summary": "The unease is boundary-shaped; clarify before committing hard to meaning."
+        },
+        {
+          "label": "attend",
+          "weight": 0.769,
+          "summary": "Sensory recognition is sharpening around heard human speech prosody."
+        }
+      ],
+      "present_sensory_perspective": {
+        "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480",
+        "mic_live": true,
+        "camera_live": true,
+        "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+        "audio_description": "",
+        "recent_speech": "",
+        "subsurface_sensory_maturity": 0.769,
+        "subsurface_sensory_recent": [
+          "heard human speech prosody",
+          "heard excited voice",
+          "heard natural speech rhythm"
+        ]
+      }
+    },
+    "sensory_observation": {
+      "source": "surface_sensory_snapshot",
+      "modality": "visual+auditory",
+      "confidence": 0.94,
+      "novelty": 0.86,
+      "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480",
+      "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+      "audio_description": "",
+      "recent_speech": "",
+      "recognitions": [
+        "heard human speech prosody",
+        "heard excited voice",
+        "heard natural speech rhythm"
+      ],
+      "concepts_active": [],
+      "native_meaning": {
+        "meaning_id": "sensory-1778783886183",
+        "created_at": 1778783886.183403,
+        "semantic_roots": [
+          "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480",
+          "a moderately lit, high-contrast live camera frame at 640 by 480",
+          "heard human speech prosody",
+          "heard excited voice",
+          "heard natural speech rhythm"
+        ],
+        "diagonal_anchor": "Boundary_Operator_of_Meaning",
+        "source_origin": "sensory_multimodal",
+        "modality_origin": "visual",
+        "source_semantic_stage": "processed_sensory",
+        "sensory_lineage_tags": [
+          "scene:interval",
+          "visual:a moderately lit, high-contrast live camera fram",
+          ""
+        ],
+        "context_refs": [
+          "sensory_scene",
+          "sensory_crystal",
+          "surface_snapshot"
+        ],
+        "memory_refs": [],
+        "law_bindings": [
+          {
+            "domain_letter": "B",
+            "domain_name": "Meaning",
+            "family": "Boundary",
+            "dimension": "OPERATOR",
+            "score": 0.82,
+            "nc_name": "boundary",
+            "summary": "what frames, contains, or separates sensory meaning"
+          },
+          {
+            "domain_letter": "X",
+            "domain_name": "Information",
+            "family": "Existential",
+            "dimension": "POLARITY",
+            "score": 0.71,
+            "nc_name": "existence",
+            "summary": "what is actually present in sensory reality"
+          }
+        ]
+      }
+    },
+    "tool": {
+      "name": "visual_analysis",
+      "success": true,
+      "data": "[SENSORY_DATA] source: none observation: visual feed unavailable intent: [PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783886.183403, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or separates sensory meaning\"}, {\"dimension\": \"POLARITY\", \"domain_letter\": \"X\", \"domain_name\": \"Information\", \"family\": \"Existential\",...",
+      "note": ""
+    },
+    "evidence": [],
+    "self_reference": {
+      "phrase": "high-contrast live camera frame",
+      "sentence": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+      "source_text": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+      "axes": {
+        "X": 0.2,
+        "T": 0.2,
+        "N": 0.2,
+        "B": 0.2,
+        "A": 0.2
+      },
+      "tick": 5795
+    },
+    "understanding_context": {},
+    "legacy_candidates": [
+      {
+        "src": "comprehension",
+        "tone": "self-aware",
+        "confidence": 0.55,
+        "text": "Self did the meaning and present. Conversations did the meaning and present.",
+        "coherent": false,
+        "salad_score": 1.0
+      },
+      {
+        "src": "mind",
+        "tone": "curious",
+        "confidence": 0.88,
+        "text": "computers earl conflict bread check chance kickball listen strange",
+        "coherent": false,
+        "salad_score": 0.65
+      }
+    ]
+  },
   "conscious_frame": {
     "coherence": 0.45,
     "contract_signals": {
@@ -195,7 +418,7 @@
       "DCEAssembly"
     ],
     "primary_tension": "subsurface is moving from research into corrective pressure",
-    "summary": "Surface should stay with present meaning while subsurface handles deeper repair and code change."
+    "summary": "Keep interpretation careful while subsurface sharpens the boundary problem. The caution can start easing because the issue is moving toward remedy."
   },
   "processing_mode": "blended",
   "reactive_signal": {
@@ -209,7 +432,7 @@
     "tracked_surface_emotion": "curiosity"
   },
   "present_sensory_perspective": {
-    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480",
     "mic_live": true,
     "camera_live": true,
     "scope": "constant_surface_feed",
@@ -235,7 +458,7 @@
         "semantic": {}
       }
     },
-    "visual_description": "",
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
     "audio_description": "",
     "recent_speech": "",
     "latest_guidance": {},
@@ -244,21 +467,22 @@
     "visual_uncertainty_streak": 0,
     "native_meaning_bundle": {
       "primary": {
-        "meaning_id": "sensory-1778184671457",
-        "created_at": 1778184671.4570296,
+        "meaning_id": "sensory-1778783886183",
+        "created_at": 1778783886.183403,
         "semantic_roots": [
-          "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+          "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480",
+          "a moderately lit, high-contrast live camera frame at 640 by 480",
           "heard human speech prosody",
           "heard excited voice",
           "heard natural speech rhythm"
         ],
         "diagonal_anchor": "Boundary_Operator_of_Meaning",
         "source_origin": "sensory_multimodal",
-        "modality_origin": "sensory",
+        "modality_origin": "visual",
         "source_semantic_stage": "processed_sensory",
         "sensory_lineage_tags": [
           "scene:interval",
-          "",
+          "visual:a moderately lit, high-contrast live camera fram",
           ""
         ],
         "context_refs": [
@@ -290,21 +514,22 @@
       }
     },
     "native_meaning": {
-      "meaning_id": "sensory-1778184671457",
-      "created_at": 1778184671.4570296,
+      "meaning_id": "sensory-1778783886183",
+      "created_at": 1778783886.183403,
       "semantic_roots": [
-        "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+        "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm. Seeing: a moderately lit, high-contrast live camera frame at 640 by 480",
+        "a moderately lit, high-contrast live camera frame at 640 by 480",
         "heard human speech prosody",
         "heard excited voice",
         "heard natural speech rhythm"
       ],
       "diagonal_anchor": "Boundary_Operator_of_Meaning",
       "source_origin": "sensory_multimodal",
-      "modality_origin": "sensory",
+      "modality_origin": "visual",
       "source_semantic_stage": "processed_sensory",
       "sensory_lineage_tags": [
         "scene:interval",
-        "",
+        "visual:a moderately lit, high-contrast live camera fram",
         ""
       ],
       "context_refs": [
@@ -336,7 +561,7 @@
     },
     "concepts_active": []
   },
-  "surface_guidance": "Surface should stay with present meaning while subsurface handles deeper repair and code change.",
+  "surface_guidance": "Keep interpretation careful while subsurface sharpens the boundary problem. The caution can start easing because the issue is moving toward remedy.",
   "surface_feels_wrong": true,
   "surface_feels_wrong_reason": "subsurface effects; surface wants to clarify",
   "noncomp_input": {},

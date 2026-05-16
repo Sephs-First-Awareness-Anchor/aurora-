@@ -1,0 +1,15 @@
+# Optional batch/subsurface sensory curriculum dependencies.
+# Do not load these in the live surface daemon by default.
+datasets>=2.20.0
+huggingface_hub>=0.23.0
+sentence-transformers>=3.0.0
+faiss-cpu>=1.8.0
+faster-whisper>=1.0.0
+mediapipe>=0.10.0
+
+# Heavier visual/audio-language encoders for offline curriculum windows.
+torch>=2.3.0
+torchvision>=0.18.0
+torchaudio>=2.3.0
+transformers>=4.42.0
+open_clip_torch>=2.24.0

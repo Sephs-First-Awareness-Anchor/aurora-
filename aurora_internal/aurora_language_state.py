@@ -1188,22 +1188,33 @@ class SemanticIntentCompiler:
         
         axis_activation = dict(intent.native_meaning.get("axis_activation") or {})
         axis_tokens = {
-            "x": ["present", "admissible", "existence"],
-            "t": ["carries", "forward", "persistence", "thread"],
-            "n": ["cost", "energy", "focus", "sustainable"],
-            "b": ["meaning", "structure", "separation", "frame"],
-            "a": ["agency", "understanding", "resolve", "did"],
+            "x": ["present", "grounded", "here"],
+            "t": ["carries", "continues", "persists", "holds"],
+            "n": ["focus", "sustain", "energy", "clear"],
+            "b": ["meaning", "clarity", "know", "understand"],
+            "a": ["agency", "forms", "shapes", "resolve"],
         }
         
         token_pool: Dict[str, float] = defaultdict(float)
-        
-        # Structured facts (fact; topic; detail; value) get higher weight 
+
+        # Fragment category labels used as structural markers — never content words.
+        # Letting them into the token pool causes them to fill AGENT slots,
+        # producing sentences like "Action grounded this." or "State hold here."
+        _category_labels = {
+            "action", "fact", "state", "understanding", "property",
+            "reflection", "observation", "linking", "established",
+            "forming", "self",  # "self" handled via identity dict already
+        }
+
+        # Structured facts (fact; topic; detail; value) get higher weight
         # to ensure their key terms are prioritized in the generative pass.
         p0_low = parts[0].lower()
         is_fact = p0_low in ("fact", "property", "understanding")
-        
+
         for p in parts_low:
-            # Skip the tag itself, but boost the topic/detail/value
+            # Skip category labels entirely — they are routing markers, not words
+            if p in _category_labels: continue
+            # Skip the fact tag itself, but boost the topic/detail/value
             if is_fact and p == p0_low: continue
             weight = 2.5 if is_fact else 1.2
             token_pool[p] += weight
@@ -1216,6 +1227,25 @@ class SemanticIntentCompiler:
             for t in tokens:
                 token_pool[t] += act * 1.5
 
+        # Expand token pool with OETS-learned neighbors of fragment keywords.
+        # This is what makes training absorption real — words Aurora learned from
+        # corpus exposure enter synthesis as valid candidates, not just fixed lists.
+        if self.lsv and hasattr(self.lsv, "_oets") and self.lsv._oets:
+            _oets_web = getattr(self.lsv._oets, "web", None)
+            if _oets_web and hasattr(_oets_web, "get_neighbors"):
+                for _fpart in parts_low:
+                    if len(_fpart) < 4 or _fpart in _category_labels:
+                        continue
+                    try:
+                        _neighbors = _oets_web.get_neighbors(_fpart, max_depth=1)
+                        for _nb in list(_neighbors)[:6]:
+                            if (len(_nb) >= 3
+                                    and _nb not in _category_labels
+                                    and _nb.isalpha()):
+                                token_pool[_nb] += 0.35
+                    except Exception:
+                        pass
+
         # 2. Select Motif (Sentence Skeleton)
         grammar = getattr(self.lsv, "_grammar", None)
         motif = None
@@ -1227,10 +1257,9 @@ class SemanticIntentCompiler:
 
         if not motif:
             from aurora_grammar_engine import TokenRole
-            if ready < 0.45:
-                seq = (TokenRole.AGENT, TokenRole.ACTION, TokenRole.DESCRIPTOR)
-            else:
-                seq = (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT, TokenRole.CONNECTOR, TokenRole.DESCRIPTOR)
+            # Keep fallback sequence short so the token pool can fill all roles without
+            # reaching fallback fillers that produce grammatically broken output.
+            seq = (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT)
             motif = type('MockMotif', (), {'role_sequence': seq, 'reference_anchors': []})
 
         # 3. Assemble word-by-word
@@ -1297,9 +1326,7 @@ class SemanticIntentCompiler:
                 elif role == TokenRole.ACTION: 
                     assembled.append("process")
                 elif role == TokenRole.OBJECT:
-                    if not assembled or assembled[-1] not in ("the", "a", "an", "my", "your", "our"):
-                        assembled.append("the")
-                    assembled.append("meaning")
+                    assembled.append("this")
                 elif role == TokenRole.CONNECTOR: 
                     assembled.append("and")
                 elif role == TokenRole.DESCRIPTOR:

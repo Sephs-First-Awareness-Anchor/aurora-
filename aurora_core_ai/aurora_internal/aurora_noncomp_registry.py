@@ -11,8 +11,23 @@ Everything else in Aurora must be expressible as derived from these 25 values.
 Behaviors, personalities, evolutionary patterns, conscious steering — none of
 that is defined here. It emerges from the physics these 25 Non-Comps define.
 
-THE 25 NON-COMPS: 5 Constraints × 5 Representational Dimensions
-----------------------------------------------------------------
+PHYSICS LAW ALIGNMENT NOTE (AURORA_COGNITIVE_PHYSICS.md §2):
+-------------------------------------------------------------
+This module contains the 25 ATOMIC CHANNELS (5 axes × 5 representational dimensions).
+In the physics document vocabulary, these are "atomic channels" — NOT the 125 noncomps.
+
+The physics document defines three distinct structures:
+  25  atomic channels     — 5 axes × 5 NonCompDimensions  ← THIS IS WHAT THIS MODULE HAS
+  625 interaction slots   — 25 × 25 pairwise relationships (not yet implemented)
+  125 constraint combinations (noncomps) — 5³ axis intersections (not yet implemented)
+
+The full Identity field requires: 125 noncomps × 625 slots = 78,125 slots.
+The module name "Non-Comp Registry" refers to the NonCompDimension structure (POLARITY,
+MAGNITUDE, OPERATOR, COST, DIFFERENCE), not the 125 noncomp combinations. The naming
+predates the physics document. Do not confuse these 25 entries with the 125 noncomps.
+
+THE 25 ATOMIC CHANNELS: 5 Constraints × 5 Representational Dimensions
+----------------------------------------------------------------------
 Each of the five constraints is represented across exactly five dimensions:
 
     NC[C][POLARITY]    — Toroidal phase state (continuous gradient, NOT binary)

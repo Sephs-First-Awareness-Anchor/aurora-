@@ -480,6 +480,13 @@ class MetabolicDistiller:
                 keep_tail_lines=2500,
                 parser="log",
             ),
+            ResidueConfig(
+                name="articulation_feedback",
+                path=self.state_dir / "articulation_feedback.jsonl",
+                max_bytes=2 * 1024 * 1024,
+                keep_tail_lines=500,
+                parser="jsonl",
+            ),
         ]
 
     def trigger_snapshot(self) -> Dict[str, Any]:

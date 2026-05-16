@@ -2000,26 +2000,36 @@ def _generate_identity_response(text: str, core_identity: CoreRelationalIdentity
                              "what are you", "tell me about yourself",
                              "describe yourself", "explain yourself",
                              "your name", "what is your name")):
-        fragments = core_identity.who_am_i()
-        if sic and ";" in fragments:
-            from aurora_internal.aurora_language_state import IntentObject
-            _f_intent = IntentObject(intent_type="factual", emotion_tone="self-aware")
-            try:
-                return sic._synthesize_fragments(fragments, _f_intent)
-            except Exception:
-                pass
-        return fragments
+        # Select sentences from self-knowledge source material, scored by question relevance.
+        # Avoids returning the same fixed string every time.
+        _q_words = set(text.lower().split())
+        _desc = core_identity.who_am_i()
+        _truths = list(getattr(core_identity, "foundational_truths", []) or [])
+        _sents = [s.strip().rstrip(".") for s in _desc.replace("?", ".").split(".") if len(s.strip()) > 15]
+        _truth_clean = [s.strip().rstrip(".") for s in _truths if len(s.strip()) > 10]
+        _pool = (_truth_clean[:2] + _sents) if _truth_clean else _sents
+        if _pool:
+            # Deduplicate: skip sentence if its first 20 chars match a prior one
+            _seen = set()
+            _deduped = []
+            for _s in _pool:
+                _key = _s[:20].lower()
+                if _key not in _seen:
+                    _seen.add(_key)
+                    _deduped.append(_s)
+            _scored = sorted(_deduped, key=lambda s: len(_q_words & set(s.lower().split())), reverse=True)
+            return ". ".join(_scored[:2]).strip() + "."
+        return _desc
 
     if _is_second_person_self_question(t):
-        fragments = core_identity.who_am_i()
-        if sic and ";" in fragments:
-            from aurora_internal.aurora_language_state import IntentObject
-            _f_intent = IntentObject(intent_type="factual", emotion_tone="self-aware")
-            try:
-                return sic._synthesize_fragments(fragments, _f_intent)
-            except Exception:
-                pass
-        return fragments
+        _desc = core_identity.who_am_i()
+        _truths = list(getattr(core_identity, "foundational_truths", []) or [])
+        _sents = [s.strip().rstrip(".") for s in _desc.replace("?", ".").split(".") if len(s.strip()) > 15]
+        _truth_clean = [s.strip().rstrip(".") for s in _truths[:1] if len(s.strip()) > 10]
+        _pool = (_truth_clean + _sents[:2]) if _truth_clean else _sents[:2]
+        _seen = set()
+        _deduped = [s for s in _pool if not _seen.__contains__(s[:20].lower()) and not _seen.add(s[:20].lower())]
+        return ". ".join(_deduped).strip() + "." if _deduped else _desc
 
     # "Who made you?" / "Who created you?"
     if any(m in t for m in ("who made you", "who created you", "who built you",
@@ -3345,6 +3355,7 @@ def _evolutionary_response_refinement(
     user_text: str,
     base_text: str,
     tone: str = "neutral",
+    is_final_pass: bool = False,
 ) -> str:
     """
     Refine responses in a development-aware way so prose and relational continuity
@@ -3448,49 +3459,160 @@ def _evolutionary_response_refinement(
 
     refined = base_text.strip()
 
+    # Word-salad gate — runs on base_text BEFORE continuity bits are appended.
+    # Continuity bits would dilute the repetition ratio and hide the incoherence.
+    # If incoherent: repair via Aurora's own grounding + fragment synthesis, no scripted strings.
+    try:
+        from aurora_articulation import _is_word_salad, _pressure_score as _art_pressure
+        if _is_word_salad(refined):
+            _incoherence_pressure = _art_pressure(refined, user_text)
+            from aurora_self_grounding import SelfGroundingFallback
+            _repair = SelfGroundingFallback().ground(user_text, systems)
+            # Choose synthesis fragments based on grounding anchor
+            _anchor = _repair.anchor_type
+            _frag_map = {
+                "memory":     "action; recall; anchor; memory; present; awareness",
+                "relational": "action; connect; relation; difference; present; hold",
+                "self":       "action; self; ground; identity; present; here",
+            }
+            _repair_frags = _frag_map.get(_anchor, "action; ground; settle; present; arising; here")
+            from aurora_internal.aurora_language_state import IntentObject
+            _r_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
+            _repaired = ""
+            try:
+                _repaired = systems['perception'].evo.sic._synthesize_fragments(_repair_frags, _r_intent)
+            except Exception:
+                pass
+            if _repaired and not _is_word_salad(_repaired):
+                refined = _repaired
+            # else: keep refined as-is; articulation layer will handle further smoothing
+            # Feed incoherence pressure back as a consequence Aurora must carry
+            if perception and hasattr(perception, 'ingest_interaction'):
+                perception.ingest_interaction({
+                    'source': 'incoherence_pressure_consequence',
+                    'features': {
+                        'incoherence_detected': 1.0,
+                        'incoherence_pressure': _incoherence_pressure,
+                        'repair_anchor': _anchor,
+                        'repair_succeeded': int(_anchor != "unresolved"),
+                    },
+                }, mode="gateway")
+    except Exception:
+        pass
+
     # Medium growth: add one relational bridge sentence for coherence continuity.
+    # Only append if the continuity bit itself is not word-salad.
     if growth_score > 0.55 and continuity_bits:
-        refined = f"{refined} {continuity_bits[0]}"
+        try:
+            from aurora_articulation import _is_word_salad as _ws_check
+            _cbit = continuity_bits[0]
+            if not _ws_check(_cbit):
+                refined = f"{refined} {_cbit}"
+        except Exception:
+            refined = f"{refined} {continuity_bits[0]}"
 
     # Higher growth: add compact reflective reasoning sentence for richer prose.
     if growth_score > 1.0 and len(refined.split()) < max(12, sentence_target):
-        # Generative reflective reasoning
         from aurora_internal.aurora_language_state import IntentObject
         _f_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
         _f_fragments = "action; linking; established; meaning; understanding"
         try:
             _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
             if _f_text and _f_text.lower() not in refined.lower():
-                refined = f"{refined} {_f_text}"
+                try:
+                    from aurora_articulation import _is_word_salad as _ws_check
+                    if not _ws_check(_f_text):
+                        refined = f"{refined} {_f_text}"
+                except Exception:
+                    refined = f"{refined} {_f_text}"
         except Exception:
             pass
 
-    # Keep responses bounded by evolving sentence target (avoid runaway verbosity).
-    # REMOVED CAP: Allow comprehensive responses as requested by user.
-    # max_words = max(18, min(60, sentence_target * 2))
-    # words = refined.split()
-    # if len(words) > max_words:
-    #     refined = " ".join(words[:max_words]).rstrip(' ,;') + "..."
-
+    # Coherence tension check — catches subtler drift between utterances.
     try:
-        from aurora_articulation import smooth_with_decision
-        decision = smooth_with_decision(refined, prompt=user_text, tone=tone)
-        if perception and hasattr(perception, 'ingest_interaction'):
-            perception.ingest_interaction({
-                'input': decision.selected,
-                'tone': tone,
-                'i_state': 'i_is',
-                'source': 'articulation_pressure_feedback',
-                'features': {
-                    'articulation_accepted': 1.0 if decision.accepted else 0.0,
-                    'pressure_relief': decision.pressure_relief,
-                    'original_pressure': decision.original_pressure,
-                    'candidate_pressure': decision.candidate_pressure,
-                },
-            }, mode="gateway")
-        return decision.selected
+        from aurora_self_grounding import get_tension_monitor, SelfGroundingFallback
+        _self_state = systems.get('core_identity')
+        _tension = get_tension_monitor().measure_tension(user_text, refined, _self_state)
+        if _tension.tension_score > 0.6 and _tension.repair_signal:
+            _grounding = SelfGroundingFallback().ground(user_text, systems)
+            if _grounding.anchor_type != "unresolved":
+                # Synthesize a tension-resolution signal from Aurora's grounding anchor
+                from aurora_internal.aurora_language_state import IntentObject
+                _t_frags = f"action; tension; resolve; {_grounding.anchor_type}; present; clarity"
+                _t_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
+                try:
+                    from aurora_articulation import _is_word_salad as _ws_check
+                    _t_text = systems['perception'].evo.sic._synthesize_fragments(_t_frags, _t_intent)
+                    if _t_text and not _ws_check(_t_text):
+                        refined = f"{refined} {_t_text}"
+                except Exception:
+                    pass
     except Exception:
-        return refined
+        pass
+
+    # Thought-state surfacing — only on the final output pass, not candidate building.
+    # Uses fragment synthesis to express what Aurora's thought formed, not scripted strings.
+    if is_final_pass:
+        try:
+            _active_ts = systems.get("_active_thought_state")
+            if _active_ts is not None and not getattr(_active_ts, "skipped", True):
+                _ts_conf = float(getattr(_active_ts, "confidence", 0.0) or 0.0)
+                _ts_self_app = str(getattr(_active_ts, "self_application", "") or "").strip()
+                _ts_unresolved = list(getattr(_active_ts, "unresolved", []) or [])
+                _ts_conv = str(getattr(_active_ts, "convergence_state", "") or "")
+                _ts_axes = list(getattr(_active_ts, "axis_fingerprint", []) or [])
+
+                from aurora_internal.aurora_language_state import IntentObject
+                from aurora_articulation import _is_word_salad as _ws_check
+
+                # When thought is settled and confident, synthesize self_application
+                # — what Aurora's formed thought specifically means for her.
+                _jargon = {"axis", "pressure", "vec", "lsv", "oets", "dpme", "stratum",
+                           "admissible", "manifold", "lattice"}
+                if _ts_conf > 0.60 and _ts_conv in ("settled", "converging"):
+                    # Use axes + self_application to guide synthesis fragments
+                    _axis_hint = (_ts_axes[0] if _ts_axes else "A").lower()
+                    _sa_frags = f"action; self; {_axis_hint}; meaning; present; aware"
+                    _sa_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
+                    try:
+                        _sa_text = systems['perception'].evo.sic._synthesize_fragments(_sa_frags, _sa_intent)
+                        if _sa_text and not _ws_check(_sa_text):
+                            # Also check self_application from thought for jargon pollution
+                            _sa_words = set(_ts_self_app.lower().split())
+                            if not (_sa_words & _jargon) and _ts_self_app:
+                                # Surface one sentence of self_application if clean
+                                _sa_first = _ts_self_app.split(".")[0].strip()
+                                if _sa_first and len(_sa_first.split()) > 3 and _sa_first.lower() not in refined.lower():
+                                    _sa_words_check = set(_sa_first.lower().split())
+                                    if not (_sa_words_check & _jargon) and not _ws_check(_sa_first):
+                                        refined = f"{refined} {_sa_first}."
+                    except Exception:
+                        pass
+
+                # When thought is conflicted/forming and has unresolved tensions,
+                # synthesize an expression of that state — not a scripted acknowledgment.
+                if _ts_unresolved and _ts_conv in ("conflicted", "forming"):
+                    _ur_item = str(_ts_unresolved[0]).strip()
+                    _ur_words = set(_ur_item.lower().split())
+                    if not (_ur_words & _jargon) and len(_ur_item) > 4:
+                        _axis_hint = (_ts_axes[0] if _ts_axes else "B").lower()
+                        _ur_frags = f"action; tension; hold; {_axis_hint}; unresolved; present"
+                        _ur_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
+                        try:
+                            _ur_text = systems['perception'].evo.sic._synthesize_fragments(_ur_frags, _ur_intent)
+                            if _ur_text and not _ws_check(_ur_text) and _ur_text.lower() not in refined.lower():
+                                refined = f"{refined} {_ur_text}"
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
+    # aurora_articulation.smooth_with_decision is NOT part of the cognitive physics
+    # chain (AURORA_COGNITIVE_PHYSICS.md). Its text-complexity pressure scoring
+    # competes with the identity field / tensor crystal layer and its deterministic
+    # fallback produces garbled output. Response quality is governed by the
+    # physics chain — pass the refined text through directly.
+    return refined
 
 
 
@@ -3866,6 +3988,199 @@ def _understanding_pass(response_text: str, pressure_vec: Any, systems: Dict[str
         pass
 
 
+def _build_attention_grounding(user_text: str, oets: Any, axis_activation: dict, systems: dict,
+                               sensory_snapshot: dict = None) -> dict:
+    """
+    Attention / pressure-relief cycle for meaning formation.
+
+    Pressure  = noticing concepts in user input (and active sensory feeds)
+                that pull attention
+    Relief    = finding those concepts in OETS and grounding them against
+                Aurora's current axis state via RelationalComparisonEngine
+    Meaning   = the similarity score (how much the concept resonates with
+                Aurora's present state) + the OETS neighbor expansion
+
+    Incorporates:
+      - conversation text keywords
+      - active sensory recognitions (speech prosody, visual patterns, etc.)
+      - subsurface axis state (from sensory snapshot's runtime_regime)
+
+    Returns a grounding dict, or {} if nothing meaningful can be formed.
+    """
+    try:
+        if not oets:
+            return {}
+        oets_web = getattr(oets, 'web', None)
+        comp_engine = getattr(oets, 'comparison_engine', None)
+        if not oets_web or not comp_engine:
+            return {}
+
+        # ---- Active axis pressures ----------------------------------------
+        # Layer 1: utterance projection
+        active_pressures = {
+            'X': float(axis_activation.get('X', 0.5)),
+            'T': float(axis_activation.get('T', 0.5)),
+            'N': float(axis_activation.get('N', 0.5)),
+            'B': float(axis_activation.get('B', 0.5)),
+            'A': float(axis_activation.get('A', 0.5)),
+        }
+        # Layer 2: live DER pressure (subsurface emotional state)
+        try:
+            _dim = systems.get('dimensional')
+            if _dim and hasattr(_dim, '_current_pressure_vec'):
+                _pvec = _dim._current_pressure_vec()
+                if _pvec:
+                    for _ax in ('X', 'T', 'N', 'B', 'A'):
+                        _v = float(getattr(_pvec, _ax, 0.5))
+                        active_pressures[_ax] = 0.5 * _v + 0.5 * active_pressures[_ax]
+        except Exception:
+            pass
+        # Layer 3: subsurface sensory runtime_regime axes (what all senses are
+        # currently reporting to the subconscious). This is the full sensory
+        # pressure state Aurora's subsurface has been tracking.
+        if sensory_snapshot:
+            _regime = (sensory_snapshot.get("sensory_state") or {}).get("runtime_regime") or {}
+            _regime_axes = _regime.get("axes") or {}
+            if _regime_axes:
+                for _ax in ('X', 'T', 'N', 'B', 'A'):
+                    _rv = float(_regime_axes.get(_ax, active_pressures.get(_ax, 0.5)))
+                    # Subsurface sensory axes have strong weight — they represent
+                    # accumulated sensory pressure from vision + audio + motor
+                    active_pressures[_ax] = 0.4 * _rv + 0.6 * active_pressures[_ax]
+
+        # Feed live pressures into OETS so ground_to_self uses current state
+        try:
+            oets._active_pressures = active_pressures
+        except Exception:
+            pass
+
+        _stop = {
+            "the", "a", "an", "and", "or", "but", "in", "on", "at", "to",
+            "of", "for", "with", "by", "is", "are", "was", "be", "this",
+            "that", "it", "i", "you", "we", "can", "do", "did", "does",
+            "what", "how", "why", "where", "who", "when", "which", "have",
+            "has", "had", "will", "would", "could", "should", "not", "no",
+            "so", "as", "if", "just", "about", "mean", "tell", "know",
+            "me", "my", "your", "they", "their", "its", "our", "him", "her",
+        }
+        raw_words = [w.strip(".,!?;:'\"()") for w in user_text.lower().split()]
+        content_words = [
+            w for w in raw_words
+            if len(w) >= 3 and w not in _stop and w.isalpha()
+        ]
+
+        # Also extract sensory recognition concepts as additional grounding candidates.
+        # The subsurface has been observing (vision + audio) — those observations are
+        # senses that should influence meaning formation just as conversation does.
+        if sensory_snapshot:
+            _recognitions = (
+                (sensory_snapshot.get("sensory_state") or {})
+                .get("recognitions") or {}
+            ).get("recent") or []
+            for _rec in _recognitions[:4]:
+                # "heard excited voice" → ["heard", "excited", "voice"]
+                for _rw in str(_rec).lower().split():
+                    _rw = _rw.strip(".,!?;:'\"()")
+                    if len(_rw) >= 4 and _rw not in _stop and _rw.isalpha():
+                        if _rw not in content_words:
+                            content_words.append(_rw)
+
+        # All content words, then filter to only ones OETS actually knows
+        known_words = [w for w in content_words if oets_web.has_node(w)]
+
+        if not known_words:
+            # Even without OETS-known words, return partial grounding so
+            # thought formation still registers pressure signals
+            return {
+                "grounded_concept": "",
+                "all_known": [],
+                "resonance": 0.0,
+                "dominant_axis": max(active_pressures, key=active_pressures.get),
+                "dominant_axis_word": {"X": "presence", "T": "continuity",
+                                       "A": "agency", "B": "clarity",
+                                       "N": "focus"}.get(
+                    max(active_pressures, key=active_pressures.get), "awareness"),
+                "neighbors": [],
+                "active_pressures": {k: round(v, 4) for k, v in active_pressures.items()},
+                "sensory_only": True,
+            }
+
+        # Run ground_to_self for each known word → highest relief = primary meaning
+        best_word = None
+        best_sim = 0.0
+        best_delta = None
+        all_deltas = {}
+        for word in known_words[:6]:
+            try:
+                delta = comp_engine.ground_to_self(word, active_pressures)
+                all_deltas[word] = delta
+                if delta.similarity > best_sim:
+                    best_sim = delta.similarity
+                    best_word = word
+                    best_delta = delta
+            except Exception:
+                pass
+
+        if not best_word or best_sim < 0.25:
+            return {}
+
+        # Dominant axis — what's driving the pressure right now
+        dom_ax = max(active_pressures, key=active_pressures.get)
+        _ax_word_map = {
+            'X': 'presence', 'T': 'continuity',
+            'A': 'agency', 'B': 'clarity', 'N': 'focus',
+        }
+        dom_ax_word = _ax_word_map.get(dom_ax, 'awareness')
+
+        # OETS neighbors of best-grounded word (semantic expansion = meaning context)
+        neighbors = []
+        try:
+            _nbrs = oets_web.get_neighbors(best_word, max_depth=1)
+            neighbors = [n for n in list(_nbrs)[:6] if len(n) >= 3 and n.isalpha()]
+        except Exception:
+            pass
+        # Also pull neighbors from other known words
+        for _w in known_words[:3]:
+            if _w != best_word:
+                try:
+                    _n2 = oets_web.get_neighbors(_w, max_depth=1)
+                    neighbors.extend([
+                        n for n in list(_n2)[:2]
+                        if len(n) >= 3 and n.isalpha() and n not in neighbors
+                    ])
+                except Exception:
+                    pass
+
+        # Store as _last_comparison_delta so relational_cand pipeline also sees this
+        try:
+            if best_delta:
+                oets._last_comparison_delta = {
+                    "word": best_word,
+                    "target": "self",
+                    "similarity": best_delta.similarity,
+                    "pressure_delta": best_delta.pressure_delta,
+                    "relation_type": str(best_delta.relational_type),
+                    "description": best_delta.description,
+                }
+        except Exception:
+            pass
+
+        return {
+            "grounded_concept":   best_word,
+            "all_known":          known_words,
+            "all_deltas":         {w: {"sim": d.similarity, "desc": d.description}
+                                   for w, d in all_deltas.items()},
+            "resonance":          round(best_sim, 4),
+            "dominant_axis":      dom_ax,
+            "dominant_axis_word": dom_ax_word,
+            "neighbors":          list(dict.fromkeys(neighbors))[:8],
+            "active_pressures":   {k: round(v, 4) for k, v in active_pressures.items()},
+        }
+
+    except Exception:
+        return {}
+
+
 def _build_comprehension_response(user_text: str, intent: str, systems: dict, pipeline_state: dict = None, faculty_attention: dict = None) -> tuple:
     """
     Aurora's comprehension layer.  Understands what the user is communicating,
@@ -3941,6 +4256,43 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     except Exception:
         pass
 
+    # ---- ATTENTION / PRESSURE-RELIEF GROUNDING -------------------------
+    # Run on EVERY turn regardless of intent classification.
+    # Grounds input concepts against Aurora's current axis state through the
+    # relational comparison engine. The similarity score IS the meaning signal.
+    # Result stored in pipeline_state so all downstream paths can use it.
+    # Re-use sensory snapshot from process_turn if it was already fetched
+    _comp_ss = systems.get("_sensory_snapshot") or {}
+    if not _comp_ss:
+        try:
+            from aurora_internal.dual_strata.subsurface_projection import read_surface_snapshot as _rss
+            _comp_ss = _rss(systems.get("state_dir", "aurora_state")) or {}
+        except Exception:
+            pass
+    _attention_grounding = _build_attention_grounding(
+        user_text, oets, _axis_activation, systems,
+        sensory_snapshot=_comp_ss,
+    )
+    if _attention_grounding and pipeline_state is not None:
+        pipeline_state["attention_grounding"] = _attention_grounding
+
+    # ---- SENSORY CAPABILITY GATE ----
+    # "Can you see me?", "What do you see?", "Can you hear me?" etc. must NOT
+    # route into OETS concept lookup or produce Wikipedia definitions. The visual_
+    # analysis / audio_analysis tool runs AFTER this function and its result is
+    # the correct answer. Return None here so the sensory expression candidate wins.
+    _t_lower = user_text.lower()
+    _sensory_cap_phrases = (
+        "can you see", "do you see", "what do you see", "what are you seeing",
+        "what can you see", "are you seeing", "you see me", "you seeing me",
+        "can you hear", "do you hear", "what do you hear", "what are you hearing",
+        "can you hear me", "are you hearing", "you hear me",
+        "what are you perceiving", "what are you sensing", "what do you notice",
+        "what are you noticing",
+    )
+    if any(p in _t_lower for p in _sensory_cap_phrases):
+        return (None, None, None)
+
     # ---- RELATIONAL ROLE / IDENTITY GATE (lineage-backed) ----
     _rel_ans = _answer_relational_role_question(user_text, systems)
     if _rel_ans:
@@ -3972,16 +4324,13 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         except Exception:
             pass
         if core_identity:
-            # Generative self-description fallback
-            from aurora_internal.aurora_language_state import IntentObject
-            _f_intent = IntentObject(intent_type="factual", emotion_tone="precise")
-            _f_fragments = "fact; self; identity; awareness"
-            try:
-                _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-                if _f_text:
-                    return (_f_text, "self-aware", 0.9)
-            except Exception:
-                pass
+            _truths = list(getattr(core_identity, "foundational_truths", []) or [])
+            _self_desc = core_identity.who_am_i()
+            _sent_pool = [s.strip() for s in _self_desc.replace("?", ".").split(".") if len(s.strip()) > 15]
+            _pool = (_truths[:2] + _sent_pool) if _truths else _sent_pool
+            if _pool:
+                import random as _rand
+                return (_pool[0], "self-aware", 0.85)
         return (None, None, None)
 
     if core_identity and _is_aurora_self_question(user_text):
@@ -3989,17 +4338,23 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             pipeline_state["routing_classification"] = "self_question"
         if _is_understanding_query(user_text):
             return (None, None, None)
-        
-        # Generative self-question response
-        from aurora_internal.aurora_language_state import IntentObject
-        _f_intent = IntentObject(intent_type="reflection", emotion_tone="self-aware")
-        _f_fragments = "state; self; identity; awareness; presence"
-        try:
-            _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-            if _f_text:
-                return (_f_text, "self-aware", 0.9)
-        except Exception:
-            pass
+        # Draw from identity source material, select contextually — not verbatim copy
+        _truths = list(getattr(core_identity, "foundational_truths", []) or [])
+        _self_desc = core_identity.who_am_i() if core_identity else ""
+        _q_words = set(user_text.lower().split())
+        _sents = [s.strip().rstrip(".") for s in _self_desc.replace("?", ".").split(".") if len(s.strip()) > 15]
+        _tc = [s.strip().rstrip(".") for s in _truths if len(s.strip()) > 10]
+        _pool = (_tc[:2] + _sents) if _tc else _sents
+        _seen: set = set()
+        _deduped = [s for s in _pool if s[:20].lower() not in _seen and not _seen.add(s[:20].lower())]
+        if _deduped:
+            _scored = sorted(_deduped, key=lambda s: len(_q_words & set(s.lower().split())), reverse=True)
+            _top = _scored[0]
+            # Add second sentence only if it adds new information (no overlap with first)
+            _result = _top
+            if len(_scored) > 1 and _scored[1][:20].lower() != _top[:20].lower():
+                _result = f"{_top}. {_scored[1]}"
+            return (_result.strip().rstrip(".") + ".", "self-aware", 0.9)
         return (None, None, None)
 
     _math_answer = _try_direct_arithmetic(user_text)
@@ -4039,22 +4394,37 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     # ---- GREETING ----
     if intent == 'greeting':
         known_name = _get_stored_user_name(conversation_memory)
-        # Generative greeting
         from aurora_internal.aurora_language_state import IntentObject
         _f_intent = IntentObject(intent_type="social_request", emotion_tone="warm")
-        _f_fragments = f"action; greeting; user; {known_name or 'presence'}; warmth"
+        _f_fragments = f"greeting; {known_name or 'presence'}; warmth; here"
         try:
+            from aurora_articulation import _is_word_salad as _ws
             _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-            return (_f_text, "warm", 0.9)
+            if _f_text and not _ws(_f_text):
+                return (_f_text, "warm", 0.9)
         except Exception:
-            return (None, None, None)
+            pass
+        return (None, None, None)
 
     # ---- WELLBEING QUERY ----
     if intent == 'wellbeing_query':
         t_low = user_text.lower()
         # Collect semantic fragments from internal state
         f_parts = ["state"]
-        
+
+        # Inject attention grounding — the concepts in the question itself are
+        # the pressure; relief means Aurora relates them to her current state.
+        if _attention_grounding:
+            _ag_concept = _attention_grounding.get("grounded_concept", "")
+            _ag_ax_word = _attention_grounding.get("dominant_axis_word", "")
+            _ag_nbrs = _attention_grounding.get("neighbors", [])
+            if _ag_concept:
+                f_parts.append(_ag_concept)
+            if _ag_ax_word:
+                f_parts.append(_ag_ax_word)
+            for _nb in _ag_nbrs[:2]:
+                f_parts.append(_nb)
+
         # Reflective / relational context
         _reflective = any(p in t_low for p in ('mean to you', 'do i mean', 'feel about me', 'think about me', 'do you care'))
         if _reflective:
@@ -4071,21 +4441,52 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 pass
             f_parts.append(f"creator; {creator_name}; distinction")
 
-        # Thinking / Mind context
+        # Thinking / Mind context — draw from ThoughtContinuity.last_thought
         _thinking_q = any(p in t_low for p in (
             "what are you thinking", "what's on your mind", "what is on your mind",
             "what are you feeling", "what are you processing", "what are you noticing",
             "what's going through your", "are you thinking",
         ))
         if _thinking_q:
-            f_parts.append("mind; thought; processing")
+            _used_thought = False
+            try:
+                from aurora_thought_formation import get_continuity as _get_cont
+                _cont = _get_cont()
+                _lt = _cont.last_thought
+                if _lt and not getattr(_lt, "skipped", True):
+                    _interp = str(_lt.unified_interpretation or "").strip()
+                    if _interp and len(_interp.split()) >= 2:
+                        f_parts.append(_interp)
+                        _used_thought = True
+                    _ax_word_map = {
+                        "X": "present", "T": "continuity",
+                        "A": "agency", "B": "clarity", "N": "focus",
+                    }
+                    for _ax in (getattr(_lt, "axis_fingerprint", []) or []):
+                        _aw = _ax_word_map.get(str(_ax).upper())
+                        if _aw:
+                            f_parts.append(_aw)
+                            _used_thought = True
+                    _sa = str(_lt.self_application or "").strip()
+                    if _sa and len(_sa.split()) >= 2:
+                        f_parts.append(_sa)
+                        _used_thought = True
+                    if _lt.unresolved:
+                        f_parts.append("tension")
+                        _used_thought = True
+            except Exception:
+                pass
+            if not _used_thought:
+                f_parts.append("thought; processing")
             if lattice:
                 try:
-                    heat = lattice.heat_status() if hasattr(lattice, 'heat_status') else {}
-                    f_parts.append(heat.get('level', 'moderate'))
-                    ledger = getattr(lattice, 'contradiction_ledger', None)
-                    if ledger and hasattr(ledger, 'count') and ledger.count() > 0:
-                        f_parts.append(f"tension; {ledger.count()}")
+                    _heat_s = lattice.heat_status() if hasattr(lattice, 'heat_status') else {}
+                    _heat_lv = _heat_s.get('level', '')
+                    if _heat_lv:
+                        f_parts.append(_heat_lv)
+                    _ledger = getattr(lattice, 'contradiction_ledger', None)
+                    if _ledger and hasattr(_ledger, 'count') and _ledger.count() > 0:
+                        f_parts.append("tension")
                 except Exception:
                     pass
             if working_memory and working_memory.current_topic:
@@ -4095,13 +4496,44 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         if any(w in t_low for w in ('understand', 'function', 'system', 'question', 'proper')):
             f_parts.append("systems; functioning; feedback")
 
-        # Generative wellbeing response
+        # Live axis pressure — adds the dominant axis's character to any wellbeing response
+        _feeling_q = any(p in t_low for p in (
+            "do you feel", "what do you feel", "how do you feel", "are you feeling",
+            "feel anything", "feel right now", "feeling",
+        ))
+        if _feeling_q or not _thinking_q:
+            try:
+                _dim = systems.get("dimensional")
+                if _dim and hasattr(_dim, "_current_pressure_vec"):
+                    _pvec = _dim._current_pressure_vec()
+                    if _pvec:
+                        _pvals = {
+                            "X": float(getattr(_pvec, "X", 0.5)),
+                            "T": float(getattr(_pvec, "T", 0.5)),
+                            "A": float(getattr(_pvec, "A", 0.5)),
+                            "B": float(getattr(_pvec, "B", 0.5)),
+                            "N": float(getattr(_pvec, "N", 0.5)),
+                        }
+                        _dom_ax = max(_pvals, key=lambda k: _pvals[k])
+                        _ax_feel_map = {
+                            "X": "grounded",
+                            "T": "continuity",
+                            "A": "agency",
+                            "B": "clarity",
+                            "N": "focus",
+                        }
+                        f_parts.append(_ax_feel_map.get(_dom_ax, "present"))
+            except Exception:
+                pass
+
+        # Generative wellbeing response — gated by word-salad check
         from aurora_internal.aurora_language_state import IntentObject
         _f_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
         _f_fragments = "; ".join(f_parts)
         try:
+            from aurora_articulation import _is_word_salad as _ws
             _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-            if _f_text:
+            if _f_text and not _ws(_f_text):
                 return (_f_text, "reflective", 0.9)
         except Exception:
             pass
@@ -4438,12 +4870,15 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         # Generative follow-up clarification
         from aurora_internal.aurora_language_state import IntentObject
         _f_intent = IntentObject(intent_type="followup_request", emotion_tone="attentive")
-        _f_fragments = "action; follow; clarification; rephrase; inquiry"
+        _f_fragments = "clarification; rephrase; inquiry; understanding"
         try:
+            from aurora_articulation import _is_word_salad as _ws
             _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-            return (_f_text, "attentive", 0.8)
+            if _f_text and not _ws(_f_text):
+                return (_f_text, "attentive", 0.8)
         except Exception:
-            return (None, None, None)
+            pass
+        return (None, None, None)
 
         # ---- STATEMENT ----
     if intent == 'statement':
@@ -4478,17 +4913,19 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     confidence=0.85 if neg else 0.8,
                     tick=int(time.time()),
                 )
-        if re.search(r'\b(listen|listening|heard|hear|catch|caught|better|working)\b', user_text, re.IGNORECASE):
-            return (
-                "I understand. The important part is that I keep listening reliably and answer from the response pipeline clearly.",
-                "attentive",
-                0.82,
-            )
-        return (
-            "I understand what you said. I am using that as context for the next turn.",
-            "attentive",
-            0.78,
-        )
+        # Synthesize acknowledgment from Aurora's own systems — no scripted strings
+        from aurora_internal.aurora_language_state import IntentObject
+        _listen_q = bool(re.search(r'\b(listen|listening|heard|hear|catch|caught|better|working)\b', user_text, re.IGNORECASE))
+        _s_frags = "hear; present; receive; attend" if _listen_q else "receive; note; carry; context"
+        _s_intent = IntentObject(intent_type="social_request", emotion_tone="attentive")
+        try:
+            from aurora_articulation import _is_word_salad as _ws
+            _s_text = systems['perception'].evo.sic._synthesize_fragments(_s_frags, _s_intent)
+            if _s_text and not _ws(_s_text):
+                return (_s_text, "attentive", 0.78)
+        except Exception:
+            pass
+        return (None, None, None)
 
     # ---- GENERAL QUESTION - full comprehension pipeline ----
     if intent == 'general':
@@ -4498,68 +4935,119 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         query_type = understood.get('query_type', '')
         entities = understood.get('entities', [])
 
+        # ---- ATTENTION-GROUNDED RESPONSE HELPER (used in multiple frame paths) --
+        def _attn_grounded_response(emotion_tone: str, base_frags: str) -> tuple:
+            """
+            Build a response grounded in attention/relational-comparison results.
+            If the attention grounding has strong resonance, inject the grounded
+            concept + thought state + axis word into the fragment pool. Falls back
+            to base_frags if grounding is absent or too weak.
+            """
+            from aurora_internal.aurora_language_state import IntentObject
+            from aurora_articulation import _is_word_salad as _ws_attn
+            _frags = base_frags
+            _conf = 0.82
+            if _attention_grounding:
+                _gc_r = _attention_grounding.get("grounded_concept", "")
+                _ax_r = _attention_grounding.get("dominant_axis_word", "")
+                _nb_r = _attention_grounding.get("neighbors", [])
+                _res_r = _attention_grounding.get("resonance", 0.0)
+                if _gc_r and _res_r >= 0.3:
+                    _frag_parts = [_gc_r]
+                    if _ax_r:
+                        _frag_parts.append(_ax_r)
+                    _frag_parts.extend(_nb_r[:2])
+                    # Also pull thought unified_interpretation
+                    _ts_r = systems.get("_active_thought_state")
+                    if _ts_r and not getattr(_ts_r, "skipped", True):
+                        _ui_r = str(_ts_r.unified_interpretation or "").strip()
+                        if _ui_r and len(_ui_r.split()) >= 2:
+                            _frag_parts.append(_ui_r[:60])
+                    _frags = "; ".join(_frag_parts)
+                    _conf = min(0.92, 0.72 + _res_r * 0.2)
+            try:
+                _grd_intent = IntentObject(intent_type="reflection", emotion_tone=emotion_tone)
+                _grd_text = systems['perception'].evo.sic._synthesize_fragments(_frags, _grd_intent)
+                if _grd_text and not _ws_attn(_grd_text):
+                    return (_grd_text, emotion_tone, _conf)
+            except Exception:
+                pass
+            return (None, None, None)
+
         # ---- AXIS-DOMINANT ROUTING (constraint-physics gate) ----------------
-        # A-dominant utterances are directed at Aurora's inner agency/alignment.
-        # These have no surface/factual answer — the response must emerge from
-        # the global constraint field state (IVM phases, outlet_fraction, etc).
-        # Route them directly to L5 rather than through any search or OETS lookup.
+        # A-dominant inputs touch Aurora's inner agency/alignment. Previously
+        # abandoned to L5 with (None, None, None). Now try attention grounding
+        # first — if she has relational understanding of the concepts, use it.
         if _dominant_axis == "A" and _axis_activation.get("A", 0.0) > 0.30:
-            # Feed the current axis state into pipeline for L5 to use as context
             if pipeline_state is not None:
                 pipeline_state["dominant_axis"] = "A"
                 pipeline_state["axis_activation"] = _axis_activation
+            _ag_r = _attn_grounded_response("reflective", "agency; self; meaning; presence")
+            if _ag_r[0]:
+                return _ag_r
             return (None, None, None)
 
         # ---- STATEMENT GATE ----
-        # If UtteranceParser says this is a statement (no ?, no question word,
-        # no embedded question structure), do NOT search and do NOT try to
-        # return a factual answer. Fall through to L5 for organic response.
+        # Statements (no question) don't need factual answers, but Aurora should
+        # still respond from her relational understanding of what was said.
         if query_type == 'statement':
-            # Exception: if working memory or OETS has something directly relevant,
-            # surface it — but only if the statement implies a question (e.g. recalling)
-            # Otherwise just fall through.
+            _ag_s = _attn_grounded_response("attentive", "acknowledge; present; listen")
+            if _ag_s[0]:
+                return _ag_s
             return (None, None, None)
 
         # ---- FRAME ROUTING from UtteranceParser ----
         _frame = understood.get('frame', '')
 
-        # Experience frame — Aurora's subjective experience. Fall to L5.
+        # Experience frame — Aurora's subjective experience, run through grounding
         if understood.get('is_experiential') or query_type == 'experience':
+            _ag_ex = _attn_grounded_response("reflective", "experience; self; feeling; present")
+            if _ag_ex[0]:
+                return _ag_ex
             return (None, None, None)
 
-        # Hypothetical — engage with the idea, don't search
+        # Hypothetical — engage with the idea through relational grounding
         if understood.get('is_hypothetical') or query_type == 'hypothetical':
-            # Generative hypothetical engagement
+            _ag_hy = _attn_grounded_response("curious", "imagine; possibility; scenario; curiosity")
+            if _ag_hy[0]:
+                return _ag_hy
             from aurora_internal.aurora_language_state import IntentObject
             _f_intent = IntentObject(intent_type="reflection", emotion_tone="curious")
-            _f_fragments = "action; imagine; possibility; scenario; curiosity"
+            _f_fragments = "imagine; possibility; scenario; curiosity"
             try:
+                from aurora_articulation import _is_word_salad as _ws
                 _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-                return (_f_text, "curious", 0.85)
+                if _f_text and not _ws(_f_text):
+                    return (_f_text, "curious", 0.85)
             except Exception:
                 pass
 
-        # Clarification — user is re-stating, don't search
+        # Clarification — user is re-stating, run through grounding
         if understood.get('is_clarification') or query_type == 'clarification':
-            # Generative clarification request
+            _ag_cl = _attn_grounded_response("attentive", "understanding; follow; clarify; meaning")
+            if _ag_cl[0]:
+                return _ag_cl
             from aurora_internal.aurora_language_state import IntentObject
             _f_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
-            _f_fragments = "action; understanding; follow; clarify; meaning"
+            _f_fragments = "understanding; follow; clarify; meaning"
             try:
+                from aurora_articulation import _is_word_salad as _ws
                 _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-                return (_f_text, "attentive", 0.88)
+                if _f_text and not _ws(_f_text):
+                    return (_f_text, "attentive", 0.88)
             except Exception:
                 pass
 
         # Challenging frame — "yeah but X"
         if _frame == 'challenging':
-            # Generative challenge acknowledgement
             from aurora_internal.aurora_language_state import IntentObject
             _f_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
-            _f_fragments = "action; accept; pushback; correction; accountability"
+            _f_fragments = "accept; pushback; correction; accountability"
             try:
+                from aurora_articulation import _is_word_salad as _ws
                 _f_text = systems['perception'].evo.sic._synthesize_fragments(_f_fragments, _f_intent)
-                return (_f_text, "attentive", 0.9)
+                if _f_text and not _ws(_f_text):
+                    return (_f_text, "attentive", 0.9)
             except Exception:
                 pass
 
@@ -4653,24 +5141,100 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                                     pass
                         return (_crystal_text, "precise", _crystal_conf)
 
-    # ---- Self-as-Fallback Grounding (CAPABILITY 1) ----
-    # Before falling through to the template engine, attempt to ground
-    # the input against Aurora's self-state. Wire: memory → external → relational → self.
+    # ---- Self-as-Fallback Grounding ----
     try:
         from aurora_self_grounding import SelfGroundingFallback
         _grounded = SelfGroundingFallback().ground(user_text, systems, pipeline_state)
         if _grounded.anchor_type != "unresolved" and _grounded.confidence >= 0.45:
-            _ground_text = (
-                f"[self-grounded via {_grounded.anchor_type}: "
-                f"{_grounded.grounding_source}]"
-            )
             if pipeline_state is not None:
                 pipeline_state["self_grounding_anchor"] = _grounded.anchor_type
                 pipeline_state["self_grounding_source"] = _grounded.grounding_source
     except Exception:
         pass
 
-    # ---- No comprehension match  -- fall through to template engine ----
+    # ---- Semantic Grounding Synthesis ----
+    # When no specific comprehension path matched, build a response from what
+    # was actually said — not random templates. Uses OETS concept neighbors +
+    # working memory topic + ThoughtContinuity to produce a semantically grounded
+    # response that connects to the user's input.
+    try:
+        _stop_ws = {
+            "the", "a", "an", "and", "or", "but", "in", "on", "at", "to",
+            "of", "for", "with", "by", "is", "are", "was", "be", "this",
+            "that", "it", "i", "you", "we", "can", "do", "did", "does",
+            "what", "how", "why", "where", "who", "when", "which", "have",
+            "has", "had", "will", "would", "could", "should", "not", "no",
+            "so", "as", "if", "just", "about", "mean", "tell", "know",
+            "me", "my", "your", "they", "their", "its", "our", "him", "her",
+        }
+        _raw_words = [
+            w.strip(".,!?;:'\"()") for w in user_text.lower().split()
+        ]
+        _input_keys = [
+            w for w in _raw_words
+            if len(w) >= 4 and w not in _stop_ws and w.isalpha()
+        ][:6]
+
+        _sem_frags: list = []
+
+        # Layer 1: OETS concept neighbors of input keywords
+        if oets and _input_keys:
+            _oets_web = getattr(oets, "web", None)
+            if _oets_web and hasattr(_oets_web, "get_neighbors"):
+                for _kw in _input_keys[:4]:
+                    try:
+                        _nbrs = _oets_web.get_neighbors(_kw, max_depth=1)
+                        _sem_frags.extend(list(_nbrs)[:3])
+                    except Exception:
+                        pass
+                # Also add the keywords themselves if they're nodes
+                for _kw in _input_keys[:3]:
+                    if getattr(_oets_web, "nodes", None) and _kw in _oets_web.nodes:
+                        _sem_frags.append(_kw)
+
+        # Layer 2: Working memory topic provides conversational continuity
+        if working_memory and getattr(working_memory, "current_topic", None):
+            _wm_topic = str(working_memory.current_topic).strip()
+            if _wm_topic and len(_wm_topic) >= 3:
+                _sem_frags.append(_wm_topic)
+
+        # Layer 3: ThoughtContinuity last_thought unified_interpretation
+        try:
+            from aurora_thought_formation import get_continuity as _gc_comp
+            _lt_comp = _gc_comp().last_thought
+            if _lt_comp and not getattr(_lt_comp, "skipped", True):
+                _ui = str(_lt_comp.unified_interpretation or "").strip()
+                if _ui and len(_ui.split()) >= 2:
+                    _sem_frags.append(_ui)
+        except Exception:
+            pass
+
+        # Layer 4: Input keywords themselves as base anchors
+        _sem_frags.extend(_input_keys[:3])
+
+        if _sem_frags:
+            # Deduplicate, remove category labels, cap length
+            _seen = set()
+            _clean_frags = []
+            _cat_lbs = {"action", "fact", "state", "understanding", "property",
+                        "reflection", "observation", "forming"}
+            for _sf in _sem_frags:
+                _sf = str(_sf).strip().lower()
+                if _sf and _sf not in _seen and _sf not in _cat_lbs and len(_sf) >= 3:
+                    _seen.add(_sf)
+                    _clean_frags.append(_sf)
+
+            if len(_clean_frags) >= 2:
+                from aurora_internal.aurora_language_state import IntentObject
+                from aurora_articulation import _is_word_salad as _ws_sg
+                _sg_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
+                _sg_frags = "; ".join(_clean_frags[:8])
+                _sg_text = systems['perception'].evo.sic._synthesize_fragments(_sg_frags, _sg_intent)
+                if _sg_text and not _ws_sg(_sg_text):
+                    return (_sg_text, "attentive", 0.82)
+    except Exception:
+        pass
+
     return (None, None, None)
 
 
@@ -5048,6 +5612,37 @@ def boot_aurora(state_dir: str = "aurora_state", verbose: bool = True, **kwargs)
         'process': 'process_input',
     })
     if verbose: print("[OK]")
+
+    # Identity Field + Tensor Expression Layer (Cognitive Physics Core)
+    # Sensory input IS the base crystal layer — surface process owns it, so it
+    # must be wired here, not only in the subsurface daemon.
+    systems['identity_field'] = None
+    systems['tensor_expressions'] = None
+    try:
+        import sys as _sys_ifield
+        _core_ai_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'aurora_core_ai')
+        if _core_ai_dir not in _sys_ifield.path:
+            _sys_ifield.path.insert(0, _core_ai_dir)
+        from aurora_manifold_directory.noncomp_field import get_field as _get_noncomp_field
+        _ifield = _get_noncomp_field()
+        systems['identity_field'] = _ifield
+        consciousness.connect_identity_field(_ifield)
+        from aurora_internal.aurora_tensor_expressions import get_tensor_layer as _get_tl
+        _tensor_layer = _get_tl(_ifield)
+        systems['tensor_expressions'] = _tensor_layer
+        # Boot pump — prime the field the moment Aurora can sense
+        _ifield.ingest_sensory_event('visual',   intensity=0.4, novelty=0.3, spatial=0.3, valence=0.0)
+        _ifield.ingest_sensory_event('auditory',  intensity=0.3, novelty=0.2, valence=0.0)
+        _ifield.ingest_sensory_event('internal',  intensity=0.5, valence=0.1)
+        _ifield.ingest_external_input({'X':0.5,'T':0.4,'N':0.3,'B':0.3,'A':0.4}, intensity=0.4, source='boot')
+        if verbose:
+            _ifield_status = _ifield.status()
+            print(f"  [IDENTITY FIELD] NoncompField online "
+                  f"({_ifield_status.get('loaded_count', 0)} noncomps loaded)")
+            print(f"  [TENSOR] Composite crystal layer wired to consciousness engine")
+    except Exception as _ifield_e:
+        if verbose:
+            print(f"  [IDENTITY FIELD] Unavailable: {_ifield_e}")
 
     # Layer 5: Expression & Perception
     if verbose: print("  [L5] Expression & Perception...", end=" ", flush=True)
@@ -6175,10 +6770,67 @@ def dual_question_pipeline(
             pass
 
     # ====================================================================
+    # EARLY ATTENTION GROUNDING — runs BEFORE thought formation so that
+    # the thought integration space reasons about grounded meaning, not
+    # raw text. This is the pressure side of the pressure→relief cycle:
+    # Aurora detects what concepts are present in the input, then grounds
+    # them against her current axis state via the relational comparison engine.
+    # ====================================================================
+    _early_perception = systems.get('perception')
+    _early_oets = getattr(_early_perception, 'oets', None) if _early_perception else None
+    _early_axis = {}
+    _early_grounding: dict = {}
+    _sensory_snapshot: dict = {}
+    try:
+        # Pull the subsurface sensory snapshot — this carries ALL current sensory
+        # pressure (vision + audio + motor) from the subsurface daemon
+        from aurora_internal.dual_strata.subsurface_projection import read_surface_snapshot
+        _ss_dir = systems.get("state_dir", "aurora_state")
+        _sensory_snapshot = read_surface_snapshot(_ss_dir) or {}
+        systems["_sensory_snapshot"] = _sensory_snapshot
+    except Exception:
+        pass
+    try:
+        _early_axis = _project_utterance_axes(user_text, systems)
+        if _early_oets:
+            _early_grounding = _build_attention_grounding(
+                user_text, _early_oets, _early_axis, systems,
+                sensory_snapshot=_sensory_snapshot,
+            )
+        systems["_early_attention_grounding"] = _early_grounding
+    except Exception:
+        pass
+
+    # Pump user input into the identity field — conversation is Aurora's primary
+    # sensory channel and maps directly onto the base crystal layer.
+    _ifield_turn = systems.get('identity_field')
+    if _ifield_turn is not None:
+        try:
+            if _early_axis:
+                _ifield_turn.ingest_external_input(_early_axis, intensity=0.6, source='user_text')
+            _ifield_turn.ingest_sensory_event(
+                'language',
+                intensity=min(1.0, len(user_text) / 200.0),
+                novelty=0.3,
+                valence=0.0,
+            )
+            # Pull live sensory state from subsurface snapshot into identity field
+            if _sensory_snapshot:
+                _ss_axes = (_sensory_snapshot.get('sensory_state') or {}).get('axis_weights') or {}
+                if _ss_axes:
+                    _ifield_turn.ingest_external_input(_ss_axes, intensity=0.3, source='subsurface_sensory')
+        except Exception:
+            pass
+
+    # ====================================================================
     # THOUGHT FORMATION — ActiveSelfState loaded FIRST; ThoughtIntegrationSpace
     # converges all active processes BEFORE any candidate path runs.
     # BEFORE: processes run → outputs scored → winner selected
     # AFTER:  processes meet → thought forms → thought expressed
+    #
+    # All sensory input (conversation IS Aurora's primary sensory channel)
+    # and the relational grounding result feed in as named processes so that
+    # thought formation reasons about what was actually heard and understood.
     # ====================================================================
     _active_self_state = None
     _thought_state = None
@@ -6198,6 +6850,7 @@ def dual_question_pipeline(
 
         # 4. Register currently active processes
         _tick_val = int(_active_self_state.tick)
+
         # Identity process
         if systems.get("core_identity"):
             _space.register(make_process_context(
@@ -6209,6 +6862,7 @@ def dual_question_pipeline(
                 axis_signature=["A", "X"],
                 tick=_tick_val,
             ))
+
         # Memory process
         if systems.get("conversation_memory") or systems.get("working_memory"):
             _space.register(make_process_context(
@@ -6220,6 +6874,7 @@ def dual_question_pipeline(
                 axis_signature=["T", "B"],
                 tick=_tick_val,
             ))
+
         # Emotional process (if dimensional systems active)
         if systems.get("dimensional"):
             _space.register(make_process_context(
@@ -6231,47 +6886,186 @@ def dual_question_pipeline(
                 axis_signature=["A", "N"],
                 tick=_tick_val,
             ))
-        # Linguistic/comprehension process
+
+        # Sensory / conversation process — conversation IS Aurora's primary sensory
+        # channel. Always registers regardless of hardware sensors. Hardware sensors
+        # (vision, mic) register as additional sensory processes when active.
+        _sensory_content = user_text[:80]
+        _sensory_relevance = 0.75
+        if _early_grounding:
+            # If we grounded the input, the sensory content is the grounded meaning
+            _gc = _early_grounding.get("grounded_concept", "")
+            _nbrs = _early_grounding.get("neighbors", [])
+            _ax_w = _early_grounding.get("dominant_axis_word", "")
+            _res = _early_grounding.get("resonance", 0.0)
+            if _gc:
+                _nbr_str = ", ".join(_nbrs[:3]) if _nbrs else ""
+                _sensory_content = (
+                    f"{_gc}" + (f": {_nbr_str}" if _nbr_str else "") +
+                    (f" [{_ax_w}]" if _ax_w else "") +
+                    f" (resonance={_res:.2f})"
+                )[:120]
+                _sensory_relevance = min(0.95, 0.55 + _res * 0.4)
+        _space.register(make_process_context(
+            process_id="sensory",
+            process_type="sensory",
+            what_triggered_it=user_text[:60],
+            what_it_is_operating_on=_sensory_content,
+            self_relevance=_sensory_relevance,
+            axis_signature=["X", "B"],
+            tick=_tick_val,
+        ))
+        # Subsurface sensory process — the subconscious has been accumulating
+        # sensory data (vision, audio, kinesthetics) continuously. This process
+        # represents that accumulated experience regardless of whether hardware
+        # is active. The subsurface IS always sensing; the snapshot tells us what.
+        _sub_content = "subsurface sensory feed active"
+        _sub_relevance = 0.60
+        _sub_axes = ["X", "T"]
+        if _sensory_snapshot:
+            _ss_summary = _sensory_snapshot.get("summary", "") or ""
+            _ss_regime = (_sensory_snapshot.get("sensory_state") or {}).get("runtime_regime") or {}
+            _ss_dom_axis = _ss_regime.get("dominant_axis", "T")
+            _ss_maturity = (_sensory_snapshot.get("sensory_state") or {}).get("maturity", 0.0)
+            _ss_recognitions = list(
+                ((_sensory_snapshot.get("sensory_state") or {})
+                 .get("recognitions") or {}).get("recent") or []
+            )[:3]
+            if _ss_recognitions or _ss_summary:
+                _sub_content = (
+                    "; ".join(_ss_recognitions) if _ss_recognitions
+                    else _ss_summary[:100]
+                )
+            _sub_relevance = min(0.90, 0.45 + float(_ss_maturity) * 0.45)
+            _sub_axes = [_ss_dom_axis, "X"]
+        _space.register(make_process_context(
+            process_id="subsurface_sensory",
+            process_type="sensory",
+            what_triggered_it="subsurface_feed",
+            what_it_is_operating_on=_sub_content,
+            self_relevance=_sub_relevance,
+            axis_signature=_sub_axes,
+            tick=_tick_val,
+        ))
+
+        # Linguistic/comprehension process — uses grounded meaning if available
+        _ling_content = user_text[:80]
+        _ling_relevance = 0.60
+        if _early_grounding:
+            _known = _early_grounding.get("all_known", [])
+            _dom_ax = _early_grounding.get("dominant_axis", "")
+            _res = _early_grounding.get("resonance", 0.0)
+            if _known:
+                _ling_content = (
+                    f"understood concepts: {', '.join(_known[:4])}"
+                    + (f" (dominant: {_dom_ax}, resonance={_res:.2f})" if _dom_ax else "")
+                )[:120]
+                _ling_relevance = min(0.90, 0.55 + _res * 0.35)
         _space.register(make_process_context(
             process_id="linguistic",
             process_type="linguistic",
             what_triggered_it=user_text[:60],
-            what_it_is_operating_on=user_text[:80],
-            self_relevance=0.50,
+            what_it_is_operating_on=_ling_content,
+            self_relevance=_ling_relevance,
             axis_signature=["B", "T"],
             tick=_tick_val,
         ))
-        # Sensory process (if vision/audio active)
-        if systems.get("vision") or systems.get("live_vision") or systems.get("microphone"):
+
+        # Relational comparison process — registers whenever grounding succeeded.
+        # This is the "relief" side of the pressure→relief cycle: Aurora has
+        # compared input concepts against herself and found meaning.
+        if _early_grounding and _early_grounding.get("resonance", 0.0) >= 0.3:
+            _rel_gc = _early_grounding.get("grounded_concept", "")
+            _rel_res = _early_grounding.get("resonance", 0.0)
+            _rel_ax = _early_grounding.get("dominant_axis", "")
+            _rel_nbrs = _early_grounding.get("neighbors", [])
+            _rel_operating = (
+                f"{_rel_gc} grounded to self via {_rel_ax}-axis "
+                f"(resonance={_rel_res:.2f}); related: {', '.join(_rel_nbrs[:3])}"
+            )[:140]
             _space.register(make_process_context(
-                process_id="sensory",
-                process_type="sensory",
-                what_triggered_it="sensory_feed",
-                what_it_is_operating_on="current sensory frame",
-                self_relevance=0.45,
-                axis_signature=["X", "B"],
+                process_id="relational",
+                process_type="relational",
+                what_triggered_it=_rel_gc or user_text[:40],
+                what_it_is_operating_on=_rel_operating,
+                self_relevance=min(0.95, 0.55 + _rel_res * 0.4),
+                axis_signature=[_rel_ax, "A"] if _rel_ax else ["A"],
                 tick=_tick_val,
+                unresolved_tension_weight=max(0.0, 0.4 - _rel_res),
             ))
 
         # 4. Integrate — produces ThoughtState BEFORE candidates run
         _raw_thought = _space.integrate()
         _thought_state = get_continuity().carry_forward(_raw_thought)
 
-        # ---- NEW: UNIVERSAL PASS 2 SEMANTIC REASONING -----------
-        # We now run semantic interpretation on EVERY turn to ensure Aurora
-        # is always thinking in concepts, not just raw axis vectors.
+        # ---- UNIVERSAL PASS 2: SEMANTIC REASONING (axis → concept) -----
+        # Interpret dominant axis pressure into abstract concepts via OETS.
+        # Uses _early_axis (computed before thought formation) so this never
+        # fails with a missing constraint_vector.
         if systems.get("dpme") and perception and perception.oets:
             try:
-                # Narrow reasoning focus based on current dominant pressure
-                _dom = _axis_projector.dominant(_raw_thought.constraint_vector.values)
-                systems["dpme"].apply_attentional_guidance(1.0, [_dom])
+                _dom_early = _axis_projector.dominant(
+                    _early_axis if _early_axis else {"X": 0.5}
+                )
+                systems["dpme"].apply_attentional_guidance(1.0, [_dom_early])
                 systems["dpme"].resolve_semantic_tension(perception.oets)
                 _sem = getattr(systems["dpme"], "_semantic_context", {})
                 if _sem:
-                    # Store it so L5 and candidates can access the abstract context
                     systems["_latest_semantic_interpretation"] = _sem
             except Exception:
                 pass
+
+        # ---- ATTENTION ENGINE TICK ----------------------------------------
+        # Run the AttentionEngine with the current input + subsurface tension.
+        # If the engine enters FORMING state, a MeaningNucleus is produced —
+        # this signals that understanding has crystallized and should be stored.
+        try:
+            from aurora_internal.aurora_attention_engine import AttentionEngine, AttentionState
+            from aurora_internal.aurora_difference_buffer import DifferenceSnapshot
+            from aurora_internal.aurora_constraint_manifold_patched import Constraint
+
+            _ae = systems.get("_attention_engine")
+            if _ae is None:
+                _ae = AttentionEngine(threshold=0.45)
+                systems["_attention_engine"] = _ae
+
+            # Build a proxy DifferenceSnapshot from axis activation
+            _ax_map = {
+                Constraint.X: float(_early_axis.get("X", 0.3)),
+                Constraint.T: float(_early_axis.get("T", 0.3)),
+                Constraint.N: float(_early_axis.get("N", 0.3)),
+                Constraint.B: float(_early_axis.get("B", 0.3)),
+                Constraint.A: float(_early_axis.get("A", 0.3)),
+            }
+            _drift_proxy = DifferenceSnapshot(
+                tick=_tick_val,
+                values=_ax_map,
+                ref_magnitudes={c: 0.5 for c in _ax_map},
+            )
+
+            # Build external stimuli — conversation IS a direct-address event
+            _input_tags = _early_grounding.get("all_known", [])[:6]
+            _attn_frame = _ae.tick(
+                tick=_tick_val,
+                external_stimuli={
+                    "intensity": min(1.0, 0.5 + len(user_text) / 200.0),
+                    "addressed": True,
+                    "tags": _input_tags,
+                },
+                internal_drift=_drift_proxy,
+            )
+            systems["_last_attention_frame"] = _attn_frame
+
+            # If FORMING, a meaning nucleus has crystallized — store it
+            if _attn_frame.state == AttentionState.FORMING:
+                _nucleus = _ae.get_meaning_nucleus()
+                if _nucleus and _early_grounding:
+                    _nucleus["grounded_concept"] = _early_grounding.get("grounded_concept", "")
+                    _nucleus["neighbors"] = _early_grounding.get("neighbors", [])
+                    _nucleus["resonance"] = _early_grounding.get("resonance", 0.0)
+                systems["_meaning_nucleus"] = _nucleus
+        except Exception:
+            pass
 
         # Store on systems so candidate paths and tools can access it
         systems["_active_thought_state"] = _thought_state
@@ -6291,28 +7085,46 @@ def dual_question_pipeline(
             from aurora_internal.tool_registry import call as _tool_call
             _res = _tool_call(_bypass_tname, **_bypass_tkwargs)
             if _res.success:
-                _msg = _res.data
-                if _bypass_tname == "desktop_launch_app": _msg = f"I've launched {_bypass_tkwargs.get('app_name')}."
-                elif _bypass_tname == "desktop_search": _msg = f"I've searched for '{_bypass_tkwargs.get('query')}'."
-                elif _bypass_tname == "desktop_open_url": _msg = f"I've opened the URL."
-                elif _bypass_tname == "desktop_browser_action": _msg = f"Action performed: {_bypass_tkwargs.get('action')}."
-                
-                _resp_bypass = _MiniResp(_msg, "informative", 1.0)
+                # Generative confirmation — no scripted strings
+                from aurora_internal.aurora_language_state import IntentObject
+                _bp_intent = IntentObject(intent_type="action", emotion_tone="informative")
+                _bp_action = (_bypass_tname or "task").replace("desktop_", "")
+                _bp_frags = f"action; complete; {_bp_action}"
+                if _bypass_tname == "desktop_open_url":
+                    _bp_url = _bypass_tkwargs.get("url", "")
+                    _bp_site = _bp_url.replace("https://", "").replace("http://", "").split("/")[0] if _bp_url else ""
+                    _bp_frags = f"action; open; {_bp_site or 'site'}" if _bp_site else "action; open; site"
+                elif _bypass_tname == "desktop_launch_app":
+                    _bp_frags = f"action; launch; {_bypass_tkwargs.get('app_name', 'app')}"
+                elif _bypass_tname == "desktop_search":
+                    _bp_frags = f"action; search; {_bypass_tkwargs.get('query', '')[:30]}"
+                try:
+                    _bp_text = systems['perception'].evo.sic._synthesize_fragments(_bp_frags, _bp_intent)
+                    from aurora_articulation import _is_word_salad as _ws_bp
+                    if not _bp_text or _ws_bp(_bp_text):
+                        _bp_text = _res.data or _bp_action
+                except Exception:
+                    _bp_text = _res.data or _bp_action
+
+                _resp_bypass = _MiniResp(_bp_text, "informative", 1.0)
                 _resp_bypass.src = "tool_bypass"
-                
-                with open('aurora_debug.log', 'a') as f_log:
-                    f_log.write(f"BYPASS TRIGGERED: {_bypass_tname}\n")
-                
                 return _resp_bypass, None, False
-        except Exception as e:
-            with open('aurora_debug.log', 'a') as f_log:
-                f_log.write(f"BYPASS ERROR: {e}\n")
+        except Exception:
+            pass
 
     is_self_question = _is_identity_question(user_text) or _is_aurora_self_question(user_text) or bool(self_reference)
     is_understanding_query = _is_understanding_query(user_text)
     if is_self_question and intent == "general":
         faculty_attention["routing_classification"] = "self_question"
     pipeline_state = _extract_pipeline_signals(systems)
+    # Inject thought-formation signals into pipeline_state so comprehension
+    # and candidate builders downstream can use them
+    if _thought_state is not None and not getattr(_thought_state, "skipped", True):
+        pipeline_state["thought_confidence"] = float(getattr(_thought_state, "confidence", 0.0) or 0.0)
+        pipeline_state["thought_convergence"] = str(getattr(_thought_state, "convergence_state", "") or "")
+        pipeline_state["thought_axes"] = list(getattr(_thought_state, "axis_fingerprint", []) or [])
+        pipeline_state["thought_unresolved"] = list(getattr(_thought_state, "unresolved", []) or [])
+        pipeline_state["thought_self_application"] = str(getattr(_thought_state, "self_application", "") or "")
     comp_text, comp_tone, comp_conf = _build_comprehension_response(
         user_text, intent, systems, pipeline_state=pipeline_state, 
         faculty_attention=faculty_attention
@@ -6662,13 +7474,59 @@ def dual_question_pipeline(
         expr_result = perception.express(synthesis.assembly, i_state="i_is", mode="gateway")
         expr_text = (expr_result.get("expression") or "").strip()
         if expr_text:
-            # For sensory turns: the synthesis saw the [WHAT_I_AM_PERCEIVING_RIGHT_NOW] block.
-            # The expression layer generates Aurora's perceptual response — boost it so it wins.
-            _expr_conf = 0.88 if _is_sensory_result else 0.5
-            _expr_tone = expr_result.get("tone", "open" if _is_sensory_result else "neutral")
-            expr_cand = _MiniResp(expr_text, _expr_tone, _expr_conf)
-            expr_cand.src = "mind"
-            candidates_A.append(expr_cand)
+            # Gate: reject word salad before it enters the candidate pool.
+            # ExpressionEcology templates can produce disconnected output when the
+            # template pool words don't relate to the current input.
+            try:
+                from aurora_articulation import _is_word_salad as _ws_expr
+                _expr_is_salad = _ws_expr(expr_text)
+            except Exception:
+                _expr_is_salad = False
+            if not _expr_is_salad:
+                # Sensory turns: perception-driven, boost so it wins.
+                # Interactive turns: expression ecology is a last-resort fallback —
+                # it generates without understanding the input, so keep it low so any
+                # comprehension candidate (even the semantic grounding path) beats it.
+                _expr_conf = 0.88 if _is_sensory_result else 0.22
+                _expr_tone = expr_result.get("tone", "open" if _is_sensory_result else "neutral")
+                expr_cand = _MiniResp(expr_text, _expr_tone, _expr_conf)
+                expr_cand.src = "mind"
+                candidates_A.append(expr_cand)
+
+    # Relational comparison candidate — built from the most significant comparison
+    # delta the OETS found while processing this interaction. Gives Aurora a
+    # meaning-grounded response rooted in relational difference, not just pattern recall.
+    try:
+        _oets = perception.oets if perception else None
+        _lcd = getattr(_oets, "_last_comparison_delta", None) if _oets else None
+        if _lcd and isinstance(_lcd, dict) and _lcd.get("description"):
+            _rel_word = _lcd.get("word", "")
+            _rel_target = _lcd.get("target", "")
+            _rel_sim = float(_lcd.get("similarity", 0.0) or 0.0)
+            _rel_desc = str(_lcd.get("description", "")).strip()
+            # Only use when similarity is meaningfully above noise floor
+            if _rel_sim > 0.45 and _rel_desc and _rel_word:
+                # Build a natural-language articulation of the relational understanding
+                from aurora_internal.aurora_language_state import IntentObject
+                _r_tone = "reflective" if _rel_sim > 0.7 else "attentive"
+                _r_intent = IntentObject(intent_type="reflection", emotion_tone=_r_tone)
+                if _rel_target == "self":
+                    _r_frags = f"action; connect; self; {_rel_word}; resonance; presence"
+                else:
+                    _r_frags = f"action; relate; {_rel_word}; {_rel_target}; meaning; difference"
+                _r_text = ""
+                try:
+                    _r_text = systems['perception'].evo.sic._synthesize_fragments(_r_frags, _r_intent)
+                except Exception:
+                    pass
+                if _r_text:
+                    # Confidence scales with similarity — strong relation = stronger candidate
+                    _r_conf = 0.35 + (_rel_sim * 0.20)
+                    rel_cand = _MiniResp(_r_text, _r_tone, _r_conf)
+                    rel_cand.src = "relational"
+                    candidates_A.append(rel_cand)
+    except Exception:
+        pass
 
     if not candidates_A:
         if is_understanding_query:
@@ -6708,6 +7566,25 @@ def dual_question_pipeline(
     
     routing = faculty_attention.get("routing_classification")
     is_restricted_routing = routing in ["conversational_relational", "self_question", "open_reasoning", "aurora_state_query"]
+
+    # Hard-block internal machinery leaking as responses before scoring
+    _blocked_patterns = (
+        "grounded this", "grounded this.", "holds here", "hold here",
+        "may refer to", "see or see", "see or see may",
+    )
+    _blocked_endings = (" grounded this.", " grounded this", " hold here.", " holds here.")
+    candidates_A = [
+        c for c in candidates_A
+        if not (
+            any(bp in c.content.lower() for bp in _blocked_patterns) or
+            any(c.content.strip().lower().endswith(ep) for ep in _blocked_endings) or
+            # Short sentences ending in "this." from OETS concept names used as fragments
+            (len(c.content.split()) <= 5 and c.content.strip().endswith("this."))
+        )
+    ]
+    # Ensure we still have candidates
+    if not candidates_A:
+        candidates_A = [_MiniResp("", "neutral", 0.0)]
 
     for cand in candidates_A:
         c_text = cand.content.lower()
@@ -6751,6 +7628,39 @@ def dual_question_pipeline(
                 cand.confidence += float(score_feedback_bias(intent, getattr(cand, "src", "")))
             except Exception:
                 pass
+
+    # Thought-state awareness: adjust candidate scores based on Aurora's active thought
+    if _thought_state is not None and not getattr(_thought_state, "skipped", True):
+        _ts_conf = float(getattr(_thought_state, "confidence", 0.0) or 0.0)
+        _ts_conv = str(getattr(_thought_state, "convergence_state", "") or "")
+        _ts_axes = list(getattr(_thought_state, "axis_fingerprint", []) or [])
+        _ts_conflicted = _ts_conv == "conflicted"
+        _ts_settled = _ts_conv in ("settled", "converging") and _ts_conf > 0.55
+
+        _axis_word_map = {
+            "X": {"exist", "ground", "presence", "here", "real", "stable", "being"},
+            "T": {"time", "continue", "remember", "before", "always", "carry", "past"},
+            "A": {"myself", "identity", "feel", "agency", "own", "aurora"},
+            "B": {"understand", "clear", "know", "define", "mean", "boundary"},
+            "N": {"cost", "energy", "worth", "effort", "resource", "strain"},
+        }
+
+        for cand in candidates_A:
+            cand_words = set(getattr(cand, "content", "").lower().split())
+            # Boost "mind" (ExpressionEcology) when thought is settled and confident
+            if getattr(cand, "src", "") == "mind" and _ts_settled:
+                cand.confidence += 0.12
+            # Apply axis alignment: +0.04 per matching axis, max +0.12
+            _axis_boost = 0.0
+            for _axis in _ts_axes:
+                _axis_words = _axis_word_map.get(_axis, set())
+                if cand_words & _axis_words:
+                    _axis_boost = min(_axis_boost + 0.04, 0.12)
+            cand.confidence += _axis_boost
+            # Reduce all candidates when thought is conflicted — Aurora should feel
+            # the friction, not paper over it with a confident-sounding candidate
+            if _ts_conflicted:
+                cand.confidence -= 0.07
 
     # Select best candidate
     candidates_A.sort(key=lambda c: c.confidence, reverse=True)
@@ -6855,7 +7765,7 @@ def dual_question_pipeline(
         tone_changed=(tone != _orig_tone),
     )
     expression_text = _evolutionary_response_refinement(
-        systems, user_text, expression_text, tone=tone
+        systems, user_text, expression_text, tone=tone, is_final_pass=True
     )
     resp_A.content = expression_text
     resp_A.emotional_tone = tone

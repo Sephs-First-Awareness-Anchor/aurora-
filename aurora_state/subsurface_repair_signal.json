@@ -1,6 +1,6 @@
 {
-  "updated_at": 1778354154.5500507,
-  "updated_at_str": "2026-05-09 15:15:54",
+  "updated_at": 1778890867.836812,
+  "updated_at_str": "2026-05-15 20:21:07",
   "phase": "enforce",
   "issue": "semantic_precision",
   "reason": "subsurface is moving from research into corrective pressure",
@@ -11,8 +11,8 @@
     "fail_summary": [
       {
         "dim": "context_carryover",
-        "fails": 785,
-        "avg_sev": 0.476
+        "fails": 810,
+        "avg_sev": 0.47
       },
       {
         "dim": "implied_intent_inference",
@@ -29,5 +29,5 @@
     "surface_reason": "",
     "surface_summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm."
   },
-  "poedex_excerpt": "Researcher lookup failed: HTTP Error 429: Too Many Requests"
+  "poedex_excerpt": "No external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant"
 }

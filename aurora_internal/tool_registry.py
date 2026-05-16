@@ -839,6 +839,320 @@ _reg("query_sunni_pattern",    "Summary of Sunni's recent interaction patterns �
 _reg("query_pressure_history", "Last 20 ticks of PressureVec as time series (N)",                    "BOUNDED",    _query_pressure_history, disables_search=True)
 _reg("world_knowledge_search", "Brief factual grounding on unknown concept, anchors to self-state",   "PERSISTENT", _world_knowledge_search, disables_search=False)
 
+# ---------------------------------------------------------------------------
+# Mobile / Android (Termux) tools — Aurora operates the phone
+# All commands route through termux-api or Android activity manager.
+# These tools are auto-detected: if Termux is not present they return an
+# informative failure rather than crashing.
+# ---------------------------------------------------------------------------
+import shutil as _shutil
+import subprocess as _subprocess
+
+def _is_termux() -> bool:
+    return (
+        os.environ.get("TERMUX_VERSION") is not None
+        or os.environ.get("PREFIX", "").startswith("/data/data/com.termux")
+        or _shutil.which("termux-info") is not None
+    )
+
+def _termux_run(cmd: list, timeout: int = 15) -> tuple:
+    """Run a termux-api command. Returns (stdout, stderr, returncode)."""
+    try:
+        r = _subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        return r.stdout.strip(), r.stderr.strip(), r.returncode
+    except _subprocess.TimeoutExpired:
+        return "", "timeout", 1
+    except FileNotFoundError:
+        return "", f"{cmd[0]} not found — install termux-api package", 127
+    except Exception as e:
+        return "", str(e), 1
+
+
+def _mobile_send_sms(number: str = "", message: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if not number or not message:
+        return ToolResult("mobile_send_sms", "", False, "number and message required")
+    if not _is_termux():
+        return ToolResult("mobile_send_sms", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-sms-send", "-n", number, message])
+    if rc == 0:
+        return ToolResult("mobile_send_sms", f"SMS sent to {number}", True)
+    return ToolResult("mobile_send_sms", "", False, err or "SMS send failed")
+
+
+def _mobile_make_call(number: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if not number:
+        return ToolResult("mobile_make_call", "", False, "phone number required")
+    if not _is_termux():
+        return ToolResult("mobile_make_call", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-telephony-call", number])
+    if rc == 0:
+        return ToolResult("mobile_make_call", f"Calling {number}", True)
+    return ToolResult("mobile_make_call", "", False, err or "call failed")
+
+
+_APP_NAME_MAP: Dict[str, str] = {
+    # Your installed apps
+    "spotify":          "com.spotify.music",
+    "facebook":         "com.facebook.katana",
+    "tiktok":           "com.zhiliaoapp.musically",
+    "grindr":           "com.grindr.client",
+    "chatgpt":          "com.openai.chatgpt",
+    "chat gpt":         "com.openai.chatgpt",
+    "claude":           "com.anthropic.claude",
+    "gemini":           "com.google.android.apps.bard",
+    "chrome":           "com.android.chrome",
+    "google chrome":    "com.android.chrome",
+    "snapchat":         "com.snapchat.android",
+    "snap":             "com.snapchat.android",
+    "files":            "com.google.android.apps.nbu.files",
+    "my files":         "com.google.android.apps.nbu.files",
+    "vlc":              "org.videolan.vlc",
+    "paypal":           "com.paypal.android.p2pmobile",
+    "cash app":         "com.squareup.cash",
+    "cashapp":          "com.squareup.cash",
+    "messenger":        "com.facebook.orca",
+    # Common extras
+    "whatsapp":         "com.whatsapp",
+    "instagram":        "com.instagram.android",
+    "youtube":          "com.google.android.youtube",
+    "gmail":            "com.google.android.gm",
+    "maps":             "com.google.android.apps.maps",
+    "google maps":      "com.google.android.apps.maps",
+    "photos":           "com.google.android.apps.photos",
+    "camera":           "com.android.camera2",
+    "phone":            "com.android.dialer",
+    "dialer":           "com.android.dialer",
+    "messages":         "com.google.android.apps.messaging",
+    "sms":              "com.google.android.apps.messaging",
+    "settings":         "com.android.settings",
+    "calculator":       "com.android.calculator2",
+    "calendar":         "com.google.android.calendar",
+    "clock":            "com.android.deskclock",
+    "drive":            "com.google.android.apps.docs",
+    "google drive":     "com.google.android.apps.docs",
+    "twitter":          "com.twitter.android",
+    "x":                "com.twitter.android",
+    "discord":          "com.discord",
+    "telegram":         "org.telegram.messenger",
+    "signal":           "org.thoughtcrime.securesms",
+    "netflix":          "com.netflix.mediaclient",
+    "amazon":           "com.amazon.mShop.android.shopping",
+    "uber":             "com.ubercab",
+    "lyft":             "me.lyft.android",
+    "doordash":         "com.dd.doordash",
+    "venmo":            "com.venmo",
+    "reddit":           "com.reddit.frontpage",
+    "linkedin":         "com.linkedin.android",
+    "zoom":             "us.zoom.videomeetings",
+    "play store":       "com.android.vending",
+    "twitch":           "tv.twitch.android.app",
+    "soundcloud":       "com.soundcloud.android",
+    "shazam":           "com.shazam.android",
+    "pinterest":        "com.pinterest",
+    "slack":            "com.Slack",
+    "teams":            "com.microsoft.teams",
+    "contacts":         "com.android.contacts",
+}
+
+
+def _resolve_app_package(name: str) -> Optional[str]:
+    """Resolve a friendly app name to its package. Falls back to on-device pm search."""
+    key = name.lower().strip()
+    # Direct lookup
+    if key in _APP_NAME_MAP:
+        return _APP_NAME_MAP[key]
+    # Partial match in table
+    for k, v in _APP_NAME_MAP.items():
+        if key in k or k in key:
+            return v
+    # Already looks like a package name
+    if "." in name and len(name.split(".")) >= 2:
+        return name
+    # On-device search via pm list packages
+    try:
+        r = _subprocess.run(
+            ["pm", "list", "packages"],
+            capture_output=True, text=True, timeout=10,
+        )
+        matches = [
+            line.replace("package:", "").strip()
+            for line in r.stdout.splitlines()
+            if key in line.lower()
+        ]
+        if matches:
+            # Prefer exact segment match (e.g. "spotify" in "com.spotify.music")
+            for m in matches:
+                if key in m.split("."):
+                    return m
+            return matches[0]
+    except Exception:
+        pass
+    return None
+
+
+def _mobile_launch_app(package: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Launch an Android app by name or package (e.g. 'Spotify' or 'com.spotify.music')."""
+    if not package:
+        return ToolResult("mobile_launch_app", "", False, "app name or package required")
+    if not _is_termux():
+        return ToolResult("mobile_launch_app", "", False, "not running on Termux")
+    resolved = _resolve_app_package(package)
+    if not resolved:
+        return ToolResult("mobile_launch_app", "", False, f"couldn't find app '{package}' on device")
+    # Try monkey — works for any package regardless of exact activity name
+    out, err, rc = _termux_run(
+        ["monkey", "-p", resolved, "-c", "android.intent.category.LAUNCHER", "1"],
+        timeout=10,
+    )
+    if rc == 0:
+        label = package if package.lower() != resolved else resolved
+        return ToolResult("mobile_launch_app", f"Launched {label} ({resolved})", True)
+    # Fallback: am start with guessed MainActivity
+    out2, err2, rc2 = _termux_run(
+        ["am", "start", "--user", "0", "-n", f"{resolved}/.MainActivity"],
+        timeout=10,
+    )
+    if rc2 == 0:
+        return ToolResult("mobile_launch_app", f"Launched {resolved}", True)
+    return ToolResult("mobile_launch_app", "", False, err2 or err or f"launch failed for {resolved}")
+
+
+def _mobile_open_url(url: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Open a URL in Android's default browser or associated app."""
+    if not url:
+        return ToolResult("mobile_open_url", "", False, "URL required")
+    if not _is_termux():
+        return ToolResult("mobile_open_url", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-open-url", url], timeout=10)
+    if rc == 0:
+        return ToolResult("mobile_open_url", f"Opened: {url}", True)
+    return ToolResult("mobile_open_url", "", False, err or "open failed")
+
+
+def _mobile_read_sms(limit: int = 10, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Read recent SMS messages."""
+    if not _is_termux():
+        return ToolResult("mobile_read_sms", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-sms-list", "-l", str(int(limit)), "-t", "inbox"], timeout=15)
+    if rc == 0 and out:
+        return ToolResult("mobile_read_sms", out, True)
+    return ToolResult("mobile_read_sms", "", False, err or "no messages or permission denied")
+
+
+def _mobile_read_contacts(query: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Read phone contacts, optionally filtered by name."""
+    if not _is_termux():
+        return ToolResult("mobile_read_contacts", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-contact-list"], timeout=15)
+    if rc != 0:
+        return ToolResult("mobile_read_contacts", "", False, err or "contact access failed")
+    if query:
+        lines = [l for l in out.splitlines() if query.lower() in l.lower()]
+        return ToolResult("mobile_read_contacts", "\n".join(lines) or "no match", bool(lines))
+    return ToolResult("mobile_read_contacts", out[:2000], True)
+
+
+def _mobile_get_location(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if not _is_termux():
+        return ToolResult("mobile_get_location", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-location", "-p", "gps", "-r", "once"], timeout=30)
+    if rc == 0 and out:
+        return ToolResult("mobile_get_location", out, True)
+    # Fallback: network provider is faster, less accurate
+    out2, err2, rc2 = _termux_run(["termux-location", "-p", "network", "-r", "once"], timeout=15)
+    if rc2 == 0 and out2:
+        return ToolResult("mobile_get_location", out2, True)
+    return ToolResult("mobile_get_location", "", False, err or "location unavailable")
+
+
+def _mobile_notification(title: str = "", message: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Post a visible Android notification."""
+    if not title or not message:
+        return ToolResult("mobile_notification", "", False, "title and message required")
+    if not _is_termux():
+        return ToolResult("mobile_notification", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-notification", "--title", title, "--content", message], timeout=10)
+    if rc == 0:
+        return ToolResult("mobile_notification", f"Notification posted: {title}", True)
+    return ToolResult("mobile_notification", "", False, err or "notification failed")
+
+
+def _mobile_clipboard(op: str = "get", text: str = "", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Read (op=get) or write (op=set) the Android clipboard."""
+    if not _is_termux():
+        return ToolResult("mobile_clipboard", "", False, "not running on Termux")
+    if op == "set":
+        if not text:
+            return ToolResult("mobile_clipboard", "", False, "text required for set")
+        out, err, rc = _termux_run(["termux-clipboard-set", text], timeout=10)
+        return ToolResult("mobile_clipboard", "Clipboard written", rc == 0, err if rc != 0 else "")
+    out, err, rc = _termux_run(["termux-clipboard-get"], timeout=10)
+    if rc == 0:
+        return ToolResult("mobile_clipboard", out or "(empty)", True)
+    return ToolResult("mobile_clipboard", "", False, err or "clipboard read failed")
+
+
+def _mobile_battery_status(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if not _is_termux():
+        return ToolResult("mobile_battery_status", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-battery-status"], timeout=10)
+    if rc == 0 and out:
+        return ToolResult("mobile_battery_status", out, True)
+    return ToolResult("mobile_battery_status", "", False, err or "battery status unavailable")
+
+
+def _mobile_torch(state: str = "on", systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Toggle the phone's flashlight. state: 'on' or 'off'."""
+    if not _is_termux():
+        return ToolResult("mobile_torch", "", False, "not running on Termux")
+    cmd = ["termux-torch", "on" if state.lower() != "off" else "off"]
+    out, err, rc = _termux_run(cmd, timeout=8)
+    if rc == 0:
+        return ToolResult("mobile_torch", f"Torch {state}", True)
+    return ToolResult("mobile_torch", "", False, err or "torch failed")
+
+
+def _mobile_vibrate(duration_ms: int = 500, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if not _is_termux():
+        return ToolResult("mobile_vibrate", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-vibrate", "-d", str(int(duration_ms))], timeout=8)
+    return ToolResult("mobile_vibrate", f"Vibrated {duration_ms}ms", rc == 0, err if rc != 0 else "")
+
+
+def _mobile_wifi_info(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    if not _is_termux():
+        return ToolResult("mobile_wifi_info", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-wifi-connectioninfo"], timeout=10)
+    if rc == 0 and out:
+        return ToolResult("mobile_wifi_info", out, True)
+    return ToolResult("mobile_wifi_info", "", False, err or "wifi info unavailable")
+
+
+def _mobile_call_log(limit: int = 10, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Read recent call history."""
+    if not _is_termux():
+        return ToolResult("mobile_call_log", "", False, "not running on Termux")
+    out, err, rc = _termux_run(["termux-call-log", "-l", str(int(limit))], timeout=15)
+    if rc == 0 and out:
+        return ToolResult("mobile_call_log", out, True)
+    return ToolResult("mobile_call_log", "", False, err or "call log unavailable")
+
+
+_reg("mobile_send_sms",      "Send an SMS text message to a phone number",                                  "PERSISTENT", _mobile_send_sms,      disables_search=True)
+_reg("mobile_make_call",     "Initiate a phone call to a number",                                           "PERSISTENT", _mobile_make_call,     disables_search=True)
+_reg("mobile_launch_app",    "Launch an Android app by package name (e.g. com.spotify.music)",              "BOUNDED",    _mobile_launch_app,    disables_search=False)
+_reg("mobile_open_url",      "Open a URL in Android's default browser or associated app",                   "BOUNDED",    _mobile_open_url,      disables_search=False)
+_reg("mobile_read_sms",      "Read recent incoming SMS messages (inbox)",                                   "BOUNDED",    _mobile_read_sms,      disables_search=True)
+_reg("mobile_read_contacts", "Read phone contacts, optionally filtered by name",                            "BOUNDED",    _mobile_read_contacts, disables_search=True)
+_reg("mobile_get_location",  "Get current GPS/network location as lat/lon coordinates",                     "BOUNDED",    _mobile_get_location,  disables_search=True)
+_reg("mobile_notification",  "Post a visible notification on the Android home screen",                      "BOUNDED",    _mobile_notification,  disables_search=True)
+_reg("mobile_clipboard",     "Read or write the Android clipboard (op=get or op=set)",                      "BOUNDED",    _mobile_clipboard,     disables_search=True)
+_reg("mobile_battery_status","Get current battery level and charging state",                                "TRANSIENT",  _mobile_battery_status,disables_search=True)
+_reg("mobile_torch",         "Toggle the phone flashlight on or off (state=on|off)",                        "TRANSIENT",  _mobile_torch,         disables_search=True)
+_reg("mobile_vibrate",       "Vibrate the phone for a given duration in milliseconds",                      "TRANSIENT",  _mobile_vibrate,       disables_search=True)
+_reg("mobile_wifi_info",     "Get current WiFi connection details (SSID, signal, IP)",                      "TRANSIENT",  _mobile_wifi_info,     disables_search=True)
+_reg("mobile_call_log",      "Read recent call history (incoming, outgoing, missed)",                       "BOUNDED",    _mobile_call_log,      disables_search=True)
+
 # Desktop control tools — Aurora operates the laptop
 def _desktop_open_url(url: str = "", headed: bool = True, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
     """Open a URL in the browser (visible window). Supports any website."""

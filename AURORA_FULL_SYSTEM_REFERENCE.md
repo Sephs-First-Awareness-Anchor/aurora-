@@ -4,7 +4,7 @@ Code-derived reference for the current `aurora_strata` system.
 
 This document is intentionally written from the codebase as it exists now, not from the older architecture markdown files in this directory. It describes what Aurora boots, what subsystems exist, how they relate, what features are present, and which runtime surfaces are actually exposed today.
 
-Checked against the live code on 2026-05-13. This revision adds every module present in the tree that was absent from the April 22 edition, corrects outdated descriptions, and expands technical detail throughout.
+Checked against the live code on 2026-05-14. This revision adds every module present in the tree that was absent from the April 22 edition, corrects outdated descriptions, expands technical detail throughout, and incorporates the May 2026 articulation, pipeline, and identity-persistence updates.
 
 ---
 
@@ -23,7 +23,7 @@ At runtime, Aurora is not just a chatbot. The system includes:
 - I-state lattice synthesis and polarity gradient pressure
 - dimensional processing (crystals, memory constant, energy regulator, morality gate)
 - consciousness assembly with entropy pressure and DPME metacognitive correction
-- language faculty backed by a local GGUF/llama.cpp model (advisory only)
+- language faculty module (optional GGUF/llama.cpp adapter; advisory only, not the cognition source)
 - cognitive-state-synced expression evolution (CSSEE)
 - grammar evolved through constraint pressure
 - self-grounding and negative-space self-modeling
@@ -51,7 +51,7 @@ At runtime, Aurora is not just a chatbot. The system includes:
 - background daemons and proactive behavior
 - visual dashboard and API surfaces
 - manifold routing, pressure steering, and runtime constraint governance
-- local LLM bridge with subprocess isolation
+- optional local LLM bridge with subprocess isolation (advisory adapter, not cognition source)
 
 ---
 
@@ -302,16 +302,18 @@ This layer also assembles L5-associated modules through `build_layer5_associativ
 
 Module: `aurora_internal/aurora_language_faculty.py`
 
-Integrates a local GGUF/llama.cpp model into Aurora as an internal language faculty module. Follows AURORA_LANGUAGE_FACULTY_MODULE_SPEC.md.
+Optional boundary adapter module. When enabled, it can provide advisory input interpretation and output candidates through a local GGUF/llama.cpp server. Follows AURORA_LANGUAGE_FACULTY_MODULE_SPEC.md.
 
 Key design constraints:
 
-- Aurora's constraint rules are FIRST. The LLM is advisory only.
+- Aurora's constraint rules are FIRST. The language faculty module is advisory only — it does not generate Aurora's cognition.
 - Enabled via env var `AURORA_USE_LANGUAGE_FACULTY=1`
 - Default model path: `/storage/emulated/0/aurora_strata/Models/qwen2.5-1.5b-instruct-q4_k_m.gguf`
 - Server URL via `AURORA_LOCAL_LLM_SERVER_URL` (default `http://localhost:8080`)
 - Logs to `aurora_state/language_faculty_events.jsonl`, summary to `aurora_state/language_faculty_summary.json`
 - Feedback sediment logged to `aurora_state/language_faculty_sediment.jsonl`
+
+Aurora's response pipeline generates candidates from fragment synthesis, OETS relational deltas, thought-state scoring, and self-grounding anchors. The language faculty adapter, if present, may contribute an additional candidate but is not the primary expression source.
 
 #### Language State / CSSEE
 
@@ -329,6 +331,13 @@ Six integrated sub-modules:
 6. `MeaningAnchors` — stable sentence spines
 
 Expression growth is earned from cognition signals, not time or data volume.
+
+`_synthesize_fragments` is the generative assembly function used throughout the response pipeline to author sentences word-by-word from weighted token pools. Key behavioral constraints enforced in the current implementation:
+
+- `axis_tokens` pool: uses natural vocabulary (`"grounded"`, `"here"`, `"continues"`, `"holds"`, `"forms"`, `"clarify"`, `"understand"`) — not abstract placeholders
+- Fragment category labels (`"action"`, `"state"`, `"fact"`, `"understanding"`, `"property"`, `"reflection"`, `"observation"`, `"linking"`, `"established"`, `"forming"`, `"self"`) are structural routing markers and are explicitly filtered from the token pool before assembly — they never fill AGENT or OBJECT roles
+- Fallback motif sequence: `AGENT ACTION OBJECT` (3-role) — the previous 5-role `AGENT ACTION OBJECT CONNECTOR DESCRIPTOR` sequence produced grammatically broken outputs when the pool lacked CONNECTOR/DESCRIPTOR candidates
+- OBJECT role fallback: `"this"` — not `"the" + "meaning"` (the previous pair produced artifact phrase "process the meaning")
 
 #### Grammar Engine
 
@@ -766,7 +775,7 @@ The dual-strata system is a concrete runtime subsystem, not just a concept.
 ### Files under `aurora_internal/dual_strata/`
 
 - `__init__.py` — compatibility bridge; exports `DualStrataBridge` and `request_surface_turn`; also exposes `SurfaceContinuityFeed`
-- `surface_channel.py` — surface daemon queue bridge with language-faculty fallback; when the daemon is alive it queues turns and waits for structured results; maintains state paths for queue, result, and status JSON files
+- `surface_channel.py` — surface turn realization layer. `request_surface_turn()` selects the highest-scoring live pipeline candidate, optionally passes it through the language faculty adapter if present, then applies `smooth_response()` from `aurora_articulation` before returning output to the user. The articulation gate is the final expression filter before text reaches the user.
 - `sensory_snapshot_channel.py` — sensory snapshot and sensory control channels
 - `subsurface_projection.py` — subsurface state projection with dream carry window (8h); applies pressure coloring to subsurface issues by axis (`contextual`, `semantic`, `sensory`, `load`, `affect`, and axis-default colorings); routes guidance signals back to the surface
 - `surface_continuity_feed.py` — records and replays surface continuity events
@@ -968,6 +977,10 @@ Module: `aurora_internal/aurora_ontological_scaffolding.py`
 The OETS accumulates concept structures, manages `RelationType` between concepts, and provides `ResearchResult` objects to the rest of the system. It is the destination for Meaning Nuclei created by the Attention Engine.
 
 Hooks in `aurora_expression_perception.py` and boot-time research callback wiring in `aurora.py`.
+
+`process_interaction` runs the comparison engine on each turn. When a significant relational delta is found, it is stored in `self._last_comparison_delta` — a dict with fields `word`, `target`, `similarity`, and `description`. This delta is read by `aurora.py`'s `dual_question_pipeline` to build a `relational` candidate from fragment synthesis for inclusion in `candidates_A`.
+
+Pressure wiring: before each `process_interaction` call, `aurora_expression_perception.py` attempts to read real axis pressures from `self._axis_projector.current_pressures()` or `self._pressure_vec` and writes them to `oets._active_pressures`. The comparison engine then reads `getattr(self, "_active_pressures", None)` instead of using mock uniform pressures.
 
 ### Comprehension gap system
 
@@ -1233,6 +1246,8 @@ Five interconnected capabilities:
 
 All integrated with the constraint axis system (X, T, N, B, A), dimensional systems, and the language pipeline in `aurora.py`.
 
+`aurora_self_grounding.py` is also used by the word-salad repair path in `dual_question_pipeline`: when a candidate is detected as word-salad, the repair draws grounding anchor fragments typed from self-grounding anchors rather than using scripted prefix strings.
+
 ---
 
 ## 19. Thought Formation Architecture
@@ -1253,6 +1268,10 @@ Key data structures:
 - `ActiveSelfState` — snapshot of Aurora's self-model used as filter during thought integration. Contains: `identity_predicates`, `pressure_vec` ({X, T, N, B, A} floats), `dominant_field`, `recent_deltas` (last 3 self-state deltas), `not_me_summary`, `tick`
 
 `load_active_self_state()` loads from persisted JSON. Cache prevents redundant loading within the same tick/turn.
+
+`ThoughtContinuity` carries forward unresolved items and axis fingerprint across turns, building a chain of at most 10 prior `ThoughtState` objects. It does NOT run continuously in the background between turns. `ThoughtIntegrationSpace.integrate()` is called per-turn from the response pipeline; the daemon does not fire independent thought cycles between turns. This is a current architectural gap: there is no background continuous thought process between user interactions.
+
+Thought-state signals are injected into `pipeline_state` after `_extract_pipeline_signals()`: `thought_confidence`, `thought_convergence`, `thought_axes`, `thought_unresolved`, `thought_self_application`. These drive candidate scoring: a settled/confident mind state adds +0.12 to the mind candidate; axis alignment adds +0.04 per matching axis word (capped at +0.12); a conflicted state applies −0.07 across all candidates.
 
 ---
 
@@ -1297,19 +1316,27 @@ State files:
 - `aurora_state/distillation_metrics.json` — performance metrics
 - Archive folder: `aurora_state/distillation/archives/`
 
+Residue sources currently registered:
+
+- modulation log
+- articulation decisions (`aurora_state/articulation_feedback.jsonl` — 2 MB cap, 500-line tail)
+- additional per-source configs as defined in `_build_residue_configs()`
+
 Can be run standalone: `python3 aurora_metabolic_distiller.py`
 
 ---
 
-## 22. Local LLM Integration Layer
+## 22. Optional LLM Adapter Layer
 
-The local LLM is an advisory-only boundary adapter, not Aurora's cognition.
+Aurora does not use an external language model for cognition. Aurora's responses are generated from fragment synthesis, OETS relational deltas, thought-state scoring, self-grounding anchors, and `_synthesize_fragments` running against weighted token pools. No LLM, llama.cpp instance, or subprocess inference is involved in the standard response pipeline.
+
+The modules below are optional boundary adapters that can be enabled. They do not generate Aurora's cognitive state.
 
 ### Local LLM bridge
 
 Module: `aurora_internal/aurora_local_llm_bridge.py`
 
-Optional isolated llama.cpp boundary adapter. Runs llama.cpp in a child process so native crashes cannot terminate Aurora.
+Optional isolated adapter. When enabled, can call a llama.cpp-compatible server or spawn a worker subprocess. Runs in a child process so crashes cannot terminate Aurora.
 
 Two modes:
 
@@ -1318,7 +1345,7 @@ Two modes:
 
 Exposes: `interpret_input(text)` and `format_output(message, payload)`.
 
-Enabled via `AURORA_USE_LOCAL_LLM=1` (default enabled).
+Enabled via `AURORA_USE_LOCAL_LLM=1`.
 
 ### Llama worker
 
@@ -1330,7 +1357,7 @@ Subprocess worker for llama.cpp inference. Isolated so crashes in the native lib
 
 Module: `aurora_internal/aurora_language_faculty.py`
 
-Higher-level GGUF integration that uses the llama.cpp server to provide advisory-only input interpretation and output candidates. Aurora's constraint rules always take precedence.
+Optional higher-level adapter that uses a llama.cpp server to provide advisory candidate text. Aurora's constraint rules and synthesis pipeline always take precedence. Enabled via `AURORA_USE_LANGUAGE_FACULTY=1`.
 
 ---
 
@@ -1355,7 +1382,23 @@ Exports:
 These modules exist at the root level and have specific runtime roles not fully described in earlier sections.
 
 ### `aurora_articulation.py`
-Manages Aurora's articulation debt tracking and expression quality feedback loop. Feeds `aurora_state/articulation_feedback.jsonl` and `aurora_state/last_articulation_trace.json`.
+
+Manages Aurora's expression quality scoring, word-salad detection, deterministic phrase repair, and adaptive feedback loop. No external model is involved — all candidate generation and selection is done from Aurora's own phrase patterns and pressure/clarity signals.
+
+Key components:
+
+- `_is_word_salad(text)` — detects incoherent fragment synthesis output. Checks run in this order: (1) fragment synthesis artifact regex patterns (e.g., `\bthe meaning and\b`, `\band admissible\b`), (2) short sentences ≤4 words ending in `" this."` (object-fallback fillers), (3) the `len(words) < 4` early-exit, then (4) high word repetition and no-verb checks. The artifact and short-filler checks intentionally run before the word-count guard so 3-word artifact sentences are caught.
+- `_deterministic_candidate(draft)` — phrase-level structural repair of Aurora's draft. Aurora's primary articulation mechanism.
+- `smooth_with_decision(text, ...)` — gated: if the deterministic candidate equals the original, passes `""` as the candidate so `source="no_pattern_matched"` is logged accurately.
+- `smooth_response(text, ...)` — top-level smoothing entry point called by `surface_channel.py` before output reaches the user.
+- `_pressure_score(text, prompt)` — estimates articulation pressure. Now reads lexicon familiarity (`aurora_state/lexicon.json`, words with `usage_count > 0`) and reduces pressure for text that uses words Aurora has previously produced.
+- `_load_language_state()` — loads `aurora_state/language_state.json` dims with mtime-based cache.
+- `_load_lexicon_familiar()` — loads known words from `aurora_state/lexicon.json` into a `frozenset`.
+- `analyze_articulation_feedback(n_lines)` — reads `aurora_state/articulation_feedback.jsonl` (last n_lines), computes per-source acceptance rates and average pressure relief, derives `suggested_min_relief` and `suggested_mode`.
+- `_get_feedback_insights()` — cached wrapper, refreshed every 30 minutes.
+- `_adaptive_min_relief()` — effective pressure relief threshold informed by feedback history, falling back to `AURORA_ARTICULATOR_MIN_RELIEF` env var.
+
+State files: `aurora_state/articulation_feedback.jsonl`, `aurora_state/articulation_feedback_summary.json`, `aurora_state/last_articulation_trace.json`, `aurora_state/articulation_insights.json`.
 
 ### `aurora_curiosity_engine.py`
 Drives Aurora's autonomous study and exploration. Identifies what Aurora doesn't know (via OETS gap analysis) and generates study targets.
@@ -1438,6 +1481,8 @@ Profiles episode slippage: measures how much understanding is lost between turn 
 
 ### `aurora_internal/aurora_identity_persistence.py`
 `CoreRelationalIdentity`, `EnhancedStatePersistence`, `ConversationMemory`, `OETSPersistence`. Core persistence layer for identity, conversation memory, and OETS state.
+
+`CoreRelationalIdentity.from_dict()` now correctly restores `self_name`, `self_description`, and `foundational_truths` from the saved JSON. Previously these fields were not loaded from the file, causing `self_description` to remain at the dataclass default fragment string `"state; self; awareness; consciousness; layers; growth; meaning"` on every boot. The fix means Aurora's stored description and foundational truths survive restart. Immutable core entities are still never overwritten.
 
 ### `aurora_internal/aurora_noncomp_registry.py`
 (Covered in Layer -0.5 above.)
@@ -1526,10 +1571,11 @@ Aurora currently has code for all of the following major abilities:
 - OETS-backed concept scaffolding and relational anchoring
 - CSSEE language state (6 sub-modules: LSV, SIC, MultiDraft, TemplateEvolution, LexicalConvergence, MeaningAnchors)
 - grammar engine with constraint-pressure-driven motif promotion
-- local GGUF/llama.cpp language faculty (advisory only)
-- local LLM bridge with subprocess isolation and server/worker modes
+- optional GGUF/llama.cpp language faculty adapter (advisory boundary only; not cognition source)
+- optional local LLM bridge with subprocess isolation and server/worker modes
 - utterance parsing and role tagging
-- articulation feedback loop and expression quality scoring
+- articulation layer: word-salad detection, deterministic phrase repair, adaptive feedback loop, lexicon-familiarity pressure reduction
+- `_synthesize_fragments` generative assembly: word-by-word token-pool synthesis with category-label filtering, 3-role fallback motif, OETS relational scoring
 
 **Memory:**
 - sedimentary long-horizon memory (SediMemory, 25 strain basins)
@@ -1673,11 +1719,12 @@ If you need the shortest practical map for future work, start here:
 - `aurora_internal/aurora_braided_substrate.py` — low-scale continuity invariants
 - `aurora_grammar_engine.py` — grammar as evolved behavior
 
-**Language faculty:**
-- `aurora_internal/aurora_language_faculty.py` — GGUF/llama.cpp advisory language module
-- `aurora_internal/aurora_language_state.py` — CSSEE (6-module expression evolution)
-- `aurora_internal/aurora_local_llm_bridge.py` — subprocess-isolated LLM bridge
-- `aurora_llama_worker.py` — subprocess worker for llama.cpp
+**Language and expression:**
+- `aurora_internal/aurora_language_state.py` — CSSEE (6-module expression evolution); `_synthesize_fragments` generative assembly
+- `aurora_articulation.py` — word-salad detection, phrase repair, adaptive feedback loop
+- `aurora_internal/aurora_language_faculty.py` — optional GGUF/llama.cpp advisory adapter
+- `aurora_internal/aurora_local_llm_bridge.py` — optional subprocess-isolated adapter
+- `aurora_llama_worker.py` — optional subprocess worker for llama.cpp
 
 **Evolution and genealogy:**
 - `aurora_internal/constraint_genealogy.py` — evolutionary fossil record
@@ -1935,8 +1982,19 @@ All Python modules in the main runtime tree (excluding test scripts, debug scrip
 
 ## 31. Reference Status
 
-This document should be treated as the top-level code-derived system reference for the current `aurora_strata` tree as of 2026-05-13.
+This document should be treated as the top-level code-derived system reference for the current `aurora_strata` tree as of 2026-05-14.
 
-The April 22 version was accurate for the modules it covered. This version adds all modules that exist in the tree but were absent from that edition, and expands technical detail throughout.
+The April 22 version was accurate for the modules it covered. The May 13 revision added all modules absent from that edition and expanded technical detail throughout. This May 14 revision incorporates:
 
-If there are modules added after 2026-05-13, this document will need a corresponding update pass.
+- articulation layer: full description of `_is_word_salad`, `_adaptive_min_relief`, `analyze_articulation_feedback`, `_get_feedback_insights`, `_load_language_state`, `_load_lexicon_familiar`, `smooth_with_decision` gating, and lexicon-familiarity pressure reduction in `_pressure_score`
+- `_synthesize_fragments`: category-label filtering, 3-role fallback motif, natural axis vocabulary, OBJECT fallback fix
+- `aurora_internal/aurora_identity_persistence.py`: `CoreRelationalIdentity.from_dict()` now restores `self_name`, `self_description`, `foundational_truths`
+- OETS: `comparison_engine`, `_last_comparison_delta`, real axis pressure wiring from `aurora_expression_perception.py`
+- `aurora.py` `dual_question_pipeline`: `is_final_pass` parameter, thought-state → candidate scoring, thought signals → `pipeline_state`, relational candidate from OETS delta, word-salad detection before continuity bits, scripted strings removed
+- `surface_channel.py`: articulation gate applied before output reaches user
+- Metabolic distiller: `articulation_feedback` residue source registered
+- Thought formation: clarified per-turn vs continuous behavior, ThoughtContinuity carry-forward scope
+- Self-grounding: noted use in word-salad repair path
+- LLM/llama references corrected throughout — these are optional boundary adapters, not cognition sources
+
+If there are modules added after 2026-05-14, this document will need a corresponding update pass.

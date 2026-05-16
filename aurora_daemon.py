@@ -5759,6 +5759,7 @@ def run(systems: Dict[str, Any]) -> None:
     _audio_noise_streak: int = 0          # consecutive noise-only ambient samples
     next_away_social = now + _away_mode_interval()  # first away session fires after one interval
     next_latent_synth = now + 60      # latent synthesis — cheap JSON pass, runs independently of assimilation
+    next_thought_tick = now + 30      # ambient thought formation — ThoughtIntegrationSpace between turns
     governor = RuntimeConstraintGovernor(str(_STATE_DIR))
     if hasattr(governor, 'set_field_map') and systems.get('field_map') is not None:
         governor.set_field_map(systems['field_map'])
@@ -6454,6 +6455,88 @@ def run(systems: Dict[str, Any]) -> None:
                 next_save = now + SAVE_INTERVAL
             else:
                 next_save = now + max(60, int(decision.get("retry_in", 300) or 300))
+
+        # ---- AMBIENT THOUGHT TICK — ThoughtIntegrationSpace runs between user turns ----
+        # Keeps ThoughtContinuity.last_thought current so experiential responses
+        # ("what are you thinking?") draw from real internal state, not stale data.
+        if now >= next_thought_tick:
+            try:
+                from aurora_thought_formation import (
+                    ActiveSelfState as _ASS,
+                    ThoughtIntegrationSpace as _TIS,
+                    make_process_context as _mpc,
+                    get_continuity as _gc,
+                )
+                _self_st = _ASS.load(systems)
+                _tspace = _TIS(_self_st)
+
+                # Register dominant axis process
+                _dim_t = systems.get("dimensional")
+                _pv_t: Dict[str, float] = {}
+                if _dim_t and hasattr(_dim_t, "_current_pressure_vec"):
+                    try:
+                        _pvec_t = _dim_t._current_pressure_vec()
+                        if _pvec_t:
+                            _pv_t = {
+                                "X": float(getattr(_pvec_t, "X", 0.5)),
+                                "T": float(getattr(_pvec_t, "T", 0.5)),
+                                "N": float(getattr(_pvec_t, "N", 0.5)),
+                                "B": float(getattr(_pvec_t, "B", 0.5)),
+                                "A": float(getattr(_pvec_t, "A", 0.5)),
+                            }
+                    except Exception:
+                        pass
+                if _pv_t:
+                    _dom_ax_t = max(_pv_t, key=lambda k: _pv_t[k])
+                    _tspace.register(_mpc(
+                        process_id="ambient_axis",
+                        process_type="constraint",
+                        what_triggered_it="ambient_daemon_tick",
+                        what_it_is_operating_on=f"dominant axis {_dom_ax_t} pressure={_pv_t[_dom_ax_t]:.2f}",
+                        self_relevance=min(0.8, _pv_t[_dom_ax_t]),
+                        axis_signature=[_dom_ax_t],
+                        current_output_state=_pv_t,
+                    ))
+
+                # Register working memory topic if active
+                _wm_t = systems.get("working_memory")
+                _topic_t = str(getattr(_wm_t, "current_topic", "") or "") if _wm_t else ""
+                if _topic_t:
+                    _tspace.register(_mpc(
+                        process_id="ambient_memory",
+                        process_type="memory",
+                        what_triggered_it="ambient_daemon_tick",
+                        what_it_is_operating_on=_topic_t,
+                        self_relevance=0.4,
+                        axis_signature=["T", "B"],
+                    ))
+
+                # Register lattice state if heat is notable
+                _lat_t = systems.get("lattice")
+                if _lat_t and hasattr(_lat_t, "heat_status"):
+                    try:
+                        _hs = _lat_t.heat_status()
+                        _hlv = str(_hs.get("level", "") or "")
+                        if _hlv in ("HIGH", "CRITICAL"):
+                            _tspace.register(_mpc(
+                                process_id="ambient_lattice_heat",
+                                process_type="emotional",
+                                what_triggered_it="ambient_daemon_tick",
+                                what_it_is_operating_on=f"lattice heat {_hlv}",
+                                self_relevance=0.6,
+                                axis_signature=["N", "X"],
+                            ))
+                    except Exception:
+                        pass
+
+                # Integrate and carry forward — even single-process thoughts advance continuity
+                if _tspace.active_processes:
+                    _raw_t = _tspace.integrate()
+                    _settled_t = _gc().carry_forward(_raw_t)
+                    systems["_active_thought_state"] = _settled_t
+            except Exception:
+                pass
+            next_thought_tick = now + 30
 
         # ---- REACTIVITY: scan for significant internal state changes ----
         try:

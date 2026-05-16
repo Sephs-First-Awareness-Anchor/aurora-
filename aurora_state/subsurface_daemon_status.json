@@ -1,6 +1,6 @@
 {
   "heat": "COOL",
-  "updated": "15:20:13",
+  "updated": "20:52:09",
   "runtime_profile": "subsurface",
   "stratum_role": "subsurface",
   "browser_today": "disabled",
@@ -18,7 +18,7 @@
     "B": 1.0,
     "A": 1.0
   },
-  "dilation_factor": 9.358,
+  "dilation_factor": 3.422,
   "dilation_state": "optimal",
   "telemetry_fails": [],
   "telemetry_weakest": "?",
@@ -27,8 +27,8 @@
   "fail_summary": [
     {
       "dim": "context_carryover",
-      "fails": 786,
-      "avg_sev": 0.476
+      "fails": 811,
+      "avg_sev": 0.469
     },
     {
       "dim": "implied_intent_inference",
@@ -76,30 +76,30 @@
   },
   "runtime_host": {
     "cpu_count": 4,
-    "load_1m": 0.9395,
-    "load_5m": 0.9292,
-    "load_ratio": 0.2349,
-    "mem_available_mb": 742.3,
-    "mem_pressure": 0.8057,
-    "disk_free_ratio": 0.0613,
-    "process_rss_mb": 149.63
+    "load_1m": 1.6914,
+    "load_5m": 1.3462,
+    "load_ratio": 0.4229,
+    "mem_available_mb": 1713.32,
+    "mem_pressure": 0.5516,
+    "disk_free_ratio": 0.1712,
+    "process_rss_mb": 321.23
   },
   "runtime_recent_blocked": [],
-  "runtime_last_heavy_run_age": 108.7,
-  "generation": 65,
+  "runtime_last_heavy_run_age": 264.3,
+  "generation": 5,
   "sensory_mic_active": true,
   "sensory_camera_active": true,
-  "surface_snapshot_at": 1778354409.0669653,
+  "surface_snapshot_at": 1778892725.831519,
   "surface_snapshot_trigger": "interval",
   "surface_snapshot_flagged": false,
   "surface_snapshot_reason": "",
   "surface_snapshot_summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
-  "surface_snapshot_age_s": 4.88,
+  "surface_snapshot_age_s": 4.16,
   "subsurface_repair_phase": "enforce",
   "subsurface_repair_issue": "semantic_precision",
   "subsurface_repair_reason": "subsurface is moving from research into corrective pressure",
   "subsurface_repair_intensity": 0.58,
-  "subsurface_repair_excerpt": "Researcher lookup failed: HTTP Error 429: Too Many Requests",
+  "subsurface_repair_excerpt": "No external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
   "subsurface_sensory_maturity": 0.0,
   "subsurface_sensory_semantic_nodes": 0,
   "subsurface_sensory_summary": "",

@@ -106,30 +106,45 @@ def _get_language_faculty(systems: Dict[str, Any]) -> Optional[Any]:
 
 def request_surface_turn(*args: Any, **kwargs: Any) -> str:
     """
-    Realize the highest-scoring live pipeline candidate through Language Faculty.
+    Realize the highest-scoring live pipeline candidate through Language Faculty,
+    then apply Aurora's articulation layer before returning to the user.
     """
     prompt = _extract_prompt(*args, **kwargs)
     systems = kwargs.get("systems") or kwargs.get("runtime") or {}
 
+    result = ""
+    tone = "attentive"
+
     if isinstance(systems, dict):
         faculty = _get_language_faculty(systems)
         candidate = _select_best_candidate(systems, kwargs, prompt)
+        tone = str(candidate.get("tone") or "attentive")
         draft = str(candidate.get("draft") or "").strip()
         if faculty is not None and hasattr(faculty, "realize_output"):
             try:
                 realized = faculty.realize_output(candidate, {
                     "source": kwargs.get("source", "surface_channel"),
                     "session_id": kwargs.get("session_id"),
-                    "tone": candidate.get("tone", "attentive"),
+                    "tone": tone,
                     "routing_classification": kwargs.get("routing_classification", ""),
                 })
                 if isinstance(realized, dict):
                     text = str(realized.get("candidate_text") or "").strip()
                     if text:
-                        return text
+                        result = text
             except Exception:
                 pass
-        if draft:
-            return draft
+        if not result and draft:
+            result = draft
 
-    return prompt if prompt else "Surface channel active."
+    if not result:
+        result = prompt if prompt else "Surface channel active."
+
+    # Apply Aurora's articulation layer before output reaches the user
+    try:
+        from aurora_articulation import smooth_response
+        result = smooth_response(result, prompt=prompt, tone=tone)
+    except Exception:
+        pass
+
+    return result

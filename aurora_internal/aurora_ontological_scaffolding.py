@@ -1920,21 +1920,25 @@ class OntologicalScaffoldingEngine:
         # Enhancement: Relational Comparison Loop (Optimized for speed)
         if self.comparison_engine:
             # Sort words by depth and take only the top 3 to prevent processing bottlenecks
-            sorted_words = sorted(content_words, 
-                                  key=lambda w: self.web.nodes[w].ontological_depth, 
+            sorted_words = sorted(content_words,
+                                  key=lambda w: self.web.nodes[w].ontological_depth,
                                   reverse=True)[:3]
+            _best_delta = None
+            _best_word = None
+            _best_target = None
             for word in sorted_words:
                 # 1. Select the best target (context word or 'self')
                 target = self.comparison_engine.select_best_comparison_target(word, content_words)
-                
-                # 2. Perform comparison
+
+                # 2. Perform comparison with real axis pressures when available
                 if target == "self":
-                    # For now, we mock the active pressures (will be wired to L3 in runtime)
-                    mock_pressures = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5}
-                    delta = self.comparison_engine.ground_to_self(word, mock_pressures)
+                    active_pressures = getattr(self, "_active_pressures", None)
+                    if not active_pressures:
+                        active_pressures = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5}
+                    delta = self.comparison_engine.ground_to_self(word, active_pressures)
                 else:
                     delta = self.comparison_engine.compare(word, target)
-                
+
                 # 3. If significant relation found, record it
                 if delta.similarity > 0.4:
                     self.web.add_relation(
@@ -1943,6 +1947,23 @@ class OntologicalScaffoldingEngine:
                         confidence=0.5,
                         knowledge_source="relational_comparison"
                     )
+                    # Track the most significant delta so the pipeline can use it
+                    if _best_delta is None or delta.similarity > _best_delta.similarity:
+                        _best_delta = delta
+                        _best_word = word
+                        _best_target = target
+            # Store the most significant comparison result for the pipeline to consume
+            if _best_delta is not None:
+                self._last_comparison_delta = {
+                    "word": _best_word,
+                    "target": _best_target,
+                    "similarity": _best_delta.similarity,
+                    "pressure_delta": _best_delta.pressure_delta,
+                    "relation_type": str(_best_delta.relational_type),
+                    "description": _best_delta.description,
+                }
+            else:
+                self._last_comparison_delta = None
 
     # ================================================================
     # RESEARCH BRIDGE — Connect to internet

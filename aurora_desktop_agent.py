@@ -187,15 +187,19 @@ class DesktopAgent:
         return self._start_browser(headed)
 
     def open_url(self, url: str, headed: bool = True, timeout_ms: int = 15000) -> Dict[str, Any]:
-        with _LOCK:
-            # Try Playwright first for interactive browser control
-            if self._ensure(headed):
+        # For pure URL navigation, always use xdg-open so the URL opens in the
+        # user's visible default browser. Playwright's headed launch is unreliable
+        # from a daemon process (display env not always inherited), and its headless
+        # fallback opens an invisible Chrome — the user sees nothing.
+        # Playwright is only useful here if an existing interactive session is already
+        # open (i.e. prior click/type actions started it), in which case navigate within it.
+        if self._page and not self._page.is_closed():
+            with _LOCK:
                 try:
                     self._page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
                     title = self._page.title()
                     return {"ok": True, "url": self._page.url, "title": title}
                 except Exception:
-                    # Playwright nav failed — reset so next call retries
                     try:
                         self._browser.close()
                     except Exception:
@@ -203,8 +207,7 @@ class DesktopAgent:
                     self._page = None
                     self._browser = None
                     self._started = False
-            # Playwright unavailable or failed — use xdg-open (always works from daemon)
-            return _xdg_open(url)
+        return _xdg_open(url)
 
     def navigate(self, url: str, timeout_ms: int = 15000) -> Dict[str, Any]:
         return self.open_url(url, timeout_ms=timeout_ms)
@@ -337,11 +340,31 @@ def launch_application(app_name: str) -> Dict[str, Any]:
     """Launch a desktop application by name."""
     name = app_name.lower().strip()
     candidates = _APP_LAUNCHERS.get(name) or [name]
+
+    # Build display-aware environment so the launched app can connect to the
+    # running desktop session (same logic as _xdg_open).
+    env = dict(os.environ)
+    xdg_rt = env.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    if not env.get("DBUS_SESSION_BUS_ADDRESS"):
+        if Path(f"{xdg_rt}/bus").exists():
+            env["DBUS_SESSION_BUS_ADDRESS"] = f"unix:path={xdg_rt}/bus"
+    if not env.get("DISPLAY"):
+        for x_num in ("1", "0", "2"):
+            if Path(f"/tmp/.X11-unix/X{x_num}").exists():
+                env["DISPLAY"] = f":{x_num}"
+                break
+    if not env.get("WAYLAND_DISPLAY"):
+        for wl in ("wayland-0", "wayland-1"):
+            if Path(f"{xdg_rt}/{wl}").exists():
+                env["WAYLAND_DISPLAY"] = wl
+                env["XDG_RUNTIME_DIR"] = xdg_rt
+                break
+
     for cmd in candidates:
         exe = shutil.which(cmd)
         if exe:
             try:
-                subprocess.Popen([exe], start_new_session=True,
+                subprocess.Popen([exe], start_new_session=True, env=env,
                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return {"ok": True, "launched": cmd}
             except Exception as exc:

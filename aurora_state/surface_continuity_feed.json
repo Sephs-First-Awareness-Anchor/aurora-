@@ -1,553 +1,18 @@
 [
   {
-    "packet_id": "4c6058f4eca54156ab941cf790f6b7f7",
-    "created_at": 1778091688.0583682,
-    "source": "simulation_live_bridge",
-    "user_input": "Preserve the meaning exactly while changing the wording: It does not mean we all define liberty in exactly the same way or follow the same precise path to happiness.",
-    "aurora_response": "preserve means Researcher lookup failed: HTTP Error 429: Too Many Requests.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "preserve",
-      "meaning",
-      "exactly",
-      "changing",
-      "wording",
-      "all"
-    ],
-    "visual_description": "The scene is low light. I can make out couch, bed.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778093848.8898673
-  },
-  {
-    "packet_id": "8995d98e8fe64e5d91854bda02b807b5",
-    "created_at": 1778091955.278153,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: [PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on semantic_precision.",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "pressure",
-      "routing"
-    ],
-    "visual_description": "The scene is low light. I can make out couch, bed.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778093848.8898673
-  },
-  {
-    "packet_id": "1a16b5adc57a40b79a54ba4581382c5b",
-    "created_at": 1778092225.8970191,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links pressure and articulation_gap here?",
-    "aurora_response": "I can I can no.",
-    "response_tone": "reflective",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "pressure",
-      "articulation",
-      "gap",
-      "here"
-    ],
-    "visual_description": "The scene is low light. I can make out couch, person.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778093848.8898673
-  },
-  {
-    "packet_id": "e59ce56156fe464093706eed867f0a78",
-    "created_at": 1778092497.1660337,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778093848.8898673
-  },
-  {
-    "packet_id": "db134e47102744e2a458abf095d36e30",
-    "created_at": 1778092777.4361062,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: [PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on semantic_precision.",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "pressure",
-      "routing"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear light background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778093848.8898673
-  },
-  {
-    "packet_id": "60ef2cbc33784f3e8518db27c5da7cdf",
-    "created_at": 1778093027.3757443,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links articulation_gap and signal here?",
-    "aurora_response": "behavior means Researcher lookup failed: HTTP Error 429: Too Many Requests.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "articulation",
-      "gap",
-      "signal",
-      "here"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.46"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778093848.8898673
-  },
-  {
-    "packet_id": "026bce285457441a8cdc4c38e6dec61f",
-    "created_at": 1778093299.6879878,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Means behavior failed behavior means lookup behavior failed error There's a tension in what you're describing \u2014 I see it pulling in opposite directions on being.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.36"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778093848.8898673
-  },
-  {
-    "packet_id": "40baa0f4662843a08f25c99600055595",
-    "created_at": 1778094550.9001422,
-    "source": "simulation_live_bridge",
-    "user_input": "Hold this claim and reconcile it with an opposing angle without flattening the tension: Any resettlement program had to expose, had to carry with it like a disfiguring scar, painful conflicts and contradictions in the racial practices and pretensions of the American c",
-    "aurora_response": "I noticed something when using curious inquiry.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "hold",
-      "claim",
-      "reconcile",
-      "opposing",
-      "angle",
-      "without"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "b9b5b390879f4ec3bd5d00fb5c600f48",
-    "created_at": 1778094812.7833724,
-    "source": "simulation_live_bridge",
-    "user_input": "A conflicting angle appears now. Hold both sides and resolve honestly: Any resettlement program had to expose, had to carry with it like a disfiguring scar, painful conflicts and contradictions in the racial practices and pretensions of the American c",
-    "aurora_response": "I noticed something when using curious inquiry.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "conflicting",
-      "angle",
-      "hold",
-      "both",
-      "sides",
-      "resolve"
-    ],
-    "visual_description": "The scene is low light. I can make out bed, couch.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "0d96a3cadcf542a9b173f188a8160620",
-    "created_at": 1778095079.3509474,
-    "source": "simulation_live_bridge",
-    "user_input": "A conflicting angle appears now. Hold both sides and resolve honestly: The documentary also underscores how scarce land and water resources, limited opportunities for income generation, and conflict between traditional livelihoods and Western expectat",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "conflicting",
-      "angle",
-      "hold",
-      "both",
-      "sides",
-      "resolve"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.42"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "0dcfed3f2ff7412389182841db4aa029",
-    "created_at": 1778095347.883398,
-    "source": "simulation_live_bridge",
-    "user_input": "Respond to this while being explicit about uncertainty and confidence: Multiply the sample proportion by Divide the result by n. The confidence interval of 18 to 22 is a quantitative measure of the uncertainty \u2013 the possible difference between the tru",
-    "aurora_response": "I noticed something when using curious inquiry.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "respond",
-      "explicit",
-      "uncertainty",
-      "confidence",
-      "multiply",
-      "sample"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "6235a278b2344b19a26db3432ba821ae",
-    "created_at": 1778095610.2771525,
-    "source": "simulation_live_bridge",
-    "user_input": "Update the answer and show what remains uncertain: Multiply the sample proportion by Divide the result by n. The confidence interval of 18 to 22 is a quantitative measure of the uncertainty \u2013 the possible difference between the tru",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "update",
-      "answer",
-      "remains",
-      "uncertain",
-      "multiply",
-      "sample"
-    ],
-    "visual_description": "The scene is low light. I can make out couch.",
-    "audio_description": "I can hear light background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "821f6f8f0cdc4a8e87ba25665978ad67",
-    "created_at": 1778095906.8957515,
-    "source": "simulation_live_bridge",
-    "user_input": "Update the answer and show what remains uncertain: We conclude that where autocorrelation exists within the error structure of a chronology, annual estimates of 95% confidence intervals, developed through linear interpolation at 5-",
-    "aurora_response": "I can I can no.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "update",
-      "answer",
-      "remains",
-      "uncertain",
-      "conclude",
-      "autocorrelation"
-    ],
-    "visual_description": "The scene is low light. I see someone. I can make out couch, person, remote, remote.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.65"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "baae1401afc04394a6590a58e0c63493",
-    "created_at": 1778096272.3163674,
-    "source": "simulation_live_bridge",
-    "user_input": "Carry this context forward and keep it active: Following earlier evidence that patients carrying the ZNF804A risk allele had relatively spared memory function compared to patient non-carriers, we investigated whether ZNF804A wa",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "carry",
-      "context",
-      "forward",
-      "keep",
-      "active",
-      "following"
-    ],
-    "visual_description": "The scene is low light. I can make out couch, person, remote.",
-    "audio_description": "I can hear light background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.41"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "c8579495145b4c44899f7a59bc7c2c7b",
-    "created_at": 1778096715.8419533,
-    "source": "simulation_live_bridge",
-    "user_input": "Earlier context still matters here. Build on it directly: Following earlier evidence that patients carrying the ZNF804A risk allele had relatively spared memory function compared to patient non-carriers, we investigated whether ZNF804A wa",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "context",
-      "matters",
-      "here",
-      "build",
-      "directly",
-      "following"
-    ],
-    "visual_description": "The scene is low light. I can make out couch, person.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "28fde33666194715809e59260c431838",
-    "created_at": 1778097239.2616503,
-    "source": "simulation_live_bridge",
-    "user_input": "Earlier context still matters here. Build on it directly: Great improvements in capability were developed in the practical context of monitoring underground nuclear weapons tests following the conclusion of the LTBT \u2014 not in the context o",
-    "aurora_response": "I can I can no.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "context",
-      "matters",
-      "here",
-      "build",
-      "directly",
-      "great"
-    ],
-    "visual_description": "The scene is low light. I can tell a person is present. I can make out couch, person, person.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "69e51ab9cc7d45e0b2e0a1fdfce7fd80",
-    "created_at": 1778097735.5800827,
-    "source": "simulation_live_bridge",
-    "user_input": "[PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on semantic_precision.",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "pressure",
-      "routing",
-      "articulation",
-      "gap",
-      "signal",
-      "training"
-    ],
-    "visual_description": "The scene is low light. I can make out couch, person.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.44"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "43e34b17b8664ef68853a012c1e84d8e",
-    "created_at": 1778098223.3163705,
-    "source": "simulation_live_bridge",
-    "user_input": "Preserve the meaning exactly while changing the wording: Definition of stock: arrow in the language is derived from the verb meaning contributed Subscribe In the terminology is defined as a document that represents the shareholder in the",
-    "aurora_response": "I can I can said.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "preserve",
-      "meaning",
-      "exactly",
-      "changing",
-      "wording",
-      "definition"
-    ],
-    "visual_description": "The scene is low light. I can make out couch, person.",
-    "audio_description": "I can hear faint background noise.",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "52145273479e43e7b0d8cda4e7c89926",
-    "created_at": 1778098547.7229283,
-    "source": "simulation_live_bridge",
-    "user_input": "Preserve the meaning exactly while changing the wording: It does not mean we all define liberty in exactly the same way or follow the same precise path to happiness.",
-    "aurora_response": "preserve means The word preserve may refer to:.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "preserve",
-      "meaning",
-      "exactly",
-      "changing",
-      "wording",
-      "all"
-    ],
-    "visual_description": "The scene is low light. I can tell a person is present. I can make out couch, person.",
-    "audio_description": "I can hear moderate speech-like audio in the environment.",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778103633.7912116
-  },
-  {
-    "packet_id": "4230f4eaf7de4b748288af6352cfe486",
-    "created_at": 1778184677.7205439,
-    "source": "test_injection",
-    "user_input": "what time is it",
-    "aurora_response": "Current date and time: Thursday, May 07 2026 \u2014 04:11 PM",
-    "response_tone": "informative",
+    "packet_id": "8947e0bf35624a88933e4a457d6cbf39",
+    "created_at": 1778782138.3071404,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782136.6660683, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
     "concepts_activated": [
       "comfort_bias",
       "clarification_pressure",
       "callback_pressure",
       "novelty_attention"
     ],
-    "visual_description": "",
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "B",
@@ -559,6 +24,519 @@
     ],
     "resolved_bindings": [],
     "consumed": true,
-    "consumed_at": 1778184689.4733908
+    "consumed_at": 1778782138.7852714
+  },
+  {
+    "packet_id": "08e6f04f5d834ad5a259ab6a3cf588e9",
+    "created_at": 1778782230.1124156,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782228.5548728, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782230.3946667
+  },
+  {
+    "packet_id": "937397f2977a459389ec3f0a1fd0d9e8",
+    "created_at": 1778782321.9755864,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.7, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782320.29103, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or separa",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782322.1816776
+  },
+  {
+    "packet_id": "a615175e92f34494b7c8361f9b1e2008",
+    "created_at": 1778782413.694572,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782412.1415694, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782413.9247243
+  },
+  {
+    "packet_id": "40d29d1d8dce495db86d64e9fc745c29",
+    "created_at": 1778782505.5865488,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782504.0546758, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782506.0974836
+  },
+  {
+    "packet_id": "1b9f7ec27ab3444e8c65266aecf9e128",
+    "created_at": 1778782597.406268,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782595.776889, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782597.4518983
+  },
+  {
+    "packet_id": "9ccfaf632f5a4ef3be193eca9232dcda",
+    "created_at": 1778782693.1472976,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782687.4779263, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782701.1276066
+  },
+  {
+    "packet_id": "cb0a51cec7664e55919b9fc515cfe6a1",
+    "created_at": 1778782782.036181,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782780.4562953, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782782.30152
+  },
+  {
+    "packet_id": "452de1deaa5e4f8dbfcb01735c978863",
+    "created_at": 1778782874.3704147,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782872.793398, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
+    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782874.5122855
+  },
+  {
+    "packet_id": "d81460c0ff1f42f2b1ae2e319ddd7b92",
+    "created_at": 1778782967.2401066,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782965.6021533, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778782968.0945203
+  },
+  {
+    "packet_id": "112efb18954c4e99b498b03a1faa70a9",
+    "created_at": 1778783059.4414992,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783057.779482, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783059.7069163
+  },
+  {
+    "packet_id": "f295bd1bd0d3434b965762004a2e4eb4",
+    "created_at": 1778783151.2653842,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783149.6738384, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783151.4591665
+  },
+  {
+    "packet_id": "24d4ddb73234415eaa45c6145b61af44",
+    "created_at": 1778783243.848379,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783242.2595603, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783243.981009
+  },
+  {
+    "packet_id": "27d7f0a1a4df4775811f358e392a8208",
+    "created_at": 1778783335.7963583,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783334.0742354, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783336.1082535
+  },
+  {
+    "packet_id": "6c2887ead38b4309ae379528185dc204",
+    "created_at": 1778783427.7286103,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783426.0324109, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783427.9124432
+  },
+  {
+    "packet_id": "09755f3507d3452d8bbb50a716f86970",
+    "created_at": 1778783519.8149724,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783517.9545858, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783520.2973692
+  },
+  {
+    "packet_id": "2f59d22fccc6415d88d79d996d7259b7",
+    "created_at": 1778783612.9732454,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783610.941765, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
+    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783613.161442
+  },
+  {
+    "packet_id": "33e6158ca80246c8a52dc90f89920989",
+    "created_at": 1778783704.2807417,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783702.5862215, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
+    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783704.391501
+  },
+  {
+    "packet_id": "59e3e5cff88f416ea848c6fd10bf76ad",
+    "created_at": 1778783796.0109963,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783794.485223, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
+    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783796.167595
+  },
+  {
+    "packet_id": "0313558490144381b7e38d941402fcce",
+    "created_at": 1778783887.7420294,
+    "source": "sensory_autonomy",
+    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783886.183403, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
+    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "comfort_bias",
+      "clarification_pressure",
+      "callback_pressure",
+      "novelty_attention"
+    ],
+    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.45,
+    "felt_wrong": true,
+    "wrong_reason": "subsurface effects; surface wants to clarify",
+    "unresolved_tensions": [
+      "subsurface_effects"
+    ],
+    "resolved_bindings": [],
+    "consumed": true,
+    "consumed_at": 1778783888.1038578
   }
 ]

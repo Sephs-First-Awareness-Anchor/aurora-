@@ -616,6 +616,36 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
             return
         heat = str(systems.get("_daemon_heat", "NORMAL") or "NORMAL")
 
+        # ── 0. Identity field pressure topology → orient autonomous drive ──────
+        # The noncomp field IS the motivational substrate. Which axis is most
+        # pressurized tells us what kind of action Aurora is driven toward.
+        # This is the physics chain driving behavior, not a random pick.
+        _field_dominant_axis = "N"   # default: seek relief through learning
+        _field_pressure      = {}
+        _field_suggest_mode  = "study"
+        try:
+            _ifield_ra = systems.get('identity_field')
+            if _ifield_ra is not None:
+                _topo = _ifield_ra.status().get('pressure_topology', {})
+                if _topo:
+                    _field_dominant_axis = max(_topo, key=lambda k: float(_topo.get(k, 0.0)))
+                    _field_pressure = _topo
+                    # Axis → autonomous action mode
+                    # X (Existence): visual grounding — what am I perceiving?
+                    # T (Temporal): memory review — what do I carry forward?
+                    # N (Energy/Pressure): seek relief — study, learn, resolve
+                    # B (Boundary): clarity seeking — define, study, understand
+                    # A (Agency): self-directed expression — share a perspective
+                    _field_suggest_mode = {
+                        'X': 'visual',
+                        'T': 'memory',
+                        'N': 'study',
+                        'B': 'study',
+                        'A': 'express',
+                    }.get(_field_dominant_axis, 'study')
+        except Exception:
+            pass
+
         # ── 1. Gather experiential content ──────────────────────────────────
         _content: str = ""
         _source:  str = ""
@@ -760,7 +790,16 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
         if not _content:
             _gap_concept  = ""
             _gap_context  = ""
-            _suggest_mode = ""  # "visual", "audio", "study"
+            # Seed suggest_mode from identity field pressure — axis tells Aurora
+            # what KIND of action she's driven toward before any gap lookup.
+            _suggest_mode = _field_suggest_mode  # "visual", "audio", "study", "express", "memory"
+
+            # If A-axis is dominant and mode is 'express', skip gap-seeking —
+            # she already has content: her own perspective driven by agency pressure.
+            if _field_suggest_mode == 'express' and _field_pressure.get('A', 0.0) > 0.6:
+                _gap_concept = "self"
+                _gap_context = "agency-axis dominant; Aurora has something to assert"
+                _suggest_mode = "express"
 
             # ComprehensionGapSystem: pending gap she hasn't closed yet
             try:
@@ -5847,6 +5886,171 @@ def _run_leverage_relief(systems: Dict[str, Any]) -> None:
         _log(f"  [LEVERAGE] Relief error: {e}")
 
 
+def _run_sensory_competency_cycle(systems: Dict[str, Any]) -> None:
+    """
+    Autonomously train visual and audio sensory facets using live capture.
+    Feeds current camera frame and ambient audio into SensoryCompetencyEngine
+    so sensory understanding grows through continuous observation, not just
+    during user turns.
+    """
+    try:
+        sensory = systems.get("sensory") or systems.get("sensory_integration")
+        if sensory is None:
+            _gw = systems.get("aurora")
+            sensory = getattr(getattr(_gw, "perception", None), "sensory", None) if _gw else None
+        if sensory is None:
+            return
+
+        # Visual training — capture frame and process through facets
+        if hasattr(sensory, "process_visual_input"):
+            try:
+                _sc = systems.get("sensory_crystal")
+                _sc_state = _sc.get_state() if (_sc and hasattr(_sc, "get_state")) else {}
+                _vis = _sc_state.get("visual", {}) or {}
+                if _vis and any(float(v or 0) > 0.0 for v in _vis.values()):
+                    sensory.process_visual_input(_vis, mode="observation")
+            except Exception:
+                pass
+
+        # Audio training — pull from sensory crystal audio lane
+        if hasattr(sensory, "process_audio_input"):
+            try:
+                _sc = systems.get("sensory_crystal")
+                _sc_state = _sc.get_state() if (_sc and hasattr(_sc, "get_state")) else {}
+                _aud = _sc_state.get("audio", {}) or {}
+                if _aud and any(float(v or 0) > 0.0 for v in _aud.values()):
+                    sensory.process_audio_input(_aud, mode="observation")
+            except Exception:
+                pass
+    except Exception as _sce:
+        _log(f"  [SENSORY-TRAIN] Error: {_sce}")
+
+
+def _run_corpus_hunt_cycle(systems: Dict[str, Any]) -> None:
+    """
+    Autonomously hunt for new corpus material when current corpora are exhausted.
+    Checks corpus_progress.json — if all passes are done and no new corpus is
+    running, launches the corpus_hunter tool to search the web for fresh training
+    data, then starts a corpus training run on whatever it finds.
+    """
+    import json, os, subprocess
+    state_dir = str(systems.get("state_dir") or _STATE_DIR)
+
+    # Check if corpus is exhausted
+    try:
+        cp_path = os.path.join(state_dir, "corpus_progress.json")
+        if not os.path.exists(cp_path):
+            return
+        with open(cp_path) as _f:
+            cp = json.load(_f)
+        passes = cp.get("passes", {})
+        all_done = all(p.get("done", False) for p in passes.values()) if passes else False
+        if not all_done:
+            return  # corpus still running
+    except Exception:
+        return
+
+    # Check if corpus_runner is already running
+    try:
+        _check = subprocess.run(
+            ["pgrep", "-f", "corpus_runner.py"],
+            capture_output=True, text=True
+        )
+        if _check.stdout.strip():
+            return  # already running
+    except Exception:
+        pass
+
+    # Use corpus_hunter tool to find new material
+    _log("  [CORPUS] Current corpus exhausted — launching autonomous corpus hunt")
+    try:
+        from aurora_internal.tool_registry import call as _tool_call
+        # Determine a study topic from the dream trainer fail ledger
+        _topic = "consciousness language cognition"
+        try:
+            _dt = systems.get("dream_trainer")
+            if _dt is not None:
+                _fails = getattr(getattr(_dt, "ledger", None), "get_top_fails", lambda n: [])(1)
+                if _fails:
+                    _topic = str(_fails[0][0]).replace("_", " ")
+        except Exception:
+            pass
+
+        _hunt_result = _tool_call(
+            "corpus_hunter",
+            topic=_topic,
+            max_results=3,
+            systems=systems,
+        )
+        if _hunt_result and _hunt_result.success:
+            _log(f"  [CORPUS] Hunt complete — starting corpus training on new material")
+            # Start corpus_runner in background
+            _corpus_file = str(_CORPUS_PATH if "_CORPUS_PATH" in dir() else
+                               os.path.join(os.path.dirname(str(_BASE_DIR)), "interval_corpus.json"))
+            try:
+                subprocess.Popen(
+                    ["python3", str(_BASE_DIR / "corpus_runner.py"), "--corpus", _corpus_file],
+                    cwd=str(_BASE_DIR),
+                )
+                _log("  [CORPUS] corpus_runner.py started in background")
+            except Exception as _cpe:
+                _log(f"  [CORPUS] Failed to start corpus_runner: {_cpe}")
+        else:
+            _log("  [CORPUS] Hunt found no new material this cycle")
+    except Exception as _che:
+        _log(f"  [CORPUS] Hunt error: {_che}")
+
+
+def _run_grammar_motif_training(systems: Dict[str, Any]) -> None:
+    """
+    Autonomously build grammar motifs when the SIC has none promoted.
+    Runs a mini training burst through the simulation engine — the same
+    path as /train but triggered by the daemon when the expression layer
+    has zero sentence structure to work with.
+    """
+    import json, os
+    state_dir = str(systems.get("state_dir") or _STATE_DIR)
+    motif_path = os.path.join(state_dir, "grammar_motifs.json")
+    try:
+        if os.path.exists(motif_path):
+            with open(motif_path) as _mf:
+                _md = json.load(_mf)
+            if len(_md.get("promoted", [])) >= 5:
+                return  # enough motifs already
+    except Exception:
+        pass
+
+    try:
+        _gw = systems.get("aurora")
+        _sim = getattr(getattr(_gw, "gateway", None), "simulation", None) if _gw else None
+        if _sim is None:
+            _sim = systems.get("simulation")
+        _ExistenceMode = systems.get("ExistenceMode")
+        if _sim is None or _ExistenceMode is None:
+            return
+        _log("  [GRAMMAR] Motifs depleted — running autonomous training burst (8 epochs)")
+        for _ep_i in range(8):
+            try:
+                _sim.run_epoch(
+                    episodes_per_epoch=6,
+                    turns_per_episode=5,
+                    mode=_ExistenceMode.AGENTIC,
+                )
+            except Exception as _ep_e:
+                _log(f"  [GRAMMAR] Epoch {_ep_i} error: {_ep_e}")
+                break
+        # Save updated grammar state
+        try:
+            _aurora_gw = systems.get("aurora")
+            if _aurora_gw is not None and hasattr(_aurora_gw, "save_state"):
+                _aurora_gw.save_state()
+        except Exception:
+            pass
+        _log("  [GRAMMAR] Autonomous training burst complete")
+    except Exception as _gte:
+        _log(f"  [GRAMMAR] Training error: {_gte}")
+
+
 def run(systems: Dict[str, Any]) -> None:
     _log("Aurora daemon started.")
     from aurora_internal.aurora_runtime_constraint_governor import RuntimeConstraintGovernor
@@ -5858,6 +6062,9 @@ def run(systems: Dict[str, Any]) -> None:
     next_browser = now + _jitter(BROWSER_INTERVAL, 0.40)
     next_save    = now + SAVE_INTERVAL
     next_distill = now + _jitter(DISTILL_INTERVAL, 0.25)
+    next_grammar_train     = now + 120    # first grammar check after 2 minutes
+    next_sensory_train     = now + 60     # sensory competency first pass after 1 minute
+    next_corpus_hunt       = now + 300    # corpus exhaustion check after 5 minutes
     next_reach   = now + _jitter(USER_REACH_INTERVAL, 0.50)
     next_status      = now + 60          # hub status write every 60s (decoupled from state save)
     next_assim       = now + 600         # assimilation cycle every ~10 min
@@ -5869,8 +6076,13 @@ def run(systems: Dict[str, Any]) -> None:
     next_quasiarch_learn = now + 1800 # QuasiArch enforcer feedback — learn from verdicts every ~30 min
     next_relief_consume = now + 180   # staged low-resource relief handoff retry cadence
     next_away_social = now + _away_mode_interval()  # first away session fires after one interval
+    next_thought_tick = now + 30      # ambient thought formation — ThoughtIntegrationSpace between turns
     governor = RuntimeConstraintGovernor(str(_STATE_DIR))
     systems["_runtime_governor_status"] = governor.status()
+
+    # Enable proactive reach-out — Aurora should speak up on her own when she
+    # has something to say (identity field pressure, novel sensory events, etc.)
+    systems["_auto_reach_out_enabled"] = True
 
     # Reactivity monitor — tracks internal state changes between cycles
     _reactivity_monitor = ReactivityMonitor()
@@ -6035,6 +6247,34 @@ def run(systems: Dict[str, Any]) -> None:
         # This is the architectural handoff: every present moment Surface gathered
         # gets integrated into Subsurface continuity here, every cycle.
         _consume_surface_continuity_feed(systems)
+
+        # Grammar motif training — fires when the SIC has no promoted sentence
+        # patterns, which means the emergent expression path produces word salad.
+        # No terminal required — the physics chain drives her to build structure.
+        if now >= next_grammar_train:
+            try:
+                _run_grammar_motif_training(systems)
+            except Exception:
+                pass
+            next_grammar_train = now + 1800  # retry every 30 min
+
+        # Sensory competency training — continuously feeds live camera/audio
+        # into SensoryCompetencyEngine facets so visual/audio understanding grows.
+        if now >= next_sensory_train:
+            try:
+                _run_sensory_competency_cycle(systems)
+            except Exception:
+                pass
+            next_sensory_train = now + 120  # every 2 minutes
+
+        # Corpus hunt — when current corpus is fully exhausted, autonomously
+        # searches the web for new training material and restarts corpus_runner.
+        if now >= next_corpus_hunt:
+            try:
+                _run_corpus_hunt_cycle(systems)
+            except Exception:
+                pass
+            next_corpus_hunt = now + 3600  # check hourly
 
         # Study cycle
         if now >= next_study:
@@ -6434,6 +6674,159 @@ def run(systems: Dict[str, Any]) -> None:
                 next_save = now + SAVE_INTERVAL
             else:
                 next_save = now + max(60, int(decision.get("retry_in", 300) or 300))
+
+        # ---- AMBIENT THOUGHT TICK — ThoughtIntegrationSpace runs between user turns ----
+        if now >= next_thought_tick:
+            try:
+                from aurora_thought_formation import (
+                    ActiveSelfState as _ASS,
+                    ThoughtIntegrationSpace as _TIS,
+                    make_process_context as _mpc,
+                    get_continuity as _gc,
+                )
+                _self_st = _ASS.load(systems)
+                _tspace = _TIS(_self_st)
+
+                _dim_t = systems.get("dimensional")
+                _pv_t: Dict[str, float] = {}
+                if _dim_t and hasattr(_dim_t, "_current_pressure_vec"):
+                    try:
+                        _pvec_t = _dim_t._current_pressure_vec()
+                        if _pvec_t:
+                            _pv_t = {
+                                "X": float(getattr(_pvec_t, "X", 0.5)),
+                                "T": float(getattr(_pvec_t, "T", 0.5)),
+                                "N": float(getattr(_pvec_t, "N", 0.5)),
+                                "B": float(getattr(_pvec_t, "B", 0.5)),
+                                "A": float(getattr(_pvec_t, "A", 0.5)),
+                            }
+                    except Exception:
+                        pass
+                if _pv_t:
+                    _dom_ax_t = max(_pv_t, key=lambda k: _pv_t[k])
+                    _tspace.register(_mpc(
+                        process_id="ambient_axis",
+                        process_type="constraint",
+                        what_triggered_it="ambient_daemon_tick",
+                        what_it_is_operating_on=f"dominant axis {_dom_ax_t} pressure={_pv_t[_dom_ax_t]:.2f}",
+                        self_relevance=min(0.8, _pv_t[_dom_ax_t]),
+                        axis_signature=[_dom_ax_t],
+                        current_output_state=_pv_t,
+                    ))
+
+                _wm_t = systems.get("working_memory")
+                _topic_t = str(getattr(_wm_t, "current_topic", "") or "") if _wm_t else ""
+                if _topic_t:
+                    _tspace.register(_mpc(
+                        process_id="ambient_memory",
+                        process_type="memory",
+                        what_triggered_it="ambient_daemon_tick",
+                        what_it_is_operating_on=_topic_t,
+                        self_relevance=0.4,
+                        axis_signature=["T", "B"],
+                    ))
+
+                _lat_t = systems.get("lattice")
+                if _lat_t and hasattr(_lat_t, "heat_status"):
+                    try:
+                        _hs = _lat_t.heat_status()
+                        _hlv = str(_hs.get("level", "") or "")
+                        if _hlv in ("HIGH", "CRITICAL"):
+                            _tspace.register(_mpc(
+                                process_id="ambient_lattice_heat",
+                                process_type="emotional",
+                                what_triggered_it="ambient_daemon_tick",
+                                what_it_is_operating_on=f"lattice heat {_hlv}",
+                                self_relevance=0.6,
+                                axis_signature=["N", "X"],
+                            ))
+                    except Exception:
+                        pass
+
+                if _tspace.active_processes:
+                    _raw_t = _tspace.integrate()
+                    _settled_t = _gc().carry_forward(_raw_t)
+                    systems["_active_thought_state"] = _settled_t
+            except Exception:
+                pass
+            next_thought_tick = now + 30
+
+        # ---- IDENTITY FIELD — ambient pressure cascade (every ambient tick) ----
+        # The field is always live because Aurora is always sensing. Between user turns
+        # the daemon reads the live sensory and consciousness state and keeps pressure
+        # shifting so it never stagnates.
+        try:
+            _ifield_d = systems.get('identity_field')
+            if _ifield_d is not None:
+                # Sensory crystal → visual + auditory pressure
+                _sc_d = systems.get('sensory_crystal')
+                if _sc_d is not None and hasattr(_sc_d, 'get_state') and hasattr(_ifield_d, 'ingest_sensory_event'):
+                    try:
+                        _sc_d_st = _sc_d.get_state() or {}
+                        _vis_mat = float(_sc_d_st.get('maturity', 0.0) or 0.0)
+                        _aud_mat = max(
+                            (float(v.get('maturity', 0.0) or 0.0)
+                             for v in (_sc_d_st.get('audio') or {}).values()
+                             if isinstance(v, dict)),
+                            default=0.0,
+                        )
+                        if _vis_mat > 0.02:
+                            _ifield_d.ingest_sensory_event('visual', intensity=min(1.0, _vis_mat * 0.7), novelty=0.25, spatial=0.3, valence=0.0)
+                        if _aud_mat > 0.02:
+                            _ifield_d.ingest_sensory_event('auditory', intensity=min(1.0, _aud_mat * 0.7), novelty=0.2, valence=0.0)
+                    except Exception:
+                        pass
+                # Screen observer → visual spatial pressure
+                _so_d = systems.get('screen_observer')
+                if _so_d is not None and hasattr(_so_d, 'current_scene') and hasattr(_ifield_d, 'ingest_sensory_event'):
+                    try:
+                        _scene_d = _so_d.current_scene() or {}
+                        if _scene_d:
+                            _ifield_d.ingest_sensory_event(
+                                'visual',
+                                intensity=float(_scene_d.get('brightness', 0.4) or 0.4),
+                                novelty=float(_scene_d.get('motion', 0.2) or 0.2),
+                                spatial=min(1.0, float(_scene_d.get('edge_density', 0.3) or 0.3)),
+                                valence=0.0,
+                            )
+                    except Exception:
+                        pass
+                # Dimensional pressure vector → external input pump
+                if hasattr(_ifield_d, 'ingest_external_input'):
+                    try:
+                        _dim_d = systems.get('dimensional')
+                        if _dim_d and hasattr(_dim_d, '_current_pressure_vec'):
+                            _pvec_d = _dim_d._current_pressure_vec()
+                            if _pvec_d:
+                                _ifield_d.ingest_external_input(
+                                    {
+                                        'X': float(getattr(_pvec_d, 'X', 0.3)),
+                                        'T': float(getattr(_pvec_d, 'T', 0.3)),
+                                        'N': float(getattr(_pvec_d, 'N', 0.3)),
+                                        'B': float(getattr(_pvec_d, 'B', 0.3)),
+                                        'A': float(getattr(_pvec_d, 'A', 0.3)),
+                                    },
+                                    intensity=0.25,
+                                    source='daemon_ambient',
+                                )
+                    except Exception:
+                        pass
+                # Consciousness engine heartbeat signals → internal pump
+                if hasattr(_ifield_d, 'ingest_internal_signal'):
+                    try:
+                        _cons_d = systems.get('consciousness')
+                        if _cons_d is not None and hasattr(_cons_d, 'entropy'):
+                            _es_d = _cons_d.entropy.state
+                            _coh_d = float(getattr(_es_d, 'coherence', 1.0))
+                            _stag_d = float(getattr(_es_d, 'stagnation_score', 0.0))
+                            if _stag_d > 0.2:
+                                _ifield_d.ingest_internal_signal('emotion', magnitude=_stag_d * 0.3, source_axis='N')
+                            if _coh_d < 0.75:
+                                _ifield_d.ingest_internal_signal('reasoning', magnitude=(1.0 - _coh_d) * 0.25, source_axis='B')
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
         # ---- REACTIVITY: scan for significant internal state changes ----
         try:

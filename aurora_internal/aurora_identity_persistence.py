@@ -362,6 +362,14 @@ class CoreRelationalIdentity:
         """Deserialize, always enforcing immutable core entities."""
         identity = cls()  # Creates with defaults (which includes core entities)
 
+        # Restore self identity fields from saved data
+        if data.get("self_name"):
+            identity.self_name = str(data["self_name"])
+        if data.get("self_description"):
+            identity.self_description = str(data["self_description"])
+        if data.get("foundational_truths"):
+            identity.foundational_truths = list(data["foundational_truths"])
+
         # Overlay any non-immutable additions from saved data
         saved_entities = data.get("entities", {})
         for key, edata in saved_entities.items():
