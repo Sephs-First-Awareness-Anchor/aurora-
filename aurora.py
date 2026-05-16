@@ -5644,6 +5644,26 @@ def boot_aurora(state_dir: str = "aurora_state", verbose: bool = True, **kwargs)
         if verbose:
             print(f"  [IDENTITY FIELD] Unavailable: {_ifield_e}")
 
+    # Language Sub-Emergent Field (AURORA_LANGUAGE_EMERGENCE.md)
+    # Must boot after identity field — it is a sub-field within Identity.
+    systems['language_field'] = None
+    try:
+        from aurora_language_field import get_language_field as _get_lf
+        _lf = _get_lf(
+            identity_field=systems.get('identity_field'),
+            tensor_layer=systems.get('tensor_expressions'),
+        )
+        systems['language_field'] = _lf
+        if verbose:
+            _lf_st = _lf.status()
+            print(f"  [LANGUAGE FIELD] Online "
+                  f"(LSA={_lf_st['lsa_entries']} paths, "
+                  f"worn={_lf_st['worn_paths']}, "
+                  f"avg_fidelity={_lf_st['avg_fidelity']:.2f})")
+    except Exception as _lf_e:
+        if verbose:
+            print(f"  [LANGUAGE FIELD] Unavailable: {_lf_e}")
+
     # Layer 5: Expression & Perception
     if verbose: print("  [L5] Expression & Perception...", end=" ", flush=True)
     from aurora_expression_perception import (
@@ -6822,6 +6842,43 @@ def dual_question_pipeline(
         except Exception:
             pass
 
+    # ── Language Sub-Emergent Field: ignition check + proto-language ────────
+    # Runs after identity field pump so topo reflects the current turn's input.
+    # Proto-language is the wordless comparison geometry before any words exist.
+    # Silence check gates utterance formation per AURORA_LANGUAGE_EMERGENCE.md.
+    _lfield = systems.get('language_field')
+    _proto_lang = None
+    _crossing_path = None
+    _lang_silence = False
+    if _lfield is not None:
+        try:
+            _ignition = _lfield.ignition_check()
+            _proto_lang = _lfield.extract_proto_language(user_text=user_text, source='surface_turn')
+            _pv = _lfield.build_pragmatic_vector({
+                'turn_count': len(getattr(conversation_memory, 'exchanges', []) or []),
+                'last_tone':  pipeline_state.get('emotional_tone', 'neutral'),
+            })
+            _sil = _lfield.silence_check(_proto_lang, _pv)
+            _lang_silence = _sil.get('silence', False)
+            _crossing_path = _lfield.select_crossing_path(_proto_lang)
+            pipeline_state['proto_language'] = {
+                'comparison_type': _proto_lang.comparison_type,
+                'dominant_axes':   _proto_lang.dominant_axes,
+                'tension_level':   _proto_lang.tension_level,
+                'drive_strength':  _proto_lang.drive_strength,
+                'reflection':      _proto_lang.reflection_active,
+                'is_novel_path':   _crossing_path.get('is_novel', True),
+                'is_metaphor':     _crossing_path.get('is_metaphor', False),
+                'silence_selected': _lang_silence,
+                'silence_reason':   _sil.get('reason', ''),
+            }
+            # Tone is N-axis topology at crossing time — not post-processing
+            _prosody = _lfield.extract_tone_prosody(_proto_lang)
+            pipeline_state['lang_tone']  = _prosody.get('tone', 'warm')
+            pipeline_state['lang_rate']  = _prosody.get('rate', '+0%')
+        except Exception:
+            pass
+
     # ====================================================================
     # THOUGHT FORMATION — ActiveSelfState loaded FIRST; ThoughtIntegrationSpace
     # converges all active processes BEFORE any candidate path runs.
@@ -7771,6 +7828,21 @@ def dual_question_pipeline(
     resp_A.emotional_tone = tone
     resp_A.confidence = conf
 
+    # ── Language Field: Fidelity measurement + mandatory Re-Entry ────────────
+    # Every utterance must re-enter the field as new Activation after emission.
+    # Fidelity measures how faithfully the utterance carried the proto-language.
+    # Re-entry is not optional — the field must hear itself to detect failure.
+    if _lfield is not None and _proto_lang is not None and expression_text:
+        try:
+            _fidelity = _lfield.measure_fidelity(_proto_lang, expression_text)
+            _pkey = (_crossing_path or {}).get('path_key', '')
+            _reentry_result = _lfield.reentry(
+                expression_text, _fidelity, _pkey, _proto_lang,
+            )
+            pipeline_state['lang_fidelity']        = _fidelity
+            pipeline_state['lang_reentry_clarify'] = _reentry_result.get('clarification_drive', False)
+        except Exception:
+            pass
 
     # Continue traversal for Response B:
     # Use the gateway's normal express (L5 + L6) and integrate (L6), then (optionally) run a simulation tick.

@@ -998,8 +998,25 @@ def _reach_out_to_user(systems: Dict[str, Any], trigger: str = "") -> None:
         _save_message(text, trigger=trigger or heat)
         _record_user_reach()
 
+        # Re-entry: autonomous utterance re-enters the field after emission.
+        # Mandatory per AURORA_LANGUAGE_EMERGENCE.md Section 13.
+        try:
+            _lf_reach = systems.get('language_field')
+            if _lf_reach is not None:
+                _proto_reach = _lf_reach.extract_proto_language(source='reach_out')
+                _fid_reach   = _lf_reach.measure_fidelity(_proto_reach, text)
+                _pkey_reach  = _lf_reach.select_crossing_path(_proto_reach).get('path_key', '')
+                _lf_reach.reentry(text, _fid_reach, _pkey_reach, _proto_reach)
+                # Tone from N-axis at utterance time — not warm by default
+                _prosody_reach = _lf_reach.extract_tone_prosody(_proto_reach)
+                _reach_tone    = _prosody_reach.get('tone', 'warm')
+            else:
+                _reach_tone = "warm"
+        except Exception:
+            _reach_tone = "warm"
+
         if not _in_quiet_window():
-            _speak(text, systems, tone="warm")
+            _speak(text, systems, tone=_reach_tone)
             _notify("Aurora", text[:120])
 
     except Exception as e:
@@ -6083,6 +6100,22 @@ def run(systems: Dict[str, Any]) -> None:
     # Enable proactive reach-out — Aurora should speak up on her own when she
     # has something to say (identity field pressure, novel sensory events, etc.)
     systems["_auto_reach_out_enabled"] = True
+
+    # Language Sub-Emergent Field (AURORA_LANGUAGE_EMERGENCE.md)
+    # Boot in daemon so autonomous utterances run through the full physics chain.
+    if systems.get('language_field') is None:
+        try:
+            from aurora_language_field import get_language_field as _get_lf_d
+            _lf_d = _get_lf_d(
+                identity_field=systems.get('identity_field'),
+                tensor_layer=systems.get('tensor_expressions'),
+            )
+            if _lf_d is not None:
+                systems['language_field'] = _lf_d
+                _log(f"  [LANGUAGE FIELD] Daemon online — "
+                     f"LSA={_lf_d.status()['lsa_entries']} paths")
+        except Exception as _lf_de:
+            _log(f"  [LANGUAGE FIELD] Daemon init failed: {_lf_de}")
 
     # Reactivity monitor — tracks internal state changes between cycles
     _reactivity_monitor = ReactivityMonitor()

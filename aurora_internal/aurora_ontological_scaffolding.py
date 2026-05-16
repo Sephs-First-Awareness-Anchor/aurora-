@@ -102,6 +102,7 @@ class RelationType(Enum):
     PRECEDES = "precedes"       # Temporal: "question PRECEDES answer"
     ENABLES = "enables"         # Functional: "understanding ENABLES growth"
     CONTRASTS = "contrasts"     # Nuance: "knowing CONTRASTS believing"
+    SIMILAR_TO = "similar_to"   # Similarity: high embedding overlap
 
 
 # Relation weights — how much each type contributes to ontological depth
@@ -118,6 +119,7 @@ RELATION_DEPTH_WEIGHTS = {
     RelationType.PRECEDES: 0.6,     # Temporal reasoning
     RelationType.ENABLES: 0.75,     # Functional understanding
     RelationType.CONTRASTS: 0.8,    # Discriminative understanding
+    RelationType.SIMILAR_TO: 0.5,   # Similarity clustering
 }
 
 
