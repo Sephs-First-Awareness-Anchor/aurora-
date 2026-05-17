@@ -51,6 +51,7 @@ train.txt
 # Large runtime state files (>50MB — exceed GitHub's 100MB limit)
 aurora_oets_web.json
 aurora_state/aurora_oets_web.json
+conversations.json
 
 # Python junk
 __pycache__/
