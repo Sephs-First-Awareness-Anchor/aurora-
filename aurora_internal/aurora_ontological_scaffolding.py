@@ -217,6 +217,9 @@ class SemanticNode:
     cluster_ids: Set[str] = field(default_factory=set)
     associated_axes: List[str] = field(default_factory=list) # X, T, N, B, A
 
+    # Non-computational ID (for alignment)
+    noncomp_id: Optional[str] = None
+
     # Learning history
     times_encountered: int = 0
     times_used_in_expression: int = 0
@@ -1942,7 +1945,7 @@ class OntologicalScaffoldingEngine:
                     delta = self.comparison_engine.compare(word, target)
 
                 # 3. If significant relation found, record it
-                if delta.similarity > 0.4:
+                if delta.similarity > 0.2:
                     self.web.add_relation(
                         word, target, delta.relational_type,
                         strength=delta.similarity,

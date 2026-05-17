@@ -4963,8 +4963,20 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                         _ui_r = str(_ts_r.unified_interpretation or "").strip()
                         if _ui_r and len(_ui_r.split()) >= 2:
                             _frag_parts.append(_ui_r[:60])
+                    # Crystal insight: surface concepts Aurora truly understands
+                    # (higher_order = all 3 modalities, composite = 2 modalities)
+                    _ci_r = systems.get("_crystal_insight") or {}
+                    for _rc in _ci_r.get("rich_concepts", []):
+                        if _rc not in _frag_parts:
+                            _frag_parts.insert(1, _rc)  # near front — grounded knowledge
+                    for _pc in _ci_r.get("partial_concepts", [])[:2]:
+                        if _pc not in _frag_parts:
+                            _frag_parts.append(_pc)
                     _frags = "; ".join(_frag_parts)
+                    # Base confidence from resonance, then crystal stage modifier
                     _conf = min(0.92, 0.72 + _res_r * 0.2)
+                    _conf = max(0.55, min(0.95,
+                        _conf + _ci_r.get("confidence_modifier", 0.0)))
             try:
                 _grd_intent = IntentObject(intent_type="reflection", emotion_tone=emotion_tone)
                 _grd_text = systems['perception'].evo.sic._synthesize_fragments(_frags, _grd_intent)
@@ -5191,6 +5203,19 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 for _kw in _input_keys[:3]:
                     if getattr(_oets_web, "nodes", None) and _kw in _oets_web.nodes:
                         _sem_frags.append(_kw)
+
+        # Layer 1.5: Crystal-promoted concepts pull 2-hop OETS neighbors.
+        # The study cycle has built out rich relational maps for deep/geological
+        # concepts; when those are in play, draw on the deeper web.
+        _ci_sem = systems.get("_crystal_insight") or {}
+        _crystal_rich = _ci_sem.get("rich_concepts", []) + _ci_sem.get("partial_concepts", [])
+        if oets and _crystal_rich and _oets_web and hasattr(_oets_web, "get_neighbors"):
+            for _cw in _crystal_rich[:3]:
+                try:
+                    _deep = _oets_web.get_neighbors(_cw, max_depth=2)
+                    _sem_frags.extend(list(_deep)[:4])
+                except Exception:
+                    pass
 
         # Layer 2: Working memory topic provides conversational continuity
         if working_memory and getattr(working_memory, "current_topic", None):
@@ -6821,6 +6846,79 @@ def dual_question_pipeline(
     except Exception:
         pass
 
+    # Feed live turn text into the unified concept registry so live interactions
+    # and corpus training share the same semantic→composite→higher_order pathway.
+    try:
+        _live_crystal = systems.get("sensory_crystal")
+        if _live_crystal is not None:
+            _LIVE_STOPS = {
+                "the", "and", "for", "are", "but", "not", "you", "all", "can",
+                "was", "had", "has", "have", "this", "that", "with", "from",
+                "they", "will", "been", "were", "their", "what", "when",
+                "which", "your", "there", "more", "also", "just", "into",
+                "than", "then", "some", "its", "about", "would", "could",
+                "should", "like", "very", "only", "even", "any", "our",
+            }
+            for _raw in user_text.lower().split():
+                _w = _raw.strip(".,!?;:'\"()-[]{}«»")
+                if len(_w) >= 4 and _w.isalpha() and _w not in _LIVE_STOPS:
+                    _live_crystal.observe_semantic(_w, weight=0.75)
+            # DER audio synthesis for live turns
+            try:
+                from aurora_internal.aurora_sensory_crystal import build_audio_20d_from_der as _bld_a
+                _ax = _early_axis or {"X": 0.4, "T": 0.4, "N": 0.35, "B": 0.4, "A": 0.3}
+                _a20 = _bld_a(
+                    float(_ax.get("X", 0.4)), float(_ax.get("T", 0.4)),
+                    float(_ax.get("N", 0.35)), float(_ax.get("B", 0.4)),
+                    float(_ax.get("A", 0.3)),
+                )
+                _live_crystal.observe_frame(_a20, [0.0] * 57,
+                                            session_id=f"live:aud",
+                                            audio_conf=0.6)
+                for _raw in user_text.lower().split():
+                    _w = _raw.strip(".,!?;:'\"()-[]{}«»")
+                    if len(_w) >= 4 and _w.isalpha() and _w not in _LIVE_STOPS:
+                        _live_crystal._register_concept_audio(_w, "live:der")
+            except Exception:
+                pass
+
+            # Build crystal insight: what stage is Aurora's understanding of
+            # each concept in this turn? Flows into response confidence + frags.
+            try:
+                _stage_rank = {"base": 0, "composite": 1,
+                               "higher_order": 2, "quasicrystal": 3,
+                               "unknown": -1}
+                _rich_c, _partial_c, _thin_c = [], [], []
+                _top_stage = "unknown"
+                for _raw in user_text.lower().split():
+                    _w = _raw.strip(".,!?;:'\"()-[]{}«»")
+                    if len(_w) >= 4 and _w.isalpha() and _w not in _LIVE_STOPS:
+                        _st = _live_crystal.concept_stage(_w)
+                        if _stage_rank.get(_st, -1) > _stage_rank.get(_top_stage, -1):
+                            _top_stage = _st
+                        if _st in ("higher_order", "quasicrystal"):
+                            _rich_c.append(_w)
+                        elif _st == "composite":
+                            _partial_c.append(_w)
+                        elif _st == "base":
+                            _thin_c.append(_w)
+                systems["_crystal_insight"] = {
+                    "rich_concepts":    _rich_c[:4],
+                    "partial_concepts": _partial_c[:4],
+                    "thin_concepts":    _thin_c[:4],
+                    "top_stage":        _top_stage,
+                    # confidence_modifier: higher stage → speak with more certainty
+                    "confidence_modifier": {
+                        "base": -0.05, "composite": 0.02,
+                        "higher_order": 0.10, "quasicrystal": 0.15,
+                        "unknown": -0.08,
+                    }.get(_top_stage, 0.0),
+                }
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     # Pump user input into the identity field — conversation is Aurora's primary
     # sensory channel and maps directly onto the base crystal layer.
     _ifield_turn = systems.get('identity_field')
@@ -7018,6 +7116,18 @@ def dual_question_pipeline(
                     + (f" (dominant: {_dom_ax}, resonance={_res:.2f})" if _dom_ax else "")
                 )[:120]
                 _ling_relevance = min(0.90, 0.55 + _res * 0.35)
+        # Crystal stage enriches linguistic process: multi-modal understanding
+        # of a concept means Aurora can draw on richer internal experience
+        _ci_ling = systems.get("_crystal_insight") or {}
+        if _ci_ling.get("top_stage") in ("composite", "higher_order", "quasicrystal"):
+            _rich_ling = _ci_ling.get("rich_concepts", []) + _ci_ling.get("partial_concepts", [])
+            if _rich_ling:
+                _ling_content = (
+                    f"crystal-grounded [{_ci_ling['top_stage']}]: "
+                    f"{', '.join(_rich_ling[:3])} | " + _ling_content
+                )[:140]
+                _ling_relevance = min(0.95, _ling_relevance
+                                      + _ci_ling.get("confidence_modifier", 0.0))
         _space.register(make_process_context(
             process_id="linguistic",
             process_type="linguistic",

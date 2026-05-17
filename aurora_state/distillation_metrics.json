@@ -1,19 +1,19 @@
 {
-  "timestamp": 1778886388.8399591,
-  "timestamp_str": "2026-05-15 19:06:28",
-  "status": "idle",
-  "summary": "idle",
+  "timestamp": 1778897843.2153966,
+  "timestamp_str": "2026-05-15 22:17:23",
+  "status": "distilled",
+  "summary": "run 20260515_221723 | 0B purged | 26 crystals",
   "trigger_snapshot": {
     "sizes": {
-      "surface_pressure": 25609817,
+      "surface_pressure": 26252784,
       "pressure_experiences": 2755082,
-      "daemon_log": 413355,
-      "articulation_feedback": 572915
+      "daemon_log": 248166,
+      "articulation_feedback": 599132
     },
-    "total_state_bytes": 137319557,
+    "total_state_bytes": 138645735,
     "low_worth_density": 0.0,
-    "der_load": 0.4024,
-    "latest_restorable_run_id": "20260515_060139",
+    "der_load": 0.4019,
+    "latest_restorable_run_id": "20260515_211158",
     "triggers": {
       "log_size_threshold_exceeded": false,
       "high_low_worth_density": false,
@@ -21,23 +21,76 @@
       "memory_saturation": false,
       "der_load_increase": false,
       "coherence_instability": false,
-      "quiet_window": false
+      "quiet_window": true
     },
-    "should_run": false
+    "should_run": true
   },
   "bytes_purged": 0,
   "links_promoted": 0,
-  "crystals_formed": 0,
-  "micro_residuals_preserved": 0,
+  "crystals_formed": 26,
+  "micro_residuals_preserved": 600,
   "coherence_ratio": 1.0,
-  "vortex_count": 0,
+  "vortex_count": 26,
   "knot_count": 0,
   "wave_count": 0,
   "drift_count": 0,
-  "results": [],
-  "archive_dir": "",
-  "run_id": "",
+  "results": [
+    {
+      "source": "surface_pressure",
+      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/surface_pressure_log.jsonl",
+      "parser": "jsonl",
+      "status": "under_threshold",
+      "current_bytes": 26252784,
+      "bytes_purged": 0,
+      "records_purged": 0,
+      "archive_file": "",
+      "crystals": [],
+      "micro_residuals": [],
+      "shape_counts": {}
+    },
+    {
+      "source": "pressure_experiences",
+      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/pressure_experiences.jsonl",
+      "parser": "jsonl",
+      "status": "under_threshold",
+      "current_bytes": 2755082,
+      "bytes_purged": 0,
+      "records_purged": 0,
+      "archive_file": "",
+      "crystals": [],
+      "micro_residuals": [],
+      "shape_counts": {}
+    },
+    {
+      "source": "daemon_log",
+      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/daemon.log",
+      "parser": "log",
+      "status": "under_threshold",
+      "current_bytes": 248248,
+      "bytes_purged": 0,
+      "records_purged": 0,
+      "archive_file": "",
+      "crystals": [],
+      "micro_residuals": [],
+      "shape_counts": {}
+    },
+    {
+      "source": "articulation_feedback",
+      "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/articulation_feedback.jsonl",
+      "parser": "jsonl",
+      "status": "under_threshold",
+      "current_bytes": 599132,
+      "bytes_purged": 0,
+      "records_purged": 0,
+      "archive_file": "",
+      "crystals": [],
+      "micro_residuals": [],
+      "shape_counts": {}
+    }
+  ],
+  "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260515_221723",
+  "run_id": "20260515_221723",
   "restorable": true,
-  "latest_restorable_run_id": "20260515_060139",
-  "distillation_status": "idle"
+  "latest_restorable_run_id": "20260515_221723",
+  "distillation_status": "20260515_221723 ready"
 }

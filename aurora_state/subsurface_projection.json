@@ -1,9 +1,9 @@
 {
   "source": "subsurface_daemon",
-  "generated_at": 1778892729.9935596,
+  "generated_at": 1778911420.0127864,
   "dominant_axis_hint": "X",
-  "governor_mode": "open",
-  "readiness_bias": 0.52,
+  "governor_mode": "balanced",
+  "readiness_bias": 0.46,
   "surface_guidance": "Surface should feel careful around interpretation while subsurface sharpens the boundary problem. The caution should start easing because the issue is moving toward remedy.",
   "present_sensory_perspective": {
     "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
@@ -59,7 +59,7 @@
       "assimilation"
     ],
     "handoff_status": "researched",
-    "mem_available_mb": 1713.32,
+    "mem_available_mb": 810.51,
     "sensory_history_scope": "discard_after_processing",
     "continuity_scope": "durable_recall_and_consolidation",
     "surface_frame_dependency": "surface_flags_and_5s_snapshots"

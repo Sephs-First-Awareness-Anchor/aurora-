@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-corpus_runner.py — Aurora Corpus Ingestion (Physics-Grounded Absorption)
+corpus_runner.py â Aurora Corpus Ingestion (Physics-Grounded Absorption)
 =========================================================================
 Feeds external conversation data through Aurora's complete architecture,
 governed by the constraint-physics absorption layer established in
@@ -8,55 +8,55 @@ AURORA_COGNITIVE_PHYSICS.md and AURORA_LANGUAGE_EMERGENCE.md.
 
 ABSORPTION ARCHITECTURE:
   Every corpus item is an incoming utterance from an external field.
-  Aurora does not read text — she receives B-axis crossings and must
+  Aurora does not read text â she receives B-axis crossings and must
   reconstruct the proto-language comparison geometry that produced them.
-  That reconstruction IS comprehension. Not word matching — geometry
+  That reconstruction IS comprehension. Not word matching â geometry
   reconstruction.
 
   The physics absorption layer governs all ingestion:
 
-  1. GeometryExtractor        — reconstructs proto-language comparison geometry
+  1. GeometryExtractor        â reconstructs proto-language comparison geometry
                                 from each corpus utterance (which axes active,
                                 relational comparison present, constraint depth)
 
-  2. StratigraphicDepthAssigner — assigns each item to the correct Memory stratum
+  2. StratigraphicDepthAssigner â assigns each item to the correct Memory stratum
                                 based on constraint significance, novelty against
                                 existing Identity field geometry, and axis depth
 
-  3. TensionTracker            — records corpus items that contradict existing
+  3. TensionTracker            â records corpus items that contradict existing
                                 field geometry; holds at surface until reconciled
                                 rather than forcing deep absorption
 
-  4. TwoFactorPathGate         — manages Lexical-Semantic Archive crossing path
+  4. TwoFactorPathGate         â manages Lexical-Semantic Archive crossing path
                                 economics: N-cost decreases with use (worn paths
                                 become cheap), B-specificity tightens with use
                                 (worn paths require stronger contextual match)
                                 Self-diversifying through constraint physics alone
 
-  5. GeometryFidelityScorer    — replaces surface string comparison as primary
+  5. GeometryFidelityScorer    â replaces surface string comparison as primary
                                 training signal: measures whether Aurora's output
                                 carries the same comparison geometry as the truth,
                                 not whether she used the same words
 
-  6. PlateauDetector           — EEPR-style detection: when corpus items stop
+  6. PlateauDetector           â EEPR-style detection: when corpus items stop
                                 producing novel comparison geometries, stall is
                                 detected and curriculum rotation is triggered
 
-  7. AbsorptionField           — orchestrates the full chain for every item:
-                                extract → assign depth → check tension →
-                                update archive → route to stratum
+  7. AbsorptionField           â orchestrates the full chain for every item:
+                                extract â assign depth â check tension â
+                                update archive â route to stratum
 
 LEARNING PATHWAYS (all five, now physics-governed):
-  1. DER energy shaping    — DPME driven by geometry fidelity, not string similarity
-  2. Vocabulary + patterns — Lexical-Semantic Archive with two-factor gate
-  3. Impression distillation — L5 consolidate() after absorption field confirms Understanding
-  4. Identity evolution    — L6 process_episode() after geological-depth writes only
-  5. Simulation wisdom     — L7 run_epoch() → conscious learner shards
+  1. DER energy shaping    â DPME driven by geometry fidelity, not string similarity
+  2. Vocabulary + patterns â Lexical-Semantic Archive with two-factor gate
+  3. Impression distillation â L5 consolidate() after absorption field confirms Understanding
+  4. Identity evolution    â L6 process_episode() after geological-depth writes only
+  5. Simulation wisdom     â L7 run_epoch() â conscious learner shards
 
 PASSES:
-  observer  : witness all messages — geometry extraction + archive seeding
-  responder : Aurora replies to USER — geometry fidelity comparison + full-stack
-  reverse   : Aurora replies to ASSISTANT — geometry fidelity comparison + full-stack
+  observer  : witness all messages â geometry extraction + archive seeding
+  responder : Aurora replies to USER â geometry fidelity comparison + full-stack
+  reverse   : Aurora replies to ASSISTANT â geometry fidelity comparison + full-stack
   triple    : observer -> responder -> reverse (default, RECOMMENDED)
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
@@ -122,7 +122,7 @@ def boot_aurora(state_dir: str = "aurora_state",
                 verbose: bool = True) -> Dict[str, Any]:
     if verbose:
         print("=" * 70)
-        print("  AURORA Corpus Runner — Physics-Grounded Absorption")
+        print("  AURORA Corpus Runner â Physics-Grounded Absorption")
         print("  Authors: Sunni (Sir) Morningstar and Cael Devo")
         print("=" * 70)
 
@@ -162,7 +162,7 @@ def boot_aurora(state_dir: str = "aurora_state",
             print(f"  [STATE] Restored (gen={snapshot.generation}, "
                   f"epochs={snapshot.simulation_epochs})")
         else:
-            print("  [STATE] Fresh boot — no prior state")
+            print("  [STATE] Fresh boot â no prior state")
 
     # Load persisted lexicon
     _lex_path = os.path.join(state_dir, "aurora_state", "lexicon.json")
@@ -185,7 +185,7 @@ def boot_aurora(state_dir: str = "aurora_state",
         restored = checkpoint.restore()
         if verbose and restored:
             c = checkpoint.cursor
-            print(f"  [CHECKPOINT] Restored — last pass: {c.pass_name}, "
+            print(f"  [CHECKPOINT] Restored â last pass: {c.pass_name}, "
                   f"line: {c.line_index}, items: {c.total_items_processed}")
         checkpoint.start_auto_save(300)
     except Exception as e:
@@ -236,6 +236,41 @@ def boot_aurora(state_dir: str = "aurora_state",
         if verbose:
             print(f"  [CHAMBER] Not available: {_e}")
 
+    # Sensory Crystal — unified modality registry + promotion gates
+    sensory_crystal = None
+    try:
+        from aurora_internal.aurora_sensory_crystal import (
+            AuroraSensoryCrystal, ensure_sensory_crystal_lineage,
+            build_vision_57d_from_image_file, build_audio_20d_from_der,
+        )
+        _sc_state_dir = os.path.join(state_dir, "aurora_state")
+        sensory_crystal = AuroraSensoryCrystal(state_dir=_sc_state_dir)
+        sensory_crystal.boot()
+        ensure_sensory_crystal_lineage({"dimensional": dimensional,
+                                        "chamber": chamber})
+        # Build vision seed cache: concept_word → 57-d vector (PIL only, no cv2)
+        _vseed_dir = os.path.join(state_dir, "aurora_state",
+                                  "vision_seeds", "concepts")
+        _vseed_cache: Dict[str, Any] = {}
+        if os.path.isdir(_vseed_dir):
+            for _fname in os.listdir(_vseed_dir):
+                _stem, _ext = os.path.splitext(_fname.lower())
+                if _ext in ('.jpg', '.jpeg', '.png') and _stem:
+                    _v57 = build_vision_57d_from_image_file(
+                        os.path.join(_vseed_dir, _fname))
+                    if _v57:
+                        _vseed_cache[_stem] = _v57
+        if verbose:
+            _sc_summary = sensory_crystal.concept_registry_summary()
+            print(f"  [SENSORY] Crystal booted — "
+                  f"concepts={_sc_summary['total']} "
+                  f"by_stage={_sc_summary['by_stage']} "
+                  f"vision_seeds={len(_vseed_cache)}")
+    except Exception as _sce:
+        if verbose:
+            print(f"  [SENSORY] Crystal not available: {_sce}")
+        _vseed_cache = {}
+
     return {
         "aurora": aurora,
         "StreamType": StreamType,
@@ -248,6 +283,8 @@ def boot_aurora(state_dir: str = "aurora_state",
         "checkpoint": checkpoint,
         "lattice": lattice,
         "chamber": chamber,
+        "sensory_crystal": sensory_crystal,
+        "vision_seed_cache": _vseed_cache,
     }
 
 
@@ -270,7 +307,7 @@ def _safe_join_parts(parts: Any) -> str:
                     out.append(p["text"])
                 elif isinstance(p.get("content"), str):
                     out.append(p["content"])
-        return "\n".join([s for s in out if s])
+                return "\n".join([s for s in out if s])
     return str(parts)
 
 
@@ -397,7 +434,7 @@ def _extract_messages_from_conversation(
 
 
 # =============================================================================
-# Hygiene — Aggressive code-stripping for technical corpora
+# Hygiene â Aggressive code-stripping for technical corpora
 # =============================================================================
 
 _CODE_KEYWORDS = frozenset({
@@ -468,7 +505,7 @@ def _extract_natural_sentences(text: str) -> List[str]:
         sent = sent.strip()
         if not sent or len(sent) < 10:
             continue
-        lines = sent.split('\n')
+        lines = sent.split('\\n')
         clean_lines = []
         for line in lines:
             line = line.strip()
@@ -501,7 +538,6 @@ def sanitize_corpus_text(text: str) -> str:
     t = re.sub(r'\b\w+\s*=\s*\d+\.?\d*\b', ' ', t)
     t = re.sub(r'["\'][\w_]+["\']\s*:\s*\S+', ' ', t)
     t = re.sub(r'(?:Traceback|Error|Exception|Warning)\s*[\(:][^\n]*', ' ', t)
-    t = re.sub(r'\b\w+Error:\s*[^\n]*', ' ', t)
     t = re.sub(r'\b(?:python3?|pip|npm|bash|sh)\s+\S+(?:\s+--?\S+)*', ' ', t)
     t = re.sub(r'(?:==|!=|>=|<=|->|=>|::|&&|\|\||<<|>>)', ' ', t)
     t = re.sub(r'\b[0-9a-f]{8,}\b', ' ', t)
@@ -550,34 +586,34 @@ class StratigraphicDepth(Enum):
     Surface = volatile base-crystal depth (fast decay).
     Geological = near-immutable quasicrystal depth (Understanding writes only).
     """
-    SURFACE    = auto()   # Base crystal depth — volatile, fast decay
-    MID        = auto()   # Composite crystal depth — moderate persistence
-    DEEP       = auto()   # Higher-order crystal depth — high permanence
-    GEOLOGICAL = auto()   # Quasicrystal depth — near-immutable, Understanding only
+    SURFACE    = auto()   # Base crystal depth â volatile, fast decay
+    MID        = auto()   # Composite crystal depth â moderate persistence
+    DEEP       = auto()   # Higher-order crystal depth â high permanence
+    GEOLOGICAL = auto()   # Quasicrystal depth â near-immutable, Understanding only
 
 
 @dataclass
 class ComparisonGeometry:
     """
     The proto-language comparison geometry extracted from a corpus utterance.
-    This is what the utterance IS underneath the words — the relational
+    This is what the utterance IS underneath the words â the relational
     comparison that the external field was making when it produced this text.
 
-    Axis activations are 0.0–1.0 indicating how strongly each constraint
+    Axis activations are 0.0â1.0 indicating how strongly each constraint
     axis is expressed in the comparison this utterance is making.
     """
     # Five-axis activation profile
-    x_activation: float = 0.0   # Existence — being, presence, factual assertion
-    t_activation: float = 0.0   # Temporal — time, sequence, duration, memory
-    n_activation: float = 0.0   # Energy — pressure, urgency, emotional weight
-    b_activation: float = 0.0   # Boundary — definition, distinction, comparison
-    a_activation: float = 0.0   # Agency — will, action, direction, intention
+    x_activation: float = 0.0   # Existence â being, presence, factual assertion
+    t_activation: float = 0.0   # Temporal â time, sequence, duration, memory
+    n_activation: float = 0.0   # Energy â pressure, urgency, emotional weight
+    b_activation: float = 0.0   # Boundary â definition, distinction, comparison
+    a_activation: float = 0.0   # Agency â will, action, direction, intention
 
-    # Constraint significance (0.0–1.0)
+    # Constraint significance (0.0â1.0)
     # Higher = more axes active, deeper constraint depth, more novel
     constraint_significance: float = 0.0
 
-    # Novelty against existing Identity field geometry (0.0–1.0)
+    # Novelty against existing Identity field geometry (0.0â1.0)
     # Higher = more novel, lower = more resonant with known geometry
     novelty: float = 0.0
 
@@ -598,19 +634,19 @@ class ComparisonGeometry:
             self.b_activation, self.a_activation
         ] if v > 0.3)
 
-    # Magnitude per the physics formula: (B × T × X) / N
+    # Magnitude per the physics formula: (B Ã T Ã X) / N
     @property
     def magnitude(self) -> float:
         n = max(self.n_activation, 0.01)
         return (self.b_activation * self.t_activation * self.x_activation) / n
 
-    # Impact per the physics formula: Magnitude × A
+    # Impact per the physics formula: Magnitude Ã A
     @property
     def impact(self) -> float:
         return self.magnitude * self.a_activation
 
 
-# Axis detection vocabulary — words that signal each constraint axis
+# Axis detection vocabulary â words that signal each constraint axis
 _X_MARKERS = frozenset({
     'is', 'are', 'was', 'were', 'be', 'been', 'being', 'exist', 'exists',
     'there', 'here', 'presence', 'present', 'real', 'true', 'fact', 'actual',
@@ -643,7 +679,7 @@ _A_MARKERS = frozenset({
     'control', 'guide', 'lead', 'push', 'drive', 'cause', 'effect', 'change',
 })
 
-# Relational comparison patterns — B-axis geometry indicators
+# Relational comparison patterns â B-axis geometry indicators
 _RELATIONAL_PATTERNS = [
     r'\b(?:is|are|was|were)\s+(?:not|like|unlike|similar|different|the same)\b',
     r'\b(?:more|less|better|worse|greater|smaller)\s+than\b',
@@ -662,7 +698,7 @@ class GeometryExtractor:
     symbolic form), reconstruct the comparison geometry that the external
     field was expressing when it produced this text.
 
-    Does not require Aurora's internal field to be in any particular state —
+    Does not require Aurora's internal field to be in any particular state â
     operates on the text alone using axis detection heuristics and relational
     pattern matching.
     """
@@ -693,7 +729,7 @@ class GeometryExtractor:
         )
         geom.b_activation = min(1.0, geom.b_activation + relational_count * 0.12)
 
-        # Constraint significance — scaled by axis count and depth
+        # Constraint significance â scaled by axis count and depth
         geom.constraint_significance = self._compute_significance(geom)
 
         # Geometry fingerprint
@@ -721,7 +757,7 @@ class GeometryExtractor:
 
     def _axis_score(self, words: Set[str],
                     markers: frozenset, text: str) -> float:
-        """Score axis activation from word overlap (0.0–1.0)."""
+        """Score axis activation from word overlap (0.0â1.0)."""
         if not words:
             return 0.0
         hits = len(words & markers)
@@ -735,7 +771,7 @@ class GeometryExtractor:
     def _compute_significance(self, geom: ComparisonGeometry) -> float:
         """
         Constraint significance from axis profile.
-        Uses the physics magnitude formula: (B × T × X) / N
+        Uses the physics magnitude formula: (B Ã T Ã X) / N
         then scales by axis count.
         """
         axis_count = geom.active_axis_count
@@ -749,7 +785,7 @@ class GeometryExtractor:
     def _fingerprint(self, geom: ComparisonGeometry,
                      words: Set[str]) -> str:
         """
-        Generate a geometry fingerprint — identifies the comparison geometry
+        Generate a geometry fingerprint â identifies the comparison geometry
         irrespective of specific word choices. Two utterances making the same
         relational comparison should produce similar fingerprints.
         """
@@ -789,21 +825,21 @@ class GeometryExtractor:
         prefix = fingerprint[:6]
         similar_count = sum(1 for fp in existing if fp.startswith(prefix))
         if similar_count > 0:
-            # Similar geometry exists — partial novelty
+            # Similar geometry exists â partial novelty
             return max(0.3, 1.0 - (similar_count * 0.15))
         return 1.0
 
     def _assign_depth(self, geom: ComparisonGeometry) -> StratigraphicDepth:
         """
         Assign stratigraphic depth from the physics depth rules:
-          Surface    — single axis, low significance, high novelty without tension
-          Mid        — 2-3 axes, moderate significance
-          Deep       — 4+ axes, high significance, resolved (no tension)
-          Geological — reserved for Understanding events only; never assigned
+          Surface    â single axis, low significance, high novelty without tension
+          Mid        â 2-3 axes, moderate significance
+          Deep       â 4+ axes, high significance, resolved (no tension)
+          Geological â reserved for Understanding events only; never assigned
                        during initial absorption (requires Reflection + RECONCILIATION)
         """
         if geom.creates_tension:
-            # Tension items always land at surface — await reconciliation
+            # Tension items always land at surface â await reconciliation
             return StratigraphicDepth.SURFACE
 
         if geom.active_axis_count >= 4 and geom.constraint_significance > 0.7:
@@ -835,7 +871,7 @@ class TensionRecord:
     def attempt_reconciliation(self, current_novelty: float) -> bool:
         """
         Attempt to reconcile this tension against current field geometry.
-        Returns True if reconciled (novelty has decreased — field has grown
+        Returns True if reconciled (novelty has decreased â field has grown
         to accommodate the geometry), False if still unresolved.
         """
         self.reconciliation_attempts += 1
@@ -845,12 +881,12 @@ class TensionRecord:
 
 class TwoFactorPathGate:
     """
-    Lexical-Semantic Archive — crossing path economics.
+    Lexical-Semantic Archive â crossing path economics.
 
     Implements the two-factor gate from AURORA_LANGUAGE_EMERGENCE.md:
-      Factor 1 — N-cost (float): decreases with each successful use.
+      Factor 1 â N-cost (float): decreases with each successful use.
                  Worn paths become cheap to traverse.
-      Factor 2 — B-specificity (float): increases with each successful use.
+      Factor 2 â B-specificity (float): increases with each successful use.
                  Worn paths require stronger contextual match to unlock.
 
     These two factors work in opposition to produce natural expression
@@ -872,7 +908,7 @@ class TwoFactorPathGate:
         Decreases N-cost, increases B-specificity.
         """
         if path_id not in self._paths:
-            # New path — initialize with high cost and low specificity
+            # New path â initialize with high cost and low specificity
             self._paths[path_id] = (1.0, 0.1, 0, context_hash)
 
         n_cost, b_spec, use_count, _ = self._paths[path_id]
@@ -901,7 +937,7 @@ class TwoFactorPathGate:
 
         Returns list of (path_id, n_cost, b_specificity) tuples.
         Only paths whose B-gate is satisfied by the current context
-        are returned — worn paths with insufficient context match are excluded.
+        are returned â worn paths with insufficient context match are excluded.
         """
         path_ids = self._geometry_to_paths.get(geometry_fingerprint, [])
         available = []
@@ -928,7 +964,7 @@ class TwoFactorPathGate:
         return len(self._paths)
 
     def _context_similarity(self, ctx_a: str, ctx_b: str) -> float:
-        """Simple hash-prefix context similarity (0.0–1.0)."""
+        """Simple hash-prefix context similarity (0.0â1.0)."""
         if not ctx_a or not ctx_b:
             return 0.0
         if ctx_a == ctx_b:
@@ -993,8 +1029,8 @@ class AbsorptionField:
     Orchestrates the full physics-grounded absorption chain for every
     corpus item:
 
-      extract geometry → check tension → assign depth →
-      update archive → route to stratum → record novelty
+      extract geometry â check tension â assign depth â
+      update archive â route to stratum â record novelty
 
     This is the layer the existing DPME and full-stack learning hooks sit
     on top of. The absorption field determines WHAT gets absorbed WHERE
@@ -1006,7 +1042,7 @@ class AbsorptionField:
         self.path_gate = TwoFactorPathGate()
         self.plateau_detector = PlateauDetector()
 
-        # Archive of all geometry fingerprints seen — novelty reference
+        # Archive of all geometry fingerprints seen â novelty reference
         self._seen_fingerprints: Set[str] = set()
 
         # Active tension items (unresolved contradiction holds)
@@ -1087,7 +1123,7 @@ class AbsorptionField:
                 record.geometry.depth = StratigraphicDepth.MID
                 self.tension_resolved += 1
             elif record.expired:
-                # Expired: geometry too contradictory — discard
+                # Expired: geometry too contradictory â discard
                 self.tension_expired += 1
             else:
                 still_held.append(record)
@@ -1096,7 +1132,7 @@ class AbsorptionField:
 
     def understanding_write(self, text: str) -> ComparisonGeometry:
         """
-        Geological-depth write — only called after Reflection has confirmed
+        Geological-depth write â only called after Reflection has confirmed
         UNDERSTANDING (full field equilibrium reached).
         This is the only path to GEOLOGICAL depth.
         """
@@ -1130,7 +1166,7 @@ class AbsorptionField:
 # Geometry Fidelity Scorer
 # Replaces composite_similarity as primary training signal.
 # Measures whether Aurora's output carries the same comparison geometry
-# as the truth — not whether she used the same words.
+# as the truth â not whether she used the same words.
 # =============================================================================
 
 class GeometryFidelityScorer:
@@ -1155,11 +1191,11 @@ class GeometryFidelityScorer:
               seen_fingerprints: Optional[Set[str]] = None) -> Dict[str, float]:
         """
         Returns a dict with:
-          geometry_fidelity  — primary signal (0.0–1.0)
-          axis_alignment     — how well axis profiles match
-          depth_alignment    — whether constraint depth matches
-          surface_similarity — traditional string/vocab overlap (secondary)
-          composite          — weighted composite of all signals
+          geometry_fidelity  â primary signal (0.0â1.0)
+          axis_alignment     â how well axis profiles match
+          depth_alignment    â whether constraint depth matches
+          surface_similarity â traditional string/vocab overlap (secondary)
+          composite          â weighted composite of all signals
         """
         gen = (generated or "").strip()
         tr = (truth or "").strip()
@@ -1234,7 +1270,7 @@ class GeometryFidelityScorer:
         if gen_d == tr_d:
             return 1.0
         diff = abs(gen_d - tr_d)
-        # Depth mismatch penalty — worse when Aurora is shallower than truth
+        # Depth mismatch penalty â worse when Aurora is shallower than truth
         if gen_d < tr_d:
             return max(0.0, 1.0 - diff * 0.35)  # Shallower = bigger penalty
         else:
@@ -1281,7 +1317,7 @@ def artifact_ratio(text: str) -> float:
 
 
 # =============================================================================
-# Coherence Gate (retained — now uses geometry fidelity as primary input)
+# Coherence Gate (retained â now uses geometry fidelity as primary input)
 # =============================================================================
 
 class CoherenceGate:
@@ -1329,7 +1365,7 @@ def dpme_adjust_from_geometry(
     Physics-governed DPME adjustment.
 
     Adjustments are now driven by geometry fidelity and the truth geometry's
-    constraint profile — not raw string similarity. The truth geometry tells
+    constraint profile â not raw string similarity. The truth geometry tells
     us WHICH axes need energy reinforcement. The fidelity score tells us HOW
     MUCH adjustment is needed.
 
@@ -1349,18 +1385,18 @@ def dpme_adjust_from_geometry(
     unlocked = gate.unlocked() if gate is not None else False
 
     # Determine which axes the truth geometry is most expressing
-    # — route energy to those facets
+    # â route energy to those facets
     dominant_axes = []
     if truth_geom.x_activation > 0.4:
-        dominant_axes.append("cat_processing")   # X-axis → existence/grounding
+        dominant_axes.append("cat_processing")   # X-axis â existence/grounding
     if truth_geom.t_activation > 0.4:
-        dominant_axes.append("cat_memory")       # T-axis → temporal continuity
+        dominant_axes.append("cat_memory")       # T-axis â temporal continuity
     if truth_geom.n_activation > 0.4:
-        dominant_axes.append("cat_emotional")    # N-axis → energetic pressure
+        dominant_axes.append("cat_emotional")    # N-axis â energetic pressure
     if truth_geom.b_activation > 0.4:
-        dominant_axes.append("cat_processing")   # B-axis → definition/reasoning
+        dominant_axes.append("cat_processing")   # B-axis â definition/reasoning
     if truth_geom.a_activation > 0.4:
-        dominant_axes.append("cat_creative")     # A-axis → agency/expression
+        dominant_axes.append("cat_creative")     # A-axis â agency/expression
 
     adjustments = []
     intention = f"geometry-fidelity DPME: composite={composite:.3f} " \
@@ -1401,7 +1437,7 @@ def dpme_adjust_from_geometry(
 
     else:
         # Post-coherence: axis-targeted energy routing
-        intention2 = (f"coherence established — route energy to truth geometry "
+        intention2 = (f"coherence established â route energy to truth geometry "
                       f"axes: {dominant_axes}")
 
         # Route to dominant axes from truth geometry
@@ -1413,18 +1449,18 @@ def dpme_adjust_from_geometry(
         if depth_alignment < 0.6:
             adjustments.append(dpme.adjust(
                 "der", "cat_memory", 0.08,
-                "depth mismatch — reinforce temporal-constraint depth"))
+                "depth mismatch â reinforce temporal-constraint depth"))
 
         # Presence stabilization
         adjustments.append(dpme.adjust(
             "der", "presence", 0.02,
             "maintain stability while deepening geometry"))
 
-        # If axis alignment is good but depth is off — emotional integration
+        # If axis alignment is good but depth is off â emotional integration
         if axis_alignment > 0.65 and depth_alignment > 0.7 and mismatch < 0.3:
             adjustments.append(dpme.adjust(
                 "der", "cat_emotional", 0.03,
-                "geometry aligned — allow meaning integration"))
+                "geometry aligned â allow meaning integration"))
 
     adjustments = [a for a in adjustments if a is not None]
     for adj in adjustments:
@@ -1459,12 +1495,77 @@ def dpme_adjust_from_geometry(
 
 
 # =============================================================================
+# DER â OETS Axis Pressure Bridge
+# Keeps OETS relational comparisons grounded in Aurora's real constraint state.
+# Without this, OETS uses flat {X:0.5 ...} defaults and comparisons are generic.
+# =============================================================================
+
+_DER_CAT_TO_AXIS = {
+    "vitality":   "X",   # existence / grounding
+    "memory":     "T",   # temporal continuity
+    "emotional":  "N",   # energy / tension
+    "processing": "B",   # boundary / definition
+    "creative":   "A",   # agency / expression
+}
+
+def sync_der_to_oets(systems: Dict[str, Any]) -> Dict[str, float]:
+    """
+    Read DER's current category energies, map to X/T/N/B/A, and push them
+    onto perception._pressure_vec so OETS comparisons use Aurora's real
+    constraint topology instead of flat 0.5 defaults.
+
+    Returns the pressure dict that was applied.
+    """
+    dimensional = systems.get("dimensional")
+    perception  = systems.get("perception")
+    if dimensional is None or perception is None:
+        return {}
+
+    # Try the rich pressure vec first (needs genealogy symbols)
+    pv = None
+    try:
+        pv = dimensional._current_pressure_vec()
+        if pv is not None:
+            pressures = pv.to_dict() if hasattr(pv, "to_dict") else dict(pv)
+            if pressures and all(k in pressures for k in ("X", "T", "N", "B", "A")):
+                if "curriculum_tension" in systems:
+                    systems["curriculum_tension"].apply_to_pressures(pressures)
+        perception._pressure_vec = pressures
+        if hasattr(perception, "oets") and perception.oets is not None:
+            perception.oets._active_pressures = dict(pressures)
+        return pressures
+    except Exception:
+        pass
+
+    # Fallback: read category_energy directly from DER and normalise
+    try:
+        der = dimensional.der
+        raw = {ax: der.category_energy(cat)
+               for cat, ax in _DER_CAT_TO_AXIS.items()}
+        total = sum(raw.values()) or 1.0
+        # Keep values in [0.05, 0.95] so nothing is fully silenced
+        pressures = {ax: max(0.05, min(0.95, v / total * len(raw) * 0.5))
+                     for ax, v in raw.items()}
+        if "curriculum_tension" in systems:
+            systems["curriculum_tension"].apply_to_pressures(pressures)
+        perception._pressure_vec = pressures
+        if hasattr(perception, "oets") and perception.oets is not None:
+            perception.oets._active_pressures = dict(pressures)
+        return pressures
+    except Exception:
+        pass
+
+    return {}
+
+
+# =============================================================================
 # Full-Stack Learning Hooks (physics-governed versions)
 # =============================================================================
 
 def heartbeat(systems: Dict[str, Any]):
     """One consciousness heartbeat. Entropy erodes coherence, DER disperses."""
     systems["consciousness"].tick()
+    sync_der_to_oets(systems)   # keep OETS grounded after every energy tick
 
 
 def physics_absorb_truth(
@@ -1484,15 +1585,16 @@ def physics_absorb_truth(
       4. TwoFactorPathGate updated with this crossing
 
     The L5 composer only receives text that has cleared geometry extraction
-    at MID depth or above — surface-stratum items are vocabulary seeds only.
+    at MID depth or above â surface-stratum items are vocabulary seeds only.
     """
     if not truth_text or len(truth_text.split()) < 3:
         return ComparisonGeometry()
 
+    sync_der_to_oets(systems)   # ground OETS before truth absorption
     geom = absorption_field.absorb(truth_text, context_hash)
     perception = systems["perception"]
 
-    # Vocabulary gate — always applies regardless of depth
+    # Vocabulary gate â always applies regardless of depth
     words = truth_text.split()
     clean_words = [w for w in words if is_valid_word(
         w.strip(".,!?;:'\"()-[]{}").lower())]
@@ -1508,7 +1610,7 @@ def physics_absorb_truth(
             # SURFACE only: vocabulary seeding, no template absorption
             # (tension items and low-significance items don't template yet)
             for w in clean_words[:10]:  # Seed lexicon but don't template
-                perception.lexicon.ingest_interaction(w, "")
+                perception.lexicon.add_word(w, meaning="absorbed", role="noun")
 
     return geom
 
@@ -1519,7 +1621,7 @@ def evolve_identity(systems: Dict[str, Any],
                     mode=None):
     """
     Physics-governed identity evolution.
-    Only called after DEEP or GEOLOGICAL depth absorption events —
+    Only called after DEEP or GEOLOGICAL depth absorption events â
     surface and mid absorptions don't trigger identity evolution.
     """
     if mode is None:
@@ -1540,7 +1642,7 @@ def evolve_identity(systems: Dict[str, Any],
             geom.b_activation,
             geom.a_activation,
         )
-        # N-axis → emotional weight
+        # N-axis â emotional weight
         trust = 0.3 + quality * 0.4 + geom.n_activation * 0.1
         curiosity = 0.4 + (1.0 - quality) * 0.3 + geom.b_activation * 0.1
 
@@ -1589,10 +1691,69 @@ def consolidate(systems: Dict[str, Any]):
         oets.consolidate()
 
 
+def corpus_study_cycle(systems: Dict[str, Any], verbose: bool = False) -> None:
+    """
+    Aurora's in-training research pass.
+
+    Flushes the study queue that the observer builds during deep/geological
+    absorptions, queues those concepts into OETS's research engine, and runs
+    one study cycle so Aurora actively builds relational maps around concepts
+    she's encountering — not just absorbing them passively.
+
+    Uses internal OETS graph traversal only (no network) so it works on a
+    mobile hotspot.  The study cycle:
+        1. Pops up to 20 deep-encountered concepts from systems["_study_queue"]
+        2. Queues them as ResearchRequests (reason="corpus_deep_encounter")
+        3. Calls oets.run_study_cycle() which:
+           - Discovers 1-hop + 2-hop OETS neighbors
+           - Infers synonym/antonym/hypernym candidates
+           - Adds new relational edges to the web
+           - Logs a StudyEvent
+    """
+    oets = getattr(systems.get("perception"), 'oets', None)
+    if oets is None:
+        return
+
+    study_queue: List[str] = systems.get("_study_queue") or []
+    if not study_queue:
+        return
+
+    # Drain up to 20 per consolidation interval
+    batch, remainder = study_queue[:20], study_queue[20:]
+    systems["_study_queue"] = remainder
+
+    try:
+        from aurora_internal.aurora_ontological_scaffolding import ResearchRequest
+        import uuid as _uuid
+        requests = [
+            ResearchRequest(
+                request_id=str(_uuid.uuid4()),
+                word=w,
+                priority=0.85,
+                reason="corpus_deep_encounter",
+            )
+            for w in batch
+            if w in (getattr(oets, "web", None) and oets.web.nodes or {})
+        ]
+        if requests and hasattr(oets, "research") and hasattr(oets.research, "queue_research"):
+            oets.research.queue_research(requests)
+            result = oets.run_study_cycle(trigger_reason="corpus_learning")
+            if verbose:
+                studied = result.get("researched", 0)
+                rels    = result.get("results", [])
+                new_rels = sum(r.get("relations_added", 0) for r in rels)
+                print(f"  [STUDY] Researched {studied} concept(s) | "
+                      f"+{new_rels} relations | "
+                      f"queued={len(remainder)} remaining")
+    except Exception as _se:
+        if verbose:
+            print(f"  [STUDY] Study cycle error: {_se}")
+
+
 def simulation_burst(systems: Dict[str, Any],
                      episodes: int = 4,
                      verbose: bool = True):
-    """L7 simulation training burst — avatars + inception + wisdom shards."""
+    """L7 simulation training burst â avatars + inception + wisdom shards."""
     from foundational_contract import ExistenceMode
     result = systems["simulation"].run_epoch(
         episodes_per_epoch=episodes,
@@ -1665,6 +1826,41 @@ def evolve_chain(systems: Dict[str, Any],
 # Learning Cadence
 # =============================================================================
 
+
+class CurriculumTension:
+    """
+    Represents internal tension generated by curriculum failure.
+    Wired into the N-axis (Energy) to drive B-axis (Boundary) tightening.
+    """
+    def __init__(self):
+        self.tension_level: float = 0.0  # 0.0 to 1.0
+        self.failure_count: int = 0
+        self.last_failure_time: float = 0.0
+
+    def record_failure(self, fidelity: float):
+        self.failure_count += 1
+        # Tension = 1.0 - fidelity, weighted by repeat failures
+        new_tension = (1.0 - fidelity) * (1.0 + (self.failure_count * 0.2))
+        self.tension_level = min(1.0, self.tension_level + new_tension)
+        self.last_failure_time = time.time()
+
+    def decay(self, message_count: int = 1):
+        # Tension decays as she studies (OBSERVER mode)
+        # It takes ~500 messages to fully clear a major failure
+        self.tension_level = max(0.0, self.tension_level - (message_count * 0.002))
+
+    def apply_to_pressures(self, pressures: dict):
+        """Wired feedback: Tension increases N-axis and B-axis pressure."""
+        if self.tension_level <= 0:
+            return
+        # N-axis (Energy): URGENCY to resolve the mismatch
+        pressures["N"] = min(0.95, pressures.get("N", 0.5) + (self.tension_level * 0.3))
+        # B-axis (Boundary): TIGHTEN definition to prevent future error
+        pressures["B"] = min(0.95, pressures.get("B", 0.5) + (self.tension_level * 0.4))
+        # A-axis (Agency): REDUCE expressive confidence while tense
+        pressures["A"] = max(0.05, pressures.get("A", 0.5) - (self.tension_level * 0.2))
+
+
 class LearningCadence:
     """
     Orchestrates when each learning pathway fires.
@@ -1719,7 +1915,7 @@ class LearningCadence:
 
 
 # =============================================================================
-# Corpus Ingestion — Physics-Grounded
+# Corpus Ingestion â Physics-Grounded
 # =============================================================================
 
 def run_corpus_ingestion(
@@ -1748,6 +1944,8 @@ def run_corpus_ingestion(
     # Initialize physics absorption field and geometry scorer
     absorption_field = AbsorptionField()
     fidelity_scorer = GeometryFidelityScorer(absorption_field.extractor)
+    curriculum_tension = CurriculumTension()
+    systems["curriculum_tension"] = curriculum_tension
 
     if verbose:
         print("=" * 70)
@@ -1763,7 +1961,6 @@ def run_corpus_ingestion(
               f"save/{cadence.save_every}")
         print("=" * 70)
 
-    # Warm-up simulation
     if warmup_epochs > 0:
         if verbose:
             print(f"\n  [WARMUP] Running {warmup_epochs} simulation epochs")
@@ -1802,34 +1999,150 @@ def run_corpus_ingestion(
             print("  [CORPUS] No usable messages found. Aborting.\n")
         return
 
+    # Sync DER axis pressures to OETS before each perception call
+    # so relational comparisons use Aurora's real constraint topology.
+    sync_der_to_oets(systems)
+
     # Core routing
+    _crystal = systems.get("sensory_crystal")
+    _vseed_cache = systems.get("vision_seed_cache") or {}
+    # Import builder here so it's available inside closures without re-importing
+    try:
+        from aurora_internal.aurora_sensory_crystal import build_audio_20d_from_der as _build_a20
+    except ImportError:
+        _build_a20 = None
+    _STOPWORDS = {
+        "the", "and", "for", "are", "but", "not", "you", "all", "can", "was",
+        "had", "has", "have", "this", "that", "with", "from", "they", "will",
+        "been", "were", "their", "what", "when", "which", "your", "there",
+        "more", "also", "just", "into", "than", "then", "some", "its",
+        "about", "would", "could", "should", "like", "very", "only", "even",
+        "any", "our", "how", "who", "each", "does", "did", "get", "his",
+        "her", "him", "she", "him", "they", "them", "those", "these",
+    }
+
+    def _feed_crystal_semantic(text: str, weight: float = 1.0) -> None:
+        """Extract content words and register semantic modality in crystal."""
+        if not _crystal:
+            return
+        words = text.lower().split()
+        for raw in words:
+            w = raw.strip(".,!?;:'\"()-[]{}«»")
+            if len(w) >= 4 and w.isalpha() and w not in _STOPWORDS:
+                _crystal.observe_semantic(w, weight=weight)
+
+    def _feed_crystal_visual_and_audio(
+            text: str, weight: float = 1.0, depth_name: str = "SURFACE") -> None:
+        """Feed visual (vision seeds) and audio (DER synthesis) into crystal."""
+        if not _crystal:
+            return
+        words = text.lower().split()
+        content_words = []
+        for raw in words:
+            w = raw.strip(".,!?;:'\"()-[]{}«»")
+            if len(w) >= 4 and w.isalpha() and w not in _STOPWORDS:
+                content_words.append(w)
+
+        # --- Visual: for each content word that has a vision seed image ---
+        for w in content_words:
+            v57 = _vseed_cache.get(w)
+            if v57 is None:
+                continue
+            try:
+                _crystal.observe_frame(
+                    [0.0] * 20, v57,
+                    session_id=f"corpus:vis:{w}",
+                    visual_conf=weight,
+                )
+                _crystal._register_concept_visual(w, f"seed:{w}")
+            except Exception:
+                pass
+
+        # --- Audio: synthesize from DER axis pressures (once per message) ---
+        # Only for MID+ depth — surface is too shallow to carry acoustic meaning
+        if _build_a20 and depth_name in ("MID", "DEEP", "GEOLOGICAL"):
+            _axes = getattr(systems.get("perception"), "_pressure_vec", None) or {}
+            if not _axes:
+                # Fall back to a neutral profile so audio facets still get signal
+                _axes = {"X": 0.4, "T": 0.4, "N": 0.35, "B": 0.4, "A": 0.3}
+            try:
+                a20 = _build_a20(
+                    float(_axes.get("X", 0.4)),
+                    float(_axes.get("T", 0.4)),
+                    float(_axes.get("N", 0.35)),
+                    float(_axes.get("B", 0.4)),
+                    float(_axes.get("A", 0.3)),
+                )
+                # One audio frame per message to exercise audio facets
+                _crystal.observe_frame(
+                    a20, [0.0] * 57,
+                    session_id=f"corpus:aud",
+                    audio_conf=weight * 0.65,  # DER-synthesised = lower confidence
+                )
+                # Register audio modality for all content words in this message
+                for w in content_words:
+                    _crystal._register_concept_audio(w, f"der:corpus")
+            except Exception:
+                pass
+
     def witness(tag: str, content: str, source: str,
                 context_hash: str = ""):
         """
         Witness a corpus message.
         Routes through physics absorption field before gateway receive.
+        One bad message must never abort the entire training run.
         """
         if not content or len(content.split()) < 3:
             return None, ComparisonGeometry()
-
-        geom = absorption_field.absorb(content, context_hash)
-
-        return aurora.gateway.receive(
-            content=f"[{tag}] {content}",
-            stream_type=StreamType.KNOWLEDGE_FEED,
-            source=source,
-            mode=ExistenceMode.BOUNDED,
-        ), geom
+        try:
+            geom = absorption_field.absorb(content, context_hash)
+            sync_der_to_oets(systems)   # ground OETS in current constraint state
+            # Weight deeper absorptions more strongly in the concept registry
+            _depth_name = getattr(geom.depth, "name", "SURFACE")
+            _sem_weight = {
+                "SURFACE": 0.4, "MID": 0.7, "DEEP": 0.9, "GEOLOGICAL": 1.0
+            }.get(_depth_name, 0.4)
+            _feed_crystal_semantic(content, weight=_sem_weight)
+            _feed_crystal_visual_and_audio(content, weight=_sem_weight,
+                                           depth_name=_depth_name)
+            # Queue deep/geological concepts for OETS study cycle
+            if _depth_name in ("DEEP", "GEOLOGICAL"):
+                _sq = systems.setdefault("_study_queue", [])
+                _seen_sq = set(_sq)
+                for _raw in content.lower().split():
+                    _sw = _raw.strip(".,!?;:'\"()-[]{}«»")
+                    if (len(_sw) >= 4 and _sw.isalpha()
+                            and _sw not in _STOPWORDS
+                            and _sw not in _seen_sq
+                            and len(_sq) < 500):
+                        _sq.append(_sw)
+                        _seen_sq.add(_sw)
+            result = aurora.gateway.receive(
+                content=f"[{tag}] {content}",
+                stream_type=StreamType.KNOWLEDGE_FEED,
+                source=source,
+                mode=ExistenceMode.BOUNDED,
+            )
+            return result, geom
+        except Exception as _we:
+            if verbose:
+                print(f"  [WITNESS] skipped ({_we.__class__.__name__}: {_we})")
+            return None, ComparisonGeometry()
 
     def generate_reply(prompt_text: str, source: str):
         if not prompt_text or len(prompt_text.split()) < 3:
             return None
-        return aurora.gateway.receive(
-            content=prompt_text,
-            stream_type=StreamType.USER_INPUT,
-            source=source,
-            mode=ExistenceMode.BOUNDED,
-        )
+        try:
+            return aurora.gateway.receive(
+                content=prompt_text,
+                stream_type=StreamType.USER_INPUT,
+                source=source,
+                mode=ExistenceMode.BOUNDED,
+            )
+        except Exception as _ge:
+            if verbose:
+                print(f"  [REPLY] skipped ({_ge.__class__.__name__}: {_ge})")
+            return None
 
     _checkpoint = systems.get("checkpoint")
 
@@ -1859,15 +2172,21 @@ def run_corpus_ingestion(
 
         if cadence.should_consolidate(counter):
             consolidate(systems)
+            corpus_study_cycle(systems, verbose=verbose)
             if verbose:
                 vocab = systems["perception"].lexicon.size
                 gen = systems["identity"].generation
                 report = absorption_field.field_report()
                 oets_info = ""
+                sc_info = ""
                 if systems["perception"].oets:
                     oets = systems["perception"].oets
                     oets_info = (f" oets={len(oets.web.nodes)}c/"
                                  f"{len(oets.web.relations)}r")
+                if systems.get("sensory_crystal"):
+                    _sc_sum = systems["sensory_crystal"].concept_registry_summary()
+                    sc_info = (f" | concepts={_sc_sum['total']}"
+                               f" {_sc_sum['by_stage']}")
                 print(
                     f"  [CONSOLIDATE] at {counter:,} "
                     f"vocab={vocab} gen={gen}{oets_info} | "
@@ -1876,6 +2195,7 @@ def run_corpus_ingestion(
                     f"deep={report['deep_writes']} "
                     f"tension={report['pending_tension']} "
                     f"novelty={report['avg_novelty']:.3f}"
+                    f"{sc_info}"
                 )
 
         if cadence.should_simulate(counter):
@@ -1890,13 +2210,13 @@ def run_corpus_ingestion(
                 verbose=verbose
             )
 
-        # Plateau detection — log stall if detected
+        # Plateau detection ÃÂ¢Ã¢âÂ¬Ã¢â¬Â log stall if detected
         if absorption_field.plateau_stalled and counter % 50 == 0:
             if verbose:
                 report = absorption_field.field_report()
                 print(
                     f"  [PLATEAU] CURRICULUM_STALL detected at {counter:,} "
-                    f"avg_novelty={report['avg_novelty']:.3f} — "
+                    f"avg_novelty={report['avg_novelty']:.3f} ÃÂ¢Ã¢âÂ¬Ã¢â¬Â "
                     f"consider rotating corpus"
                 )
             absorption_field.plateau_detector.reset_stall()
@@ -1910,14 +2230,16 @@ def run_corpus_ingestion(
                 systems["perception"].save_lexicon()
 
     # PASS: OBSERVER
-    def pass_observer():
+    def pass_observer(break_on_stall: bool = False,
+                      min_messages: int = 0) -> str:
         if verbose:
-            print("  [CORPUS] PASS — OBSERVER "
-                  "(geometry extraction + archive seeding)\n")
+            extra = ' + study mandate' if min_messages > 0 else ''
+            print(f"  [CORPUS] PASS â OBSERVER "
+                  f"(geometry extraction + archive seeding{extra})\n")
         counter = 0
         start_line = 0
 
-        if _checkpoint and _checkpoint.cursor.pass_name == "observer":
+        if _checkpoint:
             start_line = _checkpoint.cursor.line_index
             if verbose and start_line > 0:
                 print(f"  [CHECKPOINT] Resuming observer from line {start_line}")
@@ -1933,7 +2255,23 @@ def run_corpus_ingestion(
                               source="corpus_observer",
                               context_hash=ctx_hash)
 
+            curriculum_tension.decay(1)
             run_cadence(counter, geom=geom)
+
+            if (break_on_stall and counter >= min_messages 
+                and absorption_field.plateau_stalled):
+                if verbose:
+                    print(f"  [PLATEAU] Stall detected at {counter:,}. "
+                          f"Transitioning to RESPONDER practice...")
+                # Advance checkpoint before returning
+                if _checkpoint:
+                    _checkpoint.advance(
+                        line_index=line_idx,
+                        item_hash=ctx_hash,
+                        pass_name="observer",
+                        file_path=corpus_path,
+                    )
+                return "STALLED"
 
             if _checkpoint and counter % 500 == 0:
                 _checkpoint.advance(
@@ -1942,6 +2280,11 @@ def run_corpus_ingestion(
                     pass_name="observer",
                     file_path=corpus_path,
                 )
+                if _crystal:
+                    try:
+                        _crystal.save()
+                    except Exception:
+                        pass
 
             if verbose and counter % 500 == 0:
                 vocab = systems["perception"].lexicon.size
@@ -1964,15 +2307,15 @@ def run_corpus_ingestion(
 
         if verbose:
             report = absorption_field.field_report()
-            print(f"\n  [OBSERVER] Complete. Messages: {counter:,} | "
+            print(f"  [OBSERVER] Complete. Messages: {counter:,} | "
                   f"Archive: {report['fingerprints_archived']} geometries | "
                   f"Paths: {report['crossing_paths']}\n")
 
     # PASS: RESPONDER
-    def pass_responder():
+    def pass_responder(break_on_failure: bool = False) -> str:
         if verbose:
-            print("  [CORPUS] PASS — RESPONDER "
-                  "(geometry fidelity + full-stack)\n")
+            print("  [CORPUS] PASS â RESPONDER (geometry fidelity + full-stack)\n")
+
 
         gate = CoherenceGate(window=coherence_window,
                              unlock_avg=unlock_avg,
@@ -1980,7 +2323,7 @@ def run_corpus_ingestion(
         counter = 0
         start_i = 0
 
-        if _checkpoint and _checkpoint.cursor.pass_name == "responder":
+        if _checkpoint:
             start_i = _checkpoint.cursor.line_index
             if verbose and start_i > 0:
                 print(f"  [CHECKPOINT] Resuming responder from line {start_i}")
@@ -1995,6 +2338,23 @@ def run_corpus_ingestion(
             if role == "user" and next_role == "assistant":
                 counter += 1
                 ctx_hash = hashlib.md5(content[:32].encode()).hexdigest()[:8]
+
+                if break_on_failure and counter >= coherence_window:
+                    # Only fail if truly lost (not just early-training poor performance)
+                    _fail_floor = max(0.15, unlock_min - 0.30)
+                    if gate.avg() < _fail_floor:
+                        if verbose:
+                            print(f"  [CURRICULUM] Poor performance detected "
+                                  f"(avg={gate.avg():.3f} < floor={_fail_floor:.3f}). "
+                                  f"Forcing back to OBSERVER mode...")
+                        if _checkpoint:
+                            _checkpoint.advance(
+                                line_index=i,
+                                item_hash=ctx_hash,
+                                pass_name="responder",
+                                file_path=corpus_path,
+                            )
+                        return "FAILED"
 
                 if _checkpoint and counter % 500 == 0:
                     _checkpoint.advance(
@@ -2065,13 +2425,13 @@ def run_corpus_ingestion(
                 i += 1
 
         if verbose:
-            print(f"\n  [RESPONDER] Complete. Pairs: {counter:,}\n")
+            print(f"  [RESPONDER] Complete. Pairs: {counter:,}\n")
 
     # PASS: REVERSE
     def pass_reverse():
         if verbose:
-            print("  [CORPUS] PASS — REVERSE "
-                  "(geometry fidelity, reverse direction)\n")
+            print("  [CORPUS] PASS â REVERSE (geometry fidelity, reverse direction)\n")
+
 
         gate = CoherenceGate(window=coherence_window,
                              unlock_avg=unlock_avg,
@@ -2139,7 +2499,7 @@ def run_corpus_ingestion(
                 i += 1
 
         if verbose:
-            print(f"\n  [REVERSE] Complete. Pairs: {counter:,}\n")
+            print(f"  [REVERSE] Complete. Pairs: {counter:,}\n")
 
     # Execute passes
     passes = (passes or "triple").strip().lower()
@@ -2150,6 +2510,29 @@ def run_corpus_ingestion(
         pass_responder()
     elif passes == "reverse":
         pass_reverse()
+    elif passes == "dynamic":
+        if verbose:
+            print("  [DYNAMIC] Starting physics-grounded dynamic curriculum")
+            print("  [DYNAMIC] Loop: OBSERVER (until stall) -> RESPONDER (until success/fail)")
+        
+        study_mandate = 0
+        while True:
+            obs_status = pass_observer(break_on_stall=True, min_messages=study_mandate)
+            if obs_status == "STALLED":
+                resp_status = pass_responder(break_on_failure=True)
+                if resp_status == "FAILED":
+                    # Force 250 messages of study before next practice attempt
+                    curriculum_tension.record_failure(0.0)
+                    study_mandate = 250
+                    absorption_field.plateau_detector.reset_stall()
+                    continue
+                else:
+                    # Finished responder or succeeded
+                    break
+            else:
+                # Finished observer pass without stall
+                pass_responder()
+                break
     elif passes in ("double", "both"):
         pass_observer()
         pass_responder()
@@ -2206,6 +2589,16 @@ def run_corpus_ingestion(
 
     aurora.save_state()
     _save_oets(systems, verbose=verbose)
+    if systems.get("sensory_crystal"):
+        try:
+            systems["sensory_crystal"].save()
+            if verbose:
+                _sc = systems["sensory_crystal"].concept_registry_summary()
+                print(f"  [SENSORY] Crystal saved — "
+                      f"concepts={_sc['total']} by_stage={_sc['by_stage']}")
+        except Exception as _scse:
+            if verbose:
+                print(f"  [SENSORY] Crystal save failed: {_scse}")
     if systems.get("perception"):
         _perc = systems["perception"]
         _lex_save_path = "aurora_state/lexicon.json"
@@ -2219,11 +2612,10 @@ def run_corpus_ingestion(
         if _perc.lexicon.size >= _disk_count:
             _perc.save_lexicon()
         elif verbose:
-            print(f"  [LEXICON] Save skipped — "
+            print(f"  [LEXICON] Save skipped ÃÂ¢Ã¢âÂ¬Ã¢â¬Â "
                   f"memory({_perc.lexicon.size}) < disk({_disk_count})")
-
-    if verbose:
         print("  [CORPUS] Ingestion complete.\n")
+
 
 
 # =============================================================================
@@ -2232,7 +2624,7 @@ def run_corpus_ingestion(
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Aurora corpus runner — physics-grounded geometry absorption",
+        description="Aurora corpus runner ÃÂ¢Ã¢âÂ¬Ã¢â¬Â physics-grounded geometry absorption",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -2251,7 +2643,7 @@ IMPORTANT: Always use --passes triple (default) for first runs.
     ap.add_argument("--url", type=str,
                     help="URL to download corpus from")
     ap.add_argument("--passes", type=str, default="triple",
-                    help="observer|responder|reverse|double|triple (default: triple)")
+                    help="observer|responder|reverse|double|triple|dynamic (default: triple)")
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--dpme-verbose", action="store_true")
     ap.add_argument("--warmup", type=int, default=3)

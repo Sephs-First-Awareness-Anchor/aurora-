@@ -481,7 +481,7 @@ class OETSPersistence:
                     "first_encountered": node.first_encountered,
                     "last_accessed": node.last_accessed,
                     "lineage": node.lineage,
-                    "noncomp_id": node.noncomp_id,
+                    "noncomp_id": getattr(node, 'noncomp_id', None),
                 }
 
             # Serialize relations

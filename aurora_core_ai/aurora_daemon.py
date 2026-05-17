@@ -2462,6 +2462,60 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
     except Exception as _img_e:
         _log(f"  [IMAGER] Concept image cycle error: {_img_e}")
 
+    # Crystal gap-fill cycle — autonomous modality completion so crystals promote.
+    # Aurora reads her own concept registry gaps and acts on them during downtime.
+    try:
+        _sc = systems.get("sensory_crystal")
+        if _sc is not None and hasattr(_sc, "get_gap_report"):
+            _gaps = _sc.get_gap_report()
+            _needs_visual = _gaps.get("needs_visual", [])
+            _needs_audio  = _gaps.get("needs_audio",  [])
+
+            # Visual gaps → concept imager (Wikipedia images)
+            if _needs_visual:
+                try:
+                    from aurora_concept_imager import fetch_concept_image, ingest_concept_image
+                    _hw = systems.get("hardware")
+                    for _word in _needs_visual[:3]:
+                        _img_p = fetch_concept_image(_word, _STATE_DIR)
+                        if _img_p:
+                            ingest_concept_image(_img_p, _word, _hw, _sc)
+                            _log(f"  [GAP-FILL] Visual gap closed: '{_word}'")
+                except Exception as _vge:
+                    _log(f"  [GAP-FILL] Visual gap-fill error: {_vge}")
+
+            # Audio gaps → DER synthesis (gives third modality without a mic)
+            if _needs_audio and hasattr(_sc, "_register_concept_audio"):
+                try:
+                    from aurora_internal.aurora_sensory_crystal import build_audio_20d_from_der
+                    _perc = systems.get("perception")
+                    _ax = (getattr(_perc, "_pressure_vec", None) or
+                           {"X": 0.4, "T": 0.4, "N": 0.35, "B": 0.4, "A": 0.3})
+                    _a20 = build_audio_20d_from_der(
+                        float(_ax.get("X", 0.4)), float(_ax.get("T", 0.4)),
+                        float(_ax.get("N", 0.35)), float(_ax.get("B", 0.4)),
+                        float(_ax.get("A", 0.3)),
+                    )
+                    _sc.observe_frame(_a20, [0.0] * 57,
+                                      session_id="gap_fill:aud", audio_conf=0.55)
+                    for _word in _needs_audio[:10]:
+                        _sc._register_concept_audio(_word, "gap_fill:der")
+                    _log(f"  [GAP-FILL] Audio modality → "
+                         f"{min(10, len(_needs_audio))} concept(s)")
+                except Exception as _age:
+                    _log(f"  [GAP-FILL] Audio gap-fill error: {_age}")
+
+            # Tick promotions — anything that just met its gate advances
+            try:
+                _promoted = _sc.tick_concept_promotions()
+                if _promoted:
+                    _log(f"  [GAP-FILL] Promoted {len(_promoted)} concept(s): "
+                         f"{_promoted[:5]}")
+            except Exception:
+                pass
+    except Exception as _gfe:
+        _log(f"  [GAP-FILL] Crystal gap cycle error: {_gfe}")
+
 
 def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
                 timeout: float = 12.0) -> str:

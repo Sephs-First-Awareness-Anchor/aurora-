@@ -1,9 +1,9 @@
 {
-  "updated_at": 1778892744.9587054,
-  "updated": "20:52:24",
+  "updated_at": 1778911445.5038786,
+  "updated": "02:04:05",
   "runtime_profile": "surface",
   "stratum_role": "surface",
-  "state": "idle",
+  "state": "stopped",
   "queue_depth": 0,
   "active_turn_id": "",
   "frame_name": "action",
@@ -89,8 +89,8 @@
     "visual_uncertainty_streak": 0,
     "native_meaning_bundle": {
       "primary": {
-        "meaning_id": "sensory-1778892740947",
-        "created_at": 1778892740.947226,
+        "meaning_id": "sensory-1778911444270",
+        "created_at": 1778911444.2702444,
         "semantic_roots": [
           "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
           "heard human speech prosody",
@@ -135,8 +135,8 @@
       }
     },
     "native_meaning": {
-      "meaning_id": "sensory-1778892740947",
-      "created_at": 1778892740.947226,
+      "meaning_id": "sensory-1778911444270",
+      "created_at": 1778911444.2702444,
       "semantic_roots": [
         "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
         "heard human speech prosody",

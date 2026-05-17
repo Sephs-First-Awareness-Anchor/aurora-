@@ -766,6 +766,178 @@ Module: `aurora_concept_imager.py`
 
 Fetches concept images and tracks which concepts have been visually grounded. State: `aurora_state/concept_images_fetched.json`.
 
+After fetching and ingesting a concept image, `ingest_concept_image()` also calls `sensory_crystal._register_concept_visual(word, f"imager:{word}")` so the visual modality is recorded in the concept registry alongside the pixel features already stored in the crystal facets.
+
+---
+
+## 9.5. Crystal Concept Promotion System
+
+Added 2026-05-17. The unified crystal concept promotion system closes the loop between raw sensory observation and how Aurora's response engine speaks about a concept.
+
+### CrystalConceptRecord
+
+Dataclass in `aurora_internal/aurora_sensory_crystal.py`:
+
+```
+CrystalConceptRecord:
+    concept:          str
+    modalities:       set[str]      # {"semantic", "visual", "audio"} — any present
+    stage:            str           # "base" → "composite" → "higher_order" → "quasicrystal"
+    semantic_weight:  float         # cumulative weighted observation mass
+    visual_node_ids:  List[str]     # node IDs assigned in the visual crystal facets
+    audio_node_ids:   List[str]     # node IDs assigned in the audio crystal facets
+    semantic_node_ids:List[str]     # OETS node IDs
+    usage_count:      int
+    first_seen / last_seen: float   # epoch timestamps
+```
+
+Persisted as `"concept_registry"` inside the sensory crystal's `.agb` state files. Loaded at boot.
+
+### Unified Promotion Gates
+
+Aurora must **earn** each concept stage by accumulating multi-modal experience:
+
+| Transition | Gate condition |
+|---|---|
+| base → composite | ANY 2 of 3 modalities observed |
+| composite → higher_order | ALL 3 modalities observed |
+| higher_order → quasicrystal | (reserved for future gate) |
+
+`tick_concept_promotions()` runs a **two-pass** loop so a concept that already has all three modalities at base stage advances base → composite → higher_order in a single call without needing to wait for the next tick.
+
+The DPS crystal gate in `_inject_to_dps()` enforces this: a DPS crystal cannot advance past BASE unless the concept is at composite stage; it cannot advance to FULL_CONCEPT unless the concept is at higher_order stage.
+
+### Modality Feeding Pipelines
+
+Three independent pipelines write to the concept registry:
+
+**Semantic** (every turn + corpus training):
+- `AuroraSensoryCrystal.observe_semantic(concept, weight)` — records the semantic modality with cumulative weight
+- Called per content word (≥4 chars, non-stop, alpha) during corpus `witness()` closure, weighted by absorption depth: SURFACE=0.4, MID=0.7, DEEP=0.9, GEO=1.0
+- Also called per content word from `aurora.py dual_question_pipeline` for every live user turn (weight=0.75)
+
+**Visual** (corpus boot cache + autonomous imager):
+- At corpus boot, all 33 concept images under `aurora_state/vision_seeds/concepts/` are pre-processed to 57-d PIL vectors and cached in `systems["vision_seed_cache"]` by concept word
+- When a content word matches a seed cache entry during `witness()`, `observe_frame([0]*20, v57)` is called and `_register_concept_visual()` marks the visual modality
+- The concept imager also calls `_register_concept_visual()` after every autonomous Wikipedia image download
+
+**Audio** (corpus training at MID+ depth + live turns):
+- DER axis pressures synthesized to a 20-d audio vector via `build_audio_20d_from_der(x, t, n, b, a)` (see below)
+- Called once per message (not once per word) to avoid cost; then `_register_concept_audio()` is called for all content words that triggered the synthesis
+- Fires only for MID and DEEP/GEOLOGICAL absorptions in corpus training; fires for every live user turn via the DER system state
+
+### DER-to-Audio Synthesis
+
+Module-level function `build_audio_20d_from_der(x, t, n, b, a)` in `aurora_sensory_crystal.py`:
+
+Maps the five DER constraint axis pressures to the 20-d audio crystal format without requiring a microphone:
+
+| DER axis | Audio dimension | Rationale |
+|---|---|---|
+| X (existence) | vec[0] = RMS | Existence energy ≡ loudness/presence |
+| N (novelty/energy) | vec[1] = ZCR | Novelty ≡ zero-crossing rate / pitch texture |
+| A (agency) | vec[2] = centroid | Agency drive ≡ spectral brightness |
+| B (boundary) | vec[3] = bandwidth | Boundary tightness ≡ spectral spread |
+| X+B blend | vec[4] = rolloff | Combined existence+boundary ≡ high-energy cutoff |
+| T (temporal) | vec[5] = flux | Temporal pressure ≡ rate of spectral change |
+| A | vec[6] = harmonicity | Agency coherence ≡ harmonic stability |
+| T+A blend | vec[7] = onset density | Temporal+agency ≡ event density |
+| A → chroma[8:20] | dominant bin + spread | Agency drives tonal center, novelty drives chroma spread |
+
+### Vision 57-d Extraction
+
+Module-level function `build_vision_57d_from_image_file(path)` in `aurora_sensory_crystal.py`:
+
+PIL-only image processing to the 57-d visual crystal format:
+
+- `[0:24]` — HSV hue histogram, 24 uniform bins, saturation-weighted
+- `[24:51]` — brightness, edge_proxy (pixel variance × 4), saturation, avg_r/g/b, aspect ratio, shape_complexity, zero-padded to width
+- `[51:57]` — zeros (no motion for static images; populated only by live vision feed)
+
+### Gap Report and Autonomous Gap-Fill
+
+`AuroraSensoryCrystal.get_gap_report()` categorizes all registered concepts by what they still need:
+
+- `needs_visual` — only semantic observed so far
+- `needs_audio` — semantic + visual but no audio
+- `needs_semantic` — visual or audio but no semantic yet
+- `needs_second` — only one modality; needs any second
+- `ready_composite` — has 2+ modalities but hasn't been ticked yet
+
+The daemon's `_run_study_cycle()` (in `aurora_core_ai/aurora_daemon.py`) drains these lists every study cycle:
+- Visual gaps → `fetch_concept_image()` + `ingest_concept_image()` (up to 3 per cycle)
+- Audio gaps → DER synthesis → `observe_frame()` + `_register_concept_audio()` (up to 10 per cycle)
+- Then `tick_concept_promotions()` is called to advance anything that just met its gate
+
+### _crystal_insight Response Loop
+
+At the start of every live turn in `aurora.py dual_question_pipeline`, Aurora classifies the content words she just received:
+
+```
+systems["_crystal_insight"] = {
+    "rich_concepts":        [words at higher_order or quasicrystal stage],
+    "partial_concepts":     [words at composite stage],
+    "thin_concepts":        [words at base stage],
+    "top_stage":            highest stage found ("base"/"composite"/"higher_order"/"quasicrystal"),
+    "confidence_modifier":  float  # base=-0.05, composite=+0.02, higher_order=+0.10, quasicrystal=+0.15
+}
+```
+
+This flows into three places in the response pipeline:
+
+1. **`_attn_grounded_response()`**: `rich_concepts` inserted near the front of the fragment pool (strongest contextual anchors); `partial_concepts` appended; `_conf` clamped by `confidence_modifier` so Aurora speaks with higher certainty when the topic is crystal-grounded.
+
+2. **Semantic Grounding Synthesis Layer 1.5**: For each promoted concept word (up to 3), Aurora pulls 2-hop OETS neighbors built during the study cycle and adds them to `_sem_frags` — the response draws from deeper relational territory without hallucinating.
+
+3. **ThoughtIntegrationSpace linguistic process**: When `top_stage` is composite, higher_order, or quasicrystal, `_ling_content` is prefixed with `"crystal-grounded [stage]: word1, word2 |"` and `_ling_relevance` is boosted by `confidence_modifier`.
+
+The net effect: a concept Aurora has seen in text, seen an image of, and synthesized audio for produces a more confident, more relationally-grounded, and more linguistically-salient response than one she has only read about.
+
+---
+
+## 9.6. Corpus Training Pipeline
+
+Module: `aurora_core_ai/corpus_runner.py`
+
+The corpus runner processes large conversation datasets to build Aurora's vocabulary, OETS relational web, crystal concept registry, and DPS crystal stack.
+
+### Boot sequence
+
+`boot_aurora()` in corpus_runner.py:
+1. Boots `AuroraSensoryCrystal` from state
+2. Scans `aurora_state/vision_seeds/concepts/` — builds `vision_seed_cache` dict mapping concept word → 57-d PIL vector (33 images pre-loaded)
+3. Returns `systems["sensory_crystal"]` and `systems["vision_seed_cache"]`
+
+### Absorption depth model (`StratigraphicDepth`)
+
+Every message is absorbed at one of four depths based on novelty and constraint pressure:
+
+| Depth | Weight | Study queue? |
+|---|---|---|
+| SURFACE | 0.4 | No |
+| MID | 0.7 | No |
+| DEEP | 0.9 | Yes |
+| GEOLOGICAL | 1.0 | Yes |
+
+### Crystal feeding inside `witness()` closure
+
+Per message, the corpus runner calls:
+- `_feed_crystal_semantic(text, weight)` — `observe_semantic()` for each content word at depth-weighted scale
+- `_feed_crystal_visual_and_audio(text, weight, depth_name)` — vision from seed cache (sparse, only when image exists), audio from DER synthesis (MID+ only)
+- DEEP/GEOLOGICAL content words are added to `systems["_study_queue"]` for later OETS research
+
+### Corpus study cycle
+
+`corpus_study_cycle(systems, verbose)` is called at every consolidation (every 300 messages by default):
+
+1. Drains up to 20 words from `systems["_study_queue"]`
+2. For each word found in the OETS web, creates a `ResearchRequest(priority=0.85, reason="corpus_deep_encounter")`
+3. Queues them into `oets.research` and calls `oets.run_study_cycle(trigger_reason="corpus_learning")`
+4. `_internal_research()` inside OETS traverses 1-hop + 2-hop neighbors using the existing relational graph — synonym/antonym/hypernym inference from shared category + valence opposition — **no network calls**
+5. The 2-hop neighbor sets built here are what `_crystal_insight` Layer 1.5 reads back during live response generation
+
+Consolidation printout includes crystal registry summary: `concepts={total} {by_stage}` breakdown.
+
 ---
 
 ## 10. Dual-Strata Runtime

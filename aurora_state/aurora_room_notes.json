@@ -1,229 +1,5 @@
 [
   {
-    "ts": 1778354078.1023278,
-    "ts_str": "2026-05-09 15:14:38",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=863MB",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778354153.3427498,
-    "ts_str": "2026-05-09 15:15:54",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nResearcher lookup failed: HTTP Error 429: Too Many Requests",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778354306.4281886,
-    "ts_str": "2026-05-09 15:18:26",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nResearcher lookup failed: HTTP Error 429: Too Many Requests",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778354307.6749532,
-    "ts_str": "2026-05-09 15:18:27",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nResearcher lookup failed: HTTP Error 429: Too Many Requests",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778772212.9513576,
-    "ts_str": "2026-05-14 11:23:32",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=818MB",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778772241.132372,
-    "ts_str": "2026-05-14 11:24:01",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1749MB, load=0.22. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778772242.7438192,
-    "ts_str": "2026-05-14 11:24:02",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1749M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778772326.568667,
-    "ts_str": "2026-05-14 11:25:26",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1761M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778772445.4359734,
-    "ts_str": "2026-05-14 11:27:25",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1730M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778772705.8296602,
-    "ts_str": "2026-05-14 11:31:45",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1693M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778772925.7433174,
-    "ts_str": "2026-05-14 11:35:25",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1650M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778773120.966372,
-    "ts_str": "2026-05-14 11:38:40",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1640M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778773224.0354621,
-    "ts_str": "2026-05-14 11:40:26",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778773228.8551958,
-    "ts_str": "2026-05-14 11:40:28",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1594M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778773298.7104442,
-    "ts_str": "2026-05-14 11:41:38",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1612M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778773503.3646832,
-    "ts_str": "2026-05-14 11:45:03",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1597M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778775560.2681656,
-    "ts_str": "2026-05-14 12:19:20",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1418MB, load=0.18. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778775562.280271,
-    "ts_str": "2026-05-14 12:19:22",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1418M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778775624.765684,
-    "ts_str": "2026-05-14 12:20:27",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778775747.8661659,
-    "ts_str": "2026-05-14 12:22:27",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1396M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778778025.516349,
-    "ts_str": "2026-05-14 13:00:28",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778778332.589409,
-    "ts_str": "2026-05-14 13:05:32",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1162MB, load=0.14. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778778335.402897,
-    "ts_str": "2026-05-14 13:05:35",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1162M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778779584.9749503,
-    "ts_str": "2026-05-14 13:26:24",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1026MB, load=0.19. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778779587.7881591,
-    "ts_str": "2026-05-14 13:26:27",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1026M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778780426.1857498,
-    "ts_str": "2026-05-14 13:40:28",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778782826.4406939,
-    "ts_str": "2026-05-14 14:20:29",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778784192.4955885,
-    "ts_str": "2026-05-14 14:43:12",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1898MB, load=0.19. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778784194.9104135,
-    "ts_str": "2026-05-14 14:43:14",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1898M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778784409.9590037,
-    "ts_str": "2026-05-14 14:46:49",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1839M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778784526.4862962,
-    "ts_str": "2026-05-14 14:48:46",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1839M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778784632.5490165,
-    "ts_str": "2026-05-14 14:50:32",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1794M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
     "ts": 1778784840.3787506,
     "ts_str": "2026-05-14 14:54:00",
     "type": "evolution_relief_research",
@@ -1397,6 +1173,230 @@
     "ts_str": "2026-05-15 20:52:18",
     "type": "evolution_relief_research",
     "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1713M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778892831.1280508,
+    "ts_str": "2026-05-15 20:53:51",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1700M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778892962.9355037,
+    "ts_str": "2026-05-15 20:56:02",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=2",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778893118.2637157,
+    "ts_str": "2026-05-15 20:58:38",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1818M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778893338.735906,
+    "ts_str": "2026-05-15 21:02:18",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1761M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778893575.8902924,
+    "ts_str": "2026-05-15 21:06:15",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1677M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778893729.2154827,
+    "ts_str": "2026-05-15 21:08:54",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778896129.4155006,
+    "ts_str": "2026-05-15 21:48:55",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778897937.711925,
+    "ts_str": "2026-05-15 22:18:57",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1249MB, load=0.21. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1778897941.3419542,
+    "ts_str": "2026-05-15 22:19:01",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1249M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778898530.367092,
+    "ts_str": "2026-05-15 22:28:55",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778899153.8475149,
+    "ts_str": "2026-05-15 22:39:13",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1147MB, load=0.17. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1778899158.6648366,
+    "ts_str": "2026-05-15 22:39:18",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1147M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778899327.5320315,
+    "ts_str": "2026-05-15 22:42:07",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1151M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778899440.4262426,
+    "ts_str": "2026-05-15 22:44:00",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1111M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778899491.796733,
+    "ts_str": "2026-05-15 22:44:51",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1109M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778899692.1211061,
+    "ts_str": "2026-05-15 22:48:12",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1089M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778899945.6829753,
+    "ts_str": "2026-05-15 22:52:25",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1067M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778900167.9506135,
+    "ts_str": "2026-05-15 22:56:07",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1035M",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778900930.8841105,
+    "ts_str": "2026-05-15 23:08:54",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778903331.571959,
+    "ts_str": "2026-05-15 23:48:51",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778905732.420245,
+    "ts_str": "2026-05-16 00:28:52",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778908132.696355,
+    "ts_str": "2026-05-16 01:08:53",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778909343.1517618,
+    "ts_str": "2026-05-16 01:29:03",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=518MB, load=0.19. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1778909343.5746047,
+    "ts_str": "2026-05-16 01:29:03",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=518MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778909418.3096857,
+    "ts_str": "2026-05-16 01:30:18",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=517MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778910018.1675627,
+    "ts_str": "2026-05-16 01:40:18",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=464MB, load=0.19. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1778910018.5923278,
+    "ts_str": "2026-05-16 01:40:18",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=464MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778910243.3191576,
+    "ts_str": "2026-05-16 01:44:03",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=470MB, load=0.30. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1778910244.1349392,
+    "ts_str": "2026-05-16 01:44:04",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=4",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1778910533.4314752,
+    "ts_str": "2026-05-16 01:48:53",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1778911389.9454536,
+    "ts_str": "2026-05-16 02:03:09",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=837MB, load=0.33. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1778911393.5674036,
+    "ts_str": "2026-05-16 02:03:13",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=837MB",
     "source": "daemon_evolution_relief_handoff"
   }
 ]

@@ -1,418 +1,5 @@
 [
   {
-    "ts": 1778260208.3053305,
-    "ts_str": "13:10:11",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778260256.2115185,
-    "ts_str": "13:10:56",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778260996.8566728,
-    "ts_str": "13:23:16",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778261103.9000607,
-    "ts_str": "13:25:03",
-    "action": "low-resource evolution relief",
-    "detail": "assimilation blocked by n_load_saturation -> latent_promotion",
-    "category": "action"
-  },
-  {
-    "ts": 1778261105.935783,
-    "ts_str": "13:25:05",
-    "action": "evolution relief handoff",
-    "detail": "Researcher lookup failed: HTTP Error 429: Too Many Requests",
-    "category": "action"
-  },
-  {
-    "ts": 1778261121.1075387,
-    "ts_str": "13:25:21",
-    "action": "low-resource evolution relief",
-    "detail": "mutation blocked by n_load_saturation -> latent_promotion",
-    "category": "action"
-  },
-  {
-    "ts": 1778261124.730799,
-    "ts_str": "13:25:24",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. mutation is blocked by n_load_saturation. Governor mode=survival, mem_avail=920MB, loa",
-    "category": "action"
-  },
-  {
-    "ts": 1778261365.9346886,
-    "ts_str": "13:29:25",
-    "action": "low-resource evolution relief",
-    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
-    "category": "action"
-  },
-  {
-    "ts": 1778261371.5574205,
-    "ts_str": "13:29:31",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=survival, mem_avail=6",
-    "category": "action"
-  },
-  {
-    "ts": 1778261798.0934765,
-    "ts_str": "13:36:38",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: N, corpus, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778286660.8987339,
-    "ts_str": "20:31:00",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=survival, mem_avail=6",
-    "category": "action"
-  },
-  {
-    "ts": 1778286771.3707998,
-    "ts_str": "20:32:56",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778287149.6768904,
-    "ts_str": "20:39:09",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: N, corpus, energy, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778287907.089697,
-    "ts_str": "20:51:47",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, N",
-    "category": "action"
-  },
-  {
-    "ts": 1778288799.3005369,
-    "ts_str": "21:06:39",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778289191.8934429,
-    "ts_str": "21:13:19",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778289456.7150638,
-    "ts_str": "21:17:36",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778290166.425565,
-    "ts_str": "21:29:26",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, N",
-    "category": "action"
-  },
-  {
-    "ts": 1778290348.4470978,
-    "ts_str": "21:32:28",
-    "action": "low-resource evolution relief",
-    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
-    "category": "action"
-  },
-  {
-    "ts": 1778290353.673975,
-    "ts_str": "21:32:33",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=7",
-    "category": "action"
-  },
-  {
-    "ts": 1778290586.4630044,
-    "ts_str": "21:36:26",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=7",
-    "category": "action"
-  },
-  {
-    "ts": 1778290995.2280588,
-    "ts_str": "21:43:15",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778291613.9089792,
-    "ts_str": "21:53:36",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778291691.9943857,
-    "ts_str": "21:54:52",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778292537.6516864,
-    "ts_str": "22:08:57",
-    "action": "low-resource evolution relief",
-    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
-    "category": "action"
-  },
-  {
-    "ts": 1778292549.676027,
-    "ts_str": "22:09:09",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=707MB",
-    "category": "action"
-  },
-  {
-    "ts": 1778292564.755436,
-    "ts_str": "22:09:24",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778293138.2551048,
-    "ts_str": "22:18:58",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778293937.7298193,
-    "ts_str": "22:32:17",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778294028.8982067,
-    "ts_str": "22:34:06",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778294468.6050854,
-    "ts_str": "22:41:08",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778295072.318339,
-    "ts_str": "22:51:12",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778295767.3176,
-    "ts_str": "23:02:47",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778296251.3051322,
-    "ts_str": "23:10:51",
-    "action": "low-resource evolution relief",
-    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
-    "category": "action"
-  },
-  {
-    "ts": 1778296256.9393947,
-    "ts_str": "23:10:56",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1037M",
-    "category": "action"
-  },
-  {
-    "ts": 1778296453.7207348,
-    "ts_str": "23:14:23",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778296689.6109164,
-    "ts_str": "23:18:09",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778297490.4116077,
-    "ts_str": "23:31:30",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778298019.4611983,
-    "ts_str": "23:40:19",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778298563.5108368,
-    "ts_str": "23:49:23",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778298865.757507,
-    "ts_str": "23:54:32",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778299113.5471475,
-    "ts_str": "23:58:33",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778299733.5771527,
-    "ts_str": "00:08:53",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: A, daemon, energy, X",
-    "category": "action"
-  },
-  {
-    "ts": 1778300110.9136643,
-    "ts_str": "00:15:10",
-    "action": "low-resource evolution relief",
-    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
-    "category": "action"
-  },
-  {
-    "ts": 1778300119.3371506,
-    "ts_str": "00:15:19",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=917MB",
-    "category": "action"
-  },
-  {
-    "ts": 1778300123.389599,
-    "ts_str": "00:15:23",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=917MB",
-    "category": "action"
-  },
-  {
-    "ts": 1778300274.0331352,
-    "ts_str": "00:17:54",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778300312.1835678,
-    "ts_str": "00:18:32",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=878MB",
-    "category": "action"
-  },
-  {
-    "ts": 1778300592.6552417,
-    "ts_str": "00:23:12",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1109M",
-    "category": "action"
-  },
-  {
-    "ts": 1778300779.4659107,
-    "ts_str": "00:26:19",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1072M",
-    "category": "action"
-  },
-  {
-    "ts": 1778300809.567852,
-    "ts_str": "00:26:49",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778300951.4958503,
-    "ts_str": "00:29:11",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1007M",
-    "category": "action"
-  },
-  {
-    "ts": 1778301017.1918,
-    "ts_str": "00:30:17",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1012M",
-    "category": "action"
-  },
-  {
-    "ts": 1778301146.7379968,
-    "ts_str": "00:32:26",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1014M",
-    "category": "action"
-  },
-  {
-    "ts": 1778301283.0052044,
-    "ts_str": "00:34:49",
-    "action": "autonomous poedex issue research",
-    "detail": "semantic_precision (qao=0)",
-    "category": "action"
-  },
-  {
-    "ts": 1778301324.3473697,
-    "ts_str": "00:35:24",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1047M",
-    "category": "action"
-  },
-  {
-    "ts": 1778301512.6532526,
-    "ts_str": "00:38:32",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=998MB",
-    "category": "action"
-  },
-  {
-    "ts": 1778301587.9000409,
-    "ts_str": "00:39:47",
-    "action": "poedex study scan",
-    "detail": "shelf seeded: X, governor, overlay, T",
-    "category": "action"
-  },
-  {
-    "ts": 1778301685.5089645,
-    "ts_str": "00:41:25",
-    "action": "evolution relief handoff",
-    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=930MB",
-    "category": "action"
-  },
-  {
     "ts": 1778301872.5987427,
     "ts_str": "00:44:32",
     "action": "evolution relief handoff",
@@ -3497,6 +3084,419 @@
     "ts_str": "20:52:18",
     "action": "evolution relief handoff",
     "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1713M",
+    "category": "action"
+  },
+  {
+    "ts": 1778892831.1280508,
+    "ts_str": "20:53:51",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1700M",
+    "category": "action"
+  },
+  {
+    "ts": 1778892962.9355037,
+    "ts_str": "20:56:02",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=2",
+    "category": "action"
+  },
+  {
+    "ts": 1778893016.189956,
+    "ts_str": "20:56:56",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778893118.2637157,
+    "ts_str": "20:58:38",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1818M",
+    "category": "action"
+  },
+  {
+    "ts": 1778893338.735906,
+    "ts_str": "21:02:18",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1761M",
+    "category": "action"
+  },
+  {
+    "ts": 1778893575.8902924,
+    "ts_str": "21:06:15",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1677M",
+    "category": "action"
+  },
+  {
+    "ts": 1778893729.2154827,
+    "ts_str": "21:08:54",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778893816.3168216,
+    "ts_str": "21:10:16",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778894631.7500908,
+    "ts_str": "21:23:51",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778895174.5977318,
+    "ts_str": "21:32:54",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778895796.7623649,
+    "ts_str": "21:43:16",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778896129.4155006,
+    "ts_str": "21:48:55",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778896614.5636327,
+    "ts_str": "21:56:54",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778897496.770916,
+    "ts_str": "22:11:36",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778897937.711925,
+    "ts_str": "22:18:57",
+    "action": "low-resource evolution relief",
+    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
+    "category": "action"
+  },
+  {
+    "ts": 1778897941.3419542,
+    "ts_str": "22:19:01",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1249M",
+    "category": "action"
+  },
+  {
+    "ts": 1778898333.1763632,
+    "ts_str": "22:25:33",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778898530.367092,
+    "ts_str": "22:28:55",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778899153.8475149,
+    "ts_str": "22:39:13",
+    "action": "low-resource evolution relief",
+    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
+    "category": "action"
+  },
+  {
+    "ts": 1778899158.6648366,
+    "ts_str": "22:39:18",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1147M",
+    "category": "action"
+  },
+  {
+    "ts": 1778899207.451212,
+    "ts_str": "22:40:07",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778899327.5320315,
+    "ts_str": "22:42:07",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1151M",
+    "category": "action"
+  },
+  {
+    "ts": 1778899440.4262426,
+    "ts_str": "22:44:00",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1111M",
+    "category": "action"
+  },
+  {
+    "ts": 1778899491.796733,
+    "ts_str": "22:44:51",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1109M",
+    "category": "action"
+  },
+  {
+    "ts": 1778899692.1211061,
+    "ts_str": "22:48:12",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1089M",
+    "category": "action"
+  },
+  {
+    "ts": 1778899915.8795063,
+    "ts_str": "22:51:55",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778899945.6829753,
+    "ts_str": "22:52:25",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1067M",
+    "category": "action"
+  },
+  {
+    "ts": 1778900167.9506135,
+    "ts_str": "22:56:07",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1035M",
+    "category": "action"
+  },
+  {
+    "ts": 1778900541.3374028,
+    "ts_str": "23:02:21",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778900930.8841105,
+    "ts_str": "23:08:54",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778901129.9758017,
+    "ts_str": "23:12:09",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778901854.5119872,
+    "ts_str": "23:24:14",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778902533.5059927,
+    "ts_str": "23:35:33",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778903081.8340936,
+    "ts_str": "23:44:41",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778903331.571959,
+    "ts_str": "23:48:51",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778903900.0449054,
+    "ts_str": "23:58:20",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778904612.1994655,
+    "ts_str": "00:10:12",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778905208.6523077,
+    "ts_str": "00:20:08",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778905732.420245,
+    "ts_str": "00:28:52",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778905861.893002,
+    "ts_str": "00:31:01",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778906569.6630313,
+    "ts_str": "00:42:49",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778907495.1178925,
+    "ts_str": "00:58:15",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778908132.696355,
+    "ts_str": "01:08:53",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778908338.6419892,
+    "ts_str": "01:12:18",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778908947.4312744,
+    "ts_str": "01:22:27",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778909343.1517618,
+    "ts_str": "01:29:03",
+    "action": "low-resource evolution relief",
+    "detail": "assimilation blocked by x_memory_floor -> latent_promotion",
+    "category": "action"
+  },
+  {
+    "ts": 1778909343.5746047,
+    "ts_str": "01:29:03",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=518MB, lo",
+    "category": "action"
+  },
+  {
+    "ts": 1778909418.3096857,
+    "ts_str": "01:30:18",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=517MB, lo",
+    "category": "action"
+  },
+  {
+    "ts": 1778909605.4592402,
+    "ts_str": "01:33:25",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778910018.1675627,
+    "ts_str": "01:40:18",
+    "action": "low-resource evolution relief",
+    "detail": "mutation blocked by x_memory_floor -> latent_promotion",
+    "category": "action"
+  },
+  {
+    "ts": 1778910018.5923278,
+    "ts_str": "01:40:18",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=464MB, load=0",
+    "category": "action"
+  },
+  {
+    "ts": 1778910206.9315853,
+    "ts_str": "01:43:26",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778910243.3191576,
+    "ts_str": "01:44:03",
+    "action": "low-resource evolution relief",
+    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
+    "category": "action"
+  },
+  {
+    "ts": 1778910244.1349392,
+    "ts_str": "01:44:04",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=4",
+    "category": "action"
+  },
+  {
+    "ts": 1778910533.4314752,
+    "ts_str": "01:48:53",
+    "action": "autonomous poedex issue research",
+    "detail": "semantic_precision (qao=0)",
+    "category": "action"
+  },
+  {
+    "ts": 1778910779.8783727,
+    "ts_str": "01:52:59",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778911380.3515432,
+    "ts_str": "02:03:00",
+    "action": "poedex study scan",
+    "detail": "shelf seeded: X, governor, overlay, T",
+    "category": "action"
+  },
+  {
+    "ts": 1778911389.9454536,
+    "ts_str": "02:03:09",
+    "action": "low-resource evolution relief",
+    "detail": "assimilation blocked by b_concurrency_cooldown -> latent_promotion",
+    "category": "action"
+  },
+  {
+    "ts": 1778911393.5674036,
+    "ts_str": "02:03:13",
+    "action": "evolution relief handoff",
+    "detail": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=837MB",
     "category": "action"
   }
 ]

@@ -122,39 +122,108 @@ def universal_corpus_iterator(path: Path) -> Iterator[Tuple[str, str]]:
 
 # --- Internal Parsers ---
 
+def _extract_text_from_content(content) -> str:
+    """Extract plain text from OpenAI content field (str, dict, or list of parts)."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        parts = content.get("parts", [])
+        return " ".join(p for p in parts if isinstance(p, str))
+    if isinstance(content, list):
+        return " ".join(
+            p if isinstance(p, str)
+            else (p.get("text", "") if isinstance(p, dict) else "")
+            for p in content
+        )
+    return ""
+
+
+def _parse_chatgpt_mapping(mapping: dict):
+    """Walk a ChatGPT export mapping tree and yield (user, assistant) pairs in order."""
+    # Build parent→children graph and find root
+    children = {k: v.get("children", []) for k, v in mapping.items()}
+    all_children = {c for kids in children.values() for c in kids}
+    roots = [k for k in mapping if k not in all_children]
+    if not roots:
+        return
+
+    # DFS through the tree collecting messages in order
+    messages = []
+    stack = list(roots)
+    visited = set()
+    while stack:
+        node_id = stack.pop(0)
+        if node_id in visited:
+            continue
+        visited.add(node_id)
+        node = mapping.get(node_id, {})
+        msg = node.get("message")
+        if msg:
+            author = msg.get("author", {})
+            role = author.get("role", "")
+            content = msg.get("content", "")
+            text = _extract_text_from_content(content).strip()
+            if text and role in ("user", "assistant"):
+                messages.append((role, text))
+        stack.extend(node.get("children", []))
+
+    # Pair consecutive user→assistant turns
+    last_user = None
+    for role, text in messages:
+        if role == "user":
+            last_user = text
+        elif role == "assistant" and last_user:
+            yield (last_user, text)
+            last_user = None
+
+
 def _parse_openai_json(path: Path):
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
-        # Standardize to list of conversations
+
+        # ChatGPT export: list of conversations with 'mapping' tree
+        if isinstance(data, list) and data and "mapping" in data[0]:
+            for conv in data:
+                mapping = conv.get("mapping", {})
+                if mapping:
+                    yield from _parse_chatgpt_mapping(mapping)
+            return
+
+        # Standard list of {user, assistant} pairs or {messages: [...]}
         convs = []
-        if isinstance(data, list): convs = data
+        if isinstance(data, list):
+            convs = data
         elif isinstance(data, dict):
             convs = data.get("conversations") or data.get("data") or []
-            
+
         for c in convs:
-            # Handle the simple flat list of pairs
+            if not isinstance(c, dict):
+                continue
+
+            # Simple flat pair
             if "user" in c and "assistant" in c:
                 yield (c["user"], c["assistant"])
                 continue
-                
-            # This is specific to the complex 'mapping' structure in OpenAI exports
-            # We'll try to find a simpler list of messages first
+
+            # ChatGPT mapping inside a dict-keyed export
+            mapping = c.get("mapping")
+            if mapping and isinstance(mapping, dict):
+                yield from _parse_chatgpt_mapping(mapping)
+                continue
+
+            # Flat messages list
             msgs = c.get("messages")
             if msgs and isinstance(msgs, list):
                 last_user = None
                 for m in msgs:
-                    role = m.get("role") or m.get("author", {}).get("role")
-                    content = m.get("content") or ""
-                    if isinstance(content, dict): content = content.get("parts", [""])[0]
-                    
-                    if role == "user": last_user = content
+                    role = m.get("role") or m.get("author", {}).get("role", "")
+                    text = _extract_text_from_content(m.get("content", "")).strip()
+                    if role == "user":
+                        last_user = text
                     elif role in ("assistant", "bot") and last_user:
-                        yield (last_user, content)
+                        yield (last_user, text)
                         last_user = None
-            else:
-                pass
     except Exception:
         pass
 

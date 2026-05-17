@@ -1,28 +1,32 @@
 {
-  "original": "I am I am here",
-  "candidate": "I am I am here.",
-  "selected": "I am I am here.",
+  "original": "manufactured you passionately reflect a This",
+  "candidate": "manufactured you passionately reflect a This.",
+  "selected": "manufactured you passionately reflect a This.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.63,
-  "candidate_score": 0.68,
-  "original_pressure": 0.374,
-  "candidate_pressure": 0.304,
+  "original_score": 0.87,
+  "candidate_score": 0.92,
+  "original_pressure": 0.366,
+  "candidate_pressure": 0.296,
   "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "hey aurora",
+    "prompt_excerpt": "He did, did you know he was afraid of bambi that is really funny",
     "input_interpretation": {
-      "raw_prompt": "hey aurora",
+      "raw_prompt": "He did, did you know he was afraid of bambi that is really funny",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "aurora"
+        "know",
+        "afraid",
+        "bambi",
+        "really",
+        "funny"
       ],
       "entities": []
     },
-    "tone": "gentle",
+    "tone": "playful",
     "source": "deterministic",
-    "timestamp": 1778892230.0808716,
+    "timestamp": 1778989183.0906625,
     "min_relief_used": 0.035
   }
 }

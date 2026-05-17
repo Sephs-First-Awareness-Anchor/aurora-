@@ -214,6 +214,9 @@ class SemanticNode:
     # Cluster membership
     cluster_ids: Set[str] = field(default_factory=set)
 
+    # Non-computational ID (for alignment)
+    noncomp_id: Optional[str] = None
+
     # Learning history
     times_encountered: int = 0
     times_used_in_expression: int = 0

@@ -165,6 +165,9 @@ def ingest_concept_image(
                     session_id=f"concept:{word}",
                     visual_conf=0.75,
                 )
+                # Register visual modality in the unified concept registry
+                if hasattr(sensory_crystal, "_register_concept_visual"):
+                    sensory_crystal._register_concept_visual(word, f"imager:{word}")
             except Exception as ce:
                 logger.debug(f"[IMAGER] Crystal feed failed for '{word}': {ce}")
 

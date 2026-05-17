@@ -411,6 +411,136 @@ def visual_dict_to_crystal_57d(visual_data: Dict[str, Any]) -> List[float]:
 
     return out
 
+def build_audio_20d_from_der(
+    x: float, t: float, n: float, b: float, a: float
+) -> List[float]:
+    """
+    Synthesize a 20-d audio feature vector from DER axis pressures.
+
+    Maps Aurora's internal constraint state to the acoustic dimension that the
+    sensory crystal's audio facets understand.  Used when no microphone is
+    available (corpus training, daemon idle cycles).
+
+    DER → audio mapping (matches AUDIO_FACET_INDICES layout):
+        [0]  RMS           ← X  (existence energy → amplitude)
+        [1]  ZCR           ← N  (novelty → spectral roughness/texture)
+        [2]  centroid      ← A  (agency → timbral brightness)
+        [3]  bandwidth     ← B  (boundary → spectral spread)
+        [4]  rolloff       ← mean(X, B)  (energy-shape boundary)
+        [5]  flux          ← T  (temporal change rate)
+        [6]  harmonicity   ← A  (agency → tonal coherence)
+        [7]  onset_density ← 0.8*T + 0.2*A
+        [8:20] chroma      ← A-shaped peak with N-spread across 12 pitch classes
+    """
+    x = max(0.0, min(1.0, float(x)))
+    t = max(0.0, min(1.0, float(t)))
+    n = max(0.0, min(1.0, float(n)))
+    b = max(0.0, min(1.0, float(b)))
+    a = max(0.0, min(1.0, float(a)))
+
+    vec = [0.0] * 20
+    # Timbre indices [0..4]
+    vec[0] = x
+    vec[1] = n
+    vec[2] = a
+    vec[3] = b
+    vec[4] = (x + b) * 0.5
+    # Rhythm indices [5] and [7]
+    vec[5] = t
+    vec[7] = 0.8 * t + 0.2 * a
+    # Tone: [6] harmonicity + [8:20] chroma
+    vec[6] = a
+    dominant = int(a * 11.9999)   # agency determines tonal centre (0-11)
+    spread = max(0.5, (1.0 - n) * 2.5)   # novelty widens chroma spread
+    chroma_sum = 0.0
+    for i in range(12):
+        dist = min(abs(i - dominant), 12 - abs(i - dominant))
+        raw = math.exp(-dist / spread)
+        vec[8 + i] = raw
+        chroma_sum += raw
+    if chroma_sum > 0:
+        for i in range(12):
+            vec[8 + i] = vec[8 + i] / chroma_sum * a   # scale by agency strength
+    return vec
+
+
+def build_vision_57d_from_image_file(image_path: str) -> Optional[List[float]]:
+    """
+    Extract a 57-d visual feature vector from an image file using PIL only.
+
+    No cv2 required — works in corpus training where cv2 may not be installed.
+    Produces HSV hue histogram (24-d) + brightness/edge/color shape (27-d)
+    + zero motion plane (6-d, static images have no motion).
+
+    Matches VISUAL_FACET_SLICES layout exactly.
+    Returns None if PIL is unavailable or extraction fails.
+    """
+    try:
+        from PIL import Image as _PILImg
+    except ImportError:
+        return None
+
+    try:
+        img = _PILImg.open(image_path).convert("RGB")
+        w, h = img.size
+        pixels = list(img.getdata())
+        n_pix = max(1, len(pixels))
+
+        r_vals = [p[0] / 255.0 for p in pixels]
+        g_vals = [p[1] / 255.0 for p in pixels]
+        b_vals = [p[2] / 255.0 for p in pixels]
+        avg_r = sum(r_vals) / n_pix
+        avg_g = sum(g_vals) / n_pix
+        avg_b = sum(b_vals) / n_pix
+
+        # [0:24] Hue histogram — 24 uniform bins weighted by saturation
+        hue_bins = [0.0] * 24
+        sat_sum = 0.0
+        for r, g, bv in zip(r_vals, g_vals, b_vals):
+            mx, mn = max(r, g, bv), min(r, g, bv)
+            delta = mx - mn
+            sat = delta / max(mx, 1e-9)
+            sat_sum += sat
+            if delta < 0.001:
+                continue
+            if mx == r:
+                hue = ((g - bv) / delta) % 6.0
+            elif mx == g:
+                hue = (bv - r) / delta + 2.0
+            else:
+                hue = (r - g) / delta + 4.0
+            hue_bins[int(hue / 6.0 * 24) % 24] += sat
+        hue_sum = sum(hue_bins) or 1.0
+        vec = [v / hue_sum for v in hue_bins]   # normalised
+
+        # [24:51] Shape facet — brightness, edge proxy, color stats
+        brightness = avg_r * 0.299 + avg_g * 0.587 + avg_b * 0.114
+        var_r = sum((v - avg_r) ** 2 for v in r_vals) / n_pix
+        var_g = sum((v - avg_g) ** 2 for v in g_vals) / n_pix
+        var_b = sum((v - avg_b) ** 2 for v in b_vals) / n_pix
+        edge_proxy = _clamp01((var_r + var_g + var_b) ** 0.5 * 4.0)
+        saturation = sat_sum / n_pix
+        aspect = _clamp01(min(3.0, w / max(1, h)) / 3.0)
+        shape_complexity = _clamp01(abs(var_r - var_b) / max(var_g + 1e-9, 0.01))
+        vec.extend([
+            brightness,       # [24]
+            edge_proxy,       # [25]
+            0.0,              # [26] orientation — not computable without gradient
+            saturation,       # [27]
+            0.0,              # [28] object count
+            shape_complexity, # [29]
+            avg_r, avg_g, avg_b, aspect,  # [30:34]
+        ])
+        vec.extend([0.0] * 17)  # [34:51] fill rest of shape facet
+
+        # [51:57] Motion facet — zeros for static image
+        vec.extend([0.0] * 6)
+
+        return vec[:57]
+    except Exception:
+        return None
+
+
 def _agb_save(path: Path, payload: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
@@ -880,6 +1010,70 @@ class SemanticCrystalNode:
         return cls(**payload)
 
 # =============================================================================
+# CRYSTAL CONCEPT RECORD  —  concept-level modality registry
+# =============================================================================
+
+@dataclass
+class CrystalConceptRecord:
+    """
+    Tracks which modalities (semantic/visual/audio) have been observed for a
+    named concept. Gates progression through the unified crystal lifecycle:
+
+        base        — only 1 modality observed (or none)
+        composite   — ANY 2 of 3 modalities observed
+        higher_order— ALL 3 modalities observed
+        quasicrystal— all 3 + deep integration (set externally)
+    """
+    concept: str
+    modalities: set = field(default_factory=set)   # {"semantic","visual","audio"}
+    stage: str = "base"   # base | composite | higher_order | quasicrystal
+    semantic_weight: float = 0.0
+    visual_node_ids: List[str] = field(default_factory=list)
+    audio_node_ids:  List[str] = field(default_factory=list)
+    semantic_node_ids: List[str] = field(default_factory=list)
+    usage_count: int = 0
+    first_seen: float = field(default_factory=time.time)
+    last_seen:  float = field(default_factory=time.time)
+
+    def modality_count(self) -> int:
+        return len(self.modalities)
+
+    def can_promote_to_composite(self) -> bool:
+        return self.stage == "base" and self.modality_count() >= 2
+
+    def can_promote_to_higher_order(self) -> bool:
+        return self.stage == "composite" and self.modalities >= {"semantic", "visual", "audio"}
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "concept":          self.concept,
+            "modalities":       list(self.modalities),
+            "stage":            self.stage,
+            "semantic_weight":  self.semantic_weight,
+            "visual_node_ids":  self.visual_node_ids,
+            "audio_node_ids":   self.audio_node_ids,
+            "semantic_node_ids":self.semantic_node_ids,
+            "usage_count":      self.usage_count,
+            "first_seen":       self.first_seen,
+            "last_seen":        self.last_seen,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "CrystalConceptRecord":
+        obj = cls(concept=d["concept"])
+        obj.modalities       = set(d.get("modalities", []))
+        obj.stage            = d.get("stage", "base")
+        obj.semantic_weight  = d.get("semantic_weight", 0.0)
+        obj.visual_node_ids  = d.get("visual_node_ids", [])
+        obj.audio_node_ids   = d.get("audio_node_ids", [])
+        obj.semantic_node_ids= d.get("semantic_node_ids", [])
+        obj.usage_count      = d.get("usage_count", 0)
+        obj.first_seen       = d.get("first_seen", time.time())
+        obj.last_seen        = d.get("last_seen",  time.time())
+        return obj
+
+
+# =============================================================================
 # AURORA SENSORY CRYSTAL  —  full 6-facet assembly
 # =============================================================================
 
@@ -940,6 +1134,8 @@ class AuroraSensoryCrystal:
 
         self._novelty_window: List[int] = []
         self._maturity:       float     = 0.0
+        # Concept-level modality registry (unified promotion gate system)
+        self._concept_registry: Dict[str, CrystalConceptRecord] = {}
         # DPS reference — set via wire_dimensional() after boot_aurora().
         # When set, promoted nodes are injected into the DPS Crystal order
         # ladder (BASE → COMPOSITE → FULL_CONCEPT → QUASI).
@@ -969,10 +1165,14 @@ class AuroraSensoryCrystal:
             self._visual_marginal = sem_d.get("visual_marginal", {})
             self._total_frames   = sem_d.get("total_frames",   0)
             self._maturity       = sem_d.get("maturity",       0.0)
-        logger.info("[SensoryCrystal] Booted  audio=%s  visual=%s  semantic=%d",
+            self._concept_registry = {
+                c: CrystalConceptRecord.from_dict(d)
+                for c, d in sem_d.get("concept_registry", {}).items()
+            }
+        logger.info("[SensoryCrystal] Booted  audio=%s  visual=%s  semantic=%d  concepts=%d",
                     {n: len(f._nodes) for n, f in self._audio.items()},
                     {n: len(f._nodes) for n, f in self._visual.items()},
-                    len(self._semantic))
+                    len(self._semantic), len(self._concept_registry))
 
     def start_session(self, session_id: str) -> None:
         self._session_id = session_id
@@ -1103,7 +1303,18 @@ class AuroraSensoryCrystal:
                     content=f"cross_modal:{link_id}",
                     confidence=node.confidence * 0.80,
                 )
-            evolved = crystal.evolve()
+            # Modality gate: don't let this node climb DPS levels unless
+            # its concept has earned the required modality combination.
+            concept_name = str(node.name or "")
+            _gate_ok = True
+            if concept_name and concept_name in self._concept_registry:
+                _crec = self._concept_registry[concept_name]
+                _cur_level = getattr(getattr(crystal, 'level', None), 'name', 'BASE')
+                if _cur_level == 'BASE' and _crec.stage == 'base':
+                    _gate_ok = False   # needs a 2nd modality before climbing
+                elif _cur_level == 'COMPOSITE' and _crec.stage not in ('higher_order', 'quasicrystal'):
+                    _gate_ok = False   # needs all 3 before reaching FULL_CONCEPT
+            evolved = crystal.evolve() if _gate_ok else False
             if evolved:
                 logger.info("[SensoryCrystal→DPS] %s:%s:%s  DPS level→%s",
                             domain, facet_name, node.node_id[:8],
@@ -1157,6 +1368,131 @@ class AuroraSensoryCrystal:
         for node in self._semantic.values():
             if node.stage in {"concept", "promoted"}:
                 self._inject_semantic_to_dps(node, count_use=count_use)
+
+    # ------------------------------------------------------------------
+    # Concept-level modality registry  —  unified promotion gates
+    # ------------------------------------------------------------------
+
+    def observe_semantic(self, concept: str, weight: float = 1.0, node_id: str = "") -> None:
+        """Register a semantic observation for a named concept.
+        Call this from corpus_runner for each content word processed."""
+        rec = self._concept_registry.setdefault(
+            concept, CrystalConceptRecord(concept=concept))
+        rec.modalities.add("semantic")
+        rec.semantic_weight = _ema(rec.semantic_weight, weight)
+        rec.usage_count += 1
+        rec.last_seen = time.time()
+        if node_id and node_id not in rec.semantic_node_ids:
+            rec.semantic_node_ids.append(node_id)
+
+    def _register_concept_visual(self, concept: str, node_id: str) -> None:
+        """Mark visual modality observed for a concept."""
+        rec = self._concept_registry.setdefault(
+            concept, CrystalConceptRecord(concept=concept))
+        rec.modalities.add("visual")
+        rec.last_seen = time.time()
+        if node_id and node_id not in rec.visual_node_ids:
+            rec.visual_node_ids.append(node_id)
+
+    def _register_concept_audio(self, concept: str, node_id: str) -> None:
+        """Mark audio modality observed for a concept."""
+        rec = self._concept_registry.setdefault(
+            concept, CrystalConceptRecord(concept=concept))
+        rec.modalities.add("audio")
+        rec.last_seen = time.time()
+        if node_id and node_id not in rec.audio_node_ids:
+            rec.audio_node_ids.append(node_id)
+
+    def tick_concept_promotions(self) -> List[str]:
+        """
+        Advance concept stages when modality gates are met.
+
+        Gates (user-specified):
+            base → composite:         ANY 2 of 3 modalities present
+            composite → higher_order: ALL 3 modalities present
+
+        Does TWO passes per tick so a base concept with all 3 modalities
+        reaches higher_order in a single call rather than needing two ticks.
+        Returns list of concept names promoted this tick (each name appears once).
+        """
+        promoted = []
+        promoted_set = set()
+        for _pass in range(2):
+            for concept, rec in self._concept_registry.items():
+                if rec.can_promote_to_composite():
+                    rec.stage = "composite"
+                    if concept not in promoted_set:
+                        promoted.append(concept)
+                        promoted_set.add(concept)
+                    logger.info("[ConceptRegistry] base→composite: %s  modalities=%s",
+                                concept, rec.modalities)
+                elif rec.can_promote_to_higher_order():
+                    rec.stage = "higher_order"
+                    if concept not in promoted_set:
+                        promoted.append(concept)
+                        promoted_set.add(concept)
+                    logger.info("[ConceptRegistry] composite→higher_order: %s  all 3",
+                                concept)
+        return promoted
+
+    def get_gap_report(self) -> Dict[str, List[str]]:
+        """
+        Return which concepts are missing each modality — for autonomous gap-filling.
+
+        Aurora's curiosity engine should call this and issue tool calls to
+        search for images (visual) or audio samples for concepts in each list.
+        """
+        needs_visual:    List[str] = []
+        needs_audio:     List[str] = []
+        needs_semantic:  List[str] = []
+        needs_second:    List[str] = []
+        ready_composite: List[str] = []
+
+        for concept, rec in self._concept_registry.items():
+            m = rec.modalities
+            count = len(m)
+            if rec.stage == "base":
+                if count < 2:
+                    needs_second.append(concept)
+                else:
+                    if "visual"   not in m: needs_visual.append(concept)
+                    if "audio"    not in m: needs_audio.append(concept)
+                    if "semantic" not in m: needs_semantic.append(concept)
+            elif rec.stage == "composite":
+                if "visual"   not in m: needs_visual.append(concept)
+                if "audio"    not in m: needs_audio.append(concept)
+                if "semantic" not in m: needs_semantic.append(concept)
+                if count < 3:
+                    ready_composite.append(concept)
+
+        return {
+            "needs_visual":    needs_visual,
+            "needs_audio":     needs_audio,
+            "needs_semantic":  needs_semantic,
+            "needs_second":    needs_second,
+            "ready_composite": ready_composite,
+        }
+
+    def concept_stage(self, concept: str) -> str:
+        """Return current stage of a concept, or 'unknown'."""
+        rec = self._concept_registry.get(concept)
+        return rec.stage if rec else "unknown"
+
+    def concept_modalities(self, concept: str) -> set:
+        """Return the set of modalities observed for a concept."""
+        rec = self._concept_registry.get(concept)
+        return set(rec.modalities) if rec else set()
+
+    def concept_registry_summary(self) -> Dict[str, Any]:
+        """Quick stats for monitoring."""
+        stages: Dict[str, int] = {}
+        for rec in self._concept_registry.values():
+            stages[rec.stage] = stages.get(rec.stage, 0) + 1
+        return {
+            "total":        len(self._concept_registry),
+            "by_stage":     stages,
+            "gap_report":   {k: len(v) for k, v in self.get_gap_report().items()},
+        }
 
     # ------------------------------------------------------------------
     # Core observe  —  Operations: sensory.intake (N), sensory.cluster (B)
@@ -1326,6 +1662,7 @@ class AuroraSensoryCrystal:
 
         # Semantic middle plane
         self._tick_semantic_promotion()
+        self.tick_concept_promotions()
         self._sync_to_dps(count_use=True)
         self._cull_semantic(wisdom)
         self._compute_semantic_maturity()
@@ -1378,6 +1715,7 @@ class AuroraSensoryCrystal:
             "cooccur":         self._cooccur,
             "audio_marginal":  self._audio_marginal,
             "visual_marginal": self._visual_marginal,
+            "concept_registry": {c: r.to_dict() for c, r in self._concept_registry.items()},
         }
         _agb_save(self._base / "semantic" / "state.agb", payload)
         # Write hub-readable snapshot so aurora_hub.py Audio tab can display

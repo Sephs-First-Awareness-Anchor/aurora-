@@ -1982,9 +1982,10 @@ class SentenceComposer:
                         can_promote = len(deep) >= 1
                 elif level == 3:
                     # CONCEPTUAL â†’ ABSTRACT: understanding index >= 0.6
-                    metrics = self._oets.metrics.compute(self._oets.web,
-                                                         self._oets.cluster_engine)
-                    can_promote = metrics.understanding_index >= 0.6
+                    _m = self._oets.metrics.compute()
+                    _uidx = _m.get('understanding_index', 0.0) if isinstance(_m, dict) \
+                        else getattr(_m, 'understanding_index', 0.0)
+                    can_promote = _uidx >= 0.6
 
                 if can_promote:
                     template['scaffolding_level'] = level + 1
