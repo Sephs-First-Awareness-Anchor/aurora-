@@ -1,6 +1,6 @@
 {
   "heat": "COOL",
-  "updated": "02:03:40",
+  "updated": "19:51:01",
   "runtime_profile": "subsurface",
   "stratum_role": "subsurface",
   "browser_today": "disabled",
@@ -18,8 +18,8 @@
     "B": 1.0,
     "A": 1.0
   },
-  "dilation_factor": 1607.166,
-  "dilation_state": "optimal",
+  "dilation_factor": 1.0,
+  "dilation_state": "stable",
   "telemetry_fails": [],
   "telemetry_weakest": "?",
   "qao_recent_events": 0,
@@ -27,8 +27,8 @@
   "fail_summary": [
     {
       "dim": "context_carryover",
-      "fails": 811,
-      "avg_sev": 0.469
+      "fails": 816,
+      "avg_sev": 0.468
     },
     {
       "dim": "implied_intent_inference",
@@ -46,10 +46,10 @@
       "avg_sev": 0.66
     }
   ],
-  "distillation_status": "20260515_221723 ready",
-  "distillation_bytes_purged": 0,
+  "distillation_status": "20260517_183924 ready",
+  "distillation_bytes_purged": 484733,
   "distillation_crystals": 26,
-  "distillation_coherence_ratio": 1.0,
+  "distillation_coherence_ratio": 0.0145,
   "distillation_vortex_count": 26,
   "distillation_knot_count": 0,
   "interaction_archetype": "",
@@ -60,13 +60,13 @@
   "interaction_quasi_ready": false,
   "interaction_observed_effect": "resolved_partially",
   "interaction_quasi_count": 0,
-  "runtime_governor_mode": "balanced",
+  "runtime_governor_mode": "survival",
   "runtime_governor_axes": {
     "X": 1.0,
     "T": 1.0,
     "N": 1.0,
     "B": 1.0,
-    "A": 1.0
+    "A": 0.8734
   },
   "runtime_energy_balance": {
     "raw_N": 1.0,
@@ -76,25 +76,25 @@
   },
   "runtime_host": {
     "cpu_count": 4,
-    "load_1m": 2.377,
-    "load_5m": 1.6597,
-    "load_ratio": 0.5942,
-    "mem_available_mb": 810.51,
-    "mem_pressure": 0.7879,
-    "disk_free_ratio": 0.17,
-    "process_rss_mb": 285.72
+    "load_1m": 2.21,
+    "load_5m": 1.9902,
+    "load_ratio": 0.5525,
+    "mem_available_mb": 224.01,
+    "mem_pressure": 0.9414,
+    "disk_free_ratio": 0.1936,
+    "process_rss_mb": 550.89
   },
   "runtime_recent_blocked": [],
-  "runtime_last_heavy_run_age": 30.2,
-  "generation": 32,
+  "runtime_last_heavy_run_age": null,
+  "generation": 1,
   "sensory_mic_active": true,
   "sensory_camera_active": true,
-  "surface_snapshot_at": 1778911419.078828,
+  "surface_snapshot_at": 1779061856.3479197,
   "surface_snapshot_trigger": "interval",
   "surface_snapshot_flagged": false,
   "surface_snapshot_reason": "",
-  "surface_snapshot_summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
-  "surface_snapshot_age_s": 0.93,
+  "surface_snapshot_summary": "Surface is tracking audio and vision live. Current frame-load=147, maturity=0.00.",
+  "surface_snapshot_age_s": 4.79,
   "subsurface_repair_phase": "enforce",
   "subsurface_repair_issue": "semantic_precision",
   "subsurface_repair_reason": "subsurface is moving from research into corrective pressure",
@@ -103,5 +103,9 @@
   "subsurface_sensory_maturity": 0.0,
   "subsurface_sensory_semantic_nodes": 0,
   "subsurface_sensory_summary": "",
-  "subsurface_sensory_recent": []
+  "subsurface_sensory_recent": [
+    "heard harmonic consonance",
+    "heard warm body",
+    "heard syncopated burst"
+  ]
 }

@@ -1,13 +1,14 @@
 {
   "active": true,
   "status": "researched",
-  "generated_at": 1778911389.9454536,
-  "generated_at_str": "2026-05-16 02:03:09",
+  "generated_at": 1779061411.9403458,
+  "generated_at_str": "2026-05-17 19:43:31",
   "blocked_tasks": [
-    "assimilation"
+    "assimilation",
+    "mutation"
   ],
-  "reason": "b_concurrency_cooldown",
-  "retry_after": 900,
+  "reason": "x_memory_floor",
+  "retry_after": 1800,
   "selected_operator": "latent_promotion",
   "selection_source": "hint",
   "routing_type": "code_gap",
@@ -15,12 +16,12 @@
   "dominant_type": "code_gap",
   "dominant_score": 0.2725,
   "classification_mode": "active",
-  "governor_mode": "open",
+  "governor_mode": "survival",
   "host_snapshot": {
-    "mem_available_mb": 837.45,
-    "mem_pressure": 0.7808,
-    "load_ratio": 0.3276,
-    "process_rss_mb": 286.13
+    "mem_available_mb": 239.35,
+    "mem_pressure": 0.9374,
+    "load_ratio": 0.4918,
+    "process_rss_mb": 130.4
   },
   "actions": [
     {
@@ -54,27 +55,27 @@
       ]
     }
   ],
-  "poedex_question": "Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=837MB, load=0.33. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-  "occurrences": 1,
-  "handoff_attempts": 1,
-  "researched_occurrences": 1,
-  "last_handoff_at": 1778911389.716019,
-  "last_handoff_at_str": "2026-05-16 02:03:09",
+  "poedex_question": "Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=239MB, load=0.49. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+  "occurrences": 5,
+  "handoff_attempts": 5,
+  "researched_occurrences": 5,
+  "last_handoff_at": 1779061411.9343278,
+  "last_handoff_at_str": "2026-05-17 19:43:31",
   "last_handoff_status": "done",
-  "poedex_result": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=837MB",
-  "poedex_result_excerpt": "No external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=837MB",
-  "poedex_result_at": 1778911393.5674036,
-  "poedex_result_at_str": "2026-05-16 02:03:13",
+  "poedex_result": "No external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=239MB, load=0",
+  "poedex_result_excerpt": "No external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=239MB, load=0",
+  "poedex_result_at": 1779061415.9531858,
+  "poedex_result_at_str": "2026-05-17 19:43:35",
   "last_gate": {
     "reason": "allowed",
-    "retry_in": 180,
-    "score": 1.0,
+    "retry_in": 270,
+    "score": 0.9819,
     "floor": 0.18,
-    "ts": 1778911389.716019,
-    "ts_str": "2026-05-16 02:03:09"
+    "ts": 1779061411.9343278,
+    "ts_str": "2026-05-17 19:43:31"
   },
-  "updated_at": 1778911396.7897027,
-  "updated_at_str": "2026-05-16 02:03:16",
+  "updated_at": 1779061415.9531858,
+  "updated_at_str": "2026-05-17 19:43:35",
   "relief_parsed_operator": "latent_promotion",
   "relief_parsed_axis_biases": {},
   "relief_parsed_routing": "",

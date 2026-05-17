@@ -2566,6 +2566,15 @@ def _select_tool(
     if knowledge_hit and not is_self_question and not browser_search_hit:
         return "world_knowledge_search", {"query": user_text, "systems": systems}
 
+    # ── Corpus training (natural language intent) ────────────────────────────
+    _train_markers = (
+        "active training", "start training", "begin training",
+        "run training", "train yourself", "initiate training",
+        "start corpus", "run corpus", "begin corpus",
+    )
+    if any(m in t for m in _train_markers):
+        return "corpus_train_auto", {"systems": systems}
+
     return None, {}
 
 
@@ -4540,6 +4549,26 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             except Exception:
                 pass
 
+        # Stage 3: Topology-based reconstruction — if a prior meaning attractor
+        # carries topology links for relevant concepts, traverse those links and
+        # add them as reconstruction seeds. Different contextual prompts (this
+        # turn's f_parts) reconstruct different aspects of the same attractor.
+        try:
+            _s3_attr = systems.get('_meaning_attractor')
+            if _s3_attr is not None and _s3_attr.oets_topology:
+                _f_parts_set = set(f_parts)
+                for _s3_concept, _s3_neighbors in _s3_attr.oets_topology.items():
+                    # Only traverse if the concept is relevant to this turn
+                    if _s3_concept in _f_parts_set or any(
+                        _s3_concept in p for p in f_parts
+                    ):
+                        for _s3_nb in _s3_neighbors[:2]:
+                            if _s3_nb and _s3_nb not in _f_parts_set and len(_s3_nb) >= 3:
+                                f_parts.append(_s3_nb)
+                                _f_parts_set.add(_s3_nb)
+        except Exception:
+            pass
+
         # Generative wellbeing response — gated by word-salad check
         from aurora_internal.aurora_language_state import IntentObject
         _f_intent = IntentObject(intent_type="reflection", emotion_tone="reflective")
@@ -5034,6 +5063,40 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             if _ag_r[0]:
                 return _ag_r
             return (None, None, None)
+
+        # ---- TRAINING INTENT GATE ----
+        # Natural language training requests ("active training", "start training", etc.)
+        # must not fall into generic synthesis — route to tool and confirm via synthesis.
+        _train_markers_comp = (
+            "active training", "start training", "begin training",
+            "run training", "train yourself", "initiate training",
+            "start corpus", "run corpus", "begin corpus",
+        )
+        if any(m in t_low for m in _train_markers_comp):
+            from aurora_internal.tool_registry import call as _tr_call
+            _tr_res = _tr_call("corpus_train_auto", systems=systems)
+            from aurora_internal.aurora_language_state import IntentObject
+            _tr_intent = IntentObject(intent_type="action", emotion_tone="determined")
+            if _tr_res.success:
+                _tr_frags = "training; begin; active; corpus; learning; process"
+                _tr_text = ""
+                try:
+                    _tr_text = systems['perception'].evo.sic._synthesize_fragments(_tr_frags, _tr_intent)
+                except Exception:
+                    pass
+                if not _tr_text:
+                    _tr_text = _tr_res.data
+                return (_tr_text, "determined", 0.95)
+            else:
+                _tr_frags = "corpus; missing; need; download; training; unavailable"
+                _tr_text = ""
+                try:
+                    _tr_text = systems['perception'].evo.sic._synthesize_fragments(_tr_frags, _tr_intent)
+                except Exception:
+                    pass
+                if not _tr_text:
+                    _tr_text = "No training corpus available. Download one first."
+                return (_tr_text, "attentive", 0.90)
 
         # ---- STATEMENT GATE ----
         # Statements (no question) don't need factual answers, but Aurora should
@@ -7375,6 +7438,22 @@ def dual_question_pipeline(
         pipeline_state["thought_axes"] = list(getattr(_thought_state, "axis_fingerprint", []) or [])
         pipeline_state["thought_unresolved"] = list(getattr(_thought_state, "unresolved", []) or [])
         pipeline_state["thought_self_application"] = str(getattr(_thought_state, "self_application", "") or "")
+
+    # ── RELATIONAL SYNTHESIS CONTEXT — built once per turn ───────────────────
+    # Draws from all live signal sources (crystal stage, OETS neighborhood,
+    # axis delta, thought state, temporal arc) and injects into SIC so every
+    # synthesis call this turn has access to the full relational position.
+    # Partial failures tolerated; missing signals leave safe defaults in place.
+    _rctx = None
+    try:
+        from aurora_internal.aurora_relational_context import build_relational_synthesis_context as _build_rctx
+        _rctx = _build_rctx(systems, user_text, intent, pipeline_state)
+        if perception and hasattr(perception, 'set_relational_context'):
+            perception.set_relational_context(_rctx)
+        systems['_relational_ctx'] = _rctx
+    except Exception:
+        pass
+
     comp_text, comp_tone, comp_conf = _build_comprehension_response(
         user_text, intent, systems, pipeline_state=pipeline_state, 
         faculty_attention=faculty_attention
@@ -8076,6 +8155,17 @@ def dual_question_pipeline(
     try:
         from aurora_curiosity_engine import reset_curiosity_interrupt
         reset_curiosity_interrupt()
+    except Exception:
+        pass
+
+    # Persist the updated meaning attractor for carry-forward into the next turn.
+    # synthesis calls in this turn updated _rctx.meaning_attractor in-place via SIC.
+    try:
+        _persisted_rctx = systems.get('_relational_ctx')
+        if _persisted_rctx is not None:
+            _updated_attr = getattr(_persisted_rctx, 'meaning_attractor', None)
+            if _updated_attr is not None:
+                systems['_meaning_attractor'] = _updated_attr
     except Exception:
         pass
 

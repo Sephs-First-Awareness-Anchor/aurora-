@@ -1,6 +1,6 @@
 {
-  "updated_at": 1778910533.8365142,
-  "updated_at_str": "2026-05-16 01:48:53",
+  "updated_at": 1779061721.2965822,
+  "updated_at_str": "2026-05-17 19:48:41",
   "phase": "enforce",
   "issue": "semantic_precision",
   "reason": "subsurface is moving from research into corrective pressure",
@@ -11,8 +11,8 @@
     "fail_summary": [
       {
         "dim": "context_carryover",
-        "fails": 811,
-        "avg_sev": 0.469
+        "fails": 816,
+        "avg_sev": 0.468
       },
       {
         "dim": "implied_intent_inference",
@@ -27,7 +27,7 @@
     ],
     "surface_flagged": false,
     "surface_reason": "",
-    "surface_summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm."
+    "surface_summary": "Surface is tracking audio and vision live. Current frame-load=146, maturity=0.00."
   },
   "poedex_excerpt": "No external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant"
 }

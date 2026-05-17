@@ -1,93 +1,81 @@
 {
-  "updated_at": 1778911444.2702444,
-  "updated": "02:04:04",
+  "updated_at": 1779061866.3761468,
+  "updated": "19:51:06",
   "source": "surface_daemon",
   "trigger": "interval",
   "flagged": false,
   "reason": "",
   "mic_live": true,
   "camera_live": true,
-  "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+  "summary": "Surface is tracking audio and vision live. Current frame-load=147, maturity=0.00.",
   "sensory_state": {
-    "maturity": 0.769,
-    "total_frames": 881,
-    "semantic_nodes": 6,
+    "maturity": 0.0,
+    "total_frames": 147,
+    "semantic_nodes": 0,
     "audio": {
       "tone": {
-        "nodes": 10,
-        "promoted": 5,
-        "maturity": 0.694
+        "nodes": 5,
+        "promoted": 0,
+        "maturity": 0.218
       },
       "timbre": {
         "nodes": 5,
-        "promoted": 5,
-        "maturity": 0.736
+        "promoted": 0,
+        "maturity": 0.218
       },
       "rhythm": {
         "nodes": 4,
-        "promoted": 4,
-        "maturity": 0.766
+        "promoted": 0,
+        "maturity": 0.218
       }
     },
     "visual": {
       "hue": {
         "nodes": 5,
-        "promoted": 5,
-        "maturity": 0.78
+        "promoted": 0,
+        "maturity": 0.218
       },
       "shape": {
         "nodes": 5,
-        "promoted": 5,
-        "maturity": 0.78
+        "promoted": 0,
+        "maturity": 0.218
       },
       "motion": {
         "nodes": 4,
-        "promoted": 4,
-        "maturity": 0.78
+        "promoted": 0,
+        "maturity": 0.218
       }
     },
     "lanes": {
       "tonal_colour": {
-        "nodes": 2,
-        "promoted": 2
+        "nodes": 0,
+        "promoted": 0
       },
       "texture_form": {
-        "nodes": 2,
-        "promoted": 2
+        "nodes": 0,
+        "promoted": 0
       },
       "tempo_flow": {
-        "nodes": 2,
-        "promoted": 2
+        "nodes": 0,
+        "promoted": 0
       }
     },
     "recognitions": {
-      "recent": [
-        "heard human speech prosody",
-        "heard excited voice",
-        "heard natural speech rhythm"
-      ],
+      "recent": [],
       "last_matches": {
-        "audio": {
-          "tone": "21720cf3-5047-4547-b87c-c7f21276fa1b",
-          "timbre": "2594f263-f1f3-48a6-bf60-4c00f1fd68c1",
-          "rhythm": "b338ac24-bcfb-4d42-b60d-b06c4f216437"
-        },
-        "visual": {
-          "hue": null,
-          "shape": null,
-          "motion": null
-        },
+        "audio": {},
+        "visual": {},
         "semantic": {}
       }
     },
     "lineage_signature": "XTNBA",
     "runtime_regime": {
       "axes": {
-        "X": 0.6619999999999985,
-        "T": 0.76535,
-        "N": 0.5851853114963339,
-        "B": 0.66535,
-        "A": 0.5288
+        "X": 0.39744906781250006,
+        "T": 0.475625,
+        "N": 0.30899883476562506,
+        "B": 0.2,
+        "A": 0.15
       },
       "dominant_axis": "T",
       "governor_weight": 0.682
@@ -101,8 +89,7 @@
       "verb_bias": 0.109,
       "flat_web": true,
       "relation_type_dominant": "related_to"
-    },
-    "saved_at": 1778093833.7922325
+    }
   },
   "sensory_vectors": {
     "audio_20d": [],
@@ -123,29 +110,17 @@
   "visual_uncertainty_streak": 0,
   "concepts_active": [],
   "present_sensory_perspective": {
-    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+    "summary": "Surface is tracking audio and vision live. Current frame-load=147, maturity=0.00.",
     "mic_live": true,
     "camera_live": true,
     "scope": "constant_surface_feed",
     "trigger": "interval",
     "flagged": false,
     "recognitions": {
-      "recent": [
-        "heard human speech prosody",
-        "heard excited voice",
-        "heard natural speech rhythm"
-      ],
+      "recent": [],
       "last_matches": {
-        "audio": {
-          "tone": "21720cf3-5047-4547-b87c-c7f21276fa1b",
-          "timbre": "2594f263-f1f3-48a6-bf60-4c00f1fd68c1",
-          "rhythm": "b338ac24-bcfb-4d42-b60d-b06c4f216437"
-        },
-        "visual": {
-          "hue": null,
-          "shape": null,
-          "motion": null
-        },
+        "audio": {},
+        "visual": {},
         "semantic": {}
       }
     },
@@ -158,13 +133,10 @@
     "visual_uncertainty_streak": 0,
     "native_meaning_bundle": {
       "primary": {
-        "meaning_id": "sensory-1778911444270",
-        "created_at": 1778911444.2702444,
+        "meaning_id": "sensory-1779061866376",
+        "created_at": 1779061866.3761468,
         "semantic_roots": [
-          "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
-          "heard human speech prosody",
-          "heard excited voice",
-          "heard natural speech rhythm"
+          "Surface is tracking audio and vision live. Current frame-load=147, maturity=0.00."
         ],
         "diagonal_anchor": "Boundary_Operator_of_Meaning",
         "source_origin": "sensory_multimodal",
@@ -204,13 +176,10 @@
       }
     },
     "native_meaning": {
-      "meaning_id": "sensory-1778911444270",
-      "created_at": 1778911444.2702444,
+      "meaning_id": "sensory-1779061866376",
+      "created_at": 1779061866.3761468,
       "semantic_roots": [
-        "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
-        "heard human speech prosody",
-        "heard excited voice",
-        "heard natural speech rhythm"
+        "Surface is tracking audio and vision live. Current frame-load=147, maturity=0.00."
       ],
       "diagonal_anchor": "Boundary_Operator_of_Meaning",
       "source_origin": "sensory_multimodal",

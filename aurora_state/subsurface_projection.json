@@ -1,12 +1,12 @@
 {
   "source": "subsurface_daemon",
-  "generated_at": 1778911420.0127864,
+  "generated_at": 1779061861.1380203,
   "dominant_axis_hint": "X",
-  "governor_mode": "balanced",
-  "readiness_bias": 0.46,
+  "governor_mode": "survival",
+  "readiness_bias": 0.28,
   "surface_guidance": "Surface should feel careful around interpretation while subsurface sharpens the boundary problem. The caution should start easing because the issue is moving toward remedy.",
   "present_sensory_perspective": {
-    "summary": "Surface is tracking audio and vision live. Current frame-load=881, maturity=0.77. Recognitions: heard human speech prosody, heard excited voice, heard natural speech rhythm.",
+    "summary": "Surface is tracking audio and vision live. Current frame-load=147, maturity=0.00.",
     "mic_live": true,
     "camera_live": true,
     "scope": "constant_surface_feed",
@@ -37,6 +37,11 @@
       "summary": "Deeper structural repair is already underway below awareness."
     },
     {
+      "label": "slow_down",
+      "weight": 0.55,
+      "summary": "Use a lighter present-frame response while resources are tight."
+    },
+    {
       "label": "clarify",
       "weight": 0.58,
       "summary": "The unease is boundary-shaped; clarify before committing hard to meaning."
@@ -45,6 +50,7 @@
   "active_effects": [
     "the wrong-feeling is being remedied below the surface",
     "background repair pressure is still active",
+    "energy should stay economical",
     "recurring issue pressure around ?",
     "subsurface repair focus is semantic precision"
   ],
@@ -54,12 +60,17 @@
     "repair_issue": "semantic precision",
     "repair_reason": "subsurface is moving from research into corrective pressure",
     "sensory_growth_maturity": 0.0,
-    "sensory_growth_recent": [],
+    "sensory_growth_recent": [
+      "heard harmonic consonance",
+      "heard warm body",
+      "heard syncopated burst"
+    ],
     "blocked_tasks": [
-      "assimilation"
+      "assimilation",
+      "mutation"
     ],
     "handoff_status": "researched",
-    "mem_available_mb": 810.51,
+    "mem_available_mb": 224.01,
     "sensory_history_scope": "discard_after_processing",
     "continuity_scope": "durable_recall_and_consolidation",
     "surface_frame_dependency": "surface_flags_and_5s_snapshots"

@@ -1,32 +1,28 @@
 {
-  "original": "manufactured you passionately reflect a This",
-  "candidate": "manufactured you passionately reflect a This.",
-  "selected": "manufactured you passionately reflect a This.",
+  "original": "hey aurora",
+  "candidate": "hey aurora.",
+  "selected": "hey aurora.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.87,
-  "candidate_score": 0.92,
-  "original_pressure": 0.366,
-  "candidate_pressure": 0.296,
+  "original_score": 0.69,
+  "candidate_score": 0.74,
+  "original_pressure": 0.552,
+  "candidate_pressure": 0.482,
   "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "He did, did you know he was afraid of bambi that is really funny",
+    "prompt_excerpt": "hey aurora",
     "input_interpretation": {
-      "raw_prompt": "He did, did you know he was afraid of bambi that is really funny",
+      "raw_prompt": "hey aurora",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "know",
-        "afraid",
-        "bambi",
-        "really",
-        "funny"
+        "aurora"
       ],
       "entities": []
     },
-    "tone": "playful",
+    "tone": "attentive",
     "source": "deterministic",
-    "timestamp": 1778989183.0906625,
+    "timestamp": 1779061800.98276,
     "min_relief_used": 0.035
   }
 }

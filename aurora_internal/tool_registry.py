@@ -822,6 +822,50 @@ def _corpus_train(corpus_name: str = "", systems: Optional[Dict[str, Any]] = Non
 
 _reg("corpus_train", "Start a training loop on a downloaded corpus", "PERSISTENT", _corpus_train, disables_search=True)
 
+
+def _corpus_train_auto(systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
+    """Start training on the best available corpus — auto-discovers the path."""
+    _base = Path(__file__).resolve().parents[1]
+    _candidates = [
+        _base.parent / "conversations.json",
+        _base / "conversations.json",
+        _base / "aurora_state" / "training_corpus" / "directed_prompt_cache.json",
+        _base.parent / "chats_criteria.json.txt",
+        _base / "aurora_state" / "chats_criteria.json.txt",
+    ]
+    corp_path = None
+    for _c in _candidates:
+        if _c.exists() and _c.stat().st_size > 1024:
+            corp_path = _c
+            break
+    if corp_path is None:
+        return ToolResult("corpus_train_auto", "", False, "No corpus found. Download one first.")
+
+    def _run():
+        try:
+            import sys
+            sys.path.append(str(_base))
+            from corpus_runner import run_corpus_ingestion, LearningCadence
+            cadence = LearningCadence(
+                heartbeat_every=5, identity_every=50, voice_every=50,
+                consolidation_every=300, simulation_every=500,
+                save_every=1000, evolve_every=100,
+            )
+            run_corpus_ingestion(
+                systems=systems, corpus_path=str(corp_path), cadence=cadence,
+                passes="observer", verbose=False, dpme_verbose=False,
+                coherence_window=200, unlock_avg=0.62, unlock_min=0.45, warmup_epochs=3,
+            )
+        except Exception as exc:
+            with open(str(_base / "aurora_state" / "training_error.log"), "a") as f:
+                f.write(f"corpus_train_auto: {exc}\n")
+
+    threading.Thread(target=_run, daemon=True).start()
+    return ToolResult("corpus_train_auto", f"Training started on {corp_path.name}.", True)
+
+
+_reg("corpus_train_auto", "Start training on the best available local corpus (auto-discovered)", "PERSISTENT", _corpus_train_auto, disables_search=True)
+
 _reg("self_state",    "Aurora's current internal runtime state",            "BOUNDED",    _self_state_read, disables_search=True)
 _reg("schedule_read", "Aurora's daemon schedule — uptime/generation/events","BOUNDED",    _schedule_read,  disables_search=True)
 _reg("memory_read",   "Aurora's recalled fragments and active OETS concepts","BOUNDED",   _memory_read,    disables_search=True)

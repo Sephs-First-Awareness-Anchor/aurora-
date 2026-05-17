@@ -14,7 +14,7 @@
     "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260506_233012",
     "restorable": false,
     "restored_at": "",
-    "pruned_at": "2026-05-15 22:17:23"
+    "pruned_at": "2026-05-17 18:39:24"
   },
   {
     "run_id": "20260507_003926",
@@ -31,13 +31,13 @@
     "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260507_003926",
     "restorable": false,
     "restored_at": "",
-    "pruned_at": "2026-05-15 22:17:23"
+    "pruned_at": "2026-05-17 18:39:24"
   },
   {
     "run_id": "20260507_014636",
     "timestamp": 1778132796.1816463,
     "timestamp_str": "2026-05-07 01:46:36",
-    "status": "distilled",
+    "status": "pruned",
     "bytes_purged": 0,
     "links_promoted": 0,
     "crystals_formed": 0,
@@ -46,14 +46,15 @@
     "knot_count": 0,
     "summary": "run 20260507_014636 | 0B purged | 0 crystals",
     "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260507_014636",
-    "restorable": true,
-    "restored_at": ""
+    "restorable": false,
+    "restored_at": "",
+    "pruned_at": "2026-05-17 18:39:24"
   },
   {
     "run_id": "20260507_022148",
     "timestamp": 1778134908.8932064,
     "timestamp_str": "2026-05-07 02:21:48",
-    "status": "distilled",
+    "status": "pruned",
     "bytes_purged": 0,
     "links_promoted": 0,
     "crystals_formed": 0,
@@ -62,8 +63,9 @@
     "knot_count": 0,
     "summary": "run 20260507_022148 | 0B purged | 0 crystals",
     "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260507_022148",
-    "restorable": true,
-    "restored_at": ""
+    "restorable": false,
+    "restored_at": "",
+    "pruned_at": "2026-05-17 18:39:24"
   },
   {
     "run_id": "20260507_025806",
@@ -414,6 +416,38 @@
     "knot_count": 0,
     "summary": "run 20260515_221723 | 0B purged | 26 crystals",
     "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260515_221723",
+    "restorable": true,
+    "restored_at": ""
+  },
+  {
+    "run_id": "20260517_133822",
+    "timestamp": 1779039503.0394754,
+    "timestamp_str": "2026-05-17 13:38:23",
+    "status": "distilled",
+    "bytes_purged": 1220453,
+    "links_promoted": 0,
+    "crystals_formed": 26,
+    "coherence_ratio": 0.0123,
+    "vortex_count": 26,
+    "knot_count": 0,
+    "summary": "run 20260517_133822 | 1.2MB purged | 26 crystals",
+    "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260517_133822",
+    "restorable": true,
+    "restored_at": ""
+  },
+  {
+    "run_id": "20260517_183924",
+    "timestamp": 1779057564.6216094,
+    "timestamp_str": "2026-05-17 18:39:24",
+    "status": "distilled",
+    "bytes_purged": 484733,
+    "links_promoted": 0,
+    "crystals_formed": 26,
+    "coherence_ratio": 0.0145,
+    "vortex_count": 26,
+    "knot_count": 0,
+    "summary": "run 20260517_183924 | 473.4KB purged | 26 crystals",
+    "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260517_183924",
     "restorable": true,
     "restored_at": ""
   }

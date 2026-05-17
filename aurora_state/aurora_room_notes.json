@@ -1,551 +1,5 @@
 [
   {
-    "ts": 1778784840.3787506,
-    "ts_str": "2026-05-14 14:54:00",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1344M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778801574.500366,
-    "ts_str": "2026-05-14 19:32:54",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1344M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778801660.735311,
-    "ts_str": "2026-05-14 19:34:20",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1216MB, load=0.22. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778801663.1491442,
-    "ts_str": "2026-05-14 19:34:23",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1216M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778801692.467052,
-    "ts_str": "2026-05-14 19:35:04",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778801864.2401826,
-    "ts_str": "2026-05-14 19:37:44",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=1213M",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778804093.018188,
-    "ts_str": "2026-05-14 20:15:01",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778805594.1583323,
-    "ts_str": "2026-05-14 20:39:54",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=964MB, load=0.16. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778805602.577604,
-    "ts_str": "2026-05-14 20:40:02",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=964MB",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778806493.1627848,
-    "ts_str": "2026-05-14 20:54:58",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778807473.7009103,
-    "ts_str": "2026-05-14 21:11:13",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=845MB, load=0.15. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778807476.1134136,
-    "ts_str": "2026-05-14 21:11:16",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=845MB",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778808893.8680186,
-    "ts_str": "2026-05-14 21:34:57",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778811344.9344256,
-    "ts_str": "2026-05-14 22:15:44",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=652MB, load=0.12. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778811395.0069175,
-    "ts_str": "2026-05-14 22:16:35",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778811446.9365616,
-    "ts_str": "2026-05-14 22:17:26",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778811846.4326253,
-    "ts_str": "2026-05-14 22:24:06",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778812035.288448,
-    "ts_str": "2026-05-14 22:27:15",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778812253.4172375,
-    "ts_str": "2026-05-14 22:30:53",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778812305.931672,
-    "ts_str": "2026-05-14 22:31:45",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778812745.0534136,
-    "ts_str": "2026-05-14 22:39:05",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778812932.0414913,
-    "ts_str": "2026-05-14 22:42:12",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778813295.150814,
-    "ts_str": "2026-05-14 22:48:15",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778813347.19844,
-    "ts_str": "2026-05-14 22:49:07",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778813838.3243942,
-    "ts_str": "2026-05-14 22:57:18",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778814026.1054142,
-    "ts_str": "2026-05-14 23:00:26",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778815369.2827718,
-    "ts_str": "2026-05-14 23:22:49",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=498MB, load=0.13. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778815419.358142,
-    "ts_str": "2026-05-14 23:23:39",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778815420.2640867,
-    "ts_str": "2026-05-14 23:23:40",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=507MB, load=0.12. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778815470.3346167,
-    "ts_str": "2026-05-14 23:24:30",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778816250.3960085,
-    "ts_str": "2026-05-14 23:37:30",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=501MB, load=0.09. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778816300.465504,
-    "ts_str": "2026-05-14 23:38:20",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778816370.9881399,
-    "ts_str": "2026-05-14 23:39:30",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778816898.4103932,
-    "ts_str": "2026-05-14 23:48:18",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=463MB, load=0.13. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778816948.476679,
-    "ts_str": "2026-05-14 23:49:08",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778817794.2488904,
-    "ts_str": "2026-05-15 00:03:26",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778818275.1004543,
-    "ts_str": "2026-05-15 00:11:15",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=635MB, load=0.21. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778818283.1218104,
-    "ts_str": "2026-05-15 00:11:23",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=6",
-    "source": "daemon_evolution_relief_handoff"
-  },
-  {
-    "ts": 1778820194.4512377,
-    "ts_str": "2026-05-15 00:43:20",
-    "type": "issue_research",
-    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
-    "source": "daemon_poedex_research"
-  },
-  {
-    "ts": 1778823965.2810214,
-    "ts_str": "2026-05-15 01:46:05",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=858MB, load=0.17. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778824015.3504808,
-    "ts_str": "2026-05-15 01:46:55",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778824155.135765,
-    "ts_str": "2026-05-15 01:49:15",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778824205.832754,
-    "ts_str": "2026-05-15 01:50:05",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778824602.3595746,
-    "ts_str": "2026-05-15 01:56:42",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778824770.5534472,
-    "ts_str": "2026-05-15 01:59:30",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778824967.5961792,
-    "ts_str": "2026-05-15 02:02:47",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778825391.7830255,
-    "ts_str": "2026-05-15 02:09:51",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778825455.8896296,
-    "ts_str": "2026-05-15 02:10:55",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778825606.14244,
-    "ts_str": "2026-05-15 02:13:26",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778826156.5220363,
-    "ts_str": "2026-05-15 02:22:36",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=507MB, load=0.09. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778826206.5923965,
-    "ts_str": "2026-05-15 02:23:26",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778826881.914694,
-    "ts_str": "2026-05-15 02:34:41",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=522MB, load=0.12. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778826931.9843533,
-    "ts_str": "2026-05-15 02:35:31",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778828332.8847222,
-    "ts_str": "2026-05-15 02:58:52",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=520MB, load=0.08. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778828382.9556694,
-    "ts_str": "2026-05-15 02:59:42",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778829540.1621134,
-    "ts_str": "2026-05-15 03:19:00",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=528MB, load=0.08. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778829590.2323582,
-    "ts_str": "2026-05-15 03:19:50",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778829791.1832356,
-    "ts_str": "2026-05-15 03:23:11",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778830004.4270747,
-    "ts_str": "2026-05-15 03:26:44",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778830318.7088337,
-    "ts_str": "2026-05-15 03:31:58",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=455MB, load=0.11. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778830368.7836668,
-    "ts_str": "2026-05-15 03:32:48",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778830541.805715,
-    "ts_str": "2026-05-15 03:35:41",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=482MB, load=0.15. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778830591.876001,
-    "ts_str": "2026-05-15 03:36:31",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778831955.5328693,
-    "ts_str": "2026-05-15 03:59:15",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=427MB, load=0.21. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778832005.603611,
-    "ts_str": "2026-05-15 04:00:05",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778832169.6824634,
-    "ts_str": "2026-05-15 04:02:49",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=412MB, load=0.16. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778832219.749687,
-    "ts_str": "2026-05-15 04:03:39",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: b_concurrency_cooldown. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778832219.7590132,
-    "ts_str": "2026-05-15 04:03:39",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=412MB, load=0.16. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778832269.8282278,
-    "ts_str": "2026-05-15 04:04:29",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778832751.7890372,
-    "ts_str": "2026-05-15 04:12:31",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778833443.0502267,
-    "ts_str": "2026-05-15 04:24:03",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=430MB, load=0.14. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778833493.1254663,
-    "ts_str": "2026-05-15 04:24:53",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778834501.9832742,
-    "ts_str": "2026-05-15 04:41:41",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=456MB, load=0.11. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778834552.052201,
-    "ts_str": "2026-05-15 04:42:32",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778834552.0612283,
-    "ts_str": "2026-05-15 04:42:32",
-    "type": "evolution_relief",
-    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=456MB, load=0.11. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief"
-  },
-  {
-    "ts": 1778834602.1323388,
-    "ts_str": "2026-05-15 04:43:22",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778834652.2102444,
-    "ts_str": "2026-05-15 04:44:12",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
-    "ts": 1778835083.7415967,
-    "ts_str": "2026-05-15 04:51:23",
-    "type": "evolution_relief_research",
-    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nHandoff status: local fallback\n\nPoedex was unavailable, so subsurface is staging a local relief move for assimilation, mutation. Preferred operator: latent_promotion. Reason: x_memory_floor. Hold point: What code structure would best implement the missing capability in the high-pressure axis cluster?",
-    "source": "daemon_evolution_relief_fallback"
-  },
-  {
     "ts": 1778836846.3550866,
     "ts_str": "2026-05-15 05:20:46",
     "type": "evolution_relief",
@@ -1398,5 +852,551 @@
     "type": "evolution_relief_research",
     "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=837MB",
     "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779037007.9485073,
+    "ts_str": "2026-05-17 12:56:47",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=292MB, load=0.47. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779037012.371304,
+    "ts_str": "2026-05-17 12:56:52",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=292MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779037059.9508636,
+    "ts_str": "2026-05-17 12:58:00",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779040256.2335503,
+    "ts_str": "2026-05-17 13:50:56",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=survival, mem_avail=362MB, load=0.48. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779040260.2580717,
+    "ts_str": "2026-05-17 13:51:00",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=survival, mem_avail=3",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779040517.6061254,
+    "ts_str": "2026-05-17 13:55:17",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=643MB, load=0.49. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779040521.22099,
+    "ts_str": "2026-05-17 13:55:21",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=6",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779040660.7832546,
+    "ts_str": "2026-05-17 13:57:46",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779040772.237119,
+    "ts_str": "2026-05-17 13:59:32",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=6",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779040961.3513472,
+    "ts_str": "2026-05-17 14:02:41",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=917MB, load=0.94. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779040964.1800854,
+    "ts_str": "2026-05-17 14:02:44",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=917MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779040968.8289342,
+    "ts_str": "2026-05-17 14:02:48",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=928MB, load=0.89. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779040971.6466248,
+    "ts_str": "2026-05-17 14:02:51",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=9",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779041201.1757548,
+    "ts_str": "2026-05-17 14:06:41",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=9",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779041201.2015357,
+    "ts_str": "2026-05-17 14:06:41",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=balanced, mem_avail=909MB, load=0.58. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779041203.2248569,
+    "ts_str": "2026-05-17 14:06:43",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=balanced, mem_avail=909MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779041358.2240596,
+    "ts_str": "2026-05-17 14:09:18",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=907MB, load=0.58. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779041361.042549,
+    "ts_str": "2026-05-17 14:09:21",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=9",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779041577.6116807,
+    "ts_str": "2026-05-17 14:12:57",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=929MB",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779041742.874101,
+    "ts_str": "2026-05-17 14:15:42",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=905MB",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779041947.7778413,
+    "ts_str": "2026-05-17 14:19:07",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=open, mem_avail=888MB",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779042667.3081713,
+    "ts_str": "2026-05-17 14:31:07",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=486MB, load=0.53. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779042670.717857,
+    "ts_str": "2026-05-17 14:31:10",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=486MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779043124.9320045,
+    "ts_str": "2026-05-17 14:38:44",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=407MB, load=0.52. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779043128.9540963,
+    "ts_str": "2026-05-17 14:38:48",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=407MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779044000.894708,
+    "ts_str": "2026-05-17 14:53:20",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=1024MB, load=0.55. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779044003.7148776,
+    "ts_str": "2026-05-17 14:53:23",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=balanced, mem_avail=1",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779044017.7687137,
+    "ts_str": "2026-05-17 14:53:37",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=354MB, load=0.75. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779044020.587624,
+    "ts_str": "2026-05-17 14:53:40",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=354MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779044261.2550154,
+    "ts_str": "2026-05-17 14:57:43",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779044571.6303356,
+    "ts_str": "2026-05-17 15:02:51",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=418MB, load=0.60. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779044574.8435626,
+    "ts_str": "2026-05-17 15:02:54",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=418MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779046042.799638,
+    "ts_str": "2026-05-17 15:27:22",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=290MB, load=0.68. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779046046.0176878,
+    "ts_str": "2026-05-17 15:27:26",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=290MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779046372.1736722,
+    "ts_str": "2026-05-17 15:32:52",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=297MB, load=0.78. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779046374.5871603,
+    "ts_str": "2026-05-17 15:32:54",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=297MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779046867.8540874,
+    "ts_str": "2026-05-17 15:41:07",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=453MB, load=0.43. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779046871.0746832,
+    "ts_str": "2026-05-17 15:41:11",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=4",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779048112.5284996,
+    "ts_str": "2026-05-17 16:01:55",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779048396.2250335,
+    "ts_str": "2026-05-17 16:06:36",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=294MB, load=0.49. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779048401.0525005,
+    "ts_str": "2026-05-17 16:06:41",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=294MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779049738.3450022,
+    "ts_str": "2026-05-17 16:28:58",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=465MB, load=0.39. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779049741.1621208,
+    "ts_str": "2026-05-17 16:29:01",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=4",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779049741.1735964,
+    "ts_str": "2026-05-17 16:29:01",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=465MB, load=0.39. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779049744.3880246,
+    "ts_str": "2026-05-17 16:29:04",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=465MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779049746.481694,
+    "ts_str": "2026-05-17 16:29:06",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=465MB, load=0.39. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779049748.093901,
+    "ts_str": "2026-05-17 16:29:08",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: b_concurrency_cooldown\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by b_concurrency_cooldown. Governor mode=conserve, mem_avail=4",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779049851.2066588,
+    "ts_str": "2026-05-17 16:30:51",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=439MB, load=0.40. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779049858.8248465,
+    "ts_str": "2026-05-17 16:30:58",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=conserve, mem_avail=439MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779050513.1575859,
+    "ts_str": "2026-05-17 16:41:55",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779051051.6423702,
+    "ts_str": "2026-05-17 16:50:51",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=233MB, load=0.50. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779051055.2684,
+    "ts_str": "2026-05-17 16:50:55",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=233MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779051247.0774674,
+    "ts_str": "2026-05-17 16:54:07",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=231MB, load=0.45. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779051250.292202,
+    "ts_str": "2026-05-17 16:54:10",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=231MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779052597.438299,
+    "ts_str": "2026-05-17 17:16:37",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=325MB, load=0.36. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779052600.262528,
+    "ts_str": "2026-05-17 17:16:40",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=325MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779052854.7225764,
+    "ts_str": "2026-05-17 17:20:54",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=283MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779052913.6589274,
+    "ts_str": "2026-05-17 17:21:58",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779054548.0168846,
+    "ts_str": "2026-05-17 17:49:08",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=259MB, load=0.48. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779054551.645675,
+    "ts_str": "2026-05-17 17:49:11",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=259MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779054655.1728978,
+    "ts_str": "2026-05-17 17:50:55",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=263MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779055314.5488338,
+    "ts_str": "2026-05-17 18:01:56",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779056011.2346745,
+    "ts_str": "2026-05-17 18:13:31",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=288MB, load=0.48. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779056014.8701544,
+    "ts_str": "2026-05-17 18:13:34",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=288MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779056017.2932415,
+    "ts_str": "2026-05-17 18:13:37",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=288MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779056911.3609016,
+    "ts_str": "2026-05-17 18:28:35",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779057811.4951375,
+    "ts_str": "2026-05-17 18:43:31",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=202MB, load=0.44. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779057815.5188477,
+    "ts_str": "2026-05-17 18:43:35",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=202MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779057961.4096072,
+    "ts_str": "2026-05-17 18:46:01",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=216MB, load=0.63. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779057964.64049,
+    "ts_str": "2026-05-17 18:46:04",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=216MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779059311.6635365,
+    "ts_str": "2026-05-17 19:08:31",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=282MB, load=0.42. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779059316.4849215,
+    "ts_str": "2026-05-17 19:08:36",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=282MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779059317.0129118,
+    "ts_str": "2026-05-17 19:08:40",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
+  },
+  {
+    "ts": 1779059614.544512,
+    "ts_str": "2026-05-17 19:13:34",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=316MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779060661.9318686,
+    "ts_str": "2026-05-17 19:31:01",
+    "type": "evolution_relief",
+    "content": "LOW-RESOURCE EVOLUTION RELIEF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nDominant pressure: code_gap (0.273)\nNext prompt: What code structure would best implement the missing capability in the high-pressure axis cluster?\n\nPoedex question:\nLow-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=303MB, load=0.47. Dominant pressure=code_gap (0.273), preferred operator=latent_promotion. Help me stage the smallest safe next code or logic move. Start with: What code structure would best implement the missing capability in the high-pressure axis cluster?",
+    "source": "daemon_evolution_relief"
+  },
+  {
+    "ts": 1779060666.7480967,
+    "ts_str": "2026-05-17 19:31:06",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. assimilation is blocked by x_memory_floor. Governor mode=survival, mem_avail=303MB, lo",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779061415.9531858,
+    "ts_str": "2026-05-17 19:43:35",
+    "type": "evolution_relief_research",
+    "content": "LOW-RESOURCE EVOLUTION HANDOFF\n\nBlocked tasks: assimilation, mutation\nReason: x_memory_floor\nPreferred operator: latent_promotion\nExecutable operator: latent_promotion\nAxis biases: none detected\nHandoff status: executable \u2014 adapter_hints updated\n\nPoedex Researcher returned:\nNo external data available for: Low-resource self-repair request. mutation is blocked by x_memory_floor. Governor mode=survival, mem_avail=239MB, load=0",
+    "source": "daemon_evolution_relief_handoff"
+  },
+  {
+    "ts": 1779061717.689346,
+    "ts_str": "2026-05-17 19:48:41",
+    "type": "issue_research",
+    "content": "AUTONOMOUS ISSUE RESEARCH\n\nRecurring issue: semantic_precision\nQAO recent events: 0\nTop QAO issue: ?\n\nPoedex Researcher returned:\nNo external data available for: Aurora self-diagnostic. I am seeing a recurring issue and need the smallest useful fix clues. Top fail dimension: semant",
+    "source": "daemon_poedex_research"
   }
 ]

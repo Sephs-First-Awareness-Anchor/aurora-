@@ -886,6 +886,10 @@ _VOICE_COMMAND_PATTERNS = [
     ([r"hunt for a corpus on (.*)", r"find dataset on (.*)", r"search for a corpus on (.*)"], "corpus_hunter"),
     ([r"download new corpus from (.*)", r"fetch new corpus from (.*)"], "corpus_download"),
     ([r"start training on (.*)", r"train on (.*)"],                     "corpus_train"),
+    (["active training", "begin training",
+      "train yourself", "initiate training",
+      "start corpus", "begin corpus", "run corpus",
+      "corpus train", "run corpus training"],                           "corpus_train_auto"),
 ]
 
 import re
@@ -1099,6 +1103,50 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
         res = _corpus_train(corpus_name=p1, systems=systems)
         return res.data if res.success else f"Training failed to start: {res.note}"
 
+    if command_key == "corpus_train_auto":
+        # Natural-language training intent — discover corpus automatically.
+        # Search known locations in priority order.
+        from pathlib import Path as _P
+        _base = _P(__file__).resolve().parent
+        _candidates = [
+            _base.parent / "conversations.json",
+            _base / "conversations.json",
+            _base / "aurora_state" / "training_corpus" / "directed_prompt_cache.json",
+            _base.parent / "chats_criteria.json.txt",
+            _base / "aurora_state" / "chats_criteria.json.txt",
+        ]
+        _corp_path = None
+        for _c in _candidates:
+            if _c.exists() and _c.stat().st_size > 1024:
+                _corp_path = _c
+                break
+        if _corp_path is None:
+            return "No corpus found to train on. Download a corpus first."
+        # Launch corpus_runner directly with the absolute path
+        import threading as _thr
+        def _run_train():
+            try:
+                import sys as _sys
+                _sys.path.append(str(_base))
+                from corpus_runner import run_corpus_ingestion, LearningCadence
+                _cad = LearningCadence(
+                    heartbeat_every=5, identity_every=50, voice_every=50,
+                    consolidation_every=300, simulation_every=500,
+                    save_every=1000, evolve_every=100,
+                )
+                run_corpus_ingestion(
+                    systems=systems, corpus_path=str(_corp_path), cadence=_cad,
+                    passes="observer", verbose=False, dpme_verbose=False,
+                    coherence_window=200, unlock_avg=0.62, unlock_min=0.45, warmup_epochs=3,
+                )
+            except Exception as _te:
+                import traceback
+                with open(str(_base / "aurora_state" / "training_error.log"), "a") as _f:
+                    _f.write(f"corpus_train_auto error: {_te}\n{traceback.format_exc()}\n")
+        _thr.Thread(target=_run_train, daemon=True).start()
+        _log_voice_command_to_hub("corpus_train_auto", f"Training started: {_corp_path.name}")
+        return f"Training started on {_corp_path.name}."
+
     # --- Core Engine Commands ---
     if command_key == "switchvoice":
         new_voice = _cycle_system_voice(systems)
@@ -1144,7 +1192,6 @@ def _execute_voice_command(command_key: str, p1: Optional[str], p2: Optional[str
                 episodes_per_epoch=episodes,
                 turns_per_episode=turns,
                 verbose=False,
-                phase_prefix="voice_train",
             )
             result = (
                 f"Training complete after {epochs} epochs "

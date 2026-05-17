@@ -2643,6 +2643,9 @@ class ExpressionPerceptionEngine:
         # IVM lattice reference for heat checks (set via set_ivm)
         self._ivm_lattice = None
 
+        # Per-turn relational synthesis context (set via set_relational_context)
+        self._relational_ctx = None
+
     def set_attentional_focus(self, focus: Dict[str, Any]):
         """Pass the Attention Engine's nucleus to the expression layer."""
         self._attentional_focus = focus
@@ -2652,6 +2655,15 @@ class ExpressionPerceptionEngine:
     def set_personality(self, traits: Dict[str, float]):
         """Accept personality traits from L6 for expression shaping."""
         self._personality_traits = traits
+
+    def set_relational_context(self, ctx) -> None:
+        """Forward per-turn relational synthesis context to the SIC inside EVO."""
+        self._relational_ctx = ctx
+        try:
+            if self.evo is not None:
+                self.evo.sic.set_relational_context(ctx)
+        except Exception:
+            pass
 
     def set_ivm(self, lattice):
         """Wire IVM lattice for heat-aware expression selection."""

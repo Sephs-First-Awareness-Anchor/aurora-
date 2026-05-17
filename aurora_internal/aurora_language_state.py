@@ -433,6 +433,14 @@ class SemanticIntentCompiler:
     def __init__(self, lsv: LanguageStateVector):
         self.lsv = lsv
         self._thought_log: deque = deque(maxlen=50)
+        self._relational_ctx = None
+        # Expression pressure accumulator — concepts that failed to express
+        # carry forward as boosted signal weight on the next synthesis attempt.
+        # Key: concept word; Value: accumulated pressure (decays with each use).
+        self._expression_pressure: Dict[str, float] = {}
+
+    def set_relational_context(self, ctx) -> None:
+        self._relational_ctx = ctx
 
     # ----------------------------------------------------------------
     # Pass A: Internal thought
@@ -1164,7 +1172,7 @@ class SemanticIntentCompiler:
         
         return core
 
-    def _synthesize_fragments(self, fragments: str, intent: IntentObject) -> str:
+    def _synthesize_fragments(self, fragments: str, intent: IntentObject, relational_ctx=None) -> str:
         """
         Generative Assembly: Authors a sentence word-by-word from weighted tokens,
         or weaves factual harvested data into her metabolic cadence.
@@ -1206,6 +1214,20 @@ class SemanticIntentCompiler:
             "forming", "self",  # "self" handled via identity dict already
         }
 
+        # Expression pressure carry-forward: concepts that failed to express on
+        # prior attempts enter this turn's pool with amplified weight. The pressure
+        # acts as a traversal bias — unresolved meaning presses harder toward expression.
+        # Pressure decays 40% per use, eventually dropping below the noise floor.
+        if self._expression_pressure:
+            _decayed = {}
+            for _pc, _pw in list(self._expression_pressure.items()):
+                if _pc.isalpha() and len(_pc) >= 3 and _pc not in _category_labels:
+                    token_pool[_pc] += _pw * 1.8
+                _remaining = _pw * 0.6
+                if _remaining >= 0.05:
+                    _decayed[_pc] = _remaining
+            self._expression_pressure = _decayed
+
         # Structured facts (fact; topic; detail; value) get higher weight
         # to ensure their key terms are prioritized in the generative pass.
         p0_low = parts[0].lower()
@@ -1227,6 +1249,75 @@ class SemanticIntentCompiler:
             for t in tokens:
                 token_pool[t] += act * 1.5
 
+        # Relational context injection — macro (crystal/OETS depth) + micro (axis delta, thought)
+        _arc = "first_encounter"
+        _rctx = relational_ctx or getattr(self, '_relational_ctx', None)
+        if _rctx is not None:
+            try:
+                # MACRO: Crystal-stage weighted token boosting
+                # Concepts Aurora has deeper multi-modal experience of get more synthesis weight
+                for _concept, _cw in (_rctx.macro.concept_weights or {}).items():
+                    if _concept in parts_low:
+                        token_pool[_concept] += _cw
+                    # Boost OETS neighbors of crystal-promoted concepts proportionally to stage weight
+                    for _nb, _nb_strength in (_rctx.macro.oets_neighbors.get(_concept) or [])[:4]:
+                        if _nb.isalpha() and len(_nb) >= 3 and _nb not in _category_labels:
+                            token_pool[_nb] += _nb_strength * (_cw / 1.2)
+            except Exception:
+                pass
+
+            try:
+                # MICRO: Axis delta — concepts rising in this conversation get extra token weight
+                # This encodes the direction of change, not just current state
+                _delta_tokens = {
+                    "X": ["present", "grounded", "here", "now", "real"],
+                    "T": ["carries", "continues", "persists", "holds", "through", "across"],
+                    "N": ["focus", "energy", "clear", "sustain", "attend"],
+                    "B": ["meaning", "clarity", "know", "understand", "bound"],
+                    "A": ["agency", "forms", "shapes", "resolve", "move", "act"],
+                }
+                for _ax, _delta in (_rctx.micro.axis_delta or {}).items():
+                    if _delta > 0.04:
+                        for _t in _delta_tokens.get(_ax, []):
+                            token_pool[_t] += _delta * 2.0
+                    elif _delta < -0.04:
+                        # Falling axis — suppression tokens reduce that axis's expression
+                        for _t in _delta_tokens.get(_ax, []):
+                            token_pool[_t] = max(0.0, token_pool[_t] - abs(_delta) * 1.0)
+            except Exception:
+                pass
+
+            try:
+                # MICRO: Thought convergence tokens — convey where the thought is right now
+                _conv = _rctx.micro.thought_convergence
+                if _conv == "settling":
+                    for _w in ["understand", "clear", "holds", "meaning", "know"]:
+                        token_pool[_w] += 0.45
+                elif _conv == "conflicted":
+                    for _w in ["tension", "between", "yet", "both", "and"]:
+                        token_pool[_w] += 0.45
+                elif _conv in ("drifting", "open"):
+                    for _w in ["open", "toward", "seeks", "perhaps", "wonder"]:
+                        token_pool[_w] += 0.45
+            except Exception:
+                pass
+
+            try:
+                # MICRO: Thought interpretation words feed into token pool
+                if _rctx.micro.thought_interpretation:
+                    import re as _re_rctx
+                    for _w in _re_rctx.findall(r'[a-z]+', _rctx.micro.thought_interpretation.lower()):
+                        if len(_w) >= 4 and _w not in _category_labels:
+                            token_pool[_w] += 0.3
+            except Exception:
+                pass
+
+            try:
+                # MICRO: Temporal arc — stored for motif selection below
+                _arc = _rctx.micro.temporal_arc
+            except Exception:
+                pass
+
         # Expand token pool with OETS-learned neighbors of fragment keywords.
         # This is what makes training absorption real — words Aurora learned from
         # corpus exposure enter synthesis as valid candidates, not just fixed lists.
@@ -1246,6 +1337,30 @@ class SemanticIntentCompiler:
                     except Exception:
                         pass
 
+        # Stage 2: Meaning Attractor — recursive condensation
+        # The prior attractor (from earlier turns) bleeds into this token pool,
+        # then we produce an updated attractor from the fully-built pool.
+        # This is the "perpetually revisable" layer: meaning accumulates without
+        # collapsing — each pass stabilizes the attractor further while remaining
+        # plastic enough to shift under new relational pressure.
+        if _rctx is not None:
+            try:
+                from aurora_internal.aurora_relational_context import condense_to_attractor as _cta
+                _prior_attr = getattr(_rctx, 'meaning_attractor', None)
+                if _prior_attr is not None and _prior_attr.token_weights:
+                    # Blend prior attractor into current token pool — the degree
+                    # of influence scales with attractor stability (stable meaning
+                    # carries more forward; plastic meaning yields to new input)
+                    _blend_alpha = float(_prior_attr.stability) * 0.35
+                    for _atk, _atw in _prior_attr.token_weights.items():
+                        if _atk.isalpha() and len(_atk) >= 3:
+                            token_pool[_atk] += _atw * _blend_alpha
+                # Condense the current pool into an updated attractor
+                _new_attractor = _cta(dict(token_pool), _rctx, _prior_attr)
+                _rctx.meaning_attractor = _new_attractor
+            except Exception:
+                pass
+
         # 2. Select Motif (Sentence Skeleton)
         grammar = getattr(self.lsv, "_grammar", None)
         motif = None
@@ -1262,15 +1377,91 @@ class SemanticIntentCompiler:
             seq = (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT)
             motif = type('MockMotif', (), {'role_sequence': seq, 'reference_anchors': []})
 
+        # Temporal arc: recurring concepts warrant deeper relational motif orientation;
+        # first encounters stay grounded in the present rather than overloading meaning.
+        try:
+            if _arc == "recurring" and grammar and motif:
+                _deep_orient = {a: 1.0 + axis_activation.get(a, 0.2) for a in "XTNBA"}
+                _deep_orient["B"] = _deep_orient.get("B", 1.0) + 0.5
+                _deep_orient["T"] = _deep_orient.get("T", 1.0) + 0.3
+                _alt_motif = grammar._lineage.best_for_pressure(_deep_orient, 0.5)
+                if _alt_motif:
+                    motif = _alt_motif
+            elif _arc == "first_encounter" and grammar and motif:
+                _simple_orient = {a: 0.5 for a in "XTNBA"}
+                _simple_orient["X"] = 0.9
+                _alt_motif = grammar._lineage.best_for_pressure(_simple_orient, 0.5)
+                if _alt_motif:
+                    motif = _alt_motif
+        except Exception:
+            pass
+
         # 3. Assemble word-by-word
         from aurora_grammar_engine import RoleTagger, TokenRole
         tagger = RoleTagger()
-        
+
+        # Primary pass: rule-based tagging. Collect high-weight UNKNOWN tokens
+        # for OETS fallback — these are words Aurora knows conceptually but the
+        # rule-based tagger hasn't encountered in a grammatical role yet.
+        _unknown_candidates: List[Tuple[str, float]] = []
         role_pool: Dict[TokenRole, List[Tuple[str, float]]] = defaultdict(list)
         for token, weight in token_pool.items():
-            _, role = tagger.tag(token)[0] if tagger.tag(token) else (token, TokenRole.UNKNOWN)
+            _tagged = tagger.tag(token)
+            _, role = _tagged[0] if _tagged else (token, TokenRole.UNKNOWN)
             if role != TokenRole.UNKNOWN:
                 role_pool[role].append((token, weight))
+            elif weight >= 0.12 and token.isalpha() and len(token) >= 3:
+                _unknown_candidates.append((token, weight))
+
+        # OETS Role Fallback + Learning Feedback.
+        # Traverse the OETS for each unrecognized token. The traversal:
+        #   1. Reads the node's stored grammatical role if known
+        #   2. Infers and WRITES the role back if missing — learning from use
+        #   3. Places the token in the correct role_pool bucket for this assembly
+        #   4. Increments times_used_in_expression — the retraversal IS the signal
+        # Over multiple turns and corpus runs this fills in the grammatical
+        # role map for Aurora's entire learned vocabulary without any hand-coding.
+        if _unknown_candidates and self.lsv and hasattr(self.lsv, "_oets") and self.lsv._oets:
+            _fb_web = getattr(self.lsv._oets, "web", None)
+            if _fb_web is not None:
+                _oets_role_map = {
+                    "noun":        TokenRole.OBJECT,
+                    "verb":        TokenRole.ACTION,
+                    "adjective":   TokenRole.DESCRIPTOR,
+                    "adverb":      TokenRole.CONTEXT,
+                    "preposition": TokenRole.CONNECTOR,
+                    "pronoun":     TokenRole.AGENT,
+                }
+                import time as _t_fb
+                for _fb_tok, _fb_wt in _unknown_candidates:
+                    try:
+                        _fb_node = _fb_web.get_node(_fb_tok)
+                        if _fb_node is not None:
+                            _fb_role_str = str(getattr(_fb_node, "role", "") or "").lower()
+                            if not _fb_role_str:
+                                # Node known but role never recorded — infer and persist
+                                from aurora_expression_perception import infer_word_role as _iwr
+                                _fb_role_str = _iwr(_fb_tok)
+                                _fb_node.role = _fb_role_str
+                            _fb_tr = _oets_role_map.get(_fb_role_str)
+                            if _fb_tr is not None:
+                                role_pool[_fb_tr].append((_fb_tok, _fb_wt))
+                            # Learning feedback — record that this word was used in expression
+                            _fb_node.times_used_in_expression = (
+                                getattr(_fb_node, "times_used_in_expression", 0) + 1
+                            )
+                            _fb_node.last_accessed = _t_fb.time()
+                        else:
+                            # Word not in OETS yet — infer role from suffix rules.
+                            # Lower weight signals "unverified by corpus" to keep
+                            # confirmed OETS words preferred over suffix guesses.
+                            from aurora_expression_perception import infer_word_role as _iwr2
+                            _fb_role_str2 = _iwr2(_fb_tok)
+                            _fb_tr2 = _oets_role_map.get(_fb_role_str2)
+                            if _fb_tr2 is not None:
+                                role_pool[_fb_tr2].append((_fb_tok, _fb_wt * 0.65))
+                    except Exception:
+                        pass
 
         assembled = []
         for role in motif.role_sequence:
@@ -1335,13 +1526,83 @@ class SemanticIntentCompiler:
                     assembled.append("perhaps")
 
         sentence = " ".join(assembled).strip()
-        if not sentence: return ""
-        
+        if not sentence:
+            # Empty assembly — generate expression pressure from all fragment concepts.
+            # Failure is not silence; it is a signal that reshapes next traversal.
+            self._register_expression_failure(parts_low, _category_labels, _rctx)
+            return ""
+
         # Capitalize and punctuate
         res = sentence[0].upper() + sentence[1:]
         if not res.endswith((".", "?", "!")):
             res += "."
+
+        # Word-salad check — if the assembled sentence is incoherent, that IS a
+        # failure even though assembly succeeded mechanically. Apply same pressure.
+        try:
+            from aurora_articulation import _is_word_salad as _ws_check
+            if _ws_check(res):
+                self._register_expression_failure(parts_low, _category_labels, _rctx)
+                return ""
+        except Exception:
+            pass
+
         return res
+
+    def _register_expression_failure(
+        self,
+        parts_low: List[str],
+        category_labels: set,
+        rctx,
+    ) -> None:
+        """
+        Failed synthesis becomes pressure, not silence.
+
+        Three effects:
+          1. Fragment concepts accumulate in _expression_pressure — amplified
+             weight on the next synthesis attempt (traversal economics).
+          2. OETS research_priority boosted for unresolved concepts — the system
+             schedules deeper learning for what it couldn't express.
+          3. Meaning attractor destabilized — failure signals that the current
+             compressed form is not yet stable enough, keeping the attractor plastic.
+        """
+        # 1. Accumulate expression pressure
+        for _fp in parts_low:
+            if _fp.isalpha() and len(_fp) >= 3 and _fp not in category_labels:
+                self._expression_pressure[_fp] = (
+                    self._expression_pressure.get(_fp, 0.0) + 0.28
+                )
+
+        # 2. Boost OETS research priority for unresolved concepts
+        try:
+            if self.lsv and hasattr(self.lsv, "_oets") and self.lsv._oets:
+                _rp_web = getattr(self.lsv._oets, "web", None)
+                if _rp_web is not None:
+                    for _fp in parts_low:
+                        if not (_fp.isalpha() and len(_fp) >= 3
+                                and _fp not in category_labels):
+                            continue
+                        try:
+                            _rp_node = _rp_web.get_node(_fp)
+                            if _rp_node is not None:
+                                _rp_node.research_priority = min(
+                                    1.0,
+                                    getattr(_rp_node, "research_priority", 0.5) + 0.12,
+                                )
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
+        # 3. Destabilize meaning attractor — failure means the crest hasn't
+        # earned its stability yet; keep the wave plastic and responsive
+        try:
+            if rctx is not None:
+                _attr = getattr(rctx, "meaning_attractor", None)
+                if _attr is not None:
+                    _attr.stability = max(0.1, _attr.stability - 0.12)
+        except Exception:
+            pass
 
     def _should_synthesize_fragments(self, text: str, intent: IntentObject) -> bool:
         """

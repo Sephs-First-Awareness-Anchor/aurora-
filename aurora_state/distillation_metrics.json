@@ -1,46 +1,46 @@
 {
-  "timestamp": 1778897843.2153966,
-  "timestamp_str": "2026-05-15 22:17:23",
+  "timestamp": 1779057564.6216094,
+  "timestamp_str": "2026-05-17 18:39:24",
   "status": "distilled",
-  "summary": "run 20260515_221723 | 0B purged | 26 crystals",
+  "summary": "run 20260517_183924 | 473.4KB purged | 26 crystals",
   "trigger_snapshot": {
     "sizes": {
-      "surface_pressure": 26252784,
-      "pressure_experiences": 2755082,
-      "daemon_log": 248166,
-      "articulation_feedback": 599132
+      "surface_pressure": 10360771,
+      "pressure_experiences": 545022,
+      "daemon_log": 628345,
+      "articulation_feedback": 608315
     },
-    "total_state_bytes": 138645735,
-    "low_worth_density": 0.0,
-    "der_load": 0.4019,
-    "latest_restorable_run_id": "20260515_211158",
+    "total_state_bytes": 249904923,
+    "low_worth_density": 0.0125,
+    "der_load": 0.4013,
+    "latest_restorable_run_id": "20260517_133822",
     "triggers": {
-      "log_size_threshold_exceeded": false,
+      "log_size_threshold_exceeded": true,
       "high_low_worth_density": false,
       "genealogy_backlog": true,
       "memory_saturation": false,
       "der_load_increase": false,
       "coherence_instability": false,
-      "quiet_window": true
+      "quiet_window": false
     },
     "should_run": true
   },
-  "bytes_purged": 0,
+  "bytes_purged": 484733,
   "links_promoted": 0,
   "crystals_formed": 26,
   "micro_residuals_preserved": 600,
-  "coherence_ratio": 1.0,
+  "coherence_ratio": 0.0145,
   "vortex_count": 26,
   "knot_count": 0,
-  "wave_count": 0,
-  "drift_count": 0,
+  "wave_count": 96,
+  "drift_count": 8275,
   "results": [
     {
       "source": "surface_pressure",
       "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/surface_pressure_log.jsonl",
       "parser": "jsonl",
       "status": "under_threshold",
-      "current_bytes": 26252784,
+      "current_bytes": 10360771,
       "bytes_purged": 0,
       "records_purged": 0,
       "archive_file": "",
@@ -53,7 +53,7 @@
       "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/pressure_experiences.jsonl",
       "parser": "jsonl",
       "status": "under_threshold",
-      "current_bytes": 2755082,
+      "current_bytes": 545022,
       "bytes_purged": 0,
       "records_purged": 0,
       "archive_file": "",
@@ -65,21 +65,2233 @@
       "source": "daemon_log",
       "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/daemon.log",
       "parser": "log",
-      "status": "under_threshold",
-      "current_bytes": 248248,
-      "bytes_purged": 0,
-      "records_purged": 0,
-      "archive_file": "",
+      "status": "distilled",
+      "current_bytes": 628427,
+      "bytes_purged": 484733,
+      "records_purged": 8375,
+      "archive_file": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260517_183924/daemon_log.purged",
       "crystals": [],
-      "micro_residuals": [],
-      "shape_counts": {}
+      "micro_residuals": [
+        {
+          "id": "DISTILL:wave:d9ecea59741cc716",
+          "signature": "d9ecea59741cc716",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[12:11:30]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:f5d2b8ad1dc7c6a3",
+          "signature": "f5d2b8ad1dc7c6a3",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[12:11:47]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:8dcc662b440ec448",
+          "signature": "8dcc662b440ec448",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[12:16:47]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:e8f35c8663c6f32e",
+          "signature": "e8f35c8663c6f32e",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[12:17:07]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:01b2518d30455fa6",
+          "signature": "01b2518d30455fa6",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 74,
+          "examples": [
+            "[12:20:32]   [DREAM] Deferred: x_memory_floor score=1.03/0.05 retry=2700s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:733fe91b22f9a3d9",
+          "signature": "733fe91b22f9a3d9",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[12:21:04]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:4ca1d4a9dc5a841a",
+          "signature": "4ca1d4a9dc5a841a",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[12:21:23]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:5c23398598b40dde",
+          "signature": "5c23398598b40dde",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[12:33:36]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:a3b5b2326e8290eb",
+          "signature": "a3b5b2326e8290eb",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[12:33:55]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:cf4c165d05a90097",
+          "signature": "cf4c165d05a90097",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[12:48:02]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:4f137d999b279a70",
+          "signature": "4f137d999b279a70",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[12:48:26]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:c464263e069e7ea8",
+          "signature": "c464263e069e7ea8",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "social"
+          ],
+          "tag_counts": {
+            "social": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 75,
+          "examples": [
+            "[12:57:39]   [SOCIAL] Deferred: x_memory_floor score=0.81/0.60 retry=2700s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ad074863c887baef",
+          "signature": "ad074863c887baef",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[13:00:18]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:4b7594c0f81d0a36",
+          "signature": "4b7594c0f81d0a36",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:00:39]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:28d16b0d81fb4d7b",
+          "signature": "28d16b0d81fb4d7b",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 74,
+          "examples": [
+            "[13:05:32]   [DREAM] Deferred: x_memory_floor score=0.93/0.05 retry=2700s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:e86b28c76450c87f",
+          "signature": "e86b28c76450c87f",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[13:12:42]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:bb92e666cecf8ab7",
+          "signature": "bb92e666cecf8ab7",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:13:04]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:62f10237b9688964",
+          "signature": "62f10237b9688964",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[13:26:08]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:af29801749ad4362",
+          "signature": "af29801749ad4362",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:26:25]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:35ff640c7a98fe0e",
+          "signature": "35ff640c7a98fe0e",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[13:35:14]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:638e19ae2be5fc1e",
+          "signature": "638e19ae2be5fc1e",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:35:31]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:4eaeed851f07e5d1",
+          "signature": "4eaeed851f07e5d1",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 82,
+          "examples": [
+            "[13:38:22]   [DISTILL] Pressure release distillation started. run=20260517_133822"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ca2c5fe96f609804",
+          "signature": "ca2c5fe96f609804",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 51,
+          "examples": [
+            "[13:38:23]   [DISTILL] Pruned 3 old archive rounds"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:dfc9043bdb860d00",
+          "signature": "dfc9043bdb860d00",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 94,
+          "examples": [
+            "[13:38:23]   [DISTILL] Completed: run=20260517_133822 purged=1.2MB crystals=26 coherence=0.01"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:1cd4e38bfc7ca436",
+          "signature": "1cd4e38bfc7ca436",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 143,
+          "examples": [
+            "[13:38:23]   [DISTILL] Archive packed at /home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260517_133822"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:460b6a9470f45f57",
+          "signature": "460b6a9470f45f57",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 80,
+          "examples": [
+            "[13:38:23]   [DISTILL] Telemetry: bytes=1220453 crystals=26 vortices=26 knots=0"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:5526e2be05c7de93",
+          "signature": "5526e2be05c7de93",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "social"
+          ],
+          "tag_counts": {
+            "social": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 83,
+          "examples": [
+            "[13:42:39]   [SOCIAL] Deferred: b_concurrency_cooldown score=0.94/0.60 retry=1800s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:a9d14ec4db6562f0",
+          "signature": "a9d14ec4db6562f0",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[13:47:37]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:a5990c7ad1c85c25",
+          "signature": "a5990c7ad1c85c25",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:47:55]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:022b3f4406afb188",
+          "signature": "022b3f4406afb188",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[13:50:33]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:03394b33c3a3bbc3",
+          "signature": "03394b33c3a3bbc3",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:50:56]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:cbb2b0413425f155",
+          "signature": "cbb2b0413425f155",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[13:54:57]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:a8eb2356e8299df1",
+          "signature": "a8eb2356e8299df1",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:55:17]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:e09c923e13e017f0",
+          "signature": "e09c923e13e017f0",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[13:59:04]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ba2666040a19df3d",
+          "signature": "ba2666040a19df3d",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[13:59:27]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:79d392e80bc9a728",
+          "signature": "79d392e80bc9a728",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[14:01:47]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:4f7cf24fed38dcaf",
+          "signature": "4f7cf24fed38dcaf",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:02:08]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:2749ed0477ff5b41",
+          "signature": "2749ed0477ff5b41",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[14:02:09]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:5ef327b4d38408be",
+          "signature": "5ef327b4d38408be",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:02:41]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:d185f11cb5efae30",
+          "signature": "d185f11cb5efae30",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[14:06:07]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:a0a4216c5e423f43",
+          "signature": "a0a4216c5e423f43",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:06:38]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:f211f0beda5bf07b",
+          "signature": "f211f0beda5bf07b",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[14:08:56]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:6c4abfd74f50cfe3",
+          "signature": "6c4abfd74f50cfe3",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:09:18]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:7064ca4467c468cb",
+          "signature": "7064ca4467c468cb",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 84,
+          "examples": [
+            "[14:10:24]   [DISTILL] Deferred: b_concurrency_cooldown score=1.00/0.06 retry=2400s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:cebdc3502d5765ed",
+          "signature": "cebdc3502d5765ed",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[14:12:34]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:d85e5e73ddc06a61",
+          "signature": "d85e5e73ddc06a61",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:12:55]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:fc4492851b5ca271",
+          "signature": "fc4492851b5ca271",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "social"
+          ],
+          "tag_counts": {
+            "social": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 83,
+          "examples": [
+            "[14:13:02]   [SOCIAL] Deferred: b_concurrency_cooldown score=1.00/0.60 retry=1800s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:40d82e2512a81ef6",
+          "signature": "40d82e2512a81ef6",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[14:15:20]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:2f230a65bc222cce",
+          "signature": "2f230a65bc222cce",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:15:40]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:9170bb013c6956d0",
+          "signature": "9170bb013c6956d0",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[14:15:47]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:1860a50dabe36cb9",
+          "signature": "1860a50dabe36cb9",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:16:07]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:86fd605d5408d570",
+          "signature": "86fd605d5408d570",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[14:18:44]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:d08de857877211d8",
+          "signature": "d08de857877211d8",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:19:04]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:4eb04aaa9fa24601",
+          "signature": "4eb04aaa9fa24601",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 82,
+          "examples": [
+            "[14:22:51]   [DREAM] Deferred: b_concurrency_cooldown score=1.04/0.05 retry=1800s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:e575b4feb5a0e0ad",
+          "signature": "e575b4feb5a0e0ad",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[14:30:34]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:26e74d29d82f769e",
+          "signature": "26e74d29d82f769e",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:30:58]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ac7204918d6a4723",
+          "signature": "ac7204918d6a4723",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[14:39:24]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:df44b51e7c6635cf",
+          "signature": "df44b51e7c6635cf",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:39:46]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:33c10b329e81a841",
+          "signature": "33c10b329e81a841",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "social"
+          ],
+          "tag_counts": {
+            "social": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 82,
+          "examples": [
+            "[14:43:02]   [SOCIAL] GPT outreach disabled \u2014 no external API client connected."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:752e58dc3ee7a604",
+          "signature": "752e58dc3ee7a604",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[14:49:40]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ee802842c37e2186",
+          "signature": "ee802842c37e2186",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:49:59]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:a2624275c47d7898",
+          "signature": "a2624275c47d7898",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 37,
+          "examples": [
+            "[14:50:25]   [DISTILL] Skipped: idle"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:7feec4568d858721",
+          "signature": "7feec4568d858721",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[14:52:51]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:2ff5bb4c144d03e7",
+          "signature": "2ff5bb4c144d03e7",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[14:53:20]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:04e86e9433e363a4",
+          "signature": "04e86e9433e363a4",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 74,
+          "examples": [
+            "[14:56:36]   [DREAM] Deferred: x_memory_floor score=1.04/0.05 retry=1800s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:5df20be5c4a4931b",
+          "signature": "5df20be5c4a4931b",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[15:04:37]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:647763a8b8d29db4",
+          "signature": "647763a8b8d29db4",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[15:04:59]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ae91a47ad7d7dc1d",
+          "signature": "ae91a47ad7d7dc1d",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[15:19:03]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:3ff84e579ee09c80",
+          "signature": "3ff84e579ee09c80",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[15:19:23]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:45b63d07cc886a6b",
+          "signature": "45b63d07cc886a6b",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 76,
+          "examples": [
+            "[15:19:58]   [DISTILL] Deferred: x_memory_floor score=1.00/0.06 retry=2400s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:99f4ed7d9da30319",
+          "signature": "99f4ed7d9da30319",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 74,
+          "examples": [
+            "[15:26:36]   [DREAM] Deferred: x_memory_floor score=1.05/0.05 retry=2700s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:df40667c24cd0e9a",
+          "signature": "df40667c24cd0e9a",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[15:33:01]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:450a88585826c088",
+          "signature": "450a88585826c088",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[15:33:21]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:c360b565bfb220c9",
+          "signature": "c360b565bfb220c9",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[15:40:48]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:935fae738c45f761",
+          "signature": "935fae738c45f761",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[15:41:07]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:00e862f31d262770",
+          "signature": "00e862f31d262770",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 74,
+          "examples": [
+            "[15:43:39]   [DREAM] Deferred: x_memory_floor score=1.04/0.05 retry=2700s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ab4491a60e8c4f9d",
+          "signature": "ab4491a60e8c4f9d",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[15:51:05]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:6d92c5372d300030",
+          "signature": "6d92c5372d300030",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[15:51:22]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:f63579df63e353b8",
+          "signature": "f63579df63e353b8",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[16:01:27]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:0c00e6a8d6faa233",
+          "signature": "0c00e6a8d6faa233",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[16:01:51]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:6909f78550f88f6b",
+          "signature": "6909f78550f88f6b",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 76,
+          "examples": [
+            "[16:05:28]   [DISTILL] Deferred: x_memory_floor score=1.00/0.62 retry=3600s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:5e396d93eed3ac4b",
+          "signature": "5e396d93eed3ac4b",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[16:14:26]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:31cbfdb3e7da1700",
+          "signature": "31cbfdb3e7da1700",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[16:14:43]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:4fb8aeae8ffe84de",
+          "signature": "4fb8aeae8ffe84de",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[16:23:49]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ed31ffc7e4d0ec39",
+          "signature": "ed31ffc7e4d0ec39",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[16:24:07]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:73a530a4639da63a",
+          "signature": "73a530a4639da63a",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 44,
+          "examples": [
+            "[16:28:39]   [DREAM] Running dream burst..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:ef35c060812a17a9",
+          "signature": "ef35c060812a17a9",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[16:28:58]   [DREAM] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:507f4fad764111c8",
+          "signature": "507f4fad764111c8",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 74,
+          "examples": [
+            "[16:31:37]   [DREAM] Deferred: x_memory_floor score=1.04/0.05 retry=1800s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:6b9648e402a92ed9",
+          "signature": "6b9648e402a92ed9",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[16:37:32]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:53f72f890a86b3a6",
+          "signature": "53f72f890a86b3a6",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[16:37:48]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:16c77f2ab0732e8f",
+          "signature": "16c77f2ab0732e8f",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[16:53:04]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:93ebf9afdb9f5cfc",
+          "signature": "93ebf9afdb9f5cfc",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[16:53:21]   [STUDY] Done."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:0b21df3dfc23ff30",
+          "signature": "0b21df3dfc23ff30",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "dream"
+          ],
+          "tag_counts": {
+            "dream": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 74,
+          "examples": [
+            "[17:01:37]   [DREAM] Deferred: x_memory_floor score=1.05/0.05 retry=2700s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:b9acaf13d13571e7",
+          "signature": "b9acaf13d13571e7",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "distill"
+          ],
+          "tag_counts": {
+            "distill": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 76,
+          "examples": [
+            "[17:05:28]   [DISTILL] Deferred: x_memory_floor score=1.00/0.62 retry=3600s"
+          ]
+        },
+        {
+          "id": "DISTILL:wave:705b183ae929e79c",
+          "signature": "705b183ae929e79c",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 49,
+          "examples": [
+            "[17:07:17]   [STUDY] Running OETS study cycle..."
+          ]
+        },
+        {
+          "id": "DISTILL:wave:edab206c359729c6",
+          "signature": "edab206c359729c6",
+          "source": "daemon_log",
+          "shape": "wave",
+          "count": 1,
+          "avg_worth": 0.46,
+          "avg_coherence": 0.36,
+          "axes": [],
+          "axis_counts": {},
+          "tags": [
+            "study"
+          ],
+          "tag_counts": {
+            "study": 1
+          },
+          "first_ts": 0.0,
+          "last_ts": 0.0,
+          "raw_bytes": 27,
+          "examples": [
+            "[17:07:33]   [STUDY] Done."
+          ]
+        }
+      ],
+      "shape_counts": {
+        "wave": 96,
+        "drift": 8275
+      }
     },
     {
       "source": "articulation_feedback",
       "path": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/articulation_feedback.jsonl",
       "parser": "jsonl",
       "status": "under_threshold",
-      "current_bytes": 599132,
+      "current_bytes": 608315,
       "bytes_purged": 0,
       "records_purged": 0,
       "archive_file": "",
@@ -88,9 +2300,9 @@
       "shape_counts": {}
     }
   ],
-  "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260515_221723",
-  "run_id": "20260515_221723",
+  "archive_dir": "/home/king2morningstr/aurora/AuroraO/aurora_strata/aurora_state/distillation/archives/20260517_183924",
+  "run_id": "20260517_183924",
   "restorable": true,
-  "latest_restorable_run_id": "20260515_221723",
-  "distillation_status": "20260515_221723 ready"
+  "latest_restorable_run_id": "20260517_183924",
+  "distillation_status": "20260517_183924 ready"
 }
