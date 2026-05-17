@@ -53,6 +53,24 @@ aurora_oets_web.json
 aurora_state/aurora_oets_web.json
 conversations.json
 
+# Large runtime logs and generated state (kept locally, not versioned)
+aurora_state/*.jsonl
+aurora_state/genealogy/events.jsonl
+aurora_state/genealogy/abilities.json
+aurora_state/genealogy/constraint_genealogy_log.json
+aurora_state/surface_pressure_log.jsonl
+aurora_state/live_lineage_journal.json
+aurora_state/emerged_abilities.json
+aurora_state/quasiarch_observer/
+aurora_state/dream_episodes/
+aurora_state/aurora_recommendation_inbox.jsonl
+aurora_state/aurora_recommendation_notes.jsonl
+aurora_state/aurora_oets_web.json.pre_seed_backup
+aurora_core_ai/aurora_state/
+interval_corpus.json
+large_batch.json
+svos/
+
 # Python junk
 __pycache__/
 .venv/
