@@ -1710,8 +1710,14 @@ def _is_understanding_query(text: str) -> bool:
     t = " ".join((text or "").lower().split())
     if not _is_second_person_self_question(t):
         return False
+    # Exclude feeling/emotion questions — those are wellbeing queries, not understanding queries
+    _feeling_phrases = ("how do you feel", "how are you feeling", "what do you feel",
+                        "do you feel", "are you feeling", "how does it feel")
+    if any(p in t for p in _feeling_phrases):
+        return False
     return any(marker in t for marker in (
-        "what makes", "how", "why", "explain", "describe yourself",
+        "what makes", "how do you", "how can you", "how are you able",
+        "why", "explain", "describe yourself",
         "what do you understand", "what do you mean", "what does that mean",
         "prove", "show me",
     ))
@@ -3003,7 +3009,7 @@ def _classify_input_intent(text: str) -> str:
         r'\bwhat\s+does\s+(that|this|it)\s+mean\s+to\s+you\b',
         r'\bwhat\s+do\s+i\s+mean\s+to\s+you\b',
         r'\bwhat\s+does\s+\w+\s+mean\s+to\s+you\b',
-        r'\bhow\s+do\s+you\s+feel\s+about\s+(me|us|that|this)\b',
+        r'\bhow\s+do\s+you\s+feel\s+about\b',
         r'\bdo\s+you\s+care\b',
         r'\bdo\s+you\s+think\s+about\s+(me|us)\b',
         # Internal state / what Aurora is processing or thinking
@@ -4425,6 +4431,14 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             for _nb in _ag_nbrs[:2]:
                 f_parts.append(_nb)
 
+        # Topic extraction — "how do you feel about X" / "what do you think about X"
+        import re as _re_wb
+        _topic_m = _re_wb.search(r'\b(?:feel|think)\s+about\s+([a-z][a-z\s]{1,30}?)(?:\?|$)', t_low)
+        if _topic_m:
+            _topic_word = _topic_m.group(1).strip()
+            if _topic_word and _topic_word not in ("me", "us", "that", "this"):
+                f_parts.append(_topic_word)
+
         # Reflective / relational context
         _reflective = any(p in t_low for p in ('mean to you', 'do i mean', 'feel about me', 'think about me', 'do you care'))
         if _reflective:
@@ -4537,6 +4551,28 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 return (_f_text, "reflective", 0.9)
         except Exception:
             pass
+
+        # Fallback: when synthesis produced word-salad, enrich with OETS neighbors
+        # of the topic word and try synthesis again with that richer input.
+        _excl_wb = {"state", "grounded", "focus", "clarity", "agency",
+                    "continuity", "present", "tension", "functioning", "systems", "feedback"}
+        _fb_topic = next((p for p in f_parts if p not in _excl_wb), "")
+        if _fb_topic:
+            try:
+                _oets = getattr(perception, "oets", None) if perception else None
+                if _oets and hasattr(_oets, "query"):
+                    _nbrs = _oets.query(_fb_topic, top_k=4) or []
+                    for _nb in _nbrs:
+                        _nb_word = (getattr(_nb, "word", None) or (isinstance(_nb, str) and _nb) or "")
+                        if _nb_word and _nb_word != _fb_topic:
+                            f_parts.append(_nb_word)
+                _f_fragments2 = "; ".join(f_parts)
+                from aurora_articulation import _is_word_salad as _ws2
+                _f_text2 = systems['perception'].evo.sic._synthesize_fragments(_f_fragments2, _f_intent)
+                if _f_text2 and not _ws2(_f_text2):
+                    return (_f_text2, "reflective", 0.75)
+            except Exception:
+                pass
         return (None, None, None)
 
     # ---- FACT ASSERTION ----
@@ -6836,10 +6872,11 @@ def dual_question_pipeline(
         pass
 
     class _MiniResp:
-        def __init__(self, content, emotional_tone="neutral", confidence=0.5):
+        def __init__(self, content, emotional_tone="neutral", confidence=0.5, src="mind"):
             self.content = content
             self.emotional_tone = emotional_tone
             self.confidence = confidence
+            self.src = src
 
     # ====================================================================
     # LANGUAGE FACULTY - Input Hook
