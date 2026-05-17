@@ -48,6 +48,10 @@ Models/
 *.pt
 train.txt
 
+# Large runtime state files (>50MB — exceed GitHub's 100MB limit)
+aurora_oets_web.json
+aurora_state/aurora_oets_web.json
+
 # Python junk
 __pycache__/
 .venv/
