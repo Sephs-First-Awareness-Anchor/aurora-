@@ -519,6 +519,34 @@ def _is_word_salad(text: str) -> bool:
     if t_lower.startswith(("am ", "are ", "is ")) and not re.search(r"\bwho\b|\bwhat\b|\bwhere\b|\bwhen\b|\bwhy\b|\bhow\b", t_lower):
         return True
 
+    # "X this am" — synthesis artifact where "this" fallback + "am" close a dangling clause.
+    # e.g. "Loses amount this am", "You feels you only this am"
+    if re.search(r"\bthis\s+am\b", t_lower):
+        return True
+
+    # Short sentences ending in a function word that can't close a clause.
+    # "I exist this is part" — "part" at end in a 5-word sentence is an open fragment.
+    _bad_endings = {"part", "which", "where", "only", "also", "even", "just", "through"}
+    if len(words) <= 6 and words and words[-1] in _bad_endings:
+        return True
+
+    # Third-person conjugated verb at sentence start with no subject.
+    # "Loses amount this am", "Names this mammals", "Feels you only"
+    # Exclude known imperative openers (bare infinitive — same form as 3rd-person).
+    _known_imperatives = {
+        "think", "know", "feel", "look", "tell", "make", "take", "try", "use",
+        "ask", "find", "help", "keep", "let", "listen", "notice", "remember",
+        "consider", "understand", "see", "hear", "notice", "read", "write",
+        "check", "run", "add", "create", "show", "start", "stop",
+    }
+    if len(words) >= 3:
+        _first = words[0]
+        # Third-person -s ending that isn't a recognized imperative or verb stem
+        if (len(_first) > 4 and _first.endswith("s")
+                and _first not in _known_imperatives
+                and _first not in common_verbs):
+            return True
+
     # Disconnected word-chain: high ratio of uncommon adjacent pairs
     # "Past have you amazing." — no coherent clause linking these words
     if len(words) >= 4:

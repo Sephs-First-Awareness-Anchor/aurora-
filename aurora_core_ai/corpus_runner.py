@@ -249,8 +249,8 @@ def boot_aurora(state_dir: str = "aurora_state",
         ensure_sensory_crystal_lineage({"dimensional": dimensional,
                                         "chamber": chamber})
         # Build vision seed cache: concept_word → 57-d vector (PIL only, no cv2)
-        _vseed_dir = os.path.join(state_dir, "aurora_state",
-                                  "vision_seeds", "concepts")
+        # Seeds are one level up from the crystal state dir (in aurora_state directly).
+        _vseed_dir = os.path.join(state_dir, "vision_seeds", "concepts")
         _vseed_cache: Dict[str, Any] = {}
         if os.path.isdir(_vseed_dir):
             for _fname in os.listdir(_vseed_dir):
@@ -2173,6 +2173,16 @@ def run_corpus_ingestion(
         if cadence.should_consolidate(counter):
             consolidate(systems)
             corpus_study_cycle(systems, verbose=verbose)
+            # Tick concept promotions so semantic+audio pairs advance to composite
+            # and composite+visual pairs advance to higher_order each cycle.
+            if systems.get("sensory_crystal"):
+                try:
+                    _promoted = systems["sensory_crystal"].tick_concept_promotions()
+                    if _promoted and verbose:
+                        print(f"  [CRYSTAL] Promoted {len(_promoted)} concept(s) "
+                              f"this cycle")
+                except Exception:
+                    pass
             if verbose:
                 vocab = systems["perception"].lexicon.size
                 gen = systems["identity"].generation
@@ -2591,6 +2601,10 @@ def run_corpus_ingestion(
     _save_oets(systems, verbose=verbose)
     if systems.get("sensory_crystal"):
         try:
+            # Final promotion tick before saving so all eligible concepts advance.
+            _final_promoted = systems["sensory_crystal"].tick_concept_promotions()
+            if _final_promoted and verbose:
+                print(f"  [SENSORY] Final tick: promoted {len(_final_promoted)} concept(s)")
             systems["sensory_crystal"].save()
             if verbose:
                 _sc = systems["sensory_crystal"].concept_registry_summary()

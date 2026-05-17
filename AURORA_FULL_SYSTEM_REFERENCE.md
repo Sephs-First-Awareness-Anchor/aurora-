@@ -2154,19 +2154,32 @@ All Python modules in the main runtime tree (excluding test scripts, debug scrip
 
 ## 31. Reference Status
 
-This document should be treated as the top-level code-derived system reference for the current `aurora_strata` tree as of 2026-05-14.
+This document should be treated as the top-level code-derived system reference for the current `aurora_strata` tree as of 2026-05-17.
 
-The April 22 version was accurate for the modules it covered. The May 13 revision added all modules absent from that edition and expanded technical detail throughout. This May 14 revision incorporates:
+The April 22 version was accurate for the modules it covered. The May 13 revision added all modules absent from that edition and expanded technical detail throughout. The May 14 revision expanded the articulation, synthesis, OETS, and thought-formation sections. This May 17 revision adds:
 
-- articulation layer: full description of `_is_word_salad`, `_adaptive_min_relief`, `analyze_articulation_feedback`, `_get_feedback_insights`, `_load_language_state`, `_load_lexicon_familiar`, `smooth_with_decision` gating, and lexicon-familiarity pressure reduction in `_pressure_score`
-- `_synthesize_fragments`: category-label filtering, 3-role fallback motif, natural axis vocabulary, OBJECT fallback fix
-- `aurora_internal/aurora_identity_persistence.py`: `CoreRelationalIdentity.from_dict()` now restores `self_name`, `self_description`, `foundational_truths`
-- OETS: `comparison_engine`, `_last_comparison_delta`, real axis pressure wiring from `aurora_expression_perception.py`
-- `aurora.py` `dual_question_pipeline`: `is_final_pass` parameter, thought-state → candidate scoring, thought signals → `pipeline_state`, relational candidate from OETS delta, word-salad detection before continuity bits, scripted strings removed
-- `surface_channel.py`: articulation gate applied before output reaches user
-- Metabolic distiller: `articulation_feedback` residue source registered
-- Thought formation: clarified per-turn vs continuous behavior, ThoughtContinuity carry-forward scope
-- Self-grounding: noted use in word-salad repair path
-- LLM/llama references corrected throughout — these are optional boundary adapters, not cognition sources
+**Crystal Concept Promotion System (new sections 9.5 and 9.6):**
+- `CrystalConceptRecord` dataclass: per-concept modality tracking and stage management
+- Unified promotion gates: base→composite (ANY 2 of 3 modalities), composite→higher_order (ALL 3)
+- Two-pass `tick_concept_promotions()` so all-3-modality concepts reach higher_order in one call
+- `build_audio_20d_from_der(x,t,n,b,a)`: DER axis pressures → 20-d audio vector (no microphone needed)
+- `build_vision_57d_from_image_file(path)`: PIL-only → 57-d visual vector
+- Vision seed cache: 33 concept images pre-processed at boot from `aurora_state/vision_seeds/concepts/`
+- DPS gate enforcement in `_inject_to_dps()`: advancement blocked until concept reaches required stage
+- `get_gap_report()`: categorizes concepts by which modality they still need
+- `corpus_study_cycle()`: drains `_study_queue` deep/geological words into OETS research (no network)
+- Autonomous gap-fill in `aurora_daemon.py _run_study_cycle()`: visual via imager, audio via DER synthesis
 
-If there are modules added after 2026-05-14, this document will need a corresponding update pass.
+**`_crystal_insight` response loop (live turns):**
+- Computed per turn in `dual_question_pipeline()`: classifies input words into rich/partial/thin concept sets
+- Confidence modifier: base=−0.05, composite=+0.02, higher_order=+0.10, quasicrystal=+0.15
+- `_attn_grounded_response()`: rich_concepts injected near front of fragment pool, confidence clamped by modifier
+- Semantic Grounding Synthesis Layer 1.5: 2-hop OETS neighbors for promoted concepts injected into `_sem_frags`
+- ThoughtIntegrationSpace: linguistic process `_ling_relevance` boosted by confidence_modifier (label never in speech)
+
+**Bug fixes (2026-05-17):**
+- `aurora.py boot_aurora()` now boots `AuroraSensoryCrystal` and builds vision seed cache — previously the crystal was never in `systems` so the entire pipeline was a silent no-op during live interaction
+- Corpus runner vision seed path corrected (`vision_seeds/concepts/` not `aurora_state/aurora_state/vision_seeds/`)
+- `tick_concept_promotions()` added to corpus runner consolidation and final save — previously concepts never promoted even when eligible
+- `_is_word_salad()` extended: catches "X this am" (synthesis artifact), sentence-final open fragments ("part", "only", "which"), third-person verb at sentence start with no subject
+- Crystal stage labels ("crystal-grounded", stage names) explicitly excluded from `_ling_content` so they never reach `_synthesize_fragments` and cannot appear in Aurora's speech

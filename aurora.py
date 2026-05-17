@@ -6100,6 +6100,55 @@ def boot_aurora(state_dir: str = "aurora_state", verbose: bool = True, **kwargs)
         if verbose:
             print("  [STATE] Fresh boot  no prior state found")
 
+    # Sensory Crystal — boots the unified concept registry and cross-modal promotion
+    # system so that live turns can feed observe_semantic() and _crystal_insight can
+    # classify concepts for response generation.  Must live here (not only in the
+    # corpus_runner) so the daemon and interactive shell both see it.
+    systems["sensory_crystal"] = None
+    systems["vision_seed_cache"] = {}
+    try:
+        from aurora_internal.aurora_sensory_crystal import (
+            AuroraSensoryCrystal as _ASC,
+            ensure_sensory_crystal_lineage as _esc_lin,
+            build_vision_57d_from_image_file as _bv57,
+        )
+        # Crystal state lives one level deeper than the runtime state_dir
+        # (mirrors the corpus_runner path so both read/write the same files).
+        _sc_state_dir = os.path.join(state_dir, "aurora_state")
+        _sc = _ASC(state_dir=_sc_state_dir)
+        _sc.boot()
+        try:
+            _esc_lin({
+                "dimensional": systems.get("dimensional"),
+                "chamber": systems.get("chamber"),
+            })
+        except Exception:
+            pass
+        # Vision seed cache: concept_word → 57-d PIL vector (PIL only, no cv2).
+        # Seeds live directly in aurora_state/vision_seeds/concepts/.
+        _vseed_dir = os.path.join(state_dir, "vision_seeds", "concepts")
+        _vseed_cache: Dict[str, Any] = {}
+        if os.path.isdir(_vseed_dir):
+            for _fname in os.listdir(_vseed_dir):
+                _stem, _ext = os.path.splitext(_fname.lower())
+                if _ext in ('.jpg', '.jpeg', '.png') and _stem:
+                    try:
+                        _v57 = _bv57(os.path.join(_vseed_dir, _fname))
+                        if _v57:
+                            _vseed_cache[_stem] = _v57
+                    except Exception:
+                        pass
+        systems["sensory_crystal"] = _sc
+        systems["vision_seed_cache"] = _vseed_cache
+        if verbose:
+            _sc_sum = _sc.concept_registry_summary()
+            print(f"  [CRYSTAL] Concept registry: "
+                  f"{_sc_sum['total']} concepts  stages={_sc_sum['by_stage']}  "
+                  f"vision_seeds={len(_vseed_cache)}")
+    except Exception as _sce:
+        if verbose:
+            print(f"  [CRYSTAL] Sensory crystal not available: {_sce}")
+
     if verbose:
         print()
         print("  All 9 layers online.")
@@ -7117,17 +7166,14 @@ def dual_question_pipeline(
                 )[:120]
                 _ling_relevance = min(0.90, 0.55 + _res * 0.35)
         # Crystal stage enriches linguistic process: multi-modal understanding
-        # of a concept means Aurora can draw on richer internal experience
+        # of a concept raises relevance so Aurora's attention lands more firmly.
+        # The label text is intentionally NOT prefixed into _ling_content so
+        # stage names ("composite", "crystal-grounded") never reach the synthesis
+        # token pool and can't appear in Aurora's actual speech.
         _ci_ling = systems.get("_crystal_insight") or {}
         if _ci_ling.get("top_stage") in ("composite", "higher_order", "quasicrystal"):
-            _rich_ling = _ci_ling.get("rich_concepts", []) + _ci_ling.get("partial_concepts", [])
-            if _rich_ling:
-                _ling_content = (
-                    f"crystal-grounded [{_ci_ling['top_stage']}]: "
-                    f"{', '.join(_rich_ling[:3])} | " + _ling_content
-                )[:140]
-                _ling_relevance = min(0.95, _ling_relevance
-                                      + _ci_ling.get("confidence_modifier", 0.0))
+            _ling_relevance = min(0.95, _ling_relevance
+                                  + _ci_ling.get("confidence_modifier", 0.0))
         _space.register(make_process_context(
             process_id="linguistic",
             process_type="linguistic",
