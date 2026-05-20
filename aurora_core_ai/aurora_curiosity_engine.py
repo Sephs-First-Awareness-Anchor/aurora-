@@ -371,17 +371,29 @@ class CuriosityEngine:
         world_knowledge_search) not analysis tools — we need new data,
         not a read of what's already there.
         """
+        _hyp = (curiosity.hypothesis or "").lower()
+        _subj = (curiosity.subject or "").lower()
+        _hint = _hyp + " " + _subj
+
         _type_to_tools: Dict[str, List[str]] = {
-            # Gap types — acquisition first, then train
-            "perceptual_gap":  ["corpus_hunter", "world_knowledge_search", "corpus_train_auto"],
+            # Gap types — route by missing modality when detectable, else text acquisition
+            "perceptual_gap":  (
+                ["mobile_image_search", "corpus_hunter", "world_knowledge_search"]
+                if "visual" in _hint
+                else (
+                    ["mobile_music_identify", "audio_analysis", "world_knowledge_search"]
+                    if "audio" in _hint
+                    else ["corpus_hunter", "world_knowledge_search", "corpus_train_auto"]
+                )
+            ),
             "semantic_gap":    ["world_knowledge_search", "corpus_hunter", "corpus_train_auto"],
-            # Standard curiosity types — analysis of existing state
-            "perceptual": ["visual_analysis", "audio_analysis", "query_crystal_state"],
+            # Standard curiosity types — analysis + outward search
+            "perceptual": ["visual_analysis", "mobile_image_search", "audio_analysis", "query_crystal_state"],
             "conceptual":  ["world_knowledge_search", "query_genealogy_recent", "challenge_my_conclusion"],
             "relational":  ["query_sunni_pattern", "query_crystal_state", "query_unresolved_tensions"],
             "self":        ["query_unresolved_tensions", "query_pressure_history", "self_state"],
             "temporal":    ["query_sedimemory_strata", "query_genealogy_recent", "time"],
-            "aesthetic":   ["audio_analysis", "visual_analysis", "world_knowledge_search"],
+            "aesthetic":   ["mobile_music_identify", "audio_analysis", "mobile_image_search", "visual_analysis", "world_knowledge_search"],
         }
         preferred = _type_to_tools.get(curiosity.curiosity_type, ["query_unresolved_tensions"])
         available = _get_available_tools()
@@ -441,6 +453,13 @@ class CuriosityEngine:
                     kwargs["analysis_intent"] = curiosity.subject[:80]
                 elif tool_name == "audio_analysis":
                     kwargs["analysis_intent"] = curiosity.subject[:80]
+                elif tool_name == "mobile_image_search":
+                    kwargs["query"] = curiosity.subject[:100]
+                    kwargs["count"] = 5
+                elif tool_name == "mobile_reverse_image_search":
+                    pass  # uses latest_camera_frame.jpg by default
+                elif tool_name == "mobile_music_identify":
+                    kwargs["duration_s"] = 8
                 elif tool_name == "challenge_my_conclusion":
                     pass  # systems= is enough; it reads _last_thought_state
                 tool_result = _tool_call(tool_name, **kwargs)

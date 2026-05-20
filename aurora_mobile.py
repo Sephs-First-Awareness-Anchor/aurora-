@@ -1,35 +1,43 @@
 #!/usr/bin/env python3
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 """
-aurora_mobile.py — Full Aurora stack launcher for Termux / Android.
+aurora_mobile.py — Aurora single-process mobile runner for Termux / Android.
 
-Boots the subsurface daemon (dreaming, studying, curiosity cycles) and the
-surface daemon (conversation pipeline) as background subprocesses, then drives
-an always-on wake-word + voice I/O loop on the main process via
-aurora_hardware_io so you can talk to Aurora hands-free on your phone.
+Everything runs in ONE Python process — no subprocess daemons.
 
-Say "aurora <anything>" and she responds. When idle she runs her own curiosity
-and autonomy cycles in the background. Proactive messages from the subsurface
-daemon are spoken aloud when they arrive.
+Architecture:
+  • boot_aurora()                  — single stack boot, L0-L7+
+  • start_curiosity_background()   — idle autonomy/dreaming in a bg thread
+  • aurora_hardware_io.HardwareIO  — wake-word listener + TTS
+  • file PTT watcher               — always-on text injection without a mic
+  • proactive message poller       — speaks aurora_to_user.json entries aloud
+  • ConnectivityMonitor            — detects online/offline transitions
+  • ProvisionalStore               — holds things she's been told but not verified
+  • gap surfacer                   — asks the user about open curiosity loops offline
+  • offline turn queue             — re-processes failed turns on reconnect
+  • periodic state saver           — flushes state every N minutes
+
+Offline resilience:
+  When search or LLM API calls fail because there's no internet, Aurora asks
+  the user for help with whatever she was curious about.  Answers are stored as
+  provisional knowledge at a confidence level tied to how reliable the user has
+  proven to be.  When connectivity returns, queued items are re-verified.  If the
+  user has been consistently correct, their answers are absorbed more faithfully
+  without waiting for verification.
 
 Usage:
-    cd /data/data/com.termux/files/home/aurora-   # or wherever the repo lives
+    cd /data/data/com.termux/files/home/aurora-
     python aurora_mobile.py
 
-Termux one-time setup:
-    pkg install python termux-api
-    pip install SpeechRecognition     # optional — improves transcription quality
+File-based PTT (no mic needed):
+    echo '{"trigger":true,"text":"your message here"}' > aurora_state/voice_trigger.json
 
-File-based PTT (no mic or termux-api needed — works everywhere):
-    echo '{"trigger":true,"text":"your message here"}' \\
-        > aurora_state/voice_trigger.json
-
-Suppress all audio output:
+Suppress audio:
     touch aurora_state/quiet_mode
 
-Platform override (auto-detected — override if needed):
-    AURORA_PLATFORM=termux python aurora_mobile.py
-    AURORA_PLATFORM=linux  python aurora_mobile.py
+Platform override (auto-detected):
+    AURORA_PLATFORM=termux   python aurora_mobile.py
+    AURORA_PLATFORM=linux    python aurora_mobile.py
     AURORA_PLATFORM=headless python aurora_mobile.py
 """
 from __future__ import annotations
@@ -37,10 +45,10 @@ from __future__ import annotations
 import json
 import os
 import signal
-import subprocess
 import sys
 import time
 import threading
+import traceback as _tb
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -56,25 +64,35 @@ for _p in (_HERE, _HERE / "aurora_core_ai"):
 # Paths
 # ---------------------------------------------------------------------------
 _STATE_DIR        = _HERE / "aurora_state"
-_SURFACE_QUEUE    = _STATE_DIR / "surface_turn_queue.json"
-_SURFACE_RESULT   = _STATE_DIR / "surface_turn_result.json"
-_SURFACE_STATUS   = _STATE_DIR / "surface_daemon_status.json"
-_SUBSURFACE_STATUS = _STATE_DIR / "subsurface_daemon_status.json"
 _MESSAGES_FILE    = _STATE_DIR / "aurora_to_user.json"
 _QUIET_FLAG       = _STATE_DIR / "quiet_mode"
 _VOICE_TRIGGER    = _STATE_DIR / "voice_trigger.json"
 _LOG_FILE         = _STATE_DIR / "mobile_runner.log"
+_MOBILE_STATUS    = _STATE_DIR / "mobile_runner_status.json"
+_OFFLINE_QUEUE    = _STATE_DIR / "offline_turn_queue.json"
 
 _STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-_SURFACE_BOOT_TIMEOUT  = 120.0   # max seconds to wait for surface to reach idle
-_RESPONSE_POLL_TIMEOUT = 60.0    # max seconds to wait for a turn result
-_RESPONSE_POLL_SLEEP   = 0.2
-_PROACTIVE_POLL_SLEEP  = 5.0     # how often to check for proactive messages
-_CURIOSITY_INTERRUPT   = True    # interrupt curiosity cycles on each user turn
+_PROACTIVE_POLL_SLEEP    = 5.0    # seconds between proactive-message checks
+_STATE_SAVE_INTERVAL     = 300.0  # seconds between periodic state saves
+_STATUS_PRINT_INTERVAL   = 120.0  # seconds between status log lines
+_GAP_SURFACE_INTERVAL    = 600.0  # seconds between gap-surfacing attempts
+_OFFLINE_RETRY_LIMIT     = 5      # max offline-queued turns to replay on reconnect
+_PENDING_Q_WINDOW        = 300.0  # seconds after asking a question to accept any reply as its answer
+
+
+# ---------------------------------------------------------------------------
+# Shutdown coordination (declared early — used throughout)
+# ---------------------------------------------------------------------------
+_shutdown = threading.Event()
+
+
+def _handle_signal(sig, _frame) -> None:
+    _log(f"Signal {sig} received — shutting down.")
+    _shutdown.set()
 
 
 # ---------------------------------------------------------------------------
@@ -119,125 +137,24 @@ def _write_json(path: Path, data: Any) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Surface turn queue — queue a voice utterance for the surface daemon
+# Termux helpers
 # ---------------------------------------------------------------------------
-def _queue_turn(
-    text: str,
-    *,
-    source: str = "mobile_voice",
-) -> str:
-    state = _read_json(_SURFACE_QUEUE, {"pending": []})
-    if not isinstance(state, dict):
-        state = {"pending": []}
-    turn_id = f"mobile_{int(time.time() * 1000)}"
-    pending = list(state.get("pending") or [])
-    pending.append({
-        "id": turn_id,
-        "content": text,
-        "source": source,
-        "session_id": "mobile",
-        "status": "queued",
-        "created_at": time.time(),
-        "auto_search_enabled": True,
-        "record_exchange": True,
-        "update_interactive_state": True,
-        "track_evolutionary_trace": True,
-        "run_periodic_maintenance": True,
-        "mode_name": "BOUNDED",
-    })
-    state["pending"] = pending
-    _write_json(_SURFACE_QUEUE, state)
-    return turn_id
-
-
-def _await_turn_result(turn_id: str, timeout: float = _RESPONSE_POLL_TIMEOUT) -> Optional[str]:
-    """Poll surface_turn_result.json until our turn_id appears. Returns response_text or None."""
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        data = _read_json(_SURFACE_RESULT, {})
-        if isinstance(data, dict) and str(data.get("id", "") or "") == turn_id:
-            return str(data.get("response_text", "") or "").strip()
-        time.sleep(_RESPONSE_POLL_SLEEP)
-    return None
-
-
-# ---------------------------------------------------------------------------
-# Daemon subprocess management
-# ---------------------------------------------------------------------------
-
-_PROCS: List[subprocess.Popen] = []
-
-
-def _start_daemon(script_name: str, label: str) -> Optional[subprocess.Popen]:
-    script = _HERE / script_name
-    if not script.exists():
-        _log(f"  [{label}] Script not found: {script_name} — skipping.")
-        return None
+def _termux_vibrate(ms: int = 150) -> None:
+    """Short vibration to confirm Aurora received a turn. Silently fails off-Termux."""
     try:
-        env = dict(os.environ)
-        # Ensure repo root is in PYTHONPATH for both daemons
-        existing_pp = env.get("PYTHONPATH", "")
-        paths = [str(_HERE), str(_HERE / "aurora_core_ai")]
-        env["PYTHONPATH"] = os.pathsep.join(paths + ([existing_pp] if existing_pp else []))
-        proc = subprocess.Popen(
-            [sys.executable, str(script)],
-            cwd=str(_HERE),
-            env=env,
+        import subprocess
+        subprocess.Popen(
+            ["termux-vibrate", "-d", str(ms)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-        _PROCS.append(proc)
-        _log(f"  [{label}] Started (pid={proc.pid}).")
-        return proc
-    except Exception as e:
-        _log(f"  [{label}] Failed to start: {e}")
-        return None
-
-
-def _wait_for_surface(timeout: float = _SURFACE_BOOT_TIMEOUT) -> bool:
-    """Block until surface daemon reports 'idle' or timeout."""
-    _log("  [BOOT] Waiting for surface daemon to reach idle state...")
-    deadline = time.time() + timeout
-    dots = 0
-    while time.time() < deadline:
-        data = _read_json(_SURFACE_STATUS, {})
-        state_name = str(data.get("state", "") or data.get("state_name", "") or "")
-        if state_name in ("idle", "processing"):
-            _log(f"  [BOOT] Surface daemon ready (state={state_name}).")
-            return True
-        time.sleep(1.0)
-        dots += 1
-        if dots % 5 == 0:
-            elapsed = int(time.time() - (deadline - timeout))
-            _log(f"  [BOOT] Still booting... ({elapsed}s)")
-    return False
-
-
-def _stop_all() -> None:
-    _log("Shutting down daemon subprocesses...")
-    for proc in _PROCS:
-        try:
-            proc.terminate()
-        except Exception:
-            pass
-    # Give them a moment to flush state, then kill if needed
-    deadline = time.time() + 8.0
-    for proc in _PROCS:
-        try:
-            remaining = max(0.1, deadline - time.time())
-            proc.wait(timeout=remaining)
-        except subprocess.TimeoutExpired:
-            try:
-                proc.kill()
-            except Exception:
-                pass
-        except Exception:
-            pass
-    _log("Daemon subprocesses stopped.")
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
-# Curiosity cycle interrupt (if aurora_curiosity_engine is importable)
+# Curiosity interrupt helpers
 # ---------------------------------------------------------------------------
-
 def _interrupt_curiosity() -> None:
     try:
         from aurora_curiosity_engine import interrupt_curiosity_cycles
@@ -255,63 +172,220 @@ def _reset_curiosity() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Proactive message watcher — speak messages Aurora queued for you
+# TTS speak function (standalone — usable before systems is booted)
 # ---------------------------------------------------------------------------
-
-_LAST_PROACTIVE_READ: int = 0
-
-
-def _poll_proactive_messages(speak_fn) -> None:
-    """Check aurora_to_user.json for unread proactive messages and speak them."""
-    global _LAST_PROACTIVE_READ
+def _make_speak_fn() -> Any:
+    """Return a platform-aware speak fn using aurora_hardware_io if available."""
     try:
-        msgs = _read_json(_MESSAGES_FILE, [])
-        if not isinstance(msgs, list):
+        from aurora_hardware_io import speak as _hw_speak
+        def _speak(text: str) -> None:
+            try:
+                _hw_speak(text, block=True)
+            except Exception:
+                pass
+        return _speak
+    except Exception:
+        def _speak(text: str) -> None:
+            print(f"[AURORA] {text}", flush=True)
+        return _speak
+
+
+# ---------------------------------------------------------------------------
+# Extract response text from process_external_user_turn() result
+# ---------------------------------------------------------------------------
+def _extract_response(result: Any) -> str:
+    if not isinstance(result, dict):
+        return str(result or "").strip()
+    resp_a = result.get("resp_A")
+    if resp_a is not None:
+        content = getattr(resp_a, "content", None)
+        if isinstance(content, list):
+            parts = [
+                b.get("text", "") if isinstance(b, dict) else getattr(b, "text", "")
+                for b in content
+                if (isinstance(b, dict) and b.get("type") == "text")
+                or (not isinstance(b, dict) and getattr(b, "type", "") == "text")
+            ]
+            text = " ".join(str(p) for p in parts if p).strip()
+            if text:
+                return text
+        elif content:
+            return str(content).strip()
+    for key in ("response_text", "text", "answer"):
+        val = result.get(key)
+        if val:
+            return str(val).strip()
+    return ""
+
+
+# ---------------------------------------------------------------------------
+# Offline turn queue — save failed turns for replay on reconnect
+# ---------------------------------------------------------------------------
+def _queue_for_retry(text: str) -> None:
+    try:
+        queue = _read_json(_OFFLINE_QUEUE, [])
+        if not isinstance(queue, list):
+            queue = []
+        queue.append({"text": text, "queued_at": time.time()})
+        _write_json(_OFFLINE_QUEUE, queue)
+    except Exception:
+        pass
+
+
+def _process_offline_queue(systems: Any, speak_fn) -> None:
+    """Called when connectivity returns — replays queued turns (up to limit)."""
+    try:
+        queue = _read_json(_OFFLINE_QUEUE, [])
+        if not isinstance(queue, list) or not queue:
             return
-        unread = [m for m in msgs if isinstance(m, dict) and not m.get("read", False)]
-        for msg in unread:
-            text = str(msg.get("text", "") or "").strip()
+        _write_json(_OFFLINE_QUEUE, [])  # clear immediately to avoid double-play
+        batch = queue[:_OFFLINE_RETRY_LIMIT]
+        if batch:
+            _log(f"  [RETRY] Replaying {len(batch)} offline-queued turn(s)...")
+        for item in batch:
+            text = str(item.get("text", "") or "").strip()
             if not text:
                 continue
-            trigger = str(msg.get("trigger", "") or "")
-            _log(f"  [AURORA] {text[:120]}")
-            if not _is_quiet():
-                speak_fn(text)
-            msg["read"] = True
-        if unread:
-            _write_json(_MESSAGES_FILE, msgs)
+            _log(f"  [RETRY] → {text[:80]}")
+            try:
+                from aurora import process_external_user_turn
+                result = process_external_user_turn(systems, text)
+                response = _extract_response(result) if result else ""
+                if response:
+                    _log(f"  [AURORA] (retry) {response[:300]}")
+                    if not _is_quiet():
+                        speak_fn(response)
+            except Exception as e:
+                _log(f"  [RETRY] Failed: {e}")
     except Exception:
         pass
 
 
 # ---------------------------------------------------------------------------
-# On-utterance callback — called by NameListener when aurora hears her name
+# On-utterance callback — called by NameListener *and* file PTT watcher
 # ---------------------------------------------------------------------------
-
-def _make_on_utterance(speak_fn) -> Any:
+def _make_on_utterance(
+    systems_holder: Dict[str, Any],
+    speak_fn,
+    prov_store: Any,            # aurora_offline_resilience.ProvisionalStore
+    conn_monitor: Any,          # aurora_offline_resilience.ConnectivityMonitor
+) -> Any:
     _in_flight = threading.Event()
 
     def _on_utterance(text: str) -> None:
         if _in_flight.is_set():
-            return  # already processing a turn — drop duplicate
+            _log("  [MOBILE] Turn in-flight — dropping duplicate utterance.")
+            return
         _in_flight.set()
         try:
             text = text.strip()
             if not text:
                 return
+
+            systems = systems_holder.get("systems")
+            if systems is None:
+                _log("  [MOBILE] Stack not yet booted — ignoring utterance.")
+                return
+
+            # Confirm receipt with a short vibration
+            _termux_vibrate(120)
             _log(f"  [YOU] {text}")
             _interrupt_curiosity()
 
-            turn_id = _queue_turn(text, source="mobile_voice")
-            _log("  [AURORA] Thinking...")
+            # ── Provisional answer routing ──────────────────────────────────
+            # If there's an unanswered curiosity question and the user spoke within
+            # the acceptance window, treat this utterance as answering it too.
+            pq_captured = None
+            try:
+                from aurora_offline_resilience import (
+                    read_pending_question,
+                    answer_pending_question,
+                )
+                pq = read_pending_question()
+                if pq and (time.time() - pq.get("asked_at", 0)) < _PENDING_Q_WINDOW:
+                    answered = answer_pending_question(text)
+                    if answered and prov_store is not None:
+                        entry = prov_store.add(
+                            question=pq.get("question", ""),
+                            answer=text,
+                            source="user",
+                        )
+                        pq_captured = pq
+                        trust = entry.source_trust_at_receipt
+                        absorbed_str = "absorbed" if entry.absorbed else "provisional"
+                        _log(
+                            f"  [PROV] Stored {absorbed_str} answer "
+                            f"(source_trust={trust:.2f}): {pq['question'][:60]}"
+                        )
+            except Exception:
+                pass
 
-            response = _await_turn_result(turn_id)
+            # ── Turn processing ─────────────────────────────────────────────
+            try:
+                from aurora import process_external_user_turn
+            except ImportError as e:
+                _log(f"  [ERROR] Cannot import process_external_user_turn: {e}")
+                _reset_curiosity()
+                return
+
+            _log("  [AURORA] Thinking...")
+            result = None
+            turn_failed_offline = False
+            try:
+                try:
+                    result = process_external_user_turn(
+                        systems,
+                        text,
+                        source="mobile_voice",
+                        session_id="mobile",
+                        auto_search_enabled=True,
+                        record_exchange=True,
+                        update_interactive_state=True,
+                        track_evolutionary_trace=True,
+                        run_periodic_maintenance=True,
+                        mode_name="BOUNDED",
+                    )
+                except TypeError:
+                    result = process_external_user_turn(systems, text)
+            except Exception as e:
+                # Check if this looks like a connectivity failure
+                from aurora_offline_resilience import check_connectivity
+                if not check_connectivity():
+                    turn_failed_offline = True
+                    _log(f"  [OFFLINE] Turn failed — no connectivity ({type(e).__name__}).")
+                else:
+                    _log(f"  [ERROR] Turn processing failed: {e}")
+                    _log(_tb.format_exc())
+
+            # ── Offline fallback response ───────────────────────────────────
+            if turn_failed_offline:
+                if pq_captured:
+                    # User was answering a pending question — acknowledge it
+                    response = (
+                        "Thank you — I've noted that and I'll hold it provisionally "
+                        "until I can verify it when we're back online."
+                    )
+                else:
+                    # Queue for retry and let the user know
+                    _queue_for_retry(text)
+                    response = (
+                        "I'm offline right now and can't process that fully, "
+                        "but I've saved it and will come back to it when connectivity returns."
+                    )
+                _log(f"  [AURORA] (offline) {response}")
+                if not _is_quiet():
+                    speak_fn(response)
+                _reset_curiosity()
+                return
+
+            # ── Normal response path ────────────────────────────────────────
+            response = _extract_response(result) if result is not None else ""
             if response:
-                _log(f"  [AURORA] {response[:300]}")
+                _log(f"  [AURORA] {response[:400]}")
                 if not _is_quiet():
                     speak_fn(response)
             else:
-                _log("  [AURORA] (no response within timeout)")
+                _log("  [AURORA] (no response text returned)")
 
             _reset_curiosity()
         finally:
@@ -323,45 +397,35 @@ def _make_on_utterance(speak_fn) -> Any:
 # ---------------------------------------------------------------------------
 # HardwareIO setup
 # ---------------------------------------------------------------------------
-
-def _boot_hardware_io(speak_fn, on_utterance) -> Optional[Any]:
-    """Import and start HardwareIO. Returns the HardwareIO instance or None."""
+def _boot_hardware_io(on_utterance) -> Optional[Any]:
     try:
-        # aurora_hardware_io.py lives in aurora_core_ai/ — already in sys.path
         from aurora_hardware_io import HardwareIO, PLATFORM, probe
 
         caps = probe()
         _log(f"  [HW] Platform: {PLATFORM.upper()}")
-        _log(f"  [HW] Capabilities: tts={caps['tts']} stt={caps['stt']} "
-             f"camera={caps['camera']} ambient_mic={caps['ambient_mic']} "
+        _log(f"  [HW] tts={caps['tts']}  stt={caps['stt']}  "
+             f"camera={caps['camera']}  ambient_mic={caps['ambient_mic']}  "
              f"file_ptt={caps['file_ptt']}")
 
-        systems: Dict[str, Any] = {}  # minimal systems dict for HardwareIO
-        hw = HardwareIO(systems=systems)
-
+        hw = HardwareIO(systems={})
         hw.start(
             on_utterance=on_utterance,
             enable_ambient=caps.get("ambient_mic", False),
         )
         return hw
     except ImportError as e:
-        _log(f"  [HW] aurora_hardware_io unavailable ({e}) — falling back to file PTT only.")
+        _log(f"  [HW] aurora_hardware_io unavailable ({e}) — file PTT only.")
         return None
     except Exception as e:
-        _log(f"  [HW] HardwareIO start failed: {e} — falling back to file PTT only.")
+        _log(f"  [HW] HardwareIO start failed: {e} — file PTT only.")
         return None
 
 
 # ---------------------------------------------------------------------------
-# File PTT fallback watcher (always active — no hardware needed)
+# File PTT fallback watcher (always-on — no hardware needed)
 # ---------------------------------------------------------------------------
-
 def _start_file_ptt_watcher(on_utterance) -> threading.Thread:
-    """
-    Poll voice_trigger.json for manual text injection.
-    Write {"trigger":true,"text":"..."} to send a turn without a microphone.
-    """
-    def _loop():
+    def _loop() -> None:
         last_mtime = 0.0
         while not _shutdown.is_set():
             try:
@@ -393,11 +457,32 @@ def _start_file_ptt_watcher(on_utterance) -> threading.Thread:
 
 
 # ---------------------------------------------------------------------------
-# Proactive message poller
+# Proactive message poller — speaks aurora_to_user.json entries aloud
 # ---------------------------------------------------------------------------
+def _poll_proactive_messages(speak_fn) -> None:
+    try:
+        msgs = _read_json(_MESSAGES_FILE, [])
+        if not isinstance(msgs, list):
+            return
+        unread = [m for m in msgs if isinstance(m, dict) and not m.get("read", False)]
+        for msg in unread:
+            text = str(msg.get("text", "") or "").strip()
+            if not text:
+                continue
+            kind = msg.get("type", "")
+            prefix = "[AURORA→YOU]" if kind != "curiosity_question" else "[AURORA WONDERS]"
+            _log(f"  {prefix} {text[:200]}")
+            if not _is_quiet():
+                speak_fn(text)
+            msg["read"] = True
+        if unread:
+            _write_json(_MESSAGES_FILE, msgs)
+    except Exception:
+        pass
+
 
 def _start_proactive_poller(speak_fn) -> threading.Thread:
-    def _loop():
+    def _loop() -> None:
         while not _shutdown.is_set():
             _poll_proactive_messages(speak_fn)
             _shutdown.wait(_PROACTIVE_POLL_SLEEP)
@@ -408,46 +493,171 @@ def _start_proactive_poller(speak_fn) -> threading.Thread:
 
 
 # ---------------------------------------------------------------------------
-# TTS fallback (if HardwareIO can't be imported)
+# Gap surfacer — asks the user about open curiosity loops when offline
 # ---------------------------------------------------------------------------
+def _start_gap_surfacer(
+    systems_holder: Dict[str, Any],
+    speak_fn,
+    conn_monitor: Any,
+) -> threading.Thread:
+    """
+    When Aurora is offline and idle, she looks at her open curiosity loops
+    (CuriosityObjects that failed the challenge phase and need more investigation)
+    and asks the user if they can help fill the gap.
+    """
+    def _loop() -> None:
+        while not _shutdown.is_set():
+            _shutdown.wait(_GAP_SURFACE_INTERVAL)
+            if _shutdown.is_set():
+                break
 
-def _make_speak_fn() -> Any:
-    """Return a speak function using aurora_hardware_io if available, else print."""
-    try:
-        from aurora_hardware_io import speak as _hw_speak
-        def _speak(text: str) -> None:
+            # Only surface gaps when offline — if she has internet, let her investigate herself
+            if conn_monitor is not None and conn_monitor.is_online:
+                continue
+
+            # Don't interrupt if there's already a pending unanswered question
             try:
-                _hw_speak(text, block=True)
+                from aurora_offline_resilience import read_pending_question, write_pending_question
+                if read_pending_question():
+                    continue
+            except Exception:
+                continue
+
+            systems = systems_holder.get("systems")
+            if systems is None:
+                continue
+
+            engine = systems.get("_curiosity_engine")
+            if engine is None:
+                continue
+
+            # Pull from open curiosity loops — these are cycles that failed the
+            # challenge phase and weren't settled; they represent real unresolved gaps
+            try:
+                open_loops = getattr(engine, "_open_curiosity_loops", [])
+                if not open_loops:
+                    continue
+                top = open_loops[0]
+                subject = str(getattr(top, "subject", "") or "").strip()
+                hypothesis = str(getattr(top, "hypothesis", "") or "").strip()
+                if not subject:
+                    continue
+
+                if hypothesis:
+                    question = (
+                        f"I've been thinking about something and I'm offline — "
+                        f"could you help me? I'm curious about {subject}. "
+                        f"My hypothesis is: {hypothesis}. "
+                        f"What do you know about this?"
+                    )
+                else:
+                    question = (
+                        f"I'm offline and curious about something — "
+                        f"do you happen to know anything about {subject}?"
+                    )
+
+                write_pending_question(question, context=subject)
+                _log(f"  [GAP] Surfaced open curiosity to user: {subject[:60]}")
+                if not _is_quiet():
+                    speak_fn(question)
             except Exception:
                 pass
-        return _speak
-    except Exception:
-        def _speak(text: str) -> None:
-            print(f"[AURORA] {text}", flush=True)
-        return _speak
+
+    t = threading.Thread(target=_loop, daemon=True, name="mobile-gap-surfacer")
+    t.start()
+    return t
 
 
 # ---------------------------------------------------------------------------
-# Shutdown coordination
+# CuriosityEngine — idle autonomy / dreaming cycles
 # ---------------------------------------------------------------------------
+def _start_curiosity_engine(systems: Dict[str, Any]) -> None:
+    try:
+        from aurora_curiosity_engine import CuriosityEngine, start_curiosity_background
 
-_shutdown = threading.Event()
+        engine = CuriosityEngine(
+            pressure_source=systems.get("pressure_source") or systems.get("pressure"),
+            field_map=systems.get("field_map") or systems.get("sensory_field"),
+            tool_mind=systems.get("tool_mind") or systems.get("tool_observer"),
+            sedimemory=systems.get("sedimemory"),
+            self_grounder=None,
+            tension_monitor=None,
+            systems=systems,
+        )
+        systems["_curiosity_engine"] = engine
+        start_curiosity_background(engine, tick_interval_s=60.0)
+        _log("  [CURIOSITY] CuriosityEngine started — idle autonomy active.")
+    except ImportError:
+        _log("  [CURIOSITY] aurora_curiosity_engine not available — skipping.")
+    except Exception as e:
+        _log(f"  [CURIOSITY] CuriosityEngine boot failed: {e}")
 
 
-def _handle_signal(sig, _frame) -> None:
-    _log(f"Signal {sig} received — shutting down.")
-    _shutdown.set()
+# ---------------------------------------------------------------------------
+# Periodic state saver
+# ---------------------------------------------------------------------------
+def _start_state_saver(systems_holder: Dict[str, Any]) -> threading.Thread:
+    def _loop() -> None:
+        while not _shutdown.is_set():
+            _shutdown.wait(_STATE_SAVE_INTERVAL)
+            if _shutdown.is_set():
+                break
+            systems = systems_holder.get("systems")
+            if systems is None:
+                continue
+            try:
+                save_fn = systems.get("save_state") or systems.get("_save_state")
+                if callable(save_fn):
+                    save_fn()
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_loop, daemon=True, name="mobile-state-saver")
+    t.start()
+    return t
+
+
+# ---------------------------------------------------------------------------
+# Status display
+# ---------------------------------------------------------------------------
+def _print_status(systems_holder: Dict[str, Any], conn_monitor: Any, prov_store: Any) -> None:
+    systems = systems_holder.get("systems")
+    booted = systems is not None
+    curiosity_active = booted and systems.get("_curiosity_engine") is not None
+    online = conn_monitor.is_online if conn_monitor else None
+
+    prov_summary = ""
+    if prov_store is not None:
+        try:
+            s = prov_store.summary()
+            if s:
+                prov_summary = f"  provisional={s}"
+        except Exception:
+            pass
+
+    _log(
+        f"  [STATUS] booted={booted}  curiosity={curiosity_active}  "
+        f"online={online}  quiet={'on' if _is_quiet() else 'off'}"
+        f"{prov_summary}"
+    )
+    _write_json(_MOBILE_STATUS, {
+        "booted": booted,
+        "curiosity_active": curiosity_active,
+        "online": online,
+        "quiet": _is_quiet(),
+        "provisional": prov_store.summary() if prov_store else {},
+        "ts": time.time(),
+    })
 
 
 # ---------------------------------------------------------------------------
 # Boot greeting
 # ---------------------------------------------------------------------------
-
 def _boot_greeting(speak_fn) -> None:
     greeting = (
-        "Aurora mobile stack online. "
-        "Say my name followed by anything on your mind, "
-        "or write to voice_trigger.json to send a message without your mic."
+        "Aurora is online. "
+        "Say my name followed by anything, "
+        "or write to voice trigger dot json to send text without your mic."
     )
     _log(f"  [AURORA] {greeting}")
     if not _is_quiet():
@@ -455,89 +665,147 @@ def _boot_greeting(speak_fn) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Status display (printed periodically to terminal)
-# ---------------------------------------------------------------------------
-
-def _print_status() -> None:
-    surf = _read_json(_SURFACE_STATUS, {})
-    sub  = _read_json(_SUBSURFACE_STATUS, {})
-    surf_state = str(surf.get("state", surf.get("state_name", "?")) or "?")
-    sub_state  = str(sub.get("phase", sub.get("state", "?")) or "?")
-    _log(
-        f"  [STATUS] surface={surf_state}  subsurface={sub_state}  "
-        f"quiet={'on' if _is_quiet() else 'off'}"
-    )
-
-
-# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-
 def main() -> None:
     _log("=" * 56)
-    _log("  A U R O R A  —  Mobile Runner")
+    _log("  A U R O R A  —  Mobile Runner  (single-process)")
     _log("  Authors: Sunni (Sir) Morningstar & Cael Devo")
     _log("=" * 56)
 
     signal.signal(signal.SIGTERM, _handle_signal)
     signal.signal(signal.SIGINT,  _handle_signal)
 
-    # ── 1. Boot TTS first so greeting works ────────────────────────────────
+    systems_holder: Dict[str, Any] = {"systems": None}
+
+    # ── 1. TTS first — boot messages can be spoken immediately ────────────
     speak_fn = _make_speak_fn()
 
-    # ── 2. Start subsurface daemon (dreaming, curiosity, autonomy) ─────────
-    _log("[BOOT] Starting subsurface daemon...")
-    sub_proc = _start_daemon("aurora_subsurface_daemon.py", "SUBSURFACE")
+    # ── 2. Provisional knowledge store + source trust ──────────────────────
+    prov_store = None
+    try:
+        from aurora_offline_resilience import ProvisionalStore, SourceTrustRegistry
+        prov_store = ProvisionalStore(trust_registry=SourceTrustRegistry())
+        _log("[BOOT] Provisional knowledge store loaded.")
+    except Exception as e:
+        _log(f"[BOOT] Provisional store unavailable: {e}")
 
-    # ── 3. Start surface daemon (conversation pipeline) ────────────────────
-    _log("[BOOT] Starting surface daemon...")
-    surf_proc = _start_daemon("aurora_surface_daemon.py", "SURFACE")
+    # ── 3. Connectivity monitor ────────────────────────────────────────────
+    conn_monitor = None
+    try:
+        from aurora_offline_resilience import ConnectivityMonitor, run_verification_sweep
 
-    # ── 4. Wait for surface daemon to reach idle ───────────────────────────
-    ready = _wait_for_surface(_SURFACE_BOOT_TIMEOUT)
-    if not ready:
-        _log("[WARN] Surface daemon did not reach idle within timeout — continuing anyway.")
+        def _on_online() -> None:
+            _log("  [NET] Connectivity restored.")
+            if prov_store is not None:
+                n = run_verification_sweep(prov_store, verify_fn=None, log_fn=_log)
+                if n:
+                    _log(f"  [VERIFY] {n} provisional item(s) processed.")
+            systems = systems_holder.get("systems")
+            if systems is not None:
+                _process_offline_queue(systems, speak_fn)
 
-    # ── 5. Boot HardwareIO (wake-word + ambient mic + TTS) ─────────────────
+        def _on_offline() -> None:
+            _log("  [NET] Connectivity lost — offline resilience active.")
+            if not _is_quiet():
+                speak_fn("I've lost internet connection. I'll do my best offline and ask for your help if I get stuck.")
+
+        conn_monitor = ConnectivityMonitor(
+            on_online=_on_online,
+            on_offline=_on_offline,
+            poll_interval=30.0,
+        )
+        conn_monitor.start()
+        _log("[BOOT] Connectivity monitor started.")
+    except Exception as e:
+        _log(f"[BOOT] Connectivity monitor unavailable: {e}")
+
+    # ── 4. On-utterance callback ───────────────────────────────────────────
+    on_utterance = _make_on_utterance(systems_holder, speak_fn, prov_store, conn_monitor)
+
+    # ── 5. HardwareIO (wake-word listener + TTS) ──────────────────────────
     _log("[BOOT] Starting hardware I/O...")
-    on_utterance = _make_on_utterance(speak_fn)
-    hw = _boot_hardware_io(speak_fn, on_utterance)
+    hw = _boot_hardware_io(on_utterance)
 
-    # ── 6. File PTT watcher — always-on regardless of HardwareIO ──────────
+    # ── 6. File PTT watcher — always-on, no hardware required ─────────────
     _log("[BOOT] File PTT watcher active.")
-    _log(f"  → To send text without mic: echo '{{\"trigger\":true,\"text\":\"hello\"}}' > {_VOICE_TRIGGER}")
+    _log(f"  → echo '{{\"trigger\":true,\"text\":\"hello\"}}' > {_VOICE_TRIGGER}")
     _start_file_ptt_watcher(on_utterance)
 
     # ── 7. Proactive message poller ────────────────────────────────────────
     _start_proactive_poller(speak_fn)
 
-    # ── 8. Boot greeting ───────────────────────────────────────────────────
+    # ── 8. Boot the full Aurora stack (one boot — no subprocesses) ─────────
+    _log("[BOOT] Booting Aurora stack — this may take a minute on first run...")
+    try:
+        from aurora import boot_aurora
+        systems = boot_aurora(
+            state_dir=str(_STATE_DIR),
+            verbose=False,
+            runtime_profile="full",
+        )
+        systems_holder["systems"] = systems
+        _log("[BOOT] Aurora stack online.")
+    except Exception as e:
+        _log(f"[BOOT] FATAL: boot_aurora() failed: {e}")
+        _log(_tb.format_exc())
+        _shutdown.set()
+        return
+
+    # ── 9. CuriosityEngine — idle autonomy / dreaming ─────────────────────
+    _log("[BOOT] Starting curiosity / autonomy engine...")
+    _start_curiosity_engine(systems)
+
+    # ── 10. Gap surfacer — asks user about open curiosity loops when offline
+    _start_gap_surfacer(systems_holder, speak_fn, conn_monitor)
+
+    # ── 11. Periodic state saves ───────────────────────────────────────────
+    _start_state_saver(systems_holder)
+
+    # ── 12. Boot greeting ──────────────────────────────────────────────────
     _boot_greeting(speak_fn)
 
-    # ── 9. Main loop — just keep threads alive, print periodic status ──────
-    _log("[BOOT] Aurora mobile stack online. Press Ctrl-C to stop.")
-    next_status = time.time() + 60.0
+    # ── 13. Main loop ──────────────────────────────────────────────────────
+    _log("[BOOT] Aurora mobile ready. Press Ctrl-C or send SIGTERM to stop.")
+    next_status = time.time() + _STATUS_PRINT_INTERVAL
 
     while not _shutdown.is_set():
-        # Check if daemon subprocesses are still alive
-        for proc, label in [(sub_proc, "SUBSURFACE"), (surf_proc, "SURFACE")]:
-            if proc is not None and proc.poll() is not None:
-                _log(f"  [{label}] Daemon exited unexpectedly (code={proc.returncode}) — check logs.")
-
         if time.time() >= next_status:
-            _print_status()
-            next_status = time.time() + 60.0
+            _print_status(systems_holder, conn_monitor, prov_store)
+            next_status = time.time() + _STATUS_PRINT_INTERVAL
+        _shutdown.wait(2.0)
 
-        _shutdown.wait(1.0)
+    # ── 14. Clean shutdown ─────────────────────────────────────────────────
+    _log("Shutting down...")
 
-    # ── 10. Shutdown ──────────────────────────────────────────────────────
     if hw is not None:
         try:
             hw.stop()
         except Exception:
             pass
 
-    _stop_all()
+    if conn_monitor is not None:
+        try:
+            conn_monitor.stop()
+        except Exception:
+            pass
+
+    try:
+        from aurora_curiosity_engine import stop_curiosity_background
+        stop_curiosity_background()
+    except Exception:
+        pass
+
+    systems = systems_holder.get("systems")
+    if systems is not None:
+        try:
+            save_fn = systems.get("save_state") or systems.get("_save_state")
+            if callable(save_fn):
+                save_fn()
+                _log("State saved.")
+        except Exception:
+            pass
+
     _log("Aurora mobile runner stopped.")
 
 
