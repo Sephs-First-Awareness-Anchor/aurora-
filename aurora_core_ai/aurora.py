@@ -23492,6 +23492,10 @@ def boot_aurora(
     systems['identity_field'] = None
     systems['tensor_expressions'] = None
     try:
+        import sys as _sys
+        _repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if _repo_root not in _sys.path:
+            _sys.path.insert(0, _repo_root)
         from aurora_manifold_directory.noncomp_field import get_field as _get_noncomp_field
         _ifield = _get_noncomp_field()
         systems['identity_field'] = _ifield
