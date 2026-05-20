@@ -129,7 +129,17 @@ def _write_subsurface_repair_signal(
         pass
 
 
-def _queue_surface_turn(text: str, *, source: str = "hub_chat") -> str:
+def _queue_surface_turn(
+    text: str,
+    *,
+    source: str = "hub_chat",
+    auto_search_enabled: bool = True,
+    record_exchange: bool = True,
+    update_interactive_state: bool = True,
+    track_evolutionary_trace: bool = True,
+    run_periodic_maintenance: bool = True,
+    mode_name: str = "BOUNDED",
+) -> str:
     state = _read_json_file(_SURFACE_QUEUE, {"pending": []})
     if not isinstance(state, dict):
         state = {"pending": []}
@@ -142,9 +152,12 @@ def _queue_surface_turn(text: str, *, source: str = "hub_chat") -> str:
         "session_id": source,
         "status": "queued",
         "created_at": time.time(),
-        "auto_search_enabled": True,
-        "record_exchange": True,
-        "mode_name": "BOUNDED",
+        "auto_search_enabled": bool(auto_search_enabled),
+        "record_exchange": bool(record_exchange),
+        "update_interactive_state": bool(update_interactive_state),
+        "track_evolutionary_trace": bool(track_evolutionary_trace),
+        "run_periodic_maintenance": bool(run_periodic_maintenance),
+        "mode_name": str(mode_name or "BOUNDED"),
     })
     state["pending"] = pending
     tmp = str(_SURFACE_QUEUE) + ".tmp"
@@ -162,6 +175,21 @@ def _await_surface_turn(turn_id: str, timeout_s: float = 45.0) -> Dict[str, Any]
             return data
         time.sleep(0.25)
     return {}
+
+
+def _queue_autonomous_inquiry(text: str, *, source: str) -> Optional[str]:
+    if _surface_channel_recently_active(120.0):
+        return None
+    return _queue_surface_turn(
+        text,
+        source=source,
+        auto_search_enabled=False,
+        record_exchange=True,
+        update_interactive_state=True,
+        track_evolutionary_trace=True,
+        run_periodic_maintenance=True,
+        mode_name="TRANSIENT",
+    )
 
 # ---------------------------------------------------------------------------
 # Config — adjust these to taste
@@ -240,9 +268,13 @@ def _speak(text: str, systems: Dict[str, Any], tone: str = "warm") -> bool:
         return False
     try:
         from aurora_voice import speak_with_system_voice
-
-        return bool(speak_with_system_voice(text, systems, tone=tone))
+        _aurora_speaking_evt.set()
+        try:
+            return bool(speak_with_system_voice(text, systems, tone=tone))
+        finally:
+            _aurora_speaking_evt.clear()
     except Exception:
+        _aurora_speaking_evt.clear()
         return False
 
 
@@ -258,8 +290,63 @@ def _notify(title: str, body: str) -> None:
         _log(f"Notification failed: {e}")
 
 
+_STATE_WRITE_LOCK_MAX_AGE = 6 * 60 * 60
+
+
 def _state_write_lock_active() -> bool:
-    return (_STATE_DIR / ".state_write_lock").exists()
+    """
+    Corpus ingestion owns a coarse state-write lock while it is actively
+    mutating shared state. Older daemon builds treated lock existence as
+    absolute; a crashed/stopped corpus runner could leave a stale file that
+    starved save, distillation, and other maintenance forever.
+    """
+    lock_path = _STATE_DIR / ".state_write_lock"
+    if not lock_path.exists():
+        return False
+
+    now = time.time()
+    try:
+        age = max(0.0, now - float(lock_path.stat().st_mtime))
+    except Exception:
+        age = 0.0
+
+    pid_text = ""
+    try:
+        pid_text = lock_path.read_text(encoding="utf-8").strip()
+    except Exception:
+        pid_text = ""
+
+    def _clear_stale(reason: str) -> bool:
+        try:
+            lock_path.unlink()
+            _log(f"  [LOCK] Cleared stale state-write lock ({reason}).")
+        except Exception as exc:
+            _log(f"  [LOCK] Stale state-write lock remains ({reason}): {exc}")
+            return True
+        return False
+
+    try:
+        pid = int(pid_text)
+    except Exception:
+        if age > _STATE_WRITE_LOCK_MAX_AGE:
+            return _clear_stale("invalid pid")
+        return True
+
+    cmdline = ""
+    try:
+        raw_cmdline = Path(f"/proc/{pid}/cmdline").read_bytes()
+        cmdline = raw_cmdline.replace(b"\x00", b" ").decode("utf-8", "ignore").strip()
+    except FileNotFoundError:
+        return _clear_stale(f"pid {pid} no longer exists")
+    except Exception:
+        if age > _STATE_WRITE_LOCK_MAX_AGE:
+            return _clear_stale(f"pid {pid} unreadable and lock age {int(age)}s")
+        return True
+
+    if "corpus_runner.py" in cmdline:
+        return True
+
+    return _clear_stale(f"pid {pid} is not corpus_runner")
 
 
 # ---------------------------------------------------------------------------
@@ -501,6 +588,78 @@ class ReactivityMonitor:
         self._last_study_id = study_id
 
 
+# Per-issue report cooldown: same issue won't be re-reported within this window.
+_ISSUE_REPORT_COOLDOWN = 3600.0  # 1 hour
+_REPORTED_ISSUES: Dict[str, float] = {}  # issue_key -> last reported timestamp
+
+
+def _collect_unresolved_issues(systems: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """
+    Collect system issues Aurora has flagged but cannot self-resolve.
+    Returns list of {key, description, source, severity} sorted by severity desc.
+    """
+    issues: List[Dict[str, Any]] = []
+
+    # 1. Repair signal stuck in a non-steady phase for more than 5 minutes.
+    try:
+        _sig = _read_json_file(_SUBSURFACE_REPAIR_SIGNAL, {})
+        _phase = str(_sig.get("phase", "") or "")
+        _age = time.time() - float(_sig.get("updated_at", time.time()) or time.time())
+        if _phase not in ("steady", "") and _age > 300:
+            _issue_text = str(_sig.get("issue", "") or "unknown").strip()
+            issues.append({
+                "key": f"repair:{_phase}:{_issue_text[:40]}",
+                "description": (
+                    f"Repair signal stuck in '{_phase}' for {int(_age // 60)}m"
+                    + (f": {_issue_text}" if _issue_text and _issue_text != "unknown" else "")
+                ),
+                "source": "repair_signal",
+                "severity": float(_sig.get("intensity", 0.5) or 0.5),
+            })
+    except Exception:
+        pass
+
+    # 2. QuasiArch proposals with high confidence that need human input.
+    try:
+        _qreport = _read_json_file(_STATE_DIR / "quasiarch_diag_report.json", {})
+        _gen_at = float(_qreport.get("generated_at", 0) or 0)
+        if time.time() - _gen_at < 86400:
+            for _prop in list(_qreport.get("proposals", []) or [])[:6]:
+                _conf = float(_prop.get("confidence", 0.0) or 0.0)
+                _action = str(_prop.get("proposed_action", "") or "").strip()
+                _target = str(_prop.get("target", "") or "").strip()
+                _arch = str(_prop.get("issue_archetype", "") or "").strip()
+                if _conf >= 0.7 and _action and _target:
+                    _pid = str(_prop.get("proposal_id", _arch) or _arch)[:16]
+                    issues.append({
+                        "key": f"qao:{_pid}",
+                        "description": (
+                            f"QuasiArch: {_arch} → {_action} on "
+                            f"{_target.split(':')[0]} (conf {_conf:.2f})"
+                        ),
+                        "source": "quasiarch",
+                        "severity": _conf,
+                    })
+    except Exception:
+        pass
+
+    # 3. Telemetry zero-confidence reports (complete subsystem failures).
+    try:
+        from aurora_telemetry import get_telemetry as _get_tel
+        for _r in _get_tel().get_weak_points(threshold=0.05):
+            issues.append({
+                "key": f"tel:{_r.source}:{_r.module}",
+                "description": f"Subsystem failure: {_r.source} — {(_r.detail or '')[:100]}",
+                "source": "telemetry",
+                "severity": 0.9,
+            })
+    except Exception:
+        pass
+
+    issues.sort(key=lambda x: float(x.get("severity", 0.0)), reverse=True)
+    return issues
+
+
 # ---------------------------------------------------------------------------
 # Proactive user outreach — Aurora decides to say something
 # ---------------------------------------------------------------------------
@@ -526,6 +685,12 @@ def _should_reach_out(systems: Dict[str, Any], heat_level: str) -> bool:
         return False
     if _in_quiet_window():
         return False
+
+    # High-priority: always reach out if there is an unreported system issue.
+    _now_issues = time.time()
+    for _iss in _collect_unresolved_issues(systems):
+        if _now_issues - _REPORTED_ISSUES.get(_iss["key"], 0.0) >= _ISSUE_REPORT_COOLDOWN:
+            return True
 
     # --- Sensory crystal snapshot -------------------------------------------
     sc_state: dict = {}
@@ -6249,6 +6414,43 @@ def run(systems: Dict[str, Any]) -> None:
         _cam_thread.start()
         _log("  [SENSORY] Camera capture thread started (frame_latest.png every ~3s).")
 
+    # Boot ScreenObserver (visual inquiry source for the daemon loop).
+    if not surface_owned_sensory and systems.get("screen_observer") is None:
+        try:
+            from aurora_live_vision import boot_screen_observer as _boot_sobs
+            systems["screen_observer"] = _boot_sobs(systems, interval=5.0)
+            _log("  [VISION] ScreenObserver started (visual inquiry active, 5s interval).")
+        except Exception as _sobs_e:
+            _log(f"  [VISION] ScreenObserver unavailable: {_sobs_e}")
+
+    # Start autonomous CuriosityEngine — runs 3-cycle idle batches, pauses during user turns.
+    try:
+        from aurora_curiosity_engine import (
+            CuriosityEngine as _CuriosityEngine,
+            start_curiosity_background as _start_curiosity,
+        )
+        from aurora_self_grounding import SelfGroundingFallback as _SGF, get_tension_monitor as _get_tm
+        from aurora_tool_mind import ToolChoiceObserver as _TCO
+
+        _dim = systems.get("dimensional")
+        _pressure_src = getattr(_dim, "pressure_vec", None) if _dim else None
+        _field_map = getattr(getattr(_dim, "field_map", None), "field_map", None) or getattr(_dim, "field_map", None)
+        _tool_obs = _TCO()
+        _curiosity_engine = _CuriosityEngine(
+            pressure_source=_pressure_src,
+            field_map=_field_map,
+            tool_mind=_tool_obs,
+            sedimemory=systems.get("sedimemory"),
+            self_grounder=_SGF(),
+            tension_monitor=_get_tm(),
+            systems=systems,
+        )
+        systems["_curiosity_engine"] = _curiosity_engine
+        _start_curiosity(_curiosity_engine, tick_interval_s=60.0)
+        _log("  [CURIOSITY] Autonomous curiosity engine started (60s idle cycle).")
+    except Exception as _ce:
+        _log(f"  [CURIOSITY] Engine unavailable: {_ce}")
+
     def _handle_signal(sig, frame):
         nonlocal shutdown
         _log(f"Shutdown signal received ({sig}).")
@@ -6982,6 +7184,13 @@ def run(systems: Dict[str, Any]) -> None:
     if voice_listener:
         voice_listener.stop()
 
+    # Stop curiosity engine cleanly before state save.
+    try:
+        from aurora_curiosity_engine import stop_curiosity_background as _stop_curiosity
+        _stop_curiosity()
+    except Exception:
+        pass
+
     _log("Saving state before shutdown...")
     _run_sensory_crystal_consolidation(systems)   # final promotion + wisdom routing
     _save_state(systems)
@@ -7036,9 +7245,8 @@ def main(runtime_profile: str = "full") -> None:
             _signal_operator("boot_tour")
         run(systems)
     except Exception as e:
-        _log(f"FATAL boot error: {e}")
-        import traceback
-        traceback.print_exc()
+        import traceback as _tb
+        _log(f"FATAL boot error: {e}\n{_tb.format_exc()}")
         sys.exit(1)
 
 
