@@ -9478,7 +9478,7 @@ class ImageIngestionProtocol:
 
         self._vectors:  Dict[str, VisualFeatureVector]  = {}
         self._clusters: Dict[str, VisualCluster]        = {}
-        self._lock      = threading.Lock()
+        self._lock      = threading.RLock()
 
         os.makedirs(self.SEED_DIR, exist_ok=True)
         os.makedirs(os.path.join(self.SEED_DIR, "web"), exist_ok=True)
