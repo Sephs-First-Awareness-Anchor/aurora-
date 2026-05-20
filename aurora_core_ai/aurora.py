@@ -23591,7 +23591,10 @@ def boot_aurora(
         oets_status = ""
         if perception.oets:
             oets_status = f", OETS={len(perception.oets.web.nodes)} concepts"
-        print(f"  (vocab={perception.lexicon.size}{oets_status})")
+        _lex_sz = getattr(perception.lexicon, 'size', None)
+        if _lex_sz is None:
+            _lex_sz = len(getattr(perception.lexicon, 'entries', {}))
+        print(f"  (vocab={_lex_sz}{oets_status})")
 
     # Grammar Evolution Engine (constraint-driven sentence structure)
     systems['grammar_engine'] = None
@@ -28898,7 +28901,7 @@ def chat(systems: Dict[str, Any]):
                     f"          [A src={r['src']} tone={r['resp_A'].emotional_tone} "
                     f"confidence={r['resp_A'].confidence:.2f} "
                     f"pipeline={r['elapsed_A']:.0f}ms "
-                    f"vocab={perception.lexicon.size} "
+                    f"vocab={getattr(perception.lexicon, 'size', len(getattr(perception.lexicon, 'entries', {})))} "
                     f"gen={identity.dna.generation}]"
                 )
             if r['offered_lookup']:
