@@ -3151,6 +3151,8 @@ def build_layer5_associative_modules(
         vision_bootstrap = ImageIngestionProtocol(oets=perception.oets if perception else None)
         modules['vision_bootstrap'] = vision_bootstrap
 
+        vstatus = vision_bootstrap.status()
+
         seed_dir = f"{state_dir}/vision_seeds"
         if os.path.exists(seed_dir):
             import threading as _th
@@ -3159,8 +3161,6 @@ def build_layer5_associative_modules(
                 vision_bootstrap.ingest_folder(seed_dir)
 
             _th.Thread(target=_bg_ingest, daemon=True, name="VisionBootstrap").start()
-
-        vstatus = vision_bootstrap.status()
         if verbose:
             print(f"  (vectors={vstatus['vectors_indexed']}, clusters={vstatus['clusters']})")
     except Exception as e:

@@ -1251,6 +1251,9 @@ class GrammarEngine:
 
         # Clause III coloring: tone, passion, and drive bias motif selection
         # (e.g., "focused" tone biases toward B-axis (Boundary) structure)
+        tone = getattr(self, '_tone', None)
+        passion = getattr(self, '_passion', None)
+        drive = getattr(self, '_drive', None)
         if tone == "focused":
             orientation["B"] = orientation.get("B", 1.0) * 1.3
         if passion == "intense":
