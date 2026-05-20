@@ -21,6 +21,20 @@ from aurora_internal.aurora_identity_persistence import (
 # Backward compatibility for older boot paths that still import the legacy name.
 StatePersistence = EnhancedStatePersistence
 
+# Governance / persistence / device-sync classes
+try:
+    from aurora_governance_persistence_gateway import (
+        AuroraStateSnapshot,
+        DeviceAwareness,
+        RcloneInterface,
+        DriveSync,
+    )
+except Exception:
+    AuroraStateSnapshot = None
+    DeviceAwareness     = None
+    RcloneInterface     = None
+    DriveSync           = None
+
 # Semantic scaffolding / OETS
 try:
     from aurora_internal.aurora_ontological_scaffolding import (
@@ -58,4 +72,8 @@ __all__ = [
     "RelationType",
     "ExpressionEvolutionOrchestra",
     "LSVMetrics",
+    "AuroraStateSnapshot",
+    "DeviceAwareness",
+    "RcloneInterface",
+    "DriveSync",
 ]
