@@ -284,7 +284,9 @@ def _make_on_utterance(
 
             systems = systems_holder.get("systems")
             if systems is None:
-                _log("  [MOBILE] Stack not yet booted — ignoring utterance.")
+                _log("  [MOBILE] Still booting — watch the terminal for layer progress. Try again in a moment.")
+                if not _is_quiet():
+                    speak_fn("Still starting up — give me another minute.")
                 return
 
             # Confirm receipt with a short vibration
@@ -735,31 +737,67 @@ def main() -> None:
     # ── 7. Proactive message poller ────────────────────────────────────────
     _start_proactive_poller(speak_fn)
 
-    # ── 8. Boot the full Aurora stack (one boot — no subprocesses) ─────────
-    _log("[BOOT] Booting Aurora stack — this may take a minute on first run...")
-    try:
-        from aurora import boot_aurora
-        systems = boot_aurora(
-            state_dir=str(_STATE_DIR),
-            verbose=False,
-            runtime_profile="full",
-        )
-        systems_holder["systems"] = systems
-        _log("[BOOT] Aurora stack online.")
-    except Exception as e:
-        _log(f"[BOOT] FATAL: boot_aurora() failed: {e}")
-        _log(_tb.format_exc())
+    # ── 8. Boot the full Aurora stack ─────────────────────────────────────
+    # AURORA_SKIP_DEP_INSTALL=1 prevents _ensure_runtime_dependencies() from
+    # running `pip install` for numpy/librosa/etc during boot — on Android
+    # those pip installs hang for minutes or fail entirely.  Install deps
+    # manually once with: pip install numpy SpeechRecognition soundfile pydub Pillow
+    os.environ.setdefault("AURORA_SKIP_DEP_INSTALL", "1")
+
+    _log("[BOOT] Booting Aurora stack — verbose output follows (may take a few minutes)...")
+
+    # Run boot in a background thread so the watchdog can log progress and
+    # the file-PTT watcher stays alive throughout.
+    _boot_error: List[Any] = [None]
+    _boot_done = threading.Event()
+
+    def _do_boot() -> None:
+        try:
+            from aurora import boot_aurora
+            s = boot_aurora(
+                state_dir=str(_STATE_DIR),
+                verbose=True,           # layer-by-layer output so we can see where it stalls
+                use_quasiarch=False,    # skip QuasiArch observer — too heavy for mobile
+                runtime_profile="full",
+            )
+            systems_holder["systems"] = s
+            _log("[BOOT] Aurora stack online.")
+        except Exception as e:
+            _boot_error[0] = e
+            _log(f"[BOOT] FATAL: boot_aurora() failed: {e}")
+            _log(_tb.format_exc())
+        finally:
+            _boot_done.set()
+
+    _boot_thread = threading.Thread(target=_do_boot, daemon=False, name="aurora-boot")
+    _boot_thread.start()
+
+    # Watchdog — print a heartbeat every 30 s so the terminal doesn't look frozen,
+    # and give up after 15 min if something is genuinely stuck.
+    _BOOT_TIMEOUT_S = 900.0
+    _boot_start = time.time()
+    while not _boot_done.wait(timeout=30.0):
+        elapsed = int(time.time() - _boot_start)
+        _log(f"[BOOT] Still loading... ({elapsed}s) — check verbose output above for current layer.")
+        if elapsed >= _BOOT_TIMEOUT_S:
+            _log("[BOOT] Timeout — continuing with whatever loaded. Some features may be unavailable.")
+            break
+
+    if _boot_error[0] is not None:
         _shutdown.set()
         return
 
+    systems = systems_holder.get("systems")
+    if systems is None:
+        _log("[BOOT] WARNING: boot returned no systems dict — limited functionality.")
+
     # ── 9. CuriosityEngine — idle autonomy / dreaming ─────────────────────
     _log("[BOOT] Starting curiosity / autonomy engine...")
-    _start_curiosity_engine(systems)
+    if systems is not None:
+        _start_curiosity_engine(systems)
 
-    # ── 10. Gap surfacer — asks user about open curiosity loops when offline
+    # ── 10. Gap surfacer + state saver (start regardless — they check systems lazily)
     _start_gap_surfacer(systems_holder, speak_fn, conn_monitor)
-
-    # ── 11. Periodic state saves ───────────────────────────────────────────
     _start_state_saver(systems_holder)
 
     # ── 12. Boot greeting ──────────────────────────────────────────────────
