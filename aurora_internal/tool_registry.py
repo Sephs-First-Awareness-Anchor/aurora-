@@ -1182,20 +1182,304 @@ def _mobile_call_log(limit: int = 10, systems: Optional[Dict[str, Any]] = None, 
     return ToolResult("mobile_call_log", "", False, err or "call log unavailable")
 
 
-_reg("mobile_send_sms",      "Send an SMS text message to a phone number",                                  "PERSISTENT", _mobile_send_sms,      disables_search=True)
-_reg("mobile_make_call",     "Initiate a phone call to a number",                                           "PERSISTENT", _mobile_make_call,     disables_search=True)
-_reg("mobile_launch_app",    "Launch an Android app by package name (e.g. com.spotify.music)",              "BOUNDED",    _mobile_launch_app,    disables_search=False)
-_reg("mobile_open_url",      "Open a URL in Android's default browser or associated app",                   "BOUNDED",    _mobile_open_url,      disables_search=False)
-_reg("mobile_read_sms",      "Read recent incoming SMS messages (inbox)",                                   "BOUNDED",    _mobile_read_sms,      disables_search=True)
-_reg("mobile_read_contacts", "Read phone contacts, optionally filtered by name",                            "BOUNDED",    _mobile_read_contacts, disables_search=True)
-_reg("mobile_get_location",  "Get current GPS/network location as lat/lon coordinates",                     "BOUNDED",    _mobile_get_location,  disables_search=True)
-_reg("mobile_notification",  "Post a visible notification on the Android home screen",                      "BOUNDED",    _mobile_notification,  disables_search=True)
-_reg("mobile_clipboard",     "Read or write the Android clipboard (op=get or op=set)",                      "BOUNDED",    _mobile_clipboard,     disables_search=True)
-_reg("mobile_battery_status","Get current battery level and charging state",                                "TRANSIENT",  _mobile_battery_status,disables_search=True)
-_reg("mobile_torch",         "Toggle the phone flashlight on or off (state=on|off)",                        "TRANSIENT",  _mobile_torch,         disables_search=True)
-_reg("mobile_vibrate",       "Vibrate the phone for a given duration in milliseconds",                      "TRANSIENT",  _mobile_vibrate,       disables_search=True)
-_reg("mobile_wifi_info",     "Get current WiFi connection details (SSID, signal, IP)",                      "TRANSIENT",  _mobile_wifi_info,     disables_search=True)
-_reg("mobile_call_log",      "Read recent call history (incoming, outgoing, missed)",                       "BOUNDED",    _mobile_call_log,      disables_search=True)
+def _mobile_image_search(
+    query: str = "",
+    count: int = 5,
+    open_browser: bool = False,
+    systems: Optional[Dict[str, Any]] = None,
+    **_,
+) -> ToolResult:
+    """
+    Search for images matching a text description via DuckDuckGo image search.
+    Returns image URLs, titles, and source domains for the top results.
+    open_browser=True also opens the DDG images page in the default browser.
+    """
+    if not query:
+        return ToolResult("mobile_image_search", "", False, "query required")
+
+    import re as _re
+    count = max(1, min(int(count), 20))
+    q_enc = urllib.parse.quote_plus(query)
+    browser_url = f"https://duckduckgo.com/?q={q_enc}&iax=images&ia=images"
+
+    # Step 1: fetch the vqd token DDG requires for its image JSON endpoint
+    vqd = None
+    try:
+        req = urllib.request.Request(
+            f"https://duckduckgo.com/?q={q_enc}",
+            headers={"User-Agent": "Mozilla/5.0 (Android 13; Mobile)"},
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+        m = _re.search(r'vqd=["\']([\d-]+)["\']', html)
+        if m:
+            vqd = m.group(1)
+    except Exception:
+        pass
+
+    # Step 2: hit the image JSON endpoint
+    results: List[Dict[str, Any]] = []
+    if vqd:
+        try:
+            img_req = urllib.request.Request(
+                f"https://duckduckgo.com/i.js?q={q_enc}&o=json&p=1&s=0"
+                f"&u=bing&f=,,,,,&l=en-us&vqd={vqd}",
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Android 13; Mobile)",
+                    "Referer": "https://duckduckgo.com/",
+                },
+            )
+            with urllib.request.urlopen(img_req, timeout=10) as resp2:
+                data = json.loads(resp2.read().decode("utf-8"))
+            for item in (data.get("results") or [])[:count]:
+                results.append({
+                    "url": item.get("image", ""),
+                    "title": item.get("title", ""),
+                    "source": item.get("url", ""),
+                    "width": item.get("width", ""),
+                    "height": item.get("height", ""),
+                })
+        except Exception:
+            pass
+
+    # Open browser (always useful; only fallback if no programmatic results)
+    if (open_browser or not results) and _is_termux():
+        _termux_run(["termux-open-url", browser_url], timeout=10)
+
+    if not results:
+        if _is_termux() and open_browser:
+            return ToolResult("mobile_image_search", f"Opened DDG images: {query}", True)
+        return ToolResult(
+            "mobile_image_search", "", False,
+            "no image results — try open_browser=True or check connectivity"
+        )
+
+    lines = [f"Image search: {query}"]
+    for i, r in enumerate(results, 1):
+        lines.append(f"{i}. {r['title']} [{r['width']}x{r['height']}]")
+        lines.append(f"   {r['url']}")
+        if r["source"]:
+            lines.append(f"   via {r['source'][:80]}")
+
+    if open_browser and _is_termux():
+        _termux_run(["termux-open-url", browser_url], timeout=10)
+
+    return ToolResult("mobile_image_search", "\n".join(lines), True)
+
+
+def _mobile_reverse_image_search(
+    image_source: str = "",
+    systems: Optional[Dict[str, Any]] = None,
+    **_,
+) -> ToolResult:
+    """
+    Find what an image is or where it appears online via Google Lens.
+    image_source: a public URL, or a local file path (e.g. a camera capture).
+
+    For URLs: opens Google Lens directly.
+    For local files: uploads anonymously to 0x0.st (no key, files expire ~30 days),
+    then opens Google Lens with the returned public URL.
+    """
+    if not image_source:
+        # Default: try the latest camera capture
+        state_dir = str(
+            Path(__file__).resolve().parent.parent / "aurora_state"
+        )
+        latest = Path(state_dir) / "latest_camera_frame.jpg"
+        if latest.exists():
+            image_source = str(latest)
+        else:
+            return ToolResult(
+                "mobile_reverse_image_search", "", False,
+                "image_source required (URL or local file path)"
+            )
+
+    target_url = image_source
+
+    if not image_source.startswith(("http://", "https://")):
+        fp = Path(image_source)
+        if not fp.exists():
+            return ToolResult(
+                "mobile_reverse_image_search", "", False,
+                f"file not found: {image_source}"
+            )
+        # Upload to 0x0.st — anonymous, no API key required
+        try:
+            r = _subprocess.run(
+                ["curl", "-sS", "-F", f"file=@{fp}", "https://0x0.st"],
+                capture_output=True, text=True, timeout=25,
+            )
+            if r.returncode == 0 and r.stdout.strip().startswith("http"):
+                target_url = r.stdout.strip()
+            else:
+                return ToolResult(
+                    "mobile_reverse_image_search", "", False,
+                    f"upload to 0x0.st failed: {r.stderr or r.stdout}"
+                )
+        except Exception as e:
+            return ToolResult("mobile_reverse_image_search", "", False, f"upload error: {e}")
+
+    lens_url = (
+        "https://lens.google.com/uploadbyurl?url="
+        + urllib.parse.quote_plus(target_url)
+    )
+
+    if _is_termux():
+        out, err, rc = _termux_run(["termux-open-url", lens_url], timeout=10)
+        if rc == 0:
+            return ToolResult(
+                "mobile_reverse_image_search",
+                f"Opened Google Lens\nSource: {image_source}\nPublic URL: {target_url}",
+                True,
+            )
+        return ToolResult("mobile_reverse_image_search", "", False, err or "failed to open browser")
+
+    return ToolResult(
+        "mobile_reverse_image_search",
+        f"Reverse image search URL (open in browser):\n{lens_url}\nSource: {target_url}",
+        True,
+    )
+
+
+_AUDD_API_KEY_ENV    = "AUDD_API_KEY"
+_AUDD_RECORD_SECONDS = 8
+
+
+def _mobile_music_identify(
+    duration_s: int = _AUDD_RECORD_SECONDS,
+    audio_file: str = "",
+    systems: Optional[Dict[str, Any]] = None,
+    **_,
+) -> ToolResult:
+    """
+    Identify a song playing in the environment by recording a short clip and
+    sending it to the AudD music recognition API.
+
+    Requires internet. Set AUDD_API_KEY env var for the free tier (300 req/month);
+    anonymous requests work but are heavily rate-limited.
+
+    duration_s: seconds of audio to record (5-30; more = more accurate).
+    audio_file: path to an existing audio file to identify instead of recording.
+    """
+    import base64
+    import tempfile
+
+    if not _is_termux() and not audio_file:
+        return ToolResult(
+            "mobile_music_identify", "", False,
+            "not on Termux and no audio_file provided"
+        )
+
+    api_key = os.environ.get(_AUDD_API_KEY_ENV, "")
+    duration_s = max(5, min(int(duration_s), 30))
+
+    # ── Acquire audio ────────────────────────────────────────────────────────
+    tmp_audio: Optional[str] = None
+    audio_path = audio_file or ""
+
+    if not audio_path:
+        import tempfile as _tf
+        tmp_fd, tmp_audio = _tf.mkstemp(suffix=".m4a", prefix="aurora_id_")
+        os.close(tmp_fd)
+        audio_path = tmp_audio
+
+        # Record via termux-microphone-record
+        out, err, rc = _termux_run(
+            ["termux-microphone-record", "-f", audio_path, "-l", str(duration_s), "-e", "aac"],
+            timeout=duration_s + 12,
+        )
+        if rc != 0:
+            # Older termux-api — try without encoder flag
+            out, err, rc = _termux_run(
+                ["termux-microphone-record", "-f", audio_path, "-l", str(duration_s)],
+                timeout=duration_s + 12,
+            )
+
+        # Give it a moment to flush then stop
+        time.sleep(1.5)
+        _termux_run(["termux-microphone-record", "-q"], timeout=5)
+
+    try:
+        ap = Path(audio_path)
+        if not ap.exists() or ap.stat().st_size < 1024:
+            return ToolResult(
+                "mobile_music_identify", "", False,
+                "audio capture too small or missing — check mic permission in Termux:API"
+            )
+
+        # ── Send to AudD ─────────────────────────────────────────────────────
+        with open(audio_path, "rb") as f:
+            audio_b64 = base64.b64encode(f.read()).decode("ascii")
+
+        post_data = urllib.parse.urlencode({
+            "api_token": api_key,
+            "audio": audio_b64,
+            "return": "spotify,apple_music,deezer",
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://api.audd.io/",
+            data=post_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+
+        if result.get("status") != "success":
+            err_info = result.get("error", {})
+            if isinstance(err_info, dict):
+                err_info = err_info.get("error_message", str(err_info))
+            return ToolResult("mobile_music_identify", "", False, f"AudD: {err_info}")
+
+        song = result.get("result")
+        if not song:
+            return ToolResult(
+                "mobile_music_identify",
+                "No match — try closer to the speaker or in a quieter environment.",
+                False,
+                "no match",
+            )
+
+        lines = [
+            f"Artist:   {song.get('artist', '?')}",
+            f"Title:    {song.get('title', '?')}",
+            f"Album:    {song.get('album', '?')}",
+            f"Released: {song.get('release_date', '?')}",
+            f"Label:    {song.get('label', '?')}",
+        ]
+        sp = song.get("spotify") or {}
+        if isinstance(sp, dict):
+            sp_url = (sp.get("external_urls") or {}).get("spotify", "")
+            if sp_url:
+                lines.append(f"Spotify:  {sp_url}")
+
+        return ToolResult("mobile_music_identify", "\n".join(lines), True)
+
+    finally:
+        if tmp_audio:
+            try:
+                os.unlink(tmp_audio)
+            except Exception:
+                pass
+
+
+_reg("mobile_send_sms",               "Send an SMS text message to a phone number",                                          "PERSISTENT", _mobile_send_sms,               disables_search=True)
+_reg("mobile_make_call",              "Initiate a phone call to a number",                                                   "PERSISTENT", _mobile_make_call,              disables_search=True)
+_reg("mobile_launch_app",             "Launch an Android app by package name (e.g. com.spotify.music)",                      "BOUNDED",    _mobile_launch_app,             disables_search=False)
+_reg("mobile_open_url",               "Open a URL in Android's default browser or associated app",                           "BOUNDED",    _mobile_open_url,               disables_search=False)
+_reg("mobile_read_sms",               "Read recent incoming SMS messages (inbox)",                                           "BOUNDED",    _mobile_read_sms,               disables_search=True)
+_reg("mobile_read_contacts",          "Read phone contacts, optionally filtered by name",                                    "BOUNDED",    _mobile_read_contacts,          disables_search=True)
+_reg("mobile_get_location",           "Get current GPS/network location as lat/lon coordinates",                             "BOUNDED",    _mobile_get_location,           disables_search=True)
+_reg("mobile_notification",           "Post a visible notification on the Android home screen",                              "BOUNDED",    _mobile_notification,           disables_search=True)
+_reg("mobile_clipboard",              "Read or write the Android clipboard (op=get or op=set)",                              "BOUNDED",    _mobile_clipboard,              disables_search=True)
+_reg("mobile_battery_status",         "Get current battery level and charging state",                                        "TRANSIENT",  _mobile_battery_status,         disables_search=True)
+_reg("mobile_torch",                  "Toggle the phone flashlight on or off (state=on|off)",                                "TRANSIENT",  _mobile_torch,                  disables_search=True)
+_reg("mobile_vibrate",                "Vibrate the phone for a given duration in milliseconds",                              "TRANSIENT",  _mobile_vibrate,                disables_search=True)
+_reg("mobile_wifi_info",              "Get current WiFi connection details (SSID, signal, IP)",                              "TRANSIENT",  _mobile_wifi_info,              disables_search=True)
+_reg("mobile_call_log",               "Read recent call history (incoming, outgoing, missed)",                               "BOUNDED",    _mobile_call_log,               disables_search=True)
+_reg("mobile_image_search",           "Search for images by text description via DuckDuckGo; returns URLs + metadata",      "BOUNDED",    _mobile_image_search,           disables_search=False)
+_reg("mobile_reverse_image_search",   "Find what an image is / where it appears online via Google Lens",                    "BOUNDED",    _mobile_reverse_image_search,   disables_search=False)
+_reg("mobile_music_identify",         "Identify a song playing nearby by recording audio and querying AudD",                "BOUNDED",    _mobile_music_identify,         disables_search=False)
 
 # Desktop control tools — Aurora operates the laptop
 def _desktop_open_url(url: str = "", headed: bool = True, systems: Optional[Dict[str, Any]] = None, **_) -> ToolResult:
