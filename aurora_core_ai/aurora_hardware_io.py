@@ -208,11 +208,17 @@ def _listen_termux(timeout: float) -> Optional[str]:
     """Use termux-speech-to-text (blocks until done, respects timeout)."""
     if not _termux_cmd("termux-speech-to-text"):
         return None
+    # Give a generous timeout beyond the caller's window.
+    # termux-speech-to-text opens Android STT UI; if we kill the client
+    # subprocess too early its socket closes and Termux:API's ResultReturner
+    # gets "Connection refused" — a Java-side crash we can prevent by never
+    # timing out prematurely.  45 s is the Android STT hard limit.
+    _proc_timeout = max(45.0, timeout + 15.0)
     try:
         result = subprocess.run(
             ["termux-speech-to-text"],
             capture_output=True, text=True,
-            timeout=max(5.0, timeout + 2.0),
+            timeout=_proc_timeout,
         )
         raw = result.stdout.strip()
         if raw:
@@ -224,6 +230,9 @@ def _listen_termux(timeout: float) -> Optional[str]:
                     return str(data.get("utterances", [""])[0] or "").strip()
             except json.JSONDecodeError:
                 return raw
+    except subprocess.TimeoutExpired:
+        # User didn't speak within Android STT window — not an error
+        pass
     except Exception:
         pass
     return None
