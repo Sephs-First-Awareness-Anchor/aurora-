@@ -118,7 +118,16 @@ _WAKE_PATTERNS = re.compile(
     r"\b(aurora|hey\s+aurora|ok\s+aurora|yo\s+aurora)\b",
     re.IGNORECASE,
 )
-_WAKE_COOLDOWN = 3.0   # seconds between wake detections
+_WAKE_COOLDOWN        = 3.0    # seconds between wake detections
+_CONVERSATION_WINDOW  = 30.0   # seconds to stay awake after a turn completes
+_WAKE_ACKS = [
+    "What's up?",
+    "Yeah?",
+    "I'm listening.",
+    "Go ahead.",
+    "Mm?",
+    "What do you need?",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -425,6 +434,7 @@ class NameListener:
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self._cooldown_until: float = 0.0
+        self._conversation_active_until: float = 0.0
         self._paused = threading.Event()
 
     def start(self) -> None:
@@ -450,6 +460,10 @@ class NameListener:
     def resume(self) -> None:
         self._paused.clear()
 
+    def keep_active(self, seconds: float = _CONVERSATION_WINDOW) -> None:
+        """Extend the conversation window so no wake word is needed for the next utterance."""
+        self._conversation_active_until = time.time() + seconds
+
     # ---- Termux loop -------------------------------------------------------
 
     def _loop_termux(self) -> None:
@@ -468,19 +482,28 @@ class NameListener:
             try:
                 text = _listen_termux(timeout=8.0)
                 if not text:
+                    # No speech — check file PTT while idle
+                    self._check_file_ptt()
                     continue
                 if _WAKE_PATTERNS.search(text):
-                    # Strip the wake word and use the rest as the utterance
+                    # Strip wake word; use remainder as the utterance
                     follow = _WAKE_PATTERNS.sub("", text).strip(" ,.!?")
                     if not follow:
-                        # Wake word only — ask for follow-up
-                        speak("Yes?")
-                        follow = _listen_termux(timeout=10.0) or ""
+                        # Wake word only — acknowledge naturally and listen again
+                        import random as _random
+                        speak(_random.choice(_WAKE_ACKS))
+                        follow = _listen_termux(timeout=12.0) or ""
+                        if not follow:
+                            # One retry — give the user a moment
+                            follow = _listen_termux(timeout=8.0) or ""
                     if follow:
                         self._cooldown_until = time.time() + _WAKE_COOLDOWN
                         self._dispatch(follow)
+                elif time.time() < self._conversation_active_until:
+                    # Conversation window is open — no wake word needed
+                    self._dispatch(text)
                 else:
-                    # No wake word — still pass through if file PTT triggered
+                    # No wake word, outside conversation window — check file PTT
                     self._check_file_ptt()
             except Exception:
                 time.sleep(1.0)
@@ -570,11 +593,14 @@ class NameListener:
             if _WAKE_PATTERNS.search(text):
                 follow = _WAKE_PATTERNS.sub("", text).strip(" ,.!?")
                 if not follow:
-                    speak("Yes?")
-                    follow = _listen_linux(timeout=10.0) or ""
+                    import random as _random
+                    speak(_random.choice(_WAKE_ACKS))
+                    follow = _listen_linux(timeout=12.0) or ""
                 if follow:
                     self._cooldown_until = time.time() + _WAKE_COOLDOWN
                     self._dispatch(follow)
+            elif time.time() < self._conversation_active_until:
+                self._dispatch(text)
 
     # ---- Headless / file PTT loop ------------------------------------------
 
@@ -613,6 +639,9 @@ class NameListener:
         try:
             self._on_utterance(text)
         finally:
+            # Keep conversation alive for 30s after each turn so the user
+            # can reply or follow up without saying "hey Aurora" again.
+            self._conversation_active_until = time.time() + _CONVERSATION_WINDOW
             self.resume()
 
 
