@@ -1390,29 +1390,50 @@ def _mobile_music_identify(
         # later calls onDestroy() → cleanupMediaRecorder() → MediaRecorder.stop()
         # on the already-stopped recorder → RuntimeException: stop failed.
         #
-        # Fix: start without -l (returns immediately), sleep the desired
-        # duration ourselves, then send -q while the recorder is still ACTIVE.
-        # stop() on a live recorder succeeds; mRecorder is set to null before
-        # onDestroy() fires so no second stop() is attempted.
+        # Fix: start without -l using Popen (the command BLOCKS until -q is sent,
+        # so we can't use _termux_run here). Sleep duration_s, then send -q while
+        # the recorder is still actively recording. stop() on a live recorder
+        # succeeds; mRecorder is set to null before onDestroy() fires.
         rc = 0
-        _start_out, _start_err, _start_rc = _termux_run(
-            ["termux-microphone-record", "-f", audio_path, "-e", "aac"],
-            timeout=10,
-        )
-        if _start_rc != 0:
-            # Older termux-api without -e flag
-            _start_out, _start_err, _start_rc = _termux_run(
-                ["termux-microphone-record", "-f", audio_path],
-                timeout=10,
+        _rec_proc = None
+        try:
+            _rec_proc = _subprocess.Popen(
+                ["termux-microphone-record", "-f", audio_path, "-e", "aac"],
+                stdout=_subprocess.DEVNULL, stderr=_subprocess.DEVNULL,
             )
-        if _start_rc != 0:
-            rc = _start_rc
-        else:
-            # Sleep the full duration THEN stop while recorder is still live
-            time.sleep(duration_s)
-            _, _, _stop_rc = _termux_run(["termux-microphone-record", "-q"], timeout=10)
-            rc = _stop_rc
-        out, err = _start_out, _start_err
+        except FileNotFoundError:
+            rc = 127
+        except Exception:
+            rc = 1
+
+        if rc == 0 and _rec_proc is not None:
+            # Brief pause to let the service actually start
+            time.sleep(0.8)
+            if _rec_proc.poll() is not None and _rec_proc.returncode != 0:
+                # -e flag not supported — retry without it
+                try:
+                    _rec_proc = _subprocess.Popen(
+                        ["termux-microphone-record", "-f", audio_path],
+                        stdout=_subprocess.DEVNULL, stderr=_subprocess.DEVNULL,
+                    )
+                    time.sleep(0.8)
+                except Exception:
+                    rc = 1
+
+        if rc == 0 and _rec_proc is not None:
+            # Wait the desired duration while Popen keeps the channel open
+            time.sleep(max(0.0, duration_s - 0.8))
+            # Stop while recorder is STILL ACTIVE — this is the safe stop
+            _, _, rc = _termux_run(["termux-microphone-record", "-q"], timeout=10)
+            # Wait for the start process to exit naturally
+            try:
+                _rec_proc.wait(timeout=3)
+            except Exception:
+                try:
+                    _rec_proc.terminate()
+                except Exception:
+                    pass
+        out, err = "", ""
 
     try:
         ap = Path(audio_path)
