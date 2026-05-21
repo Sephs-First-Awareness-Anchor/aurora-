@@ -204,6 +204,36 @@ def listen_once(timeout: float = 10.0, prompt: bool = False) -> Optional[str]:
     return None
 
 
+def _parse_stt_output(raw: str) -> Optional[str]:
+    """
+    Parse termux-speech-to-text output.  Handles all known formats:
+      - ["text"]                          (older termux-api)
+      - [{"utterances": ["text"]}]        (termux-api 0.50+)
+      - {"utterances": ["text"]}          (dict top-level)
+      - plain string                      (fallback)
+    """
+    try:
+        data = json.loads(raw)
+        if isinstance(data, list) and data:
+            first = data[0]
+            if isinstance(first, str):
+                return first.strip() or None
+            if isinstance(first, dict):
+                utterances = first.get("utterances", [])
+                if isinstance(utterances, list) and utterances:
+                    return str(utterances[0]).strip() or None
+                for v in first.values():
+                    if isinstance(v, str) and v.strip():
+                        return v.strip()
+        if isinstance(data, dict):
+            utterances = data.get("utterances", [])
+            if isinstance(utterances, list) and utterances:
+                return str(utterances[0]).strip() or None
+    except (json.JSONDecodeError, TypeError, KeyError):
+        pass
+    return raw.strip() or None
+
+
 def _listen_termux(timeout: float) -> Optional[str]:
     """Use termux-speech-to-text (blocks until done, respects timeout)."""
     if not _termux_cmd("termux-speech-to-text"):
@@ -222,14 +252,7 @@ def _listen_termux(timeout: float) -> Optional[str]:
         )
         raw = result.stdout.strip()
         if raw:
-            try:
-                data = json.loads(raw)
-                if isinstance(data, list) and data:
-                    return str(data[0]).strip()
-                if isinstance(data, dict):
-                    return str(data.get("utterances", [""])[0] or "").strip()
-            except json.JSONDecodeError:
-                return raw
+            return _parse_stt_output(raw)
     except subprocess.TimeoutExpired:
         # User didn't speak within Android STT window — not an error
         pass
