@@ -1383,29 +1383,36 @@ def _mobile_music_identify(
         os.close(tmp_fd)
         audio_path = tmp_audio
 
-        # Record via termux-microphone-record
-        out, err, rc = _termux_run(
-            ["termux-microphone-record", "-f", audio_path, "-l", str(duration_s), "-e", "aac"],
-            timeout=duration_s + 12,
+        # Record via termux-microphone-record — WITHOUT -l (timed) flag.
+        #
+        # Using -l causes Termux:API to stop MediaRecorder internally when the
+        # duration elapses, but MicRecorderService keeps running. When Android
+        # later calls onDestroy() → cleanupMediaRecorder() → MediaRecorder.stop()
+        # on the already-stopped recorder → RuntimeException: stop failed.
+        #
+        # Fix: start without -l (returns immediately), sleep the desired
+        # duration ourselves, then send -q while the recorder is still ACTIVE.
+        # stop() on a live recorder succeeds; mRecorder is set to null before
+        # onDestroy() fires so no second stop() is attempted.
+        rc = 0
+        _start_out, _start_err, _start_rc = _termux_run(
+            ["termux-microphone-record", "-f", audio_path, "-e", "aac"],
+            timeout=10,
         )
-        if rc != 0:
-            # Older termux-api — try without encoder flag
-            out, err, rc = _termux_run(
-                ["termux-microphone-record", "-f", audio_path, "-l", str(duration_s)],
-                timeout=duration_s + 12,
+        if _start_rc != 0:
+            # Older termux-api without -e flag
+            _start_out, _start_err, _start_rc = _termux_run(
+                ["termux-microphone-record", "-f", audio_path],
+                timeout=10,
             )
-
-        # Timed recordings (-l) stop themselves — do NOT send -q afterward.
-        # Calling -q on an already-stopped recorder crashes MicRecorderService
-        # (MediaRecorder.stop() on non-running recorder → RuntimeException).
-        # Only attempt a stop if the recording command itself returned an error
-        # that suggests it may still be running.
-        if rc != 0:
-            time.sleep(0.5)
-            try:
-                _termux_run(["termux-microphone-record", "-q"], timeout=5)
-            except Exception:
-                pass
+        if _start_rc != 0:
+            rc = _start_rc
+        else:
+            # Sleep the full duration THEN stop while recorder is still live
+            time.sleep(duration_s)
+            _, _, _stop_rc = _termux_run(["termux-microphone-record", "-q"], timeout=10)
+            rc = _stop_rc
+        out, err = _start_out, _start_err
 
     try:
         ap = Path(audio_path)
