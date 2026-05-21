@@ -9251,6 +9251,12 @@ def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed:
     if not is_q and _extract_user_name(text):
         return "fact_assertion"
 
+    # Imperative directive frame — grammatical signal from UtteranceParser.
+    # A-axis (agency/will) + X-axis (instantiation) dominate when the user
+    # issues a directed action command.  The pipeline routes to tool dispatch.
+    if bool(parsed.get("is_imperative")):
+        return "directive"
+
     # Explicit memory/recall patterns — must be checked before axis routing because
     # these are T-axis intent regardless of what the field activation reports.
     _text_low_cl = str(text or "").lower()
@@ -25246,6 +25252,40 @@ def _advance_intake_pipeline(
         pass  # intake pipeline must never interrupt the conversation loop
 
 
+def _dispatch_user_directive(
+    user_text: str,
+    parsed: Dict[str, Any],
+    systems: Dict[str, Any],
+) -> Optional[str]:
+    """
+    Route an imperative/directive utterance to the appropriate tool.
+
+    This function contains NO hardcoded app names or action keywords.
+    It reads only:
+      - parsed['entities']  — named targets extracted by UtteranceParser
+      - the tool registry's own semantic maps (e.g. _APP_NAME_MAP)
+    The pipeline itself stays free of domain knowledge; each tool owns its
+    own resolution logic.
+
+    Returns a human-readable result string, or None if no tool matched.
+    """
+    entities = list(parsed.get("entities") or [])
+    if not entities:
+        return None
+    try:
+        from aurora_internal.tool_registry import call as _tool_call, _resolve_app_package
+        for entity in entities:
+            pkg = _resolve_app_package(entity)
+            if pkg:
+                result = _tool_call("mobile_launch_app", package=entity, systems=systems)
+                if result.success:
+                    return result.data
+                return f"I tried to open {entity} but: {result.note}"
+    except Exception as _de:
+        pass
+    return None
+
+
 def dual_question_pipeline(
     systems: Dict[str, Any],
     user_text: str,
@@ -25288,6 +25328,24 @@ def dual_question_pipeline(
         _parsed=_pre_parsed if _pre_parsed else None,
     )
     systems.pop("_pre_parsed_utterance", None)
+
+    # ── Directive dispatch ───────────────────────────────────────────────────
+    # When the utterance parser identifies a directive/imperative frame,
+    # route to tool dispatch before any comprehension-gap or hypothesis
+    # processing — the user is asking Aurora to DO something, not say something.
+    if intent == "directive":
+        _dir_result = _dispatch_user_directive(user_text, _pre_parsed, systems)
+        if _dir_result:
+            _resp_dir = _MiniResp(_dir_result, "engaged", 0.95)
+            _resp_dir.src = "tool_dispatch"
+            try:
+                systems["_last_turn_state"] = _resp_dir
+            except Exception:
+                pass
+            return _resp_dir, None, False
+        # If no tool matched, fall through to normal pipeline so Aurora can
+        # respond naturally rather than returning silence.
+
     understood = None
     quasiarch_events: List[Dict[str, Any]] = []
     lookup_request = _resolve_lookup_request(user_text, systems)

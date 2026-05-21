@@ -400,6 +400,7 @@ class UtteranceIntent:
     is_callback: bool = False
     is_experiential: bool = False
     is_opinion: bool = False
+    is_imperative: bool = False   # directive frame: base-verb + entity target, no question mark
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to backward-compatible dict (superset of QueryUnderstanding output)."""
@@ -423,6 +424,7 @@ class UtteranceIntent:
             'is_callback':        self.is_callback,
             'is_experiential':    self.is_experiential,
             'is_opinion':         self.is_opinion,
+            'is_imperative':      self.is_imperative,
             'raw_text':           self.raw_text,
         }
 
@@ -614,6 +616,27 @@ class UtteranceParser:
         intent.is_callback      = PragmaticRole.CALLBACK in signal_roles
         intent.is_experiential  = PragmaticRole.EXPERIENCE in signal_roles
         intent.is_opinion       = PragmaticRole.OPINION in signal_roles
+
+        # Imperative / directive frame: grammatically, an imperative begins with a
+        # bare base-form verb (or modal REQUEST) directed at a named entity, with
+        # no question marker.  This is a syntactic property of the utterance, not
+        # a keyword rule in the pipeline — the pipeline reads is_imperative as a
+        # grammatical signal and routes accordingly.
+        _ACTION_BASE_FORMS = {
+            'open', 'start', 'launch', 'run', 'load', 'play', 'resume',
+            'close', 'stop', 'quit', 'exit', 'kill',
+            'send', 'call', 'dial', 'text', 'message',
+            'turn', 'toggle', 'enable', 'disable', 'set',
+            'take', 'capture', 'record', 'show', 'display',
+        }
+        _first_word = t_low.split()[0] if t_low.split() else ""
+        _is_q = '?' in t
+        _has_request = PragmaticRole.REQUEST in signal_roles
+        intent.is_imperative = (
+            (_first_word in _ACTION_BASE_FORMS or _has_request)
+            and not _is_q
+            and bool(intent.entities)
+        )
 
         # ---- Step 8: Determine utterance frame ----
         intent.frame = self._infer_frame(intent, t_low)
