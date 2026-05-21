@@ -344,6 +344,7 @@ class AmbientMicStream:
         self._chunk_frames = int(sample_rate * chunk_duration)
         self._running = False
         self._thread: Optional[threading.Thread] = None
+        self._termux_proc: Optional[subprocess.Popen] = None
 
     def start(self) -> bool:
         """Start the stream. Returns True if successfully started."""
@@ -356,6 +357,25 @@ class AmbientMicStream:
 
     def stop(self) -> None:
         self._running = False
+        # Send -q to stop any active Termux recording so MicRecorderService is
+        # cleanly destroyed before Aurora exits.  Orphaned Popen processes keep
+        # the recorder running after Python exits, and Android's onDestroy()
+        # then crashes trying to stop an already-idle MediaRecorder.
+        if PLATFORM == "termux":
+            try:
+                subprocess.run(
+                    ["termux-microphone-record", "-q"],
+                    timeout=5,
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+            except Exception:
+                pass
+            if self._termux_proc is not None:
+                try:
+                    self._termux_proc.terminate()
+                except Exception:
+                    pass
+                self._termux_proc = None
 
     def _start_linux(self) -> bool:
         try:
@@ -395,15 +415,36 @@ class AmbientMicStream:
             tmp = str(_STATE_DIR / "ambient_tmp_chunk.wav")
             while self._running:
                 try:
-                    # Record 2-second clip
-                    subprocess.run(
+                    # Start recording WITHOUT -l: the command blocks until -q is
+                    # sent.  Using -l causes MediaRecorder to stop internally
+                    # while MicRecorderService is still alive; onDestroy() then
+                    # calls stop() on the already-stopped recorder → crash.
+                    _proc = subprocess.Popen(
                         ["termux-microphone-record",
                          "-e", "wav", "-r", str(self._sample_rate),
-                         "-c", "1", "-l", "2", "-f", tmp],
-                        timeout=6,
+                         "-c", "1", "-f", tmp],
                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                     )
-                    if Path(tmp).exists():
+                    self._termux_proc = _proc
+                    # Record for 2 seconds (check _running so stop() bails fast)
+                    _deadline = time.time() + 2.0
+                    while self._running and time.time() < _deadline:
+                        time.sleep(0.1)
+                    # Stop while recorder is ACTIVE — safe stop
+                    subprocess.run(
+                        ["termux-microphone-record", "-q"],
+                        timeout=5,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    )
+                    self._termux_proc = None
+                    try:
+                        _proc.wait(timeout=2)
+                    except Exception:
+                        try:
+                            _proc.terminate()
+                        except Exception:
+                            pass
+                    if self._running and Path(tmp).exists():
                         with open(tmp, "rb") as f:
                             data = f.read()
                         # Strip WAV header (44 bytes) to get raw PCM
