@@ -1395,9 +1395,17 @@ def _mobile_music_identify(
                 timeout=duration_s + 12,
             )
 
-        # Give it a moment to flush then stop
-        time.sleep(1.5)
-        _termux_run(["termux-microphone-record", "-q"], timeout=5)
+        # Timed recordings (-l) stop themselves — do NOT send -q afterward.
+        # Calling -q on an already-stopped recorder crashes MicRecorderService
+        # (MediaRecorder.stop() on non-running recorder → RuntimeException).
+        # Only attempt a stop if the recording command itself returned an error
+        # that suggests it may still be running.
+        if rc != 0:
+            time.sleep(0.5)
+            try:
+                _termux_run(["termux-microphone-record", "-q"], timeout=5)
+            except Exception:
+                pass
 
     try:
         ap = Path(audio_path)
