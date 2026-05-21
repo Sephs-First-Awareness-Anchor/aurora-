@@ -1435,9 +1435,11 @@ class GovernancePersistenceGateway:
                  perception: Optional[ExpressionPerceptionEngine] = None,
                  identity: Optional[BehavioralIdentityEngine] = None,
                  simulation: Optional[SimulationEngine] = None,
-                 state_dir: str = "aurora_state"):
+                 state_dir: str = "aurora_state",
+                 sedimemory=None):
 
         self.contract = contract or FoundationalContract()
+        self.sedimemory = sedimemory
 
         # Governance
         self.governance = GovernanceEngine()
