@@ -9251,6 +9251,12 @@ def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed:
     if not is_q and _extract_user_name(text):
         return "fact_assertion"
 
+    # Imperative directive frame — grammatical signal from UtteranceParser.
+    # A-axis (agency/will) + X-axis (instantiation) dominate when the user
+    # issues a directed action command.  The pipeline routes to tool dispatch.
+    if bool(parsed.get("is_imperative")):
+        return "directive"
+
     # Explicit memory/recall patterns — must be checked before axis routing because
     # these are T-axis intent regardless of what the field activation reports.
     _text_low_cl = str(text or "").lower()
@@ -10126,8 +10132,26 @@ def _render_runtime_intent(
             pass
     if isinstance(systems, dict):
         systems['_rendered_from_comprehension_intent'] = True
-    # Don't leak raw data tokens (e.g. "Sunni; calm") as speech — restructure minimally
+    # If the claim is constraint-physics notation (semicolon-separated short tokens
+    # that are axis labels, not words), suppress it entirely rather than emitting
+    # the raw tokens as speech.  Constraint notation must never reach the surface.
+    _clean_parts = [p.strip() for p in clean.split(';') if p.strip()]
+    _AXIS_LABELS = {
+        'cost', 'energy', 'sustain', 'boundary', 'separation', 'framing', 'law',
+        'existence', 'present', 'admissible', 'persistence', 'transition', 'sequence',
+        'agency', 'ownership', 'enact', 'coherence', 'identity', 'surface',
+        'instantiation', 'presence', 'actuality', 'temporal', 'relational',
+    }
+    if len(_clean_parts) >= 2:
+        _axis_count = sum(1 for p in _clean_parts if p.lower() in _AXIS_LABELS or 'from memory' in p.lower())
+        if _axis_count >= len(_clean_parts) - 1:
+            return ""
     minimal = WorkingMemory._data_to_minimal_speech(clean, emotion_tone, relationship_signal)
+    # Suppress minimal speech that is still just axis-label concatenation
+    _min_parts = [p.strip() for p in re.split(r'[;,.]', minimal) if p.strip()]
+    _min_axis = sum(1 for p in _min_parts if p.lower().rstrip('s') in _AXIS_LABELS)
+    if _min_parts and _min_axis >= len(_min_parts) - 1:
+        return ""
     return _repair_unarticulated_surface_response("", minimal, systems=systems)
 
 
@@ -19569,9 +19593,12 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     _sedi_concepts = list(_sedi_best['content'].get('salient', []) or [])[:3]
                     _sedi_anchor = str((state.parsed or {}).get('topic', '') or '').strip()
                     if _sedi_anchor and _sedi_ctx:
+                        # Pass the actual recalled text, not the "anchor; from memory: X"
+                        # notation format — that format leaks constraint syntax into speech
+                        # when rendering fails.
                         state.response_content = _render_runtime_intent(
                             systems,
-                            f"{_sedi_anchor}; from memory: {_sedi_ctx[:100]}",
+                            _sedi_ctx[:100],
                             emotion_tone='reflective',
                             certainty=0.68,
                             supporting_concepts=([_sedi_anchor] + _sedi_concepts)[:4],
@@ -25246,6 +25273,40 @@ def _advance_intake_pipeline(
         pass  # intake pipeline must never interrupt the conversation loop
 
 
+def _dispatch_user_directive(
+    user_text: str,
+    parsed: Dict[str, Any],
+    systems: Dict[str, Any],
+) -> Optional[str]:
+    """
+    Route an imperative/directive utterance to the appropriate tool.
+
+    This function contains NO hardcoded app names or action keywords.
+    It reads only:
+      - parsed['entities']  — named targets extracted by UtteranceParser
+      - the tool registry's own semantic maps (e.g. _APP_NAME_MAP)
+    The pipeline itself stays free of domain knowledge; each tool owns its
+    own resolution logic.
+
+    Returns a human-readable result string, or None if no tool matched.
+    """
+    entities = list(parsed.get("entities") or [])
+    if not entities:
+        return None
+    try:
+        from aurora_internal.tool_registry import call as _tool_call, _resolve_app_package
+        for entity in entities:
+            pkg = _resolve_app_package(entity)
+            if pkg:
+                result = _tool_call("mobile_launch_app", package=entity, systems=systems)
+                if result.success:
+                    return result.data
+                return f"I tried to open {entity} but: {result.note}"
+    except Exception as _de:
+        pass
+    return None
+
+
 def dual_question_pipeline(
     systems: Dict[str, Any],
     user_text: str,
@@ -25288,6 +25349,24 @@ def dual_question_pipeline(
         _parsed=_pre_parsed if _pre_parsed else None,
     )
     systems.pop("_pre_parsed_utterance", None)
+
+    # ── Directive dispatch ───────────────────────────────────────────────────
+    # When the utterance parser identifies a directive/imperative frame,
+    # route to tool dispatch before any comprehension-gap or hypothesis
+    # processing — the user is asking Aurora to DO something, not say something.
+    if intent == "directive":
+        _dir_result = _dispatch_user_directive(user_text, _pre_parsed, systems)
+        if _dir_result:
+            _resp_dir = _MiniResp(_dir_result, "engaged", 0.95)
+            _resp_dir.src = "tool_dispatch"
+            try:
+                systems["_last_turn_state"] = _resp_dir
+            except Exception:
+                pass
+            return _resp_dir, None, False
+        # If no tool matched, fall through to normal pipeline so Aurora can
+        # respond naturally rather than returning silence.
+
     understood = None
     quasiarch_events: List[Dict[str, Any]] = []
     lookup_request = _resolve_lookup_request(user_text, systems)

@@ -471,7 +471,7 @@ class ConsciousLearner:
             return f"{concept_name.capitalize()} can create tension — use carefully"
         if obs.avatar_pulled_back:
             return f"{concept_name.capitalize()} may push people away in this context"
-        return f"I noticed something when using {concept_name}"
+        return ""  # neutral/unmemorable outcome — nothing to surface
 
     def _find_similar(self, concept: ResponseConcept,
                       context_type: str) -> Optional[UnderstandingShard]:
