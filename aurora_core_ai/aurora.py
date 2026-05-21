@@ -10132,8 +10132,26 @@ def _render_runtime_intent(
             pass
     if isinstance(systems, dict):
         systems['_rendered_from_comprehension_intent'] = True
-    # Don't leak raw data tokens (e.g. "Sunni; calm") as speech — restructure minimally
+    # If the claim is constraint-physics notation (semicolon-separated short tokens
+    # that are axis labels, not words), suppress it entirely rather than emitting
+    # the raw tokens as speech.  Constraint notation must never reach the surface.
+    _clean_parts = [p.strip() for p in clean.split(';') if p.strip()]
+    _AXIS_LABELS = {
+        'cost', 'energy', 'sustain', 'boundary', 'separation', 'framing', 'law',
+        'existence', 'present', 'admissible', 'persistence', 'transition', 'sequence',
+        'agency', 'ownership', 'enact', 'coherence', 'identity', 'surface',
+        'instantiation', 'presence', 'actuality', 'temporal', 'relational',
+    }
+    if len(_clean_parts) >= 2:
+        _axis_count = sum(1 for p in _clean_parts if p.lower() in _AXIS_LABELS or 'from memory' in p.lower())
+        if _axis_count >= len(_clean_parts) - 1:
+            return ""
     minimal = WorkingMemory._data_to_minimal_speech(clean, emotion_tone, relationship_signal)
+    # Suppress minimal speech that is still just axis-label concatenation
+    _min_parts = [p.strip() for p in re.split(r'[;,.]', minimal) if p.strip()]
+    _min_axis = sum(1 for p in _min_parts if p.lower().rstrip('s') in _AXIS_LABELS)
+    if _min_parts and _min_axis >= len(_min_parts) - 1:
+        return ""
     return _repair_unarticulated_surface_response("", minimal, systems=systems)
 
 
@@ -19575,9 +19593,12 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     _sedi_concepts = list(_sedi_best['content'].get('salient', []) or [])[:3]
                     _sedi_anchor = str((state.parsed or {}).get('topic', '') or '').strip()
                     if _sedi_anchor and _sedi_ctx:
+                        # Pass the actual recalled text, not the "anchor; from memory: X"
+                        # notation format — that format leaks constraint syntax into speech
+                        # when rendering fails.
                         state.response_content = _render_runtime_intent(
                             systems,
-                            f"{_sedi_anchor}; from memory: {_sedi_ctx[:100]}",
+                            _sedi_ctx[:100],
                             emotion_tone='reflective',
                             certainty=0.68,
                             supporting_concepts=([_sedi_anchor] + _sedi_concepts)[:4],
