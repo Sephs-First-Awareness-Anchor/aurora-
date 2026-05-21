@@ -208,6 +208,17 @@ def _listen_termux(timeout: float) -> Optional[str]:
     """Use termux-speech-to-text (blocks until done, respects timeout)."""
     if not _termux_cmd("termux-speech-to-text"):
         return None
+    # Release microphone before STT: Android only grants exclusive mic access
+    # to one consumer.  If AmbientMicStream is mid-clip, send -q now so
+    # MicRecorderService stops cleanly before SpeechRecognizer opens the mic.
+    try:
+        subprocess.run(
+            ["termux-microphone-record", "-q"],
+            timeout=3,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        pass
     # Give a generous timeout beyond the caller's window.
     # termux-speech-to-text opens Android STT UI; if we kill the client
     # subprocess too early its socket closes and Termux:API's ResultReturner
@@ -872,7 +883,12 @@ def probe() -> Dict[str, Any]:
         result["tts"]         = _termux_cmd("termux-tts-speak")
         result["stt"]         = _termux_cmd("termux-speech-to-text")
         result["camera"]      = _termux_cmd("termux-camera-photo")
-        result["ambient_mic"] = _termux_cmd("termux-microphone-record")
+        # Ambient mic stream is disabled on Termux: Android only allows one
+        # exclusive mic consumer at a time.  AmbientMicStream and
+        # termux-speech-to-text (NameListener STT) conflict — Android
+        # forcibly kills MicRecorderService to give STT the mic, causing
+        # onDestroy() → MediaRecorder.stop() crash.
+        result["ambient_mic"] = False
     elif PLATFORM == "linux":
         try:
             import sounddevice  # noqa: F401
