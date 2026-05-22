@@ -39,6 +39,13 @@ jobs:
           channel: stable
           cache: true
 
+      # settings.gradle reads local.properties at evaluation time — must exist first
+      - name: Write local.properties
+        working-directory: flutter_app/android
+        run: |
+          printf "flutter.sdk=%s\nsdk.dir=%s\n" \
+            "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" > local.properties
+
       - name: Install Flutter dependencies
         working-directory: flutter_app
         run: flutter pub get
