@@ -124,3 +124,23 @@ def _extract_response(result) -> str:
 def set_state(state: str) -> None:
     """Called by AuroraService when embodiment state changes."""
     pass  # state is managed by Flutter/Kotlin; Python side is stateless here
+
+
+def provide_camera_frame(jpeg_bytes) -> None:
+    """
+    Called from Kotlin (AuroraService.provideCameraFrame) to push a CameraX
+    frame into Aurora's visual stack.  jpeg_bytes is a Java byte[] from
+    Chaquopy, decoded here to a BGR numpy array and fed to the cv2 shim's
+    VideoCapture buffer.
+    """
+    try:
+        import io as _io
+        import numpy as _np
+        from PIL import Image as _Image
+        import cv2 as _cv2
+        pil  = _Image.open(_io.BytesIO(bytes(jpeg_bytes))).convert('RGB')
+        rgb  = _np.array(pil, dtype=_np.uint8)
+        bgr  = rgb[:, :, ::-1].copy()
+        _cv2.VideoCapture.provide_frame(bgr)
+    except Exception as exc:
+        log.warning("provide_camera_frame: %s", exc)
