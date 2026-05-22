@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../aurora_bridge.dart';
 import '../widgets/aurora_orb.dart';
@@ -30,12 +31,12 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseAnim;
 
-  // ── Chat ────────────────────────────────────────────────────────────────
+  // ── Chat ───────────────────────────────────────────────────────────……[...]
   final List<ChatMsg>         _msgs       = [];
   final TextEditingController _textCtrl   = TextEditingController();
   final ScrollController      _scrollCtrl = ScrollController();
 
-  // ── AI state ────────────────────────────────────────────────────────────
+  // ── AI state ──────────────────────────────────────────────────────────…[...]
   bool   _aiReady   = false;
   String _statusTxt = 'Starting Aurora…';
 
@@ -52,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ── Bridge events ────────────────────────────────────────────────────────
   StreamSubscription? _bridgeSub;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────……[...]
 
   @override
   void initState() {
@@ -185,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (_inConversation) _startConversationWindow();
   }
 
-  // ── STT ──────────────────────────────────────────────────────────────────
+  // ── STT ───────────────────────────────────────────────────────────……[...]
 
   void _startListening() {
     if (_listening || _speaking || _embState == 'DORMANT') return;
@@ -193,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen>
     AuroraBridge.startListening();
   }
 
-  // ── TTS ───────────────────────────────────────────────────────────────────
+  // ── TTS ───────────────────────────────────────────────────────────……[...]
 
   Future<void> _speak(String text) async {
     if (text.isEmpty) return;
@@ -202,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen>
     await AuroraBridge.speak(text);
   }
 
-  // ── Message send ─────────────────────────────────────────────────────────
+  // ── Message send ────────────────────────────────────────────────────────……[...]
 
   Future<void> _sendMessage(String text) async {
     text = text.trim();
@@ -241,12 +242,12 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  // ── App lifecycle ─────────────────────────────────────────────────────────
+  // ── App lifecycle ────────────────────────────────────────────────────────…[...]
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused && _embState != 'DORMANT') {
-      _background();
+      await _background();
     } else if (state == AppLifecycleState.resumed) {
       final wasTapped = await AuroraBridge.consumeOverlayTap();
       if (wasTapped) {
@@ -258,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // ── Build ───────────────────────────────────────────────────────────[...]
 
   @override
   Widget build(BuildContext context) {
@@ -334,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// ── Sub-widgets ───────────────────────────────────────────────────────────────
+// ── Sub-widgets ─────────────────────────────────────────────────────────……[...]
 
 class _Header extends StatelessWidget {
   final String state;
