@@ -88,8 +88,6 @@ chaquopy {
             install "psutil==7.2.1"
             install "numpy==1.26.4"
             install "Pillow"          // used by cv2 Android shim (imwrite/imread)
-            install "anthropic==0.84.0"
-            install "openai==2.26.0"
         }
     }
 }
