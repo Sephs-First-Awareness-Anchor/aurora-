@@ -51,6 +51,7 @@ task preparePythonSources {
 preBuild.dependsOn preparePythonSources
 
 android {
+    namespace "org.aurora.app"
     compileSdkVersion 34
     ndkVersion "25.1.8937393"
 
