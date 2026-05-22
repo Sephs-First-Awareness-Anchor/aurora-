@@ -45,6 +45,16 @@ class AuroraService : Service() {
             }
         }
 
+        fun provideCameraFrame(jpegBytes: ByteArray) {
+            scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("provide_camera_frame", jpegBytes)
+                } catch (_: Exception) {}
+            }
+        }
+
         fun setState(state: String) {
             currentState = state
             scope?.launch {

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -15,6 +16,12 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import android.util.Log
+import android.util.Size
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
@@ -22,22 +29,27 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.Executors
 
 class MainActivity : FlutterActivity() {
 
-    private val BRIDGE       = "org.aurora.app/bridge"
-    private val EVENTS       = "org.aurora.app/events"
-    private val PERM_REQUEST = 1001
+    private companion object {
+        const val TAG         = "MainActivity"
+        const val BRIDGE      = "org.aurora.app/bridge"
+        const val EVENTS      = "org.aurora.app/events"
+        const val PERM_REQUEST = 1001
+        const val FRAME_INTERVAL_MS = 1_000L  // 1 FPS is ample for Aurora's visual loop
+    }
 
     @Volatile private var pendingSummon = false
 
     private val overlayReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
-            if (intent?.action == OverlayService.ACTION_OVERLAY_TAPPED) {
-                pendingSummon = true
-            }
+            if (intent?.action == OverlayService.ACTION_OVERLAY_TAPPED) pendingSummon = true
         }
     }
 
@@ -58,11 +70,7 @@ class MainActivity : FlutterActivity() {
         override fun onError(error: Int) {
             runOnUiThread {
                 AuroraService.eventSink?.success(
-                    JSONObject()
-                        .put("source", "stt")
-                        .put("type", "error")
-                        .put("error", error)
-                        .toString()
+                    JSONObject().put("source","stt").put("type","error").put("error",error).toString()
                 )
             }
         }
@@ -73,12 +81,8 @@ class MainActivity : FlutterActivity() {
                 ?.firstOrNull() ?: ""
             runOnUiThread {
                 AuroraService.eventSink?.success(
-                    JSONObject()
-                        .put("source", "stt")
-                        .put("type", "result")
-                        .put("text", text)
-                        .put("final", true)
-                        .toString()
+                    JSONObject().put("source","stt").put("type","result")
+                        .put("text",text).put("final",true).toString()
                 )
             }
         }
@@ -90,17 +94,18 @@ class MainActivity : FlutterActivity() {
             if (text.isEmpty()) return
             runOnUiThread {
                 AuroraService.eventSink?.success(
-                    JSONObject()
-                        .put("source", "stt")
-                        .put("type", "partial")
-                        .put("text", text)
-                        .toString()
+                    JSONObject().put("source","stt").put("type","partial").put("text",text).toString()
                 )
             }
         }
 
         override fun onEvent(eventType: Int, params: Bundle?) {}
     }
+
+    // ── Camera ───────────────────────────────────────────────────────────────
+    private val cameraExecutor = Executors.newSingleThreadExecutor()
+    private var cameraProvider: ProcessCameraProvider? = null
+    private var lastFrameMs = 0L
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -139,85 +144,71 @@ class MainActivity : FlutterActivity() {
                         stopService(Intent(this, OverlayService::class.java))
                         result.success(null)
                     }
-                    "hasOverlayPermission"    -> result.success(hasOverlayPermission())
-                    "requestOverlayPermission" -> {
-                        requestOverlayPermission()
-                        result.success(null)
-                    }
+                    "hasOverlayPermission"     -> result.success(hasOverlayPermission())
+                    "requestOverlayPermission" -> { requestOverlayPermission(); result.success(null) }
                     "consumeOverlayTap" -> {
-                        val had = pendingSummon
-                        pendingSummon = false
-                        result.success(had)
+                        val had = pendingSummon; pendingSummon = false; result.success(had)
                     }
-                    "startListening" -> {
-                        startNativeStt()
-                        result.success(null)
-                    }
-                    "stopListening" -> {
-                        speechRecognizer?.stopListening()
-                        result.success(null)
-                    }
-                    "speak" -> {
-                        nativeSpeak(call.argument<String>("text") ?: "")
-                        result.success(null)
-                    }
-                    "stopSpeaking" -> {
-                        tts?.stop()
-                        result.success(null)
-                    }
-                    else -> result.notImplemented()
+                    "startListening" -> { startNativeStt(); result.success(null) }
+                    "stopListening"  -> { speechRecognizer?.stopListening(); result.success(null) }
+                    "speak"          -> { nativeSpeak(call.argument<String>("text") ?: ""); result.success(null) }
+                    "stopSpeaking"   -> { tts?.stop(); result.success(null) }
+                    else             -> result.notImplemented()
                 }
             }
 
         EventChannel(engine.dartExecutor.binaryMessenger, EVENTS)
             .setStreamHandler(object : EventChannel.StreamHandler {
-                override fun onListen(args: Any?, sink: EventChannel.EventSink?) {
-                    AuroraService.eventSink = sink
-                }
-                override fun onCancel(args: Any?) {
-                    AuroraService.eventSink = null
-                }
+                override fun onListen(args: Any?, sink: EventChannel.EventSink?) { AuroraService.eventSink = sink }
+                override fun onCancel(args: Any?) { AuroraService.eventSink = null }
             })
 
         startAuroraService()
         registerOverlayReceiver()
         requestRuntimePermissions()
+
+        // Start camera immediately if permission is already granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            startCameraCapture()
+        }
     }
+
+    // ── Permissions ───────────────────────────────────────────────────────────
 
     private fun requestRuntimePermissions() {
         val perms = mutableListOf<String>()
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            perms.add(Manifest.permission.RECORD_AUDIO)
-        }
+        fun need(p: String) = ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED
+        if (need(Manifest.permission.RECORD_AUDIO)) perms.add(Manifest.permission.RECORD_AUDIO)
+        if (need(Manifest.permission.CAMERA))       perms.add(Manifest.permission.CAMERA)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED) {
+            need(Manifest.permission.POST_NOTIFICATIONS))
             perms.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-        if (perms.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, perms.toTypedArray(), PERM_REQUEST)
-        }
+        if (perms.isNotEmpty()) ActivityCompat.requestPermissions(this, perms.toTypedArray(), PERM_REQUEST)
     }
 
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == PERM_REQUEST) {
-            val micIdx  = permissions.indexOf(Manifest.permission.RECORD_AUDIO)
-            val granted = micIdx >= 0 && grantResults[micIdx] == PackageManager.PERMISSION_GRANTED
+        if (requestCode != PERM_REQUEST) return
+
+        fun granted(p: String): Boolean {
+            val i = permissions.indexOf(p)
+            return i >= 0 && grantResults[i] == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (granted(Manifest.permission.RECORD_AUDIO)) {
             runOnUiThread {
                 AuroraService.eventSink?.success(
-                    JSONObject()
-                        .put("source", "permission")
-                        .put("type", "microphone")
-                        .put("granted", granted)
-                        .toString()
+                    JSONObject().put("source","permission").put("type","microphone").put("granted",true).toString()
                 )
             }
         }
+        if (granted(Manifest.permission.CAMERA)) startCameraCapture()
     }
+
+    // ── TTS ───────────────────────────────────────────────────────────────────
 
     private fun initTts() {
         tts = TextToSpeech(this) { status ->
@@ -230,10 +221,7 @@ class MainActivity : FlutterActivity() {
                     override fun onDone(utteranceId: String?) {
                         runOnUiThread {
                             AuroraService.eventSink?.success(
-                                JSONObject()
-                                    .put("source", "tts")
-                                    .put("type", "done")
-                                    .toString()
+                                JSONObject().put("source","tts").put("type","done").toString()
                             )
                         }
                     }
@@ -249,26 +237,95 @@ class MainActivity : FlutterActivity() {
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString())
     }
 
+    // ── STT ───────────────────────────────────────────────────────────────────
+
     private fun startNativeStt() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestRuntimePermissions()
-            return
-        }
+                != PackageManager.PERMISSION_GRANTED) { requestRuntimePermissions(); return }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) return
         if (speechRecognizer == null) {
             speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
             speechRecognizer?.setRecognitionListener(sttListener)
         }
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString())
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
         }
         speechRecognizer?.startListening(intent)
     }
+
+    // ── Camera (Aurora visual sensory intake) ─────────────────────────────────
+
+    private fun startCameraCapture() {
+        ProcessCameraProvider.getInstance(this).also { future ->
+            future.addListener({
+                cameraProvider = future.get()
+                bindCamera()
+            }, ContextCompat.getMainExecutor(this))
+        }
+    }
+
+    private fun bindCamera() {
+        val provider = cameraProvider ?: return
+        val analysis = ImageAnalysis.Builder()
+            .setTargetResolution(Size(640, 480))
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .build()
+
+        analysis.setAnalyzer(cameraExecutor) { proxy ->
+            val now = System.currentTimeMillis()
+            if (now - lastFrameMs >= FRAME_INTERVAL_MS) {
+                lastFrameMs = now
+                val jpeg = proxy.toJpeg()
+                if (jpeg != null) AuroraService.provideCameraFrame(jpeg)
+            }
+            proxy.close()
+        }
+
+        try {
+            provider.unbindAll()
+            provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, analysis)
+        } catch (e: Exception) {
+            Log.w(TAG, "camera bind failed: ${e.message}")
+        }
+    }
+
+    private fun ImageProxy.toJpeg(): ByteArray? {
+        return try {
+            val plane      = planes[0]
+            val rowStride  = plane.rowStride
+            val pixStride  = plane.pixelStride  // 4 for RGBA_8888
+            val w          = width
+            val h          = height
+            val buf        = plane.buffer
+
+            // Copy into a tightly-packed RGBA byte array, stripping row padding
+            val rgba = ByteArray(w * h * 4)
+            if (rowStride == w * pixStride) {
+                buf.get(rgba)
+            } else {
+                for (row in 0 until h) {
+                    buf.position(row * rowStride)
+                    buf.get(rgba, row * w * 4, w * 4)
+                }
+            }
+
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+            bmp.copyPixelsFromBuffer(ByteBuffer.wrap(rgba))
+            val out = ByteArrayOutputStream()
+            bmp.compress(Bitmap.CompressFormat.JPEG, 70, out)
+            bmp.recycle()
+            out.toByteArray()
+        } catch (e: Exception) {
+            Log.w(TAG, "toJpeg: ${e.message}")
+            null
+        }
+    }
+
+    // ── Service / overlay helpers ─────────────────────────────────────────────
 
     private fun startAuroraService() {
         val i = Intent(this, AuroraService::class.java)
@@ -278,25 +335,24 @@ class MainActivity : FlutterActivity() {
 
     private fun registerOverlayReceiver() {
         val filter = IntentFilter(OverlayService.ACTION_OVERLAY_TAPPED)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
             registerReceiver(overlayReceiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
+        else
             registerReceiver(overlayReceiver, filter)
-        }
     }
 
     private fun hasOverlayPermission() =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
 
-    private fun requestOverlayPermission() {
-        startActivity(
-            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName"))
-        )
-    }
+    private fun requestOverlayPermission() =
+        startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     override fun onDestroy() {
         super.onDestroy()
+        cameraProvider?.unbindAll()
+        cameraExecutor.shutdown()
         speechRecognizer?.destroy()
         speechRecognizer = null
         tts?.shutdown()
