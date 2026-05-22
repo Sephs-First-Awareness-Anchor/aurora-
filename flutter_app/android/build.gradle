@@ -5,6 +5,15 @@ allprojects {
         google()
         mavenCentral()
     }
+    // flutter.gradle runs on :app AFTER plugin sub-projects are already
+    // configured, so flutter.compileSdkVersion is not yet set when
+    // speech_to_text (and similar plugins) evaluate their build.gradle.
+    // Seed the values here so every project sees them synchronously.
+    ext.flutter = [
+        compileSdkVersion: 34,
+        minSdkVersion    : 26,
+        targetSdkVersion : 34,
+    ]
 }
 
 rootProject.buildDir = "../build"
