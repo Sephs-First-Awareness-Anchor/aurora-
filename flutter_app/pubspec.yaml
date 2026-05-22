@@ -8,7 +8,6 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_overlay_window: ^0.3.0
   speech_to_text: ^7.0.0
   flutter_tts: ^4.0.0
   permission_handler: ^11.3.0

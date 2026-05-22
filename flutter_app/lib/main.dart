@@ -1,21 +1,5 @@
 import 'package:flutter/material.dart';
-import 'overlay_entry.dart';
 import 'screens/home_screen.dart';
-
-/// Overlay entry point — runs in a separate Flutter engine managed by
-/// flutter_overlay_window.  Keep this lightweight.
-@pragma('vm:entry-point')
-void overlayMain() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: OverlayOrb(),
-      ),
-    ),
-  );
-}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
