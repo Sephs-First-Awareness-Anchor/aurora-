@@ -1,0 +1,108 @@
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader -> localProperties.load(reader) }
+}
+
+def flutterSdkPath = localProperties.getProperty('flutter.sdk')
+assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
+
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.chaquo.python'
+apply from: "$flutterSdkPath/packages/flutter_tools/gradle/flutter.gradle"
+
+// ── Copy Aurora Python modules into the standard python srcDir ──────────────
+// aurora_core_ai/aurora.py uses bare imports that expect its directory on
+// sys.path. The bridge adds it at runtime; this task bundles the files.
+task preparePythonSources {
+    def repoRoot  = file("../../..")
+    def destDir   = file("src/main/python")
+
+    inputs.files  fileTree(repoRoot) {
+        include "aurora_core_ai/**/*.py"
+        include "aurora_internal/**/*.py"
+        include "aurora_support_stack.py"
+        include "foundational_contract.py"
+        exclude "**/__pycache__/**"
+        exclude "**/*.pyc"
+    }
+    outputs.dir destDir
+
+    doLast {
+        // aurora_core_ai as a sub-package (namespace package, no __init__ needed)
+        copy {
+            from(repoRoot) { include "aurora_core_ai/**/*.py"; exclude "**/__pycache__/**" }
+            into destDir
+        }
+        // aurora_internal as a package (__init__.py is already present)
+        copy {
+            from(repoRoot) { include "aurora_internal/**/*.py"; exclude "**/__pycache__/**" }
+            into destDir
+        }
+        // Root-level support modules aurora_core_ai imports at the top level
+        copy {
+            from(repoRoot) { include "aurora_support_stack.py"; include "foundational_contract.py" }
+            into destDir
+        }
+    }
+}
+
+preBuild.dependsOn preparePythonSources
+
+android {
+    compileSdkVersion 34
+    ndkVersion "25.1.8937393"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions { jvmTarget = '17' }
+
+    sourceSets {
+        main.python.srcDir "src/main/python"
+    }
+
+    defaultConfig {
+        applicationId "org.aurora.app"
+        minSdkVersion 26
+        targetSdkVersion 34
+        versionCode 1
+        versionName "1.0"
+
+        ndk { abiFilters "arm64-v8a", "armeabi-v7a" }
+
+        python {
+            version "3.12"
+            buildPython "python3"
+            pip {
+                install "requests==2.25.1"
+                install "python-dateutil==2.9.0.post0"
+                install "pytz==2022.1"
+                install "psutil==7.2.1"
+                install "numpy"
+                install "anthropic"
+                install "openai"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+}
+
+flutter { source '../..' }
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+}

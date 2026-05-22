@@ -1,0 +1,21 @@
+# Flutter build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+
+# Generated Python sources (copied by preparePythonSources gradle task)
+android/app/src/main/python/aurora_core_ai/
+android/app/src/main/python/aurora_internal/
+android/app/src/main/python/aurora_support_stack.py
+android/app/src/main/python/foundational_contract.py
+
+# Android generated
+android/.gradle/
+android/app/.cxx/
+android/local.properties
+
+# IDE
+.idea/
+*.iml
