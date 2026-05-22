@@ -16,6 +16,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -57,6 +59,10 @@ jobs:
         working-directory: flutter_app
         run: flutter pub get
 
+      - name: Clean Flutter build
+        working-directory: flutter_app
+        run: flutter clean
+
       - name: Build APK (release)
         working-directory: flutter_app
         run: flutter build apk --release --no-shrink -v 2>&1 | tee build.log
@@ -65,7 +71,6 @@ jobs:
         if: failure()
         run: tail -100 flutter_app/build.log
 
-      # 🔥 REPLACED ARTIFACT STEP WITH RELEASE STEP
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
