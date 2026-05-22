@@ -65,9 +65,12 @@ jobs:
         if: failure()
         run: tail -100 flutter_app/build.log
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      # 🔥 REPLACED ARTIFACT STEP WITH RELEASE STEP
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: aurora-flutter-release-${{ github.sha }}
-          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 14
+          tag_name: build-${{ github.run_number }}
+          name: Aurora Build ${{ github.run_number }}
+          files: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
