@@ -110,6 +110,11 @@ def detect_platform() -> str:
 
 PLATFORM = detect_platform()
 
+# Coordinates TTS and STT so they don't fight for Android audio focus.
+# Set by _speak_termux before speaking; cleared after. _loop_termux and
+# _listen_termux yield immediately when this is set.
+_TTS_ACTIVE = threading.Event()
+
 # ---------------------------------------------------------------------------
 # Wake-word / name constants
 # ---------------------------------------------------------------------------
@@ -150,12 +155,32 @@ def speak(text: str, block: bool = False) -> None:
 
 def _speak_termux(text: str, block: bool) -> None:
     if _termux_cmd("termux-tts-speak"):
-        fn = subprocess.run if block else subprocess.Popen
+        # Signal NameListener to pause STT so TTS can get Android audio focus.
+        # STT and TTS share the same audio focus on Android; if STT holds focus,
+        # TTS silently fails.
+        _TTS_ACTIVE.set()
         try:
-            fn(["termux-tts-speak", text],
-               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        except Exception:
-            print(f"[AURORA] {text}")
+            if block:
+                try:
+                    subprocess.run(
+                        ["termux-tts-speak", text],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                        timeout=120,
+                    )
+                except subprocess.TimeoutExpired:
+                    pass
+                except Exception:
+                    print(f"[AURORA] {text}")
+            else:
+                try:
+                    subprocess.Popen(
+                        ["termux-tts-speak", text],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                    )
+                except Exception:
+                    print(f"[AURORA] {text}")
+        finally:
+            _TTS_ACTIVE.clear()
     else:
         print(f"[AURORA] {text}")
 
@@ -238,12 +263,14 @@ def _listen_termux(timeout: float) -> Optional[str]:
     """Use termux-speech-to-text (blocks until done, respects timeout)."""
     if not _termux_cmd("termux-speech-to-text"):
         return None
-    # Give a generous timeout beyond the caller's window.
-    # termux-speech-to-text opens Android STT UI; if we kill the client
-    # subprocess too early its socket closes and Termux:API's ResultReturner
-    # gets "Connection refused" — a Java-side crash we can prevent by never
-    # timing out prematurely.  45 s is the Android STT hard limit.
-    _proc_timeout = max(45.0, timeout + 15.0)
+    # Yield immediately if TTS is speaking — STT and TTS share Android audio
+    # focus; starting STT while TTS is active would cut off speech.
+    if _TTS_ACTIVE.is_set():
+        return None
+    # Keep timeout short so the mic visibly cycles and TTS can get focus soon
+    # after setting _TTS_ACTIVE.  Android STT returns as soon as speech ends,
+    # so the timeout is only hit on silence/no-input.
+    _proc_timeout = max(10.0, timeout + 2.0)
     try:
         result = subprocess.run(
             ["termux-speech-to-text"],
@@ -546,8 +573,8 @@ class NameListener:
         If transcript contains "aurora", capture follow-up immediately.
         """
         while self._running:
-            if self._paused.is_set():
-                time.sleep(0.5)
+            if self._paused.is_set() or _TTS_ACTIVE.is_set():
+                time.sleep(0.2)
                 continue
             if time.time() < self._cooldown_until:
                 time.sleep(0.5)
