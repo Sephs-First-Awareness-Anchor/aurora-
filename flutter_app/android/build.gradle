@@ -1,3 +1,15 @@
+// Chaquopy's plugin internally locates AGP via the buildscript classpath;
+// the declarative plugins {} in settings.gradle doesn't populate that path.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.4'
+    }
+}
+
 allprojects {
     repositories {
         google()
