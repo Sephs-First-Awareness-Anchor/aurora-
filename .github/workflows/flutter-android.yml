@@ -66,16 +66,22 @@ jobs:
       - name: Build APK (release)
         working-directory: flutter_app
         run: flutter build apk --release --no-shrink -v 2>&1 | tee build.log
-        
+
       - name: Display build log on failure
         if: failure()
         run: tail -100 flutter_app/build.log
+
+      - name: Upload APK as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurora-flutter-apk
+          path: flutter_app/build/app/outputs/flutter-apk/*.apk
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: build-${{ github.run_number }}
           name: Aurora Build ${{ github.run_number }}
-          files: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          files: flutter_app/build/app/outputs/flutter-apk/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
