@@ -112,6 +112,16 @@ chaquopy {
     }
 }
 
+// ── Disable strict validation on Chaquopy's generated merge tasks ──
+tasks.withType(org.gradle.api.tasks.Copy).configureEach { task ->
+    if (task.name.contains("mergePython")) {
+        task.doFirst {
+            // Ensure output directory exists before validation
+            task.outputs.files.each { it.mkdirs() }
+        }
+    }
+}
+
 flutter { source "../.." }
 
 dependencies {
