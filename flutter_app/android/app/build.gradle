@@ -1,8 +1,8 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    id "com.chaquo.python"
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.chaquo.python"
 }
 
 // ── Copy Aurora Python modules into the standard python srcDir ──────────────
