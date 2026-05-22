@@ -368,16 +368,20 @@ class AuroraApp(App):
             self.stop_listening()
             if platform == 'android':
                 self._stop_native_overlay()
+                self._unregister_overlay_receiver()
             
         elif state == "BACKGROUND":
             self.orb.opacity_val = 0.5
-            self.orb.size = (120, 120) if platform != 'android' else (0, 0)
+            # Keep Kivy orb visible on Android too — acts as in-app fallback
+            # and touch target if the native overlay fails to start.
+            self.orb.size = (120, 120)
             self.orb.pos_hint = {'right': 0.95, 'top': 0.85}
             self.chat_layer.opacity = 0
             self.bottom_toolbar.opacity = 1
             self.set_status("Listening...")
             if platform == 'android':
                 self._start_native_overlay()
+                self._register_overlay_receiver()
             # Auto-unmute and start listening if we just embodied
             if self.mic_btn.state == 'normal':
                 self.mic_btn.state = 'down'
@@ -404,9 +408,15 @@ class AuroraApp(App):
                 self.set_status("Need 'Draw over other apps' permission")
                 self.check_overlay_permission()
                 return
+            Build = autoclass('android.os.Build')
             intent = Intent()
             intent.setClassName(activity.getPackageName(), "org.aurora.aurora.OverlayService")
-            activity.startService(intent)
+            # Android 8+ requires startForegroundService; the service must call
+            # startForeground() within 5s or it is killed.
+            if Build.VERSION.SDK_INT >= 26:
+                activity.startForegroundService(intent)
+            else:
+                activity.startService(intent)
         except Exception as e:
             self.set_status(f"Overlay Error: {e}")
 
@@ -544,6 +554,38 @@ class AuroraApp(App):
                 activity.startActivity(intent)
             
             Clock.schedule_once(open_settings, 3.0)
+
+    def on_resume(self):
+        """Called when the app returns to the foreground (e.g. after Settings)."""
+        if platform == 'android' and self.embodiment_state == "BACKGROUND":
+            # Re-attempt overlay in case user just granted the permission
+            self._start_native_overlay()
+
+    def _register_overlay_receiver(self):
+        """Listen for tap broadcasts from OverlayService to trigger SUMMONED."""
+        if not platform == 'android':
+            return
+        if getattr(self, '_overlay_receiver', None) is not None:
+            return  # Already registered
+        try:
+            from android.broadcast import BroadcastReceiver
+            def _on_tap(context, intent):
+                Clock.schedule_once(lambda dt: self.set_embodiment_state("SUMMONED"), 0)
+            self._overlay_receiver = BroadcastReceiver(
+                _on_tap,
+                actions=["org.aurora.aurora.OVERLAY_TAPPED"]
+            )
+            self._overlay_receiver.start()
+        except Exception as e:
+            pass  # Graceful degradation — wake word still works
+
+    def _unregister_overlay_receiver(self):
+        if getattr(self, '_overlay_receiver', None) is not None:
+            try:
+                self._overlay_receiver.stop()
+            except Exception:
+                pass
+            self._overlay_receiver = None
 
     def start_boot_thread(self):
         threading.Thread(target=self.boot_aurora_thread, daemon=True).start()
