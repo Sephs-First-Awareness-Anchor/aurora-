@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 /// Dart wrapper around the Kotlin MethodChannel / EventChannel that talks to
 /// AuroraService.kt → Chaquopy → aurora_bridge.py.
 class AuroraBridge {
-  static const _channel     = MethodChannel('org.aurora.app/bridge');
+  static const _channel      = MethodChannel('org.aurora.app/bridge');
   static const _eventChannel = EventChannel('org.aurora.app/events');
 
   static Stream<Map<String, dynamic>>? _events;
@@ -13,21 +13,11 @@ class AuroraBridge {
   static Stream<Map<String, dynamic>> get events {
     _events ??= _eventChannel
         .receiveBroadcastStream()
-        .map((raw) {
-          try {
-            // raw is a JSON string: {"type":"response","text":"..."}
-            final str = raw.toString();
-            // Minimal JSON decode without importing dart:convert everywhere
-            return _parseEvent(str);
-          } catch (_) {
-            return <String, dynamic>{'type': 'raw', 'text': raw.toString()};
-          }
-        });
+        .map((raw) => _parseEvent(raw.toString()));
     return _events!;
   }
 
   static Map<String, dynamic> _parseEvent(String json) {
-    // Light JSON parsing — avoids a full import just for this
     final typeMatch = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
     final textMatch = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     return {
@@ -36,11 +26,8 @@ class AuroraBridge {
     };
   }
 
-  /// Send a text message to Aurora and get a response back.
   static Future<String> sendMessage(String text) async {
-    final result = await _channel.invokeMethod<String>(
-      'sendMessage', {'text': text},
-    );
+    final result = await _channel.invokeMethod<String>('sendMessage', {'text': text});
     return result ?? '';
   }
 
@@ -50,9 +37,22 @@ class AuroraBridge {
   static Future<void> setState(String state) =>
       _channel.invokeMethod('setState', {'state': state});
 
+  // ── Overlay (native Android OverlayService) ────────────────────────────
+
+  static Future<bool> startOverlay() async =>
+      await _channel.invokeMethod<bool>('startOverlay') ?? false;
+
+  static Future<void> stopOverlay() =>
+      _channel.invokeMethod('stopOverlay');
+
   static Future<bool> hasOverlayPermission() async =>
       await _channel.invokeMethod<bool>('hasOverlayPermission') ?? false;
 
   static Future<void> requestOverlayPermission() =>
       _channel.invokeMethod('requestOverlayPermission');
+
+  /// Returns true (and clears the flag) if the overlay orb was tapped while
+  /// the app was backgrounded.  Call this in onResume.
+  static Future<bool> consumeOverlayTap() async =>
+      await _channel.invokeMethod<bool>('consumeOverlayTap') ?? false;
 }

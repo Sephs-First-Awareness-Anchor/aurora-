@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -26,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+
   // ── Embodiment state ────────────────────────────────────────────────────
   String _embState = 'DORMANT'; // DORMANT | BACKGROUND | SUMMONED
 
@@ -34,9 +34,9 @@ class _HomeScreenState extends State<HomeScreen>
   late Animation<double>   _pulseAnim;
 
   // ── Chat ────────────────────────────────────────────────────────────────
-  final List<ChatMsg>       _msgs      = [];
-  final TextEditingController _textCtrl = TextEditingController();
-  final ScrollController    _scrollCtrl = ScrollController();
+  final List<ChatMsg>          _msgs       = [];
+  final TextEditingController  _textCtrl   = TextEditingController();
+  final ScrollController       _scrollCtrl = ScrollController();
 
   // ── AI state ────────────────────────────────────────────────────────────
   bool   _aiReady   = false;
@@ -52,16 +52,13 @@ class _HomeScreenState extends State<HomeScreen>
   final FlutterTts _tts      = FlutterTts();
   bool             _speaking = false;
 
-  // ── Conversation window after wake-word ─────────────────────────────────
+  // ── Conversation window ──────────────────────────────────────────────────
   static const _convSec = 30;
-  Timer?  _convTimer;
-  bool    _inConversation = false;
+  Timer? _convTimer;
+  bool   _inConversation = false;
 
   // ── Bridge events ────────────────────────────────────────────────────────
   StreamSubscription? _bridgeSub;
-
-  // ── Overlay ──────────────────────────────────────────────────────────────
-  StreamSubscription? _overlaySub;
 
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -83,7 +80,6 @@ class _HomeScreenState extends State<HomeScreen>
     await _initTts();
     await _requestPermissions();
     _listenBridgeEvents();
-    _listenOverlayTaps();
     setState(() => _embState = 'BACKGROUND');
   }
 
@@ -93,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen>
     await _tts.setVolume(1.0);
     _tts.setCompletionHandler(() {
       if (mounted) setState(() => _speaking = false);
-      if (_embState == 'SUMMONED') _startListening();
+      if (_embState != 'DORMANT') _startListening();
     });
   }
 
@@ -103,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen>
       onStatus: _onSttStatus,
       onError:  (e) => debugPrint('STT error: $e'),
     );
-    if (_sttOk && _embState != 'DORMANT') _startListening();
+    if (_sttOk) _startListening();
   }
 
   void _listenBridgeEvents() {
@@ -116,19 +112,12 @@ class _HomeScreenState extends State<HomeScreen>
             _aiReady   = true;
             _statusTxt = 'Listening…';
           });
-          _speak("Aurora is online.");
-        case 'response':
-          // handled synchronously in _sendMessage; ignore duplicate here
-          break;
+          _speak('Aurora is online.');
         case 'error':
           setState(() => _statusTxt = 'Error: $text');
+        default:
+          break;
       }
-    });
-  }
-
-  void _listenOverlayTaps() {
-    _overlaySub = FlutterOverlayWindow.overlayListener.listen((data) {
-      if (data == 'tapped') _summon();
     });
   }
 
@@ -138,11 +127,11 @@ class _HomeScreenState extends State<HomeScreen>
     if (_embState == 'SUMMONED') return;
     setState(() => _embState = 'SUMMONED');
     AuroraBridge.setState('SUMMONED');
-    FlutterOverlayWindow.closeOverlay();
+    AuroraBridge.stopOverlay();
     _startConversationWindow();
   }
 
-  void _background() {
+  Future<void> _background() async {
     _convTimer?.cancel();
     _inConversation = false;
     setState(() {
@@ -150,25 +139,10 @@ class _HomeScreenState extends State<HomeScreen>
       _statusTxt = 'Listening for "Aurora"…';
     });
     AuroraBridge.setState('BACKGROUND');
-    _showOverlay();
-  }
-
-  Future<void> _showOverlay() async {
-    try {
-      final hasPerm = await AuroraBridge.hasOverlayPermission();
-      if (!hasPerm) {
-        await AuroraBridge.requestOverlayPermission();
-        return;
-      }
-      await FlutterOverlayWindow.showOverlay(
-        height: 80,
-        width: 80,
-        flag: OverlayFlag.defaultFlag,
-        alignment: OverlayAlignment.bottomLeft,
-        positionGravity: PositionGravity.auto,
-      );
-    } catch (e) {
-      debugPrint('showOverlay: $e');
+    final started = await AuroraBridge.startOverlay();
+    if (!started) {
+      // Permission missing — re-check on next resume
+      setState(() => _statusTxt = 'Overlay permission needed');
     }
   }
 
@@ -189,8 +163,7 @@ class _HomeScreenState extends State<HomeScreen>
   void _onSttStatus(String status) {
     if (status == 'done' || status == 'notListening') {
       if (mounted) setState(() => _listening = false);
-      // Restart if we're still in an active state and not speaking
-      if (!_speaking && (_embState != 'DORMANT')) {
+      if (!_speaking && _embState != 'DORMANT') {
         Future.delayed(const Duration(milliseconds: 400), _startListening);
       }
     }
@@ -198,10 +171,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _startListening() {
     if (!_sttOk || _listening || _speaking || _embState == 'DORMANT') return;
-    setState(() {
-      _listening   = true;
-      _partialText = '';
-    });
+    setState(() { _listening = true; _partialText = ''; });
     _stt.listen(
       onResult: _onSttResult,
       listenFor: Duration(seconds: _inConversation ? 20 : 45),
@@ -215,22 +185,16 @@ class _HomeScreenState extends State<HomeScreen>
   void _onSttResult(result) {
     final words = result.recognizedWords as String;
     setState(() => _partialText = words);
-
     if (!result.finalResult) return;
-    setState(() {
-      _listening   = false;
-      _partialText = '';
-    });
 
+    setState(() { _listening = false; _partialText = ''; });
     final lower = words.toLowerCase().trim();
     if (lower.isEmpty) return;
 
     if (_inConversation) {
-      // Inside conversation window — send directly
       _resetConversationWindow();
       _sendMessage(words);
     } else {
-      // Outside — check for wake word
       final idx = lower.indexOf('aurora');
       if (idx == -1) return;
       final after = words.substring(idx + 6).trim();
@@ -238,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen>
       if (after.isNotEmpty) {
         Future.delayed(const Duration(milliseconds: 300), () => _sendMessage(after));
       } else {
-        _speak("Yes?");
+        _speak('Yes?');
       }
     }
   }
@@ -248,10 +212,7 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _speak(String text) async {
     if (text.isEmpty) return;
     _stt.cancel();
-    setState(() {
-      _speaking = true;
-      _listening = false;
-    });
+    setState(() { _speaking = true; _listening = false; });
     await _tts.speak(text);
   }
 
@@ -296,12 +257,18 @@ class _HomeScreenState extends State<HomeScreen>
   // ── App lifecycle ─────────────────────────────────────────────────────────
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused && _embState != 'DORMANT') {
       _background();
     } else if (state == AppLifecycleState.resumed) {
-      FlutterOverlayWindow.closeOverlay();
-      if (_embState == 'BACKGROUND') _startListening();
+      // Check if resume was triggered by tapping the overlay orb
+      final wasTapped = await AuroraBridge.consumeOverlayTap();
+      if (wasTapped) {
+        _summon();
+      } else if (_embState == 'BACKGROUND') {
+        AuroraBridge.stopOverlay();
+        _startListening();
+      }
     }
   }
 
@@ -320,21 +287,16 @@ class _HomeScreenState extends State<HomeScreen>
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header ──────────────────────────────────────────────────
-            _Header(
-              state: _embState,
-              onBackground: isSummoned ? _background : null,
-            ),
-            // ── Orb + status ─────────────────────────────────────────────
+            _Header(state: _embState, onBackground: isSummoned ? _background : null),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Column(
                 children: [
                   AuroraOrb(
-                    state:  orbState,
-                    pulse:  _pulseAnim,
-                    size:   isSummoned ? 100 : 140,
-                    onTap:  isSummoned ? null : _summon,
+                    state: orbState,
+                    pulse: _pulseAnim,
+                    size:  isSummoned ? 100 : 140,
+                    onTap: isSummoned ? null : _summon,
                   ),
                   const SizedBox(height: 12),
                   AnimatedSwitcher(
@@ -346,8 +308,7 @@ class _HomeScreenState extends State<HomeScreen>
                         color: Colors.white.withOpacity(0.6),
                         fontSize: 13,
                         fontStyle: _partialText.isNotEmpty
-                            ? FontStyle.italic
-                            : FontStyle.normal,
+                            ? FontStyle.italic : FontStyle.normal,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -355,7 +316,6 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
             ),
-            // ── Chat (visible when summoned) ─────────────────────────────
             if (isSummoned) ...[
               Expanded(
                 child: ListView.builder(
@@ -365,10 +325,7 @@ class _HomeScreenState extends State<HomeScreen>
                   itemBuilder: (_, i) => _ChatBubble(msg: _msgs[i]),
                 ),
               ),
-              _InputBar(
-                controller: _textCtrl,
-                onSend: _sendMessage,
-              ),
+              _InputBar(controller: _textCtrl, onSend: _sendMessage),
             ] else
               const Spacer(),
           ],
@@ -384,7 +341,6 @@ class _HomeScreenState extends State<HomeScreen>
     _textCtrl.dispose();
     _scrollCtrl.dispose();
     _bridgeSub?.cancel();
-    _overlaySub?.cancel();
     _convTimer?.cancel();
     _stt.cancel();
     _tts.stop();
@@ -396,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen>
 
 class _Header extends StatelessWidget {
   final String state;
-  final VoidCallback? onBackground;
+  final AsyncCallback? onBackground;
   const _Header({required this.state, this.onBackground});
 
   @override
@@ -405,13 +361,10 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
       child: Row(
         children: [
-          const Text(
-            'Aurora',
+          const Text('Aurora',
             style: TextStyle(
-              color: _purple,
-              fontSize: 22,
-              fontWeight: FontWeight.w300,
-              letterSpacing: 3,
+              color: _purple, fontSize: 22,
+              fontWeight: FontWeight.w300, letterSpacing: 3,
             ),
           ),
           const Spacer(),
@@ -436,21 +389,15 @@ class _ChatBubble extends StatelessWidget {
     return Align(
       alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78,
-        ),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: msg.isUser
-              ? const Color(0xFF3A1060)
-              : const Color(0xFF1A1A2E),
+          color: msg.isUser ? const Color(0xFF3A1060) : const Color(0xFF1A1A2E),
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Text(
-          msg.text,
-          style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.4),
-        ),
+        child: Text(msg.text,
+          style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.4)),
       ),
     );
   }
@@ -465,9 +412,8 @@ class _InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 12, right: 12,
+        left: 12, right: 12, top: 8,
         bottom: MediaQuery.of(context).viewInsets.bottom + 12,
-        top: 8,
       ),
       child: Row(
         children: [
@@ -480,8 +426,7 @@ class _InputBar extends StatelessWidget {
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.35)),
                 filled: true,
                 fillColor: const Color(0xFF1C1C28),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
                   borderSide: BorderSide.none,
@@ -495,12 +440,8 @@ class _InputBar extends StatelessWidget {
           GestureDetector(
             onTap: () => onSend(controller.text),
             child: Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                color: _purple,
-                shape: BoxShape.circle,
-              ),
+              width: 44, height: 44,
+              decoration: const BoxDecoration(color: _purple, shape: BoxShape.circle),
               child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
             ),
           ),

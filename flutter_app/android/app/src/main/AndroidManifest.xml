@@ -46,7 +46,10 @@
             android:exported="false"
             android:foregroundServiceType="microphone" />
 
-        <!-- flutter_overlay_window service (auto-registered by plugin) -->
+        <!-- Native floating-orb overlay service -->
+        <service
+            android:name=".OverlayService"
+            android:exported="false" />
 
         <meta-data
             android:name="flutterEmbedding"
