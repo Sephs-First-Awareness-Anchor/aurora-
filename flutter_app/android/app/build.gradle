@@ -53,6 +53,12 @@ task preparePythonSources {
 
 preBuild.dependsOn preparePythonSources
 
+tasks.configureEach { task ->
+    if (task.name ==~ /merge.*PythonSources/) {
+        task.dependsOn preparePythonSources
+    }
+}
+
 android {
     namespace      "org.aurora.app"
     compileSdkVersion 34
