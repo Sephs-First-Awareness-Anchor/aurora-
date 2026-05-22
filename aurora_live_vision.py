@@ -330,17 +330,27 @@ class ScreenObserver:
         return os.path.join(self.SCREEN_DIR, "frame_latest.png")
 
     def _capture_frame(self):
-        """Grab screen, resize, return (PIL image, path).
-
-        Tries PIL.ImageGrab via subprocess first (subprocess isolation prevents
-        X connection leaks on failure).  Falls back to ImageMagick.
-        Circuit breaker: after 5 consecutive failures, stops retrying for
-        60 s then tries again — prevents exhausting X client slots.
-        """
+        """Grab screen, resize, return (PIL image, path)."""
         if self._capture_disabled:
             return None, None
 
         path = self._frame_path()
+        
+        # --- attempt 0: Android/Mobile check ---
+        # On Android (Chaquopy), capturing is handled by the Kotlin side.
+        # We just check if the file exists and is recent.
+        is_android = os.path.exists("/data/data/com.termux") or "ANDROID_ROOT" in os.environ
+        if is_android:
+            if os.path.exists(path):
+                try:
+                    from PIL import Image as _PILImage
+                    # Use a copy to avoid locking issues if Kotlin is writing
+                    with open(path, "rb") as f:
+                        img = _PILImage.open(f).copy()
+                    return img, path
+                except Exception:
+                    pass
+            return None, None
 
         # --- attempt 1: PIL.ImageGrab via subprocess (X-connection-safe) ---
         if _PIL_GRAB_AVAILABLE:
