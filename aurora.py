@@ -220,7 +220,9 @@ def _ensure_runtime_dependencies(verbose: bool = True):
         ('cv2', 'opencv-python', False),
         ('PIL', 'Pillow', True),
         ('soundfile', 'soundfile', True),
-        ('librosa', 'librosa', True),
+        # librosa pulls a heavy scientific stack and can compile numpy on
+        # Termux; install it manually if advanced audio analysis is needed.
+        ('librosa', 'librosa', False),
         ('pydub', 'pydub', True),
     ]
 
@@ -4218,6 +4220,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     oets = getattr(perception, 'oets', None) if perception else None
     _reasoner = ReasoningEngine()
     _qu = UtteranceParser()
+    t_low = str(user_text or "").lower()
 
     self_reference = _match_self_reference(user_text, systems)
 

@@ -12,4 +12,4 @@ export AURORA_ENABLE_QUIET_WINDOW="${AURORA_ENABLE_QUIET_WINDOW:-0}"
 export AURORA_TTS_ROUTE="${AURORA_TTS_ROUTE:-simple_first}"
 export AURORA_SKIP_HARDWARE_IMPORTS=0
 
-exec "$SCRIPT_DIR/run_daemon.sh"
+bash "$SCRIPT_DIR/run_daemon.sh"

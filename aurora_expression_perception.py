@@ -5364,6 +5364,10 @@ class LinuxMicrophone:
             logger.error("[MICROPHONE] SpeechRecognition not available")
             return None
 
+        if self._microphone is None:
+            logger.error("[MICROPHONE] Microphone backend unavailable")
+            return None
+
         try:
             with self._microphone as source:
                 logger.info("[MICROPHONE] Listening...")
@@ -5649,14 +5653,24 @@ class LinuxVoice:
         if self.use_edge_tts:
             try:
                 if blocking:
-                    return self._speak_edge_tts_sync(text)
+                    success = self._speak_edge_tts_sync(text)
+                    if success: return True
                 else:
                     thread = threading.Thread(target=self._speak_edge_tts_sync, args=(text,))
                     thread.daemon = True
                     thread.start()
                     return True
             except Exception as e:
-                logger.warning(f"[VOICE] edge-tts failed: {e}, trying fallback")
+                logger.warning(f"[VOICE] edge-tts failed: {e}")
+
+        # If in Termux, try native Android TTS before robotic fallback
+        if _IS_TERMUX and shutil.which("termux-tts-speak"):
+            try:
+                logger.info("[VOICE] edge-tts failed/unavailable, trying termux-tts-speak")
+                subprocess.run(["termux-tts-speak", "-r", "1.1", text], timeout=60)
+                return True
+            except Exception as e:
+                logger.warning(f"[VOICE] termux-tts-speak failed: {e}")
 
         # Fallback to pyttsx3
         if self._engine:
@@ -5691,18 +5705,26 @@ class LinuxVoice:
         """Synchronous wrapper for edge-tts."""
         try:
             import asyncio
-
-            # Get or create event loop
             try:
                 loop = asyncio.get_event_loop()
-                if loop.is_closed():
-                    loop = asyncio.new_event_loop()
-                    asyncio.set_event_loop(loop)
             except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
+                loop = None
 
-            return loop.run_until_complete(self._speak_edge_tts_async(text))
+            if loop and loop.is_running():
+                import threading
+                from concurrent.futures import ThreadPoolExecutor
+                def _runner():
+                    new_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(new_loop)
+                    try:
+                        return new_loop.run_until_complete(self._speak_edge_tts_async(text))
+                    finally:
+                        new_loop.close()
+                with ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_runner)
+                    return future.result(timeout=130)
+            else:
+                return asyncio.run(self._speak_edge_tts_async(text))
 
         except Exception as e:
             logger.error(f"[VOICE] edge-tts sync error: {e}")
@@ -5710,6 +5732,7 @@ class LinuxVoice:
 
     async def _speak_edge_tts_async(self, text: str) -> bool:
         """Async edge-tts speech synthesis and playback."""
+        temp_file = None
         try:
             import edge_tts
             import subprocess
@@ -5728,49 +5751,76 @@ class LinuxVoice:
 
             # Generate audio to temp file
             temp_file = self._temp_dir / f"speech_{time.time():.0f}.mp3"
-
             await communicate.save(str(temp_file))
 
             # Play audio
+            success = False
             try:
-                # Try mpv first (best quality)
-                result = subprocess.run(
-                    ['mpv', '--no-video', '--really-quiet', str(temp_file)],
-                    capture_output=True, timeout=60
-                )
-                if result.returncode != 0:
-                    raise FileNotFoundError("mpv failed")
-            except (FileNotFoundError, subprocess.SubprocessError):
-                try:
-                    # Try ffplay
-                    subprocess.run(
-                        ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet', str(temp_file)],
-                        capture_output=True, timeout=60
-                    )
-                except (FileNotFoundError, subprocess.SubprocessError):
+                if _IS_TERMUX:
+                    if shutil.which("play"):
+                        logger.info(f"[VOICE] Playing neural audio via sox 'play': {temp_file}")
+                        result = subprocess.run(['play', '-q', str(temp_file)], capture_output=True, timeout=60)
+                        if result.returncode == 0: success = True
+                    
+                    if not success and shutil.which("termux-media-player"):
+                        logger.info(f"[VOICE] Playing neural audio via termux-media-player: {temp_file}")
+                        result = subprocess.run(['termux-media-player', 'play', str(temp_file)], capture_output=True, timeout=60)
+                        if result.returncode == 0: success = True
+
+                if not success:
+                    # Try mpv first (best quality)
                     try:
-                        # Try aplay with converted wav
+                        result = subprocess.run(
+                            ['mpv', '--no-video', '--really-quiet', str(temp_file)],
+                            capture_output=True, timeout=60
+                        )
+                        if result.returncode == 0: success = True
+                    except:
+                        pass
+                
+                if not success:
+                    # Try ffplay
+                    try:
+                        result = subprocess.run(
+                            ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet', str(temp_file)],
+                            capture_output=True, timeout=60
+                        )
+                        if result.returncode == 0: success = True
+                    except:
+                        pass
+                
+                if not success:
+                    # Try aplay with converted wav
+                    try:
                         wav_file = temp_file.with_suffix('.wav')
                         subprocess.run(
                             ['ffmpeg', '-y', '-i', str(temp_file), str(wav_file)],
                             capture_output=True, timeout=30
                         )
-                        subprocess.run(['aplay', str(wav_file)], capture_output=True, timeout=60)
+                        result = subprocess.run(['aplay', str(wav_file)], capture_output=True, timeout=60)
                         wav_file.unlink(missing_ok=True)
-                    except (FileNotFoundError, subprocess.SubprocessError):
-                        logger.error("[VOICE] No audio player found. Install: sudo apt install mpv")
-                        return False
+                        if result.returncode == 0: success = True
+                    except:
+                        pass
+            
+            except Exception as e:
+                logger.warning(f"[VOICE] Error during playback: {e}")
 
-            # Cleanup temp file
-            temp_file.unlink(missing_ok=True)
-
-            self._speaking = False
-            return True
+            if not success:
+                logger.warning("[VOICE] All high-quality players failed, falling back to robotic voice")
+            
+            return success
 
         except Exception as e:
             logger.error(f"[VOICE] edge-tts async error: {e}")
-            self._speaking = False
             return False
+        finally:
+            self._speaking = False
+            if temp_file and temp_file.exists():
+                try:
+                    temp_file.unlink(missing_ok=True)
+                except:
+                    pass
 
     def speak_async(self, text: str, emotion: str = None):
         """Speak in background thread."""
@@ -5949,6 +5999,32 @@ class HardwareInterface:
         Capture and extract features from camera.
         Returns dict ready for SensoryCompetencyEngine.process_visual_input()
         """
+        if self.termux_mode and self._termux_has_camera:
+            try:
+                state_dir = Path(os.environ.get("AURORA_STATE_DIR", "aurora_state"))
+                try:
+                    state_dir = Path(os.path.relpath(state_dir, os.getcwd()))
+                except Exception:
+                    state_dir = Path("aurora_state")
+                snap_dir = state_dir / "vision_snapshots"
+                snap_dir.mkdir(parents=True, exist_ok=True)
+                tmp_path = str(snap_dir / f"aurora_cam_{int(time.time()*1000)}.jpg")
+                result = subprocess.run(["termux-camera-photo", "-c", "0", tmp_path], check=False, timeout=15)
+                if result.returncode == 0 and os.path.exists(tmp_path) and os.path.getsize(tmp_path) > 0:
+                    self.stats["visual_frames"] += 1
+                    return {
+                        "timestamp": time.time(),
+                        "source": "termux_camera_photo",
+                        "image_path": tmp_path,
+                        "brightness": 0.5,
+                        "features": {},
+                        "objects": [],
+                        "faces": [],
+                        "motion_detected": False,
+                    }
+            except Exception:
+                pass
+
         if self.camera and self.camera.running:
             frame = self.camera.capture_frame()
             if frame is None:
@@ -5961,8 +6037,17 @@ class HardwareInterface:
 
         if self.termux_mode and self._termux_has_camera:
             try:
-                tmp_path = f"/data/data/com.termux/files/usr/tmp/aurora_cam_{int(time.time()*1000)}.jpg"
-                subprocess.run(["termux-camera-photo", "-c", "0", tmp_path], check=False, timeout=15)
+                state_dir = Path(os.environ.get("AURORA_STATE_DIR", "aurora_state"))
+                try:
+                    state_dir = Path(os.path.relpath(state_dir, os.getcwd()))
+                except Exception:
+                    state_dir = Path("aurora_state")
+                snap_dir = state_dir / "vision_snapshots"
+                snap_dir.mkdir(parents=True, exist_ok=True)
+                tmp_path = str(snap_dir / f"aurora_cam_{int(time.time()*1000)}.jpg")
+                result = subprocess.run(["termux-camera-photo", "-c", "0", tmp_path], check=False, timeout=15)
+                if result.returncode != 0 or not os.path.exists(tmp_path):
+                    return None
                 features = {
                     "timestamp": time.time(),
                     "source": "termux_camera_photo",
@@ -7176,9 +7261,15 @@ class SensoryIntegrationEngine:
             logger.error("[SENSORY] Speech recognizer not available")
             return
 
-        recognizer = self.hardware.microphone._recognizer
-        microphone = self.hardware.microphone._microphone
+        recognizer = getattr(self.hardware.microphone, '_recognizer', None)
+        microphone = getattr(self.hardware.microphone, '_microphone', None)
 
+        if recognizer is None or microphone is None:
+            logger.error(f"[SENSORY] Microphone or Recognizer backend is NONE (Hardware: {self.hardware}, Mic: {getattr(self.hardware, 'microphone', 'N/A')}) - exiting listen loop")
+            self.listening_enabled = False
+            return
+
+        logger.info(f"[SENSORY] Starting listen loop with microphone: {microphone}")
         while self.listening_enabled and not self._listen_stop.is_set():
             try:
                 with microphone as source:
@@ -7236,7 +7327,8 @@ class SensoryIntegrationEngine:
                     time.sleep(1.0)  # Back off on API errors
 
             except Exception as e:
-                logger.error(f"[SENSORY] Listen loop error: {e}")
+                import traceback
+                logger.error(f"[SENSORY] Listen loop error: {e}\n{traceback.format_exc()}")
                 time.sleep(0.5)
 
         logger.info("[SENSORY] Listen loop ended")

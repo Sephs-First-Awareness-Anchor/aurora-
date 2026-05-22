@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import signal
 import threading
 import time
@@ -146,6 +147,21 @@ def _write_latest_camera_frame(frame: Any) -> None:
         return
     except Exception:
         pass
+
+
+def _write_latest_camera_path(src: Path) -> None:
+    frame_path = _STATE_DIR / "vision_seeds" / "camera" / "frame_latest.png"
+    fallback_path = _STATE_DIR / "vision_snapshots" / "sight_latest.jpg"
+    frame_path.parent.mkdir(parents=True, exist_ok=True)
+    fallback_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        shutil.copyfile(src, fallback_path)
+        shutil.copyfile(src, frame_path)
+    except Exception:
+        try:
+            shutil.copyfile(src, fallback_path)
+        except Exception:
+            pass
 
     try:
         from PIL import Image as PILImage  # type: ignore
@@ -755,7 +771,15 @@ def run() -> None:
                 if hardware is not None and hasattr(hardware, "capture_visual"):
                     visual = hardware.capture_visual()
                     desc = "hardware capture"
-                    if visual is not None and hasattr(hardware, "process_visual"):
+                    if isinstance(visual, str) and visual:
+                        src = Path(visual)
+                        if src.exists():
+                            _write_latest_camera_path(src)
+                    elif isinstance(visual, dict) and str(visual.get("image_path", "") or ""):
+                        src = Path(str(visual.get("image_path", "") or ""))
+                        if src.exists():
+                            _write_latest_camera_path(src)
+                    elif visual is not None and hasattr(hardware, "process_visual"):
                         try:
                             from foundational_contract import ExistenceMode
                             mode = ExistenceMode.BOUNDED
@@ -796,14 +820,23 @@ def run() -> None:
         now = time.time()
 
         # Dormancy check — Subsurface owns the sleep/wake clock.
-        # When sleeping, Surface stands down: no sensory writes, no turn processing.
-        # Subsurface continues running (continuity, dreaming, memory consolidation).
+        # User turns are allowed to wake Surface; otherwise queued mobile input
+        # can sit forever while the mobile runner times out.
         try:
-            from aurora_internal.dual_strata.sleep_cycle import is_sleeping
+            from aurora_internal.dual_strata.sleep_cycle import exit_sleep, is_sleeping
             if is_sleeping(_STATE_DIR):
-                _write_json(_STATUS_FILE, _build_status(state_name="sleeping"))
-                time.sleep(5.0)
-                continue
+                queue_state = _queue_state()
+                pending_turns = [
+                    item for item in list(queue_state.get("pending") or [])
+                    if str(item.get("status", "queued") or "queued") == "queued"
+                ]
+                if pending_turns:
+                    exit_sleep(_STATE_DIR)
+                    _log("Surface woke for queued user turn.")
+                else:
+                    _write_json(_STATUS_FILE, _build_status(state_name="sleeping"))
+                    time.sleep(5.0)
+                    continue
         except Exception:
             pass
 

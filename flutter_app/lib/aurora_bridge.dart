@@ -61,6 +61,9 @@ class AuroraBridge {
   static Future<void> stopSpeaking() =>
       _channel.invokeMethod('stopSpeaking');
 
+  static Future<void> captureVision() =>
+      _channel.invokeMethod('captureVision');
+
   // ── Overlay (native Android OverlayService) ───────────────────────────────
 
   static Future<bool> startOverlay() async =>

@@ -15,10 +15,18 @@ task preparePythonSources {
         include "aurora_internal/**/*.py"
         include "aurora_support_stack.py"
         include "foundational_contract.py"
+        include "aurora_live_vision.py"
+        include "aurora_expression_perception.py"
+        include "aurora_constraint_engine.py"
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
     }
     outputs.dir destDir
+
+    doFirst {
+        // Ensure the directory exists before Gradle validates it
+        destDir.mkdirs()
+    }
 
     doLast {
         copy {
@@ -33,6 +41,9 @@ task preparePythonSources {
             from(repoRoot) {
                 include "aurora_support_stack.py"
                 include "foundational_contract.py"
+                include "aurora_live_vision.py"
+                include "aurora_expression_perception.py"
+                include "aurora_constraint_engine.py"
             }
             into destDir
         }
@@ -65,6 +76,15 @@ android {
         versionName "1.0"
 
         ndk { abiFilters "arm64-v8a", "x86_64" }
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file(System.getenv("HOME") + "/.android/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
     }
 
     buildTypes {

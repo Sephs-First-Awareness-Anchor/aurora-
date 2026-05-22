@@ -16,6 +16,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -43,20 +45,38 @@ jobs:
       - name: Write local.properties
         working-directory: flutter_app/android
         run: |
-          printf "flutter.sdk=%s\nsdk.dir=%s\n" \
-            "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" > local.properties
+          printf "flutter.sdk=%s\nsdk.dir=%s\nndk.dir=%s\nndk.version=25.1.8937393\n" \
+            "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" "$ANDROID_SDK_ROOT/ndk/25.1.8937393" > local.properties
+
+      - name: Create debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android \
+            -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+            -validity 10000 -dname "CN=Android Debug,O=Android,C=US" || true
 
       - name: Install Flutter dependencies
         working-directory: flutter_app
         run: flutter pub get
 
+      - name: Clean Flutter build
+        working-directory: flutter_app
+        run: flutter clean
+
       - name: Build APK (release)
         working-directory: flutter_app
-        run: flutter build apk --release --no-shrink
+        run: |
+          flutter build apk --release --no-shrink -v
+          cp build/app/outputs/flutter-apk/app-release.apk ../aurora-release.apk
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+      - name: List output for verification
+        run: ls -lh *.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: aurora-flutter-release-${{ github.sha }}
-          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 14
+          tag_name: build-${{ github.run_number }}
+          name: Aurora Build ${{ github.run_number }}
+          files: aurora-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

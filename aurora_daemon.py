@@ -32,8 +32,13 @@ import signal
 import random
 import datetime
 import subprocess
+import shutil
 from pathlib import Path
 from typing import Dict, Any, Optional, List
+
+_IS_TERMUX = (os.path.exists('/data/data/com.termux') or
+            os.environ.get('TERMUX_VERSION') is not None or
+            shutil.which('termux-info') is not None)
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -4383,6 +4388,15 @@ def _start_file_ptt_watcher(
                             payload = {}
                         should_trigger = bool(payload.get("trigger", True))
                         if should_trigger:
+                            # 1. Reset trigger immediately to avoid loops
+                            try:
+                                _VOICE_TRIGGER_FILE.write_text(json.dumps({
+                                    "trigger": False,
+                                    "handled_at": time.time(),
+                                }, indent=2))
+                            except Exception:
+                                pass
+
                             try:
                                 from aurora_voice import daemon_voice_session
 
@@ -4392,13 +4406,6 @@ def _start_file_ptt_watcher(
                                 log("  [VOICE] Voice session ended.")
                             except Exception as e:
                                 log(f"  [VOICE] File-triggered voice session failed: {e}")
-                            try:
-                                _VOICE_TRIGGER_FILE.write_text(json.dumps({
-                                    "trigger": False,
-                                    "handled_at": time.time(),
-                                }, indent=2))
-                            except Exception:
-                                pass
                 time.sleep(0.35)
             except Exception as e:
                 log(f"  [VOICE] File-based PTT watcher error: {e}")
@@ -4416,6 +4423,11 @@ def _start_file_ptt_watcher(
     return thread
 
 
+_AURORA_DIRECT_RE = _re_ambient.compile(
+    r'\baurora\b',
+    _re_ambient.IGNORECASE
+)
+
 def _classify_ambient(text: str) -> str:
     """Return 'direct', 'absorb', or 'ignore'.
 
@@ -4423,41 +4435,174 @@ def _classify_ambient(text: str) -> str:
     - 'absorb' : Ambient speech with enough content → note silently, never respond
     - 'ignore' : Too short or empty → discard entirely
     """
-    _stripped = text.strip()
+    _stripped = text.strip().lower()
     # Discard anything too brief to be meaningful (single word or empty)
-    if len(_stripped.split()) < 2:
+    if not _stripped or len(_stripped.split()) < 1:
         return 'ignore'
+    
+    # If the user says ONLY "Aurora" or starts with "Aurora"
+    if _stripped == "aurora" or _stripped.startswith("aurora"):
+        return 'direct'
+        
     # Explicit opt-out or third-person/meta mention: absorb silently.
     if _AURORA_NOT_ADDRESSED_RE.search(_stripped):
         return 'absorb'
-    # Direct wake/address phrase → she's being addressed.
-    if _AURORA_DIRECT_RE.search(_stripped):
+        
+    # If "Aurora" appears anywhere
+    if "aurora" in _stripped:
         return 'direct'
-    # Bare name mention is context, not permission to answer.
-    if _re_ambient.search(r"\baurora\b", _stripped, _re_ambient.IGNORECASE):
-        return 'absorb'
+        
     # Everything else: absorb passively into working memory / sensory crystal
-    return 'absorb'
+    if len(_stripped.split()) >= 3:
+        return 'absorb'
+    return 'ignore'
+
+
+def _start_ambient_response_listener_termux(
+    systems: Dict[str, Any],
+    *,
+    log_fn: Optional[Any] = None,
+) -> Optional[Any]:
+    """
+    Termux-specific ambient listener that uses termux-microphone-record in a loop.
+    Since direct PortAudio is often broken in Termux, we record short chunks
+    using the Termux:API and process them.
+    """
+    if VOICE_MODE in {"off", "disabled", "none"}:
+        return None
+
+    log = log_fn or _log
+    _last_response_time: Dict[str, float] = {"t": 0.0}
+
+    def _ambient_loop():
+        import time as _t
+        import tempfile as _tf
+        try:
+            from aurora_voice import transcribe as _transcribe, _speak_with_system_voice as _speak
+            import speech_recognition as _sr
+        except Exception as _ie:
+            log(f"  [AMBIENT] Termux voice imports failed: {_ie}")
+            return
+
+        log("  [AMBIENT] Termux Always-On listener started (5s chunks)")
+        try:
+            subprocess.run(["termux-notification", "--id", "aurora_mic", "--title", "Aurora", "--content", "Always-On Voice Listening..."], timeout=5)
+        except:
+            pass
+
+        consecutive_failures = 0
+        while True:
+            try:
+                # 1. Respect Aurora speaking
+                if _aurora_speaking_evt.is_set():
+                    _t.sleep(1.0)
+                    continue
+                
+                # 2. Record a chunk
+                tmp_wav = os.path.expanduser("~/aurora_ambient_chunk.wav")
+                if os.path.exists(tmp_wav): os.unlink(tmp_wav)
+                
+                # Record for 5 seconds using AAC encoder
+                proc = subprocess.run(
+                    ["termux-microphone-record", "-f", tmp_wav, "-l", "5", "-e", "aac"],
+                    capture_output=True, timeout=12
+                )
+                
+                if not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) < 100:
+                    consecutive_failures += 1
+                    if consecutive_failures >= 3:
+                        log("  [AMBIENT] Mic seems blocked. Check permissions!")
+                        try:
+                            subprocess.run(["termux-notification", "--id", "aurora_mic", "--title", "Aurora Warning", "--content", "Mic access failing. Tap to fix."], timeout=5)
+                        except:
+                            pass
+                    _t.sleep(1.0)
+                    continue
+                
+                consecutive_failures = 0
+
+                # 3. Convert to PCM for transcription
+                tmp_raw = os.path.expanduser("~/aurora_ambient_chunk.raw")
+                if os.path.exists(tmp_raw): os.unlink(tmp_raw)
+                
+                subprocess.run([
+                    "ffmpeg", "-y", "-i", tmp_wav,
+                    "-f", "s16le", "-acodec", "pcm_s16le",
+                    "-ar", str(_AMBIENT_SAMPLE_RATE), "-ac", "1",
+                    tmp_raw
+                ], check=True, capture_output=True)
+                
+                with open(tmp_raw, "rb") as f:
+                    pcm_bytes = f.read()
+                
+                os.unlink(tmp_wav)
+                os.unlink(tmp_raw)
+                
+                if not pcm_bytes:
+                    continue
+
+                # 4. Transcribe
+                audio_data = _sr.AudioData(pcm_bytes, _AMBIENT_SAMPLE_RATE, 2)
+                text = _transcribe(audio_data).strip()
+                
+                if not text:
+                    continue
+                
+                # 5. Classify and respond
+                category = _classify_ambient(text)
+                if category == 'ignore':
+                    continue
+
+                if category == 'direct':
+                    log(f"  [AMBIENT] Direct address: \"{text}\"")
+                    # Check cooldown
+                    now = _t.time()
+                    if now - _last_response_time["t"] < _AMBIENT_COOLDOWN_SEC:
+                        log("  [AMBIENT] Skipping response (cooldown active)")
+                        continue
+                    
+                    _last_response_time["t"] = now
+                    
+                    # Run the response pipeline
+                    response, tone = _generate_response(text, systems)
+                    if response:
+                        log(f"  [AMBIENT] Responding: \"{response[:60]}...\"")
+                        _speak(response, systems, tone=tone)
+                else:
+                    # 'absorb' — just note context
+                    # log(f"  [AMBIENT] Absorbed context: \"{text}\"")
+                    try:
+                        from aurora import update_working_memory
+                        update_working_memory(systems, f"Heard in background: {text}")
+                    except:
+                        pass
+
+            except Exception as _e:
+                log(f"  [AMBIENT] Termux ambient loop error: {_e}")
+                _t.sleep(2.0)
+
+    import threading as _threading_ambient
+    thread = _threading_ambient.Thread(
+        target=_ambient_loop,
+        name="aurora-ambient-termux",
+        daemon=True,
+    )
+    thread.start()
+    return thread
 
 
 def _start_ambient_response_listener(
     systems: Dict[str, Any],
     *,
     log_fn: Optional[Any] = None,
-) -> Optional[_threading_ambient.Thread]:
+) -> Optional[Any]:
     """
     Start an always-on ambient speech listener that transcribes nearby speech.
-
-    - When Aurora is directly addressed → run her response pipeline → speak if
-      the pipeline produces content.
-    - When she is mentioned (she/her) → note the context in working memory
-      silently, no spoken response.
-    - When speech is overheard but not about her → passively note it in working
-      memory as environmental context (no spoken response).
-
-    This is completely separate from the crystal audio loop (which handles
-    feature extraction) and the Alt-toggle controller (explicit commands).
+    Delegates to Termux-specific version if on Android.
     """
+    if _IS_TERMUX:
+        return _start_ambient_response_listener_termux(systems, log_fn=log_fn)
+
     if VOICE_MODE in {"off", "disabled", "none"}:
         return None
 
@@ -5818,7 +5963,10 @@ def run(systems: Dict[str, Any]) -> None:
     if not surface_owned_sensory:
         # Full/classic runtime still owns direct voice/ambient listeners locally.
         voice_listener = _start_voice_listener(systems)
-        _start_ambient_response_listener(systems)
+        if _IS_TERMUX:
+            _start_ambient_response_listener_termux(systems)
+        else:
+            _start_ambient_response_listener(systems)
 
     if not surface_owned_sensory:
         # Start SensoryIntegrationEngine always-on mic loop — feeds raw audio

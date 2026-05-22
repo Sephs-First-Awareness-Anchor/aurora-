@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../aurora_bridge.dart';
 import '../widgets/aurora_orb.dart';
@@ -30,12 +31,12 @@ class _HomeScreenState extends State<HomeScreen>
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseAnim;
 
-  // ── Chat ────────────────────────────────────────────────────────────────
+  // ── Chat ───────────────────────────────────────────────────────────……[...]
   final List<ChatMsg>         _msgs       = [];
   final TextEditingController _textCtrl   = TextEditingController();
   final ScrollController      _scrollCtrl = ScrollController();
 
-  // ── AI state ────────────────────────────────────────────────────────────
+  // ── AI state ──────────────────────────────────────────────────────────…[...]
   bool   _aiReady   = false;
   String _statusTxt = 'Starting Aurora…';
 
@@ -52,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ── Bridge events ────────────────────────────────────────────────────────
   StreamSubscription? _bridgeSub;
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────……[...]
 
   @override
   void initState() {
@@ -89,8 +90,19 @@ class _HomeScreenState extends State<HomeScreen>
             if (_embState != 'DORMANT') _startListening();
           }
         case 'permission':
-          if (type == 'microphone' && (event['granted'] as bool? ?? false)) {
-            if (!_speaking) _startListening();
+          if (type == 'update' && mounted) {
+            final map = event['granted_map'] as Map?;
+            if (map != null) {
+              final mic = map['microphone'] == true;
+              if (mic && !_speaking) _startListening();
+            }
+          }
+        case 'camera':
+          if (type == 'captured' && mounted) {
+            setState(() => _statusTxt = 'Vision captured!');
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) setState(() => _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…');
+            });
           }
         default: // aurora service events
           switch (type) {
@@ -128,14 +140,17 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _processRecognizedText(String words) {
     final lower = words.toLowerCase().trim();
-    if (lower.isEmpty || (!_inConversation && !lower.contains('aurora'))) {
+    if (lower.isEmpty) {
       if (!_speaking) _startListening();
       return;
     }
-    if (_inConversation) {
+
+    // If we're already in a conversation, respond to EVERYTHING heard.
+    // If not, only respond if "Aurora" is mentioned.
+    if (_inConversation || _embState == 'SUMMONED') {
       _resetConversationWindow();
       _sendMessage(words);
-    } else {
+    } else if (lower.contains('aurora')) {
       final idx   = lower.indexOf('aurora');
       final after = words.substring(idx + 6).trim();
       _summon();
@@ -144,6 +159,9 @@ class _HomeScreenState extends State<HomeScreen>
       } else {
         _speak('Yes?');
       }
+    } else {
+      // Not for us, keep listening
+      if (!_speaking) _startListening();
     }
   }
 
@@ -185,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (_inConversation) _startConversationWindow();
   }
 
-  // ── STT ──────────────────────────────────────────────────────────────────
+  // ── STT ───────────────────────────────────────────────────────────……[...]
 
   void _startListening() {
     if (_listening || _speaking || _embState == 'DORMANT') return;
@@ -193,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen>
     AuroraBridge.startListening();
   }
 
-  // ── TTS ───────────────────────────────────────────────────────────────────
+  // ── TTS ───────────────────────────────────────────────────────────……[...]
 
   Future<void> _speak(String text) async {
     if (text.isEmpty) return;
@@ -202,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen>
     await AuroraBridge.speak(text);
   }
 
-  // ── Message send ─────────────────────────────────────────────────────────
+  // ── Message send ────────────────────────────────────────────────────────……[...]
 
   Future<void> _sendMessage(String text) async {
     text = text.trim();
@@ -241,12 +259,12 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  // ── App lifecycle ─────────────────────────────────────────────────────────
+  // ── App lifecycle ────────────────────────────────────────────────────────…[...]
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused && _embState != 'DORMANT') {
-      _background();
+      await _background();
     } else if (state == AppLifecycleState.resumed) {
       final wasTapped = await AuroraBridge.consumeOverlayTap();
       if (wasTapped) {
@@ -258,7 +276,7 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // ── Build ───────────────────────────────────────────────────────────[...]
 
   @override
   Widget build(BuildContext context) {
@@ -334,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// ── Sub-widgets ───────────────────────────────────────────────────────────────
+// ── Sub-widgets ─────────────────────────────────────────────────────────……[...]
 
 class _Header extends StatelessWidget {
   final String state;
@@ -354,6 +372,12 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          if (state == 'SUMMONED')
+            IconButton(
+              icon: const Icon(Icons.visibility_rounded, color: Colors.white54),
+              onPressed: () => AuroraBridge.captureVision(),
+              tooltip: 'Capture Vision',
+            ),
           if (state == 'SUMMONED' && onBackground != null)
             IconButton(
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white54),
