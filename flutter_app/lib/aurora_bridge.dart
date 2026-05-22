@@ -9,7 +9,9 @@ class AuroraBridge {
 
   static Stream<Map<String, dynamic>>? _events;
 
-  /// Stream of JSON events emitted by AuroraService (ready / response / error).
+  /// Stream of JSON events from AuroraService (ready/response/error),
+  /// native STT (source:"stt"), native TTS (source:"tts"), and
+  /// permission results (source:"permission").
   static Stream<Map<String, dynamic>> get events {
     _events ??= _eventChannel
         .receiveBroadcastStream()
@@ -18,11 +20,17 @@ class AuroraBridge {
   }
 
   static Map<String, dynamic> _parseEvent(String json) {
-    final typeMatch = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
-    final textMatch = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final sourceMatch = RegExp(r'"source"\s*:\s*"([^"]*)"').firstMatch(json);
+    final typeMatch   = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
+    final textMatch   = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final errorMatch  = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
     return {
-      'type': typeMatch?.group(1) ?? 'unknown',
-      'text': textMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'source':  sourceMatch?.group(1) ?? 'aurora',
+      'type':    typeMatch?.group(1)   ?? 'unknown',
+      'text':    textMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'error':   errorMatch != null ? int.tryParse(errorMatch.group(1)!) : null,
+      'final':   json.contains('"final":true'),
+      'granted': json.contains('"granted":true'),
     };
   }
 
@@ -37,7 +45,23 @@ class AuroraBridge {
   static Future<void> setState(String state) =>
       _channel.invokeMethod('setState', {'state': state});
 
-  // ── Overlay (native Android OverlayService) ────────────────────────────
+  // ── STT (native Android SpeechRecognizer) ─────────────────────────────────
+
+  static Future<void> startListening() =>
+      _channel.invokeMethod('startListening');
+
+  static Future<void> stopListening() =>
+      _channel.invokeMethod('stopListening');
+
+  // ── TTS (native Android TextToSpeech) ────────────────────────────────────
+
+  static Future<void> speak(String text) =>
+      _channel.invokeMethod('speak', {'text': text});
+
+  static Future<void> stopSpeaking() =>
+      _channel.invokeMethod('stopSpeaking');
+
+  // ── Overlay (native Android OverlayService) ───────────────────────────────
 
   static Future<bool> startOverlay() async =>
       await _channel.invokeMethod<bool>('startOverlay') ?? false;

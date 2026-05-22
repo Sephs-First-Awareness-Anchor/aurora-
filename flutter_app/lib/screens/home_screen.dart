@@ -1,8 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 
 import '../aurora_bridge.dart';
 import '../widgets/aurora_orb.dart';
@@ -27,30 +24,25 @@ class _HomeScreenState extends State<HomeScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
 
   // ── Embodiment state ────────────────────────────────────────────────────
-  String _embState = 'DORMANT'; // DORMANT | BACKGROUND | SUMMONED
+  String _embState = 'DORMANT';
 
   // ── Orb animation ───────────────────────────────────────────────────────
   late AnimationController _pulseCtrl;
   late Animation<double>   _pulseAnim;
 
   // ── Chat ────────────────────────────────────────────────────────────────
-  final List<ChatMsg>          _msgs       = [];
-  final TextEditingController  _textCtrl   = TextEditingController();
-  final ScrollController       _scrollCtrl = ScrollController();
+  final List<ChatMsg>         _msgs       = [];
+  final TextEditingController _textCtrl   = TextEditingController();
+  final ScrollController      _scrollCtrl = ScrollController();
 
   // ── AI state ────────────────────────────────────────────────────────────
   bool   _aiReady   = false;
   String _statusTxt = 'Starting Aurora…';
 
-  // ── STT ─────────────────────────────────────────────────────────────────
-  final SpeechToText _stt         = SpeechToText();
-  bool               _sttOk       = false;
-  bool               _listening   = false;
-  String             _partialText = '';
-
-  // ── TTS ─────────────────────────────────────────────────────────────────
-  final FlutterTts _tts      = FlutterTts();
-  bool             _speaking = false;
+  // ── STT / TTS state ─────────────────────────────────────────────────────
+  bool   _listening   = false;
+  bool   _speaking    = false;
+  String _partialText = '';
 
   // ── Conversation window ──────────────────────────────────────────────────
   static const _convSec = 30;
@@ -77,48 +69,82 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Future<void> _init() async {
-    await _initTts();
-    await _requestPermissions();
     _listenBridgeEvents();
     setState(() => _embState = 'BACKGROUND');
-  }
-
-  Future<void> _initTts() async {
-    await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.48);
-    await _tts.setVolume(1.0);
-    _tts.setCompletionHandler(() {
-      if (mounted) setState(() => _speaking = false);
-      if (_embState != 'DORMANT') _startListening();
-    });
-  }
-
-  Future<void> _requestPermissions() async {
-    await [Permission.microphone, Permission.notification].request();
-    _sttOk = await _stt.initialize(
-      onStatus: _onSttStatus,
-      onError:  (e) => debugPrint('STT error: $e'),
-    );
-    if (_sttOk) _startListening();
+    _startListening();
   }
 
   void _listenBridgeEvents() {
     _bridgeSub = AuroraBridge.events.listen((event) {
-      final type = event['type'] as String? ?? '';
-      final text = event['text'] as String? ?? '';
-      switch (type) {
-        case 'ready':
-          setState(() {
-            _aiReady   = true;
-            _statusTxt = 'Listening…';
-          });
-          _speak('Aurora is online.');
-        case 'error':
-          setState(() => _statusTxt = 'Error: $text');
-        default:
-          break;
+      final source = event['source'] as String? ?? 'aurora';
+      final type   = event['type']   as String? ?? '';
+      final text   = event['text']   as String? ?? '';
+
+      switch (source) {
+        case 'stt':
+          _handleSttEvent(type, text, event['final'] as bool? ?? false);
+        case 'tts':
+          if (type == 'done' && mounted) {
+            setState(() => _speaking = false);
+            if (_embState != 'DORMANT') _startListening();
+          }
+        case 'permission':
+          if (type == 'microphone' && (event['granted'] as bool? ?? false)) {
+            if (!_speaking) _startListening();
+          }
+        default: // aurora service events
+          switch (type) {
+            case 'ready':
+              if (mounted) {
+                setState(() { _aiReady = true; _statusTxt = 'Listening…'; });
+              }
+              _speak('Aurora is online.');
+            case 'error':
+              if (mounted) setState(() => _statusTxt = 'Error: $text');
+            default:
+              break;
+          }
       }
     });
+  }
+
+  void _handleSttEvent(String type, String text, bool isFinal) {
+    if (!mounted) return;
+    switch (type) {
+      case 'partial':
+        if (text.isNotEmpty) setState(() => _partialText = text);
+      case 'result':
+        if (isFinal) {
+          setState(() { _partialText = ''; _listening = false; });
+          _processRecognizedText(text);
+        }
+      case 'error':
+        setState(() { _listening = false; _partialText = ''; });
+        if (!_speaking && _embState != 'DORMANT') {
+          Future.delayed(const Duration(milliseconds: 600), _startListening);
+        }
+    }
+  }
+
+  void _processRecognizedText(String words) {
+    final lower = words.toLowerCase().trim();
+    if (lower.isEmpty || (!_inConversation && !lower.contains('aurora'))) {
+      if (!_speaking) _startListening();
+      return;
+    }
+    if (_inConversation) {
+      _resetConversationWindow();
+      _sendMessage(words);
+    } else {
+      final idx   = lower.indexOf('aurora');
+      final after = words.substring(idx + 6).trim();
+      _summon();
+      if (after.isNotEmpty) {
+        Future.delayed(const Duration(milliseconds: 300), () => _sendMessage(after));
+      } else {
+        _speak('Yes?');
+      }
+    }
   }
 
   // ── Embodiment transitions ────────────────────────────────────────────────
@@ -134,14 +160,15 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _background() async {
     _convTimer?.cancel();
     _inConversation = false;
+    AuroraBridge.stopListening();
     setState(() {
       _embState  = 'BACKGROUND';
+      _listening = false;
       _statusTxt = 'Listening for "Aurora"…';
     });
     AuroraBridge.setState('BACKGROUND');
     final started = await AuroraBridge.startOverlay();
     if (!started) {
-      // Permission missing — re-check on next resume
       setState(() => _statusTxt = 'Overlay permission needed');
     }
   }
@@ -160,60 +187,19 @@ class _HomeScreenState extends State<HomeScreen>
 
   // ── STT ──────────────────────────────────────────────────────────────────
 
-  void _onSttStatus(String status) {
-    if (status == 'done' || status == 'notListening') {
-      if (mounted) setState(() => _listening = false);
-      if (!_speaking && _embState != 'DORMANT') {
-        Future.delayed(const Duration(milliseconds: 400), _startListening);
-      }
-    }
-  }
-
   void _startListening() {
-    if (!_sttOk || _listening || _speaking || _embState == 'DORMANT') return;
+    if (_listening || _speaking || _embState == 'DORMANT') return;
     setState(() { _listening = true; _partialText = ''; });
-    _stt.listen(
-      onResult: _onSttResult,
-      listenFor: Duration(seconds: _inConversation ? 20 : 45),
-      pauseFor: const Duration(seconds: 3),
-      partialResults: true,
-      cancelOnError: false,
-      listenMode: ListenMode.confirmation,
-    );
-  }
-
-  void _onSttResult(result) {
-    final words = result.recognizedWords as String;
-    setState(() => _partialText = words);
-    if (!result.finalResult) return;
-
-    setState(() { _listening = false; _partialText = ''; });
-    final lower = words.toLowerCase().trim();
-    if (lower.isEmpty) return;
-
-    if (_inConversation) {
-      _resetConversationWindow();
-      _sendMessage(words);
-    } else {
-      final idx = lower.indexOf('aurora');
-      if (idx == -1) return;
-      final after = words.substring(idx + 6).trim();
-      _summon();
-      if (after.isNotEmpty) {
-        Future.delayed(const Duration(milliseconds: 300), () => _sendMessage(after));
-      } else {
-        _speak('Yes?');
-      }
-    }
+    AuroraBridge.startListening();
   }
 
   // ── TTS ───────────────────────────────────────────────────────────────────
 
   Future<void> _speak(String text) async {
     if (text.isEmpty) return;
-    _stt.cancel();
+    AuroraBridge.stopListening();
     setState(() { _speaking = true; _listening = false; });
-    await _tts.speak(text);
+    await AuroraBridge.speak(text);
   }
 
   // ── Message send ─────────────────────────────────────────────────────────
@@ -222,9 +208,10 @@ class _HomeScreenState extends State<HomeScreen>
     text = text.trim();
     if (text.isEmpty) return;
     _textCtrl.clear();
-    _stt.cancel();
+    AuroraBridge.stopListening();
 
     setState(() {
+      _listening = false;
       _msgs.add(ChatMsg(text, isUser: true));
       _statusTxt = 'Thinking…';
     });
@@ -261,7 +248,6 @@ class _HomeScreenState extends State<HomeScreen>
     if (state == AppLifecycleState.paused && _embState != 'DORMANT') {
       _background();
     } else if (state == AppLifecycleState.resumed) {
-      // Check if resume was triggered by tapping the overlay orb
       final wasTapped = await AuroraBridge.consumeOverlayTap();
       if (wasTapped) {
         _summon();
@@ -342,8 +328,8 @@ class _HomeScreenState extends State<HomeScreen>
     _scrollCtrl.dispose();
     _bridgeSub?.cancel();
     _convTimer?.cancel();
-    _stt.cancel();
-    _tts.stop();
+    AuroraBridge.stopListening();
+    AuroraBridge.stopSpeaking();
     super.dispose();
   }
 }
