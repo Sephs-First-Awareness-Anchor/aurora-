@@ -59,7 +59,11 @@ jobs:
 
       - name: Build APK (release)
         working-directory: flutter_app
-        run: flutter build apk --release --no-shrink -v
+        run: flutter build apk --release --no-shrink -v 2>&1 | tee build.log
+        
+      - name: Display build log on failure
+        if: failure()
+        run: tail -100 flutter_app/build.log
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
