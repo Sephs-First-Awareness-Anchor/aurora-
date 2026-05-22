@@ -5,6 +5,12 @@ plugins {
     id "com.chaquo.python"
 }
 
+// ── Ensure Python directory exists at configuration time ──────────────
+File pythonDir = file("src/main/python")
+if (!pythonDir.exists()) {
+    pythonDir.mkdirs()
+}
+
 // ── Copy Aurora Python modules into the standard python srcDir ──────────────
 task preparePythonSources {
     def repoRoot = file("../../..")
@@ -22,11 +28,6 @@ task preparePythonSources {
         exclude "**/*.pyc"
     }
     outputs.dir destDir
-
-    doFirst {
-        // Ensure the directory exists before Gradle validates it
-        destDir.mkdirs()
-    }
 
     doLast {
         copy {
