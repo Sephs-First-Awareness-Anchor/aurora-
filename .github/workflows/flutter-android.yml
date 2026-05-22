@@ -43,8 +43,15 @@ jobs:
       - name: Write local.properties
         working-directory: flutter_app/android
         run: |
-          printf "flutter.sdk=%s\nsdk.dir=%s\n" \
-            "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" > local.properties
+          printf "flutter.sdk=%s\nsdk.dir=%s\nndk.dir=%s\nndk.version=25.1.8937393\n" \
+            "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" "$ANDROID_SDK_ROOT/ndk/25.1.8937393" > local.properties
+
+      - name: Create debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android \
+            -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+            -validity 10000 -dname "CN=Android Debug,O=Android,C=US" || true
 
       - name: Install Flutter dependencies
         working-directory: flutter_app
@@ -52,7 +59,7 @@ jobs:
 
       - name: Build APK (release)
         working-directory: flutter_app
-        run: flutter build apk --release --no-shrink
+        run: flutter build apk --release --no-shrink -v
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
