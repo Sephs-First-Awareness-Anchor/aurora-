@@ -20,6 +20,11 @@ task preparePythonSources {
     }
     outputs.dir destDir
 
+    doFirst {
+        // Ensure the directory exists before Gradle validates it
+        destDir.mkdirs()
+    }
+
     doLast {
         copy {
             from(repoRoot) { include "aurora_core_ai/**/*.py"; exclude "**/__pycache__/**" }
