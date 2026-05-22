@@ -1,0 +1,55 @@
+name: Flutter Android Build
+
+on:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'flutter_app/**'
+      - 'aurora_core_ai/**'
+      - 'aurora_internal/**'
+      - 'aurora_support_stack.py'
+      - 'foundational_contract.py'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Android NDK 25
+        run: |
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager \
+            "ndk;25.1.8937393" "cmake;3.22.1"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.3'
+          channel: stable
+          cache: true
+
+      - name: Install Flutter dependencies
+        working-directory: flutter_app
+        run: flutter pub get
+
+      - name: Build APK (release)
+        working-directory: flutter_app
+        run: flutter build apk --release --no-shrink
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurora-flutter-release-${{ github.sha }}
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14
