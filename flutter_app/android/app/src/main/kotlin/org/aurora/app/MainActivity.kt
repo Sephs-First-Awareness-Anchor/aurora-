@@ -165,6 +165,10 @@ class MainActivity : FlutterActivity() {
                         tts?.stop()
                         result.success(null)
                     }
+                    "captureVision" -> {
+                        captureVision()
+                        result.success(null)
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -190,10 +194,28 @@ class MainActivity : FlutterActivity() {
                 != PackageManager.PERMISSION_GRANTED) {
             perms.add(Manifest.permission.RECORD_AUDIO)
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            perms.add(Manifest.permission.POST_NOTIFICATIONS)
+            perms.add(Manifest.permission.CAMERA)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES)
+                    != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.READ_MEDIA_IMAGES)
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                perms.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
         }
         if (perms.isNotEmpty()) {
             ActivityCompat.requestPermissions(this, perms.toTypedArray(), PERM_REQUEST)
@@ -205,18 +227,91 @@ class MainActivity : FlutterActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERM_REQUEST) {
-            val micIdx  = permissions.indexOf(Manifest.permission.RECORD_AUDIO)
-            val granted = micIdx >= 0 && grantResults[micIdx] == PackageManager.PERMISSION_GRANTED
+            val results = JSONObject()
+            permissions.forEachIndexed { i, p ->
+                val granted = grantResults[i] == PackageManager.PERMISSION_GRANTED
+                val key = when(p) {
+                    Manifest.permission.RECORD_AUDIO -> "microphone"
+                    Manifest.permission.CAMERA -> "camera"
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE, 
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_MEDIA_IMAGES -> "storage"
+                    else -> p
+                }
+                results.put(key, granted)
+            }
+            
             runOnUiThread {
                 AuroraService.eventSink?.success(
                     JSONObject()
                         .put("source", "permission")
-                        .put("type", "microphone")
-                        .put("granted", granted)
+                        .put("type", "update")
+                        .put("granted_map", results)
                         .toString()
                 )
             }
         }
+    }
+
+    // ── Camera Sensory ───────────────────────────────────────────────────────
+    
+    private fun captureVision() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestRuntimePermissions()
+            return
+        }
+
+        val cameraProviderFuture = androidx.camera.lifecycle.ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                val imageCapture = androidx.camera.core.ImageCapture.Builder()
+                    .setCaptureMode(androidx.camera.core.ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                    .build()
+
+                val cameraSelector = androidx.camera.core.CameraSelector.DEFAULT_BACK_CAMERA
+
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(this, cameraSelector, imageCapture)
+
+                val file = java.io.File(filesDir, "aurora_state/vision_seeds/screen/frame_latest.png")
+                file.parentFile?.mkdirs()
+
+                val outputOptions = androidx.camera.core.ImageCapture.OutputFileOptions.Builder(file).build()
+
+                imageCapture.takePicture(
+                    outputOptions,
+                    ContextCompat.getMainExecutor(this),
+                    object : androidx.camera.core.ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(output: androidx.camera.core.ImageCapture.OutputFileResults) {
+                            Log.i("Aurora", "Vision capture successful: ${file.absolutePath}")
+                            
+                            // Haptic feedback
+                            val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                vibrator.vibrate(android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                            } else {
+                                @Suppress("DEPRECATION") vibrator.vibrate(50)
+                            }
+
+                            AuroraService.eventSink?.success(
+                                JSONObject()
+                                    .put("source", "camera")
+                                    .put("type", "captured")
+                                    .put("path", file.absolutePath)
+                                    .toString()
+                            )
+                        }
+                        override fun onError(exc: androidx.camera.core.ImageCaptureException) {
+                            Log.e("Aurora", "Vision capture failed: ${exc.message}")
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                Log.e("Aurora", "CameraProvider init failed: ${e.message}")
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
     private fun initTts() {

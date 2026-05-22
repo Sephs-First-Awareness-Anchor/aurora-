@@ -46,7 +46,7 @@ pid_matches_daemon() {
 }
 
 # ── Single-instance guard ────────────────────────────────────────────────────
-LOCK_FILE="/tmp/${LOCK_NAME}.lock"
+LOCK_FILE="${TMPDIR:-/tmp}/${LOCK_NAME}.lock"
 if [[ -f "$LOCK_FILE" ]]; then
     EXISTING_PID=$(cat "$LOCK_FILE" 2>/dev/null || true)
     if [[ -n "$EXISTING_PID" ]] && kill -0 "$EXISTING_PID" 2>/dev/null && pid_matches_daemon "$EXISTING_PID"; then

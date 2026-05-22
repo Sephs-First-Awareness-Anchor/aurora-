@@ -8,6 +8,7 @@ import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import android.view.*
 
 class OverlayService : Service() {
@@ -25,6 +26,7 @@ class OverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.i("Aurora", "OverlayService: onCreate")
         createNotificationChannel()
         startForeground(NOTIF_ID, buildNotification())
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -32,32 +34,48 @@ class OverlayService : Service() {
     }
 
     private fun addOrb() {
-        orbView = View(this).apply { setBackgroundColor(0x88A020F0.toInt()) }
+        Log.i("Aurora", "OverlayService: adding orb")
+        orbView = View(this).apply { 
+            setBackgroundColor(0xFFA020F0.toInt()) // Solid purple
+        }
 
         val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         else
             @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
-        val dp80 = (80 * resources.displayMetrics.density).toInt()
+        val dp60 = (60 * resources.displayMetrics.density).toInt()
         val params = WindowManager.LayoutParams(
-            dp80, dp80, layoutFlag,
+            dp60, dp60, layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
-        ).apply { gravity = Gravity.TOP or Gravity.LEFT; x = 0; y = 100 }
+        ).apply { 
+            gravity = Gravity.TOP or Gravity.START
+            x = 100
+            y = 200 
+        }
 
         var ix = 0; var iy = 0; var tx = 0f; var ty = 0f; var t0 = 0L
         val slop = 8f * resources.displayMetrics.density
 
         orbView.setOnTouchListener { _, e ->
             when (e.action) {
-                MotionEvent.ACTION_DOWN -> { ix = params.x; iy = params.y; tx = e.rawX; ty = e.rawY; t0 = System.currentTimeMillis(); true }
-                MotionEvent.ACTION_MOVE -> { params.x = ix + (e.rawX - tx).toInt(); params.y = iy + (e.rawY - ty).toInt(); windowManager.updateViewLayout(orbView, params); true }
+                MotionEvent.ACTION_DOWN -> { 
+                    ix = params.x; iy = params.y; tx = e.rawX; ty = e.rawY; t0 = System.currentTimeMillis()
+                    true 
+                }
+                MotionEvent.ACTION_MOVE -> { 
+                    params.x = ix + (e.rawX - tx).toInt()
+                    params.y = iy + (e.rawY - ty).toInt()
+                    try { windowManager.updateViewLayout(orbView, params) } catch(_: Exception) {}
+                    true 
+                }
                 MotionEvent.ACTION_UP   -> {
                     if (Math.abs(e.rawX - tx) < slop && Math.abs(e.rawY - ty) < slop
                         && System.currentTimeMillis() - t0 < 300) {
+                        Log.i("Aurora", "OverlayService: orb tapped")
                         bringAppToForeground()
                         sendBroadcast(Intent(ACTION_OVERLAY_TAPPED))
                     }
@@ -67,7 +85,12 @@ class OverlayService : Service() {
             }
         }
 
-        try { windowManager.addView(orbView, params) } catch (_: Exception) {}
+        try { 
+            windowManager.addView(orbView, params) 
+            Log.i("Aurora", "OverlayService: orb added successfully")
+        } catch (e: Exception) {
+            Log.e("Aurora", "OverlayService: failed to add orb: ${e.message}")
+        }
     }
 
     private fun bringAppToForeground() {

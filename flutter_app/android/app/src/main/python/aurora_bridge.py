@@ -56,11 +56,14 @@ def initialize(state_dir: str = "") -> str:
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
     global _systems
+    print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
+        print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
     _setup_paths()
     try:
         from aurora_core_ai.aurora import process_external_user_turn  # type: ignore
+        print("AURORA_BRIDGE: Processing turn...")
         with _lock:
             result = process_external_user_turn(
                 _systems,
@@ -74,7 +77,9 @@ def handle_message(text: str) -> str:
                 run_periodic_maintenance=True,
                 mode_name="BOUNDED",
             )
-        return _extract_response(result)
+        response = _extract_response(result)
+        print(f"AURORA_BRIDGE: Response: {response}")
+        return response
     except TypeError:
         # Older Aurora build that doesn't accept keyword-only args
         try:

@@ -36,8 +36,13 @@ import asyncio
 import tempfile
 import threading
 import subprocess
+import shutil
 from pathlib import Path
 from typing import Optional, Callable, Dict, Any
+
+_IS_TERMUX = (os.path.exists('/data/data/com.termux') or
+            os.environ.get('TERMUX_VERSION') is not None or
+            shutil.which('termux-info') is not None)
 
 from aurora_internal.dual_strata.surface_channel import request_surface_turn
 
@@ -111,15 +116,35 @@ async def _tts_async(text: str) -> bool:
         import edge_tts
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
             tmp = f.name
-        comm = edge_tts.Communicate(text, _current_voice(), rate="+0%", volume="+0%")
+        
+        voice = _current_voice()
+        print(f"  [TTS] Using edge-tts with voice: {voice}", flush=True)
+        comm = edge_tts.Communicate(text, voice, rate="+0%", volume="+0%")
         await comm.save(tmp)
-        result = subprocess.run(
-            ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", tmp],
-            timeout=120,
-        )
+
+        if _IS_TERMUX:
+            if shutil.which("play"):
+                print(f"  [TTS] Playing via sox 'play': {tmp}", flush=True)
+                result = subprocess.run(["play", "-q", tmp], timeout=120)
+            elif shutil.which("termux-media-player"):
+                print(f"  [TTS] Playing via termux-media-player: {tmp}", flush=True)
+                result = subprocess.run(["termux-media-player", "play", tmp], timeout=120)
+            else:
+                print(f"  [TTS] Playing via ffplay fallback: {tmp}", flush=True)
+                result = subprocess.run(
+                    ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", tmp],
+                    timeout=120,
+                )
+        else:
+            result = subprocess.run(
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", tmp],
+                timeout=120,
+            )
+        
         os.unlink(tmp)
         return result.returncode == 0
-    except Exception:
+    except Exception as e:
+        print(f"  [TTS] edge-tts error: {e}", flush=True)
         return False
 
 
@@ -178,35 +203,76 @@ def _split_tts_chunks(text: str, max_chars: int = 600) -> list:
     return [c for c in chunks if c.strip()]
 
 
+def _run_tts_safe(text: str) -> bool:
+    """Helper to run tts async in a way that works even if a loop is running."""
+    import asyncio
+    try:
+        # Check if already in a loop
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            # If in a loop, we need to run in a separate thread
+            import threading
+            from concurrent.futures import ThreadPoolExecutor
+            
+            def _runner():
+                new_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(new_loop)
+                try:
+                    return new_loop.run_until_complete(_tts_async(text))
+                finally:
+                    new_loop.close()
+            
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_runner)
+                return future.result(timeout=130)
+        else:
+            return asyncio.run(_tts_async(text))
+    except Exception as e:
+        print(f"  [TTS] Safe runner error: {e}", flush=True)
+        return False
+
 def speak(text: str) -> bool:
     """Speak text aloud via edge-tts. Long text is chunked to prevent fallback."""
+    print(f"  [TTS] Attempting to speak: \"{text[:50]}...\"", flush=True)
     chunks = _split_tts_chunks(text, max_chars=600)
     if not chunks:
+        print("  [TTS] No chunks to speak.", flush=True)
         return False
 
     # Try edge-tts chunk by chunk. If every chunk succeeds, return True.
-    # Only fall back to pyttsx3/espeak if edge-tts fails on the first chunk —
-    # meaning edge-tts itself is unavailable (not just a length issue).
     all_ok = True
-    first_chunk_failed = False
     for i, chunk in enumerate(chunks):
         try:
-            ok = asyncio.run(_tts_async(chunk))
+            print(f"  [TTS] Running safe tts for chunk {i+1}/{len(chunks)}", flush=True)
+            ok = _run_tts_safe(chunk)
             if not ok:
+                print(f"  [TTS] Chunk {i+1} failed.", flush=True)
                 all_ok = False
-                if i == 0:
-                    first_chunk_failed = True
                 break
-        except Exception:
+        except Exception as e:
+            print(f"  [TTS] Exception on chunk {i+1}: {e}", flush=True)
             all_ok = False
-            if i == 0:
-                first_chunk_failed = True
             break
 
     if all_ok:
         return True
 
+    # If in Termux, prioritize the native Android TTS engine for high-quality voice
+    if _IS_TERMUX and shutil.which("termux-tts-speak"):
+        try:
+            print("  [TTS] edge-tts failed, falling back to termux-tts-speak", flush=True)
+            # We use a slightly slower rate for clarity
+            subprocess.run(["termux-tts-speak", "-r", "1.1", text], timeout=60)
+            return True
+        except Exception as e:
+            print(f"  [TTS] termux-tts-speak failed: {e}", flush=True)
+
     # edge-tts is unavailable — fall back for the full text (truncated to be safe)
+    print("  [TTS] Falling back to robotic pyttsx3/espeak engine", flush=True)
     safe_text = text[:400]
     try:
         global _pyttsx3_engine
@@ -288,9 +354,17 @@ def _transcribe_sphinx(audio_data) -> str:
 
 def transcribe(audio_data) -> str:
     """Transcribe audio — Google first, sphinx fallback."""
+    print("  [VOICE] Transcribing captured audio...", flush=True)
     text = _transcribe_google(audio_data)
     if not text:
+        print("  [VOICE] Google STT empty/failed, trying PocketSphinx...", flush=True)
         text = _transcribe_sphinx(audio_data)
+    
+    if text:
+        print(f"  [VOICE] Transcription result: \"{text}\"", flush=True)
+    else:
+        print("  [VOICE] Transcription completely failed (no speech detected).", flush=True)
+        
     return text.strip()
 
 
@@ -859,9 +933,11 @@ _VOICE_COMMAND_PATTERNS = [
     ([r"what time is it", r"check time", r"current time"],              "time"),
     ([r"weather in (.*)", r"weather for (.*)", r"check weather in (.*)", r"what's the weather in (.*)"], "weather"),
     ([r"what's the weather", r"check weather"],                         "weather_local"),
-    ([r"calculate (.*)", r"math (.*)", r"what is (.*)"],                "calculator"),
+    ([r"calculate (.*)", r"math (.*)"],                                 "calculator"),
     ([r"query memory", r"read memory"],                                 "memory"),
-    ([r"check self state", r"internal state"],                          "self_state"),
+    ([r"check self state", r"internal state", r"status check",
+      r"system status", r"what is your status", r"what's your status",
+      r"how are you doing internally"],                                  "self_state"),
     
     # Mobile/Android Hardware Tools
     ([r"check battery", r"battery level", r"how much battery"],         "mobile_battery"),
@@ -875,7 +951,8 @@ _VOICE_COMMAND_PATTERNS = [
     ([r"read contacts", r"find contact (.*)"],                          "mobile_contacts"),
     ([r"check wifi", r"wifi info", r"what wifi am i on"],               "mobile_wifi"),
     ([r"open url (.*)", r"open link (.*)"],                             "mobile_open_url"),
-    ([r"open app (.*)", r"launch app (.*)", r"open (.*)"],              "mobile_launch_app"),
+    ([r"open app (.*)", r"launch app (.*)", r"open (.*)",
+      r"can you open (.*)", r"please open (.*)"],                       "mobile_launch_app"),
     ([r"read my texts", r"read my sms", r"any new messages"],           "mobile_read_sms"),
     ([r"notify me (.*)", r"send notification (.*)"],                    "mobile_notification"),
     ([r"copy to clipboard (.*)", r"clipboard set (.*)"],                "mobile_clipboard_set"),
@@ -896,16 +973,21 @@ import re
 
 def _detect_voice_command(text: str) -> tuple[Optional[str], Optional[str], Optional[str]]:
     """Return (command_key, param1, param2) if text matches a voice command, else None."""
-    tl = text.lower().strip()
+    tl = re.sub(r"\b(?:hey\s+aurora|ok\s+aurora|yo\s+aurora|aurora)\b", " ", text.lower()).strip()
+    tl = re.sub(r"\s+", " ", tl)
+    if not tl:
+        return None, None, None
     for patterns, key in _VOICE_COMMAND_PATTERNS:
         for p in patterns:
             # If the pattern is a regex with capture groups
             if "(.*)" in p:
-                match = re.search(p, tl)
+                match = re.fullmatch(p, tl)
                 if match:
                     groups = match.groups()
                     p1 = groups[0].strip() if len(groups) > 0 else None
                     p2 = groups[1].strip() if len(groups) > 1 else None
+                    if key == "mobile_launch_app" and p1 in {"your", "you", "the", "a", "an", "it", "this", "that"}:
+                        return None, None, None
                     return key, p1, p2
             # Standard substring match
             elif p in tl:
@@ -1479,8 +1561,8 @@ class VoiceSession:
         self._active = False
 
     def _print(self, msg: str) -> None:
-        if self.visual:
-            print(msg, flush=True)
+        # In daemon mode, we want these to appear in the log file
+        print(msg, flush=True)
 
     def _greeting(self) -> str:
         """Generate the same greeting Aurora would give to 'hey aurora' in chat."""
@@ -1495,6 +1577,11 @@ class VoiceSession:
         Record audio from the microphone for as long as SPACE is held.
         Returns raw PCM bytes (16kHz, mono, int16) or None on error.
         """
+        if _IS_TERMUX and shutil.which("termux-microphone-record"):
+            # For Termux we'll use a fixed length since we can't easily detect key release
+            # when running as a command-line tool via termux-api.
+            return self._record_until_silence()
+
         try:
             import sounddevice as sd
             import numpy as np
@@ -1527,6 +1614,9 @@ class VoiceSession:
 
     def _record_until_stop_event(self, stop_event: threading.Event, max_duration: float = MAX_RECORD_SEC) -> Optional[bytes]:
         """Record until an external stop event is set or max_duration is reached."""
+        if _IS_TERMUX and shutil.which("termux-microphone-record"):
+            return self._record_until_silence(max_duration=max_duration)
+
         try:
             import sounddevice as sd
             import numpy as np
@@ -1567,6 +1657,53 @@ class VoiceSession:
         Record audio once speech begins, then stop after sustained silence.
         Returns raw PCM bytes (16kHz, mono, int16) or None on timeout/error.
         """
+        if _IS_TERMUX and shutil.which("termux-microphone-record"):
+            # Use a path in the home directory which is definitely writable
+            tmp_wav = os.path.expanduser("~/aurora_mic_temp.wav")
+            try:
+                if os.path.exists(tmp_wav): os.unlink(tmp_wav)
+                self._print(f"  [VOICE] Starting Termux recording (10s) to {tmp_wav}...")
+                
+                # Run the command and capture output for debugging
+                rec_proc = subprocess.run(
+                    ["termux-microphone-record", "-f", tmp_wav, "-l", "10"],
+                    capture_output=True, text=True, timeout=15
+                )
+                
+                if rec_proc.returncode != 0:
+                    self._print(f"  [VOICE] termux-microphone-record failed: {rec_proc.stderr}")
+                    return None
+                
+                if not os.path.exists(tmp_wav) or os.path.getsize(tmp_wav) < 100:
+                    self._print(f"  [VOICE] Termux recording file missing or too small (Size: {os.path.getsize(tmp_wav) if os.path.exists(tmp_wav) else 'N/A'})")
+                    if os.path.exists(tmp_wav): os.unlink(tmp_wav)
+                    return None
+                
+                # Convert to raw PCM (16kHz, mono, int16) using ffmpeg
+                tmp_raw = os.path.expanduser("~/aurora_mic_temp.raw")
+                if os.path.exists(tmp_raw): os.unlink(tmp_raw)
+                
+                self._print("  [VOICE] Converting audio to PCM...")
+                subprocess.run([
+                    "ffmpeg", "-y", "-i", tmp_wav,
+                    "-f", "s16le", "-acodec", "pcm_s16le",
+                    "-ar", str(SAMPLE_RATE), "-ac", str(CHANNELS),
+                    tmp_raw
+                ], check=True, stderr=subprocess.DEVNULL)
+                
+                with open(tmp_raw, "rb") as f:
+                    audio_bytes = f.read()
+                
+                self._print(f"  [VOICE] Successfully captured {len(audio_bytes)} bytes of audio.")
+                
+                os.unlink(tmp_wav)
+                os.unlink(tmp_raw)
+                return audio_bytes
+            except Exception as e:
+                self._print(f"  [VOICE] Termux recording/conversion failed: {e}")
+                if os.path.exists(tmp_wav): os.unlink(tmp_wav)
+                return None
+
         try:
             import sounddevice as sd
             import numpy as np

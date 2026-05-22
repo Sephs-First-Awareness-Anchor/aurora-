@@ -90,8 +90,19 @@ class _HomeScreenState extends State<HomeScreen>
             if (_embState != 'DORMANT') _startListening();
           }
         case 'permission':
-          if (type == 'microphone' && (event['granted'] as bool? ?? false)) {
-            if (!_speaking) _startListening();
+          if (type == 'update' && mounted) {
+            final map = event['granted_map'] as Map?;
+            if (map != null) {
+              final mic = map['microphone'] == true;
+              if (mic && !_speaking) _startListening();
+            }
+          }
+        case 'camera':
+          if (type == 'captured' && mounted) {
+            setState(() => _statusTxt = 'Vision captured!');
+            Future.delayed(const Duration(seconds: 2), () {
+              if (mounted) setState(() => _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…');
+            });
           }
         default: // aurora service events
           switch (type) {
@@ -129,14 +140,17 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _processRecognizedText(String words) {
     final lower = words.toLowerCase().trim();
-    if (lower.isEmpty || (!_inConversation && !lower.contains('aurora'))) {
+    if (lower.isEmpty) {
       if (!_speaking) _startListening();
       return;
     }
-    if (_inConversation) {
+
+    // If we're already in a conversation, respond to EVERYTHING heard.
+    // If not, only respond if "Aurora" is mentioned.
+    if (_inConversation || _embState == 'SUMMONED') {
       _resetConversationWindow();
       _sendMessage(words);
-    } else {
+    } else if (lower.contains('aurora')) {
       final idx   = lower.indexOf('aurora');
       final after = words.substring(idx + 6).trim();
       _summon();
@@ -145,6 +159,9 @@ class _HomeScreenState extends State<HomeScreen>
       } else {
         _speak('Yes?');
       }
+    } else {
+      // Not for us, keep listening
+      if (!_speaking) _startListening();
     }
   }
 
@@ -355,6 +372,12 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          if (state == 'SUMMONED')
+            IconButton(
+              icon: const Icon(Icons.visibility_rounded, color: Colors.white54),
+              onPressed: () => AuroraBridge.captureVision(),
+              tooltip: 'Capture Vision',
+            ),
           if (state == 'SUMMONED' && onBackground != null)
             IconButton(
               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white54),
