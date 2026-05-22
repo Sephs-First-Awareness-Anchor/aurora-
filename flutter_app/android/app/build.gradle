@@ -86,9 +86,9 @@ chaquopy {
             install "python-dateutil==2.9.0.post0"
             install "pytz==2022.1"
             install "psutil==7.2.1"
-            install "numpy"
-            install "anthropic"
-            install "openai"
+            install "numpy==1.26.4"
+            install "anthropic==0.84.0"
+            install "openai==2.26.0"
         }
     }
 }
