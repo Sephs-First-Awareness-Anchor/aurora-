@@ -5,6 +5,12 @@ plugins {
     id "com.chaquo.python"
 }
 
+// ── Ensure Python directory exists at configuration time ──────────────
+File pythonDir = file("src/main/python")
+if (!pythonDir.exists()) {
+    pythonDir.mkdirs()
+}
+
 // ── Copy Aurora Python modules into the standard python srcDir ──────────────
 task preparePythonSources {
     def repoRoot = file("../../..")
@@ -58,7 +64,6 @@ task preparePythonSources {
                 exclude "seed_*.py"
                 exclude "termux_*.py"
                 exclude "arena_compare.py"
-                exclude "corpus_runner.py"
             }
             into destDir
         }
@@ -129,6 +134,16 @@ chaquopy {
             install "psutil==7.1.3"
             install "numpy==1.26.2"
             install "Pillow"          // used by cv2 Android shim (imwrite/imread)
+        }
+    }
+}
+
+// ── Disable strict validation on Chaquopy's generated merge tasks ──
+tasks.withType(org.gradle.api.tasks.Copy).configureEach { task ->
+    if (task.name.contains("mergePython")) {
+        task.doFirst {
+            // Ensure output directory exists before validation
+            task.outputs.files.each { it.mkdirs() }
         }
     }
 }
