@@ -13,18 +13,19 @@ task preparePythonSources {
     inputs.files fileTree(repoRoot) {
         include "aurora_core_ai/**/*.py"
         include "aurora_internal/**/*.py"
-        include "aurora_support_stack.py"
+        include "aurora_*.py"
         include "foundational_contract.py"
-        include "aurora_live_vision.py"
-        include "aurora_expression_perception.py"
-        include "aurora_constraint_engine.py"
+        include "quasiarch_observer.py"
+        include "quasiarch_bridge.py"
+        include "constraint_genealogy_closure_wiring.py"
+        include "dce_10state.py"
+        include "dce_obligation_gate.py"
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
     }
     outputs.dir destDir
 
     doFirst {
-        // Ensure the directory exists before Gradle validates it
         destDir.mkdirs()
     }
 
@@ -37,13 +38,18 @@ task preparePythonSources {
             from(repoRoot) { include "aurora_internal/**/*.py"; exclude "**/__pycache__/**" }
             into destDir
         }
+        // All root-level aurora_*.py modules + other support files imported during boot.
+        // aurora_mobile.py is excluded — replaced by aurora_bridge.py on Android.
         copy {
             from(repoRoot) {
-                include "aurora_support_stack.py"
+                include "aurora_*.py"
                 include "foundational_contract.py"
-                include "aurora_live_vision.py"
-                include "aurora_expression_perception.py"
-                include "aurora_constraint_engine.py"
+                include "quasiarch_observer.py"
+                include "quasiarch_bridge.py"
+                include "constraint_genealogy_closure_wiring.py"
+                include "dce_10state.py"
+                include "dce_obligation_gate.py"
+                exclude "aurora_mobile.py"
             }
             into destDir
         }
