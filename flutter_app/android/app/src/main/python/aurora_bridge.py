@@ -8,6 +8,7 @@ that all audio I/O stays on the Flutter/Kotlin side.
 from __future__ import annotations
 
 import logging
+import os
 import sys
 import threading
 import traceback
@@ -39,18 +40,31 @@ def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     global _systems
     _setup_paths()
+    # aurora_core_ai/aurora.py's _ensure_runtime_dependencies tries subprocess.run
+    # (pip install) which crashes Chaquopy's Android Python.  Block it here.
+    os.environ['AURORA_SKIP_DEP_INSTALL'] = '1'
     try:
         from aurora_core_ai.aurora import boot_aurora  # type: ignore
         kwargs: dict = {"verbose": False, "runtime_profile": "full"}
         if state_dir:
             kwargs["state_dir"] = state_dir
-        with _lock:
-            _systems = boot_aurora(**kwargs)
+        try:
+            with _lock:
+                _systems = boot_aurora(**kwargs)
+        except TypeError:
+            # build doesn't accept all kwargs — try minimal set
+            with _lock:
+                _systems = boot_aurora(state_dir=state_dir) if state_dir else boot_aurora()
+        if _systems is None:
+            return "error: boot_aurora returned None"
         log.info("Aurora boot complete")
         return "ready"
     except Exception as exc:
-        log.error("boot_aurora failed: %s\n%s", exc, traceback.format_exc())
-        return f"error: {exc}"
+        tb = traceback.format_exc()
+        log.error("boot_aurora failed: %s\n%s", exc, tb)
+        # Return just the most useful line — the last line of the traceback
+        last_line = [l.strip() for l in tb.splitlines() if l.strip()][-1]
+        return f"error: {last_line}"
 
 
 def handle_message(text: str) -> str:

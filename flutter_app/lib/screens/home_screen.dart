@@ -112,7 +112,11 @@ class _HomeScreenState extends State<HomeScreen>
               }
               _speak('Aurora is online.');
             case 'error':
-              if (mounted) setState(() => _statusTxt = 'Error: $text');
+              if (mounted) {
+                // Show the real error message so it's visible for diagnosis.
+                final short = text.length > 120 ? '${text.substring(0, 120)}…' : text;
+                setState(() { _aiReady = false; _statusTxt = 'Boot error: $short'; });
+              }
             default:
               break;
           }
