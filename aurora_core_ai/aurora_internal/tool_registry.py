@@ -899,6 +899,33 @@ def _is_termux() -> bool:
         or _shutil.which("termux-info") is not None
     )
 
+def _is_chaquopy_android() -> bool:
+    """True when running inside a Chaquopy-embedded Android app (non-Termux)."""
+    return os.environ.get("AURORA_ANDROID") == "1" and not _is_termux()
+
+def _chaquopy_launch_app(package: str) -> tuple:
+    """Launch an app via Android Intent using Chaquopy's Java bridge."""
+    from android import mActivity  # Chaquopy-injected current Activity
+    from android.content import Intent
+    pm = mActivity.getPackageManager()
+    launch_intent = pm.getLaunchIntentForPackage(package)
+    if launch_intent is None:
+        return False, f"No launcher found for {package}"
+    from android.content.pm import PackageManager
+    launch_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    mActivity.startActivity(launch_intent)
+    return True, f"Launched {package}"
+
+def _chaquopy_open_url(url: str) -> tuple:
+    """Open a URL via Android Intent using Chaquopy's Java bridge."""
+    from android import mActivity
+    from android.content import Intent
+    from android.net import Uri
+    intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    mActivity.startActivity(intent)
+    return True, f"Opened {url}"
+
 def _termux_run(cmd: list, timeout: int = 15) -> tuple:
     """Run a termux-api command. Returns (stdout, stderr, returncode)."""
     try:
@@ -1038,12 +1065,18 @@ def _mobile_launch_app(package: str = "", systems: Optional[Dict[str, Any]] = No
     """Launch an Android app by name or package (e.g. 'Spotify' or 'com.spotify.music')."""
     if not package:
         return ToolResult("mobile_launch_app", "", False, "app name or package required")
-    if not _is_termux():
-        return ToolResult("mobile_launch_app", "", False, "not running on Termux")
     resolved = _resolve_app_package(package)
     if not resolved:
-        return ToolResult("mobile_launch_app", "", False, f"couldn't find app '{package}' on device")
-    # Try monkey — works for any package regardless of exact activity name
+        return ToolResult("mobile_launch_app", "", False, f"unknown app: '{package}'")
+    # Chaquopy/Android path — uses Java Intent bridge, no Termux needed
+    if _is_chaquopy_android():
+        try:
+            ok, msg = _chaquopy_launch_app(resolved)
+            return ToolResult("mobile_launch_app", msg, ok, "" if ok else msg)
+        except Exception as exc:
+            return ToolResult("mobile_launch_app", "", False, str(exc))
+    if not _is_termux():
+        return ToolResult("mobile_launch_app", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(
         ["monkey", "-p", resolved, "-c", "android.intent.category.LAUNCHER", "1"],
         timeout=10,
@@ -1051,10 +1084,8 @@ def _mobile_launch_app(package: str = "", systems: Optional[Dict[str, Any]] = No
     if rc == 0:
         label = package if package.lower() != resolved else resolved
         return ToolResult("mobile_launch_app", f"Launched {label} ({resolved})", True)
-    # Fallback: am start with guessed MainActivity
     out2, err2, rc2 = _termux_run(
-        ["am", "start", "--user", "0", "-n", f"{resolved}/.MainActivity"],
-        timeout=10,
+        ["am", "start", "--user", "0", "-n", f"{resolved}/.MainActivity"], timeout=10,
     )
     if rc2 == 0:
         return ToolResult("mobile_launch_app", f"Launched {resolved}", True)
@@ -1065,8 +1096,14 @@ def _mobile_open_url(url: str = "", systems: Optional[Dict[str, Any]] = None, **
     """Open a URL in Android's default browser or associated app."""
     if not url:
         return ToolResult("mobile_open_url", "", False, "URL required")
+    if _is_chaquopy_android():
+        try:
+            ok, msg = _chaquopy_open_url(url)
+            return ToolResult("mobile_open_url", msg, ok, "" if ok else msg)
+        except Exception as exc:
+            return ToolResult("mobile_open_url", "", False, str(exc))
     if not _is_termux():
-        return ToolResult("mobile_open_url", "", False, "not running on Termux")
+        return ToolResult("mobile_open_url", "", False, "not running on Android/Termux")
     out, err, rc = _termux_run(["termux-open-url", url], timeout=10)
     if rc == 0:
         return ToolResult("mobile_open_url", f"Opened: {url}", True)

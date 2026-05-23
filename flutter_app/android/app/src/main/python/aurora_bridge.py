@@ -84,6 +84,14 @@ def initialize(state_dir: str = "") -> str:
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
     os.environ["AURORA_SKIP_DEP_INSTALL"] = "1"
+    # Signal Android/Chaquopy context so tool registry skips desktop/Termux paths.
+    os.environ["AURORA_ANDROID"] = "1"
+    # Change CWD to state_dir so all relative file writes (aurora_debug.log etc.)
+    # land in the app's writable internal storage instead of crashing on a
+    # read-only or missing path.
+    if state_dir:
+        os.makedirs(state_dir, exist_ok=True)
+        os.chdir(state_dir)
     try:
         # Use the root aurora.py (unified runner) — it integrates the Language
         # Sub-Emergent Field and ThoughtIntegrationSpace into the response pipeline.

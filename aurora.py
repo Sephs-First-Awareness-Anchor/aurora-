@@ -7462,9 +7462,12 @@ def dual_question_pipeline(
         faculty_attention=faculty_attention
     )
     
-    with open('aurora_debug.log', 'a') as f_log:
-        f_log.write(f"Comprehension done. text: {bool(comp_text)}\n")
-        f_log.write("Calling _select_tool...\n")
+    try:
+        with open('aurora_debug.log', 'a') as f_log:
+            f_log.write(f"Comprehension done. text: {bool(comp_text)}\n")
+            f_log.write("Calling _select_tool...\n")
+    except Exception:
+        pass
     if comp_text:
         # LOGGING
         pass # Keep comp_text intact to allow responding in voice mode
@@ -7639,15 +7642,18 @@ def dual_question_pipeline(
             processed_content = f"{processed_content}\n\n{_tool_result.as_evidence_fragment()}"
     
     # LOGGING TOOL RESULT
-    with open('aurora_debug.log', 'a') as f_log:
-        if _tool_result:
-            f_log.write(f"Tool Executed: '{_tname}' | Success: {_tool_result.success}\n")
-            if not _tool_result.success:
-                f_log.write(f"Tool Error: {_tool_result.note}\n")
-        elif _tname:
-            f_log.write(f"Tool Selected: '{_tname}' | BUT EXECUTION FAILED (None result)\n")
-        else:
-            f_log.write("No Tool Selected\n")
+    try:
+        with open('aurora_debug.log', 'a') as f_log:
+            if _tool_result:
+                f_log.write(f"Tool Executed: '{_tname}' | Success: {_tool_result.success}\n")
+                if not _tool_result.success:
+                    f_log.write(f"Tool Error: {_tool_result.note}\n")
+            elif _tname:
+                f_log.write(f"Tool Selected: '{_tname}' | BUT EXECUTION FAILED (None result)\n")
+            else:
+                f_log.write("No Tool Selected\n")
+    except Exception:
+        pass
     
     # VISIBLE TOOL DEBUG
     if _tool_result:
@@ -10318,8 +10324,12 @@ def process_external_user_turn(
     )
     
     # LOGGING
-    with open('aurora_debug.log', 'a') as f_log:
-        f_log.write(f"Process External Turn Result: {getattr(resp_A, 'src', 'unknown')} | {resp_A.content[:50]}\\n")
+    try:
+        _resp_a_preview = str(getattr(resp_A, 'content', '') or '')[:50] if resp_A is not None else 'None'
+        with open('aurora_debug.log', 'a') as f_log:
+            f_log.write(f"Process External Turn Result: {getattr(resp_A, 'src', 'unknown')} | {_resp_a_preview}\n")
+    except Exception:
+        pass
 
     return {
         "resp_A": resp_A,
