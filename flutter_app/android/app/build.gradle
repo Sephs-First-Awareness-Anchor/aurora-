@@ -19,6 +19,7 @@ task preparePythonSources {
     inputs.files fileTree(repoRoot) {
         include "aurora_core_ai/**/*.py"
         include "aurora_internal/**/*.py"
+        include "aurora_manifold_directory/**"
         include "*.py"
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
@@ -37,6 +38,14 @@ task preparePythonSources {
         }
         copy {
             from(repoRoot) { include "aurora_internal/**/*.py"; exclude "**/__pycache__/**" }
+            into destDir
+        }
+        // Manifold directory — King Quasicrystal identity field data + Python package
+        copy {
+            from(repoRoot) {
+                include "aurora_manifold_directory/**"
+                exclude "**/__pycache__/**"
+            }
             into destDir
         }
         // All root-level runtime modules. Exclude only test/debug/tooling scripts
