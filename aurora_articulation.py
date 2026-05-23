@@ -474,6 +474,19 @@ def _is_word_salad(text: str) -> bool:
         r"\bstate the meaning\b",
         r"\bdid the meaning\b",
         r"\bdeepen the meaning\b",
+        # T-axis frame leakage — "Following from X, this continues."
+        r"\bfollowing from\b.*\bthis continues\b",
+        r",\s*this continues[\.\s]*$",
+        r"^following from\b",
+        # B-axis frame leakage — "This is where X holds its shape."
+        r"\bholds its shape\b",
+        # N-axis / abstract frame leakage
+        r"\bin proportion\b.*\bhere\b",
+        # Anchor template frame leakage — "The connection between X and Y matters."
+        # when Y is a filler word (adverb/conjunction that isn't a concept)
+        r"\bthe connection between\b.*\band\b.*\bmatters\b",
+        # "this continues" as a sentence ending in any form
+        r"\bthis continues[\.\s]*$",
     ]
     for _pat in _artifact_pats:
         if re.search(_pat, t_lower):

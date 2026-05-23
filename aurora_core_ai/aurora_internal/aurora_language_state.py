@@ -812,11 +812,11 @@ class SemanticIntentCompiler:
                 base = f"Where does {content} actually frame itself?"
             elif stance.boundary_resolution == "framing":
                 if content != rp:
-                    base = f"This is where {content} holds its shape."
+                    base = f"{content} is where the line is."
                 else:
                     base = f"The boundary here is {content}."
             else:
-                base = f"The distinction here is {content}."
+                base = f"{content} is what separates it."
             if support_phrase and support_phrase not in base.lower():
                 base = base.rstrip(".") + f", and I want to {support_phrase}."
 
@@ -825,9 +825,9 @@ class SemanticIntentCompiler:
             if is_q:
                 base = f"What does {content} lead into from here?"
             elif stance.time_rendering_mode == "sequential":
-                base = f"Following from {content}, this continues." if not uncertain else f"I'm tracing where {content} goes."
+                base = f"{content} carries into what's next." if not uncertain else f"I'm tracing where {content} goes."
             else:
-                base = f"This threads through {content}."
+                base = f"{content} threads through this."
             if relation_phrase:
                 base = base.rstrip(".") + f", {relation_phrase}."
 

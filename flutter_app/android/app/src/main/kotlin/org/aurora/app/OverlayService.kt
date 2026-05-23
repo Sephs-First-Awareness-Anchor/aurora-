@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -35,8 +36,18 @@ class OverlayService : Service() {
 
     private fun addOrb() {
         Log.i("Aurora", "OverlayService: adding orb")
-        orbView = View(this).apply { 
-            setBackgroundColor(0xFFA020F0.toInt()) // Solid purple
+        orbView = View(this).apply {
+            // Circular orb: radial gradient from bright violet-white core to deep purple edge
+            val orb = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(0xFFE8D5FF.toInt(), 0xFFC060FF.toInt(), 0xFF7010C0.toInt())
+            ).also {
+                it.gradientType = GradientDrawable.RADIAL_GRADIENT
+                it.gradientRadius = 90f   // matches the 60dp view diameter × 1.5 for soft bloom
+                it.shape = GradientDrawable.OVAL
+                it.alpha = 220            // slight transparency so it feels luminous
+            }
+            background = orb
         }
 
         val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
