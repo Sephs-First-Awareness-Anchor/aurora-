@@ -6,7 +6,9 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Intent
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
@@ -22,7 +24,21 @@ class AuroraService : Service() {
         private const val NOTIF_ID   = 1
 
         var currentState: String = "DORMANT"
+
+        // Stored so it can be replayed if Flutter subscribes after boot completes.
+        @Volatile private var bootEvent: String? = null
         @Volatile var eventSink: EventChannel.EventSink? = null
+
+        /** Called by MainActivity's EventChannel onListen / onCancel. */
+        fun onSinkConnected(sink: EventChannel.EventSink?) {
+            eventSink = sink
+            // Replay the boot result if Aurora already finished before Flutter subscribed.
+            if (sink != null) {
+                bootEvent?.let { evt ->
+                    Handler(Looper.getMainLooper()).post { eventSink?.success(evt) }
+                }
+            }
+        }
 
         private var scope: CoroutineScope? = null
 
@@ -85,23 +101,22 @@ class AuroraService : Service() {
             val py     = Python.getInstance()
             val bridge = py.getModule("aurora_bridge")
 
-            // Pass the app's files directory so Aurora can persist state
             val stateDir = filesDir.absolutePath + "/aurora_state"
             val status   = bridge.callAttr("initialize", stateDir).toString()
             Log.i(TAG, "Aurora bridge init: $status")
 
-            withContext(Dispatchers.Main) {
-                eventSink?.success(
-                    JSONObject().put("type", "ready").put("text", status).toString()
-                )
-            }
+            val json = JSONObject().put("type", "ready").put("text", status).toString()
+            bootEvent = json
+            withContext(Dispatchers.Main) { eventSink?.success(json) }
+
         } catch (e: Exception) {
             Log.e(TAG, "Python init failed: ${e.message}")
-            withContext(Dispatchers.Main) {
-                eventSink?.success(
-                    JSONObject().put("type", "error").put("text", e.message ?: "init failed").toString()
-                )
-            }
+            val json = JSONObject()
+                .put("type", "error")
+                .put("text", e.message ?: "init failed")
+                .toString()
+            bootEvent = json
+            withContext(Dispatchers.Main) { eventSink?.success(json) }
         }
     }
 
