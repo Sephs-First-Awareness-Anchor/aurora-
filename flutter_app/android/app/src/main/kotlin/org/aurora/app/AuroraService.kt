@@ -105,7 +105,12 @@ class AuroraService : Service() {
             val status   = bridge.callAttr("initialize", stateDir).toString()
             Log.i(TAG, "Aurora bridge init: $status")
 
-            val json = JSONObject().put("type", "ready").put("text", status).toString()
+            // Python returns "error: <msg>" on boot failure; treat anything else as ready.
+            val isError = status.startsWith("error")
+            val json = JSONObject()
+                .put("type", if (isError) "error" else "ready")
+                .put("text", status)
+                .toString()
             bootEvent = json
             withContext(Dispatchers.Main) { eventSink?.success(json) }
 
