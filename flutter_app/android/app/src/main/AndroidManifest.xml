@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Core permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -30,7 +31,6 @@
         android:name="${applicationName}"
         android:icon="@android:drawable/sym_def_app_icon"
         android:allowBackup="false"
-        xmlns:tools="http://schemas.android.com/tools"
         android:supportsRtl="true">
 
         <activity
@@ -60,10 +60,7 @@
         <service
             android:name=".OverlayService"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Aurora Overlay" />
-        </service>
+            android:foregroundServiceType="dataSync" />
 
         <meta-data
             android:name="flutterEmbedding"

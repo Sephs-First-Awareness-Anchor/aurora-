@@ -153,14 +153,20 @@ class MainActivity : FlutterActivity() {
                     "stopListening"  -> { speechRecognizer?.stopListening(); result.success(null) }
                     "speak"          -> { nativeSpeak(call.argument<String>("text") ?: ""); result.success(null) }
                     "stopSpeaking"   -> { tts?.stop(); result.success(null) }
+                    "captureVision"  -> {
+                        AuroraService.eventSink?.success(
+                            JSONObject().put("source","camera").put("type","captured").toString()
+                        )
+                        result.success(null)
+                    }
                     else             -> result.notImplemented()
                 }
             }
 
         EventChannel(engine.dartExecutor.binaryMessenger, EVENTS)
             .setStreamHandler(object : EventChannel.StreamHandler {
-                override fun onListen(args: Any?, sink: EventChannel.EventSink?) { AuroraService.eventSink = sink }
-                override fun onCancel(args: Any?) { AuroraService.eventSink = null }
+                override fun onListen(args: Any?, sink: EventChannel.EventSink?) { AuroraService.onSinkConnected(sink) }
+                override fun onCancel(args: Any?) { AuroraService.onSinkConnected(null) }
             })
 
         startAuroraService()
