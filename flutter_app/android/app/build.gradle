@@ -13,15 +13,10 @@ task preparePythonSources {
     inputs.files fileTree(repoRoot) {
         include "aurora_core_ai/**/*.py"
         include "aurora_internal/**/*.py"
-        include "aurora_*.py"
-        include "foundational_contract.py"
-        include "quasiarch_observer.py"
-        include "quasiarch_bridge.py"
-        include "constraint_genealogy_closure_wiring.py"
-        include "dce_10state.py"
-        include "dce_obligation_gate.py"
+        include "*.py"
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
+        exclude "aurora_mobile.py"
     }
     outputs.dir destDir
 
@@ -38,18 +33,32 @@ task preparePythonSources {
             from(repoRoot) { include "aurora_internal/**/*.py"; exclude "**/__pycache__/**" }
             into destDir
         }
-        // All root-level aurora_*.py modules + other support files imported during boot.
+        // All root-level runtime modules. Exclude only test/debug/tooling scripts
+        // that are never imported by Aurora's boot sequence.
         // aurora_mobile.py is excluded — replaced by aurora_bridge.py on Android.
         copy {
             from(repoRoot) {
-                include "aurora_*.py"
-                include "foundational_contract.py"
-                include "quasiarch_observer.py"
-                include "quasiarch_bridge.py"
-                include "constraint_genealogy_closure_wiring.py"
-                include "dce_10state.py"
-                include "dce_obligation_gate.py"
+                include "*.py"
                 exclude "aurora_mobile.py"
+                exclude "test_*.py"
+                exclude "_*test*.py"
+                exclude "debug_*.py"
+                exclude "run_*.py"
+                exclude "fix_*.py"
+                exclude "refactor_*.py"
+                exclude "generate_*.py"
+                exclude "sentinel*.py"
+                exclude "chatscriber.py"
+                exclude "crystalzip*.py"
+                exclude "clean_*.py"
+                exclude "swap_*.py"
+                exclude "append_*.py"
+                exclude "process_docs.py"
+                exclude "force_evolve.py"
+                exclude "seed_*.py"
+                exclude "termux_*.py"
+                exclude "arena_compare.py"
+                exclude "corpus_runner.py"
             }
             into destDir
         }
