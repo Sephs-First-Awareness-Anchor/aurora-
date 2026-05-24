@@ -52,7 +52,7 @@ class _OrbPainter extends CustomPainter {
 
   // Stacked horizontal bands. The orb sits inside this field like a planet
   // inside electrified rings.
-  static const _bandOffsets = [-0.66, -0.34, 0.0, 0.34, 0.66];
+  static const _bandOffsets = [-0.40, -0.20, -0.03, 0.15, 0.34];
 
   // Per-band phase offsets so the waveform never stacks into one flat stripe.
   static const _phaseOff = [0.0, 1.26, 2.51, 3.77, 5.03];
@@ -176,7 +176,7 @@ class _OrbPainter extends CustomPainter {
       final rippleAmp = active
           ? (state == OrbState.speaking ? 0.24 : 0.15)
           : (state == OrbState.dormant ? 0.025 : 0.065);
-      final amplitude = r * rippleAmp * (0.75 + bandPulse * 0.55);
+      final amplitude = r * rippleAmp * (0.85 + bandPulse * 0.65);
       final brightness = (active ? baseIntensity + bandPulse * 0.55 : baseIntensity * 0.55 + bandPulse * 0.16)
           .clamp(0.0, 1.0);
       final alphaScale = frontPass ? 0.66 : 1.0;
@@ -186,51 +186,68 @@ class _OrbPainter extends CustomPainter {
               : (1.0 + bandPulse * 1.0)) *
           (frontPass ? 0.76 : 1.0);
 
-      final path = Path();
       final major = r * 1.82;
       final yBase = center.dy + r * _bandOffsets[i];
       final start = frontPass ? -0.58 : -1.0;
       final end = frontPass ? 0.58 : 1.0;
       const steps = 132;
-      for (int s = 0; s <= steps; s++) {
-        final u = start + (end - start) * s / steps;
-        final x = center.dx + u * major;
-        final ringCurve = math.sin(u * math.pi) * r * 0.12;
-        final envelope = 0.34 + 0.66 * math.sqrt((1.0 - u * u).clamp(0.0, 1.0));
-        final carrier = math.sin((u + 1.0) * math.pi * 7.0 + phi);
-        final jitter = math.sin((u + 1.0) * math.pi * 19.0 + phi * 1.7) * amplitude * 0.22;
-        final y = yBase + ringCurve + carrier * amplitude * envelope + jitter;
-        if (s == 0) {
-          path.moveTo(x, y);
-        } else {
-          path.lineTo(x, y);
+
+      for (int strand = 0; strand < 3; strand++) {
+        final strandBias = (strand - 1) * r * 0.052;
+        final strandPhase = phi + strand * 0.83 + i * 0.31;
+        final strandAmp = amplitude * (0.82 + strand * 0.16);
+        final path = Path();
+
+        for (int s = 0; s <= steps; s++) {
+          final u = start + (end - start) * s / steps;
+          final x = center.dx + u * major;
+          final wrap = math.sqrt((1.0 - u * u).clamp(0.0, 1.0));
+          final depthCurve = wrap * r * (frontPass ? -0.105 : 0.115);
+          final ringCurve = math.sin(u * math.pi) * r * 0.10;
+          final envelope = 0.28 + 0.72 * wrap;
+          final carrier = math.sin((u + 1.0) * math.pi * 8.5 + strandPhase);
+          final jitter =
+              math.sin((u + 1.0) * math.pi * 23.0 + strandPhase * 1.7) *
+              strandAmp *
+              0.30;
+          final y = yBase +
+              strandBias +
+              depthCurve +
+              ringCurve +
+              carrier * strandAmp * envelope +
+              jitter;
+          if (s == 0) {
+            path.moveTo(x, y);
+          } else {
+            path.lineTo(x, y);
+          }
         }
+
+        final separatorPaint = Paint()
+          ..color = Colors.black.withOpacity(frontPass ? 0.62 : 0.86)
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..strokeWidth = strokeW + (active ? 4.8 : 3.5);
+        canvas.drawPath(path, separatorPaint);
+
+        final glowPaint = Paint()
+          ..color = _colors[i].withOpacity((strokeAlpha * 0.42 / 255.0).clamp(0.0, 1.0))
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..strokeWidth = strokeW * (frontPass ? 3.4 : 6.1)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, strokeW * 2.8);
+        canvas.drawPath(path, glowPaint);
+
+        final linePaint = Paint()
+          ..color = _colors[i].withOpacity((strokeAlpha / 255.0).clamp(0.0, 1.0))
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..strokeWidth = strokeW * (strand == 1 ? 1.0 : 0.72);
+        canvas.drawPath(path, linePaint);
       }
-
-      final separatorPaint = Paint()
-        ..color = Colors.black.withOpacity(frontPass ? 0.58 : 0.82)
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..strokeWidth = strokeW + (active ? 4.4 : 3.2);
-      canvas.drawPath(path, separatorPaint);
-
-      final glowPaint = Paint()
-        ..color = _colors[i].withOpacity((strokeAlpha * 0.34 / 255.0).clamp(0.0, 1.0))
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..strokeWidth = strokeW * (frontPass ? 3.0 : 5.4)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, strokeW * 2.4);
-      canvas.drawPath(path, glowPaint);
-
-      final linePaint = Paint()
-        ..color = _colors[i].withOpacity(strokeAlpha / 255.0)
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round
-        ..strokeWidth = strokeW;
-      canvas.drawPath(path, linePaint);
     }
   }
 

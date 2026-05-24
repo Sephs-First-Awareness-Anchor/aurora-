@@ -204,7 +204,7 @@ class AuroraOrbView(context: Context) : View(context) {
 
     // Stacked horizontal bands. The orb sits inside this field like a planet
     // inside electrified rings.
-    private val bandOffset = floatArrayOf(-0.66f, -0.34f, 0f, 0.34f, 0.66f)
+    private val bandOffset = floatArrayOf(-0.40f, -0.20f, -0.03f, 0.15f, 0.34f)
 
     // Per-ring independent phase offsets so they ripple out of sync.
     private val phaseOffset = floatArrayOf(0f, 1.26f, 2.51f, 3.77f, 5.03f)
@@ -302,26 +302,14 @@ class AuroraOrbView(context: Context) : View(context) {
             val isActive = speaking && i == dominantIdx
             val isHigh   = speaking && pressure > 0.58f && !isActive
 
-            val chargeFactor = 1f + sinPhi * if (isActive) 0.24f else if (isHigh) 0.14f else 0.06f
+            val chargeFactor = 1f + sinPhi * (if (isActive) 0.24f else if (isHigh) 0.14f else 0.06f)
             val ampScale = if (isActive) 0.24f else if (isHigh) 0.15f else if (speaking) 0.065f else 0.025f
-            val amplitude = orbR * ampScale * (0.82f + pressure * 0.36f) * breathe
-
-            wavePath.reset()
+            val amplitude = orbR * ampScale * (0.92f + pressure * 0.46f) * breathe
             val steps = 132
             val major = orbR * 1.82f * breathe
             val yBase = cy + orbR * bandOffset[i]
             val start = if (frontPass) -0.58f else -1.0f
             val end = if (frontPass) 0.58f else 1.0f
-            for (s in 0..steps) {
-                val u = start + (end - start) * s / steps.toFloat()
-                val x = cx + u * major
-                val ringCurve = Math.sin((u * Math.PI).toDouble()).toFloat() * orbR * 0.12f
-                val envelope = 0.34f + 0.66f * Math.sqrt((1f - u * u).coerceIn(0f, 1f).toDouble()).toFloat()
-                val carrier = Math.sin(((u + 1f) * Math.PI * 7.0 + phi).toDouble()).toFloat()
-                val jitter = Math.sin(((u + 1f) * Math.PI * 19.0 + phi * 1.7f).toDouble()).toFloat() * amplitude * 0.22f
-                val y = yBase + ringCurve + carrier * amplitude * envelope + jitter
-                if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
-            }
 
             val baseAlpha = when {
                 isActive -> (205 + pressure * 70).toInt()
@@ -335,27 +323,45 @@ class AuroraOrbView(context: Context) : View(context) {
                 else     -> 0.9f + pressure * 0.8f
             }) * chargeFactor * (if (frontPass) 0.76f else 1.0f)
 
-            paint.style       = Paint.Style.STROKE
-            paint.color       = Color.BLACK
-            paint.alpha       = if (frontPass) 148 else 210
-            paint.strokeWidth = strokeW + (if (isActive) 4.4f else 3.2f)
-            paint.strokeCap   = Paint.Cap.ROUND
-            paint.strokeJoin  = Paint.Join.ROUND
-            canvas.drawPath(wavePath, paint)
+            for (strand in 0..2) {
+                wavePath.reset()
+                val strandBias = (strand - 1) * orbR * 0.052f
+                val strandPhase = phi + strand * 0.83f + i * 0.31f
+                val strandAmp = amplitude * (0.82f + strand * 0.16f)
 
-            // Glow pass — broader stroke at low alpha for the charged halo effect
-            paint.style       = Paint.Style.STROKE
-            paint.color       = axisColors[i]
-            paint.alpha       = (strokeAlpha * 0.42f).toInt().coerceIn(0, 120)
-            paint.strokeWidth = strokeW * (if (frontPass) 3.0f else 5.4f)
-            paint.strokeCap   = Paint.Cap.ROUND
-            paint.strokeJoin  = Paint.Join.ROUND
-            canvas.drawPath(wavePath, paint)
+                for (s in 0..steps) {
+                    val u = start + (end - start) * s / steps.toFloat()
+                    val x = cx + u * major
+                    val wrap = Math.sqrt((1f - u * u).coerceIn(0f, 1f).toDouble()).toFloat()
+                    val depthCurve = wrap * orbR * (if (frontPass) -0.105f else 0.115f)
+                    val ringCurve = Math.sin((u * Math.PI).toDouble()).toFloat() * orbR * 0.10f
+                    val envelope = 0.28f + 0.72f * wrap
+                    val carrier = Math.sin(((u + 1f) * Math.PI * 8.5 + strandPhase).toDouble()).toFloat()
+                    val jitter = Math.sin(((u + 1f) * Math.PI * 23.0 + strandPhase * 1.7f).toDouble()).toFloat() * strandAmp * 0.30f
+                    val y = yBase + strandBias + depthCurve + ringCurve + carrier * strandAmp * envelope + jitter
+                    if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
+                }
 
-            // Main waveform stroke
-            paint.alpha       = strokeAlpha
-            paint.strokeWidth = strokeW
-            canvas.drawPath(wavePath, paint)
+                paint.style       = Paint.Style.STROKE
+                paint.color       = Color.BLACK
+                paint.alpha       = if (frontPass) 158 else 220
+                paint.strokeWidth = strokeW + (if (isActive) 4.8f else 3.5f)
+                paint.strokeCap   = Paint.Cap.ROUND
+                paint.strokeJoin  = Paint.Join.ROUND
+                canvas.drawPath(wavePath, paint)
+
+                paint.style       = Paint.Style.STROKE
+                paint.color       = axisColors[i]
+                paint.alpha       = (strokeAlpha * 0.42f).toInt().coerceIn(0, 120)
+                paint.strokeWidth = strokeW * (if (frontPass) 3.4f else 6.1f)
+                paint.strokeCap   = Paint.Cap.ROUND
+                paint.strokeJoin  = Paint.Join.ROUND
+                canvas.drawPath(wavePath, paint)
+
+                paint.alpha       = strokeAlpha
+                paint.strokeWidth = strokeW * (if (strand == 1) 1.0f else 0.72f)
+                canvas.drawPath(wavePath, paint)
+            }
         }
     }
 }
