@@ -187,7 +187,6 @@ def _temporal_feedback_pass(systems: Dict[str, Any]) -> None:
                         "source": "quantum_dream",
                         "signal": signal,
                         "paths":  recent_paths[-3:],
-                        "stratum_ref": str(stratum)[:80],
                     },
                     constraint_vector=cv,
                     source="quantum_dream:temporal_feedback",
@@ -344,14 +343,32 @@ def _dimensional_collapse(systems: Dict[str, Any]) -> None:
         sm = systems.get("sedimemory")
         if sm and hasattr(sm, "recent_recalls") and hasattr(sm, "ingest_event"):
             strata = list(sm.recent_recalls or [])[:_COLLAPSE_BACKFILL_DEPTH]
+            replayed = 0
             for stratum in strata:
                 try:
-                    content_str = str(stratum)[:200]
-                    if lf and hasattr(lf, "reentry"):
-                        lf.reentry(content_str, fidelity=0.45, path_key="", proto=None)
+                    # Extract real text from the stratum — never feed raw object
+                    # reprs into the language field (they contain mutation tracking
+                    # strings that recirculate as response content).
+                    content_str = ""
+                    if isinstance(stratum, dict):
+                        raw = stratum.get("content") or stratum.get("text") or stratum.get("summary") or ""
+                        if isinstance(raw, dict):
+                            raw = raw.get("text") or raw.get("example") or ""
+                        content_str = str(raw).strip()[:200]
+                    elif isinstance(stratum, str):
+                        content_str = stratum[:200]
+                    # Skip internal tracking strings — they cause claim recirculation
+                    _skip = ("mutation_id", "operator_key", "avg_fitness", "accepted=",
+                             "change_count", "genealogy_pressure", "apply_duration",
+                             "code evolution", "temporal_feedback", "quantum_dream",
+                             "sensory.intake", "gen=", "replaces", "carries forward")
+                    if content_str and not any(s in content_str.lower() for s in _skip):
+                        if lf and hasattr(lf, "reentry"):
+                            lf.reentry(content_str, fidelity=0.45, path_key="", proto=None)
+                            replayed += 1
                 except Exception:
                     pass
-            log.debug("quantum_dream: re-expanded from %d strata", len(strata))
+            log.debug("quantum_dream: re-expanded from %d strata (%d replayed)", len(strata), replayed)
     except Exception as exc:
         log.debug("_dimensional_collapse: %s", exc)
 

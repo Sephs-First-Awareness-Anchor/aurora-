@@ -506,6 +506,15 @@ def _is_word_salad(text: str) -> bool:
         r"\bi understand your name is\b",
         # N-axis question template bleeding: "What does X actually cost from here?"
         r"\bwhat does\b.{1,60}\bactually cost from here\b",
+        # Dream substrate / genealogy mutation tracking strings
+        r"\bmutation_id\s*=",
+        r"\boperator_key\s*=",
+        r"\bavg_fitness\s*=",
+        r"\bgenealogy_pressure\s*=",
+        r"\bapply_duration_s\s*=",
+        r"\bchange_count\s*=",
+        r"\bcode\s+evolution\s+outcome\b",
+        r"\baccepted\s*=\s*(true|false)\b",
     ]
     for _pat in _artifact_pats:
         if re.search(_pat, t_lower):

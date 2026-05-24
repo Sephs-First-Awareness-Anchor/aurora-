@@ -85,12 +85,11 @@ class OverlayService : Service() {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
-        val dp  = resources.displayMetrics.density
-        val w   = (200 * dp).toInt()   // wide enough for aurora rings
-        val h   = (130 * dp).toInt()
+        val dp = resources.displayMetrics.density
+        val sz = (200 * dp).toInt()   // square — gives orbital rings full room
 
         val params = WindowManager.LayoutParams(
-            w, h, layoutFlag,
+            sz, sz, layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
@@ -174,16 +173,23 @@ class OverlayService : Service() {
 
 
 // =============================================================================
-// AuroraOrbView — multicolored aurora wave rings + central orb
+// AuroraOrbView — planetary orbital rings + central orb
+//
+// Five thin flat ellipses, each rotated to a different orbital inclination,
+// wrap around the central sphere like multi-plane planetary rings.
+//
+// Idle:    all rings at a low charged ripple — slight alpha pulse via sin wave.
+// Speaking: only rings whose axis pressure is above the active threshold light
+//           up; the rest stay at low ripple.  This means only the colors
+//           matching Aurora's current cognitive state are prominent.
 // =============================================================================
 
 class AuroraOrbView(context: Context) : View(context) {
 
-    // Axis pressures [X, T, N, B, A] — updated from Python every 2 s
+    // Axis pressures [X, T, N, B, A] — polled from Python every 2 s
     private val axes     = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f)
     private var speaking = false
 
-    // Each axis has a dominant hue.  Rings overlap so the aurora blends.
     //   X  Existence  → deep cyan     #00CFFF
     //   T  Temporal   → spring green  #00FF88
     //   N  Energy     → amber-orange  #FF8800
@@ -197,69 +203,99 @@ class AuroraOrbView(context: Context) : View(context) {
         0xFFFFD700.toInt(),
     )
 
-    // Per-ring independent phase offsets so they undulate out of sync
+    // Orbital inclination angles — each ring wraps at a different plane angle.
+    // Spread to suggest distinct orbital trajectories around the sphere.
+    private val orbitAngle = floatArrayOf(15f, 48f, 80f, -22f, -55f)
+
+    // Slight radius variation so adjacent rings don't sit exactly on top of each other.
+    private val orbitRadiusMul = floatArrayOf(1.30f, 1.42f, 1.36f, 1.24f, 1.48f)
+
+    // Per-ring independent phase offsets so they ripple out of sync.
     private val phaseOffset = floatArrayOf(0f, 1.26f, 2.51f, 3.77f, 5.03f)
-    private var animPhase   = 0f    // master animation phase
-    private var breathPhase = 0f    // slow global breathe
+
+    private var animPhase   = 0f
+    private var breathPhase = 0f
 
     private val paint    = Paint(Paint.ANTI_ALIAS_FLAG)
     private val ringRect = RectF()
 
-    // ---- called every frame -------------------------------------------------
+    // ---- called every 50 ms (20 fps) ----------------------------------------
 
     fun tickAnimation() {
-        val speed = if (speaking) 0.14f else 0.045f
-        animPhase   = (animPhase   + speed) % (Math.PI.toFloat() * 2f)
-        breathPhase = (breathPhase + 0.022f) % (Math.PI.toFloat() * 2f)
+        val speed = if (speaking) 0.11f else 0.036f
+        animPhase   = (animPhase   + speed)  % (Math.PI.toFloat() * 2f)
+        breathPhase = (breathPhase + 0.018f) % (Math.PI.toFloat() * 2f)
         invalidate()
     }
 
-    // ---- called from OverlayService -----------------------------------------
+    // ---- called from OverlayService on each axis poll -----------------------
 
     fun updateAxisState(x: Float, t: Float, n: Float, b: Float, a: Float, speaking: Boolean) {
         axes[0] = x; axes[1] = t; axes[2] = n; axes[3] = b; axes[4] = a
         this.speaking = speaking
-        // invalidate() is handled by the animation tick — no need here
     }
 
     // ---- drawing ------------------------------------------------------------
 
     override fun onDraw(canvas: Canvas) {
-        val cx    = width  / 2f
-        val cy    = height / 2f
-        val orbR  = minOf(width, height) * 0.21f
-        val breathe = 1f + Math.sin(breathPhase.toDouble()).toFloat() * 0.05f
+        val cx      = width  / 2f
+        val cy      = height / 2f
+        val orbR    = minOf(width, height) * 0.22f
+        val breathe = 1f + Math.sin(breathPhase.toDouble()).toFloat() * 0.03f
 
-        // Draw rings from outermost inward so inner rings paint over outer
-        for (i in 4 downTo 0) {
+        val dominantIdx = axes.indices.maxByOrNull { axes[it] } ?: 4
+
+        // ── Planetary rings ───────────────────────────────────────────────────
+        // Draw all rings. Each is a thin flat ellipse rotated to its orbital angle.
+        // Two stroke passes per ring: sharp main edge + wide low-alpha glow.
+        for (i in 0..4) {
             val pressure = axes[i].coerceIn(0.05f, 1f)
             val phi      = animPhase + phaseOffset[i]
+            val sinPhi   = Math.sin(phi.toDouble()).toFloat()
 
-            // Ring geometry: ellipses wider than tall — the aurora band shape
-            // Outer rings are larger; inner rings sit closer to the orb
-            val ringSpread   = (i + 1) * 0.55f + pressure * 0.20f
-            val ringW        = orbR * (2.2f + ringSpread)
-            val ringH        = orbR * (0.55f + ringSpread * 0.28f)
-            val pulseFactor  = 1f + Math.sin(phi.toDouble()).toFloat() *
-                               (if (speaking) 0.20f else 0.08f) * pressure
+            // Active = dominant axis while speaking.
+            // High   = elevated pressure (>0.58) but not dominant.
+            // Idle   = low ripple, charged but subdued.
+            val isActive = speaking && i == dominantIdx
+            val isHigh   = speaking && pressure > 0.58f && !isActive
 
-            val rw = ringW * pulseFactor * breathe
-            val rh = ringH * pulseFactor * breathe
-            ringRect.set(cx - rw, cy - rh, cx + rw, cy + rh)
+            // Ripple amplitude scales with state — idle still feels charged.
+            val rippleAmt    = if (isActive) 0.30f else if (isHigh) 0.16f else 0.09f
+            val chargeFactor = 1f + sinPhi * rippleAmt
 
-            // Filled aurora band — low alpha, soft glow
-            val fillAlpha = ((25 + pressure * 55) * pulseFactor).toInt().coerceIn(0, 90)
-            paint.style = Paint.Style.FILL
-            paint.color = axisColors[i]
-            paint.alpha = fillAlpha
+            // Ring geometry: very flat ellipse — orbR × 0.07 minor axis ratio.
+            val rMajor = orbR * orbitRadiusMul[i] * breathe
+            val rMinor = rMajor * 0.07f
+
+            canvas.save()
+            canvas.rotate(orbitAngle[i], cx, cy)
+            ringRect.set(cx - rMajor, cy - rMinor, cx + rMajor, cy + rMinor)
+
+            // Main ring stroke
+            val baseAlpha = when {
+                isActive -> (185 + pressure * 65).toInt()
+                isHigh   -> (110 + pressure * 55).toInt()
+                else     -> (28  + pressure * 36).toInt()
+            }
+            val strokeAlpha = (baseAlpha * chargeFactor).toInt().coerceIn(0, 255)
+            val strokeW     = (when {
+                isActive -> 3.8f + pressure * 2.8f
+                isHigh   -> 2.0f + pressure * 1.4f
+                else     -> 0.9f + pressure * 0.8f
+            }) * chargeFactor
+
+            paint.style       = Paint.Style.STROKE
+            paint.color       = axisColors[i]
+            paint.alpha       = strokeAlpha
+            paint.strokeWidth = strokeW
             canvas.drawOval(ringRect, paint)
 
-            // Glowing edge stroke
-            val strokeAlpha = ((70 + pressure * 140) * pulseFactor).toInt().coerceIn(0, 220)
-            paint.style      = Paint.Style.STROKE
-            paint.strokeWidth = 2.5f + pressure * 4.5f
-            paint.alpha      = strokeAlpha
+            // Glow pass — broader stroke at ~30% alpha for the charged halo effect
+            paint.alpha       = (strokeAlpha * 0.30f).toInt().coerceIn(0, 95)
+            paint.strokeWidth = strokeW * 3.5f
             canvas.drawOval(ringRect, paint)
+
+            canvas.restore()
         }
 
         // ── Central orb ──────────────────────────────────────────────────────
@@ -267,22 +303,21 @@ class AuroraOrbView(context: Context) : View(context) {
         paint.style = Paint.Style.FILL
         paint.alpha = 255
 
-        // Glow halo behind the orb — blends dominant axis color
-        val dominantIdx = axes.indices.maxByOrNull { axes[it] } ?: 4
+        // Soft halo — dominant axis color bleeds out behind the orb
         val haloShader = RadialGradient(
-            cx, cy, r * 2.4f,
+            cx, cy, r * 2.2f,
             intArrayOf(
-                (axisColors[dominantIdx] and 0x00FFFFFF) or 0x55000000,
+                (axisColors[dominantIdx] and 0x00FFFFFF) or 0x50000000,
                 0x00000000,
             ),
-            floatArrayOf(0.25f, 1f),
+            floatArrayOf(0.28f, 1f),
             Shader.TileMode.CLAMP,
         )
         paint.shader = haloShader
-        canvas.drawCircle(cx, cy, r * 2.4f, paint)
+        canvas.drawCircle(cx, cy, r * 2.2f, paint)
         paint.shader = null
 
-        // Core orb: radial gradient white-core → violet-white → deep purple
+        // Core orb: white-core → lavender → violet → deep purple
         val orbShader = RadialGradient(
             cx, cy, r,
             intArrayOf(
