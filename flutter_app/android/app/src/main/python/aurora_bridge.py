@@ -25,18 +25,45 @@ from typing import Optional
 
 log = logging.getLogger("aurora_bridge")
 
-_systems = None
-_lock    = threading.Lock()
-_last_response: str = ""    # tracks previous turn's output for similarity gating
+_systems       = None
+_lock          = threading.Lock()
+_last_response: str = ""      # Aurora's previous output
+_last_path_key: str = ""      # LSA path key that produced it
 
 
-def _content_similarity(a: str, b: str) -> float:
-    """Jaccard overlap on content words (5+ chars). Returns 0.0-1.0."""
-    wa = {w for w in re.findall(r"[a-zA-Z']{5,}", a.lower())}
-    wb = {w for w in re.findall(r"[a-zA-Z']{5,}", b.lower())}
-    if not wa or not wb:
-        return 0.0
-    return len(wa & wb) / min(len(wa), len(wb))
+# Phrases that signal the previous output was incoherent or a repeat.
+# Your words ARE the fidelity measurement — no code pre-screening needed.
+_CONFUSION_PATTERNS = re.compile(
+    r"""
+    ^(what\??|huh\??|pardon\??|sorry\??)$                  # bare confusion
+    | \b(what\s+did\s+you\s+(just\s+)?say)                 # explicit re-ask
+    | \b(that\s+(doesn.t|didn.t|doesn't|didn't|makes?\s+no|made\s+no)\s+make\s+sense)
+    | \b(you.re\s+repeating|you\s+(already|just)\s+said)
+    | \b(what\s+are\s+you\s+talking\s+about)
+    | \b(i\s+(don.t|didn.t|don't|didn't)\s+understand)
+    | \b(say\s+that\s+(again|differently|another\s+way))
+    | \b(that\s+was(n.t|n't)\s+(clear|coherent|right))
+    | ^no[,\s]+(i\s+said|i\s+was|i\s+asked|that.s\s+not)  # correction
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
+def _is_confusion_signal(text: str) -> bool:
+    """True when the user's message signals the previous output was bad."""
+    t = (text or "").strip()
+    if not t:
+        return False
+    # Very short response (<= 4 words) after a non-trivial prior output
+    # also implies the content wasn't engaged with.
+    word_count = len(t.split())
+    if word_count <= 4 and len(_last_response.split()) > 10:
+        if t.lower() in ("ok", "okay", "sure", "yeah", "yes", "no", "k", "got it"):
+            # Acknowledgements after long output = low engagement, not confusion
+            pass
+        elif _CONFUSION_PATTERNS.search(t):
+            return True
+    return bool(_CONFUSION_PATTERNS.search(t))
 
 
 def _setup_paths() -> None:
@@ -183,13 +210,21 @@ def initialize(state_dir: str = "") -> str:
 
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
-    global _systems, _last_response
+    global _systems, _last_response, _last_path_key
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
     _setup_paths()
     try:
+        # ── Step 1: Read your response as fidelity on the previous crossing ──
+        # Your confusion, correction, or re-ask IS the measurement.
+        # No code pre-screening — your words tell the field whether the last
+        # crossing succeeded or failed.
+        if _last_response and _systems:
+            _apply_response_fidelity(text, _last_response, _last_path_key)
+
+        # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
         print("AURORA_BRIDGE: Processing turn...")
         with _lock:
@@ -206,21 +241,17 @@ def handle_message(text: str) -> str:
                 mode_name="BOUNDED",
             )
         response = _extract_response(result)
-        # Re-entry loop — mandatory per AURORA_LANGUAGE_EMERGENCE.md §13.
+
+        # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
         # The field hears itself after every utterance.
-        # Fidelity is penalised when the response is too similar to the previous
-        # turn: if content-word overlap > 50% the path is treated as a failed
-        # crossing so the LSA pushes the field toward a novel route next turn.
+        # Self-assessment fidelity is secondary — your response next turn
+        # will apply the real correction if this doesn't land.
+        path_key = ""
         if response and _systems:
             try:
                 lf = _systems.get("language_field")
                 if lf is not None and hasattr(lf, "reentry") and hasattr(lf, "_last_proto"):
-                    raw_fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
-                    similarity   = _content_similarity(_last_response, response)
-                    # Penalise repetition: high similarity → fidelity 0 → path penalised
-                    fidelity = 0.0 if similarity > 0.50 else raw_fidelity
-                    # Reconstruct the actual path key so LSA gets updated correctly
-                    path_key = ""
+                    fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
                     if lf._last_proto is not None and hasattr(lf, "_path_key"):
                         try:
                             path_key = lf._path_key(
@@ -232,12 +263,51 @@ def handle_message(text: str) -> str:
                     lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
             except Exception:
                 pass
+
         _last_response = response
+        _last_path_key = path_key
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
     except Exception as exc:
         log.error("handle_message: %s\n%s", exc, traceback.format_exc())
         return "I encountered an error processing your request."
+
+
+def _apply_response_fidelity(
+    user_text: str,
+    prev_response: str,
+    prev_path_key: str,
+) -> None:
+    """
+    Read the user's incoming message as fidelity feedback on the previous
+    crossing.  Confusion or correction → fidelity 0.0 → the LSA penalises
+    that path and the identity field drives toward a clarification crossing
+    next turn.  Engaged continuation → no penalty (the next reentry handles it).
+    """
+    if not _systems:
+        return
+    try:
+        lf = _systems.get("language_field")
+        if lf is None or not hasattr(lf, "reentry"):
+            return
+
+        if _is_confusion_signal(user_text):
+            # Your confusion is the signal: the previous crossing failed.
+            # Penalise the path in the LSA — field will seek a novel route.
+            lf.reentry(prev_response, 0.0, prev_path_key)
+            # Spike A-axis (clarification drive) and N-axis (cost of not
+            # being understood) so the field is actively seeking a better
+            # crossing on the next turn, not just repeating from the same state.
+            ifield = _systems.get("identity_field")
+            if ifield is not None and hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.3, "T": 0.4, "N": 0.75, "B": 0.6, "A": 0.85},
+                    intensity=0.8,
+                    source="user_confusion_signal",
+                )
+            log.info("Confusion signal detected — previous path penalised (fidelity=0)")
+    except Exception as exc:
+        log.warning("_apply_response_fidelity: %s", exc)
 
 
 def _extract_response(result) -> str:

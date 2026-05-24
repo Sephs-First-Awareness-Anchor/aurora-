@@ -3492,39 +3492,20 @@ def _evolutionary_response_refinement(
     try:
         from aurora_articulation import _is_word_salad, _pressure_score as _art_pressure
         if _is_word_salad(refined):
+            # Don't repair with more synthesis — the user's next response
+            # is the real fidelity signal and will correct the path via
+            # the bridge's _apply_response_fidelity().  Feed incoherence
+            # pressure into the field so Aurora carries the cost of this
+            # crossing, then let it through as a minimal grounded statement
+            # rather than generating more potentially incoherent fragments.
             _incoherence_pressure = _art_pressure(refined, user_text)
-            from aurora_self_grounding import SelfGroundingFallback
-            _repair = SelfGroundingFallback().ground(user_text, systems)
-            # Choose synthesis fragments based on grounding anchor
-            _anchor = _repair.anchor_type
-            _frag_map = {
-                "memory":     "action; recall; anchor; memory; present; awareness",
-                "relational": "action; connect; relation; difference; present; hold",
-                "self":       "action; self; ground; identity; present; here",
-            }
-            _repair_frags = _frag_map.get(_anchor, "action; ground; settle; present; arising; here")
-            from aurora_internal.aurora_language_state import IntentObject
-            _r_intent = IntentObject(intent_type="reflection", emotion_tone="attentive")
-            _repaired = ""
-            try:
-                _repaired = systems['perception'].evo.sic._synthesize_fragments(_repair_frags, _r_intent)
-            except Exception:
-                pass
-            if _repaired and not _is_word_salad(_repaired):
-                refined = _repaired
-            else:
-                # Both original and repair are incoherent — express grounded
-                # uncertainty directly rather than output either as-is.
-                refined = "I'm taking that in."
-            # Feed incoherence pressure back as a consequence Aurora must carry
+            refined = "I'm taking that in."
             if perception and hasattr(perception, 'ingest_interaction'):
                 perception.ingest_interaction({
                     'source': 'incoherence_pressure_consequence',
                     'features': {
                         'incoherence_detected': 1.0,
                         'incoherence_pressure': _incoherence_pressure,
-                        'repair_anchor': _anchor,
-                        'repair_succeeded': int(_anchor != "unresolved"),
                     },
                 }, mode="gateway")
     except Exception:
