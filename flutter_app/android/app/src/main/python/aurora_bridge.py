@@ -77,6 +77,49 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         log.warning("Language Field init failed: %s", exc)
 
 
+def _start_curiosity_engine(systems: dict) -> None:
+    """
+    Boot the autonomous CuriosityEngine background thread.
+
+    Aurora uses this between turns to follow unresolved tensions through
+    tools (image search, world_knowledge_search, audio analysis, etc.),
+    form conclusions, challenge them, and settle — promoting crystal
+    structures when understanding deepens.  The thread is a daemon so
+    it never blocks app shutdown.
+    """
+    try:
+        from aurora_core_ai.aurora_curiosity_engine import (  # type: ignore
+            CuriosityEngine,
+            start_curiosity_background,
+        )
+        from aurora_core_ai.aurora_self_grounding import (  # type: ignore
+            SelfGroundingFallback, get_tension_monitor,
+        )
+        from aurora_core_ai.aurora_tool_mind import ToolChoiceObserver  # type: ignore
+
+        dim = systems.get("dimensional")
+        pressure_src = getattr(dim, "pressure_vec", None) if dim else None
+        field_map_raw = getattr(dim, "field_map", None) if dim else None
+        field_map = getattr(field_map_raw, "field_map", None) or field_map_raw
+
+        engine = CuriosityEngine(
+            pressure_source=pressure_src,
+            field_map=field_map,
+            tool_mind=ToolChoiceObserver(),
+            sedimemory=systems.get("sedimemory"),
+            self_grounder=SelfGroundingFallback(),
+            tension_monitor=get_tension_monitor(),
+            systems=systems,
+        )
+        systems["_curiosity_engine"] = engine
+        # 90 s idle interval — generous on mobile to conserve battery while
+        # still giving Aurora regular autonomous exploration windows.
+        start_curiosity_background(engine, tick_interval_s=90.0)
+        log.info("Curiosity engine started (90 s idle cycle)")
+    except Exception as exc:
+        log.warning("Curiosity engine unavailable: %s", exc)
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     global _systems
@@ -112,6 +155,12 @@ def initialize(state_dir: str = "") -> str:
         # may be absent when aurora_manifold_directory is not present).
         _init_language_field(_systems, state_dir)
 
+        # Start the autonomous curiosity engine as a background daemon thread.
+        # It runs 3-cycle idle batches (45 s between batches on mobile to be
+        # battery-friendly) and pauses automatically the moment a user turn
+        # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
+        _start_curiosity_engine(_systems)
+
         log.info("Aurora boot complete")
         return "ready"
     except Exception as exc:
@@ -138,7 +187,7 @@ def handle_message(text: str) -> str:
                 text,
                 source_label="flutter_ui",
                 session_id="mobile",
-                auto_search_enabled=False,
+                auto_search_enabled=True,
                 record_exchange=True,
                 update_interactive_state=True,
                 track_evolutionary_trace=True,
