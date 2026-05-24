@@ -840,9 +840,6 @@ class SemanticIntentCompiler:
             "sensory.intake", "sensory intake", "raw audio",
             "crystal system", " replaces ", "should leave",
             "carries forward",
-            "mutation_id=", "operator_key=", "avg_fitness=",
-            "genealogy_pressure=", "apply_duration_s=", "change_count=",
-            "code evolution outcome", "temporal_feedback", "quantum_dream",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp

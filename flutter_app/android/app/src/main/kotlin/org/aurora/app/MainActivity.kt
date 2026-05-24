@@ -249,10 +249,12 @@ class MainActivity : FlutterActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) { requestRuntimePermissions(); return }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) return
-        if (speechRecognizer == null) {
-            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
-            speechRecognizer?.setRecognitionListener(sttListener)
-        }
+        // SpeechRecognizer becomes stale after each session on Android — calling
+        // startListening() on a previously-used instance silently does nothing.
+        // Destroy and recreate every time so each session starts from a clean state.
+        speechRecognizer?.destroy()
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this)
+        speechRecognizer?.setRecognitionListener(sttListener)
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US.toString())
