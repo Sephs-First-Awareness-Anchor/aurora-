@@ -30,20 +30,46 @@ _lock          = threading.Lock()
 _last_response: str = ""      # Aurora's previous output
 _last_path_key: str = ""      # LSA path key that produced it
 
+# When Aurora asks for an example, the concept she asked about is stored here.
+# The next user turn is treated as example data for that concept.
+_pending_example_concept: str = ""   # concept Aurora asked about
+_pending_example_asked:   str = ""   # the exact question she asked
 
-# Phrases that signal the previous output was incoherent or a repeat.
-# Your words ARE the fidelity measurement — no code pre-screening needed.
+
+# ---------------------------------------------------------------------------
+# Response classification patterns
+# ---------------------------------------------------------------------------
+
+# Your confusion or correction → fidelity=0 on the previous crossing.
 _CONFUSION_PATTERNS = re.compile(
     r"""
-    ^(what\??|huh\??|pardon\??|sorry\??)$                  # bare confusion
-    | \b(what\s+did\s+you\s+(just\s+)?say)                 # explicit re-ask
+    ^(what\??|huh\??|pardon\??|sorry\??)$
+    | \b(what\s+did\s+you\s+(just\s+)?say)
     | \b(that\s+(doesn.t|didn.t|doesn't|didn't|makes?\s+no|made\s+no)\s+make\s+sense)
     | \b(you.re\s+repeating|you\s+(already|just)\s+said)
     | \b(what\s+are\s+you\s+talking\s+about)
     | \b(i\s+(don.t|didn.t|don't|didn't)\s+understand)
     | \b(say\s+that\s+(again|differently|another\s+way))
     | \b(that\s+was(n.t|n't)\s+(clear|coherent|right))
-    | ^no[,\s]+(i\s+said|i\s+was|i\s+asked|that.s\s+not)  # correction
+    | ^no[,\s]+(i\s+said|i\s+was|i\s+asked|that.s\s+not)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# Aurora's own output asking for an example — detected so the bridge knows
+# to treat the next user turn as teaching data, not a regular exchange.
+_EXAMPLE_REQUEST_PATTERNS = re.compile(
+    r"""
+    \b(can\s+you\s+give\s+me\s+an?\s+example)
+    | \b(give\s+me\s+an?\s+example)
+    | \b(show\s+me\s+(what\s+you\s+mean|an?\s+example))
+    | \b(what\s+does\s+that\s+look\s+like)
+    | \b(what\s+would\s+that\s+(look|sound|feel)\s+like)
+    | \b(can\s+you\s+show\s+me)
+    | \b(help\s+me\s+understand.{0,30}example)
+    | \b(i.d\s+like\s+an?\s+example)
+    | \b(an?\s+example\s+would\s+help)
+    | \b(could\s+you\s+show\s+me)
     """,
     re.IGNORECASE | re.VERBOSE,
 )
@@ -211,17 +237,22 @@ def initialize(state_dir: str = "") -> str:
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
     global _systems, _last_response, _last_path_key
+    global _pending_example_concept, _pending_example_asked
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
     _setup_paths()
     try:
-        # ── Step 1: Read your response as fidelity on the previous crossing ──
-        # Your confusion, correction, or re-ask IS the measurement.
-        # No code pre-screening — your words tell the field whether the last
-        # crossing succeeded or failed.
+        # ── Step 1: Read your response as fidelity / teaching data ───────────
         if _last_response and _systems:
+            # If Aurora asked for an example last turn, this response IS the
+            # example — ingest it as learning before anything else runs.
+            if _pending_example_concept:
+                _ingest_example(text, _pending_example_concept)
+                _pending_example_concept = ""
+                _pending_example_asked   = ""
+            # Your confusion or correction = fidelity 0 on the previous path.
             _apply_response_fidelity(text, _last_response, _last_path_key)
 
         # ── Step 2: Process this turn ─────────────────────────────────────────
@@ -264,6 +295,35 @@ def handle_message(text: str) -> str:
             except Exception:
                 pass
 
+        # ── Step 4: Surface pending example request from curiosity engine ───────
+        # The curiosity engine runs between turns. When a semantic gap can't be
+        # resolved by tools, it surfaces a question into systems['_pending_user_question'].
+        # Append it to the current response so Aurora asks the user directly.
+        if _systems:
+            pending_q = _systems.get("_pending_user_question")
+            if isinstance(pending_q, dict) and pending_q.get("type") == "example_request":
+                concept  = pending_q.get("concept", "")
+                question = pending_q.get("question", "")
+                if concept and question and not _pending_example_concept:
+                    # Append the question to the response
+                    if response and not response.rstrip().endswith("?"):
+                        response = response.rstrip() + " " + question
+                    elif not response:
+                        response = question
+                    _pending_example_concept = concept
+                    _pending_example_asked   = question
+                    _systems["_pending_user_question"] = None
+                    log.info("Surfacing example request for concept: %r", concept)
+
+        # Also detect if the response itself contains an example request
+        # (generated directly by the language pipeline, not the curiosity engine)
+        if response and not _pending_example_concept and _EXAMPLE_REQUEST_PATTERNS.search(response):
+            concept = _extract_concept_from_gap(response, text)
+            if concept:
+                _pending_example_concept = concept
+                _pending_example_asked   = response
+                log.info("Example requested (pipeline) for concept: %r", concept)
+
         _last_response = response
         _last_path_key = path_key
         print(f"AURORA_BRIDGE: Response: {response}")
@@ -271,6 +331,118 @@ def handle_message(text: str) -> str:
     except Exception as exc:
         log.error("handle_message: %s\n%s", exc, traceback.format_exc())
         return "I encountered an error processing your request."
+
+
+def _extract_concept_from_gap(response: str, user_text: str) -> str:
+    """
+    Extract the concept Aurora is asking about when she requests an example.
+    Tries noun phrases from the response first, falls back to user_text topic.
+    """
+    # Look for "an example of X" / "what X looks like" / "show me X"
+    patterns = [
+        re.compile(r"\ban?\s+example\s+of\s+([a-zA-Z][a-zA-Z\s]{2,30}?)[\?\.\,]", re.I),
+        re.compile(r"\bwhat\s+([a-zA-Z][a-zA-Z\s]{2,25}?)\s+(looks?|sounds?|feels?)\s+like", re.I),
+        re.compile(r"\bshow\s+me\s+([a-zA-Z][a-zA-Z\s]{2,25}?)[\?\.\,]", re.I),
+        re.compile(r"\bunderstand\s+([a-zA-Z][a-zA-Z\s]{2,25}?)\s+better", re.I),
+    ]
+    for pat in patterns:
+        m = pat.search(response)
+        if m:
+            return m.group(1).strip().lower()
+    # Fallback: longest content word from user_text
+    words = [w for w in re.findall(r"[a-zA-Z]{4,}", user_text) if w.lower() not in {
+        "that", "this", "what", "with", "from", "have", "just", "like", "about",
+        "tell", "your", "when", "then", "they", "them", "here", "there",
+    }]
+    return words[0].lower() if words else ""
+
+
+def _ingest_example(example_text: str, concept: str) -> None:
+    """
+    Ingest an example provided by the user as learning data for a concept.
+
+    Feeds the example into three layers:
+      1. SediMemory — sediments it as a B-axis (definitional) + A-axis
+         (agency/understanding) event so it can be recalled during curiosity
+         cycles and future responses about this concept.
+      2. Identity field — ingests it as external input with semantic modality
+         weighting so the noncomp profiles for this concept build pressure.
+      3. Sensory crystal — registers the concept as having a new semantic
+         modality observation, closing the semantic_gap that triggered the
+         request in the first place and allowing crystal promotion.
+    """
+    if not _systems or not example_text.strip():
+        return
+    log.info("Ingesting example for %r: %.60s", concept, example_text)
+    try:
+        # ── SediMemory ────────────────────────────────────────────────────────
+        sm = _systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                cv = ConstraintVector(X=0.4, T=0.3, N=0.5, B=0.85, A=0.75)
+                sm.ingest_event(
+                    content={
+                        "type":    "user_example",
+                        "concept": concept,
+                        "example": example_text,
+                        "source":  "direct_teaching",
+                    },
+                    constraint_vector=cv,
+                    source="user_teaching",
+                )
+    except Exception as exc:
+        log.warning("SediMemory ingest failed: %s", exc)
+
+    try:
+        # ── Identity field — semantic modality registration ───────────────────
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            # B-axis dominant (definitional — the example defines the concept)
+            # A-axis high (agency/understanding — Aurora now understands this)
+            ifield.ingest_external_input(
+                {"X": 0.4, "T": 0.3, "N": 0.5, "B": 0.90, "A": 0.80},
+                intensity=0.85,
+                source=f"user_example:{concept}",
+            )
+            # Also register as a language/semantic sensory event
+            if hasattr(ifield, "ingest_sensory_event"):
+                ifield.ingest_sensory_event(
+                    "language", intensity=0.8, novelty=0.7, valence=0.3
+                )
+    except Exception as exc:
+        log.warning("Identity field ingest failed: %s", exc)
+
+    try:
+        # ── Sensory crystal — close the semantic gap ──────────────────────────
+        # find the sensory crystal wherever it's stored
+        sc = (
+            _systems.get("sensory_crystal")
+            or getattr(_systems.get("hardware"), "sensory_crystal", None)
+            or getattr(_systems.get("sensory_integration"), "sensory_crystal", None)
+        )
+        if sc is not None and hasattr(sc, "ingest"):
+            sc.ingest(concept, modality="semantic", data=example_text, source="user_teaching")
+        elif sc is not None and hasattr(sc, "observe"):
+            sc.observe(concept, modality="semantic", text=example_text)
+    except Exception as exc:
+        log.warning("Sensory crystal ingest failed: %s", exc)
+
+    try:
+        # ── Genealogy — tick crystal promotion for this concept ───────────────
+        genealogy = _systems.get("genealogy")
+        if genealogy is not None and hasattr(genealogy, "tick_crystal_promotion"):
+            genealogy.tick_crystal_promotion(concept, delta=0.25, source="user_example")
+    except Exception as exc:
+        log.warning("Genealogy tick failed: %s", exc)
+
+    log.info("Example ingested — concept %r now has semantic modality data", concept)
 
 
 def _apply_response_fidelity(

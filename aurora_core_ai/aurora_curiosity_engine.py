@@ -692,6 +692,31 @@ class CuriosityEngine:
                 })
             except Exception:
                 pass
+
+            # When a semantic gap can't be resolved by tools — web results were
+            # thin, no training corpus exists — ask the user directly.
+            # This is how Aurora is structured to learn: the person she's with
+            # is a primary source, not a fallback.  Surface one example request
+            # per concept; the bridge ingests the user's reply as teaching data.
+            if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual"):
+                try:
+                    subj = curiosity.subject[:60]
+                    already_asked = str(
+                        self.systems.get("_pending_user_question") or ""
+                    )
+                    # Don't overwrite a pending question that hasn't been answered yet
+                    if not already_asked or subj.lower() not in already_asked.lower():
+                        self.systems["_pending_user_question"] = {
+                            "question": (
+                                f"Can you give me an example of {subj}? "
+                                f"I want to understand it better."
+                            ),
+                            "concept": subj,
+                            "type":    "example_request",
+                        }
+                except Exception:
+                    pass
+
             return False, None
 
     def _log_cycle(self, record: Dict[str, Any]) -> None:
