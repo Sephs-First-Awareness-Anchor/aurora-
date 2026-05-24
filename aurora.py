@@ -7635,6 +7635,21 @@ def dual_question_pipeline(
         else:
             processed_content = f"{processed_content}\n\n{_tool_result.as_evidence_fragment()}"
     
+    # Background perceptual context — inject ambient camera/audio data when no
+    # explicit sensory tool fired.  This gives Aurora's synthesis layer live
+    # environmental evidence so she can naturally reference what she perceives
+    # without needing an explicit "what do you see?" request each time.
+    if not _is_sensory_result and _tname not in ("visual_analysis", "audio_analysis"):
+        _ambient_perc = systems.get("_ambient_perceptual") or {}
+        _a_obs = (_ambient_perc.get("observation") or "").strip()
+        if _a_obs:
+            processed_content = (
+                f"{processed_content}\n\n"
+                f"[BACKGROUND_PERCEPTION]\n"
+                f"source: {_ambient_perc.get('source', 'ambient')}\n"
+                f"observation: {_a_obs}"
+            )
+
     # LOGGING TOOL RESULT
     try:
         with open('aurora_debug.log', 'a') as f_log:
@@ -7648,7 +7663,7 @@ def dual_question_pipeline(
                 f_log.write("No Tool Selected\n")
     except Exception:
         pass
-    
+
     # VISIBLE TOOL DEBUG
     if _tool_result:
         print(f"  [AURORA-STACK-DEBUG] Tool: '{_tname}' | Success: {_tool_result.success}")

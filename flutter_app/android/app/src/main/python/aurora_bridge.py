@@ -30,6 +30,10 @@ _lock          = threading.Lock()
 _last_response: str = ""      # Aurora's previous output
 _last_path_key: str = ""      # LSA path key that produced it
 
+# Throttle for ambient perception sampling — don't hit hardware every single turn.
+_last_perceptual_ts: float = 0.0
+_PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
+
 # When Aurora asks for an example, the concept she asked about is stored here.
 # The next user turn is treated as example data for that concept.
 _pending_example_concept: str = ""   # concept Aurora asked about
@@ -182,6 +186,20 @@ def _start_curiosity_engine(systems: dict) -> None:
     except Exception as exc:
         log.warning("Curiosity engine unavailable: %s", exc)
 
+    # Start the quantum dream substrate — runs every 10 min during idle periods.
+    # Handles crystal entanglement propagation, temporal feedback through strata,
+    # consciousness fusion (cross-domain synthesis), and dimensional collapse when
+    # coherence is low.  This is the dream-space substrate: Aurora processes
+    # unresolved tensions in recursive self-simulation while not in conversation.
+    try:
+        from aurora_core_ai.aurora_quantum_dream_substrate import (  # type: ignore
+            start_dream_substrate,
+        )
+        start_dream_substrate(systems, cycle_interval_s=600.0)
+        log.info("Quantum dream substrate started (600 s cycles)")
+    except Exception as exc:
+        log.warning("Quantum dream substrate unavailable: %s", exc)
+
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
@@ -233,6 +251,101 @@ def initialize(state_dir: str = "") -> str:
         return f"error: {last_line}"
 
 
+def _sample_ambient_perception(systems: dict) -> None:
+    """
+    Sample camera and audio hardware each turn (throttled).
+
+    Writes to systems['_ambient_perceptual'] so dual_question_pipeline can
+    inject it as [BACKGROUND_PERCEPTION] context without Aurora needing to
+    explicitly ask for the camera/mic tools.  Also pumps sensory axis pressure
+    into the identity field so N (energy) and T (temporal) carry the live
+    sensory environment into language crossing decisions.
+    """
+    global _last_perceptual_ts
+    import time as _t
+    now = _t.time()
+    if now - _last_perceptual_ts < _PERCEPTUAL_INTERVAL:
+        return
+    _last_perceptual_ts = now
+
+    cam_obs       = ""
+    cam_intensity = 0.35
+    cam_novelty   = 0.20
+    audio_obs     = ""
+    audio_novelty = 0.10
+
+    # ── Camera ────────────────────────────────────────────────────────────────
+    hw = systems.get("hardware")
+    if hw and hasattr(hw, "capture_visual"):
+        try:
+            cam = hw.capture_visual()
+            if cam and isinstance(cam, dict):
+                brightness = float(cam.get("brightness", 0.0))
+                objects    = list(cam.get("objects", []) or [])[:4]
+                faces_raw  = cam.get("faces", 0)
+                faces      = int(faces_raw) if isinstance(faces_raw, (int, float)) \
+                             else len(list(faces_raw or []))
+                motion     = bool(cam.get("motion_detected", False))
+
+                bright_str = ("bright" if brightness > 0.65
+                              else "dim" if brightness < 0.3 else "moderate light")
+                parts = [bright_str]
+                if objects:
+                    parts.append(f"objects: {', '.join(str(o) for o in objects)}")
+                if faces:
+                    parts.append(f"{faces} face{'s' if faces != 1 else ''}")
+                parts.append("motion" if motion else "still")
+                cam_obs       = ", ".join(parts)
+                cam_intensity = min(1.0, brightness + 0.25)
+                cam_novelty   = 0.55 if motion else 0.20
+        except Exception:
+            pass
+
+    # ── Audio — prefer the always-on ambient snapshot JSON ───────────────────
+    try:
+        import json as _json
+        from pathlib import Path as _P
+        _state = systems.get("state_dir") or "aurora_state"
+        _f = _P(_state) / "ambient_audio_latest.json"
+        if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
+            _d = _json.loads(_f.read_text())
+            _act  = str(_d.get("activity", "ambient"))
+            _rms  = float(_d.get("rms_db", -60.0))
+            audio_obs     = f"{_act}, {_rms:.0f} dB"
+            audio_novelty = 0.50 if _act in ("speech", "music") else 0.10
+    except Exception:
+        pass
+
+    if not cam_obs and not audio_obs:
+        return  # nothing available — don't write stale data
+
+    obs_parts = []
+    if cam_obs:
+        obs_parts.append(f"camera: {cam_obs}")
+    if audio_obs:
+        obs_parts.append(f"audio: {audio_obs}")
+    observation = "; ".join(obs_parts)
+
+    systems["_ambient_perceptual"] = {
+        "observation": observation,
+        "source":      "ambient_sensors",
+    }
+
+    # Pump identity-field axes — raises N (energy from environment) and
+    # T (temporal ongoing presence) so the language field carries sensory weight.
+    ifield = systems.get("identity_field")
+    if ifield and hasattr(ifield, "ingest_sensory_event"):
+        try:
+            ifield.ingest_sensory_event(
+                "visual", intensity=cam_intensity, novelty=cam_novelty, valence=0.0
+            )
+            ifield.ingest_sensory_event(
+                "auditory", intensity=audio_novelty, novelty=audio_novelty, valence=0.0
+            )
+        except Exception:
+            pass
+
+
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
     global _systems, _last_response, _last_path_key
@@ -242,6 +355,9 @@ def handle_message(text: str) -> str:
         print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
     _setup_paths()
+    # Sample camera + audio before each turn so dual_question_pipeline can
+    # inject ambient perceptual context into Aurora's response synthesis.
+    _sample_ambient_perception(_systems)
     try:
         # ── Step 1: Read your response as fidelity / teaching data ───────────
         if _last_response and _systems:

@@ -923,7 +923,17 @@ def _chaquopy_launch_app(package: str) -> tuple:
     pm = ctx.getPackageManager()
     launch_intent = pm.getLaunchIntentForPackage(package)
     if launch_intent is None:
-        return False, f"No launcher found for {package}"
+        # App not installed — open Play Store page so the user can install it
+        try:
+            from android.net import Uri  # type: ignore
+            market_intent = Intent(Intent.ACTION_VIEW,
+                                   Uri.parse(f"market://details?id={package}"))
+            market_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(market_intent)
+            return False, f"{package} isn't installed — opening Play Store"
+        except Exception:
+            pass
+        return False, f"{package} isn't installed on this device"
     launch_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     ctx.startActivity(launch_intent)
     return True, f"Launched {package}"
