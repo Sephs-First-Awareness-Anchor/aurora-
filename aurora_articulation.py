@@ -474,16 +474,20 @@ def _is_word_salad(text: str) -> bool:
         r"\bstate the meaning\b",
         r"\bdid the meaning\b",
         r"\bdeepen the meaning\b",
-        # T-axis frame leakage — "Following from X, this continues."
+        # T-axis frame leakage — old and new forms
         r"\bfollowing from\b.*\bthis continues\b",
         r",\s*this continues[\.\s]*$",
         r"^following from\b",
-        # B-axis frame leakage — "This is where X holds its shape."
+        r"\bcarries into what.s next\b",     # blocks mid-sentence use anywhere
+        r"\bruns through this\b",
+        # N-axis frame leakage — "What it takes here is holding X in proportion"
+        r"\bwhat it takes here is holding\b",
+        r"\bholding\b.{0,60}\bin proportion\b",
+        # B-axis frame leakage
         r"\bholds its shape\b",
-        # N-axis / abstract frame leakage
-        r"\bin proportion\b.*\bhere\b",
-        # Anchor template frame leakage — "The connection between X and Y matters."
-        # when Y is a filler word (adverb/conjunction that isn't a concept)
+        # Stale field-state bleed — "I am paying attention to calm"
+        r"^i am paying attention to\b",
+        # Anchor template leakage — "The connection between X and Y matters."
         r"\bthe connection between\b.*\band\b.*\bmatters\b",
         # "this continues" as a sentence ending in any form
         r"\bthis continues[\.\s]*$",

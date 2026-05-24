@@ -2559,6 +2559,16 @@ def _select_tool(
         return "query_pressure_history", {"systems": systems}
 
     # ── World knowledge (factual grounding for unknown concepts) ─────────────
+    # "look up the word/definition/meaning of X" is a knowledge query, not a
+    # browser navigation — check it explicitly before browser_search_hit
+    # swallows "look up" phrases indiscriminately.
+    _word_lookup_pat = re.compile(
+        r'\blook\s+up\s+(the\s+)?(word|definition|meaning|definition\s+of|meaning\s+of)?\s*\w',
+        re.IGNORECASE,
+    )
+    if _word_lookup_pat.search(user_text) and not is_self_question:
+        return "world_knowledge_search", {"query": user_text, "systems": systems}
+
     knowledge_markers = (
         "what is a ", "what is an ", "define ", "what does it mean",
         "explain what", "tell me about ", "what exactly is",
@@ -3502,7 +3512,10 @@ def _evolutionary_response_refinement(
                 pass
             if _repaired and not _is_word_salad(_repaired):
                 refined = _repaired
-            # else: keep refined as-is; articulation layer will handle further smoothing
+            else:
+                # Both original and repair are incoherent — express grounded
+                # uncertainty directly rather than output either as-is.
+                refined = "I'm taking that in."
             # Feed incoherence pressure back as a consequence Aurora must carry
             if perception and hasattr(perception, 'ingest_interaction'):
                 perception.ingest_interaction({
