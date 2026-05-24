@@ -39,10 +39,36 @@ _PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
 _pending_example_concept: str = ""   # concept Aurora asked about
 _pending_example_asked:   str = ""   # the exact question she asked
 
+# Axis state cache — updated after each turn; read by OverlayService every 2 s.
+_last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
+_axis_state_lock = threading.Lock()
+
+# Curiosity session control
+_curiosity_session_active = threading.Event()
+
 
 # ---------------------------------------------------------------------------
 # Response classification patterns
 # ---------------------------------------------------------------------------
+
+# Voice commands that assign Aurora a block of autonomous curiosity time.
+# Examples: "explore for 10 minutes", "run 5 curiosity cycles",
+#           "curiosity session 30 minutes", "give yourself an hour to explore"
+_CURIOSITY_CMD = re.compile(
+    r"""
+    (?:
+        (?:explore|curiosity[\s_-](?:session|time|mode)|curious[\s_-](?:time|autonomy|mode)|
+           give\s+yourself|take)\s+(?:for\s+|an?\s+)?
+      | (?:run|do|start)\s+(?:a\s+)?(?:\d+\s+)?(?:curiosity[\s_-])?
+    )
+    (?P<n>\d+(?:\.\d+)?)\s*
+    (?P<unit>min(?:ute)?s?|hr?s?|hours?|cycles?|cycle)
+    | (?P<n2>\d+)\s*curiosity[\s_-]cycles?
+    | curiosity[\s_-](?:session|time|mode)\s+(?:for\s+)?(?P<n3>\d+(?:\.\d+)?)\s*
+      (?P<unit3>min(?:ute)?s?|hr?s?|hours?)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
 
 # Your confusion or correction → fidelity=0 on the previous crossing.
 _CONFUSION_PATTERNS = re.compile(
@@ -358,6 +384,19 @@ def handle_message(text: str) -> str:
     # Sample camera + audio before each turn so dual_question_pipeline can
     # inject ambient perceptual context into Aurora's response synthesis.
     _sample_ambient_perception(_systems)
+
+    # ── Voice command: curiosity session ─────────────────────────────────────
+    n_cyc, dur_s = _parse_curiosity_cmd(text)
+    if n_cyc is not None or dur_s is not None:
+        if _curiosity_session_active.is_set():
+            return "I'm already mid-session — I'll report when I finish."
+        label = (f"{n_cyc} cycle{'s' if n_cyc != 1 else ''}" if n_cyc
+                 else f"{int((dur_s or 0) // 60)} minutes")
+        _run_curiosity_session(n_cyc, dur_s)
+        with _axis_state_lock:
+            _last_axis_state["speaking"] = False
+        return f"Starting a {label} curiosity session. I'll report back when I'm done."
+
     try:
         # ── Step 1: Read your response as fidelity / teaching data ───────────
         if _last_response and _systems:
@@ -432,6 +471,17 @@ def handle_message(text: str) -> str:
 
         _last_response = response
         _last_path_key = path_key
+
+        # Refresh overlay axis cache after every turn
+        _refresh_axis_state_from_systems()
+        with _axis_state_lock:
+            _last_axis_state["speaking"] = bool(response)
+
+        # Prepend any completed curiosity session report
+        pending_report = (_systems or {}).pop("_pending_autonomous_report", None)
+        if pending_report:
+            response = f"{pending_report}\n\n{response}" if response else pending_report
+
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
     except Exception as exc:
@@ -614,6 +664,164 @@ def _extract_response(result) -> str:
         if val:
             return str(val).strip()
     return ""
+
+
+def get_axis_state() -> str:
+    """
+    Return current axis pressures + speaking flag as JSON.
+    Called from OverlayService.kt every 2 s via Chaquopy.
+    """
+    import json as _json
+    with _axis_state_lock:
+        return _json.dumps(_last_axis_state)
+
+
+def _refresh_axis_state_from_systems() -> None:
+    """Pull current axis values from systems into the overlay cache."""
+    if _systems is None:
+        return
+    try:
+        axes: dict = {}
+        # Priority 1: dimensional system pressure vector
+        dim = _systems.get("dimensional")
+        if dim is not None:
+            pv = getattr(dim, "pressure_vec", None)
+            if isinstance(pv, dict):
+                axes = pv
+            elif pv is not None and hasattr(pv, "__iter__"):
+                for k, v in zip(["X", "T", "N", "B", "A"], pv):
+                    axes[k] = float(v)
+        # Priority 2: identity field axis_activation
+        if not axes:
+            ifield = _systems.get("identity_field")
+            if ifield is not None:
+                aa = getattr(ifield, "axis_activation", None)
+                if isinstance(aa, dict):
+                    axes = aa
+                elif aa is not None and hasattr(aa, "__iter__"):
+                    for k, v in zip(["X", "T", "N", "B", "A"], aa):
+                        axes[k] = float(v)
+        if axes:
+            with _axis_state_lock:
+                for k in ("X", "T", "N", "B", "A"):
+                    _last_axis_state[k] = float(axes.get(k, 0.5))
+    except Exception:
+        pass
+
+
+def _parse_curiosity_cmd(text: str):
+    """
+    Parse a curiosity voice command.
+    Returns (n_cycles: int | None, duration_s: float | None) or (None, None) if no match.
+    """
+    m = _CURIOSITY_CMD.search(text)
+    if not m:
+        return None, None
+    # Extract amount and unit from whichever group matched
+    n_str = m.group("n") or m.group("n2") or m.group("n3") or "0"
+    unit  = (m.group("unit") or m.group("unit3") or "cycles").lower().strip()
+    n = float(n_str)
+    if "cycle" in unit:
+        return int(n), None
+    if unit.startswith("h"):
+        return None, n * 3600.0
+    # default: minutes
+    return None, n * 60.0
+
+
+def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> None:
+    """
+    Run a bounded curiosity session in a background daemon thread.
+    Collects stats and stores the completion report in systems['_pending_autonomous_report'].
+    """
+    if _systems is None:
+        return
+    engine = _systems.get("_curiosity_engine")
+    if engine is None:
+        log.warning("_run_curiosity_session: no curiosity engine available")
+        return
+
+    import time as _t
+    _curiosity_session_active.set()
+    start_ts = _t.time()
+
+    stats = {
+        "cycles_completed":   0,
+        "concepts_explored":  0,
+        "crystals_promoted":  0,
+        "tools_used":         0,
+        "settled":            0,
+    }
+
+    def _run():
+        import time as _t2
+        try:
+            cycle_count = 0
+            deadline = (start_ts + duration_s) if duration_s else None
+
+            while True:
+                # Stop if cancelled or limits reached
+                if not _curiosity_session_active.is_set():
+                    break
+                if n_cycles is not None and cycle_count >= n_cycles:
+                    break
+                if deadline is not None and _t2.time() >= deadline:
+                    break
+
+                # Run one curiosity cycle
+                try:
+                    result = {}
+                    if hasattr(engine, "run_one_cycle"):
+                        result = engine.run_one_cycle() or {}
+                    elif hasattr(engine, "tick"):
+                        result = engine.tick() or {}
+
+                    cycle_count            += 1
+                    stats["cycles_completed"] = cycle_count
+                    stats["concepts_explored"] += int(result.get("concepts_explored", 0)
+                                                      or result.get("gaps_probed", 0) or 1)
+                    stats["crystals_promoted"] += int(result.get("crystals_promoted", 0)
+                                                      or result.get("promotions", 0))
+                    stats["tools_used"]        += int(result.get("tools_used", 0)
+                                                      or result.get("tool_calls", 0))
+                    stats["settled"]           += int(result.get("settled", 0)
+                                                      or result.get("tensions_settled", 0))
+                except Exception as exc:
+                    log.warning("Curiosity cycle error: %s", exc)
+                    break
+
+        finally:
+            _curiosity_session_active.clear()
+            elapsed = _t2.time() - start_ts
+            _store_curiosity_report(stats, elapsed, n_cycles, duration_s)
+
+    threading.Thread(target=_run, daemon=True, name="curiosity_session").start()
+
+
+def _store_curiosity_report(
+    stats: dict, elapsed: float,
+    n_cycles: int | None, duration_s: float | None,
+) -> None:
+    """Format and store the session completion report."""
+    if _systems is None:
+        return
+    m, s = divmod(int(elapsed), 60)
+    time_str = f"{m}m {s}s" if m else f"{s}s"
+
+    target_str = (f"{n_cycles} cycle{'s' if n_cycles != 1 else ''}"
+                  if n_cycles else
+                  f"{int((duration_s or 0) // 60)} min")
+
+    report_lines = [
+        f"[Curiosity session complete — {target_str}, elapsed {time_str}]",
+        f"  Cycles run:         {stats['cycles_completed']}",
+        f"  Concepts explored:  {stats['concepts_explored']}",
+        f"  Crystals promoted:  {stats['crystals_promoted']}",
+        f"  Tool calls:         {stats['tools_used']}",
+        f"  Tensions settled:   {stats['settled']}",
+    ]
+    _systems["_pending_autonomous_report"] = "\n".join(report_lines)
+    log.info("Curiosity session report stored (%s)", time_str)
 
 
 def set_state(state: str) -> None:
