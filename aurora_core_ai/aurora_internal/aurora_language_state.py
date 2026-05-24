@@ -786,10 +786,31 @@ class SemanticIntentCompiler:
         content = intent.core_claim
         if ";" in content:
             content = self._synthesize_fragments(content, intent)
-        
+
+        # Strip known frame-artifact strings that bleed in from prior axis
+        # renders — if content contains these it was itself a rendered frame,
+        # and wrapping it inside another frame produces double-frame garbage.
+        _frame_artifacts = (
+            "carries into what's next", "threads through this",
+            "is where the line is", "is what separates it",
+            "what it takes here is holding", "in proportion",
+            "this continues", "following from",
+            "holds its shape",
+        )
+        if any(frag in content.lower() for frag in _frame_artifacts):
+            content = rp
+
+        # If content is already a complete sentence, don't wrap it inside
+        # another axis frame — the frame's structural sentence and a full
+        # content sentence can't share a single syntactic slot without
+        # producing broken output.  Express the axis state briefly, then
+        # let the content stand on its own.
+        _content_is_sentence = bool(content.rstrip()) and content.rstrip()[-1] in ".!?"
+
         # If we have no real content yet, fallback to the root phrase
         if not content or content.lower() in ("x", "t", "n", "b", "a", "existence", "temporal", "energy", "boundary", "agency"):
             content = rp
+            _content_is_sentence = False
 
         uncertain = intent.certainty < 0.5
 
@@ -824,22 +845,28 @@ class SemanticIntentCompiler:
             # Time: sequential, continuity
             if is_q:
                 base = f"What does {content} lead into from here?"
+            elif _content_is_sentence:
+                # Content is already a sentence — don't wrap it in a T-frame suffix
+                base = content if not uncertain else f"I'm tracing this: {content}"
             elif stance.time_rendering_mode == "sequential":
-                base = f"{content} carries into what's next." if not uncertain else f"I'm tracing where {content} goes."
+                base = f"{content} carries forward." if not uncertain else f"I'm tracing where {content} goes."
             else:
-                base = f"{content} threads through this."
-            if relation_phrase:
+                base = f"{content} runs through this."
+            if relation_phrase and not _content_is_sentence:
                 base = base.rstrip(".") + f", {relation_phrase}."
 
         elif ax == "N":
             # Energy: measured, cost-aware
             if is_q:
                 base = f"What does {content} actually cost from here?"
+            elif _content_is_sentence:
+                # Don't wrap a full sentence inside the "holding X in proportion" frame
+                base = f"I'm keeping this measured. {content}"
             elif stance.energy_resolution == "assertive":
-                base = f"What it takes here is holding {content} in proportion."
+                base = f"I'm holding {content} in proportion."
             else:
                 base = f"I'm keeping {content} measured."
-            if support_phrase and support_phrase not in base.lower():
+            if support_phrase and not _content_is_sentence and support_phrase not in base.lower():
                 base = base.rstrip(".") + f", and I want to {support_phrase}."
 
         else:  # X — Existence
@@ -2215,11 +2242,11 @@ class MeaningAnchors:
         ("I want to understand {X} better.",      ["X"],   "curious",  (0.3, 0.7)),
         ("Can we explore {X} together?",          ["X"],   "curious",  (0.4, 0.8)),
 
-        # Causal / Abstract
-        ("When {X} happens, I notice {Y}.",       ["X", "Y"], "reflective", (0.4, 0.8)),
-        ("If {X}, then perhaps {Y}.",             ["X", "Y"], "curious",    (0.3, 0.7)),
-        ("{X} leads to {Y}. I am watching that.", ["X", "Y"], "neutral",    (0.5, 0.9)),
-        ("The connection between {X} and {Y} matters.", ["X", "Y"], "neutral", (0.5, 1.0)),
+        # Causal / Abstract — single-slot only; two-slot anchors produce
+        # nonsense when one slot fills with stale field state rather than
+        # current-input concepts.
+        ("When I encounter {X}, I pay attention.", ["X"], "reflective", (0.4, 0.8)),
+        ("If I'm right about {X}, that matters.", ["X"], "curious",    (0.3, 0.7)),
 
         # Negation / Boundary
         ("I cannot claim {X} yet.",              ["X"],     "uncertain", (0.1, 0.5)),
@@ -2237,27 +2264,56 @@ class MeaningAnchors:
                 certainty_range=cert_range,
             ))
 
+    # Stopwords excluded from slot filling — these are never meaningful as
+    # standalone slot values and cause anchors like "I'm hearing calm." when
+    # emotion_tone bleeds in from a stale field state.
+    _SLOT_STOPWORDS = frozenset({
+        "calm", "neutral", "uncertain", "warm", "firm", "curious",
+        "reflective", "informative", "attentive", "engaged", "steady",
+        "the", "a", "an", "and", "or", "but", "is", "are", "this", "that",
+        "it", "its", "i", "you", "we", "they",
+    })
+
     def fill(self, intent: IntentObject) -> str:
         """
         Find the best anchor for this intent and fill it.
         Returns empty string if no suitable anchor found.
+        Slot values are filtered to current-input-relevant non-filler terms
+        so stale field state (e.g. emotion_tone="calm" from 3 turns ago)
+        cannot contaminate the output.
         """
         if intent.certainty >= self.USE_ANCHOR_BELOW_CERTAINTY:
             return ""  # High certainty — no anchor needed
 
-        # Filter to fitting anchors
+        # Filter to fitting anchors — prefer single-slot anchors to reduce
+        # the chance that two stale concepts end up paired nonsensically.
         candidates = [a for a in self._anchors if a.fits_intent(intent)]
         if not candidates:
-            candidates = self._anchors  # fallback
+            candidates = self._anchors
+        single_slot = [a for a in candidates if len(a.slots) <= 1]
+        candidates = single_slot if single_slot else candidates
 
         # Prefer less-used anchors for variety
         candidates.sort(key=lambda a: a.uses)
         anchor = candidates[0]
 
-        # Fill with intent concepts
-        concepts = intent.supporting_concepts[:]
-        if intent.emotion_tone not in concepts:
-            concepts.insert(0, intent.emotion_tone)
+        # Build concept pool: supporting_concepts first, then emotion_tone,
+        # but strip stopwords and anything that looks like a rendered frame.
+        raw = list(intent.supporting_concepts or [])
+        if intent.emotion_tone and intent.emotion_tone not in raw:
+            raw.append(intent.emotion_tone)
+        concepts = [
+            c for c in raw
+            if c and c.lower() not in self._SLOT_STOPWORDS
+            and not any(frag in c.lower() for frag in (
+                "carries into", "what's next", "in proportion",
+                "is where the line", "holds its shape", "this continues",
+                "following from",
+            ))
+        ]
+        if not concepts:
+            # No clean concepts — skip anchor entirely rather than output garbage
+            return ""
 
         filled = anchor.fill(concepts)
         intent.anchored = True

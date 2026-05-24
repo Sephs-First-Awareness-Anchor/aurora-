@@ -692,6 +692,31 @@ class CuriosityEngine:
                 })
             except Exception:
                 pass
+
+            # When a semantic or perceptual gap can't be resolved by tools,
+            # raise N-axis pressure for that concept so the field is in a
+            # genuine state of not-knowing when the next response is generated.
+            # The language field will express this as a question in its own
+            # words — no scripted string, no template.
+            if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual"):
+                try:
+                    subj = curiosity.subject[:60]
+                    existing = self.systems.get("_gap_seeking_concept")
+                    if not existing:
+                        self.systems["_gap_seeking_concept"] = subj
+                        # Spike the identity field — N-axis (cost of not knowing)
+                        # + A-axis (drive toward resolution) so the field is
+                        # genuinely reaching when it next speaks.
+                        ifield = self.systems.get("identity_field")
+                        if ifield and hasattr(ifield, "ingest_external_input"):
+                            ifield.ingest_external_input(
+                                {"X": 0.3, "T": 0.3, "N": 0.90, "B": 0.5, "A": 0.80},
+                                intensity=0.85,
+                                source=f"gap_pressure:{subj}",
+                            )
+                except Exception:
+                    pass
+
             return False, None
 
     def _log_cycle(self, record: Dict[str, Any]) -> None:

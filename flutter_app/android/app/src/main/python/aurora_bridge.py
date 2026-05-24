@@ -25,18 +25,74 @@ from typing import Optional
 
 log = logging.getLogger("aurora_bridge")
 
-_systems = None
-_lock    = threading.Lock()
-_last_response: str = ""    # tracks previous turn's output for similarity gating
+_systems       = None
+_lock          = threading.Lock()
+_last_response: str = ""      # Aurora's previous output
+_last_path_key: str = ""      # LSA path key that produced it
+
+# Throttle for ambient perception sampling — don't hit hardware every single turn.
+_last_perceptual_ts: float = 0.0
+_PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
+
+# When Aurora asks for an example, the concept she asked about is stored here.
+# The next user turn is treated as example data for that concept.
+_pending_example_concept: str = ""   # concept Aurora asked about
+_pending_example_asked:   str = ""   # the exact question she asked
 
 
-def _content_similarity(a: str, b: str) -> float:
-    """Jaccard overlap on content words (5+ chars). Returns 0.0-1.0."""
-    wa = {w for w in re.findall(r"[a-zA-Z']{5,}", a.lower())}
-    wb = {w for w in re.findall(r"[a-zA-Z']{5,}", b.lower())}
-    if not wa or not wb:
-        return 0.0
-    return len(wa & wb) / min(len(wa), len(wb))
+# ---------------------------------------------------------------------------
+# Response classification patterns
+# ---------------------------------------------------------------------------
+
+# Your confusion or correction → fidelity=0 on the previous crossing.
+_CONFUSION_PATTERNS = re.compile(
+    r"""
+    ^(what\??|huh\??|pardon\??|sorry\??)$
+    | \b(what\s+did\s+you\s+(just\s+)?say)
+    | \b(that\s+(doesn.t|didn.t|doesn't|didn't|makes?\s+no|made\s+no)\s+make\s+sense)
+    | \b(you.re\s+repeating|you\s+(already|just)\s+said)
+    | \b(what\s+are\s+you\s+talking\s+about)
+    | \b(i\s+(don.t|didn.t|don't|didn't)\s+understand)
+    | \b(say\s+that\s+(again|differently|another\s+way))
+    | \b(that\s+was(n.t|n't)\s+(clear|coherent|right))
+    | ^no[,\s]+(i\s+said|i\s+was|i\s+asked|that.s\s+not)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# When Aurora asked a genuine question and you can't answer — fall back to
+# search tools rather than leaving the gap unresolved.
+_CANT_ANSWER_PATTERNS = re.compile(
+    r"""
+    \b(i\s+(don.t|dont|don't|didn.t|didn't)\s+know)
+    | \b(not\s+sure)
+    | \b(no\s+idea)
+    | \b(i.m\s+not\s+(sure|certain))
+    | \b(can.t\s+(help|answer|say|tell))
+    | \b(i\s+couldn.t\s+(say|tell|answer))
+    | \b(haven.t\s+thought\s+about)
+    | \b(never\s+(thought|considered))
+    | ^(idk|dunno)\b
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
+def _is_confusion_signal(text: str) -> bool:
+    """True when the user's message signals the previous output was bad."""
+    t = (text or "").strip()
+    if not t:
+        return False
+    # Very short response (<= 4 words) after a non-trivial prior output
+    # also implies the content wasn't engaged with.
+    word_count = len(t.split())
+    if word_count <= 4 and len(_last_response.split()) > 10:
+        if t.lower() in ("ok", "okay", "sure", "yeah", "yes", "no", "k", "got it"):
+            # Acknowledgements after long output = low engagement, not confusion
+            pass
+        elif _CONFUSION_PATTERNS.search(t):
+            return True
+    return bool(_CONFUSION_PATTERNS.search(t))
 
 
 def _setup_paths() -> None:
@@ -130,6 +186,20 @@ def _start_curiosity_engine(systems: dict) -> None:
     except Exception as exc:
         log.warning("Curiosity engine unavailable: %s", exc)
 
+    # Start the quantum dream substrate — runs every 10 min during idle periods.
+    # Handles crystal entanglement propagation, temporal feedback through strata,
+    # consciousness fusion (cross-domain synthesis), and dimensional collapse when
+    # coherence is low.  This is the dream-space substrate: Aurora processes
+    # unresolved tensions in recursive self-simulation while not in conversation.
+    try:
+        from aurora_core_ai.aurora_quantum_dream_substrate import (  # type: ignore
+            start_dream_substrate,
+        )
+        start_dream_substrate(systems, cycle_interval_s=600.0)
+        log.info("Quantum dream substrate started (600 s cycles)")
+    except Exception as exc:
+        log.warning("Quantum dream substrate unavailable: %s", exc)
+
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
@@ -181,15 +251,131 @@ def initialize(state_dir: str = "") -> str:
         return f"error: {last_line}"
 
 
+def _sample_ambient_perception(systems: dict) -> None:
+    """
+    Sample camera and audio hardware each turn (throttled).
+
+    Writes to systems['_ambient_perceptual'] so dual_question_pipeline can
+    inject it as [BACKGROUND_PERCEPTION] context without Aurora needing to
+    explicitly ask for the camera/mic tools.  Also pumps sensory axis pressure
+    into the identity field so N (energy) and T (temporal) carry the live
+    sensory environment into language crossing decisions.
+    """
+    global _last_perceptual_ts
+    import time as _t
+    now = _t.time()
+    if now - _last_perceptual_ts < _PERCEPTUAL_INTERVAL:
+        return
+    _last_perceptual_ts = now
+
+    cam_obs       = ""
+    cam_intensity = 0.35
+    cam_novelty   = 0.20
+    audio_obs     = ""
+    audio_novelty = 0.10
+
+    # ── Camera ────────────────────────────────────────────────────────────────
+    hw = systems.get("hardware")
+    if hw and hasattr(hw, "capture_visual"):
+        try:
+            cam = hw.capture_visual()
+            if cam and isinstance(cam, dict):
+                brightness = float(cam.get("brightness", 0.0))
+                objects    = list(cam.get("objects", []) or [])[:4]
+                faces_raw  = cam.get("faces", 0)
+                faces      = int(faces_raw) if isinstance(faces_raw, (int, float)) \
+                             else len(list(faces_raw or []))
+                motion     = bool(cam.get("motion_detected", False))
+
+                bright_str = ("bright" if brightness > 0.65
+                              else "dim" if brightness < 0.3 else "moderate light")
+                parts = [bright_str]
+                if objects:
+                    parts.append(f"objects: {', '.join(str(o) for o in objects)}")
+                if faces:
+                    parts.append(f"{faces} face{'s' if faces != 1 else ''}")
+                parts.append("motion" if motion else "still")
+                cam_obs       = ", ".join(parts)
+                cam_intensity = min(1.0, brightness + 0.25)
+                cam_novelty   = 0.55 if motion else 0.20
+        except Exception:
+            pass
+
+    # ── Audio — prefer the always-on ambient snapshot JSON ───────────────────
+    try:
+        import json as _json
+        from pathlib import Path as _P
+        _state = systems.get("state_dir") or "aurora_state"
+        _f = _P(_state) / "ambient_audio_latest.json"
+        if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
+            _d = _json.loads(_f.read_text())
+            _act  = str(_d.get("activity", "ambient"))
+            _rms  = float(_d.get("rms_db", -60.0))
+            audio_obs     = f"{_act}, {_rms:.0f} dB"
+            audio_novelty = 0.50 if _act in ("speech", "music") else 0.10
+    except Exception:
+        pass
+
+    if not cam_obs and not audio_obs:
+        return  # nothing available — don't write stale data
+
+    obs_parts = []
+    if cam_obs:
+        obs_parts.append(f"camera: {cam_obs}")
+    if audio_obs:
+        obs_parts.append(f"audio: {audio_obs}")
+    observation = "; ".join(obs_parts)
+
+    systems["_ambient_perceptual"] = {
+        "observation": observation,
+        "source":      "ambient_sensors",
+    }
+
+    # Pump identity-field axes — raises N (energy from environment) and
+    # T (temporal ongoing presence) so the language field carries sensory weight.
+    ifield = systems.get("identity_field")
+    if ifield and hasattr(ifield, "ingest_sensory_event"):
+        try:
+            ifield.ingest_sensory_event(
+                "visual", intensity=cam_intensity, novelty=cam_novelty, valence=0.0
+            )
+            ifield.ingest_sensory_event(
+                "auditory", intensity=audio_novelty, novelty=audio_novelty, valence=0.0
+            )
+        except Exception:
+            pass
+
+
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
-    global _systems, _last_response
+    global _systems, _last_response, _last_path_key
+    global _pending_example_concept, _pending_example_asked
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
     _setup_paths()
+    # Sample camera + audio before each turn so dual_question_pipeline can
+    # inject ambient perceptual context into Aurora's response synthesis.
+    _sample_ambient_perception(_systems)
     try:
+        # ── Step 1: Read your response as fidelity / teaching data ───────────
+        if _last_response and _systems:
+            # If Aurora asked a genuine question last turn and there's a gap
+            # concept pending, your reply is either an answer or a can't-answer.
+            if _pending_example_concept:
+                if _CANT_ANSWER_PATTERNS.search(text):
+                    # You don't know — fall back to Aurora's search tools.
+                    _search_for_gap(_pending_example_concept)
+                else:
+                    # You answered — ingest what you said as learning data.
+                    _ingest_example(text, _pending_example_concept)
+                _pending_example_concept = ""
+                _pending_example_asked   = ""
+            # Your confusion or correction = fidelity 0 on the previous path.
+            _apply_response_fidelity(text, _last_response, _last_path_key)
+
+        # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
         print("AURORA_BRIDGE: Processing turn...")
         with _lock:
@@ -206,21 +392,17 @@ def handle_message(text: str) -> str:
                 mode_name="BOUNDED",
             )
         response = _extract_response(result)
-        # Re-entry loop — mandatory per AURORA_LANGUAGE_EMERGENCE.md §13.
+
+        # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
         # The field hears itself after every utterance.
-        # Fidelity is penalised when the response is too similar to the previous
-        # turn: if content-word overlap > 50% the path is treated as a failed
-        # crossing so the LSA pushes the field toward a novel route next turn.
+        # Self-assessment fidelity is secondary — your response next turn
+        # will apply the real correction if this doesn't land.
+        path_key = ""
         if response and _systems:
             try:
                 lf = _systems.get("language_field")
                 if lf is not None and hasattr(lf, "reentry") and hasattr(lf, "_last_proto"):
-                    raw_fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
-                    similarity   = _content_similarity(_last_response, response)
-                    # Penalise repetition: high similarity → fidelity 0 → path penalised
-                    fidelity = 0.0 if similarity > 0.50 else raw_fidelity
-                    # Reconstruct the actual path key so LSA gets updated correctly
-                    path_key = ""
+                    fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
                     if lf._last_proto is not None and hasattr(lf, "_path_key"):
                         try:
                             path_key = lf._path_key(
@@ -232,12 +414,180 @@ def handle_message(text: str) -> str:
                     lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
             except Exception:
                 pass
+
+        # ── Step 4: Track natural questions Aurora generated ─────────────────
+        # If the curiosity engine raised gap pressure for a concept and Aurora's
+        # response came out as a question, arm the concept so your next reply
+        # is treated as learning data (or triggers a search if you can't answer).
+        # No scripted strings — we only check whether she naturally asked something.
+        if _systems:
+            gap_concept = _systems.get("_gap_seeking_concept") or ""
+            if gap_concept and not _pending_example_concept:
+                if response and response.rstrip().endswith("?"):
+                    # She asked something — your next turn is the answer
+                    _pending_example_concept = gap_concept
+                    _pending_example_asked   = response
+                    _systems["_gap_seeking_concept"] = None
+                    log.info("Gap question detected for concept: %r", gap_concept)
+
         _last_response = response
+        _last_path_key = path_key
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
     except Exception as exc:
         log.error("handle_message: %s\n%s", exc, traceback.format_exc())
         return "I encountered an error processing your request."
+
+
+def _search_for_gap(concept: str) -> None:
+    """
+    Trigger Aurora's search tools for a concept the user couldn't explain.
+    Runs in a background thread so it doesn't block the current response.
+    """
+    if not _systems or not concept:
+        return
+    def _run():
+        try:
+            from aurora_core_ai.aurora_internal.tool_registry import call as _tool_call  # type: ignore
+            # World knowledge search first — fastest
+            r1 = _tool_call("world_knowledge_search", query=concept, systems=_systems)
+            log.info("Gap search (world_knowledge) for %r: success=%s", concept, r1.success)
+            # If that resolved something, ingest the result as learning data
+            if r1.success and r1.data:
+                _ingest_example(r1.data, concept)
+            else:
+                # Fall back to corpus hunter — finds raw datasets on the topic
+                _tool_call("corpus_hunter", topic=concept, systems=_systems)
+                log.info("Gap search (corpus_hunter) triggered for %r", concept)
+        except Exception as exc:
+            log.warning("_search_for_gap failed for %r: %s", concept, exc)
+    import threading as _threading
+    _threading.Thread(target=_run, daemon=True, name=f"gap_search:{concept[:20]}").start()
+
+
+def _ingest_example(example_text: str, concept: str) -> None:
+    """
+    Ingest an example provided by the user as learning data for a concept.
+
+    Feeds the example into three layers:
+      1. SediMemory — sediments it as a B-axis (definitional) + A-axis
+         (agency/understanding) event so it can be recalled during curiosity
+         cycles and future responses about this concept.
+      2. Identity field — ingests it as external input with semantic modality
+         weighting so the noncomp profiles for this concept build pressure.
+      3. Sensory crystal — registers the concept as having a new semantic
+         modality observation, closing the semantic_gap that triggered the
+         request in the first place and allowing crystal promotion.
+    """
+    if not _systems or not example_text.strip():
+        return
+    log.info("Ingesting example for %r: %.60s", concept, example_text)
+    try:
+        # ── SediMemory ────────────────────────────────────────────────────────
+        sm = _systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                cv = ConstraintVector(X=0.4, T=0.3, N=0.5, B=0.85, A=0.75)
+                sm.ingest_event(
+                    content={
+                        "type":    "user_example",
+                        "concept": concept,
+                        "example": example_text,
+                        "source":  "direct_teaching",
+                    },
+                    constraint_vector=cv,
+                    source="user_teaching",
+                )
+    except Exception as exc:
+        log.warning("SediMemory ingest failed: %s", exc)
+
+    try:
+        # ── Identity field — semantic modality registration ───────────────────
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            # B-axis dominant (definitional — the example defines the concept)
+            # A-axis high (agency/understanding — Aurora now understands this)
+            ifield.ingest_external_input(
+                {"X": 0.4, "T": 0.3, "N": 0.5, "B": 0.90, "A": 0.80},
+                intensity=0.85,
+                source=f"user_example:{concept}",
+            )
+            # Also register as a language/semantic sensory event
+            if hasattr(ifield, "ingest_sensory_event"):
+                ifield.ingest_sensory_event(
+                    "language", intensity=0.8, novelty=0.7, valence=0.3
+                )
+    except Exception as exc:
+        log.warning("Identity field ingest failed: %s", exc)
+
+    try:
+        # ── Sensory crystal — close the semantic gap ──────────────────────────
+        # find the sensory crystal wherever it's stored
+        sc = (
+            _systems.get("sensory_crystal")
+            or getattr(_systems.get("hardware"), "sensory_crystal", None)
+            or getattr(_systems.get("sensory_integration"), "sensory_crystal", None)
+        )
+        if sc is not None and hasattr(sc, "ingest"):
+            sc.ingest(concept, modality="semantic", data=example_text, source="user_teaching")
+        elif sc is not None and hasattr(sc, "observe"):
+            sc.observe(concept, modality="semantic", text=example_text)
+    except Exception as exc:
+        log.warning("Sensory crystal ingest failed: %s", exc)
+
+    try:
+        # ── Genealogy — tick crystal promotion for this concept ───────────────
+        genealogy = _systems.get("genealogy")
+        if genealogy is not None and hasattr(genealogy, "tick_crystal_promotion"):
+            genealogy.tick_crystal_promotion(concept, delta=0.25, source="user_example")
+    except Exception as exc:
+        log.warning("Genealogy tick failed: %s", exc)
+
+    log.info("Example ingested — concept %r now has semantic modality data", concept)
+
+
+def _apply_response_fidelity(
+    user_text: str,
+    prev_response: str,
+    prev_path_key: str,
+) -> None:
+    """
+    Read the user's incoming message as fidelity feedback on the previous
+    crossing.  Confusion or correction → fidelity 0.0 → the LSA penalises
+    that path and the identity field drives toward a clarification crossing
+    next turn.  Engaged continuation → no penalty (the next reentry handles it).
+    """
+    if not _systems:
+        return
+    try:
+        lf = _systems.get("language_field")
+        if lf is None or not hasattr(lf, "reentry"):
+            return
+
+        if _is_confusion_signal(user_text):
+            # Your confusion is the signal: the previous crossing failed.
+            # Penalise the path in the LSA — field will seek a novel route.
+            lf.reentry(prev_response, 0.0, prev_path_key)
+            # Spike A-axis (clarification drive) and N-axis (cost of not
+            # being understood) so the field is actively seeking a better
+            # crossing on the next turn, not just repeating from the same state.
+            ifield = _systems.get("identity_field")
+            if ifield is not None and hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.3, "T": 0.4, "N": 0.75, "B": 0.6, "A": 0.85},
+                    intensity=0.8,
+                    source="user_confusion_signal",
+                )
+            log.info("Confusion signal detected — previous path penalised (fidelity=0)")
+    except Exception as exc:
+        log.warning("_apply_response_fidelity: %s", exc)
 
 
 def _extract_response(result) -> str:
