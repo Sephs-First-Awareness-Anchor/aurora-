@@ -63,6 +63,15 @@ class _OrbPainter extends CustomPainter {
     Color(0xFFFFD700),
   ];
 
+  // Neon accent colors for extra pop
+  static const _neonAccents = [
+    Color(0xFF00FFFF),
+    Color(0xFF00FF99),
+    Color(0xFFFFAA00),
+    Color(0xFFFF00FF),
+    Color(0xFFFFFF00),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width  / 2;
@@ -197,6 +206,97 @@ class _OrbPainter extends CustomPainter {
         ..style       = PaintingStyle.stroke
         ..strokeWidth = strokeW * 4.0
         ..strokeCap   = StrokeCap.round);
+    }
+  }
+
+  void _drawOrbitalFrequencyRings(Canvas canvas, Offset center, double r) {
+    // Living orbital system: 4 concentric rings, each with 5 sine-wave frequency bands
+    // Rings rotate independently at different speeds for chaotic planetary effect
+    // Professional color contrast + neon pop for visual presence
+
+    final baseOpacity = switch (state) {
+      OrbState.speaking  => 0.70,
+      OrbState.listening => 0.45,
+      OrbState.thinking  => 0.30,
+      OrbState.dormant   => 0.12,
+    };
+
+    final baseAmplitude = switch (state) {
+      OrbState.speaking  => r * 0.18,
+      OrbState.listening => r * 0.10,
+      OrbState.thinking  => r * 0.07,
+      OrbState.dormant   => r * 0.03,
+    };
+
+    // 4 orbital rings at increasing radii with chaotic rotation
+    for (int ringIdx = 0; ringIdx < 4; ringIdx++) {
+      final ringRadius = r * (1.2 + ringIdx * 0.20);
+      
+      // Each ring rotates at different speed (chaotic planetary dynamics)
+      final ringRotation = pulse * math.pi * 2 * (0.8 + ringIdx * 0.4);
+      
+      // Per-ring frequency modulation (inner rings = higher frequency)
+      final frequencyMultiplier = 2.0 + (ringIdx * 0.6);
+      
+      // Per-ring opacity breathing
+      final ringOpacityMod = 0.7 + 0.3 * math.sin(ringRotation * 0.5);
+
+      // Draw 5 sine-wave frequency bands per ring
+      for (int bandIdx = 0; bandIdx < 5; bandIdx++) {
+        final bandPhase = ringRotation + _phaseOff[bandIdx];
+        final sinMod = math.sin(bandPhase);
+        
+        // Amplitude modulates per band for living energy feel
+        final bandAmplitude = baseAmplitude * (0.8 + 0.2 * sinMod);
+        
+        // Opacity modulates for breathing effect
+        final bandOpacity = (baseOpacity * ringOpacityMod * (0.85 + 0.15 * sinMod)).clamp(0.0, 1.0);
+
+        // Build the sine-wave path around the orbital ring
+        final path = Path();
+        const pathSteps = 180;
+        
+        for (int step = 0; step <= pathSteps; step++) {
+          final angle = (step / pathSteps) * math.pi * 2;
+          
+          // Base circular orbit
+          final baseX = center.dx + math.cos(angle) * ringRadius;
+          final baseY = center.dy + math.sin(angle) * ringRadius;
+          
+          // Sine-wave modulation perpendicular to orbit (radial breathing)
+          final radialMod = bandAmplitude * math.sin(angle * frequencyMultiplier + bandPhase);
+          final modX = baseX + math.cos(angle) * radialMod;
+          final modY = baseY + math.sin(angle) * radialMod;
+          
+          step == 0 ? path.moveTo(modX, modY) : path.lineTo(modX, modY);
+        }
+        
+        // Close the path for continuous orbital ring
+        path.close();
+
+        // Crisp neon stroke
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = _neonAccents[bandIdx].withOpacity(bandOpacity * 0.85)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.4 + pulse * 0.5
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round,
+        );
+
+        // Ethereal glow layer for professional depth
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color = _colors[bandIdx].withOpacity(bandOpacity * 0.35)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.5 + pulse * 0.8
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5.0 + pulse * 3.5),
+        );
+      }
     }
   }
 
