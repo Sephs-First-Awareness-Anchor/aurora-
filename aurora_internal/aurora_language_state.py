@@ -845,6 +845,10 @@ class SemanticIntentCompiler:
             "maint_discount", "tax_opposed", "root_slot:",
             "root_parents=", "operator_grade", "purpose_grade",
             "depth_score", "leverage_grade", "ontological_status",
+            "lineage_signature", "synthetic profile for link",
+            "profile for link", "signature:", "dominant_axis:",
+            "effect_tags", "generation_role", "semantic_translation",
+            "inheritance_breach", "persistent_pressure_root",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp

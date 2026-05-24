@@ -202,11 +202,9 @@ class AuroraOrbView(context: Context) : View(context) {
         0xFFFFD700.toInt(),
     )
 
-    // Orbital inclination angles — each sound ring wraps at a different plane.
-    private val orbitAngle = floatArrayOf(12f, 34f, 58f, -24f, -48f)
-
-    // Slight radius variation so adjacent rings don't sit exactly on top of each other.
-    private val orbitRadiusMul = floatArrayOf(1.22f, 1.34f, 1.47f, 1.60f, 1.73f)
+    // Stacked horizontal bands. The orb sits inside this field like a planet
+    // inside electrified rings.
+    private val bandOffset = floatArrayOf(-0.66f, -0.34f, 0f, 0.34f, 0.66f)
 
     // Per-ring independent phase offsets so they ripple out of sync.
     private val phaseOffset = floatArrayOf(0f, 1.26f, 2.51f, 3.77f, 5.03f)
@@ -243,66 +241,8 @@ class AuroraOrbView(context: Context) : View(context) {
 
         val dominantIdx = axes.indices.maxByOrNull { axes[it] } ?: 4
 
-        // ── Planetary waveform rings ──────────────────────────────────────────
-        // Drawn first so the central orb sits inside the rings.
-        for (i in 0..4) {
-            val pressure = axes[i].coerceIn(0.05f, 1f)
-            val phi      = animPhase + phaseOffset[i]
-            val sinPhi   = Math.sin(phi.toDouble()).toFloat()
-
-            // Active = dominant axis while speaking.
-            // High   = elevated pressure (>0.58) but not dominant.
-            // Idle   = low ripple, charged but subdued.
-            val isActive = speaking && i == dominantIdx
-            val isHigh   = speaking && pressure > 0.58f && !isActive
-
-            val chargeFactor = 1f + sinPhi * if (isActive) 0.24f else if (isHigh) 0.14f else 0.06f
-            val ampScale = if (isActive) 0.16f else if (isHigh) 0.095f else if (speaking) 0.038f else 0.016f
-            val amplitude = orbR * ampScale * (0.82f + pressure * 0.36f) * breathe
-
-            wavePath.reset()
-            val steps = 144
-            val major = orbR * orbitRadiusMul[i] * breathe
-            val minor = major * 0.24f
-            for (s in 0..steps) {
-                val theta = (Math.PI * 2.0 * s / steps.toDouble()).toFloat()
-                val wave = Math.sin((theta * 18.0 + phi).toDouble()).toFloat() * amplitude
-                val x = cx + Math.cos(theta.toDouble()).toFloat() * (major + wave)
-                val y = cy + Math.sin(theta.toDouble()).toFloat() * (minor + wave * 0.28f)
-                if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
-            }
-
-            val baseAlpha = when {
-                isActive -> (205 + pressure * 70).toInt()
-                isHigh   -> (130 + pressure * 70).toInt()
-                else     -> (44  + pressure * 54).toInt()
-            }
-            val strokeAlpha = (baseAlpha * chargeFactor).toInt().coerceIn(0, 255)
-            val strokeW     = (when {
-                isActive -> 3.8f + pressure * 2.8f
-                isHigh   -> 2.0f + pressure * 1.4f
-                else     -> 0.9f + pressure * 0.8f
-            }) * chargeFactor
-
-            canvas.save()
-            canvas.rotate(orbitAngle[i], cx, cy)
-
-            // Glow pass — broader stroke at low alpha for the charged halo effect
-            paint.style       = Paint.Style.STROKE
-            paint.color       = axisColors[i]
-            paint.alpha       = (strokeAlpha * 0.42f).toInt().coerceIn(0, 120)
-            paint.strokeWidth = strokeW * 5.2f
-            paint.strokeCap   = Paint.Cap.ROUND
-            paint.strokeJoin  = Paint.Join.ROUND
-            canvas.drawPath(wavePath, paint)
-
-            // Main waveform stroke
-            paint.alpha       = strokeAlpha
-            paint.strokeWidth = strokeW
-            canvas.drawPath(wavePath, paint)
-
-            canvas.restore()
-        }
+        // Back half of the electric sound bands.
+        drawElectricBands(canvas, cx, cy, orbR, breathe, dominantIdx, false)
 
         // ── Central orb ──────────────────────────────────────────────────────
         val r = orbR * breathe
@@ -323,7 +263,6 @@ class AuroraOrbView(context: Context) : View(context) {
         canvas.drawCircle(cx, cy, r * 2.2f, paint)
         paint.shader = null
 
-        // Core orb: white-core → lavender → violet → deep purple
         val orbShader = RadialGradient(
             cx, cy, r,
             intArrayOf(
@@ -338,5 +277,85 @@ class AuroraOrbView(context: Context) : View(context) {
         paint.shader = orbShader
         canvas.drawCircle(cx, cy, r, paint)
         paint.shader = null
+
+        // Front half of the bands, thinner and partially transparent.
+        drawElectricBands(canvas, cx, cy, orbR, breathe, dominantIdx, true)
+    }
+
+    private fun drawElectricBands(
+        canvas: Canvas,
+        cx: Float,
+        cy: Float,
+        orbR: Float,
+        breathe: Float,
+        dominantIdx: Int,
+        frontPass: Boolean
+    ) {
+        for (i in 0..4) {
+            val pressure = axes[i].coerceIn(0.05f, 1f)
+            val phi      = animPhase + phaseOffset[i]
+            val sinPhi   = Math.sin(phi.toDouble()).toFloat()
+
+            // Active = dominant axis while speaking.
+            // High   = elevated pressure (>0.58) but not dominant.
+            // Idle   = low ripple, charged but subdued.
+            val isActive = speaking && i == dominantIdx
+            val isHigh   = speaking && pressure > 0.58f && !isActive
+
+            val chargeFactor = 1f + sinPhi * if (isActive) 0.24f else if (isHigh) 0.14f else 0.06f
+            val ampScale = if (isActive) 0.24f else if (isHigh) 0.15f else if (speaking) 0.065f else 0.025f
+            val amplitude = orbR * ampScale * (0.82f + pressure * 0.36f) * breathe
+
+            wavePath.reset()
+            val steps = 132
+            val major = orbR * 1.82f * breathe
+            val yBase = cy + orbR * bandOffset[i]
+            val start = if (frontPass) -0.58f else -1.0f
+            val end = if (frontPass) 0.58f else 1.0f
+            for (s in 0..steps) {
+                val u = start + (end - start) * s / steps.toFloat()
+                val x = cx + u * major
+                val ringCurve = Math.sin((u * Math.PI).toDouble()).toFloat() * orbR * 0.12f
+                val envelope = 0.34f + 0.66f * Math.sqrt((1f - u * u).coerceIn(0f, 1f).toDouble()).toFloat()
+                val carrier = Math.sin(((u + 1f) * Math.PI * 7.0 + phi).toDouble()).toFloat()
+                val jitter = Math.sin(((u + 1f) * Math.PI * 19.0 + phi * 1.7f).toDouble()).toFloat() * amplitude * 0.22f
+                val y = yBase + ringCurve + carrier * amplitude * envelope + jitter
+                if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
+            }
+
+            val baseAlpha = when {
+                isActive -> (205 + pressure * 70).toInt()
+                isHigh   -> (130 + pressure * 70).toInt()
+                else     -> (44  + pressure * 54).toInt()
+            }
+            val strokeAlpha = (baseAlpha * chargeFactor).toInt().coerceIn(0, 255)
+            val strokeW     = (when {
+                isActive -> 3.8f + pressure * 2.8f
+                isHigh   -> 2.0f + pressure * 1.4f
+                else     -> 0.9f + pressure * 0.8f
+            }) * chargeFactor * (if (frontPass) 0.76f else 1.0f)
+
+            paint.style       = Paint.Style.STROKE
+            paint.color       = Color.BLACK
+            paint.alpha       = if (frontPass) 148 else 210
+            paint.strokeWidth = strokeW + (if (isActive) 4.4f else 3.2f)
+            paint.strokeCap   = Paint.Cap.ROUND
+            paint.strokeJoin  = Paint.Join.ROUND
+            canvas.drawPath(wavePath, paint)
+
+            // Glow pass — broader stroke at low alpha for the charged halo effect
+            paint.style       = Paint.Style.STROKE
+            paint.color       = axisColors[i]
+            paint.alpha       = (strokeAlpha * 0.42f).toInt().coerceIn(0, 120)
+            paint.strokeWidth = strokeW * (if (frontPass) 3.0f else 5.4f)
+            paint.strokeCap   = Paint.Cap.ROUND
+            paint.strokeJoin  = Paint.Join.ROUND
+            canvas.drawPath(wavePath, paint)
+
+            // Main waveform stroke
+            paint.alpha       = strokeAlpha
+            paint.strokeWidth = strokeW
+            canvas.drawPath(wavePath, paint)
+        }
     }
 }

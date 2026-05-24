@@ -3856,7 +3856,7 @@ class ConstraintGenealogyLogger:
                 cost=cost,
                 risk={"X": lnk.mean_x_risk},
                 effect_tags=tuple(lnk.tags),
-                notes=f"Synthetic profile for link {item.id} (maint_discount={discount:.2f})",
+                notes="Synthetic profile from stabilized internal lineage evidence.",
             )
         return None
 
