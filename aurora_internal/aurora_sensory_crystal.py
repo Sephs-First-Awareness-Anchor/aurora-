@@ -2137,7 +2137,7 @@ def ensure_sensory_crystal_lineage(systems: Dict[str, Any],
                     cost         = {"X": 0.05, "T": 0.10, "N": 0.20, "B": 0.05, "A": 0.05},
                     risk         = {"N": 0.05, "T": 0.03},
                     effect_tags  = ("sensory", "intake", "energy", "perception"),
-                    notes        = "Raw audio+visual enters sensory crystal (sensory.intake, gen=1, N-axis)",
+                    notes        = "",
                 ),
                 "B:SENSORY_CLUSTER": AbilityProfile(
                     id           = "B:SENSORY_CLUSTER",

@@ -1687,26 +1687,42 @@ class WorkingMemory:
         replacement = str(replacement_summary or '').strip()
 
         if action == 'delete_context':
-            core_claim = f"{removed} should leave active context now"
+            # Give the language field just the concept — not internal tracking language.
+            core_claim = removed
             tone = 'firm'
             certainty = 0.84
             family = 'context_delete'
         elif action == 'revise_context' and removed_summary and replacement:
-            core_claim = f"{replacement} replaces {removed} in active context"
+            # The replacement concept is the content — no "replaces ... in active context".
+            core_claim = replacement
             tone = 'precise'
             certainty = 0.86
             family = 'context_revise'
         elif action == 'revise_context':
-            target = replacement or 'the correction'
-            core_claim = f"active context centers on {target} now"
+            target = replacement or removed
+            core_claim = target
             tone = 'precise'
             certainty = 0.8
             family = 'context_revise'
         else:
-            core_claim = "need clearer target for context removal"
+            core_claim = removed
             tone = 'gentle'
             certainty = 0.68
             family = 'context_clarify'
+
+        # Fire the correction as a real field event before generating the response.
+        # Without this the correction is text-only — it never reaches the constraint
+        # field, so the field balancer has nothing to rebalance from and T stays pinned.
+        try:
+            ifield = (systems or {}).get("identity_field")
+            if ifield and hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.3, "T": 0.10, "N": 0.40, "B": 0.45, "A": 0.70},
+                    intensity=0.80,
+                    source="correction_event",
+                )
+        except Exception:
+            pass
 
         response = self._render_from_comprehension_intent(
             systems,
@@ -18453,6 +18469,15 @@ def _chain_up3_purpose(user_text: str, systems: dict, state: Any) -> None:
     except Exception:
         pass
 
+    # Correction pressure: a user correction breaks temporal continuity and
+    # reasserts agency.  Inject into _raw BEFORE the field balancer so the
+    # crossing selection and language frame respond to the corrective event
+    # rather than staying T-dominant (callback = temporal reference).
+    if (state.pipeline_state or {}).get("correction_absorbed"):
+        _raw["T"] = max(0.05, float(_raw.get("T", 0.3)) - 0.35)
+        _raw["A"] = min(1.0, float(_raw.get("A", 0.2)) + 0.45)
+        _raw["B"] = min(1.0, float(_raw.get("B", 0.2)) + 0.20)
+
     state.axis_activation = _field_balancer.rebalanced_activation(_raw)
     _field_balancer.update(state.axis_activation, systems)
     state.dominant_axis = _axis_projector.dominant(state.axis_activation)
@@ -25993,6 +26018,16 @@ def _run_live_response_turn(
             elif aurora_text and working_memory._normalize_mention(aurora_text) == working_memory._normalize_mention(user_low):
                 working_memory._skip_next_aurora_claim_ingest = True
             elif aurora_text:
+                # Crest output must never re-enter as trough content.
+                # Word-salad or internal-state text stored as claims creates a
+                # feedback loop: bad output → claim → conflict with correction →
+                # fragment synthesis → bad output again.
+                try:
+                    from aurora_articulation import _is_word_salad as _ws_claim_gate
+                    if _ws_claim_gate(aurora_text):
+                        working_memory._skip_next_aurora_claim_ingest = True
+                except Exception:
+                    pass
                 try:
                     user_claims = list(working_memory._extract_claims(user_text, source='user', understood=understood) or [])
                     aurora_claims = list(working_memory._extract_claims(aurora_text, source='aurora', understood=understood) or [])
