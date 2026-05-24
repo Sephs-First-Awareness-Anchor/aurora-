@@ -24,10 +24,12 @@ class AuroraBridge {
     final typeMatch   = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
     final textMatch   = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     final errorMatch  = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
+    final summaryMatch = RegExp(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     return {
       'source':  sourceMatch?.group(1) ?? 'aurora',
       'type':    typeMatch?.group(1)   ?? 'unknown',
       'text':    textMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'summary': summaryMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
       'error':   errorMatch != null ? int.tryParse(errorMatch.group(1)!) : null,
       'final':   json.contains('"final":true'),
       'granted': json.contains('"granted":true'),
@@ -77,6 +79,14 @@ class AuroraBridge {
 
   static Future<void> requestOverlayPermission() =>
       _channel.invokeMethod('requestOverlayPermission');
+
+  // ── Screen observer (Android Accessibility surface observation) ───────────
+
+  static Future<bool> hasScreenObserverPermission() async =>
+      await _channel.invokeMethod<bool>('hasScreenObserverPermission') ?? false;
+
+  static Future<void> requestScreenObserverPermission() =>
+      _channel.invokeMethod('requestScreenObserverPermission');
 
   /// Returns true (and clears the flag) if the overlay orb was tapped while
   /// the app was backgrounded.  Call this in onResume.
