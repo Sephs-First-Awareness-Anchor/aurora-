@@ -903,26 +903,39 @@ def _is_chaquopy_android() -> bool:
     """True when running inside a Chaquopy-embedded Android app (non-Termux)."""
     return os.environ.get("AURORA_ANDROID") == "1" and not _is_termux()
 
+def _get_android_context():
+    """Return application context — works from both Activity and Service."""
+    try:
+        from com.chaquo.python import Python  # type: ignore
+        return Python.getPlatform().getApplication()
+    except Exception:
+        pass
+    try:
+        from android import mActivity  # type: ignore  (Activity context, fallback)
+        return mActivity
+    except Exception as exc:
+        raise RuntimeError(f"Cannot obtain Android context: {exc}") from exc
+
 def _chaquopy_launch_app(package: str) -> tuple:
     """Launch an app via Android Intent using Chaquopy's Java bridge."""
-    from android import mActivity  # Chaquopy-injected current Activity
-    from android.content import Intent
-    pm = mActivity.getPackageManager()
+    from android.content import Intent  # type: ignore
+    ctx = _get_android_context()
+    pm = ctx.getPackageManager()
     launch_intent = pm.getLaunchIntentForPackage(package)
     if launch_intent is None:
         return False, f"No launcher found for {package}"
     launch_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    mActivity.startActivity(launch_intent)
+    ctx.startActivity(launch_intent)
     return True, f"Launched {package}"
 
 def _chaquopy_open_url(url: str) -> tuple:
     """Open a URL via Android Intent using Chaquopy's Java bridge."""
-    from android import mActivity
-    from android.content import Intent
-    from android.net import Uri
+    from android.content import Intent  # type: ignore
+    from android.net import Uri  # type: ignore
+    ctx = _get_android_context()
     intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    mActivity.startActivity(intent)
+    ctx.startActivity(intent)
     return True, f"Opened {url}"
 
 def _termux_run(cmd: list, timeout: int = 15) -> tuple:

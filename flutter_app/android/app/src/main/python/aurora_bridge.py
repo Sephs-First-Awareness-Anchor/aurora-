@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sys
 import threading
 import traceback
@@ -26,6 +27,16 @@ log = logging.getLogger("aurora_bridge")
 
 _systems = None
 _lock    = threading.Lock()
+_last_response: str = ""    # tracks previous turn's output for similarity gating
+
+
+def _content_similarity(a: str, b: str) -> float:
+    """Jaccard overlap on content words (5+ chars). Returns 0.0-1.0."""
+    wa = {w for w in re.findall(r"[a-zA-Z']{5,}", a.lower())}
+    wb = {w for w in re.findall(r"[a-zA-Z']{5,}", b.lower())}
+    if not wa or not wb:
+        return 0.0
+    return len(wa & wb) / min(len(wa), len(wb))
 
 
 def _setup_paths() -> None:
@@ -77,6 +88,49 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         log.warning("Language Field init failed: %s", exc)
 
 
+def _start_curiosity_engine(systems: dict) -> None:
+    """
+    Boot the autonomous CuriosityEngine background thread.
+
+    Aurora uses this between turns to follow unresolved tensions through
+    tools (image search, world_knowledge_search, audio analysis, etc.),
+    form conclusions, challenge them, and settle — promoting crystal
+    structures when understanding deepens.  The thread is a daemon so
+    it never blocks app shutdown.
+    """
+    try:
+        from aurora_core_ai.aurora_curiosity_engine import (  # type: ignore
+            CuriosityEngine,
+            start_curiosity_background,
+        )
+        from aurora_core_ai.aurora_self_grounding import (  # type: ignore
+            SelfGroundingFallback, get_tension_monitor,
+        )
+        from aurora_core_ai.aurora_tool_mind import ToolChoiceObserver  # type: ignore
+
+        dim = systems.get("dimensional")
+        pressure_src = getattr(dim, "pressure_vec", None) if dim else None
+        field_map_raw = getattr(dim, "field_map", None) if dim else None
+        field_map = getattr(field_map_raw, "field_map", None) or field_map_raw
+
+        engine = CuriosityEngine(
+            pressure_source=pressure_src,
+            field_map=field_map,
+            tool_mind=ToolChoiceObserver(),
+            sedimemory=systems.get("sedimemory"),
+            self_grounder=SelfGroundingFallback(),
+            tension_monitor=get_tension_monitor(),
+            systems=systems,
+        )
+        systems["_curiosity_engine"] = engine
+        # 90 s idle interval — generous on mobile to conserve battery while
+        # still giving Aurora regular autonomous exploration windows.
+        start_curiosity_background(engine, tick_interval_s=90.0)
+        log.info("Curiosity engine started (90 s idle cycle)")
+    except Exception as exc:
+        log.warning("Curiosity engine unavailable: %s", exc)
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     global _systems
@@ -112,6 +166,12 @@ def initialize(state_dir: str = "") -> str:
         # may be absent when aurora_manifold_directory is not present).
         _init_language_field(_systems, state_dir)
 
+        # Start the autonomous curiosity engine as a background daemon thread.
+        # It runs 3-cycle idle batches (45 s between batches on mobile to be
+        # battery-friendly) and pauses automatically the moment a user turn
+        # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
+        _start_curiosity_engine(_systems)
+
         log.info("Aurora boot complete")
         return "ready"
     except Exception as exc:
@@ -123,7 +183,7 @@ def initialize(state_dir: str = "") -> str:
 
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
-    global _systems
+    global _systems, _last_response
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
@@ -138,7 +198,7 @@ def handle_message(text: str) -> str:
                 text,
                 source_label="flutter_ui",
                 session_id="mobile",
-                auto_search_enabled=False,
+                auto_search_enabled=True,
                 record_exchange=True,
                 update_interactive_state=True,
                 track_evolutionary_trace=True,
@@ -146,16 +206,33 @@ def handle_message(text: str) -> str:
                 mode_name="BOUNDED",
             )
         response = _extract_response(result)
-        # Run Language Field re-entry loop after emitting a response so the
-        # field hears itself (mandatory per AURORA_LANGUAGE_EMERGENCE.md §13).
+        # Re-entry loop — mandatory per AURORA_LANGUAGE_EMERGENCE.md §13.
+        # The field hears itself after every utterance.
+        # Fidelity is penalised when the response is too similar to the previous
+        # turn: if content-word overlap > 50% the path is treated as a failed
+        # crossing so the LSA pushes the field toward a novel route next turn.
         if response and _systems:
             try:
                 lf = _systems.get("language_field")
                 if lf is not None and hasattr(lf, "reentry") and hasattr(lf, "_last_proto"):
-                    fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
-                    lf.reentry(response, fidelity, "", proto=lf._last_proto)
+                    raw_fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
+                    similarity   = _content_similarity(_last_response, response)
+                    # Penalise repetition: high similarity → fidelity 0 → path penalised
+                    fidelity = 0.0 if similarity > 0.50 else raw_fidelity
+                    # Reconstruct the actual path key so LSA gets updated correctly
+                    path_key = ""
+                    if lf._last_proto is not None and hasattr(lf, "_path_key"):
+                        try:
+                            path_key = lf._path_key(
+                                lf._last_proto.comparison_type,
+                                lf._last_proto.dominant_axes,
+                            )
+                        except Exception:
+                            pass
+                    lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
             except Exception:
                 pass
+        _last_response = response
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
     except Exception as exc:
