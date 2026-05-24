@@ -86,7 +86,7 @@ class OverlayService : Service() {
         else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
         val dp = resources.displayMetrics.density
-        val sz = (200 * dp).toInt()   // square — gives orbital rings full room
+        val sz = (200 * dp).toInt()   // square — gives planetary waveform rings room
 
         val params = WindowManager.LayoutParams(
             sz, sz, layoutFlag,
@@ -173,10 +173,9 @@ class OverlayService : Service() {
 
 
 // =============================================================================
-// AuroraOrbView — planetary orbital rings + central orb
+// AuroraOrbView — planetary waveform rings + central orb
 //
-// Five thin flat ellipses, each rotated to a different orbital inclination,
-// wrap around the central sphere like multi-plane planetary rings.
+// Five colored sound-wave rings wrap around the central sphere.
 //
 // Idle:    all rings at a low charged ripple — slight alpha pulse via sin wave.
 // Speaking: only rings whose axis pressure is above the active threshold light
@@ -203,12 +202,11 @@ class AuroraOrbView(context: Context) : View(context) {
         0xFFFFD700.toInt(),
     )
 
-    // Orbital inclination angles — each ring wraps at a different plane angle.
-    // Spread to suggest distinct orbital trajectories around the sphere.
-    private val orbitAngle = floatArrayOf(15f, 48f, 80f, -22f, -55f)
+    // Orbital inclination angles — each sound ring wraps at a different plane.
+    private val orbitAngle = floatArrayOf(12f, 34f, 58f, -24f, -48f)
 
     // Slight radius variation so adjacent rings don't sit exactly on top of each other.
-    private val orbitRadiusMul = floatArrayOf(1.30f, 1.42f, 1.36f, 1.24f, 1.48f)
+    private val orbitRadiusMul = floatArrayOf(1.22f, 1.34f, 1.47f, 1.60f, 1.73f)
 
     // Per-ring independent phase offsets so they ripple out of sync.
     private val phaseOffset = floatArrayOf(0f, 1.26f, 2.51f, 3.77f, 5.03f)
@@ -217,7 +215,7 @@ class AuroraOrbView(context: Context) : View(context) {
     private var breathPhase = 0f
 
     private val paint    = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val ringRect = RectF()
+    private val wavePath = Path()
 
     // ---- called every 50 ms (20 fps) ----------------------------------------
 
@@ -245,9 +243,8 @@ class AuroraOrbView(context: Context) : View(context) {
 
         val dominantIdx = axes.indices.maxByOrNull { axes[it] } ?: 4
 
-        // ── Planetary rings ───────────────────────────────────────────────────
-        // Draw all rings. Each is a thin flat ellipse rotated to its orbital angle.
-        // Two stroke passes per ring: sharp main edge + wide low-alpha glow.
+        // ── Planetary waveform rings ──────────────────────────────────────────
+        // Drawn first so the central orb sits inside the rings.
         for (i in 0..4) {
             val pressure = axes[i].coerceIn(0.05f, 1f)
             val phi      = animPhase + phaseOffset[i]
@@ -259,23 +256,26 @@ class AuroraOrbView(context: Context) : View(context) {
             val isActive = speaking && i == dominantIdx
             val isHigh   = speaking && pressure > 0.58f && !isActive
 
-            // Ripple amplitude scales with state — idle still feels charged.
-            val rippleAmt    = if (isActive) 0.30f else if (isHigh) 0.16f else 0.09f
-            val chargeFactor = 1f + sinPhi * rippleAmt
+            val chargeFactor = 1f + sinPhi * if (isActive) 0.24f else if (isHigh) 0.14f else 0.06f
+            val ampScale = if (isActive) 0.16f else if (isHigh) 0.095f else if (speaking) 0.038f else 0.016f
+            val amplitude = orbR * ampScale * (0.82f + pressure * 0.36f) * breathe
 
-            // Ring geometry: very flat ellipse — orbR × 0.07 minor axis ratio.
-            val rMajor = orbR * orbitRadiusMul[i] * breathe
-            val rMinor = rMajor * 0.07f
+            wavePath.reset()
+            val steps = 144
+            val major = orbR * orbitRadiusMul[i] * breathe
+            val minor = major * 0.24f
+            for (s in 0..steps) {
+                val theta = (Math.PI * 2.0 * s / steps.toDouble()).toFloat()
+                val wave = Math.sin((theta * 18.0 + phi).toDouble()).toFloat() * amplitude
+                val x = cx + Math.cos(theta.toDouble()).toFloat() * (major + wave)
+                val y = cy + Math.sin(theta.toDouble()).toFloat() * (minor + wave * 0.28f)
+                if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
+            }
 
-            canvas.save()
-            canvas.rotate(orbitAngle[i], cx, cy)
-            ringRect.set(cx - rMajor, cy - rMinor, cx + rMajor, cy + rMinor)
-
-            // Main ring stroke
             val baseAlpha = when {
-                isActive -> (185 + pressure * 65).toInt()
-                isHigh   -> (110 + pressure * 55).toInt()
-                else     -> (28  + pressure * 36).toInt()
+                isActive -> (205 + pressure * 70).toInt()
+                isHigh   -> (130 + pressure * 70).toInt()
+                else     -> (44  + pressure * 54).toInt()
             }
             val strokeAlpha = (baseAlpha * chargeFactor).toInt().coerceIn(0, 255)
             val strokeW     = (when {
@@ -284,16 +284,22 @@ class AuroraOrbView(context: Context) : View(context) {
                 else     -> 0.9f + pressure * 0.8f
             }) * chargeFactor
 
+            canvas.save()
+            canvas.rotate(orbitAngle[i], cx, cy)
+
+            // Glow pass — broader stroke at low alpha for the charged halo effect
             paint.style       = Paint.Style.STROKE
             paint.color       = axisColors[i]
+            paint.alpha       = (strokeAlpha * 0.42f).toInt().coerceIn(0, 120)
+            paint.strokeWidth = strokeW * 5.2f
+            paint.strokeCap   = Paint.Cap.ROUND
+            paint.strokeJoin  = Paint.Join.ROUND
+            canvas.drawPath(wavePath, paint)
+
+            // Main waveform stroke
             paint.alpha       = strokeAlpha
             paint.strokeWidth = strokeW
-            canvas.drawOval(ringRect, paint)
-
-            // Glow pass — broader stroke at ~30% alpha for the charged halo effect
-            paint.alpha       = (strokeAlpha * 0.30f).toInt().coerceIn(0, 95)
-            paint.strokeWidth = strokeW * 3.5f
-            canvas.drawOval(ringRect, paint)
+            canvas.drawPath(wavePath, paint)
 
             canvas.restore()
         }
@@ -321,12 +327,12 @@ class AuroraOrbView(context: Context) : View(context) {
         val orbShader = RadialGradient(
             cx, cy, r,
             intArrayOf(
-                0xFFFFFFFF.toInt(),
-                0xFFECD5FF.toInt(),
-                0xFFB060FF.toInt(),
-                0xFF5010A0.toInt(),
+                0xFFDCC8FF.toInt(),
+                0xFF7B38D8.toInt(),
+                0xFF37115F.toInt(),
+                0xFF08000F.toInt(),
             ),
-            floatArrayOf(0f, 0.22f, 0.62f, 1f),
+            floatArrayOf(0f, 0.20f, 0.62f, 1f),
             Shader.TileMode.CLAMP,
         )
         paint.shader = orbShader
