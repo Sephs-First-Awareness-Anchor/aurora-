@@ -19,14 +19,16 @@ class AuroraOrb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Canvas is 3× the orb radius so the wave bands have horizontal breathing room.
-    final canvas = size * 3.0;
+    // Wide landscape canvas so horizontal wave bands read as flowing left-to-right
+    // rather than appearing to orbit the sphere (which a square canvas causes).
+    final canvasW = size * 5.0;
+    final canvasH = size * 1.6;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedBuilder(
         animation: pulse,
         builder: (_, __) => CustomPaint(
-          size: Size(canvas, canvas),
+          size: Size(canvasW, canvasH),
           painter: _OrbPainter(
             pulse:     pulse.value,
             state:     state,
@@ -138,10 +140,6 @@ class _OrbPainter extends CustomPainter {
         );
       }
     }
-
-    // ── Living orbital frequency rings ──────────────────────────────────────────
-    // Chaotic yet professional planetary ring system with sine-wave modulation.
-    _drawOrbitalFrequencyRings(canvas, center, r);
   }
 
   void _drawWaveBands(Canvas canvas, Size size, double cx, double cy, double r) {

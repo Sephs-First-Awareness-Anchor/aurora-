@@ -43,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ── STT / TTS state ─────────────────────────────────────────────────────
   bool   _listening   = false;
   bool   _speaking    = false;
+  bool   _quietMode   = false;
   String _partialText = '';
 
   // ── Conversation window ──────────────────────────────────────────────────
@@ -148,12 +149,32 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  static final _quietOnRe  = RegExp(r'\b(quiet\s*mode|go\s*quiet|be\s*quiet|silent\s*mode|silence)\b', caseSensitive: false);
+  static final _quietOffRe = RegExp(r'\b(voice\s*on|speak\s*again|unquiet|come\s*back|talk\s*again|normal\s*mode)\b', caseSensitive: false);
+
+  void _toggleQuietMode(bool on) {
+    setState(() => _quietMode = on);
+    final msg = on ? 'Quiet mode on. I\'ll keep watching.' : 'Voice on.';
+    if (!on) {
+      _speak(msg);
+    } else {
+      // Show feedback in chat without speaking
+      setState(() => _msgs.add(ChatMsg(msg, isUser: false)));
+      _scrollToBottom();
+      if (!_speaking) _startListening();
+    }
+  }
+
   void _processRecognizedText(String words) {
     final lower = words.toLowerCase().trim();
     if (lower.isEmpty) {
       if (!_speaking) _startListening();
       return;
     }
+
+    // Quiet mode toggle commands — handled before anything else.
+    if (_quietOffRe.hasMatch(lower)) { _toggleQuietMode(false); return; }
+    if (_quietOnRe.hasMatch(lower))  { _toggleQuietMode(true);  return; }
 
     // If we're already in a conversation, respond to EVERYTHING heard.
     // If not, only respond if "Aurora" is mentioned.
@@ -265,7 +286,11 @@ class _HomeScreenState extends State<HomeScreen>
       _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
     });
     _scrollToBottom();
-    _speak(reply);
+    if (_quietMode) {
+      _startListening();
+    } else {
+      _speak(reply);
+    }
     _resetConversationWindow();
   }
 
@@ -314,7 +339,12 @@ class _HomeScreenState extends State<HomeScreen>
       body: SafeArea(
         child: Column(
           children: [
-            _Header(state: _embState, onBackground: isSummoned ? _background : null),
+            _Header(
+              state: _embState,
+              quietMode: _quietMode,
+              onQuietToggle: () => _toggleQuietMode(!_quietMode),
+              onBackground: isSummoned ? _background : null,
+            ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Column(
@@ -386,8 +416,10 @@ class _HomeScreenState extends State<HomeScreen>
 
 class _Header extends StatelessWidget {
   final String state;
+  final bool quietMode;
+  final VoidCallback onQuietToggle;
   final AsyncCallback? onBackground;
-  const _Header({required this.state, this.onBackground});
+  _Header({required this.state, required this.quietMode, required this.onQuietToggle, this.onBackground});
 
   @override
   Widget build(BuildContext context) {
@@ -402,6 +434,14 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          IconButton(
+            icon: Icon(
+              quietMode ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+              color: quietMode ? Colors.white38 : Colors.white54,
+            ),
+            onPressed: onQuietToggle,
+            tooltip: quietMode ? 'Quiet mode (tap to unmute)' : 'Quiet mode',
+          ),
           if (state == 'SUMMONED')
             IconButton(
               icon: const Icon(Icons.visibility_rounded, color: Colors.white54),
