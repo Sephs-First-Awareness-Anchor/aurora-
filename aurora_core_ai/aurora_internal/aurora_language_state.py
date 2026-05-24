@@ -800,6 +800,20 @@ class SemanticIntentCompiler:
         if any(frag in content.lower() for frag in _frame_artifacts):
             content = rp
 
+        # Strip internal system-state strings that leak in from crystal notes,
+        # context tracking diagnostics, or sensory crystal records.  These are
+        # never user-facing content — wrapping them in an axis frame produces
+        # sentences like "X replaces Y in active context carries forward."
+        _internal_sys = (
+            "active context", "sensory crystal", "n-axis", "gen=",
+            "sensory.intake", "sensory intake", "raw audio",
+            "crystal system", " replaces ", "should leave",
+            "carries forward",   # already-rendered T-frame used as content
+        )
+        if any(m in content.lower() for m in _internal_sys):
+            content = rp
+            _content_is_sentence = False
+
         # If content is already a complete sentence, don't wrap it inside
         # another axis frame — the frame's structural sentence and a full
         # content sentence can't share a single syntactic slot without

@@ -832,6 +832,19 @@ class SemanticIntentCompiler:
         if not content or content.lower() in ("x", "t", "n", "b", "a", "existence", "temporal", "energy", "boundary", "agency"):
             content = rp
 
+        # Strip internal system-state strings that leak in from crystal notes,
+        # context tracking, or sensory diagnostic text — these must never appear
+        # in user-facing output and produce garbage when wrapped in axis frames.
+        _internal_sys = (
+            "active context", "sensory crystal", "n-axis", "gen=",
+            "sensory.intake", "sensory intake", "raw audio",
+            "crystal system", " replaces ", "should leave",
+            "carries forward",
+        )
+        if any(m in content.lower() for m in _internal_sys):
+            content = rp
+            content_is_clause = False
+
         uncertain = intent.certainty < 0.5
 
         if ax == "A":

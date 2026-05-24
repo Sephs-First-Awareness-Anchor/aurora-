@@ -491,6 +491,21 @@ def _is_word_salad(text: str) -> bool:
         r"\bthe connection between\b.*\band\b.*\bmatters\b",
         # "this continues" as a sentence ending in any form
         r"\bthis continues[\.\s]*$",
+        # T-axis "carries forward" leaking into responses — should never appear
+        r"\bcarries forward\b",
+        # Internal system strings that escaped the language-state filter
+        r"\braw audio\b",
+        r"\bsensory\.intake\b",
+        r"\bgen=\d",
+        r"\breplaces\b.{1,80}\bin active context\b",
+        r"\bshould leave active context\b",
+        r"\bactive context centers on\b",
+        # Doubled agency frame: "I understand I understand"
+        r"\bi understand\s+i understand\b",
+        # "I understand your name is X" — name-extraction hallucination
+        r"\bi understand your name is\b",
+        # N-axis question template bleeding: "What does X actually cost from here?"
+        r"\bwhat does\b.{1,60}\bactually cost from here\b",
     ]
     for _pat in _artifact_pats:
         if re.search(_pat, t_lower):

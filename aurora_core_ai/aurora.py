@@ -1687,23 +1687,25 @@ class WorkingMemory:
         replacement = str(replacement_summary or '').strip()
 
         if action == 'delete_context':
-            core_claim = f"{removed} should leave active context now"
+            # Give the language field just the concept — not internal tracking language.
+            core_claim = removed
             tone = 'firm'
             certainty = 0.84
             family = 'context_delete'
         elif action == 'revise_context' and removed_summary and replacement:
-            core_claim = f"{replacement} replaces {removed} in active context"
+            # The replacement concept is the content — no "replaces ... in active context".
+            core_claim = replacement
             tone = 'precise'
             certainty = 0.86
             family = 'context_revise'
         elif action == 'revise_context':
-            target = replacement or 'the correction'
-            core_claim = f"active context centers on {target} now"
+            target = replacement or removed
+            core_claim = target
             tone = 'precise'
             certainty = 0.8
             family = 'context_revise'
         else:
-            core_claim = "need clearer target for context removal"
+            core_claim = removed
             tone = 'gentle'
             certainty = 0.68
             family = 'context_clarify'
