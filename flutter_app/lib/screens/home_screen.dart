@@ -419,7 +419,7 @@ class _Header extends StatelessWidget {
   final bool quietMode;
   final VoidCallback onQuietToggle;
   final AsyncCallback? onBackground;
-  const _Header({required this.state, required this.quietMode, required this.onQuietToggle, this.onBackground});
+  _Header({required this.state, required this.quietMode, required this.onQuietToggle, this.onBackground});
 
   @override
   Widget build(BuildContext context) {

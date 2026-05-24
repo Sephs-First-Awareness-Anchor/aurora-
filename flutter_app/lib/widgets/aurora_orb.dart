@@ -19,14 +19,16 @@ class AuroraOrb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Canvas is 3× the orb radius so the wave bands have horizontal breathing room.
-    final canvas = size * 3.0;
+    // Wide landscape canvas so horizontal wave bands read as flowing left-to-right
+    // rather than appearing to orbit the sphere (which a square canvas causes).
+    final canvasW = size * 5.0;
+    final canvasH = size * 1.6;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedBuilder(
         animation: pulse,
         builder: (_, __) => CustomPaint(
-          size: Size(canvas, canvas),
+          size: Size(canvasW, canvasH),
           painter: _OrbPainter(
             pulse:     pulse.value,
             state:     state,
@@ -129,11 +131,6 @@ class _OrbPainter extends CustomPainter {
         );
       }
     }
-
-    // ── Front half of the bands ──────────────────────────────────────────────
-    // Thin and partially transparent so the orb remains readable while the
-    // waves still feel like they wrap around it.
-    _drawElectricBands(canvas, center, r, frontPass: true);
   }
 
   void _drawWaveBands(Canvas canvas, Size size, double cx, double cy, double r) {
@@ -162,12 +159,6 @@ class _OrbPainter extends CustomPainter {
       OrbState.listening => 1.5,
       OrbState.thinking  => 1.4,
       OrbState.dormant   => 1.2,
-    };
-    final activeIndex = switch (state) {
-      OrbState.listening => 0,
-      OrbState.thinking  => 1,
-      OrbState.speaking  => 4,
-      OrbState.dormant   => -1,
     };
 
     for (int i = 0; i < 5; i++) {
