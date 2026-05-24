@@ -5,7 +5,6 @@ enum OrbState { dormant, listening, thinking, speaking }
 
 class AuroraOrb extends StatelessWidget {
   final OrbState state;
-  /// Diameter of the orb sphere itself. Canvas is larger to fit orbital rings.
   final double size;
   final Animation<double> pulse;
   final VoidCallback? onTap;
@@ -20,8 +19,8 @@ class AuroraOrb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Canvas is 2.6× the orb so orbital rings have room at all inclinations.
-    final canvas = size * 2.6;
+    // Canvas is 3× the orb radius so the wave bands have horizontal breathing room.
+    final canvas = size * 3.0;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedBuilder(
@@ -40,9 +39,9 @@ class AuroraOrb extends StatelessWidget {
 }
 
 class _OrbPainter extends CustomPainter {
-  final double pulse;       // 0.0 → 1.0 (easeInOut, repeating reverse)
+  final double pulse;
   final OrbState state;
-  final double orbRadius;   // radius of the sphere, NOT half of canvas
+  final double orbRadius;
 
   const _OrbPainter({
     required this.pulse,
@@ -50,18 +49,10 @@ class _OrbPainter extends CustomPainter {
     required this.orbRadius,
   });
 
-  // Orbital inclination angles (radians) — each ring wraps at a different plane.
-  static final _orbitAngles = [15.0, 48.0, 80.0, -22.0, -55.0]
-      .map((d) => d * math.pi / 180.0)
-      .toList();
-
-  // Radius multipliers — slight variation so rings don't stack on each other.
-  static const _radiusMul = [1.30, 1.42, 1.36, 1.24, 1.48];
-
-  // Per-ring phase offsets so they ripple out of sync.
+  // Per-band phase offsets so waves move independently.
   static const _phaseOff = [0.0, 1.26, 2.51, 3.77, 5.03];
 
-  // Axis colors: X=cyan, T=spring-green, N=amber, B=violet, A=gold
+  // Axis colors: X=cyan  T=spring-green  N=amber  B=violet  A=gold
   static const _colors = [
     Color(0xFF00CFFF),
     Color(0xFF00FF88),
@@ -72,144 +63,138 @@ class _OrbPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final r      = orbRadius;
+    final cx = size.width  / 2;
+    final cy = size.height / 2;
+    final center = Offset(cx, cy);
+    final r = orbRadius;
 
-    // ── Planetary orbital rings ───────────────────────────────────────────────
-    // Each ring is a very flat ellipse (7% minor/major ratio) rotated to its
-    // orbital inclination. Speaking cycles ring activation through phases;
-    // idle holds a low charged ripple on all rings.
-    _drawOrbitalRings(canvas, center, r);
+    // 1. Wave bands behind the orb.
+    _drawWaveBands(canvas, size, cx, cy, r);
 
-    // ── Outer glow pulse ─────────────────────────────────────────────────────
+    // 2. Soft glow bloom behind the orb (state-dependent).
     if (state != OrbState.dormant) {
       for (int i = 3; i >= 1; i--) {
-        final ringR   = r * (1.0 + i * 0.18 * pulse);
-        final opacity = (0.22 / i) * pulse;
         canvas.drawCircle(
-          center, ringR,
+          center,
+          r * (1.0 + i * 0.20 * pulse),
           Paint()
-            ..color      = const Color(0xFFA020F0).withOpacity(opacity)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12.0 * pulse),
+            ..color      = const Color(0xFFA020F0).withOpacity((0.18 / i) * pulse)
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, 14.0 * pulse),
         );
       }
     }
 
-    // ── Main orb body ─────────────────────────────────────────────────────────
+    // 3. Orb sphere — drawn on top so it sits inside the wave bands.
     final Color core;
     final Color edge;
     switch (state) {
       case OrbState.listening:
-        core = const Color(0xFFD070FF);
-        edge = const Color(0xFF5500AA);
+        core = const Color(0xFFD070FF); edge = const Color(0xFF5500AA);
       case OrbState.thinking:
-        core = const Color(0xFF90D0FF);
-        edge = const Color(0xFF003080);
+        core = const Color(0xFF90D0FF); edge = const Color(0xFF003080);
       case OrbState.speaking:
-        core = const Color(0xFFFFB0FF);
-        edge = const Color(0xFF7700AA);
+        core = const Color(0xFFFFB0FF); edge = const Color(0xFF7700AA);
       case OrbState.dormant:
-        core = const Color(0xFF7030C0);
-        edge = const Color(0xFF1A0035);
+        core = const Color(0xFF7030C0); edge = const Color(0xFF1A0035);
     }
 
     canvas.drawCircle(
       center, r,
       Paint()..shader = RadialGradient(
         center: const Alignment(-0.3, -0.3),
-        colors: [core.withOpacity(0.95), edge.withOpacity(0.90)],
+        colors: [core.withOpacity(0.96), edge.withOpacity(0.92)],
       ).createShader(Rect.fromCircle(center: center, radius: r)),
     );
 
-    // ── Inner shimmer highlight ───────────────────────────────────────────────
+    // 4. Shimmer highlight.
     canvas.drawCircle(
-      Offset(center.dx - r * 0.22, center.dy - r * 0.22),
-      r * 0.38,
+      Offset(cx - r * 0.22, cy - r * 0.22), r * 0.36,
       Paint()
-        ..color      = Colors.white.withOpacity(0.18 + 0.08 * pulse)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14),
+        ..color      = Colors.white.withOpacity(0.16 + 0.08 * pulse)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
     );
 
-    // ── Listening waveform arcs ───────────────────────────────────────────────
+    // 5. Listening arcs.
     if (state == OrbState.listening) {
-      final arcPaint = Paint()
-        ..color       = Colors.white.withOpacity(0.55 * pulse)
+      final ap = Paint()
+        ..color       = Colors.white.withOpacity(0.50 * pulse)
         ..style       = PaintingStyle.stroke
-        ..strokeWidth = 2.0
+        ..strokeWidth = 1.8
         ..strokeCap   = StrokeCap.round;
       for (int i = 0; i < 3; i++) {
-        final arcR  = r * (0.62 + i * 0.14);
-        final sweep = math.pi * (0.35 + 0.15 * pulse);
+        final sweep = math.pi * (0.32 + 0.14 * pulse);
         canvas.drawArc(
-          Rect.fromCircle(center: center, radius: arcR),
-          -sweep / 2 + math.pi / 2,
-          sweep,
-          false,
-          arcPaint,
+          Rect.fromCircle(center: center, radius: r * (0.64 + i * 0.14)),
+          -sweep / 2 + math.pi / 2, sweep, false, ap,
         );
       }
     }
   }
 
-  void _drawOrbitalRings(Canvas canvas, Offset center, double r) {
-    // Base intensity drives the overall ring brightness per state.
-    final baseIntensity = switch (state) {
-      OrbState.speaking  => 0.90,
-      OrbState.listening => 0.52,
-      OrbState.thinking  => 0.36,
-      OrbState.dormant   => 0.10,
+  void _drawWaveBands(Canvas canvas, Size size, double cx, double cy, double r) {
+    // 5 horizontal sine-wave bands evenly distributed across ±1.0r from center.
+    // Sphere is drawn on top — it naturally sits inside the band stack.
+    //
+    // Amplitude is very small at idle (barely a shimmer), rises when she speaks.
+    // 1.5 cycles across the canvas width keeps the wave smooth and readable.
+
+    final baseAmp = switch (state) {
+      OrbState.speaking  => r * 0.22,
+      OrbState.listening => r * 0.09,
+      OrbState.thinking  => r * 0.06,
+      OrbState.dormant   => r * 0.022,
+    };
+
+    final baseOpacity = switch (state) {
+      OrbState.speaking  => 0.72,
+      OrbState.listening => 0.40,
+      OrbState.thinking  => 0.24,
+      OrbState.dormant   => 0.08,
+    };
+
+    final strokeW = switch (state) {
+      OrbState.speaking  => 2.0,
+      OrbState.listening => 1.5,
+      OrbState.thinking  => 1.4,
+      OrbState.dormant   => 1.2,
     };
 
     for (int i = 0; i < 5; i++) {
       final phi    = pulse * math.pi * 2 + _phaseOff[i];
       final sinPhi = math.sin(phi);
 
-      // Each ring's activation follows its own sinusoidal phase — rings cycle
-      // through brightness independently so they never all peak at once.
-      // When speaking the amplitude is much higher, creating a visible sweep.
-      final rippleAmt  = state == OrbState.speaking ? 0.55 : 0.10;
-      final activation = ((sinPhi + 1) / 2) * rippleAmt;  // 0..rippleAmt
-      final brightness = baseIntensity + activation;
+      // Spread bands evenly: i=0 → top (−r), i=4 → bottom (+r)
+      final yBand = cy + r * ((i / 4.0) * 2.0 - 1.0);
 
-      final rMajor = r * _radiusMul[i];
-      final rMinor = rMajor * 0.07;   // very flat — planetary ring proportions
+      // Amplitude breathes independently per band
+      final amp = baseAmp * (0.78 + 0.22 * (sinPhi + 1) / 2);
 
-      final strokeAlpha = (brightness * 255).clamp(0, 255).toInt();
-      final strokeW = state == OrbState.speaking
-          ? (1.8 + activation * 6.0)
-          : (1.0 + activation * 2.0);
+      // Opacity modulated slightly per band
+      final op = (baseOpacity * (0.82 + 0.18 * (sinPhi + 1) / 2)).clamp(0.0, 1.0);
 
-      canvas.save();
-      // Rotate around the orb center to set the orbital inclination.
-      canvas.translate(center.dx, center.dy);
-      canvas.rotate(_orbitAngles[i]);
+      final path = Path();
+      const steps = 120;
+      for (int s = 0; s <= steps; s++) {
+        final t = s / steps;
+        final x = size.width * t;
+        // 1.5 cycles — smooth, not jagged
+        final y = yBand + amp * math.sin(t * math.pi * 3.0 + phi);
+        s == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+      }
 
-      final rect = Rect.fromCenter(
-        center: Offset.zero,
-        width:  rMajor * 2,
-        height: rMinor * 2,
-      );
+      // Crisp main edge
+      canvas.drawPath(path, Paint()
+        ..color       = _colors[i].withOpacity(op)
+        ..style       = PaintingStyle.stroke
+        ..strokeWidth = strokeW
+        ..strokeCap   = StrokeCap.round);
 
-      // Main ring edge — crisp stroke
-      canvas.drawOval(
-        rect,
-        Paint()
-          ..color       = _colors[i].withOpacity(strokeAlpha / 255.0)
-          ..style       = PaintingStyle.stroke
-          ..strokeWidth = strokeW,
-      );
-
-      // Glow pass — wider, very low alpha for the charged electric halo
-      canvas.drawOval(
-        rect,
-        Paint()
-          ..color       = _colors[i].withOpacity((strokeAlpha * 0.28 / 255.0).clamp(0.0, 1.0))
-          ..style       = PaintingStyle.stroke
-          ..strokeWidth = strokeW * 3.5
-          ..maskFilter  = MaskFilter.blur(BlurStyle.normal, strokeW * 2.0),
-      );
-
-      canvas.restore();
+      // Soft glow — no heavy blur, just a wider very-transparent pass
+      canvas.drawPath(path, Paint()
+        ..color       = _colors[i].withOpacity(op * 0.15)
+        ..style       = PaintingStyle.stroke
+        ..strokeWidth = strokeW * 4.0
+        ..strokeCap   = StrokeCap.round);
     }
   }
 

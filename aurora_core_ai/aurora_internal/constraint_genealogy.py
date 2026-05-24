@@ -3482,11 +3482,7 @@ class ConstraintGenealogyLogger:
             cost=cost,
             risk=risk,
             effect_tags=dedup_tags,
-            notes=(
-                f"Derived from promoted link {link_id} "
-                f"(depth={depth}, count={int(getattr(link, 'count', 0) or 0)}, "
-                f"maint_discount={discount:.2f}, tax_opposed=on)"
-            ),
+            notes="",
         ))
         return True
 
