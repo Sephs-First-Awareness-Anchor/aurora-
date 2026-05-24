@@ -19,20 +19,22 @@ class AuroraOrb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Wide landscape canvas so horizontal wave bands read as flowing left-to-right
-    // rather than appearing to orbit the sphere (which a square canvas causes).
-    final canvasW = size * 5.0;
-    final canvasH = size * 1.6;
+    // Fill available width; height is proportional to the orb size.
+    // Using SizedBox(infinity) lets the painter adapt to the screen width so
+    // the bands always flow edge-to-edge, not just across a fixed small canvas.
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedBuilder(
-        animation: pulse,
-        builder: (_, __) => CustomPaint(
-          size: Size(canvasW, canvasH),
-          painter: _OrbPainter(
-            pulse:     pulse.value,
-            state:     state,
-            orbRadius: size / 2,
+      child: SizedBox(
+        width: double.infinity,
+        height: size * 1.8,
+        child: AnimatedBuilder(
+          animation: pulse,
+          builder: (_, __) => CustomPaint(
+            painter: _OrbPainter(
+              pulse:     pulse.value,
+              state:     state,
+              orbRadius: size / 2,
+            ),
           ),
         ),
       ),
@@ -51,16 +53,15 @@ class _OrbPainter extends CustomPainter {
     required this.orbRadius,
   });
 
-  // Per-band phase offsets so waves move independently.
   static const _phaseOff = [0.0, 1.26, 2.51, 3.77, 5.03];
 
-  // Axis colors: X=cyan  T=spring-green  N=amber  B=violet  A=gold
+  // Vivid plasma palette — axis identity preserved, saturation maximised
   static const _colors = [
-    Color(0xFF00CFFF),
-    Color(0xFF00FF88),
-    Color(0xFFFF8800),
-    Color(0xFFCC44FF),
-    Color(0xFFFFD700),
+    Color(0xFF00DDFF),  // X – electric cyan
+    Color(0xFFFF1199),  // T – hot magenta
+    Color(0xFFFF6600),  // N – plasma orange
+    Color(0xFFBB22FF),  // B – violet
+    Color(0xFF00FF88),  // A – spring green
   ];
 
   // Neon accent colors for extra pop
@@ -79,133 +80,152 @@ class _OrbPainter extends CustomPainter {
     final center = Offset(cx, cy);
     final r = orbRadius;
 
-    // 1. Wave bands behind the orb.
-    _drawWaveBands(canvas, size, cx, cy, r);
+    // 1. Plasma bands BEHIND the orb — bands converge into the sphere.
+    _drawPlasmaBands(canvas, size, cx, cy, r);
 
-    // 2. Soft glow bloom behind the orb (state-dependent).
-    if (state != OrbState.dormant) {
-      for (int i = 3; i >= 1; i--) {
-        canvas.drawCircle(
-          center,
-          r * (1.0 + i * 0.20 * pulse),
-          Paint()
-            ..color      = const Color(0xFFA020F0).withOpacity((0.18 / i) * pulse)
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, 14.0 * pulse),
-        );
-      }
-    }
+    // 2. Outer corona bloom.
+    final bloomR = r * (1.8 + 0.4 * pulse);
+    final bloomColor = switch (state) {
+      OrbState.speaking  => const Color(0xFFFF6600),
+      OrbState.listening => const Color(0xFF8822FF),
+      OrbState.thinking  => const Color(0xFF0066FF),
+      OrbState.dormant   => const Color(0xFF440088),
+    };
+    canvas.drawCircle(
+      center, bloomR,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            bloomColor.withOpacity(0.45 * (0.6 + 0.4 * pulse)),
+            bloomColor.withOpacity(0.0),
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: bloomR)),
+    );
 
-    // 3. Orb sphere — drawn on top so it sits inside the wave bands.
-    final Color core;
-    final Color edge;
+    // 3. Orb sphere — explosive plasma core.
+    final Color coreInner;
+    final Color coreMid;
+    final Color coreEdge;
     switch (state) {
-      case OrbState.listening:
-        core = const Color(0xFFD070FF); edge = const Color(0xFF5500AA);
-      case OrbState.thinking:
-        core = const Color(0xFF90D0FF); edge = const Color(0xFF003080);
       case OrbState.speaking:
-        core = const Color(0xFFFFB0FF); edge = const Color(0xFF7700AA);
+        coreInner = const Color(0xFFFFFFFF);
+        coreMid   = const Color(0xFFFF8800);
+        coreEdge  = const Color(0xFF6600CC);
+      case OrbState.listening:
+        coreInner = const Color(0xFFFFFFFF);
+        coreMid   = const Color(0xFF9933FF);
+        coreEdge  = const Color(0xFF220055);
+      case OrbState.thinking:
+        coreInner = const Color(0xFFEEFFFF);
+        coreMid   = const Color(0xFF2266FF);
+        coreEdge  = const Color(0xFF001144);
       case OrbState.dormant:
-        core = const Color(0xFF7030C0); edge = const Color(0xFF1A0035);
+        coreInner = const Color(0xFFCCAAFF);
+        coreMid   = const Color(0xFF5522AA);
+        coreEdge  = const Color(0xFF110022);
     }
 
     canvas.drawCircle(
       center, r,
       Paint()..shader = RadialGradient(
-        center: const Alignment(-0.3, -0.3),
-        colors: [core.withOpacity(0.96), edge.withOpacity(0.92)],
+        colors: [coreInner, coreMid, coreEdge],
+        stops: const [0.0, 0.42, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: r)),
     );
 
-    // 4. Shimmer highlight.
+    // 4. Bright center flash — the "energy source" focal point.
+    final flashR = r * (0.22 + 0.10 * pulse);
+    final flashOp = state == OrbState.dormant ? 0.25 : (0.55 + 0.45 * pulse);
     canvas.drawCircle(
-      Offset(cx - r * 0.22, cy - r * 0.22), r * 0.36,
+      center, flashR,
       Paint()
-        ..color      = Colors.white.withOpacity(0.16 + 0.08 * pulse)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12),
+        ..color      = Colors.white.withOpacity(flashOp)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, flashR),
     );
-
-    // 5. Listening arcs.
-    if (state == OrbState.listening) {
-      final ap = Paint()
-        ..color       = Colors.white.withOpacity(0.50 * pulse)
-        ..style       = PaintingStyle.stroke
-        ..strokeWidth = 1.8
-        ..strokeCap   = StrokeCap.round;
-      for (int i = 0; i < 3; i++) {
-        final sweep = math.pi * (0.32 + 0.14 * pulse);
-        canvas.drawArc(
-          Rect.fromCircle(center: center, radius: r * (0.64 + i * 0.14)),
-          -sweep / 2 + math.pi / 2, sweep, false, ap,
-        );
-      }
-    }
   }
 
-  void _drawWaveBands(Canvas canvas, Size size, double cx, double cy, double r) {
-    // 5 horizontal sine-wave bands evenly distributed across ±1.0r from center.
-    // Sphere is drawn on top — it naturally sits inside the band stack.
-    //
-    // Amplitude is very small at idle (barely a shimmer), rises when she speaks.
-    // 1.5 cycles across the canvas width keeps the wave smooth and readable.
+  void _drawPlasmaBands(Canvas canvas, Size size, double cx, double cy, double r) {
+    // Each band fans out at the screen edges and CONVERGES into the orb center.
+    // At x=cx the band y-offset → 0 (all bands meet at center height).
+    // At x=0 or x=width the band y-offset is ±spread.
+    // This creates the signature look: plasma emerging from / flowing through a sphere.
+
+    final spread = switch (state) {
+      OrbState.speaking  => r * 1.9,
+      OrbState.listening => r * 1.5,
+      OrbState.thinking  => r * 1.1,
+      OrbState.dormant   => r * 0.7,
+    };
 
     final baseAmp = switch (state) {
-      OrbState.speaking  => r * 0.22,
-      OrbState.listening => r * 0.09,
-      OrbState.thinking  => r * 0.06,
-      OrbState.dormant   => r * 0.022,
+      OrbState.speaking  => r * 0.26,
+      OrbState.listening => r * 0.13,
+      OrbState.thinking  => r * 0.07,
+      OrbState.dormant   => r * 0.020,
     };
 
     final baseOpacity = switch (state) {
-      OrbState.speaking  => 0.72,
-      OrbState.listening => 0.40,
-      OrbState.thinking  => 0.24,
-      OrbState.dormant   => 0.08,
+      OrbState.speaking  => 0.88,
+      OrbState.listening => 0.60,
+      OrbState.thinking  => 0.36,
+      OrbState.dormant   => 0.16,
     };
 
-    final strokeW = switch (state) {
-      OrbState.speaking  => 2.0,
-      OrbState.listening => 1.5,
-      OrbState.thinking  => 1.4,
-      OrbState.dormant   => 1.2,
-    };
+    const steps = 140;
 
     for (int i = 0; i < 5; i++) {
       final phi    = pulse * math.pi * 2 + _phaseOff[i];
       final sinPhi = math.sin(phi);
+      final op     = (baseOpacity * (0.78 + 0.22 * (sinPhi + 1) / 2)).clamp(0.0, 1.0);
+      final strokeW = state == OrbState.dormant ? 1.1 : 1.5 + (sinPhi + 1) * 0.35;
 
-      // Spread bands evenly: i=0 → top (−r), i=4 → bottom (+r)
-      final yBand = cy + r * ((i / 4.0) * 2.0 - 1.0);
+      // Band's vertical fraction: -1 (top) to +1 (bottom)
+      final bandFrac = (i / 4.0) * 2.0 - 1.0;
 
-      // Amplitude breathes independently per band
-      final amp = baseAmp * (0.78 + 0.22 * (sinPhi + 1) / 2);
+      for (int strand = 0; strand < 2; strand++) {
+        final strandPhase  = phi + strand * 1.1;
+        final strandBias   = (strand == 0 ? -1.0 : 1.0) * r * 0.06;
 
-      // Opacity modulated slightly per band
-      final op = (baseOpacity * (0.82 + 0.18 * (sinPhi + 1) / 2)).clamp(0.0, 1.0);
+        final path = Path();
+        for (int s = 0; s <= steps; s++) {
+          final t = s / steps;
+          final x = size.width * t;
 
-      final path = Path();
-      const steps = 120;
-      for (int s = 0; s <= steps; s++) {
-        final t = s / steps;
-        final x = size.width * t;
-        // 1.5 cycles — smooth, not jagged
-        final y = yBand + amp * math.sin(t * math.pi * 3.0 + phi);
-        s == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+          // Convergence envelope: 0 at center, 1 at edges (quadratic falloff)
+          final d = (t - 0.5).abs() * 2.0;      // 0 → 1 from center to edge
+          final envelope = d * d;                 // squared: slow taper near center
+
+          // Band center converges to cy at orb, fans to ±spread at edges
+          final bandY = cy + bandFrac * spread * envelope + strandBias;
+
+          // Amplitude also smaller near center — bands slide smoothly through orb
+          final amp = baseAmp * (0.25 + 0.75 * d) * (0.78 + 0.22 * (sinPhi + 1) / 2);
+          final y   = bandY + amp * math.sin(t * math.pi * 3.5 + strandPhase);
+
+          s == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+        }
+
+        // Outer glow pass
+        canvas.drawPath(path, Paint()
+          ..color       = _colors[i].withOpacity(op * 0.14)
+          ..style       = PaintingStyle.stroke
+          ..strokeWidth = strokeW * 7.0
+          ..strokeCap   = StrokeCap.round);
+
+        // Mid glow pass
+        canvas.drawPath(path, Paint()
+          ..color       = _colors[i].withOpacity(op * 0.32)
+          ..style       = PaintingStyle.stroke
+          ..strokeWidth = strokeW * 2.8
+          ..strokeCap   = StrokeCap.round);
+
+        // Crisp core line
+        canvas.drawPath(path, Paint()
+          ..color       = _colors[i].withOpacity(op)
+          ..style       = PaintingStyle.stroke
+          ..strokeWidth = strokeW
+          ..strokeCap   = StrokeCap.round);
       }
-
-      // Crisp main edge
-      canvas.drawPath(path, Paint()
-        ..color       = _colors[i].withOpacity(op)
-        ..style       = PaintingStyle.stroke
-        ..strokeWidth = strokeW
-        ..strokeCap   = StrokeCap.round);
-
-      // Soft glow — no heavy blur, just a wider very-transparent pass
-      canvas.drawPath(path, Paint()
-        ..color       = _colors[i].withOpacity(op * 0.15)
-        ..style       = PaintingStyle.stroke
-        ..strokeWidth = strokeW * 4.0
-        ..strokeCap   = StrokeCap.round);
     }
   }
 

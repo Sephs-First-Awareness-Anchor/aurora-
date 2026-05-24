@@ -155,10 +155,10 @@ class AuroraOrbView(context: Context) : View(context) {
     private val axes     = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f)
     private var speaking = false
 
-    //   X cyan  T spring-green  N amber  B violet  A gold
+    //   X cyan  T hot-magenta  N plasma-orange  B violet  A spring-green
     private val axisColors = intArrayOf(
-        0xFF00CFFF.toInt(), 0xFF00FF88.toInt(), 0xFFFF8800.toInt(),
-        0xFFCC44FF.toInt(), 0xFFFFD700.toInt(),
+        0xFF00DDFF.toInt(), 0xFFFF1199.toInt(), 0xFFFF6600.toInt(),
+        0xFFBB22FF.toInt(), 0xFF00FF88.toInt(),
     )
 
     private val phaseOffset = floatArrayOf(0f, 1.26f, 2.51f, 3.77f, 5.03f)
@@ -188,52 +188,55 @@ class AuroraOrbView(context: Context) : View(context) {
         val orbR   = height * 0.35f
         val breathe = 1f + ksin(breathPhase) * 0.025f
 
-        // ── Wave bands (behind orb) ───────────────────────────────────────────
-        // 5 bands evenly distributed across ±orbR from center.
-        // Each band's amplitude is driven by its axis pressure + speaking state.
-        val steps = 100
+        // ── Plasma bands: converge into orb center, fan out at edges ─────────
+        // At x=cx every band's y-offset → 0; at the edges they fan to ±spread.
+        val spread  = if (speaking) orbR * 1.6f else orbR * 0.7f
+        val steps   = 100
         for (i in 0..4) {
             val pressure = axes[i].coerceIn(0.05f, 1f)
             val phi      = animPhase + phaseOffset[i]
             val sinPhi   = ksin(phi)
+            val bandFrac = (i / 4f) * 2f - 1f   // −1 to +1
 
-            // Vertical center for this band: −orbR (top) to +orbR (bottom)
-            val yBand = cy + orbR * ((i / 4f) * 2f - 1f)
-
-            // Amplitude: small at idle, rises with pressure when speaking
             val baseAmp = if (speaking)
-                orbR * (0.14f + pressure * 0.14f)
+                orbR * (0.12f + pressure * 0.14f)
             else
-                orbR * (0.020f + pressure * 0.020f)
-            val amp = baseAmp * (0.80f + 0.20f * (sinPhi + 1f) / 2f) * breathe
+                orbR * (0.015f + pressure * 0.015f)
 
-            // Opacity: active axis bands glow up when speaking
             val baseAlpha = if (speaking)
-                (140 + pressure * 100).toInt().coerceIn(0, 230)
+                (150 + pressure * 95).toInt().coerceIn(0, 245)
             else
-                (18 + pressure * 28).toInt().coerceIn(0, 60)
-            val alpha = (baseAlpha * (0.85f + 0.15f * (sinPhi + 1f) / 2f)).toInt().coerceIn(0, 255)
+                (20 + pressure * 30).toInt().coerceIn(0, 70)
+            val alpha   = (baseAlpha * (0.80f + 0.20f * (sinPhi + 1f) / 2f)).toInt().coerceIn(0, 255)
+            val strokeW = if (speaking) 1.8f + pressure * 1.2f else 1.0f
 
-            val strokeW = if (speaking) 2.0f + pressure * 1.5f else 1.2f
-
-            // Build wave path — 1.5 cycles across the full width
             wavePath.reset()
             for (s in 0..steps) {
                 val t  = s.toFloat() / steps
                 val x  = t * w
-                val y  = yBand + amp * ksin(t * kPI.toFloat() * 3f + phi)
+                // Convergence: 0 at center, 1 at edges (quadratic)
+                val d        = (t - 0.5f) * 2f               // −1..+1
+                val envelope = d * d                          // 0 at center, 1 at edge
+                val bandY    = cy + bandFrac * spread * envelope
+                val amp      = baseAmp * (0.25f + 0.75f * kotlin.math.abs(d)) *
+                               (0.80f + 0.20f * (sinPhi + 1f) / 2f) * breathe
+                val y        = bandY + amp * ksin(t * kPI.toFloat() * 3.5f + phi)
                 if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
             }
 
+            // Outer glow
             paint.style       = Paint.Style.STROKE
             paint.color       = axisColors[i]
+            paint.alpha       = (alpha * 0.14f).toInt().coerceIn(0, 60)
+            paint.strokeWidth = strokeW * 7f
+            canvas.drawPath(wavePath, paint)
+            // Mid glow
+            paint.alpha       = (alpha * 0.32f).toInt().coerceIn(0, 120)
+            paint.strokeWidth = strokeW * 2.8f
+            canvas.drawPath(wavePath, paint)
+            // Core line
             paint.alpha       = alpha
             paint.strokeWidth = strokeW
-            canvas.drawPath(wavePath, paint)
-
-            // Soft glow pass — wider, low alpha
-            paint.alpha       = (alpha * 0.18f).toInt().coerceIn(0, 60)
-            paint.strokeWidth = strokeW * 4f
             canvas.drawPath(wavePath, paint)
         }
 
@@ -242,25 +245,31 @@ class AuroraOrbView(context: Context) : View(context) {
         paint.style = Paint.Style.FILL
         paint.alpha = 255
 
-        // Dominant axis halo
-        val domIdx = axes.indices.maxByOrNull { axes[it] } ?: 4
-        val haloShader = RadialGradient(
-            cx, cy, r * 2.0f,
-            intArrayOf((axisColors[domIdx] and 0x00FFFFFF) or 0x44000000, 0x00000000),
-            floatArrayOf(0.30f, 1f), Shader.TileMode.CLAMP,
+        // Corona bloom
+        val domIdx      = axes.indices.maxByOrNull { axes[it] } ?: 2
+        val bloomShader = RadialGradient(
+            cx, cy, r * 2.2f,
+            intArrayOf((axisColors[domIdx] and 0x00FFFFFF) or 0x55000000, 0x00000000),
+            floatArrayOf(0.25f, 1f), Shader.TileMode.CLAMP,
         )
-        paint.shader = haloShader
-        canvas.drawCircle(cx, cy, r * 2.0f, paint)
+        paint.shader = bloomShader
+        canvas.drawCircle(cx, cy, r * 2.2f, paint)
         paint.shader = null
 
-        // Core orb gradient
+        // Explosive core gradient: white → orange → deep-purple
         val orbShader = RadialGradient(
             cx, cy, r,
-            intArrayOf(0xFFFFFFFF.toInt(), 0xFFECD5FF.toInt(), 0xFFB060FF.toInt(), 0xFF5010A0.toInt()),
-            floatArrayOf(0f, 0.22f, 0.62f, 1f), Shader.TileMode.CLAMP,
+            intArrayOf(0xFFFFFFFF.toInt(), 0xFFFF8800.toInt(), 0xFF5500CC.toInt(), 0xFF110022.toInt()),
+            floatArrayOf(0f, 0.30f, 0.68f, 1f), Shader.TileMode.CLAMP,
         )
         paint.shader = orbShader
         canvas.drawCircle(cx, cy, r, paint)
         paint.shader = null
+
+        // Center flash point
+        val flashR = r * (0.20f + 0.10f * (ksin(breathPhase) + 1f) / 2f)
+        paint.color = 0xFFFFFFFF.toInt()
+        paint.alpha = if (speaking) 220 else 100
+        canvas.drawCircle(cx, cy, flashR, paint)
     }
 }
