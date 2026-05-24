@@ -61,6 +61,15 @@ class _OrbPainter extends CustomPainter {
     Color(0xFFFFD700),
   ];
 
+  // Neon accent colors for extra pop
+  static const _neonAccents = [
+    Color(0xFF00FFFF),
+    Color(0xFF00FF99),
+    Color(0xFFFFAA00),
+    Color(0xFFFF00FF),
+    Color(0xFFFFFF00),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width  / 2;
@@ -206,6 +215,106 @@ class _OrbPainter extends CustomPainter {
         ..style       = PaintingStyle.stroke
         ..strokeWidth = strokeW * 4.0
         ..strokeCap   = StrokeCap.round);
+    }
+  }
+
+  void _drawElectricBands(Canvas canvas, Offset center, double r, {required bool frontPass}) {
+    // Metaphysical energy bands wrapping around the orb with neon intensity
+    // Front pass renders semi-transparent to let orb core shine through
+    
+    final baseOpacity = switch (state) {
+      OrbState.speaking  => 0.68,
+      OrbState.listening => 0.42,
+      OrbState.thinking  => 0.28,
+      OrbState.dormant   => 0.10,
+    };
+
+    final bandRadius = switch (state) {
+      OrbState.speaking  => r * 1.35,
+      OrbState.listening => r * 1.28,
+      OrbState.thinking  => r * 1.22,
+      OrbState.dormant   => r * 1.15,
+    };
+
+    // Draw 3 concentric energetic rings for metaphysical effect
+    for (int ring = 0; ring < 3; ring++) {
+      final ringRadius = bandRadius + (ring * r * 0.12);
+      final ringPhase = pulse * math.pi * 2 * (1 + ring * 0.3);
+      
+      // Per-ring opacity that breathes with energy
+      final ringOpacity = baseOpacity * (0.7 + 0.3 * math.sin(ringPhase)) * (1 - ring * 0.15);
+
+      for (int i = 0; i < 5; i++) {
+        final bandPhase = ringPhase + _phaseOff[i];
+        final sinBand = math.sin(bandPhase);
+        
+        // Neon glow intensity increases with pulse
+        final neonIntensity = 0.5 + 0.5 * pulse;
+        
+        // Main crisp neon line
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: ringRadius),
+          0, math.pi * 2, false,
+          Paint()
+            ..color = _neonAccents[i].withOpacity(ringOpacity * neonIntensity * (frontPass ? 0.7 : 1.0))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.2 + (pulse * 0.6)
+            ..strokeCap = StrokeCap.round,
+        );
+
+        // Ethereal outer glow for metaphysical vibes
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: ringRadius),
+          0, math.pi * 2, false,
+          Paint()
+            ..color = _colors[i].withOpacity(ringOpacity * 0.25 * (frontPass ? 0.5 : 0.8))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 4.0 + (pulse * 1.2)
+            ..strokeCap = StrokeCap.round
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6.0 + pulse * 4.0),
+        );
+      }
+    }
+
+    // Pulsing energy particles around the orb for extra visual interest
+    if (state != OrbState.dormant) {
+      _drawEnergyParticles(canvas, center, r, frontPass);
+    }
+  }
+
+  void _drawEnergyParticles(Canvas canvas, Offset center, double r, bool frontPass) {
+    // Floating energy particles that orbit and shimmer
+    const particleCount = 8;
+    
+    for (int p = 0; p < particleCount; p++) {
+      final angle = (pulse * math.pi * 2) + (p / particleCount * math.pi * 2);
+      final distance = r * (1.4 + 0.2 * math.sin(pulse * math.pi * 2 + p));
+      
+      final px = center.dx + math.cos(angle) * distance;
+      final py = center.dy + math.sin(angle) * distance;
+      
+      final colorIndex = p % 5;
+      final particleSize = 1.2 + (pulse * 0.8);
+      final particleOpacity = (0.4 + 0.6 * math.sin(pulse * math.pi * 2 + p * 0.8)) * 
+                             (frontPass ? 0.6 : 0.9);
+      
+      // Core particle glow
+      canvas.drawCircle(
+        Offset(px, py),
+        particleSize,
+        Paint()
+          ..color = _neonAccents[colorIndex].withOpacity(particleOpacity)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3.0),
+      );
+
+      // Outer particle bloom
+      canvas.drawCircle(
+        Offset(px, py),
+        particleSize * 2.2,
+        Paint()
+          ..color = _colors[colorIndex].withOpacity(particleOpacity * 0.3)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8.0),
+      );
     }
   }
 
