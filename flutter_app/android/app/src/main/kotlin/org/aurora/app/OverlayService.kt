@@ -13,6 +13,8 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import android.view.*
+import kotlin.math.sin as ksin
+import kotlin.math.PI as kPI
 
 class OverlayService : Service() {
 
@@ -168,8 +170,8 @@ class AuroraOrbView(context: Context) : View(context) {
 
     fun tickAnimation() {
         val speed = if (speaking) 0.10f else 0.030f
-        animPhase   = (animPhase   + speed)  % (Math.PI.toFloat() * 2f)
-        breathPhase = (breathPhase + 0.016f) % (Math.PI.toFloat() * 2f)
+        animPhase   = (animPhase   + speed)  % (kPI.toFloat() * 2f)
+        breathPhase = (breathPhase + 0.016f) % (kPI.toFloat() * 2f)
         invalidate()
     }
 
@@ -184,7 +186,7 @@ class AuroraOrbView(context: Context) : View(context) {
         val cy = height / 2f
         // Orb radius scales to view height so the sphere fills the vertical space cleanly.
         val orbR   = height * 0.35f
-        val breathe = 1f + Math.sin(breathPhase.toDouble()).toFloat() * 0.025f
+        val breathe = 1f + ksin(breathPhase) * 0.025f
 
         // ── Wave bands (behind orb) ───────────────────────────────────────────
         // 5 bands evenly distributed across ±orbR from center.
@@ -193,7 +195,7 @@ class AuroraOrbView(context: Context) : View(context) {
         for (i in 0..4) {
             val pressure = axes[i].coerceIn(0.05f, 1f)
             val phi      = animPhase + phaseOffset[i]
-            val sinPhi   = Math.sin(phi.toDouble()).toFloat()
+            val sinPhi   = ksin(phi)
 
             // Vertical center for this band: −orbR (top) to +orbR (bottom)
             val yBand = cy + orbR * ((i / 4f) * 2f - 1f)
@@ -219,7 +221,7 @@ class AuroraOrbView(context: Context) : View(context) {
             for (s in 0..steps) {
                 val t  = s.toFloat() / steps
                 val x  = t * w
-                val y  = yBand + amp * Math.sin((t * Math.PI * 3.0 + phi).toDouble()).toFloat()
+                val y  = yBand + amp * ksin(t * kPI.toFloat() * 3f + phi)
                 if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
             }
 
