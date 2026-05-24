@@ -897,9 +897,9 @@ class SemanticIntentCompiler:
             elif content_is_clause:
                 base = content
             elif stance.time_rendering_mode == "sequential":
-                base = f"I'm keeping track of {content}." if not uncertain else f"I'm tracing where {content} goes."
+                base = content if not uncertain else f"I'm working through {content}."
             else:
-                base = f"I'm keeping {content} connected to this moment."
+                base = content
             if relation_phrase:
                 base = base.rstrip(".") + f", {relation_phrase}."
 

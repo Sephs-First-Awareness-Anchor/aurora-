@@ -876,9 +876,9 @@ class SemanticIntentCompiler:
                 # Content is already a sentence — don't wrap it in a T-frame suffix
                 base = content if not uncertain else f"I'm tracing this: {content}"
             elif stance.time_rendering_mode == "sequential":
-                base = f"I'm keeping track of {content}." if not uncertain else f"I'm tracing where {content} goes."
+                base = content if not uncertain else f"I'm working through {content}."
             else:
-                base = f"I'm keeping {content} connected to this moment."
+                base = content
             if relation_phrase and not _content_is_sentence:
                 base = base.rstrip(".") + f", {relation_phrase}."
 

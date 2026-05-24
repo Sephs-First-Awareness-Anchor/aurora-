@@ -25,7 +25,6 @@ class OverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var orbView: AuroraOrbView
 
-    // Animation loop: 20 fps
     private val animHandler = Handler(Looper.getMainLooper())
     private val animRunnable = object : Runnable {
         override fun run() {
@@ -34,7 +33,6 @@ class OverlayService : Service() {
         }
     }
 
-    // Axis state poll: every 2 s once the Python stack is up
     private val stateHandler = Handler(Looper.getMainLooper())
     private val stateRunnable = object : Runnable {
         override fun run() {
@@ -47,16 +45,13 @@ class OverlayService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.i("Aurora", "OverlayService: onCreate")
         createNotificationChannel()
         startForeground(NOTIF_ID, buildNotification())
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         addOrb()
         animHandler.post(animRunnable)
-        stateHandler.postDelayed(stateRunnable, 4000L) // let Python boot first
+        stateHandler.postDelayed(stateRunnable, 4000L)
     }
-
-    // ---------- axis state ---------------------------------------------------
 
     private fun refreshAxisState() {
         try {
@@ -72,13 +67,10 @@ class OverlayService : Service() {
                 a        = j.optDouble("A", 0.5).toFloat(),
                 speaking = j.optBoolean("speaking", false),
             )
-        } catch (_: Exception) { /* Python not ready yet — silent */ }
+        } catch (_: Exception) {}
     }
 
-    // ---------- orb layout ---------------------------------------------------
-
     private fun addOrb() {
-        Log.i("Aurora", "OverlayService: adding aurora orb")
         orbView = AuroraOrbView(this)
 
         val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -86,61 +78,40 @@ class OverlayService : Service() {
         else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
         val dp = resources.displayMetrics.density
-        val sz = (200 * dp).toInt()   // square — gives planetary waveform rings room
+        val w  = (220 * dp).toInt()
+        val h  = (120 * dp).toInt()
 
         val params = WindowManager.LayoutParams(
-            sz, sz, layoutFlag,
+            w, h, layoutFlag,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
                     or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
-        ).apply {
-            gravity = Gravity.TOP or Gravity.START
-            x = 60; y = 200
-        }
+        ).apply { gravity = Gravity.TOP or Gravity.START; x = 60; y = 200 }
 
         var ix = 0; var iy = 0; var tx = 0f; var ty = 0f; var t0 = 0L
         val slop = 8f * dp
 
         orbView.setOnTouchListener { _, e ->
             when (e.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    ix = params.x; iy = params.y
-                    tx = e.rawX;   ty = e.rawY
-                    t0 = System.currentTimeMillis(); true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    params.x = ix + (e.rawX - tx).toInt()
-                    params.y = iy + (e.rawY - ty).toInt()
-                    try { windowManager.updateViewLayout(orbView, params) } catch (_: Exception) {}
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
+                MotionEvent.ACTION_DOWN -> { ix = params.x; iy = params.y; tx = e.rawX; ty = e.rawY; t0 = System.currentTimeMillis(); true }
+                MotionEvent.ACTION_MOVE -> { params.x = ix + (e.rawX - tx).toInt(); params.y = iy + (e.rawY - ty).toInt(); try { windowManager.updateViewLayout(orbView, params) } catch (_: Exception) {}; true }
+                MotionEvent.ACTION_UP   -> {
                     val moved = Math.abs(e.rawX - tx) > slop || Math.abs(e.rawY - ty) > slop
-                    val slow  = System.currentTimeMillis() - t0 > 300L
-                    if (!moved && !slow) {
-                        Log.i("Aurora", "OverlayService: orb tapped")
-                        bringAppToForeground()
-                        sendBroadcast(Intent(ACTION_OVERLAY_TAPPED))
+                    if (!moved && System.currentTimeMillis() - t0 <= 300L) {
+                        bringAppToForeground(); sendBroadcast(Intent(ACTION_OVERLAY_TAPPED))
                     }; true
                 }
                 else -> false
             }
         }
 
-        try {
-            windowManager.addView(orbView, params)
-            Log.i("Aurora", "OverlayService: aurora orb added")
-        } catch (e: Exception) {
-            Log.e("Aurora", "OverlayService: failed to add orb: ${e.message}")
-        }
+        try { windowManager.addView(orbView, params) } catch (e: Exception) { Log.e("Aurora", "orb add failed: ${e.message}") }
     }
 
     private fun bringAppToForeground() {
         packageManager.getLaunchIntentForPackage(packageName)?.apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
             startActivity(this)
         }
     }
@@ -152,127 +123,139 @@ class OverlayService : Service() {
         try { windowManager.removeView(orbView) } catch (_: Exception) {}
     }
 
-    // ---------- notification -------------------------------------------------
-
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ch = NotificationChannel(CHANNEL_ID, "Aurora Overlay", NotificationManager.IMPORTANCE_MIN)
-                .apply { setShowBadge(false) }
+            val ch = NotificationChannel(CHANNEL_ID, "Aurora Overlay", NotificationManager.IMPORTANCE_MIN).apply { setShowBadge(false) }
             getSystemService(NotificationManager::class.java)?.createNotificationChannel(ch)
         }
     }
 
     private fun buildNotification(): Notification {
-        val b = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            Notification.Builder(this, CHANNEL_ID)
-        else @Suppress("DEPRECATION") Notification.Builder(this)
-        return b.setContentTitle("Aurora").setContentText("Overlay active")
+        val b = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(this, CHANNEL_ID)
+                else @Suppress("DEPRECATION") Notification.Builder(this)
+        return b.setContentTitle("Aurora").setContentText("Active")
             .setSmallIcon(android.R.drawable.ic_dialog_info).setOngoing(true).build()
     }
 }
 
 
 // =============================================================================
-// AuroraOrbView — planetary waveform rings + central orb
+// AuroraOrbView
 //
-// Five colored sound-wave rings wrap around the central sphere.
-//
-// Idle:    all rings at a low charged ripple — slight alpha pulse via sin wave.
-// Speaking: only rings whose axis pressure is above the active threshold light
-//           up; the rest stay at low ripple.  This means only the colors
-//           matching Aurora's current cognitive state are prominent.
+// Five horizontal sine-wave bands flow left-to-right across the view.
+// The orb sphere is painted on top, sitting inside the band stack.
+// Idle: bands hold a faint shimmer.  Speaking: the high-pressure axis bands
+// rise in amplitude; others stay subtle.  All axis colors are always present.
 // =============================================================================
 
 class AuroraOrbView(context: Context) : View(context) {
 
-    // Axis pressures [X, T, N, B, A] — polled from Python every 2 s
     private val axes     = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f)
     private var speaking = false
 
-    //   X  Existence  → deep cyan     #00CFFF
-    //   T  Temporal   → spring green  #00FF88
-    //   N  Energy     → amber-orange  #FF8800
-    //   B  Boundary   → violet        #CC44FF
-    //   A  Agency     → warm gold     #FFD700
+    //   X cyan  T spring-green  N amber  B violet  A gold
     private val axisColors = intArrayOf(
-        0xFF00CFFF.toInt(),
-        0xFF00FF88.toInt(),
-        0xFFFF8800.toInt(),
-        0xFFCC44FF.toInt(),
-        0xFFFFD700.toInt(),
+        0xFF00CFFF.toInt(), 0xFF00FF88.toInt(), 0xFFFF8800.toInt(),
+        0xFFCC44FF.toInt(), 0xFFFFD700.toInt(),
     )
 
-    // Stacked horizontal bands. The orb sits inside this field like a planet
-    // inside electrified rings.
-    private val bandOffset = floatArrayOf(-0.40f, -0.20f, -0.03f, 0.15f, 0.34f)
-
-    // Per-ring independent phase offsets so they ripple out of sync.
     private val phaseOffset = floatArrayOf(0f, 1.26f, 2.51f, 3.77f, 5.03f)
-
     private var animPhase   = 0f
     private var breathPhase = 0f
 
     private val paint    = Paint(Paint.ANTI_ALIAS_FLAG)
     private val wavePath = Path()
 
-    // ---- called every 50 ms (20 fps) ----------------------------------------
-
     fun tickAnimation() {
-        val speed = if (speaking) 0.11f else 0.036f
+        val speed = if (speaking) 0.10f else 0.030f
         animPhase   = (animPhase   + speed)  % (Math.PI.toFloat() * 2f)
-        breathPhase = (breathPhase + 0.018f) % (Math.PI.toFloat() * 2f)
+        breathPhase = (breathPhase + 0.016f) % (Math.PI.toFloat() * 2f)
         invalidate()
     }
-
-    // ---- called from OverlayService on each axis poll -----------------------
 
     fun updateAxisState(x: Float, t: Float, n: Float, b: Float, a: Float, speaking: Boolean) {
         axes[0] = x; axes[1] = t; axes[2] = n; axes[3] = b; axes[4] = a
         this.speaking = speaking
     }
 
-    // ---- drawing ------------------------------------------------------------
-
     override fun onDraw(canvas: Canvas) {
-        val cx      = width  / 2f
-        val cy      = height / 2f
-        val orbR    = minOf(width, height) * 0.22f
-        val breathe = 1f + Math.sin(breathPhase.toDouble()).toFloat() * 0.03f
+        val w  = width.toFloat()
+        val cx = w / 2f
+        val cy = height / 2f
+        // Orb radius scales to view height so the sphere fills the vertical space cleanly.
+        val orbR   = height * 0.35f
+        val breathe = 1f + Math.sin(breathPhase.toDouble()).toFloat() * 0.025f
 
-        val dominantIdx = axes.indices.maxByOrNull { axes[it] } ?: 4
+        // ── Wave bands (behind orb) ───────────────────────────────────────────
+        // 5 bands evenly distributed across ±orbR from center.
+        // Each band's amplitude is driven by its axis pressure + speaking state.
+        val steps = 100
+        for (i in 0..4) {
+            val pressure = axes[i].coerceIn(0.05f, 1f)
+            val phi      = animPhase + phaseOffset[i]
+            val sinPhi   = Math.sin(phi.toDouble()).toFloat()
 
-        // Back half of the electric sound bands.
-        drawElectricBands(canvas, cx, cy, orbR, breathe, dominantIdx, false)
+            // Vertical center for this band: −orbR (top) to +orbR (bottom)
+            val yBand = cy + orbR * ((i / 4f) * 2f - 1f)
 
-        // ── Central orb ──────────────────────────────────────────────────────
+            // Amplitude: small at idle, rises with pressure when speaking
+            val baseAmp = if (speaking)
+                orbR * (0.14f + pressure * 0.14f)
+            else
+                orbR * (0.020f + pressure * 0.020f)
+            val amp = baseAmp * (0.80f + 0.20f * (sinPhi + 1f) / 2f) * breathe
+
+            // Opacity: active axis bands glow up when speaking
+            val baseAlpha = if (speaking)
+                (140 + pressure * 100).toInt().coerceIn(0, 230)
+            else
+                (18 + pressure * 28).toInt().coerceIn(0, 60)
+            val alpha = (baseAlpha * (0.85f + 0.15f * (sinPhi + 1f) / 2f)).toInt().coerceIn(0, 255)
+
+            val strokeW = if (speaking) 2.0f + pressure * 1.5f else 1.2f
+
+            // Build wave path — 1.5 cycles across the full width
+            wavePath.reset()
+            for (s in 0..steps) {
+                val t  = s.toFloat() / steps
+                val x  = t * w
+                val y  = yBand + amp * Math.sin((t * Math.PI * 3.0 + phi).toDouble()).toFloat()
+                if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
+            }
+
+            paint.style       = Paint.Style.STROKE
+            paint.color       = axisColors[i]
+            paint.alpha       = alpha
+            paint.strokeWidth = strokeW
+            canvas.drawPath(wavePath, paint)
+
+            // Soft glow pass — wider, low alpha
+            paint.alpha       = (alpha * 0.18f).toInt().coerceIn(0, 60)
+            paint.strokeWidth = strokeW * 4f
+            canvas.drawPath(wavePath, paint)
+        }
+
+        // ── Orb sphere (on top) ───────────────────────────────────────────────
         val r = orbR * breathe
         paint.style = Paint.Style.FILL
         paint.alpha = 255
 
-        // Soft halo — dominant axis color bleeds out behind the orb
+        // Dominant axis halo
+        val domIdx = axes.indices.maxByOrNull { axes[it] } ?: 4
         val haloShader = RadialGradient(
-            cx, cy, r * 2.2f,
-            intArrayOf(
-                (axisColors[dominantIdx] and 0x00FFFFFF) or 0x50000000,
-                0x00000000,
-            ),
-            floatArrayOf(0.28f, 1f),
-            Shader.TileMode.CLAMP,
+            cx, cy, r * 2.0f,
+            intArrayOf((axisColors[domIdx] and 0x00FFFFFF) or 0x44000000, 0x00000000),
+            floatArrayOf(0.30f, 1f), Shader.TileMode.CLAMP,
         )
         paint.shader = haloShader
-        canvas.drawCircle(cx, cy, r * 2.2f, paint)
+        canvas.drawCircle(cx, cy, r * 2.0f, paint)
         paint.shader = null
 
+        // Core orb gradient
         val orbShader = RadialGradient(
             cx, cy, r,
-            intArrayOf(
-                0xFFDCC8FF.toInt(),
-                0xFF7B38D8.toInt(),
-                0xFF37115F.toInt(),
-                0xFF08000F.toInt(),
-            ),
-            floatArrayOf(0f, 0.20f, 0.62f, 1f),
-            Shader.TileMode.CLAMP,
+            intArrayOf(0xFFFFFFFF.toInt(), 0xFFECD5FF.toInt(), 0xFFB060FF.toInt(), 0xFF5010A0.toInt()),
+            floatArrayOf(0f, 0.22f, 0.62f, 1f), Shader.TileMode.CLAMP,
         )
         paint.shader = orbShader
         canvas.drawCircle(cx, cy, r, paint)

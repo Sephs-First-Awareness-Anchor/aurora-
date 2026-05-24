@@ -3467,7 +3467,7 @@ class ConstraintGenealogyLogger:
             cost=cost,
             risk=risk,
             effect_tags=dedup_tags,
-            notes="Derived from stabilized internal lineage evidence.",
+            notes="",
         ))
         return True
 
