@@ -52,227 +52,177 @@ class _OrbPainter extends CustomPainter {
 
   static const _phaseOff = [0.0, 1.26, 2.51, 3.77, 5.03];
 
-  static const _colors = [
-    Color(0xFF00DDFF),  // electric cyan
-    Color(0xFFFF1199),  // hot magenta
-    Color(0xFFFF6600),  // plasma orange
-    Color(0xFFBB22FF),  // violet
+  static const _aurora = [
     Color(0xFF00FF88),  // spring green
+    Color(0xFF00CCAA),  // teal
+    Color(0xFF00DDFF),  // cyan
+    Color(0xFF8833FF),  // violet
+    Color(0xFFCC00FF),  // purple
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final cy = size.height / 2;
-    final center = Offset(cx, cy);
-    final r = orbRadius;
+    final r  = orbRadius;
 
-    // Dark interior — the sphere "background" visible through the energy strands.
-    // Not a filled ball; just enough darkness to contrast the bands inside the ring.
-    canvas.drawCircle(
-      center, r * 1.02,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [const Color(0xDD080012), const Color(0x00080012)],
-          stops: const [0.55, 1.0],
-        ).createShader(Rect.fromCircle(center: center, radius: r * 1.02)),
-    );
-
-    // Horizontal convergence streams — fans out at edges, passes through sphere.
-    _drawStreams(canvas, size, cx, cy, r);
-
-    // Circular boundary ring — the ring of plasma strands that defines the sphere edge.
-    _drawBoundaryRing(canvas, cx, cy, r);
-
-    // Center energy flash.
-    _drawFlash(canvas, center, r);
+    _drawAuroraBg(canvas, size, cx, cy, r);
+    _drawEqBars(canvas, size, cx, cy, r);
+    _drawBeam(canvas, size, cx, cy, r);
+    _drawOrb(canvas, Offset(cx, cy), r);
   }
 
-  // ── Horizontal convergence streams ─────────────────────────────────────────
+  // ── Aurora borealis curtain bands (background) ──────────────────────────────
 
-  void _drawStreams(Canvas canvas, Size size, double cx, double cy, double r) {
-    final spread = switch (state) {
-      OrbState.speaking  => r * 2.1,
-      OrbState.listening => r * 1.7,
-      OrbState.thinking  => r * 1.3,
-      OrbState.dormant   => r * 0.85,
-    };
-    final baseAmp = switch (state) {
-      OrbState.speaking  => r * 0.30,
-      OrbState.listening => r * 0.16,
-      OrbState.thinking  => r * 0.09,
-      OrbState.dormant   => r * 0.025,
-    };
-    final baseOp = switch (state) {
-      OrbState.speaking  => 0.92,
-      OrbState.listening => 0.68,
-      OrbState.thinking  => 0.42,
-      OrbState.dormant   => 0.22,
+  void _drawAuroraBg(Canvas canvas, Size size, double cx, double cy, double r) {
+    final op = switch (state) {
+      OrbState.speaking  => 0.65,
+      OrbState.listening => 0.44,
+      OrbState.thinking  => 0.26,
+      OrbState.dormant   => 0.10,
     };
 
-    const steps       = 160;
-    const strandCount = 4;
-
-    for (int i = 0; i < 5; i++) {
-      final phi    = pulse * math.pi * 2 + _phaseOff[i];
-      final sinPhi = math.sin(phi);
-      final op     = (baseOp * (0.72 + 0.28 * (sinPhi + 1) / 2)).clamp(0.0, 1.0);
-      final bandFrac = (i / 4.0) * 2.0 - 1.0;
-
-      for (int s = 0; s < strandCount; s++) {
-        final sFrac      = strandCount > 1 ? (s / (strandCount - 1.0)) - 0.5 : 0.0;
-        final strandBias = sFrac * r * 0.16;
-        final sPhase     = phi + s * 0.82 + i * 0.28;
-        final strandOp   = op * (0.55 + 0.45 * (1.0 - sFrac.abs() * 1.6).clamp(0.0, 1.0));
-        final strokeW    = state == OrbState.dormant ? 0.7 : (s == 1 || s == 2 ? 1.4 : 1.0);
-
-        final path = Path();
-        for (int p = 0; p <= steps; p++) {
-          final t  = p / steps;
-          final x  = size.width * t;
-          final d  = (t - 0.5).abs() * 2.0;          // 0 at center, 1 at edges
-          final ev = d * d;                            // quadratic taper
-
-          final bandY = cy + (bandFrac * spread + strandBias) * ev;
-          final amp   = baseAmp * (0.18 + 0.82 * d) *
-                        (0.72 + 0.28 * ((math.sin(sPhase * 1.2 + s * 0.4) + 1) / 2));
-
-          // Two harmonics → organic, non-mechanical look
-          final y = bandY
-              + amp       * math.sin(t * math.pi * 3.5 + sPhase)
-              + amp * 0.4 * math.sin(t * math.pi * 7.5 + sPhase * 1.5);
-
-          p == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
-        }
-
-        _drawGlowPath(canvas, path, _colors[i], strandOp, strokeW);
-      }
-    }
-  }
-
-  // ── Circular boundary ring ──────────────────────────────────────────────────
-
-  void _drawBoundaryRing(Canvas canvas, double cx, double cy, double r) {
-    final ringOp = switch (state) {
-      OrbState.speaking  => 0.90,
-      OrbState.listening => 0.65,
-      OrbState.thinking  => 0.42,
-      OrbState.dormant   => 0.22,
-    };
-
-    // 5 slightly-different-radius wobbly ellipses, one per axis color
     for (int i = 0; i < 5; i++) {
       final phi   = pulse * math.pi * 2 + _phaseOff[i];
-      final ringR = r * (0.90 + i * 0.045);
-      final op    = ringOp * (0.65 + 0.35 * math.sin(phi).abs());
+      final bandY = size.height * (0.14 + i * 0.11);
+      final amp   = size.height * 0.055;
+      final color = _aurora[i];
 
       final path = Path();
-      const steps = 200;
+      const steps = 120;
       for (int s = 0; s <= steps; s++) {
-        final t     = s / steps;
-        final angle = t * math.pi * 2;
-        // Slight wobble so the ring feels alive, not static
-        final wobble = 1.0
-            + 0.055 * math.sin(angle * 3 + phi)
-            + 0.025 * math.sin(angle * 7 + phi * 1.4);
-        final x = cx + ringR * wobble * math.cos(angle);
-        final y = cy + ringR * 0.86 * wobble * math.sin(angle); // slight flatness
+        final t = s / steps;
+        final x = t * size.width;
+        final y = bandY + amp * math.sin(t * math.pi * 2.8 + phi)
+                        + amp * 0.4 * math.sin(t * math.pi * 5.5 + phi * 1.3);
         s == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
       }
-      path.close();
 
-      // Outer glow
+      // Wide luminous band
       canvas.drawPath(path, Paint()
-        ..color       = _colors[i].withOpacity(op * 0.10)
+        ..color       = color.withOpacity(op * 0.20)
         ..style       = PaintingStyle.stroke
-        ..strokeWidth = 12.0);
-      // Mid glow
+        ..strokeWidth = size.height * 0.14
+        ..strokeCap   = StrokeCap.round);
+      // Bright core ribbon
       canvas.drawPath(path, Paint()
-        ..color       = _colors[i].withOpacity(op * 0.32)
+        ..color       = color.withOpacity(op * 0.60)
         ..style       = PaintingStyle.stroke
-        ..strokeWidth = 3.0);
-      // Core ring
-      canvas.drawPath(path, Paint()
-        ..color       = _colors[i].withOpacity(op * 0.85)
-        ..style       = PaintingStyle.stroke
-        ..strokeWidth = 0.85);
-    }
-
-    // Scattered energy sparks around the boundary
-    _drawSparks(canvas, cx, cy, r, ringOp);
-  }
-
-  void _drawSparks(Canvas canvas, double cx, double cy, double r, double baseOp) {
-    const sparkAngles = [0.3, 0.9, 1.5, 2.1, 2.7, 3.3, 3.9, 4.5, 5.1, 5.7,
-                         0.6, 1.2, 1.8, 2.4, 3.0, 3.6, 4.2, 4.8, 5.4, 6.0];
-    const sparkDists  = [0.95, 1.08, 0.88, 1.15, 0.92, 1.05, 0.82, 1.12,
-                         0.98, 1.02, 1.18, 0.85, 1.10, 0.90, 1.06, 0.80,
-                         1.14, 0.94, 1.00, 1.08];
-    const sparkSizes  = [1.8, 1.2, 2.2, 1.0, 1.6, 2.0, 1.4, 1.8,
-                         1.0, 2.4, 1.2, 1.6, 2.0, 1.4, 1.8, 1.2,
-                         2.2, 1.0, 1.6, 2.4];
-
-    final count = state == OrbState.dormant ? 8 : 20;
-    for (int p = 0; p < count && p < sparkAngles.length; p++) {
-      final angle = sparkAngles[p] + pulse * 0.25;
-      final dist  = r * sparkDists[p];
-      final px    = cx + dist * math.cos(angle);
-      final py    = cy + dist * 0.86 * math.sin(angle);
-      final color = _colors[p % 5];
-      final flicker = (math.sin(pulse * math.pi * 5 + p * 1.3) + 1) / 2;
-      final op = (baseOp * (0.35 + 0.65 * flicker)).clamp(0.0, 1.0);
-      canvas.drawCircle(Offset(px, py), sparkSizes[p], Paint()..color = color.withOpacity(op));
+        ..strokeWidth = 1.5);
     }
   }
 
-  // ── Center energy flash ─────────────────────────────────────────────────────
+  // ── EQ waveform bars (radiating outward from orb on both sides) ─────────────
 
-  void _drawFlash(Canvas canvas, Offset center, double r) {
-    final op = state == OrbState.dormant ? 0.30 : (0.60 + 0.40 * pulse);
+  void _drawEqBars(Canvas canvas, Size size, double cx, double cy, double r) {
+    final maxH = switch (state) {
+      OrbState.speaking  => r * 1.40,
+      OrbState.listening => r * 0.88,
+      OrbState.thinking  => r * 0.52,
+      OrbState.dormant   => r * 0.18,
+    };
 
-    // Radial bloom
-    canvas.drawCircle(
-      center, r * 0.60,
-      Paint()
-        ..shader = RadialGradient(
-          colors: [
-            Colors.white.withOpacity(op * 0.70),
-            const Color(0xFFFF8800).withOpacity(op * 0.40),
-            const Color(0x00000000),
-          ],
-          stops: const [0.0, 0.38, 1.0],
-        ).createShader(Rect.fromCircle(center: center, radius: r * 0.60)),
-    );
+    final barW    = math.max(2.0, r * 0.065);
+    final barGap  = math.max(1.0, r * 0.028);
+    final barStep = barW + barGap;
+    final nBars   = ((cx - r - barStep * 2) / barStep).floor().clamp(0, 40);
 
-    // Tight bright kernel
-    final flashR = r * (0.16 + 0.08 * pulse);
-    canvas.drawCircle(
-      center, flashR,
-      Paint()
-        ..color      = Colors.white.withOpacity(op)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, flashR * 0.5),
-    );
-    canvas.drawCircle(center, flashR * 0.35, Paint()..color = Colors.white);
+    for (final side in [-1, 1]) {
+      for (int bi = 0; bi < nBars; bi++) {
+        final distFrac = (bi + 0.5) / nBars;
+        final barCx    = cx + side * (r + (bi + 1) * barStep);
+
+        if (barCx < 0 || barCx > size.width) continue;
+
+        // Height: peaked envelope × animated sine per bar
+        final phi  = pulse * math.pi * 2 + bi * 0.24 + (side < 0 ? 0.9 : 0.0);
+        final anim = (math.sin(phi) + 1) / 2;
+        // Envelope: tallest in inner third, tapering to edges
+        final env  = math.pow(1.0 - distFrac, 0.5).toDouble()
+                   * (0.6 + 0.4 * math.sin(distFrac * math.pi));
+        final h    = maxH * env * (0.22 + 0.78 * anim);
+
+        if (h < 2) continue;
+
+        // Color: white/orange at sphere edge → magenta → cyan → green at far edge
+        final Color c;
+        if (distFrac < 0.22) {
+          c = Color.lerp(const Color(0xFFFFFFFF), const Color(0xFFFF8800), distFrac / 0.22)!;
+        } else if (distFrac < 0.48) {
+          c = Color.lerp(const Color(0xFFFF8800), const Color(0xFFFF1199), (distFrac - 0.22) / 0.26)!;
+        } else if (distFrac < 0.74) {
+          c = Color.lerp(const Color(0xFFFF1199), const Color(0xFF00DDFF), (distFrac - 0.48) / 0.26)!;
+        } else {
+          c = Color.lerp(const Color(0xFF00DDFF), const Color(0xFF00FF88), (distFrac - 0.74) / 0.26)!;
+        }
+
+        final op = (0.40 + 0.60 * anim).clamp(0.0, 1.0);
+
+        // 3-pass glow: outer bloom, mid glow, core bar
+        canvas.drawRect(
+          Rect.fromLTRB(barCx - barW * 3.2, cy - h * 1.15, barCx + barW * 3.2, cy + h * 1.15),
+          Paint()..color = c.withOpacity(op * 0.10));
+        canvas.drawRect(
+          Rect.fromLTRB(barCx - barW * 1.5, cy - h, barCx + barW * 1.5, cy + h),
+          Paint()..color = c.withOpacity(op * 0.28));
+        canvas.drawRect(
+          Rect.fromLTRB(barCx - barW * 0.5, cy - h, barCx + barW * 0.5, cy + h),
+          Paint()..color = c.withOpacity(op));
+      }
+    }
   }
 
-  // ── Shared glow draw helper ─────────────────────────────────────────────────
+  // ── Vertical energy beam through center ─────────────────────────────────────
 
-  void _drawGlowPath(Canvas canvas, Path path, Color color, double op, double w) {
-    canvas.drawPath(path, Paint()
-      ..color       = color.withOpacity(op * 0.11)
-      ..style       = PaintingStyle.stroke
-      ..strokeWidth = w * 9.0
-      ..strokeCap   = StrokeCap.round);
-    canvas.drawPath(path, Paint()
-      ..color       = color.withOpacity(op * 0.28)
-      ..style       = PaintingStyle.stroke
-      ..strokeWidth = w * 3.2
-      ..strokeCap   = StrokeCap.round);
-    canvas.drawPath(path, Paint()
-      ..color       = color.withOpacity(op)
-      ..style       = PaintingStyle.stroke
-      ..strokeWidth = w
-      ..strokeCap   = StrokeCap.round);
+  void _drawBeam(Canvas canvas, Size size, double cx, double cy, double r) {
+    final op = state == OrbState.dormant ? 0.12 : (0.40 + 0.60 * pulse);
+    final bw = r * 0.045;
+
+    canvas.drawRect(
+      Rect.fromLTRB(cx - bw * 9, 0, cx + bw * 9, size.height),
+      Paint()..color = const Color(0xFFFF8800).withOpacity(op * 0.10));
+    canvas.drawRect(
+      Rect.fromLTRB(cx - bw * 3, 0, cx + bw * 3, size.height),
+      Paint()..color = const Color(0xFFFF8800).withOpacity(op * 0.22));
+    canvas.drawRect(
+      Rect.fromLTRB(cx - bw, 0, cx + bw, size.height),
+      Paint()..color = const Color(0xFFFF8800).withOpacity(op * 0.60));
+  }
+
+  // ── Central plasma orb ───────────────────────────────────────────────────────
+
+  void _drawOrb(Canvas canvas, Offset center, double r) {
+    // Violet corona bloom
+    canvas.drawCircle(
+      center, r * 2.2,
+      Paint()..shader = RadialGradient(
+        colors: [
+          const Color(0xFF6633FF).withOpacity(0.38),
+          const Color(0x000000FF),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: r * 2.2)));
+
+    // Sphere: white → sky blue → deep purple → near-black
+    canvas.drawCircle(
+      center, r,
+      Paint()..shader = RadialGradient(
+        colors: [
+          Colors.white,
+          const Color(0xFF88CCFF),
+          const Color(0xFF4400CC),
+          const Color(0xFF060015),
+        ],
+        stops: const [0.0, 0.26, 0.68, 1.0],
+      ).createShader(Rect.fromCircle(center: center, radius: r)));
+
+    // Bright white flash kernel
+    final flashR = r * (0.17 + 0.08 * pulse);
+    canvas.drawCircle(
+      center, flashR * 2.2,
+      Paint()
+        ..color      = Colors.white.withOpacity(0.32 + 0.28 * pulse)
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, flashR));
+    canvas.drawCircle(center, flashR * 0.45, Paint()..color = Colors.white);
   }
 
   @override
