@@ -139,10 +139,9 @@ class _OrbPainter extends CustomPainter {
       }
     }
 
-    // ── Front half of the bands ──────────────────────────────────────────────
-    // Thin and partially transparent so the orb remains readable while the
-    // waves still feel like they wrap around it.
-    _drawElectricBands(canvas, center, r, frontPass: true);
+    // ── Living orbital frequency rings ──────────────────────────────────────────
+    // Chaotic yet professional planetary ring system with sine-wave modulation.
+    _drawOrbitalFrequencyRings(canvas, center, r);
   }
 
   void _drawWaveBands(Canvas canvas, Size size, double cx, double cy, double r) {
@@ -171,12 +170,6 @@ class _OrbPainter extends CustomPainter {
       OrbState.listening => 1.5,
       OrbState.thinking  => 1.4,
       OrbState.dormant   => 1.2,
-    };
-    final activeIndex = switch (state) {
-      OrbState.listening => 0,
-      OrbState.thinking  => 1,
-      OrbState.speaking  => 4,
-      OrbState.dormant   => -1,
     };
 
     for (int i = 0; i < 5; i++) {
@@ -218,103 +211,94 @@ class _OrbPainter extends CustomPainter {
     }
   }
 
-  void _drawElectricBands(Canvas canvas, Offset center, double r, {required bool frontPass}) {
-    // Metaphysical energy bands wrapping around the orb with neon intensity
-    // Front pass renders semi-transparent to let orb core shine through
-    
+  void _drawOrbitalFrequencyRings(Canvas canvas, Offset center, double r) {
+    // Living orbital system: 4 concentric rings, each with 5 sine-wave frequency bands
+    // Rings rotate independently at different speeds for chaotic planetary effect
+    // Professional color contrast + neon pop for visual presence
+
     final baseOpacity = switch (state) {
-      OrbState.speaking  => 0.68,
-      OrbState.listening => 0.42,
-      OrbState.thinking  => 0.28,
-      OrbState.dormant   => 0.10,
+      OrbState.speaking  => 0.70,
+      OrbState.listening => 0.45,
+      OrbState.thinking  => 0.30,
+      OrbState.dormant   => 0.12,
     };
 
-    final bandRadius = switch (state) {
-      OrbState.speaking  => r * 1.35,
-      OrbState.listening => r * 1.28,
-      OrbState.thinking  => r * 1.22,
-      OrbState.dormant   => r * 1.15,
+    final baseAmplitude = switch (state) {
+      OrbState.speaking  => r * 0.18,
+      OrbState.listening => r * 0.10,
+      OrbState.thinking  => r * 0.07,
+      OrbState.dormant   => r * 0.03,
     };
 
-    // Draw 3 concentric energetic rings for metaphysical effect
-    for (int ring = 0; ring < 3; ring++) {
-      final ringRadius = bandRadius + (ring * r * 0.12);
-      final ringPhase = pulse * math.pi * 2 * (1 + ring * 0.3);
+    // 4 orbital rings at increasing radii with chaotic rotation
+    for (int ringIdx = 0; ringIdx < 4; ringIdx++) {
+      final ringRadius = r * (1.2 + ringIdx * 0.20);
       
-      // Per-ring opacity that breathes with energy
-      final ringOpacity = baseOpacity * (0.7 + 0.3 * math.sin(ringPhase)) * (1 - ring * 0.15);
+      // Each ring rotates at different speed (chaotic planetary dynamics)
+      final ringRotation = pulse * math.pi * 2 * (0.8 + ringIdx * 0.4);
+      
+      // Per-ring frequency modulation (inner rings = higher frequency)
+      final frequencyMultiplier = 2.0 + (ringIdx * 0.6);
+      
+      // Per-ring opacity breathing
+      final ringOpacityMod = 0.7 + 0.3 * math.sin(ringRotation * 0.5);
 
-      for (int i = 0; i < 5; i++) {
-        final bandPhase = ringPhase + _phaseOff[i];
-        final sinBand = math.sin(bandPhase);
+      // Draw 5 sine-wave frequency bands per ring
+      for (int bandIdx = 0; bandIdx < 5; bandIdx++) {
+        final bandPhase = ringRotation + _phaseOff[bandIdx];
+        final sinMod = math.sin(bandPhase);
         
-        // Neon glow intensity increases with pulse
-        final neonIntensity = 0.5 + 0.5 * pulse;
+        // Amplitude modulates per band for living energy feel
+        final bandAmplitude = baseAmplitude * (0.8 + 0.2 * sinMod);
         
-        // Main crisp neon line
-        canvas.drawArc(
-          Rect.fromCircle(center: center, radius: ringRadius),
-          0, math.pi * 2, false,
+        // Opacity modulates for breathing effect
+        final bandOpacity = (baseOpacity * ringOpacityMod * (0.85 + 0.15 * sinMod)).clamp(0.0, 1.0);
+
+        // Build the sine-wave path around the orbital ring
+        final path = Path();
+        const pathSteps = 180;
+        
+        for (int step = 0; step <= pathSteps; step++) {
+          final angle = (step / pathSteps) * math.pi * 2;
+          
+          // Base circular orbit
+          final baseX = center.dx + math.cos(angle) * ringRadius;
+          final baseY = center.dy + math.sin(angle) * ringRadius;
+          
+          // Sine-wave modulation perpendicular to orbit (radial breathing)
+          final radialMod = bandAmplitude * math.sin(angle * frequencyMultiplier + bandPhase);
+          final modX = baseX + math.cos(angle) * radialMod;
+          final modY = baseY + math.sin(angle) * radialMod;
+          
+          step == 0 ? path.moveTo(modX, modY) : path.lineTo(modX, modY);
+        }
+        
+        // Close the path for continuous orbital ring
+        path.close();
+
+        // Crisp neon stroke
+        canvas.drawPath(
+          path,
           Paint()
-            ..color = _neonAccents[i].withOpacity(ringOpacity * neonIntensity * (frontPass ? 0.7 : 1.0))
+            ..color = _neonAccents[bandIdx].withOpacity(bandOpacity * 0.85)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.2 + (pulse * 0.6)
-            ..strokeCap = StrokeCap.round,
+            ..strokeWidth = 1.4 + pulse * 0.5
+            ..strokeCap = StrokeCap.round
+            ..strokeJoin = StrokeJoin.round,
         );
 
-        // Ethereal outer glow for metaphysical vibes
-        canvas.drawArc(
-          Rect.fromCircle(center: center, radius: ringRadius),
-          0, math.pi * 2, false,
+        // Ethereal glow layer for professional depth
+        canvas.drawPath(
+          path,
           Paint()
-            ..color = _colors[i].withOpacity(ringOpacity * 0.25 * (frontPass ? 0.5 : 0.8))
+            ..color = _colors[bandIdx].withOpacity(bandOpacity * 0.35)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 4.0 + (pulse * 1.2)
+            ..strokeWidth = 3.5 + pulse * 0.8
             ..strokeCap = StrokeCap.round
-            ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6.0 + pulse * 4.0),
+            ..strokeJoin = StrokeJoin.round
+            ..maskFilter = MaskFilter.blur(BlurStyle.normal, 5.0 + pulse * 3.5),
         );
       }
-    }
-
-    // Pulsing energy particles around the orb for extra visual interest
-    if (state != OrbState.dormant) {
-      _drawEnergyParticles(canvas, center, r, frontPass);
-    }
-  }
-
-  void _drawEnergyParticles(Canvas canvas, Offset center, double r, bool frontPass) {
-    // Floating energy particles that orbit and shimmer
-    const particleCount = 8;
-    
-    for (int p = 0; p < particleCount; p++) {
-      final angle = (pulse * math.pi * 2) + (p / particleCount * math.pi * 2);
-      final distance = r * (1.4 + 0.2 * math.sin(pulse * math.pi * 2 + p));
-      
-      final px = center.dx + math.cos(angle) * distance;
-      final py = center.dy + math.sin(angle) * distance;
-      
-      final colorIndex = p % 5;
-      final particleSize = 1.2 + (pulse * 0.8);
-      final particleOpacity = (0.4 + 0.6 * math.sin(pulse * math.pi * 2 + p * 0.8)) * 
-                             (frontPass ? 0.6 : 0.9);
-      
-      // Core particle glow
-      canvas.drawCircle(
-        Offset(px, py),
-        particleSize,
-        Paint()
-          ..color = _neonAccents[colorIndex].withOpacity(particleOpacity)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3.0),
-      );
-
-      // Outer particle bloom
-      canvas.drawCircle(
-        Offset(px, py),
-        particleSize * 2.2,
-        Paint()
-          ..color = _colors[colorIndex].withOpacity(particleOpacity * 0.3)
-          ..maskFilter = MaskFilter.blur(BlurStyle.normal, 8.0),
-      );
     }
   }
 
