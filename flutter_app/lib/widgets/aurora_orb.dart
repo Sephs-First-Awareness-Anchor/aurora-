@@ -129,6 +129,11 @@ class _OrbPainter extends CustomPainter {
         );
       }
     }
+
+    // ── Front half of the bands ──────────────────────────────────────────────
+    // Thin and partially transparent so the orb remains readable while the
+    // waves still feel like they wrap around it.
+    _drawElectricBands(canvas, center, r, frontPass: true);
   }
 
   void _drawWaveBands(Canvas canvas, Size size, double cx, double cy, double r) {
@@ -157,6 +162,12 @@ class _OrbPainter extends CustomPainter {
       OrbState.listening => 1.5,
       OrbState.thinking  => 1.4,
       OrbState.dormant   => 1.2,
+    };
+    final activeIndex = switch (state) {
+      OrbState.listening => 0,
+      OrbState.thinking  => 1,
+      OrbState.speaking  => 4,
+      OrbState.dormant   => -1,
     };
 
     for (int i = 0; i < 5; i++) {

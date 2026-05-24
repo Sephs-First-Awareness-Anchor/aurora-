@@ -71,6 +71,18 @@ class AuroraService : Service() {
             }
         }
 
+        fun provideScreenObservation(payloadJson: String) {
+            scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("provide_screen_observation", payloadJson)
+                } catch (e: Exception) {
+                    Log.w(TAG, "screen observation error: ${e.message}")
+                }
+            }
+        }
+
         fun setState(state: String) {
             currentState = state
             scope?.launch {

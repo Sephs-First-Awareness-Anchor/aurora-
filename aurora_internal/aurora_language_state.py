@@ -839,11 +839,23 @@ class SemanticIntentCompiler:
             "active context", "sensory crystal", "n-axis", "gen=",
             "sensory.intake", "sensory intake", "raw audio",
             "crystal system", " replaces ", "should leave",
-            "carries forward",
+            "carries forward", "sensory scene", "origin_signature",
+            "origin signature", "origin_primary", "origin_secondary",
+            "operation_lineage", "derived from promoted link",
+            "maint_discount", "tax_opposed", "root_slot:",
+            "root_parents=", "operator_grade", "purpose_grade",
+            "depth_score", "leverage_grade", "ontological_status",
+            "lineage_signature", "synthetic profile for link",
+            "profile for link", "signature:", "dominant_axis:",
+            "effect_tags", "generation_role", "semantic_translation",
+            "inheritance_breach", "persistent_pressure_root",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp
             content_is_clause = False
+
+        if content.lower().startswith(("i understand ", "i'm working through ", "i am working through ")):
+            content_is_clause = True
 
         uncertain = intent.certainty < 0.5
 
@@ -898,7 +910,7 @@ class SemanticIntentCompiler:
             elif content_is_clause:
                 base = content
             elif stance.energy_resolution == "assertive":
-                base = f"What it takes here is holding {content} in proportion."
+                base = f"I'm holding {content} in proportion."
             else:
                 base = f"I'm keeping {content} measured."
             if support_phrase and support_phrase not in base.lower():

@@ -796,24 +796,9 @@ def _augment_ability_profile_with_origin(ap: AbilityProfile) -> AbilityProfile:
     ])
     dedup_tags = tuple(dict.fromkeys([str(t) for t in tags if str(t)]))
 
-    notes = str(ap.notes or "")
-    marker = f"operation_lineage_id={origin['lineage_id']}"
-    if marker not in notes:
-        suffix = (
-            f" [origin root_slot={origin['root_slot']}; "
-            f"root_parents={origin['root_a']},{origin['root_b']}; "
-            f"origin_signature={origin['signature']}; "
-            f"operation_lineage_id={origin['lineage_id']}; "
-            f"operator_action={grading['operator_action']}; "
-            f"purpose_lane={grading['purpose_lane']}; "
-            f"operator_grade={float(grading['operator_grade']):.3f}; "
-            f"depth_score={float(grading.get('depth_score', 0.0)):.4f}; "
-            f"leverage_grade={float(grading.get('leverage_grade', 0.5)):.4f}; "
-            f"ontological_status={grading.get('ontological_status', 'derivative_offspring')}; "
-            f"generation={int(grading['generation'])}; "
-            f"generation_role={grading['generation_role']}]"
-        )
-        notes = (notes + suffix).strip()
+    # Keep machine lineage in effect_tags. Free-text notes can be surfaced by
+    # memory/language paths, so they must stay human-facing and metadata-free.
+    notes = str(ap.notes or "").strip()
 
     return AbilityProfile(
         id=ap.id,
@@ -3535,16 +3520,12 @@ class ConstraintGenealogyLogger:
             cost=cost,
             risk=risk,
             effect_tags=tags,
-            notes=(
-                f"Adaptive compression operator for pair ({key[0]} -> {key[1]}). "
-                f"lineage_signature={sig}; operation_lineage_id={op_lineage}; "
-                f"family_count={family_count}; maturity={maturity:.3f}; gain={gain:.3f}; depth={int(depth)}"
-            ),
+            notes="Adaptive compression operator from stabilized lineage evidence.",
         ))
         return aid
 
     def normalize_ability_origins(self) -> int:
-        """Backfill universal origin lineage tags/notes for all abilities."""
+        """Backfill universal origin lineage tags for all abilities."""
         count = 0
         updated: Dict[str, AbilityProfile] = {}
         for aid, ap in dict(self.abilities).items():
@@ -3875,7 +3856,7 @@ class ConstraintGenealogyLogger:
                 cost=cost,
                 risk={"X": lnk.mean_x_risk},
                 effect_tags=tuple(lnk.tags),
-                notes=f"Synthetic profile for link {item.id} (maint_discount={discount:.2f})",
+                notes="Synthetic profile from stabilized internal lineage evidence.",
             )
         return None
 

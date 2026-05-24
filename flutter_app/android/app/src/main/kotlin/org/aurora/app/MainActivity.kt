@@ -146,6 +146,8 @@ class MainActivity : FlutterActivity() {
                     }
                     "hasOverlayPermission"     -> result.success(hasOverlayPermission())
                     "requestOverlayPermission" -> { requestOverlayPermission(); result.success(null) }
+                    "hasScreenObserverPermission" -> result.success(hasScreenObserverPermission())
+                    "requestScreenObserverPermission" -> { requestScreenObserverPermission(); result.success(null) }
                     "consumeOverlayTap" -> {
                         val had = pendingSummon; pendingSummon = false; result.success(had)
                     }
@@ -354,6 +356,18 @@ class MainActivity : FlutterActivity() {
 
     private fun requestOverlayPermission() =
         startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+
+    private fun hasScreenObserverPermission(): Boolean {
+        val enabled = Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return false
+        val serviceName = "$packageName/${ScreenObserverService::class.java.name}"
+        return enabled.split(':').any { it.equals(serviceName, ignoreCase = true) }
+    }
+
+    private fun requestScreenObserverPermission() =
+        startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 

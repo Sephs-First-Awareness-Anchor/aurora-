@@ -809,6 +809,16 @@ class SemanticIntentCompiler:
             "sensory.intake", "sensory intake", "raw audio",
             "crystal system", " replaces ", "should leave",
             "carries forward",   # already-rendered T-frame used as content
+            "sensory scene", "origin_signature", "origin signature",
+            "origin_primary", "origin_secondary", "operation_lineage",
+            "derived from promoted link", "maint_discount", "tax_opposed",
+            "root_slot:", "root_parents=", "operator_grade",
+            "purpose_grade", "depth_score", "leverage_grade",
+            "ontological_status", "lineage_signature",
+            "synthetic profile for link", "profile for link",
+            "signature:", "dominant_axis:", "effect_tags",
+            "generation_role", "semantic_translation",
+            "inheritance_breach", "persistent_pressure_root",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp
@@ -825,6 +835,9 @@ class SemanticIntentCompiler:
         if not content or content.lower() in ("x", "t", "n", "b", "a", "existence", "temporal", "energy", "boundary", "agency"):
             content = rp
             _content_is_sentence = False
+
+        if content.lower().startswith(("i understand ", "i'm working through ", "i am working through ")):
+            _content_is_sentence = True
 
         uncertain = intent.certainty < 0.5
 

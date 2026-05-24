@@ -42,6 +42,7 @@ _pending_example_asked:   str = ""   # the exact question she asked
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
+_last_screen_observation: dict = {}
 
 # Curiosity session control
 _curiosity_session_active = threading.Event()
@@ -342,7 +343,8 @@ def _sample_ambient_perception(systems: dict) -> None:
     except Exception:
         pass
 
-    if not cam_obs and not audio_obs:
+    screen_obs = dict(_last_screen_observation or {})
+    if not cam_obs and not audio_obs and not screen_obs:
         return  # nothing available — don't write stale data
 
     obs_parts = []
@@ -350,6 +352,10 @@ def _sample_ambient_perception(systems: dict) -> None:
         obs_parts.append(f"camera: {cam_obs}")
     if audio_obs:
         obs_parts.append(f"audio: {audio_obs}")
+    if screen_obs:
+        summary = str(screen_obs.get("summary", "") or "").strip()
+        if summary:
+            obs_parts.append(f"screen: {summary}")
     observation = "; ".join(obs_parts)
 
     systems["_ambient_perceptual"] = {
@@ -368,6 +374,10 @@ def _sample_ambient_perception(systems: dict) -> None:
             ifield.ingest_sensory_event(
                 "auditory", intensity=audio_novelty, novelty=audio_novelty, valence=0.0
             )
+            if screen_obs:
+                ifield.ingest_sensory_event(
+                    "screen", intensity=0.55, novelty=0.45, valence=0.0
+                )
         except Exception:
             pass
 
@@ -847,3 +857,111 @@ def provide_camera_frame(jpeg_bytes) -> None:
         _cv2.VideoCapture.provide_frame(bgr)
     except Exception as exc:
         log.warning("provide_camera_frame: %s", exc)
+
+
+def provide_screen_observation(payload_json: str) -> None:
+    """
+    Called from Android Accessibility after a user-visible surface action.
+    The observation is compacted into the sensory snapshot and identity field
+    so the next response traversal can use it as present surface context.
+    """
+    global _last_screen_observation
+    try:
+        import json as _json
+        import time as _time
+
+        payload = _json.loads(str(payload_json or "{}"))
+        visible = [
+            " ".join(str(item).split()).strip()
+            for item in list(payload.get("visible_text") or [])
+            if str(item).strip()
+        ][:8]
+        package = str(payload.get("package", "") or "")
+        event_type = str(payload.get("event_type", "") or "screen_event")
+        app_label = package.rsplit(".", 1)[-1] if package else "phone"
+        visible_summary = ", ".join(visible[:3])
+        summary = f"{app_label} {event_type}"
+        if visible_summary:
+            summary = f"{summary}: {visible_summary}"
+
+        observation = {
+            "source": "screen_observer",
+            "observed_at": float(payload.get("observed_at", _time.time()) or _time.time()),
+            "package": package,
+            "class": str(payload.get("class", "") or ""),
+            "event_type": event_type,
+            "visible_text": visible,
+            "summary": summary[:360],
+        }
+        _last_screen_observation = observation
+
+        if _systems is None:
+            return
+
+        _systems["_screen_observation"] = observation
+        _systems["_ambient_perceptual"] = {
+            "observation": f"screen: {observation['summary']}",
+            "source": "screen_observer",
+        }
+
+        ifield = _systems.get("identity_field")
+        if ifield is not None:
+            if hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.52, "T": 0.66, "N": 0.50, "B": 0.58, "A": 0.44},
+                    intensity=0.58,
+                    source="screen_observer",
+                )
+            if hasattr(ifield, "ingest_sensory_event"):
+                ifield.ingest_sensory_event(
+                    "screen", intensity=0.58, novelty=0.42, valence=0.0
+                )
+
+        state_dir = str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
+        try:
+            from aurora_core_ai.aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
+                read_surface_snapshot,
+                write_surface_snapshot,
+            )
+        except Exception:
+            from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
+                read_surface_snapshot,
+                write_surface_snapshot,
+            )
+
+        current = read_surface_snapshot(state_dir)
+        sensory_state = dict(current.get("sensory_state") or {})
+        recognitions = dict(sensory_state.get("recognitions") or {})
+        recent = list(recognitions.get("recent") or [])
+        recent = (["screen", app_label, event_type] + visible[:4] + recent)[:12]
+        recognitions["recent"] = list(dict.fromkeys(str(x) for x in recent if str(x).strip()))
+        sensory_state["recognitions"] = recognitions
+        sensory_state["total_frames"] = int(sensory_state.get("total_frames", 0) or 0) + 1
+        sensory_state["maturity"] = min(1.0, float(sensory_state.get("maturity", 0.0) or 0.0) + 0.01)
+
+        sensory_context = dict(current.get("sensory_context") or {})
+        sensory_context["screen"] = observation["summary"]
+        sensory_context["screen_package"] = package
+        sensory_context["screen_event_type"] = event_type
+        sensory_context["concepts_active"] = list(dict.fromkeys(
+            [app_label, event_type] + visible[:6] + list(sensory_context.get("concepts_active") or [])
+        ))[:10]
+
+        write_surface_snapshot(
+            state_dir,
+            sensory_state,
+            mic_live=bool(current.get("mic_live", False)),
+            camera_live=bool(current.get("camera_live", False)),
+            sensory_vectors=dict(current.get("sensory_vectors") or {}),
+            sensory_context=sensory_context,
+            visual_description=str(current.get("visual_description", "") or ""),
+            audio_description=str(current.get("audio_description", "") or ""),
+            recent_speech=str(current.get("recent_speech", "") or ""),
+            concepts_active=sensory_context["concepts_active"],
+            trigger="screen_observer",
+            flagged=False,
+            reason="surface_action_observed",
+            summary=f"Phone surface action observed. {observation['summary']}",
+        )
+    except Exception as exc:
+        log.warning("provide_screen_observation: %s", exc)

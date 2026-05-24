@@ -49,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen>
   static const _convSec = 30;
   Timer? _convTimer;
   bool   _inConversation = false;
+  bool   _screenObserverReady = false;
 
   // ── Bridge events ────────────────────────────────────────────────────────
   StreamSubscription? _bridgeSub;
@@ -72,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _init() async {
     _listenBridgeEvents();
     setState(() => _embState = 'BACKGROUND');
+    _refreshScreenObserverStatus();
     _startListening();
   }
 
@@ -103,6 +105,10 @@ class _HomeScreenState extends State<HomeScreen>
             Future.delayed(const Duration(seconds: 2), () {
               if (mounted) setState(() => _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…');
             });
+          }
+        case 'screen':
+          if (type == 'observed' && mounted) {
+            setState(() => _screenObserverReady = true);
           }
         default: // aurora service events
           switch (type) {
@@ -195,6 +201,18 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  Future<void> _refreshScreenObserverStatus() async {
+    final ready = await AuroraBridge.hasScreenObserverPermission();
+    if (!mounted) return;
+    setState(() => _screenObserverReady = ready);
+  }
+
+  Future<void> _requestScreenObserver() async {
+    await AuroraBridge.requestScreenObserverPermission();
+    if (!mounted) return;
+    setState(() => _statusTxt = 'Enable Aurora screen observer, then return');
+  }
+
   void _startConversationWindow() {
     _convTimer?.cancel();
     _inConversation = true;
@@ -270,6 +288,7 @@ class _HomeScreenState extends State<HomeScreen>
     if (state == AppLifecycleState.paused && _embState != 'DORMANT') {
       await _background();
     } else if (state == AppLifecycleState.resumed) {
+      await _refreshScreenObserverStatus();
       final wasTapped = await AuroraBridge.consumeOverlayTap();
       if (wasTapped) {
         _summon();
@@ -321,6 +340,13 @@ class _HomeScreenState extends State<HomeScreen>
                       textAlign: TextAlign.center,
                     ),
                   ),
+                  if (!_screenObserverReady) ...[
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: _requestScreenObserver,
+                      child: const Text('Enable screen observer'),
+                    ),
+                  ],
                 ],
               ),
             ),
