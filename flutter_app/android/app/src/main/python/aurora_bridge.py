@@ -56,20 +56,19 @@ _CONFUSION_PATTERNS = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
-# Aurora's own output asking for an example — detected so the bridge knows
-# to treat the next user turn as teaching data, not a regular exchange.
-_EXAMPLE_REQUEST_PATTERNS = re.compile(
+# When Aurora asked a genuine question and you can't answer — fall back to
+# search tools rather than leaving the gap unresolved.
+_CANT_ANSWER_PATTERNS = re.compile(
     r"""
-    \b(can\s+you\s+give\s+me\s+an?\s+example)
-    | \b(give\s+me\s+an?\s+example)
-    | \b(show\s+me\s+(what\s+you\s+mean|an?\s+example))
-    | \b(what\s+does\s+that\s+look\s+like)
-    | \b(what\s+would\s+that\s+(look|sound|feel)\s+like)
-    | \b(can\s+you\s+show\s+me)
-    | \b(help\s+me\s+understand.{0,30}example)
-    | \b(i.d\s+like\s+an?\s+example)
-    | \b(an?\s+example\s+would\s+help)
-    | \b(could\s+you\s+show\s+me)
+    \b(i\s+(don.t|dont|don't|didn.t|didn't)\s+know)
+    | \b(not\s+sure)
+    | \b(no\s+idea)
+    | \b(i.m\s+not\s+(sure|certain))
+    | \b(can.t\s+(help|answer|say|tell))
+    | \b(i\s+couldn.t\s+(say|tell|answer))
+    | \b(haven.t\s+thought\s+about)
+    | \b(never\s+(thought|considered))
+    | ^(idk|dunno)\b
     """,
     re.IGNORECASE | re.VERBOSE,
 )
@@ -246,10 +245,15 @@ def handle_message(text: str) -> str:
     try:
         # ── Step 1: Read your response as fidelity / teaching data ───────────
         if _last_response and _systems:
-            # If Aurora asked for an example last turn, this response IS the
-            # example — ingest it as learning before anything else runs.
+            # If Aurora asked a genuine question last turn and there's a gap
+            # concept pending, your reply is either an answer or a can't-answer.
             if _pending_example_concept:
-                _ingest_example(text, _pending_example_concept)
+                if _CANT_ANSWER_PATTERNS.search(text):
+                    # You don't know — fall back to Aurora's search tools.
+                    _search_for_gap(_pending_example_concept)
+                else:
+                    # You answered — ingest what you said as learning data.
+                    _ingest_example(text, _pending_example_concept)
                 _pending_example_concept = ""
                 _pending_example_asked   = ""
             # Your confusion or correction = fidelity 0 on the previous path.
@@ -295,34 +299,20 @@ def handle_message(text: str) -> str:
             except Exception:
                 pass
 
-        # ── Step 4: Surface pending example request from curiosity engine ───────
-        # The curiosity engine runs between turns. When a semantic gap can't be
-        # resolved by tools, it surfaces a question into systems['_pending_user_question'].
-        # Append it to the current response so Aurora asks the user directly.
+        # ── Step 4: Track natural questions Aurora generated ─────────────────
+        # If the curiosity engine raised gap pressure for a concept and Aurora's
+        # response came out as a question, arm the concept so your next reply
+        # is treated as learning data (or triggers a search if you can't answer).
+        # No scripted strings — we only check whether she naturally asked something.
         if _systems:
-            pending_q = _systems.get("_pending_user_question")
-            if isinstance(pending_q, dict) and pending_q.get("type") == "example_request":
-                concept  = pending_q.get("concept", "")
-                question = pending_q.get("question", "")
-                if concept and question and not _pending_example_concept:
-                    # Append the question to the response
-                    if response and not response.rstrip().endswith("?"):
-                        response = response.rstrip() + " " + question
-                    elif not response:
-                        response = question
-                    _pending_example_concept = concept
-                    _pending_example_asked   = question
-                    _systems["_pending_user_question"] = None
-                    log.info("Surfacing example request for concept: %r", concept)
-
-        # Also detect if the response itself contains an example request
-        # (generated directly by the language pipeline, not the curiosity engine)
-        if response and not _pending_example_concept and _EXAMPLE_REQUEST_PATTERNS.search(response):
-            concept = _extract_concept_from_gap(response, text)
-            if concept:
-                _pending_example_concept = concept
-                _pending_example_asked   = response
-                log.info("Example requested (pipeline) for concept: %r", concept)
+            gap_concept = _systems.get("_gap_seeking_concept") or ""
+            if gap_concept and not _pending_example_concept:
+                if response and response.rstrip().endswith("?"):
+                    # She asked something — your next turn is the answer
+                    _pending_example_concept = gap_concept
+                    _pending_example_asked   = response
+                    _systems["_gap_seeking_concept"] = None
+                    log.info("Gap question detected for concept: %r", gap_concept)
 
         _last_response = response
         _last_path_key = path_key
@@ -333,28 +323,30 @@ def handle_message(text: str) -> str:
         return "I encountered an error processing your request."
 
 
-def _extract_concept_from_gap(response: str, user_text: str) -> str:
+def _search_for_gap(concept: str) -> None:
     """
-    Extract the concept Aurora is asking about when she requests an example.
-    Tries noun phrases from the response first, falls back to user_text topic.
+    Trigger Aurora's search tools for a concept the user couldn't explain.
+    Runs in a background thread so it doesn't block the current response.
     """
-    # Look for "an example of X" / "what X looks like" / "show me X"
-    patterns = [
-        re.compile(r"\ban?\s+example\s+of\s+([a-zA-Z][a-zA-Z\s]{2,30}?)[\?\.\,]", re.I),
-        re.compile(r"\bwhat\s+([a-zA-Z][a-zA-Z\s]{2,25}?)\s+(looks?|sounds?|feels?)\s+like", re.I),
-        re.compile(r"\bshow\s+me\s+([a-zA-Z][a-zA-Z\s]{2,25}?)[\?\.\,]", re.I),
-        re.compile(r"\bunderstand\s+([a-zA-Z][a-zA-Z\s]{2,25}?)\s+better", re.I),
-    ]
-    for pat in patterns:
-        m = pat.search(response)
-        if m:
-            return m.group(1).strip().lower()
-    # Fallback: longest content word from user_text
-    words = [w for w in re.findall(r"[a-zA-Z]{4,}", user_text) if w.lower() not in {
-        "that", "this", "what", "with", "from", "have", "just", "like", "about",
-        "tell", "your", "when", "then", "they", "them", "here", "there",
-    }]
-    return words[0].lower() if words else ""
+    if not _systems or not concept:
+        return
+    def _run():
+        try:
+            from aurora_core_ai.aurora_internal.tool_registry import call as _tool_call  # type: ignore
+            # World knowledge search first — fastest
+            r1 = _tool_call("world_knowledge_search", query=concept, systems=_systems)
+            log.info("Gap search (world_knowledge) for %r: success=%s", concept, r1.success)
+            # If that resolved something, ingest the result as learning data
+            if r1.success and r1.data:
+                _ingest_example(r1.data, concept)
+            else:
+                # Fall back to corpus hunter — finds raw datasets on the topic
+                _tool_call("corpus_hunter", topic=concept, systems=_systems)
+                log.info("Gap search (corpus_hunter) triggered for %r", concept)
+        except Exception as exc:
+            log.warning("_search_for_gap failed for %r: %s", concept, exc)
+    import threading as _threading
+    _threading.Thread(target=_run, daemon=True, name=f"gap_search:{concept[:20]}").start()
 
 
 def _ingest_example(example_text: str, concept: str) -> None:

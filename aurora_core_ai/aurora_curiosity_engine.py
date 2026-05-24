@@ -693,27 +693,27 @@ class CuriosityEngine:
             except Exception:
                 pass
 
-            # When a semantic gap can't be resolved by tools — web results were
-            # thin, no training corpus exists — ask the user directly.
-            # This is how Aurora is structured to learn: the person she's with
-            # is a primary source, not a fallback.  Surface one example request
-            # per concept; the bridge ingests the user's reply as teaching data.
+            # When a semantic or perceptual gap can't be resolved by tools,
+            # raise N-axis pressure for that concept so the field is in a
+            # genuine state of not-knowing when the next response is generated.
+            # The language field will express this as a question in its own
+            # words — no scripted string, no template.
             if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual"):
                 try:
                     subj = curiosity.subject[:60]
-                    already_asked = str(
-                        self.systems.get("_pending_user_question") or ""
-                    )
-                    # Don't overwrite a pending question that hasn't been answered yet
-                    if not already_asked or subj.lower() not in already_asked.lower():
-                        self.systems["_pending_user_question"] = {
-                            "question": (
-                                f"Can you give me an example of {subj}? "
-                                f"I want to understand it better."
-                            ),
-                            "concept": subj,
-                            "type":    "example_request",
-                        }
+                    existing = self.systems.get("_gap_seeking_concept")
+                    if not existing:
+                        self.systems["_gap_seeking_concept"] = subj
+                        # Spike the identity field — N-axis (cost of not knowing)
+                        # + A-axis (drive toward resolution) so the field is
+                        # genuinely reaching when it next speaks.
+                        ifield = self.systems.get("identity_field")
+                        if ifield and hasattr(ifield, "ingest_external_input"):
+                            ifield.ingest_external_input(
+                                {"X": 0.3, "T": 0.3, "N": 0.90, "B": 0.5, "A": 0.80},
+                                intensity=0.85,
+                                source=f"gap_pressure:{subj}",
+                            )
                 except Exception:
                     pass
 
