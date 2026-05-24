@@ -22,6 +22,7 @@ Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 from __future__ import annotations
 
+import collections
 import hashlib
 import json
 import math
@@ -139,6 +140,12 @@ class LanguageField:
         self._lsa:    Dict[str, LSAEntry] = {}
         self._last_proto: Optional[ProtoLanguage] = None
         self._silence_log: List[dict] = []
+        # Recency suppression — tracks the last 5 path keys that were
+        # reinforced (fidelity >= _FIDELITY_REINFORCE). A path in this
+        # deque faces a +0.35 context-similarity surcharge on its b_gate,
+        # forcing the field toward novel or metaphor crossings instead of
+        # repeating the same structural route every turn.
+        self._recent_paths: collections.deque = collections.deque(maxlen=5)
         self._load_lsa()
 
     # ── Persistence ──────────────────────────────────────────────────────────
@@ -439,8 +446,14 @@ class LanguageField:
             entry = self._lsa[pkey]
             b_match = self._context_similarity(current_ctx, entry.context_fingerprint)
 
-            if b_match >= entry.b_gate:
-                # Both factors satisfied — unlock the worn path
+            # Recency surcharge: a path used in the last 5 crossings must
+            # clear a higher bar — the field needs distinctly different context
+            # to justify repeating the same structural route.
+            recency_surcharge = 0.35 if pkey in self._recent_paths else 0.0
+            effective_gate = min(_B_GATE_CAP, entry.b_gate + recency_surcharge)
+
+            if b_match >= effective_gate:
+                # Both factors satisfied — unlock the path
                 return {
                     "path_key":   pkey,
                     "n_cost":     entry.n_cost,
@@ -450,7 +463,7 @@ class LanguageField:
                     "is_metaphor": False,
                     "use_count":  entry.use_count,
                 }
-            # B-gate rejects — context too narrow. Seek metaphor proxy.
+            # B-gate rejects (possibly due to recency). Seek metaphor proxy.
             proxy = self._find_metaphor_proxy(proto, exclude=pkey)
             if proxy:
                 return {**proxy, "is_metaphor": True, "is_novel": False}
@@ -685,6 +698,8 @@ class LanguageField:
             for ax in proto.raw_axes:
                 old = entry.context_fingerprint.get(ax, proto.raw_axes[ax])
                 entry.context_fingerprint[ax] = 0.72 * old + 0.28 * proto.raw_axes[ax]
+            # Mark as recently used — next selection will face +0.35 gate surcharge
+            self._recent_paths.append(path_key)
         else:
             # Failed crossing: slight cost increase, field pushed toward novel path
             entry.n_cost = min(1.0, entry.n_cost + 0.02)

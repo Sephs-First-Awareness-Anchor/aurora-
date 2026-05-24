@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import sys
 import threading
 import traceback
@@ -26,6 +27,16 @@ log = logging.getLogger("aurora_bridge")
 
 _systems = None
 _lock    = threading.Lock()
+_last_response: str = ""    # tracks previous turn's output for similarity gating
+
+
+def _content_similarity(a: str, b: str) -> float:
+    """Jaccard overlap on content words (5+ chars). Returns 0.0-1.0."""
+    wa = {w for w in re.findall(r"[a-zA-Z']{5,}", a.lower())}
+    wb = {w for w in re.findall(r"[a-zA-Z']{5,}", b.lower())}
+    if not wa or not wb:
+        return 0.0
+    return len(wa & wb) / min(len(wa), len(wb))
 
 
 def _setup_paths() -> None:
@@ -172,7 +183,7 @@ def initialize(state_dir: str = "") -> str:
 
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
-    global _systems
+    global _systems, _last_response
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
@@ -195,16 +206,33 @@ def handle_message(text: str) -> str:
                 mode_name="BOUNDED",
             )
         response = _extract_response(result)
-        # Run Language Field re-entry loop after emitting a response so the
-        # field hears itself (mandatory per AURORA_LANGUAGE_EMERGENCE.md §13).
+        # Re-entry loop — mandatory per AURORA_LANGUAGE_EMERGENCE.md §13.
+        # The field hears itself after every utterance.
+        # Fidelity is penalised when the response is too similar to the previous
+        # turn: if content-word overlap > 50% the path is treated as a failed
+        # crossing so the LSA pushes the field toward a novel route next turn.
         if response and _systems:
             try:
                 lf = _systems.get("language_field")
                 if lf is not None and hasattr(lf, "reentry") and hasattr(lf, "_last_proto"):
-                    fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
-                    lf.reentry(response, fidelity, "", proto=lf._last_proto)
+                    raw_fidelity = lf.measure_fidelity(lf._last_proto, response) if lf._last_proto else 0.5
+                    similarity   = _content_similarity(_last_response, response)
+                    # Penalise repetition: high similarity → fidelity 0 → path penalised
+                    fidelity = 0.0 if similarity > 0.50 else raw_fidelity
+                    # Reconstruct the actual path key so LSA gets updated correctly
+                    path_key = ""
+                    if lf._last_proto is not None and hasattr(lf, "_path_key"):
+                        try:
+                            path_key = lf._path_key(
+                                lf._last_proto.comparison_type,
+                                lf._last_proto.dominant_axes,
+                            )
+                        except Exception:
+                            pass
+                    lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
             except Exception:
                 pass
+        _last_response = response
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
     except Exception as exc:
