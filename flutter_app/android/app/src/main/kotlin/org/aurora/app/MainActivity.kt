@@ -235,6 +235,14 @@ class MainActivity : FlutterActivity() {
                     }
                     @Deprecated("Deprecated in Java")
                     override fun onError(utteranceId: String?) {}
+                    // Fires for each spoken word/range — minSdk 26 guarantees this is called.
+                    override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
+                        runOnUiThread {
+                            AuroraService.eventSink?.success(
+                                JSONObject().put("source","tts").put("type","word").toString()
+                            )
+                        }
+                    }
                 })
             }
         }
