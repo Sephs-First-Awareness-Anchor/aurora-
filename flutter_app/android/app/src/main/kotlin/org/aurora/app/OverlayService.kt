@@ -144,34 +144,63 @@ class OverlayService : Service() {
 // =============================================================================
 // AuroraOrbView
 //
-// Five horizontal sine-wave bands flow left-to-right across the view.
-// The orb sphere is painted on top, sitting inside the band stack.
-// Idle: bands hold a faint shimmer.  Speaking: the high-pressure axis bands
-// rise in amplitude; others stay subtle.  All axis colors are always present.
+// Renders the same two-layer photo-based orb as the Flutter main screen.
+// aurora_bg.png is drawn statically; each strand PNG (cyan/blue/purple/pink/
+// warm) is drawn with a scanline warp whose amplitude and speed come directly
+// from Aurora's emotional axis values (N/T/B/A/X).  Axis=0 → strand barely
+// moves; axis=1 → strand surges at full amplitude.
 // =============================================================================
 
 class AuroraOrbView(context: Context) : View(context) {
 
+    private companion object {
+        // Strand assets in same order as Flutter _strands list.
+        val STRAND_ASSETS   = arrayOf("strand_cyan.png", "strand_blue.png",
+                                       "strand_purple.png", "strand_pink.png",
+                                       "strand_warm.png")
+        // axes[] stores: 0=X  1=T  2=N  3=B  4=A
+        // Each strand's axis index:  cyan→N(2)  blue→T(1)  purple→B(3)  pink→A(4)  warm→X(0)
+        val STRAND_AXIS_IDX = intArrayOf(2, 1, 3, 4, 0)
+        const val N_SLICES  = 80
+    }
+
+    // Axis state: indices 0=X  1=T  2=N  3=B  4=A
     private val axes     = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f)
     private var speaking = false
 
-    //   X cyan  T hot-magenta  N plasma-orange  B violet  A spring-green
-    private val axisColors = intArrayOf(
-        0xFF00DDFF.toInt(), 0xFFFF1199.toInt(), 0xFFFF6600.toInt(),
-        0xFFBB22FF.toInt(), 0xFF00FF88.toInt(),
-    )
+    private var bgBitmap: Bitmap? = null
+    private val strandBitmaps: Array<Bitmap?> = arrayOfNulls(STRAND_ASSETS.size)
 
-    private val phaseOffset = floatArrayOf(0f, 1.26f, 2.51f, 3.77f, 5.03f)
-    private var animPhase   = 0f
-    private var breathPhase = 0f
+    // Per-strand travel phase 0..1
+    private val travelPhase = FloatArray(STRAND_ASSETS.size) { it * 0.2f }
 
-    private val paint    = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val wavePath = Path()
+    private val paint    = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
+    private val colorMat = ColorMatrix()
+    private val srcRect  = Rect()
+    private val dstRectF = RectF()
+
+    init {
+        setLayerType(LAYER_TYPE_HARDWARE, null)
+        Thread {
+            bgBitmap = loadAsset("aurora_bg.png")
+            for (i in STRAND_ASSETS.indices) strandBitmaps[i] = loadAsset(STRAND_ASSETS[i])
+            postInvalidate()
+        }.start()
+    }
+
+    private fun loadAsset(name: String): Bitmap? = try {
+        val opts = BitmapFactory.Options().apply { inSampleSize = 2 }
+        context.assets.open("flutter_assets/assets/$name").use {
+            BitmapFactory.decodeStream(it, null, opts)
+        }
+    } catch (_: Exception) { null }
 
     fun tickAnimation() {
-        val speed = if (speaking) 0.10f else 0.030f
-        animPhase   = (animPhase   + speed)  % (kPI.toFloat() * 2f)
-        breathPhase = (breathPhase + 0.016f) % (kPI.toFloat() * 2f)
+        for (i in travelPhase.indices) {
+            val axisVal  = axes[STRAND_AXIS_IDX[i]].coerceIn(0f, 1f)
+            val periodMs = (8000f - axisVal * 7300f).coerceIn(700f, 8000f)
+            travelPhase[i] = (travelPhase[i] + 50f / periodMs) % 1f
+        }
         invalidate()
     }
 
@@ -181,95 +210,111 @@ class AuroraOrbView(context: Context) : View(context) {
     }
 
     override fun onDraw(canvas: Canvas) {
-        val w  = width.toFloat()
-        val cx = w / 2f
-        val cy = height / 2f
-        // Orb radius scales to view height so the sphere fills the vertical space cleanly.
-        val orbR   = height * 0.35f
-        val breathe = 1f + ksin(breathPhase) * 0.025f
+        val vw = width.toFloat()
+        val vh = height.toFloat()
+        val bg = bgBitmap ?: return
 
-        // ── Plasma bands: converge into orb center, fan out at edges ─────────
-        // At x=cx every band's y-offset → 0; at the edges they fan to ±spread.
-        val spread  = if (speaking) orbR * 1.6f else orbR * 0.7f
-        val steps   = 100
-        for (i in 0..4) {
-            val pressure = axes[i].coerceIn(0.05f, 1f)
-            val phi      = animPhase + phaseOffset[i]
-            val sinPhi   = ksin(phi)
-            val bandFrac = (i / 4f) * 2f - 1f   // −1 to +1
+        // ── Static background ─────────────────────────────────────────────────
+        val bgBright = if (speaking) 0.78f else 0.20f
+        drawBitmapFitH(canvas, bg, vw, vh, bgBright)
 
-            val baseAmp = if (speaking)
-                orbR * (0.12f + pressure * 0.14f)
-            else
-                orbR * (0.015f + pressure * 0.015f)
-
-            val baseAlpha = if (speaking)
-                (150 + pressure * 95).toInt().coerceIn(0, 245)
-            else
-                (20 + pressure * 30).toInt().coerceIn(0, 70)
-            val alpha   = (baseAlpha * (0.80f + 0.20f * (sinPhi + 1f) / 2f)).toInt().coerceIn(0, 255)
-            val strokeW = if (speaking) 1.8f + pressure * 1.2f else 1.0f
-
-            wavePath.reset()
-            for (s in 0..steps) {
-                val t  = s.toFloat() / steps
-                val x  = t * w
-                // Convergence: 0 at center, 1 at edges (quadratic)
-                val d        = (t - 0.5f) * 2f               // −1..+1
-                val envelope = d * d                          // 0 at center, 1 at edge
-                val bandY    = cy + bandFrac * spread * envelope
-                val amp      = baseAmp * (0.25f + 0.75f * kotlin.math.abs(d)) *
-                               (0.80f + 0.20f * (sinPhi + 1f) / 2f) * breathe
-                val y        = bandY + amp * ksin(t * kPI.toFloat() * 3.5f + phi)
-                if (s == 0) wavePath.moveTo(x, y) else wavePath.lineTo(x, y)
-            }
-
-            // Outer glow
-            paint.style       = Paint.Style.STROKE
-            paint.color       = axisColors[i]
-            paint.alpha       = (alpha * 0.14f).toInt().coerceIn(0, 60)
-            paint.strokeWidth = strokeW * 7f
-            canvas.drawPath(wavePath, paint)
-            // Mid glow
-            paint.alpha       = (alpha * 0.32f).toInt().coerceIn(0, 120)
-            paint.strokeWidth = strokeW * 2.8f
-            canvas.drawPath(wavePath, paint)
-            // Core line
-            paint.alpha       = alpha
-            paint.strokeWidth = strokeW
-            canvas.drawPath(wavePath, paint)
+        // ── Each strand warped by its axis value ──────────────────────────────
+        for (i in strandBitmaps.indices) {
+            val bmp     = strandBitmaps[i] ?: continue
+            val axisVal = axes[STRAND_AXIS_IDX[i]].coerceIn(0f, 1f)
+            val tRad    = travelPhase[i] * kPI.toFloat() * 2f
+            val amp     = axisVal * 0.85f
+            val bright  = (axisVal * 0.85f + 0.10f).coerceIn(0f, 1f)
+            drawStrandWarped(canvas, bmp, vw, vh, tRad, amp, bright)
         }
 
-        // ── Orb sphere (on top) ───────────────────────────────────────────────
-        val r = orbR * breathe
-        paint.style = Paint.Style.FILL
-        paint.alpha = 255
+        // ── Center glow ───────────────────────────────────────────────────────
+        val e = if (speaking) 1.00f else 0.18f
+        drawCenterGlow(canvas, vw / 2f, vh / 2f, vh * 0.38f, e)
+    }
 
-        // Corona bloom
-        val domIdx      = axes.indices.maxByOrNull { axes[it] } ?: 2
-        val bloomShader = RadialGradient(
-            cx, cy, r * 2.2f,
-            intArrayOf((axisColors[domIdx] and 0x00FFFFFF) or 0x55000000, 0x00000000),
-            floatArrayOf(0.25f, 1f), Shader.TileMode.CLAMP,
-        )
-        paint.shader = bloomShader
-        canvas.drawCircle(cx, cy, r * 2.2f, paint)
-        paint.shader = null
+    private fun drawBitmapFitH(canvas: Canvas, bmp: Bitmap,
+                                vw: Float, vh: Float, bright: Float) {
+        val scale = vh / bmp.height
+        val bw    = bmp.width * scale
+        val bx    = (vw - bw) / 2f
+        setPaintBrightness(bright)
+        srcRect.set(0, 0, bmp.width, bmp.height)
+        dstRectF.set(bx, 0f, bx + bw, vh)
+        canvas.drawBitmap(bmp, srcRect, dstRectF, paint)
+    }
 
-        // Explosive core gradient: white → orange → deep-purple
-        val orbShader = RadialGradient(
+    private fun drawStrandWarped(canvas: Canvas, bmp: Bitmap,
+                                  vw: Float, vh: Float,
+                                  tRad: Float, amp: Float, bright: Float) {
+        val scale = vh / bmp.height
+        val bw    = bmp.width * scale
+        val bx    = (vw - bw) / 2f
+        setPaintBrightness(bright)
+
+        val srcSliceW = bmp.width.toFloat() / N_SLICES
+        val dstSliceW = bw / N_SLICES
+
+        for (s in 0 until N_SLICES) {
+            val t      = s.toFloat() / N_SLICES
+            val d      = (t - 0.5f) * 2f
+            val env    = d * d
+            val inward = if (t < 0.5f) -tRad else tRad
+
+            val dy = vh * amp * (
+                env * ksin(t * kPI.toFloat() * 3.8f + tRad + inward) * 0.080f
+              + env * ksin(t * kPI.toFloat() * 8.5f + tRad * 1.5f + inward * 1.1f) * 0.035f
+              +       ksin(t * kPI.toFloat() * 14.0f + tRad * 2.2f) * 0.010f
+            )
+
+            srcRect.set(
+                (t * bmp.width).toInt(), 0,
+                ((t + 1f / N_SLICES) * bmp.width + 1).toInt().coerceAtMost(bmp.width),
+                bmp.height
+            )
+            dstRectF.set(bx + t * bw, dy, bx + t * bw + dstSliceW, vh + dy)
+            canvas.drawBitmap(bmp, srcRect, dstRectF, paint)
+        }
+    }
+
+    private fun setPaintBrightness(b: Float) {
+        colorMat.set(floatArrayOf(
+            b, 0f, 0f, 0f, 0f,
+            0f, b, 0f, 0f, 0f,
+            0f, 0f, b, 0f, 0f,
+            0f, 0f, 0f, 1f, 0f,
+        ))
+        paint.colorFilter = ColorMatrixColorFilter(colorMat)
+    }
+
+    private fun drawCenterGlow(canvas: Canvas, cx: Float, cy: Float,
+                                r: Float, e: Float) {
+        paint.colorFilter = null
+        paint.style       = Paint.Style.FILL
+
+        // Ambient bloom
+        paint.shader = RadialGradient(
             cx, cy, r,
-            intArrayOf(0xFFFFFFFF.toInt(), 0xFFFF8800.toInt(), 0xFF5500CC.toInt(), 0xFF110022.toInt()),
-            floatArrayOf(0f, 0.30f, 0.68f, 1f), Shader.TileMode.CLAMP,
+            intArrayOf(
+                Color.argb((e * 66).toInt().coerceIn(0, 255),  255, 255, 255),
+                Color.argb((e * 26).toInt().coerceIn(0, 255),  255, 136,   0),
+                Color.TRANSPARENT,
+            ),
+            floatArrayOf(0f, 0.38f, 1f), Shader.TileMode.CLAMP
         )
-        paint.shader = orbShader
         canvas.drawCircle(cx, cy, r, paint)
-        paint.shader = null
 
-        // Center flash point
-        val flashR = r * (0.20f + 0.10f * (ksin(breathPhase) + 1f) / 2f)
-        paint.color = 0xFFFFFFFF.toInt()
-        paint.alpha = if (speaking) 220 else 100
-        canvas.drawCircle(cx, cy, flashR, paint)
+        // Tight hot core
+        paint.shader = RadialGradient(
+            cx, cy, r * 0.18f,
+            intArrayOf(
+                Color.argb((e * 230).toInt().coerceIn(0, 255), 255, 255, 255),
+                Color.argb((e * 128).toInt().coerceIn(0, 255), 255, 255, 136),
+                Color.TRANSPARENT,
+            ),
+            floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP
+        )
+        canvas.drawCircle(cx, cy, r * 0.18f, paint)
+        paint.shader = null
     }
 }
