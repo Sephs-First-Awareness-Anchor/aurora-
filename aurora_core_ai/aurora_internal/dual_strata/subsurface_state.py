@@ -1,21 +1,21 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import time
-from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List
+from dataclasses import dataclass, field
+from typing import Any, Dict, Tuple
 
+# Keep AXES, clip01, normalize_axis_map as-is for backward compat
 AXES = ("X", "T", "N", "B", "A")
 
-
-def clip01(value: Any, default: float = 0.0) -> float:
+def clip01(value, default=0.0):
     try:
         return max(0.0, min(1.0, float(value or 0.0)))
     except Exception:
         return max(0.0, min(1.0, float(default or 0.0)))
 
-
-def normalize_axis_map(values: Dict[str, Any]) -> Dict[str, float]:
-    raw: Dict[str, float] = {}
+def normalize_axis_map(values):
+    raw = {}
     for axis in AXES:
         raw[axis] = max(0.0, float(values.get(axis, 0.0) or 0.0))
     total = sum(raw.values())
@@ -26,39 +26,24 @@ def normalize_axis_map(values: Dict[str, Any]) -> Dict[str, float]:
 
 @dataclass
 class SubsurfaceState:
-    """Continuous, pre-symbolic state prepared ahead of explicit interpretation."""
+    """Recursively generalized subsurface meaning-state. Holds ONLY crests
+    and the converged subsurface crest — no raw subsystem mechanism."""
 
-    dominant_axis: str
-    frame_request: str
-    coherence: float
-    salience_weights: Dict[str, float]
-    pressure_map: Dict[str, float]
-    readiness: float
-    sensory_summary: Dict[str, Any] = field(default_factory=dict)
-    native_meaning: Dict[str, Any] = field(default_factory=dict)
-    native_meaning_bundle: Dict[str, Any] = field(default_factory=dict)
-    recalled_fragments: List[str] = field(default_factory=list)
-    candidate_interpretations: List[Dict[str, Any]] = field(default_factory=list)
-    instability_markers: List[Dict[str, Any]] = field(default_factory=list)
-    action_bias_candidates: List[Dict[str, Any]] = field(default_factory=list)
-    contract_signals: Dict[str, Any] = field(default_factory=dict)
-    prediction: Dict[str, Any] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    subsurface_crest: "Crest"                   # the converged crest
+    sub_crests: Tuple["Crest", ...]             # the eight micro-crests (frozen)
+    dominant_axis: str                          # routing only
+    frame_request: str                          # carry through
+    overlay: "ContextualOverlay"                # present-moment overlay
+    # Kept for downward traversal ONLY — MUST NOT be read by surface consumers.
+    _subsurface_detail: Dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
 
-    def dominant_candidates(self, limit: int = 3) -> List[Dict[str, Any]]:
-        ranked = sorted(
-            (dict(item) for item in self.candidate_interpretations if isinstance(item, dict)),
-            key=lambda item: float(item.get("confidence", 0.0) or 0.0),
-            reverse=True,
-        )
-        return ranked[: max(1, int(limit or 1))]
-
     def to_dict(self) -> Dict[str, Any]:
-        data = asdict(self)
-        data["coherence"] = round(clip01(self.coherence), 4)
-        data["readiness"] = round(clip01(self.readiness), 4)
-        data["salience_weights"] = normalize_axis_map(self.salience_weights)
-        data["pressure_map"] = normalize_axis_map(self.pressure_map)
-        data["candidate_interpretations"] = self.dominant_candidates()
-        return data
+        """Public upward stream — no _subsurface_detail."""
+        return {
+            "subsurface_crest": self.subsurface_crest.to_dict(),
+            "sub_crests": [c.to_dict() for c in (self.sub_crests or ())],
+            "dominant_axis": str(self.dominant_axis or "X"),
+            "frame_request": str(self.frame_request or "balanced"),
+            "overlay": self.overlay.to_dict() if self.overlay else {},
+        }

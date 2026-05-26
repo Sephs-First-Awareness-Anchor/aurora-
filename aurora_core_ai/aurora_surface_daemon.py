@@ -560,12 +560,14 @@ def _emit_continuity_packet(turn: Dict[str, Any], payload: Dict[str, Any], snaps
                 resolved_bindings.append(s)
 
         sensory_snap = read_surface_snapshot(_STATE_DIR)
-        concepts = list(payload.get("conscious_frame", {}).get("salient_hypotheses") or [])
-        concept_labels = [
-            str(c.get("label", "") or c.get("concept", "") or c).strip()
-            for c in concepts
-            if isinstance(c, dict) or str(c).strip()
-        ]
+        conscious_frame_data = payload.get("conscious_frame", {})
+        conscious_crest = dict(conscious_frame_data.get("conscious_crest") or {})
+        subsurface_crest = dict(conscious_frame_data.get("subsurface_crest") or {})
+        concept_labels = []
+        if conscious_crest.get("label"):
+            concept_labels.append(conscious_crest["label"])
+        if subsurface_crest.get("label") and subsurface_crest["label"] != conscious_crest.get("label"):
+            concept_labels.append(subsurface_crest["label"])
         concept_labels = [c for c in concept_labels if c][:12]
         if not concept_labels:
             concept_labels = list(sensory_snap.get("concepts_active") or [])[:8]
