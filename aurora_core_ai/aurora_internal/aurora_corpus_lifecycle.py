@@ -189,3 +189,55 @@ def _parse_txt(path: Path):
         lines = [l.strip() for l in f if l.strip()]
         for i in range(0, len(lines) - 1, 2):
             yield (lines[i], lines[i+1])
+
+
+def _extract_text_from_content(content) -> str:
+    """Extract plain text from OpenAI content field (str, dict, or list of parts)."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        parts = content.get("parts", [])
+        return " ".join(p for p in parts if isinstance(p, str))
+    if isinstance(content, list):
+        return " ".join(
+            p if isinstance(p, str)
+            else (p.get("text", "") if isinstance(p, dict) else "")
+            for p in content
+        )
+    return ""
+
+
+def _parse_chatgpt_mapping(mapping: dict):
+    """Walk a ChatGPT export mapping tree and yield (user, assistant) pairs in order."""
+    children = {k: v.get("children", []) for k, v in mapping.items()}
+    all_children = {c for kids in children.values() for c in kids}
+    roots = [k for k in mapping if k not in all_children]
+    if not roots:
+        return
+
+    messages = []
+    stack = list(roots)
+    visited = set()
+    while stack:
+        node_id = stack.pop(0)
+        if node_id in visited:
+            continue
+        visited.add(node_id)
+        node = mapping.get(node_id, {})
+        msg = node.get("message")
+        if msg:
+            author = msg.get("author", {})
+            role = author.get("role", "")
+            content = msg.get("content", "")
+            text = _extract_text_from_content(content).strip()
+            if text and role in ("user", "assistant"):
+                messages.append((role, text))
+        stack.extend(node.get("children", []))
+
+    last_user = None
+    for role, text in messages:
+        if role == "user":
+            last_user = text
+        elif role == "assistant" and last_user:
+            yield (last_user, text)
+            last_user = None
