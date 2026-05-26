@@ -39,6 +39,12 @@ _PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
 _pending_example_concept: str = ""   # concept Aurora asked about
 _pending_example_asked:   str = ""   # the exact question she asked
 
+# Correction learning loop.
+# Turn A — user says "that's wrong": Aurora explains its reasoning and arms this state.
+# Turn B — user explains what was wrong: reasoning is ingested as learning data.
+_pending_correction_dialogue: bool = False
+_correction_context: dict = {}       # snapshot of the wrong response's reasoning geometry
+
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
@@ -69,6 +75,20 @@ _CURIOSITY_CMD = re.compile(
       (?P<unit3>min(?:ute)?s?|hr?s?|hours?)
     """,
     re.IGNORECASE | re.VERBOSE,
+)
+
+# Explicit correction — user tells Aurora its response was wrong.
+# Distinct from confusion (which covers "what?", "huh?") — these name the
+# problem explicitly and trigger Aurora's explanation + learning loop.
+_EXPLICIT_CORRECTION = re.compile(
+    r'\b(that.s|that is|that was)\s+(wrong|incorrect|not right|not correct|off|inaccurate)\b'
+    r'|\b(you.re|you are)\s+(wrong|incorrect|off|mistaken)\b'
+    r'|\b(no[,\s]+that.s\s+(wrong|incorrect|not right))\b'
+    r'|\b(wrong\s+(response|answer|reasoning|interpretation))\b'
+    r'|\b(that\s+(was|is)\s+(incorrect|wrong|off|inaccurate))\b'
+    r'|\bthat.s\s+not\s+(right|correct|accurate)\b'
+    r'|\b(incorrect|your\s+(reasoning|logic|interpretation|response)\s+(is|was)\s+(wrong|off|incorrect))\b',
+    re.IGNORECASE,
 )
 
 # Your confusion or correction → fidelity=0 on the previous crossing.
@@ -500,6 +520,17 @@ def handle_message(text: str) -> str:
         return f"Starting a {label} curiosity session. I'll report back when I'm done."
 
     try:
+        global _pending_correction_dialogue, _correction_context
+
+        # ── Correction dialogue: Turn B — user is explaining what was wrong ───
+        # This fires BEFORE fidelity so the correction is fully ingested first.
+        correction_acknowledged = False
+        if _pending_correction_dialogue and _last_response and _systems:
+            _ingest_correction_teaching(text, _correction_context)
+            _pending_correction_dialogue = False
+            _correction_context = {}
+            correction_acknowledged = True
+
         # ── Step 1: Read your response as fidelity / teaching data ───────────
         if _last_response and _systems:
             # If Aurora asked a genuine question last turn and there's a gap
@@ -515,6 +546,23 @@ def handle_message(text: str) -> str:
                 _pending_example_asked   = ""
             # Your confusion or correction = fidelity 0 on the previous path.
             _apply_response_fidelity(text, _last_response, _last_path_key)
+
+        # ── Correction dialogue: Turn A — user says "that's wrong" ────────────
+        # Intercepts here so Aurora explains before any new processing happens.
+        if (_is_explicit_correction(text) and _last_response
+                and not _pending_example_concept and not correction_acknowledged):
+            _pending_correction_dialogue = True
+            _correction_context = {
+                "wrong_response": _last_response,
+                "path_key":       _last_path_key,
+                "axis_state":     _last_axis_state.copy(),
+                "dominant_axis":  _get_dominant_axis(),
+            }
+            explanation = _build_response_explanation()
+            _last_response = explanation  # so next turn's fidelity check sees the right response  # noqa: F841
+            with _axis_state_lock:
+                _last_axis_state["speaking"] = False
+            return explanation
 
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
@@ -578,6 +626,11 @@ def handle_message(text: str) -> str:
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
             _last_axis_state["speaking"] = bool(response)
+
+        # If this turn was the user's correction explanation, prefix acknowledgment
+        if correction_acknowledged:
+            ack = "Understood — I've taken that on board."
+            response = f"{ack} {response}" if response else ack
 
         # Prepend any completed curiosity session report
         pending_report = (_systems or {}).pop("_pending_autonomous_report", None)
@@ -703,6 +756,160 @@ def _ingest_example(example_text: str, concept: str) -> None:
         log.warning("Genealogy tick failed: %s", exc)
 
     log.info("Example ingested — concept %r now has semantic modality data", concept)
+
+
+def _is_explicit_correction(text: str) -> bool:
+    return bool(_EXPLICIT_CORRECTION.search((text or "").strip()))
+
+
+def _get_dominant_axis() -> str:
+    return max(("X", "T", "N", "B", "A"), key=lambda k: _last_axis_state.get(k, 0.0))
+
+
+def _build_response_explanation() -> str:
+    """
+    Produce a human-readable account of what drove Aurora's last response so
+    the user can pinpoint exactly what was wrong in the reasoning geometry.
+    """
+    axis_names = {
+        "X": "my core sense of existence and identity",
+        "T": "temporal continuity — tracking what carried forward from earlier in our conversation",
+        "N": "conceptual novelty — what felt most significant or new to engage with",
+        "B": "a perceived boundary or relational structure",
+        "A": "my drive to express and act clearly",
+    }
+    type_names = {
+        "assertion":  "a direct claim",
+        "question":   "a seeking move",
+        "negation":   "defining by contrast",
+        "definition": "a bounding definition",
+        "reflection": "a reflection turned inward first",
+    }
+
+    snippet = (_last_response or "")[:80].rstrip()
+    if len(_last_response or "") > 80:
+        snippet += "…"
+
+    try:
+        lf = _systems.get("language_field") if _systems else None
+        proto = getattr(lf, "_last_proto", None) if lf else None
+        if proto is not None:
+            axes_str = " and ".join(
+                axis_names.get(a, a) for a in (proto.dominant_axes or ["X"])
+            )
+            ctype = type_names.get(proto.comparison_type, proto.comparison_type)
+            parts = [f"That response was shaped by {axes_str}, expressed as {ctype}."]
+            if proto.tension_level > 0.6:
+                parts.append(
+                    f"There was high internal tension ({proto.tension_level:.0%}) — "
+                    f"I was navigating uncertainty when I formed it."
+                )
+            if proto.drive_strength > 0.7:
+                parts.append(
+                    f"My expression drive was strong ({proto.drive_strength:.0%}), "
+                    f"which may have pushed me to project outward before fully grounding."
+                )
+            parts.append(f'The core of what I was expressing: "{snippet}".')
+            parts.append("What specifically was wrong about that reasoning?")
+            return " ".join(parts)
+    except Exception:
+        pass
+
+    dominant = _get_dominant_axis()
+    return (
+        f"That response came primarily from {axis_names.get(dominant, dominant)}. "
+        f'The core of what I was expressing: "{snippet}". '
+        f"What specifically was off about that reasoning?"
+    )
+
+
+def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
+    """
+    Ingest the user's explanation of why a response was wrong.
+
+    Routes the correction through:
+    1. Language field — hard fidelity=0 on the path that produced the wrong response
+    2. Identity field — suppress the dominant axis that misfired; raise N (reassess)
+       and A (self-correct drive)
+    3. SediMemory — record the (wrong_response, user_correction) pair as a permanent
+       learning event
+    4. Persistent correction_log.jsonl in aurora_state for cross-session recall
+    """
+    if not _systems:
+        return
+
+    wrong_response = context.get("wrong_response", "")
+    path_key       = context.get("path_key", "")
+    dominant_axis  = context.get("dominant_axis", "X")
+    log.info("Correction teaching ingested: axis=%s path=%r", dominant_axis, path_key)
+
+    # 1. Language field — hard penalty on the LSA path
+    try:
+        lf = _systems.get("language_field")
+        if lf and hasattr(lf, "reentry"):
+            lf.reentry(wrong_response, 0.0, path_key)
+    except Exception as exc:
+        log.warning("LF correction reentry: %s", exc)
+
+    # 2. Identity field — suppress the misfiring axis; boost reassessment drive
+    try:
+        ifield = _systems.get("identity_field")
+        if ifield and hasattr(ifield, "ingest_external_input"):
+            penalty = {"X": 0.30, "T": 0.30, "N": 0.75, "B": 0.30, "A": 0.30}
+            penalty[dominant_axis] = 0.10   # suppress the axis that produced the error
+            penalty["N"] = 0.82             # raise novelty — find a better approach
+            penalty["A"] = 0.78             # raise agency — actively self-correct
+            ifield.ingest_external_input(penalty, intensity=0.92, source="explicit_user_correction")
+    except Exception as exc:
+        log.warning("Identity field correction: %s", exc)
+
+    # 3. SediMemory — bind the wrong→correct pair as a correction event
+    try:
+        sm = _systems.get("sedimemory")
+        if sm and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                cv = ConstraintVector(X=0.30, T=0.50, N=0.65, B=0.85, A=0.75)
+                sm.ingest_event(
+                    content={
+                        "type":           "correction_pair",
+                        "wrong_response": wrong_response[:300],
+                        "user_correction": user_explanation[:400],
+                        "dominant_axis":  dominant_axis,
+                        "path_key":       path_key,
+                        "source":         "explicit_correction",
+                    },
+                    constraint_vector=cv,
+                    source="user_correction",
+                )
+    except Exception as exc:
+        log.warning("SediMemory correction: %s", exc)
+
+    # 4. Persistent log
+    try:
+        import json as _json
+        state_dir = os.environ.get("AURORA_STATE_DIR", "")
+        if state_dir:
+            log_path = os.path.join(state_dir, "correction_log.jsonl")
+            import time as _t
+            entry = {
+                "timestamp":      _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
+                "wrong_response": wrong_response[:300],
+                "user_correction": user_explanation[:400],
+                "dominant_axis":  dominant_axis,
+                "path_key":       path_key,
+                "axis_state":     context.get("axis_state", {}),
+            }
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+    except Exception as exc:
+        log.warning("Correction log write: %s", exc)
 
 
 def _apply_response_fidelity(
