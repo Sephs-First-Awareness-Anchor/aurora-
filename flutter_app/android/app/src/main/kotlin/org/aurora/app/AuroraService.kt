@@ -118,6 +118,30 @@ class AuroraService : Service() {
         startForeground(NOTIF_ID, buildNotification())
 
         scope!!.launch { bootPython() }
+        scope!!.launch { pollPendingReport() }
+    }
+
+    private suspend fun pollPendingReport() {
+        // Check every 5 seconds for a completed curiosity session report.
+        // When one arrives, push it to Flutter as a proactive message so it
+        // displays and is spoken without the user needing to send anything.
+        while (true) {
+            kotlinx.coroutines.delay(5_000L)
+            try {
+                val bridge = Python.getInstance().getModule("aurora_bridge")
+                val report = bridge.callAttr("get_pending_report").toString()
+                if (report.isNotBlank()) {
+                    withContext(Dispatchers.Main) {
+                        eventSink?.success(
+                            JSONObject()
+                                .put("type", "proactive")
+                                .put("text", report)
+                                .toString()
+                        )
+                    }
+                }
+            } catch (_: Exception) { /* Python not ready yet — skip this tick */ }
+        }
     }
 
     private suspend fun bootPython() {

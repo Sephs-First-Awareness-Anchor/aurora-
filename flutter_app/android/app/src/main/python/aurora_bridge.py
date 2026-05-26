@@ -860,6 +860,10 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
         try:
             cycle_count = 0
             deadline = (start_ts + duration_s) if duration_s else None
+            # Reset the per-idle cycle cap so a user-triggered session isn't
+            # blocked by cycles the background loop already consumed.
+            if hasattr(engine, "reset_idle_counter"):
+                engine.reset_idle_counter()
 
             while True:
                 # Stop if cancelled or limits reached
@@ -873,7 +877,9 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                 # Run one curiosity cycle
                 try:
                     result = {}
-                    if hasattr(engine, "run_one_cycle"):
+                    if hasattr(engine, "run_curiosity_cycle"):
+                        result = engine.run_curiosity_cycle() or {}
+                    elif hasattr(engine, "run_one_cycle"):
                         result = engine.run_one_cycle() or {}
                     elif hasattr(engine, "tick"):
                         result = engine.tick() or {}
@@ -924,6 +930,17 @@ def _store_curiosity_report(
     ]
     _systems["_pending_autonomous_report"] = "\n".join(report_lines)
     log.info("Curiosity session report stored (%s)", time_str)
+
+
+def get_pending_report() -> str:
+    """
+    Called by AuroraService's polling loop.
+    Returns and clears any completed curiosity session report, or "" if none ready.
+    """
+    if _systems is None:
+        return ""
+    report = (_systems or {}).pop("_pending_autonomous_report", None)
+    return str(report) if report else ""
 
 
 def set_state(state: str) -> None:
