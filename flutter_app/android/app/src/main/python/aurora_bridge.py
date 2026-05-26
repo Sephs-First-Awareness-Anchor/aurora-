@@ -766,84 +766,192 @@ def _get_dominant_axis() -> str:
     return max(("X", "T", "N", "B", "A"), key=lambda k: _last_axis_state.get(k, 0.0))
 
 
-def _build_response_explanation() -> str:
-    """
-    Produce a human-readable account of what drove Aurora's last response so
-    the user can pinpoint exactly what was wrong in the reasoning geometry.
-    """
-    axis_names = {
-        "X": "my core sense of existence and identity",
-        "T": "temporal continuity — tracking what carried forward from earlier in our conversation",
-        "N": "conceptual novelty — what felt most significant or new to engage with",
-        "B": "a perceived boundary or relational structure",
-        "A": "my drive to express and act clearly",
-    }
-    type_names = {
-        "assertion":  "a direct claim",
-        "question":   "a seeking move",
-        "negation":   "defining by contrast",
-        "definition": "a bounding definition",
-        "reflection": "a reflection turned inward first",
-    }
+# ---------------------------------------------------------------------------
+# Emergent correction classification
+# ---------------------------------------------------------------------------
 
+# Surface-level categories that a user can meaningfully judge.
+# The internal geometry (axes, tension, drive) drives classification silently;
+# only these labels cross the surface boundary.
+_ERROR_LABELS = {
+    "intent":    "misclassified intent",
+    "words":     "word or phrasing selection",
+    "concept":   "wrong concept engaged",
+    "structure": "sentence structure",
+    "tone":      "tone or register",
+}
+
+# Geometry → (category, surface description of what went wrong linguistically).
+# The description never mentions axes, pressure, or drive — only what the
+# response *did* in language terms.
+def _classify_from_proto(proto) -> tuple:
+    if proto is None:
+        return ("intent", "the response type may not have matched what the moment needed")
+
+    ctype    = proto.comparison_type
+    dominant = (proto.dominant_axes or ["X"])[0]
+    tension  = proto.tension_level
+    drive    = proto.drive_strength
+
+    if drive > 0.72 and ctype == "assertion":
+        return ("intent",
+                "I produced a direct assertion — stated something as settled when the moment may have called for a question or exploration first")
+
+    if tension > 0.65 and ctype in ("assertion", "definition"):
+        return ("words",
+                "I expressed a firm claim despite internal ambiguity — the phrasing overstated the certainty level")
+
+    if dominant == "B" and ctype in ("definition", "assertion", "negation"):
+        return ("structure",
+                "I imposed a boundary framing — built the sentence around a limit or dividing line that may not have been warranted")
+
+    if dominant == "T" and ctype in ("assertion", "reflection"):
+        return ("concept",
+                "I anchored to a thread from earlier in the conversation that may not have been the relevant one")
+
+    if dominant == "N":
+        return ("concept",
+                "I engaged with what felt conceptually novel in the moment, which may not be what you were actually asking about")
+
+    if ctype == "reflection" and drive < 0.4:
+        return ("tone",
+                "I turned inward into reflection when a more direct response was probably needed")
+
+    if ctype == "question" and drive > 0.6:
+        return ("intent",
+                "I asked a question when you likely expected a substantive response")
+
+    return ("intent",
+            "the response type may not have matched what the moment needed")
+
+
+def _detect_error_type_from_user(text: str) -> str:
+    """
+    Parse the user's correction explanation to detect which category they're naming.
+    Returns one of the _ERROR_LABELS keys, or "unknown".
+    """
+    t = text.lower()
+    if any(w in t for w in ("intent", "misread", "wrong type", "should have asked",
+                             "question instead", "shouldn't have stated", "read it as")):
+        return "intent"
+    if any(w in t for w in ("word", "phrasing", "wording", "phrase", "said",
+                             "chose", "word choice", "phrased it", "language")):
+        return "words"
+    if any(w in t for w in ("concept", "topic", "subject", "about", "wrong thing",
+                             "different thing", "the wrong", "engaged with")):
+        return "concept"
+    if any(w in t for w in ("structure", "sentence", "format", "grammar",
+                             "structured", "framing", "how you framed")):
+        return "structure"
+    if any(w in t for w in ("tone", "register", "formal", "casual", "warm",
+                             "clinical", "too long", "too short", "length")):
+        return "tone"
+    return "unknown"
+
+
+def _emergent_category_hint(comparison_type: str, dominant_axis: str) -> str:
+    """
+    Check the correction_log for historical patterns:
+    if this (comparison_type, dominant_axis) combination has been corrected
+    before, return the most common category — that's the emergent classifier.
+    Returns "" if no history exists yet.
+    """
+    import json as _json
+    state_dir = os.environ.get("AURORA_STATE_DIR", "")
+    if not state_dir:
+        return ""
+    log_path = os.path.join(state_dir, "correction_log.jsonl")
+    if not os.path.exists(log_path):
+        return ""
+    try:
+        counts: dict = {}
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    e = _json.loads(line)
+                    if (e.get("comparison_type") == comparison_type
+                            and e.get("dominant_axis") == dominant_axis):
+                        cat = e.get("error_type", "unknown")
+                        if cat and cat != "unknown":
+                            counts[cat] = counts.get(cat, 0) + 1
+                except Exception:
+                    continue
+        if counts:
+            return max(counts, key=counts.__getitem__)
+    except Exception:
+        pass
+    return ""
+
+
+def _build_correction_explanation() -> str:
+    """
+    Produce a linguistic/semantic classification of what went wrong.
+    Identity geometry drives the classification internally but nothing
+    axis-level or pressure-level surfaces to the user.
+    """
     snippet = (_last_response or "")[:80].rstrip()
     if len(_last_response or "") > 80:
         snippet += "…"
 
+    category    = "intent"
+    description = "the response type may not have matched what the moment needed"
+    comparison_type = ""
+    dominant_axis   = _get_dominant_axis()
+
     try:
-        lf = _systems.get("language_field") if _systems else None
+        lf    = _systems.get("language_field") if _systems else None
         proto = getattr(lf, "_last_proto", None) if lf else None
-        if proto is not None:
-            axes_str = " and ".join(
-                axis_names.get(a, a) for a in (proto.dominant_axes or ["X"])
-            )
-            ctype = type_names.get(proto.comparison_type, proto.comparison_type)
-            parts = [f"That response was shaped by {axes_str}, expressed as {ctype}."]
-            if proto.tension_level > 0.6:
-                parts.append(
-                    f"There was high internal tension ({proto.tension_level:.0%}) — "
-                    f"I was navigating uncertainty when I formed it."
-                )
-            if proto.drive_strength > 0.7:
-                parts.append(
-                    f"My expression drive was strong ({proto.drive_strength:.0%}), "
-                    f"which may have pushed me to project outward before fully grounding."
-                )
-            parts.append(f'The core of what I was expressing: "{snippet}".')
-            parts.append("What specifically was wrong about that reasoning?")
-            return " ".join(parts)
+        category, description = _classify_from_proto(proto)
+        if proto:
+            comparison_type = proto.comparison_type
+            dominant_axis   = (proto.dominant_axes or [dominant_axis])[0]
     except Exception:
         pass
 
-    dominant = _get_dominant_axis()
+    # Check emergent history — if we've seen this geometry corrected before,
+    # lead with the historically confirmed category rather than the fresh guess.
+    historical = _emergent_category_hint(comparison_type, dominant_axis)
+    if historical and historical in _ERROR_LABELS:
+        category = historical
+
+    label = _ERROR_LABELS.get(category, category)
     return (
-        f"That response came primarily from {axis_names.get(dominant, dominant)}. "
-        f'The core of what I was expressing: "{snippet}". '
-        f"What specifically was off about that reasoning?"
+        f"Looks like a {label} issue — {description}. "
+        f'The response was: "{snippet}". '
+        f"Was the intent misread, was it a word or phrasing problem, "
+        f"or did I engage with the wrong concept?"
     )
 
 
 def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
     """
-    Ingest the user's explanation of why a response was wrong.
+    Ingest the user's explanation through four layers, tagged with an emergent
+    error category so the correction_log can build a classifiable history.
 
-    Routes the correction through:
-    1. Language field — hard fidelity=0 on the path that produced the wrong response
-    2. Identity field — suppress the dominant axis that misfired; raise N (reassess)
-       and A (self-correct drive)
-    3. SediMemory — record the (wrong_response, user_correction) pair as a permanent
-       learning event
-    4. Persistent correction_log.jsonl in aurora_state for cross-session recall
+    Layers:
+    1. Language field — fidelity=0 on the LSA path that produced the error
+    2. Identity field — category-specific axis adjustment (internal only)
+    3. SediMemory — (wrong_response, correction, category) bound as learning event
+    4. correction_log.jsonl — persistent, tagged record for emergent classification
     """
     if not _systems:
         return
 
-    wrong_response = context.get("wrong_response", "")
-    path_key       = context.get("path_key", "")
-    dominant_axis  = context.get("dominant_axis", "X")
-    log.info("Correction teaching ingested: axis=%s path=%r", dominant_axis, path_key)
+    wrong_response  = context.get("wrong_response", "")
+    path_key        = context.get("path_key", "")
+    dominant_axis   = context.get("dominant_axis", "X")
+    comparison_type = context.get("comparison_type", "")
 
-    # 1. Language field — hard penalty on the LSA path
+    # Detect the error category from what the user said, then fall back to
+    # the geometry-derived guess stored in context.
+    error_type = _detect_error_type_from_user(user_explanation)
+    if error_type == "unknown":
+        error_type = context.get("error_type", "intent")
+
+    log.info("Correction ingested: category=%s axis=%s path=%r",
+             error_type, dominant_axis, path_key)
+
+    # 1. Language field — hard fidelity=0 on the path
     try:
         lf = _systems.get("language_field")
         if lf and hasattr(lf, "reentry"):
@@ -851,19 +959,38 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
     except Exception as exc:
         log.warning("LF correction reentry: %s", exc)
 
-    # 2. Identity field — suppress the misfiring axis; boost reassessment drive
+    # 2. Identity field — category-specific pressure adjustment.
+    # The axis pattern that produced the error gets suppressed; axes that
+    # drive the corrective behaviour get raised. None of this surfaces.
     try:
         ifield = _systems.get("identity_field")
         if ifield and hasattr(ifield, "ingest_external_input"):
-            penalty = {"X": 0.30, "T": 0.30, "N": 0.75, "B": 0.30, "A": 0.30}
-            penalty[dominant_axis] = 0.10   # suppress the axis that produced the error
-            penalty["N"] = 0.82             # raise novelty — find a better approach
-            penalty["A"] = 0.78             # raise agency — actively self-correct
-            ifield.ingest_external_input(penalty, intensity=0.92, source="explicit_user_correction")
+            # Base: all axes pulled toward neutral
+            adj = {"X": 0.30, "T": 0.30, "N": 0.60, "B": 0.30, "A": 0.30}
+            # Suppress the axis that misfired
+            adj[dominant_axis] = 0.10
+            # Category-specific correction boost
+            if error_type == "intent":
+                adj["N"] = 0.85   # raise novelty — reassess what's actually needed
+                adj["A"] = 0.72   # raise agency — choose differently
+            elif error_type == "words":
+                adj["N"] = 0.80   # novelty in word selection
+                adj["T"] = 0.55   # better temporal grounding for word choice
+            elif error_type == "concept":
+                adj["T"] = 0.70   # recalibrate what's actually carried forward
+                adj["N"] = 0.78   # engage fresh concept
+            elif error_type == "structure":
+                adj["B"] = 0.72   # reframe boundary structure
+                adj["N"] = 0.65
+            elif error_type == "tone":
+                adj["A"] = 0.80   # agency — modulate the register deliberately
+                adj["X"] = 0.55   # ground in context of who is speaking
+            ifield.ingest_external_input(adj, intensity=0.90,
+                                         source=f"correction:{error_type}")
     except Exception as exc:
         log.warning("Identity field correction: %s", exc)
 
-    # 3. SediMemory — bind the wrong→correct pair as a correction event
+    # 3. SediMemory — bind the correction as a categorised learning event
     try:
         sm = _systems.get("sedimemory")
         if sm and hasattr(sm, "ingest_event"):
@@ -878,12 +1005,14 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
                 cv = ConstraintVector(X=0.30, T=0.50, N=0.65, B=0.85, A=0.75)
                 sm.ingest_event(
                     content={
-                        "type":           "correction_pair",
-                        "wrong_response": wrong_response[:300],
-                        "user_correction": user_explanation[:400],
-                        "dominant_axis":  dominant_axis,
-                        "path_key":       path_key,
-                        "source":         "explicit_correction",
+                        "type":             "correction_pair",
+                        "error_type":       error_type,
+                        "wrong_response":   wrong_response[:300],
+                        "user_correction":  user_explanation[:400],
+                        "dominant_axis":    dominant_axis,
+                        "comparison_type":  comparison_type,
+                        "path_key":         path_key,
+                        "source":           "explicit_correction",
                     },
                     constraint_vector=cv,
                     source="user_correction",
@@ -891,22 +1020,23 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
     except Exception as exc:
         log.warning("SediMemory correction: %s", exc)
 
-    # 4. Persistent log
+    # 4. Persistent log — the emergent taxonomy lives here
     try:
-        import json as _json
+        import json as _json, time as _t
         state_dir = os.environ.get("AURORA_STATE_DIR", "")
         if state_dir:
-            log_path = os.path.join(state_dir, "correction_log.jsonl")
-            import time as _t
             entry = {
-                "timestamp":      _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
-                "wrong_response": wrong_response[:300],
+                "timestamp":       _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
+                "error_type":      error_type,
+                "wrong_response":  wrong_response[:300],
                 "user_correction": user_explanation[:400],
-                "dominant_axis":  dominant_axis,
-                "path_key":       path_key,
-                "axis_state":     context.get("axis_state", {}),
+                "dominant_axis":   dominant_axis,
+                "comparison_type": comparison_type,
+                "path_key":        path_key,
+                "axis_state":      context.get("axis_state", {}),
             }
-            with open(log_path, "a", encoding="utf-8") as f:
+            with open(os.path.join(state_dir, "correction_log.jsonl"),
+                      "a", encoding="utf-8") as f:
                 f.write(_json.dumps(entry) + "\n")
     except Exception as exc:
         log.warning("Correction log write: %s", exc)
