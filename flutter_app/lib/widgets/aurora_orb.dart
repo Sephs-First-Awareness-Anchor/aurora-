@@ -9,12 +9,14 @@ class AuroraOrb extends StatefulWidget {
   final OrbState state;
   final double size;
   final Animation<double> pulse;
+  final Map<String, double> axisState;
   final VoidCallback? onTap;
 
   const AuroraOrb({
     super.key,
     required this.state,
     required this.pulse,
+    required this.axisState,
     this.size = 120,
     this.onTap,
   });
@@ -23,24 +25,26 @@ class AuroraOrb extends StatefulWidget {
   State<AuroraOrb> createState() => _AuroraOrbState();
 }
 
-class _AuroraOrbState extends State<AuroraOrb>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _travel;
+class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMixin {
+  late final AnimationController _travel;
   ui.Image? _orbImage;
 
-  static int _durationMs(OrbState s) => switch (s) {
-    OrbState.speaking  => 900,
-    OrbState.listening => 1800,
-    OrbState.thinking  => 3200,
-    OrbState.dormant   => 6000,
-  };
+  // Average of all axis values drives animation energy
+  double get _energy {
+    if (widget.axisState.isEmpty) return 0.5;
+    return widget.axisState.values.reduce((a, b) => a + b) / widget.axisState.length;
+  }
+
+  // axis=0 → 8 s per cycle (barely alive), axis=1 → 700 ms (surging)
+  static int _periodMs(double e) =>
+      (8000 - e.clamp(0.0, 1.0) * 7300).round().clamp(700, 8000);
 
   @override
   void initState() {
     super.initState();
     _travel = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: _durationMs(widget.state)),
+      duration: Duration(milliseconds: _periodMs(_energy)),
     )..repeat();
     _loadImage();
   }
@@ -55,9 +59,10 @@ class _AuroraOrbState extends State<AuroraOrb>
   @override
   void didUpdateWidget(AuroraOrb old) {
     super.didUpdateWidget(old);
-    if (old.state != widget.state) {
+    final newMs = _periodMs(_energy);
+    if (_travel.duration?.inMilliseconds != newMs) {
       _travel
-        ..duration = Duration(milliseconds: _durationMs(widget.state))
+        ..duration = Duration(milliseconds: newMs)
         ..repeat();
     }
   }
@@ -69,210 +74,149 @@ class _AuroraOrbState extends State<AuroraOrb>
     super.dispose();
   }
 
-  double get _brightness => switch (widget.state) {
-    OrbState.speaking  => 0.78 + widget.pulse.value * 0.22,
-    OrbState.listening => 0.52 + widget.pulse.value * 0.14,
-    OrbState.thinking  => 0.36 + widget.pulse.value * 0.10,
-    OrbState.dormant   => 0.18 + widget.pulse.value * 0.07,
+  double get _glowEnergy => switch (widget.state) {
+    OrbState.speaking  => 0.55 + 0.45 * widget.pulse.value,
+    OrbState.listening => 0.30 + 0.22 * widget.pulse.value,
+    OrbState.thinking  => 0.18 + 0.14 * widget.pulse.value,
+    OrbState.dormant   => 0.05 + 0.05 * widget.pulse.value,
   };
 
   @override
   Widget build(BuildContext context) {
     final img = _orbImage;
+    if (img == null) return const SizedBox.shrink();
+
     return GestureDetector(
       onTap: widget.onTap,
       child: SizedBox(
         width: double.infinity,
         height: widget.size * 1.9,
-        child: img == null
-            ? const SizedBox.shrink()
-            : AnimatedBuilder(
-                animation: Listenable.merge([_travel, widget.pulse]),
-                builder: (_, __) => CustomPaint(
-                  painter: _WarpPainter(
-                    image:      img,
-                    travel:     _travel.value,
-                    pulse:      widget.pulse.value,
-                    state:      widget.state,
-                    brightness: _brightness.clamp(0.0, 1.0),
-                    orbRadius:  widget.size / 2,
-                  ),
-                ),
-              ),
+        child: AnimatedBuilder(
+          animation: Listenable.merge([widget.pulse, _travel]),
+          builder: (_, __) => CustomPaint(
+            painter: _OrbPainter(
+              image:      img,
+              travelVal:  _travel.value,
+              energy:     _energy,
+              pulse:      widget.pulse.value,
+              state:      widget.state,
+              glowEnergy: _glowEnergy,
+              orbRadius:  widget.size / 2,
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-// ── Scanline-warp painter ─────────────────────────────────────────────────────
-//
-// Splits the photo into N vertical slices and displaces each slice vertically
-// by a convergence sine wave. The photo's own pixels physically move —
-// the strands genuinely undulate toward the center white-hot point.
-// Warp amplitude is driven by the pulse value (word-kick from TTS onRangeStart).
-//
-// On top: a screen-blend center glow and outward ring pulses that only add
-// light and never obscure the photo.
-
-class _WarpPainter extends CustomPainter {
+class _OrbPainter extends CustomPainter {
   final ui.Image image;
-  final double travel;
+  final double travelVal;
+  final double energy;
   final double pulse;
   final OrbState state;
-  final double brightness;
+  final double glowEnergy;
   final double orbRadius;
 
-  _WarpPainter({
+  _OrbPainter({
     required this.image,
-    required this.travel,
+    required this.travelVal,
+    required this.energy,
     required this.pulse,
     required this.state,
-    required this.brightness,
+    required this.glowEnergy,
     required this.orbRadius,
   });
 
-  // How much the strands physically move — zero when dormant, full when speaking.
-  double get _warpAmp => switch (state) {
-    OrbState.speaking  => 0.55 + 0.45 * pulse,
-    OrbState.listening => 0.22 + 0.18 * pulse,
-    OrbState.thinking  => 0.08 + 0.08 * pulse,
-    OrbState.dormant   => 0.01 + 0.02 * pulse,
-  };
-
-  double get _glowEnergy => switch (state) {
-    OrbState.speaking  => 0.55 + 0.45 * pulse,
-    OrbState.listening => 0.30 + 0.22 * pulse,
-    OrbState.thinking  => 0.16 + 0.12 * pulse,
-    OrbState.dormant   => 0.05 + 0.05 * pulse,
-  };
-
-  static Color _hsl(double hue) =>
-      HSLColor.fromAHSL(1.0, hue % 360, 1.0, 0.60).toColor();
-
   @override
   void paint(Canvas canvas, Size size) {
-    final iw   = image.width.toDouble();
-    final ih   = image.height.toDouble();
-    final tRad = travel * math.pi * 2;
-    final amp  = _warpAmp;
-    final b    = brightness;
-
-    // Replicate BoxFit.fitHeight: scale to fill height, center horizontally.
+    final iw    = image.width.toDouble();
+    final ih    = image.height.toDouble();
     final scale = size.height / ih;
-    final imgW  = iw * scale;
-    final imgH  = size.height;
-    final imgX  = (size.width - imgW) / 2;
+    final w     = iw * scale;
+    final ox    = (size.width - w) / 2;
 
-    // Brightness color filter — dims / brightens the photo with pulse.
-    final paint = Paint()
-      ..filterQuality = FilterQuality.medium
-      ..colorFilter   = ColorFilter.matrix([
-        b, 0, 0, 0, 0,
-        0, b, 0, 0, 0,
-        0, 0, b, 0, 0,
-        0, 0, 0, 1, 0,
-      ]);
+    final tRad = travelVal * math.pi * 2;
+    // Warp amplitude driven by axis energy; speaking pulse adds a kick
+    final amp  = energy * 0.10
+        + (state == OrbState.speaking ? pulse * energy * 0.08 : 0.0);
 
-    // ── Scanline warp ─────────────────────────────────────────────────────────
-    // 160 vertical slices. Each is offset vertically by a dual-harmonic
-    // converging wave. At the center (t=0.5) displacement is zero — the
-    // white-hot core stays pinned. At the edges displacement is maximal.
-    // Left half travels right, right half travels left → both converge inward.
-    const nSlices  = 160;
+    const nSlices   = 120;
     final srcSliceW = iw / nSlices;
-    final dstSliceW = imgW / nSlices;
+    final dstSliceW = w  / nSlices;
+
+    // Screen-blend layer: black pixels in the photo vanish against any background.
+    // screen(black, dst) = dst — the app background shows through wherever the photo is black.
+    canvas.saveLayer(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..blendMode = BlendMode.screen,
+    );
+
+    final imgPaint = Paint()..filterQuality = FilterQuality.medium;
 
     for (int i = 0; i < nSlices; i++) {
       final t = i / nSlices;
-
-      final srcRect = Rect.fromLTWH(t * iw, 0, srcSliceW, ih);
-      final dstX    = imgX + t * imgW;
-
-      // Convergence envelope: 0 at center, 1 at edges (quadratic).
-      final d   = (t - 0.5).abs() * 2.0;
-      final env = d * d;
-
-      // Inward traveling wave phase.
+      // env peaks at the edges where strands radiate, drops to 0 at the stable core
+      final d      = (t - 0.5).abs() * 2.0;
+      final env    = d * d;
       final inward = t < 0.5 ? -tRad : tRad;
 
-      final dy = imgH * amp * (
-          env * math.sin(t * math.pi * 3.8 + tRad       + inward        ) * 0.088
-        + env * math.sin(t * math.pi * 8.5 + tRad * 1.5 + inward * 1.1  ) * 0.038
-        +       math.sin(t * math.pi * 14.0 + tRad * 2.2 + inward * 0.7 ) * 0.011
+      final dy = size.height * amp * (
+          env * math.sin(t * math.pi * 3.8  + tRad       + inward       ) * 0.080
+        + env * math.sin(t * math.pi * 8.5  + tRad * 1.5 + inward * 1.1 ) * 0.035
+        +       math.sin(t * math.pi * 14.0 + tRad * 2.2                 ) * 0.010
       );
 
-      canvas.drawImageRect(image, srcRect, Rect.fromLTWH(dstX, dy, dstSliceW, imgH), paint);
+      canvas.drawImageRect(
+        image,
+        Rect.fromLTWH(t * iw, 0, srcSliceW, ih),
+        Rect.fromLTWH(ox + t * w, dy, dstSliceW, size.height),
+        imgPaint,
+      );
     }
 
-    // ── Screen-blend glow on top ──────────────────────────────────────────────
-    // Only adds light — never darkens or overwrites the photo pixels.
+    canvas.restore();
+
+    // Subtle atmospheric glow over the core — screen blend only adds light, never obscures
     final center = Offset(size.width / 2, size.height / 2);
     final r      = orbRadius;
+    final e      = glowEnergy;
 
     canvas.saveLayer(
       Rect.fromLTWH(0, 0, size.width, size.height),
       Paint()..blendMode = BlendMode.screen,
     );
-    _drawCenterGlow(canvas, center, r);
-    if (state != OrbState.dormant) _drawOutwardRings(canvas, center, r, tRad);
-    canvas.restore();
-  }
-
-  void _drawCenterGlow(Canvas canvas, Offset center, double r) {
-    final e = _glowEnergy;
-    // Large ambient bloom
-    canvas.drawCircle(center, r * 0.85,
+    canvas.drawCircle(
+      center, r * 0.85,
       Paint()..shader = RadialGradient(
         colors: [
-          Colors.white.withOpacity(e * 0.26),
-          const Color(0xFFFF8800).withOpacity(e * 0.10),
+          Colors.white.withOpacity(e * 0.22),
+          const Color(0xFFFF8800).withOpacity(e * 0.08),
           Colors.transparent,
         ],
         stops: const [0.0, 0.38, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: r * 0.85)));
-    // Tight hot core
-    canvas.drawCircle(center, r * 0.18,
+      ).createShader(Rect.fromCircle(center: center, radius: r * 0.85)),
+    );
+    canvas.drawCircle(
+      center, r * 0.15,
       Paint()..shader = RadialGradient(
         colors: [
-          Colors.white.withOpacity(e * 0.90),
-          const Color(0xFFFFFF88).withOpacity(e * 0.50),
+          Colors.white.withOpacity(e * 0.80),
+          const Color(0xFFFFFF88).withOpacity(e * 0.40),
           Colors.transparent,
         ],
         stops: const [0.0, 0.45, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: r * 0.18)));
-  }
-
-  void _drawOutwardRings(Canvas canvas, Offset center, double r, double tRad) {
-    final e      = _glowEnergy;
-    final nRings = state == OrbState.speaking ? 4 : 2;
-    for (int i = 0; i < nRings; i++) {
-      final phase = (travel + i / nRings) % 1.0;
-      final ringR = r * 0.06 + r * 1.15 * phase;
-      final op    = (1.0 - phase) * e * 0.55;
-      if (op < 0.02) continue;
-
-      final hue = (travel * 360 + i * 90) % 360;
-      final col = _hsl(hue);
-
-      canvas.drawCircle(center, ringR, Paint()
-        ..color       = col.withOpacity(op * 0.20)
-        ..style       = PaintingStyle.stroke
-        ..strokeWidth = r * 0.22);
-      canvas.drawCircle(center, ringR, Paint()
-        ..color       = col.withOpacity(op * 0.55)
-        ..style       = PaintingStyle.stroke
-        ..strokeWidth = r * 0.046);
-      canvas.drawCircle(center, ringR, Paint()
-        ..color       = col.withOpacity(op * 0.85)
-        ..style       = PaintingStyle.stroke
-        ..strokeWidth = r * 0.012);
-    }
+      ).createShader(Rect.fromCircle(center: center, radius: r * 0.15)),
+    );
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_WarpPainter old) =>
-      old.travel    != travel    ||
-      old.pulse     != pulse     ||
-      old.state     != state     ||
-      old.brightness != brightness;
+  bool shouldRepaint(_OrbPainter old) =>
+      old.travelVal  != travelVal  ||
+      old.energy     != energy     ||
+      old.pulse      != pulse      ||
+      old.state      != state      ||
+      old.glowEnergy != glowEnergy;
 }

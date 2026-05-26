@@ -20,10 +20,10 @@ class AuroraBridge {
   }
 
   static Map<String, dynamic> _parseEvent(String json) {
-    final sourceMatch = RegExp(r'"source"\s*:\s*"([^"]*)"').firstMatch(json);
-    final typeMatch   = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
-    final textMatch   = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    final errorMatch  = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
+    final sourceMatch  = RegExp(r'"source"\s*:\s*"([^"]*)"').firstMatch(json);
+    final typeMatch    = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
+    final textMatch    = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final errorMatch   = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
     final summaryMatch = RegExp(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     return {
       'source':  sourceMatch?.group(1) ?? 'aurora',
@@ -33,7 +33,18 @@ class AuroraBridge {
       'error':   errorMatch != null ? int.tryParse(errorMatch.group(1)!) : null,
       'final':   json.contains('"final":true'),
       'granted': json.contains('"granted":true'),
+      // Emotional axis values — present on type=="axis_state" events
+      'X': _parseDouble(json, 'X'),
+      'T': _parseDouble(json, 'T'),
+      'N': _parseDouble(json, 'N'),
+      'B': _parseDouble(json, 'B'),
+      'A': _parseDouble(json, 'A'),
     };
+  }
+
+  static double? _parseDouble(String json, String key) {
+    final m = RegExp('"$key"\\s*:\\s*([0-9]+\\.?[0-9]*)').firstMatch(json);
+    return m != null ? double.tryParse(m.group(1)!) : null;
   }
 
   static Future<String> sendMessage(String text) async {

@@ -44,19 +44,34 @@ class AuroraService : Service() {
 
         fun sendMessage(text: String, callback: (String) -> Unit) {
             scope?.launch {
+                val py     = Python.getInstance()
+                val bridge = py.getModule("aurora_bridge")
+
                 val reply = try {
-                    val py     = Python.getInstance()
-                    val bridge = py.getModule("aurora_bridge")
                     bridge.callAttr("handle_message", text).toString()
                 } catch (e: Exception) {
                     Log.e(TAG, "sendMessage error: ${e.message}")
                     "I encountered an error: ${e.message}"
                 }
+
+                // Fetch emotional axis state immediately after cognitive processing.
+                val axisJson = try {
+                    bridge.callAttr("get_axis_state").toString()
+                } catch (_: Exception) { null }
+
                 withContext(Dispatchers.Main) {
                     callback(reply)
                     eventSink?.success(
                         JSONObject().put("type", "response").put("text", reply).toString()
                     )
+                    if (axisJson != null) {
+                        try {
+                            val axisObj = JSONObject(axisJson)
+                                .put("source", "aurora")
+                                .put("type", "axis_state")
+                            eventSink?.success(axisObj.toString())
+                        } catch (_: Exception) {}
+                    }
                 }
             }
         }
