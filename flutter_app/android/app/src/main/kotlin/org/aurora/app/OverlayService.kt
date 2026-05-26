@@ -173,25 +173,28 @@ class AuroraOrbView(context: Context) : View(context) {
         }.start()
     }
 
-    private fun loadAsset(name: String): Bitmap? = try {
-        val opts = BitmapFactory.Options().apply { inSampleSize = 2 }
-        val src  = context.assets.open("flutter_assets/assets/$name").use {
-            BitmapFactory.decodeStream(it, null, opts)
-        } ?: return null
-        // Make dark/black background pixels transparent — no black box on the overlay
-        val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
-        src.recycle()
-        val pixels = IntArray(mutable.width * mutable.height)
-        mutable.getPixels(pixels, 0, mutable.width, 0, 0, mutable.width, mutable.height)
-        for (i in pixels.indices) {
-            val r = Color.red(pixels[i])
-            val g = Color.green(pixels[i])
-            val b = Color.blue(pixels[i])
-            if ((r * 299 + g * 587 + b * 114) / 1000 < 30) pixels[i] = Color.TRANSPARENT
-        }
-        mutable.setPixels(pixels, 0, mutable.width, 0, 0, mutable.width, mutable.height)
-        mutable
-    } catch (_: Exception) { null }
+    private fun loadAsset(name: String): Bitmap? {
+        return try {
+            val opts = BitmapFactory.Options().apply { inSampleSize = 2 }
+            val src = context.assets.open("flutter_assets/assets/$name").use {
+                BitmapFactory.decodeStream(it, null, opts)
+            } ?: return null
+            // Make dark/black background pixels transparent — no black box on the overlay
+            val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
+            src.recycle()
+            if (mutable == null) return null
+            val pixels = IntArray(mutable.width * mutable.height)
+            mutable.getPixels(pixels, 0, mutable.width, 0, 0, mutable.width, mutable.height)
+            for (i in pixels.indices) {
+                val r = Color.red(pixels[i])
+                val g = Color.green(pixels[i])
+                val b = Color.blue(pixels[i])
+                if ((r * 299 + g * 587 + b * 114) / 1000 < 30) pixels[i] = Color.TRANSPARENT
+            }
+            mutable.setPixels(pixels, 0, mutable.width, 0, 0, mutable.width, mutable.height)
+            mutable
+        } catch (_: Exception) { null }
+    }
 
     fun tickAnimation() {
         val energy   = axes.average().toFloat().coerceIn(0f, 1f)
@@ -219,7 +222,6 @@ class AuroraOrbView(context: Context) : View(context) {
         val energy    = axes.average().toFloat().coerceIn(0f, 1f)
         val amp       = energy * 0.10f + if (speaking) energy * 0.08f else 0f
         val tRad      = travelPhase * kPI.toFloat() * 2f
-        val srcSliceW = bmp.width.toFloat() / N_SLICES
         val dstSliceW = bw / N_SLICES
 
         for (s in 0 until N_SLICES) {
