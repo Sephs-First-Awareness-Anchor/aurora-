@@ -2542,7 +2542,7 @@ class WorkingMemory:
             supporting_concepts=[best_field, value, 'user'],
             constraints=['recall', 'speaker_fact'],
         )
-        return str(rendered or WorkingMemory._data_to_minimal_speech(core_claim, 'precise', 'neutral')).strip()
+        return str(rendered or "").strip()
 
     def answer_from_recent_utterance_recall(
         self,
@@ -2587,7 +2587,7 @@ class WorkingMemory:
         prior_text = str(best_match.get('text', '') or '').strip()
         if not prior_text:
             return ""
-        core_claim = f"earlier user utterance {prior_text[:220]}"
+        core_claim = prior_text[:220]
         rendered = self._render_from_comprehension_intent(
             systems,
             core_claim=core_claim,
@@ -2598,7 +2598,7 @@ class WorkingMemory:
             supporting_concepts=[prior_text[:220], 'earlier', 'utterance'],
             constraints=['recall', 'utterance'],
         )
-        return str(rendered or WorkingMemory._data_to_minimal_speech(core_claim, 'precise', 'recognition')).strip()
+        return str(rendered or "").strip()
 
     def answer_from_context_carryover(
         self,
@@ -3435,6 +3435,23 @@ class WorkingMemory:
         """
         clean = str(core_claim or '').strip().strip('.')
         if not clean:
+            return ""
+        # Surface boundary guard — reject any string that carries raw mechanism data.
+        # Internal labels, mutation tracking strings, and system state keys must never
+        # cross into the language template layer.  Only compressed semantic content
+        # (the result of waveform traversal) is permitted past this point.
+        _MECH_LEAK_PATTERNS = (
+            "earlier user utterance",
+            "mutation_id=", "mutation_id =",
+            "code evolution outcome",
+            "accepted=false", "accepted=true", "accepted=0", "accepted=1",
+            "operator_key=", "change_count=", "avg_fitness=",
+            "genealogy_pressure=", "apply_duration=", "temporal_overhead=",
+            "researcher lookup failed",
+            "http error",
+        )
+        _clean_low = clean.lower()
+        if any(pat in _clean_low for pat in _MECH_LEAK_PATTERNS):
             return ""
 
         perception = systems.get('perception') if isinstance(systems, dict) else None
@@ -5089,8 +5106,16 @@ class WorkingMemory:
             else:
                 # Only use summary text if it's concise (not a prior turn's full response).
                 # Long summaries > 5 words are almost certainly recycled Aurora responses.
-                _summary_words = len(str(summary or '').split())
-                if _summary_words <= 5 and '?' not in str(summary or ''):
+                _summary_str = str(summary or '')
+                _summary_words = len(_summary_str.split())
+                _summary_low = _summary_str.lower()
+                _social_starts = ('hey', 'hi ', 'hello', 'how are', 'how is',
+                                  'what\'s up', "what is up", 'greet', 'good morning',
+                                  'good afternoon', 'good evening')
+                _mech_chars = any(c in _summary_str for c in ('=', '{', '}'))
+                _is_social = any(_summary_low.startswith(s) for s in _social_starts)
+                if (_summary_words <= 5 and not _mech_chars and not _is_social
+                        and '?' not in _summary_str):
                     core_claim = f"it works through {summary}"
                 # else: leave core_claim="" so the function returns "" instead of echoing
             tone = 'reflective'
@@ -10758,7 +10783,7 @@ def _answer_from_sedimemory_context(
             if quoted:
                 return _render_runtime_intent(
                     systems,
-                    f"earlier user utterance {quoted[:220]}",
+                    quoted[:220],
                     emotion_tone='precise',
                     relationship_signal='recognition',
                     certainty=0.88,
@@ -10793,7 +10818,7 @@ def _answer_from_sedimemory_context(
         if user_line:
             return _render_runtime_intent(
                 systems,
-                f"earlier user utterance {user_line[:220]}",
+                user_line[:220],
                 emotion_tone='precise',
                 relationship_signal='recognition',
                 certainty=0.84,
@@ -19837,11 +19862,19 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
     # Constraint emission — shape final surface output through IVM pressure lens
     # Also clears internal-format strings that must never reach the speaker.
     _INTERNAL_PREFIXES = ("earlier user utterance", "researcher lookup failed", "http error")
+    _INTERNAL_MECH_SUBSTRINGS = (
+        "mutation_id=", "mutation_id =",
+        "code evolution outcome",
+        "accepted=false", "accepted=true", "accepted=0", "accepted=1",
+        "operator_key=", "change_count=", "avg_fitness=",
+        "genealogy_pressure=", "apply_duration=", "temporal_overhead=",
+    )
     _cur_resp = str(getattr(state, "response_content", "") or "").strip()
     _cur_resp_low = _cur_resp.lower()
     _has_json = ("```" in _cur_resp or "proposed_action" in _cur_resp
                  or '"file":' in _cur_resp or "contradiction_handler" in _cur_resp_low)
     if (any(_cur_resp_low.startswith(p) for p in _INTERNAL_PREFIXES)
+            or any(p in _cur_resp_low for p in _INTERNAL_MECH_SUBSTRINGS)
             or any(p in _cur_resp_low for p in _INTERNAL_INSTRUCTION_PHRASES)
             or _has_json):
         state.response_content = ""
