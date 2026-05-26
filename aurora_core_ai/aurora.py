@@ -9184,17 +9184,16 @@ def _project_utterance_axes(text: str, systems: dict, parsed: Optional[Dict[str,
         # 1. Start with the raw textual projection
         projection = _axis_projector.project(parsed, systems)
         
-        # 2. Blend the Subsurface DCE Convergence (Root Thought)
-        # If the subsurface is delibating on a specific axis, the surface 
-        # perception should lean toward that axis (Closure Symmetry).
-        _live_thought = dict(systems.get("_live_root_thought") or {})
-        _thought_axes = dict(_live_thought.get("axis_activations") or {})
-        if _thought_axes:
-            for ax in ("X", "T", "N", "B", "A"):
-                if ax in _thought_axes:
-                    # Blend at 25% weight — the subsurface frames the surface
-                    _cur = float(projection.get(ax, 0.2))
-                    projection[ax] = (_cur * 0.75) + (float(_thought_axes[ax]) * 0.25)
+        # 2. Blend the Subsurface DCE Convergence (Conscious Crest axis)
+        # If the subsurface crest has a dominant axis, lean the surface
+        # perception toward that axis (Closure Symmetry).
+        _live_crest = dict(systems.get("_live_conscious_crest") or {})
+        _crest_axis = str(_live_crest.get("axis", "") or "").upper()
+        _crest_intensity = float(_live_crest.get("intensity", 0.0) or 0.0)
+        if _crest_axis in ("X", "T", "N", "B", "A") and _crest_intensity >= 0.35:
+            # Blend at 25% weight — the subsurface crest frames the surface
+            _cur = float(projection.get(_crest_axis, 0.2))
+            projection[_crest_axis] = (_cur * 0.75) + (_crest_intensity * 0.25)
 
         # 3. Blend live Sensory Vitals (Physical perturbation)
         _live_sensory = dict(systems.get("_live_sensory_state") or {})
@@ -18990,13 +18989,9 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     break
 
 def _generate_from_manifold(systems: dict, user_text: str, state: any, core_claim: str = None) -> tuple:
-    live_thought = systems.get("_live_root_thought") or {}
-    native_meaning = dict(
-        live_thought.get("native_meaning")
-        or live_thought.get("native_meaning_bundle")
-        or {}
-    )
-    law_bindings = list(live_thought.get("law_bindings") or [])
+    live_thought = {}  # law_bindings now live in subsurface_detail; use native_meaning_obj below
+    native_meaning = {}
+    law_bindings = []
     if not law_bindings:
         law_bindings = list(native_meaning.get("law_bindings", []) or [])
     # Also check the per-turn NativeMeaningObject built by the pipeline this turn
@@ -20086,17 +20081,17 @@ def _run_reasoning_pipeline(
     try:
         # Pull latest Subsurface DCE convergence
         _live_frame = dict(systems.get("_live_conscious_frame") or {})
-        _live_thought = dict(systems.get("_live_root_thought") or {})
+        _live_crest = dict(systems.get("_live_conscious_crest") or {})
         _live_sensory = dict(systems.get("_live_sensory_state") or {})
-        
+
         if _live_frame and isinstance(state.pipeline_state, dict):
             state.pipeline_state["subsurface_conscious_frame"] = _live_frame
-            state.pipeline_state["subsurface_root_thought"] = _live_thought
+            state.pipeline_state["subsurface_conscious_crest"] = _live_crest
             state.pipeline_state["live_sensory_vitals"] = _live_sensory
-            
-            # If the subsurface has a strong 'reactive signal', prioritize it!
-            _reactive = dict(_live_frame.get("reactive_signal") or {})
-            if _reactive.get("text"):
+
+            # If the subsurface crest is high-intensity, flag reactive priority
+            _crest_intensity = float(_live_crest.get("intensity", 0.0) or 0.0)
+            if _crest_intensity >= 0.72:
                 state.pipeline_state["subsurface_reactive_priority"] = True
     except Exception:
         pass
@@ -20269,9 +20264,9 @@ def _run_reasoning_pipeline(
                 _pcf_mode = str(_pre_cf.get("processing_mode", "") or "")
                 if _pcf_mode:
                     state.pipeline_state.setdefault("conscious_frame_mode", _pcf_mode)
-                _pcf_reactive = dict(_pre_cf.get("reactive_signal") or {})
-                if _pcf_reactive:
-                    state.pipeline_state["conscious_frame_reactive"] = _pcf_reactive
+                _pcf_crest = dict(_pre_cf.get("conscious_crest") or {})
+                if _pcf_crest:
+                    state.pipeline_state["conscious_frame_crest"] = _pcf_crest
             if _pre_ss:
                 state.pipeline_state["pre_generation_subsurface_state"] = _pre_ss
                 _pss_axis = str(_pre_ss.get("dominant_axis", "") or "")
@@ -25571,14 +25566,14 @@ def _run_live_response_turn(
         turn_tick = int(getattr(working_memory, 'turn_count', 0) or 0) + 1
 
     # ---- STRATA-AWARE INTAKE: Resolve Vitals BEFORE parsing Signal ----
-    # 1. Pull the Subsurface DCE Convergence (Root Thought)
+    # 1. Pull the Subsurface DCE Convergence (Conscious Crest)
     try:
         dual_strata_runtime = _read_live_dual_strata_runtime(systems)
         conscious_frame = dict(dual_strata_runtime.get("conscious_frame") or {})
-        root_thought = dict(dual_strata_runtime.get("root_thought") or {})
+        conscious_crest = dict(dual_strata_runtime.get("conscious_crest") or {})
         # Stamp into systems so the parser can use it as context
         systems["_live_conscious_frame"] = conscious_frame
-        systems["_live_root_thought"] = root_thought
+        systems["_live_conscious_crest"] = conscious_crest
     except Exception:
         dual_strata_runtime = {}
 
@@ -26589,9 +26584,9 @@ def _run_live_response_turn(
         'poedex_representation': _poedex_representation_out,
         'other_model': dict(getattr(_last_turn_state_out, "other_model", {}) or {}),
         'conscious_frame': dict(_dual_strata_runtime_out.get('conscious_frame') or {}),
-        'root_thought': dict(_dual_strata_runtime_out.get('root_thought') or {}),
+        'conscious_crest': dict(_dual_strata_runtime_out.get('conscious_crest') or {}),
         'processing_mode': str(_dual_strata_runtime_out.get('processing_mode', '') or ''),
-        'reactive_signal': dict(_dual_strata_runtime_out.get('reactive_signal') or {}),
+        'overlay': dict(_dual_strata_runtime_out.get('overlay') or {}),
     }
 
 
@@ -26795,9 +26790,9 @@ def _run_surface_queued_turn(
         "turn_tick": turn_tick,
         "runtime_contract": dict(queued.get("runtime_contract") or {}),
         "conscious_frame": dict(queued.get("conscious_frame") or {}),
-        "root_thought": dict(queued.get("root_thought") or {}),
+        "conscious_crest": dict(queued.get("conscious_crest") or {}),
         "processing_mode": str(queued.get("processing_mode", "") or ""),
-        "reactive_signal": dict(queued.get("reactive_signal") or {}),
+        "overlay": dict(queued.get("overlay") or {}),
         "understanding_observation": {},
         "understanding_application": {},
         "memory_sweep": None,
