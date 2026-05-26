@@ -37,6 +37,8 @@ CrystalZip_Archives/
 *.docx
 *.jpg
 *.png
+!flutter_app/android/app/src/main/res/mipmap-*/*.png
+!flutter_app/assets/*.png
 
 # Logs
 *.log

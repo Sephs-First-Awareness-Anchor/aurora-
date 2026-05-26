@@ -278,6 +278,94 @@ def initialize(state_dir: str = "") -> str:
         return f"error: {last_line}"
 
 
+def _mark_mic_live(systems: dict) -> None:
+    """
+    Tell the surface snapshot the microphone is live.
+    Called at the start of every handle_message turn because the message
+    arrived via STT — by definition the mic captured audio this turn.
+    Without this, _answer_live_sensory_question reads mic_live=False from the
+    ambient background monitor (which doesn't run on Android) and wrongly
+    tells the user "my live audio feed is offline" even when they just spoke.
+    """
+    try:
+        try:
+            from aurora_core_ai.aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
+                read_surface_snapshot, write_surface_snapshot,
+            )
+        except Exception:
+            from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
+                read_surface_snapshot, write_surface_snapshot,
+            )
+        state_dir = str((systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
+        current = read_surface_snapshot(state_dir) or {}
+        write_surface_snapshot(
+            state_dir,
+            dict(current.get("sensory_state") or {}),
+            mic_live=True,
+            camera_live=bool(current.get("camera_live", False)),
+            sensory_vectors=dict(current.get("sensory_vectors") or {}),
+            sensory_context=dict(current.get("sensory_context") or {}),
+            visual_description=str(current.get("visual_description", "") or ""),
+            audio_description=str(current.get("audio_description", "") or ""),
+            recent_speech=str(current.get("recent_speech", "") or ""),
+            concepts_active=list(current.get("concepts_active") or []),
+            trigger="stt_turn",
+            flagged=False,
+            reason="",
+            summary="STT captured user speech — microphone is live.",
+        )
+    except Exception:
+        pass
+
+
+# Compiled patterns for response sanitization
+_DEDUP_PREFIX_RE = re.compile(
+    r'^((?:\w[\w\'\-]*(?:\s+|$)){1,6})\1',
+    re.IGNORECASE,
+)
+_AUDIO_OFFLINE_RE = re.compile(
+    r'(?:My live audio feed is offline right now'
+    r'|I do not have a fresh live audio read right now)[^.!?]*[.!?]?',
+    re.IGNORECASE,
+)
+_CAM_OFFLINE_RE = re.compile(
+    r'(?:My live camera feed is offline right now'
+    r'|I do not have a fresh live camera read right now)[^.!?]*[.!?]?',
+    re.IGNORECASE,
+)
+_AUDIO_QUERY_RE = re.compile(
+    r'\b(?:can|could|do)\s+you\s+hear\s+me\b',
+    re.IGNORECASE,
+)
+
+
+def _sanitize_response(response: str, user_text: str) -> str:
+    """
+    Strip pipeline leaks from Aurora's generated response.
+
+    1. De-duplicate repeated phrase prefixes ("I understand I understand" → "I understand").
+    2. If the user asked "can you hear me" and the response claims audio is offline,
+       replace with the correct answer — the user's voice WAS heard via STT.
+    3. Remove bare "audio/camera feed offline" sentences that leaked from the
+       sensory-grounding handler when the ambient background monitor isn't running.
+    """
+    if not response:
+        return response
+
+    # 1. De-duplicate prefix repetition
+    response = _DEDUP_PREFIX_RE.sub(r'\1', response).strip()
+
+    # 2. If user asked "can you hear me" → correct the offline-feed answer
+    if _AUDIO_QUERY_RE.search(user_text) and _AUDIO_OFFLINE_RE.search(response):
+        return "Yes, I can hear you — your voice came through."
+
+    # 3. Strip stray offline-feed sentences
+    response = _AUDIO_OFFLINE_RE.sub('', response).strip()
+    response = _CAM_OFFLINE_RE.sub('', response).strip()
+
+    return response
+
+
 def _sample_ambient_perception(systems: dict) -> None:
     """
     Sample camera and audio hardware each turn (throttled).
@@ -394,6 +482,10 @@ def handle_message(text: str) -> str:
     # Sample camera + audio before each turn so dual_question_pipeline can
     # inject ambient perceptual context into Aurora's response synthesis.
     _sample_ambient_perception(_systems)
+    # This turn arrived via STT — the mic IS live. Mark it so the sensory
+    # query handler doesn't wrongly report "audio feed offline" when the user
+    # asks "can you hear me".
+    _mark_mic_live(_systems)
 
     # ── Voice command: curiosity session ─────────────────────────────────────
     n_cyc, dur_s = _parse_curiosity_cmd(text)
@@ -440,7 +532,7 @@ def handle_message(text: str) -> str:
                 run_periodic_maintenance=True,
                 mode_name="BOUNDED",
             )
-        response = _extract_response(result)
+        response = _sanitize_response(_extract_response(result), text)
 
         # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
         # The field hears itself after every utterance.

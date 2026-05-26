@@ -90,7 +90,10 @@ class _HomeScreenState extends State<HomeScreen>
         case 'tts':
           if (type == 'done' && mounted) {
             setState(() => _speaking = false);
+            _pulseCtrl.repeat(reverse: true);
             if (_embState != 'DORMANT') _startListening();
+          } else if (type == 'word' && mounted && _speaking) {
+            _kickPulse();
           }
         case 'permission':
           if (type == 'update' && mounted) {
@@ -261,6 +264,25 @@ class _HomeScreenState extends State<HomeScreen>
     AuroraBridge.stopListening();
     setState(() { _speaking = true; _listening = false; });
     await AuroraBridge.speak(text);
+  }
+
+  // Snap pulse to 1.0 on each spoken word, then decay — driven by TTS onRangeStart.
+  void _kickPulse() {
+    _pulseCtrl
+      ..stop()
+      ..animateTo(1.0,
+          duration: const Duration(milliseconds: 80),
+          curve: Curves.easeOut)
+      .then((_) {
+        if (!mounted) return;
+        if (_speaking) {
+          _pulseCtrl.animateTo(0.20,
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeIn);
+        } else {
+          _pulseCtrl.repeat(reverse: true);
+        }
+      });
   }
 
   // ── Message send ────────────────────────────────────────────────────────……[...]
