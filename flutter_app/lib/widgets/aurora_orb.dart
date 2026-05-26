@@ -5,28 +5,29 @@ import 'package:flutter/services.dart';
 
 enum OrbState { dormant, listening, thinking, speaking }
 
-// ── Per-strand config ─────────────────────────────────────────────────────────
+// ── Strand definitions ────────────────────────────────────────────────────────
 //
-// Each strand has a primary state where it comes alive.
-// When dormant: all strands near-still.
-// When listening: cyan + blue active, others dim.
-// When thinking:  blue + purple active, others dim.
-// When speaking:  all strands surge — full expression.
+// Each strand is bound to one of Aurora's internal emotional/cognitive axes.
+// The axis value (0.0–1.0) directly drives that strand's speed and amplitude.
+//
+//   X  Extension / outward reach   →  warm orange-red strand
+//   T  Temporal / continuity       →  blue strand
+//   N  Novelty / curiosity         →  cyan strand
+//   B  Boundary / identity         →  purple strand
+//   A  Affective / emotion         →  pink-magenta strand
 
 class _StrandDef {
   final String asset;
-  final OrbState primaryState;
-  final OrbState? secondaryState;
-
-  const _StrandDef(this.asset, this.primaryState, [this.secondaryState]);
+  final String axis; // X | T | N | B | A
+  const _StrandDef(this.asset, this.axis);
 }
 
 const _strands = [
-  _StrandDef('assets/strand_cyan.png',   OrbState.listening, null),
-  _StrandDef('assets/strand_blue.png',   OrbState.listening, OrbState.thinking),
-  _StrandDef('assets/strand_purple.png', OrbState.thinking,  null),
-  _StrandDef('assets/strand_pink.png',   OrbState.speaking,  OrbState.thinking),
-  _StrandDef('assets/strand_warm.png',   OrbState.speaking,  null),
+  _StrandDef('assets/strand_cyan.png',   'N'),
+  _StrandDef('assets/strand_blue.png',   'T'),
+  _StrandDef('assets/strand_purple.png', 'B'),
+  _StrandDef('assets/strand_pink.png',   'A'),
+  _StrandDef('assets/strand_warm.png',   'X'),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -35,12 +36,14 @@ class AuroraOrb extends StatefulWidget {
   final OrbState state;
   final double size;
   final Animation<double> pulse;
+  final Map<String, double> axisState;
   final VoidCallback? onTap;
 
   const AuroraOrb({
     super.key,
     required this.state,
     required this.pulse,
+    required this.axisState,
     this.size = 120,
     this.onTap,
   });
@@ -50,60 +53,22 @@ class AuroraOrb extends StatefulWidget {
 }
 
 class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
-  // One travel controller per strand
   late final List<AnimationController> _travels;
   ui.Image? _bgImage;
   final List<ui.Image?> _strandImages = List.filled(_strands.length, null);
 
-  // Travel duration (ms) for each strand in each state
-  static int _travelMs(int idx, OrbState state) {
-    final def = _strands[idx];
-    final isPrimary   = state == def.primaryState;
-    final isSecondary = def.secondaryState != null && state == def.secondaryState;
-    final isSpeaking  = state == OrbState.speaking;
-
-    if (isSpeaking)               return 700 + idx * 80;   // all fast when speaking
-    if (isPrimary)                return 1200 + idx * 100;  // primary state speed
-    if (isSecondary)              return 2400 + idx * 120;  // secondary: slower
-    if (state == OrbState.dormant) return 9000 + idx * 500; // barely alive
-    return 5000 + idx * 300;                                // background drift
-  }
-
-  // Warp amplitude for each strand in current state
-  static double _amp(int idx, OrbState state, double pulse) {
-    final def = _strands[idx];
-    final isPrimary   = state == def.primaryState;
-    final isSecondary = def.secondaryState != null && state == def.secondaryState;
-    final isSpeaking  = state == OrbState.speaking;
-
-    if (isSpeaking)                return 0.52 + 0.48 * pulse;
-    if (isPrimary)                 return 0.32 + 0.22 * pulse;
-    if (isSecondary)               return 0.14 + 0.10 * pulse;
-    if (state == OrbState.dormant) return 0.01 + 0.01 * pulse;
-    return 0.05 + 0.04 * pulse;   // not active — very faint drift
-  }
-
-  // Brightness for each strand in current state
-  static double _brightness(int idx, OrbState state, double pulse) {
-    final def = _strands[idx];
-    final isPrimary   = state == def.primaryState;
-    final isSecondary = def.secondaryState != null && state == def.secondaryState;
-    final isSpeaking  = state == OrbState.speaking;
-
-    if (isSpeaking)                return (0.80 + 0.20 * pulse).clamp(0, 1.0);
-    if (isPrimary)                 return (0.62 + 0.18 * pulse).clamp(0, 1.0);
-    if (isSecondary)               return (0.38 + 0.12 * pulse).clamp(0, 1.0);
-    if (state == OrbState.dormant) return 0.10 + 0.04 * pulse;
-    return 0.18 + 0.06 * pulse;
-  }
+  // Travel period: axis=0 → 8 s (barely alive), axis=1 → 700 ms (surging).
+  static int _periodMs(double axisVal) =>
+      (8000 - axisVal.clamp(0.0, 1.0) * 7300).round().clamp(700, 8000);
 
   @override
   void initState() {
     super.initState();
     _travels = List.generate(_strands.length, (i) {
+      final v = widget.axisState[_strands[i].axis] ?? 0.5;
       return AnimationController(
         vsync: this,
-        duration: Duration(milliseconds: _travelMs(i, widget.state)),
+        duration: Duration(milliseconds: _periodMs(v)),
       )..repeat();
     });
     _loadImages();
@@ -112,7 +77,6 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
   Future<void> _loadImages() async {
     final bg = await _loadUiImage('assets/aurora_bg.png');
     if (mounted) setState(() => _bgImage = bg);
-
     for (int i = 0; i < _strands.length; i++) {
       final img = await _loadUiImage(_strands[i].asset);
       if (mounted) setState(() => _strandImages[i] = img);
@@ -128,10 +92,13 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
   @override
   void didUpdateWidget(AuroraOrb old) {
     super.didUpdateWidget(old);
-    if (old.state != widget.state) {
-      for (int i = 0; i < _travels.length; i++) {
+    // Adjust each controller's speed whenever its axis value changes.
+    for (int i = 0; i < _travels.length; i++) {
+      final newVal = widget.axisState[_strands[i].axis] ?? 0.5;
+      final newMs  = _periodMs(newVal);
+      if (_travels[i].duration?.inMilliseconds != newMs) {
         _travels[i]
-          ..duration = Duration(milliseconds: _travelMs(i, widget.state))
+          ..duration = Duration(milliseconds: newMs)
           ..repeat();
       }
     }
@@ -146,7 +113,7 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
   }
 
   double get _bgBrightness => switch (widget.state) {
-    OrbState.speaking  => 0.70 + widget.pulse.value * 0.20,
+    OrbState.speaking  => (0.70 + widget.pulse.value * 0.20).clamp(0, 1.0),
     OrbState.listening => 0.48 + widget.pulse.value * 0.12,
     OrbState.thinking  => 0.34 + widget.pulse.value * 0.10,
     OrbState.dormant   => 0.16 + widget.pulse.value * 0.06,
@@ -164,10 +131,7 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
     final bg = _bgImage;
     if (bg == null) return const SizedBox.shrink();
 
-    // Merge all travel animations + pulse into one listenable
-    final animations = <Listenable>[widget.pulse, ...
-        _travels.where((c) => _strandImages[_travels.indexOf(c)] != null)];
-    final merged = Listenable.merge(animations);
+    final listenables = <Listenable>[widget.pulse, ..._travels];
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -175,22 +139,23 @@ class _AuroraOrbState extends State<AuroraOrb> with TickerProviderStateMixin {
         width: double.infinity,
         height: widget.size * 1.9,
         child: AnimatedBuilder(
-          animation: merged,
-          builder: (_, __) {
-            final travelVals = _travels.map((c) => c.value).toList();
-            return CustomPaint(
-              painter: _LayeredOrbPainter(
-                bgImage:      bg,
-                strandImages: _strandImages,
-                travelVals:   travelVals,
-                pulse:        widget.pulse.value,
-                state:        widget.state,
-                bgBrightness: _bgBrightness.clamp(0, 1.0),
-                glowEnergy:   _glowEnergy,
-                orbRadius:    widget.size / 2,
+          animation: Listenable.merge(listenables),
+          builder: (_, __) => CustomPaint(
+            painter: _LayeredOrbPainter(
+              bgImage:      bg,
+              strandImages: List.unmodifiable(_strandImages),
+              travelVals:   _travels.map((c) => c.value).toList(),
+              axisVals: List.generate(
+                _strands.length,
+                (i) => (widget.axisState[_strands[i].axis] ?? 0.5).clamp(0.0, 1.0),
               ),
-            );
-          },
+              pulse:        widget.pulse.value,
+              state:        widget.state,
+              bgBrightness: _bgBrightness,
+              glowEnergy:   _glowEnergy,
+              orbRadius:    widget.size / 2,
+            ),
+          ),
         ),
       ),
     );
@@ -203,6 +168,7 @@ class _LayeredOrbPainter extends CustomPainter {
   final ui.Image bgImage;
   final List<ui.Image?> strandImages;
   final List<double> travelVals;
+  final List<double> axisVals;  // 0.0–1.0, one per strand
   final double pulse;
   final OrbState state;
   final double bgBrightness;
@@ -213,6 +179,7 @@ class _LayeredOrbPainter extends CustomPainter {
     required this.bgImage,
     required this.strandImages,
     required this.travelVals,
+    required this.axisVals,
     required this.pulse,
     required this.state,
     required this.bgBrightness,
@@ -223,7 +190,7 @@ class _LayeredOrbPainter extends CustomPainter {
   static Color _hsl(double hue) =>
       HSLColor.fromAHSL(1.0, hue % 360, 1.0, 0.60).toColor();
 
-  ({double x, double w, double h}) _fitHeight(ui.Image img, Size canvas) {
+  ({double x, double w, double h}) _fit(ui.Image img, Size canvas) {
     final scale = canvas.height / img.height;
     final w     = img.width * scale;
     return (x: (canvas.width - w) / 2, w: w, h: canvas.height);
@@ -231,8 +198,8 @@ class _LayeredOrbPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // ── Background (static) ───────────────────────────────────────────────────
-    final bgFit = _fitHeight(bgImage, size);
+    // ── Static background ─────────────────────────────────────────────────────
+    final bgFit = _fit(bgImage, size);
     canvas.drawImageRect(
       bgImage,
       Rect.fromLTWH(0, 0, bgImage.width.toDouble(), bgImage.height.toDouble()),
@@ -240,23 +207,30 @@ class _LayeredOrbPainter extends CustomPainter {
       _brightPaint(bgBrightness),
     );
 
-    // ── Each strand with its own travel + amplitude ───────────────────────────
+    // ── Each strand driven by its axis value ──────────────────────────────────
     for (int i = 0; i < _strands.length; i++) {
       final img = strandImages[i];
       if (img == null) continue;
 
-      final travel = travelVals[i];
-      final tRad   = travel * math.pi * 2;
-      final amp    = _AuroraOrbState._amp(i, state, pulse);
-      final bright = _AuroraOrbState._brightness(i, state, pulse);
+      final axisVal = axisVals[i];
+      final tRad    = travelVals[i] * math.pi * 2;
+
+      // Warp amplitude = axis value × boost from speaking pulse
+      final baseAmp = axisVal * 0.85;
+      final amp     = state == OrbState.speaking
+          ? baseAmp + pulse * axisVal * 0.15   // word-kicks amplify active axes
+          : baseAmp;
+
+      // Brightness: fully bright when axis is high, dim when low
+      final bright = (axisVal * 0.85 + 0.10).clamp(0.0, 1.0);
 
       _drawStrand(canvas, size, img, tRad, amp, bright);
     }
 
-    // ── Screen-blend glow (adds light only) ───────────────────────────────────
-    final tRad0 = travelVals.isNotEmpty ? travelVals[0] * math.pi * 2 : 0.0;
+    // ── Screen-blend glow (only adds light) ───────────────────────────────────
     final center = Offset(size.width / 2, size.height / 2);
     final r      = orbRadius;
+    final tRad0  = travelVals.isNotEmpty ? travelVals[0] * math.pi * 2 : 0.0;
 
     canvas.saveLayer(
       Rect.fromLTWH(0, 0, size.width, size.height),
@@ -269,7 +243,7 @@ class _LayeredOrbPainter extends CustomPainter {
 
   void _drawStrand(Canvas canvas, Size size, ui.Image img,
       double tRad, double amp, double bright) {
-    final fit = _fitHeight(img, size);
+    final fit = _fit(img, size);
     final iw  = img.width.toDouble();
     final ih  = img.height.toDouble();
     final paint = _brightPaint(bright);
@@ -279,10 +253,9 @@ class _LayeredOrbPainter extends CustomPainter {
     final dstSliceW = fit.w / nSlices;
 
     for (int i = 0; i < nSlices; i++) {
-      final t = i / nSlices;
-
-      final d     = (t - 0.5).abs() * 2.0;
-      final env   = d * d;
+      final t      = i / nSlices;
+      final d      = (t - 0.5).abs() * 2.0;
+      final env    = d * d;
       final inward = t < 0.5 ? -tRad : tRad;
 
       final dy = fit.h * amp * (
@@ -320,7 +293,6 @@ class _LayeredOrbPainter extends CustomPainter {
         ],
         stops: const [0.0, 0.38, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: r * 0.85)));
-
     canvas.drawCircle(center, r * 0.18,
       Paint()..shader = RadialGradient(
         colors: [
@@ -341,27 +313,27 @@ class _LayeredOrbPainter extends CustomPainter {
       final ringR  = r * 0.06 + r * 1.15 * phase;
       final op     = (1.0 - phase) * e * 0.55;
       if (op < 0.02) continue;
-
       final col = _hsl((travel * 360 + i * 72) % 360);
       canvas.drawCircle(center, ringR, Paint()
-        ..color       = col.withOpacity(op * 0.20)
-        ..style       = PaintingStyle.stroke
+        ..color = col.withOpacity(op * 0.20)
+        ..style = PaintingStyle.stroke
         ..strokeWidth = r * 0.22);
       canvas.drawCircle(center, ringR, Paint()
-        ..color       = col.withOpacity(op * 0.55)
-        ..style       = PaintingStyle.stroke
+        ..color = col.withOpacity(op * 0.55)
+        ..style = PaintingStyle.stroke
         ..strokeWidth = r * 0.046);
       canvas.drawCircle(center, ringR, Paint()
-        ..color       = col.withOpacity(op * 0.85)
-        ..style       = PaintingStyle.stroke
+        ..color = col.withOpacity(op * 0.85)
+        ..style = PaintingStyle.stroke
         ..strokeWidth = r * 0.012);
     }
   }
 
   @override
   bool shouldRepaint(_LayeredOrbPainter old) =>
-      old.pulse      != pulse      ||
-      old.state      != state      ||
+      old.pulse        != pulse        ||
+      old.state        != state        ||
       old.bgBrightness != bgBrightness ||
+      old.axisVals.toString() != axisVals.toString() ||
       old.travelVals.toString() != travelVals.toString();
 }

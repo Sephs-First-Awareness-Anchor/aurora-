@@ -40,6 +40,11 @@ class _HomeScreenState extends State<HomeScreen>
   bool   _aiReady   = false;
   String _statusTxt = 'Starting Aurora…';
 
+  // ── Aurora emotional axis state (X/T/N/B/A, each 0.0–1.0) ───────────────
+  Map<String, double> _axisState = {
+    'X': 0.5, 'T': 0.5, 'N': 0.5, 'B': 0.5, 'A': 0.5,
+  };
+
   // ── STT / TTS state ─────────────────────────────────────────────────────
   bool   _listening   = false;
   bool   _speaking    = false;
@@ -116,6 +121,18 @@ class _HomeScreenState extends State<HomeScreen>
           }
         default: // aurora service events
           switch (type) {
+            case 'axis_state':
+              if (mounted) {
+                setState(() {
+                  _axisState = {
+                    'X': (event['X'] as double?) ?? _axisState['X']!,
+                    'T': (event['T'] as double?) ?? _axisState['T']!,
+                    'N': (event['N'] as double?) ?? _axisState['N']!,
+                    'B': (event['B'] as double?) ?? _axisState['B']!,
+                    'A': (event['A'] as double?) ?? _axisState['A']!,
+                  };
+                });
+              }
             case 'ready':
               if (mounted) {
                 setState(() { _aiReady = true; _statusTxt = 'Listening…'; });
@@ -372,10 +389,11 @@ class _HomeScreenState extends State<HomeScreen>
               child: Column(
                 children: [
                   AuroraOrb(
-                    state: orbState,
-                    pulse: _pulseAnim,
-                    size:  isSummoned ? 100 : 140,
-                    onTap: isSummoned ? null : _summon,
+                    state:     orbState,
+                    pulse:     _pulseAnim,
+                    axisState: _axisState,
+                    size:      isSummoned ? 100 : 140,
+                    onTap:     isSummoned ? null : _summon,
                   ),
                   const SizedBox(height: 12),
                   AnimatedSwitcher(
