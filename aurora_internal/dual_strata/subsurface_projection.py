@@ -121,6 +121,7 @@ def build_subsurface_projection(
     *,
     relief_plan: Dict[str, Any] | None = None,
     projection_path: Path | None = None,
+    subsurface_state_dict: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     daemon_status = dict(daemon_status or {})
     relief_plan = dict(relief_plan or {})
@@ -130,10 +131,7 @@ def build_subsurface_projection(
     host = dict(daemon_status.get("runtime_host") or {})
     dominant_axis = _dominant_axis(axis_orientation, runtime_axes)
     governor_mode = str(daemon_status.get("runtime_governor_mode", "") or "balanced")
-    try:
-        qao_events = int(daemon_status.get("qao_recent_events", 0) or 0)
-    except Exception:
-        qao_events = 0
+    qao_events = int(daemon_status.get("qao_recent_events", 0) or 0)
     qao_issue = str(daemon_status.get("qao_top_issue", "") or "").replace("_", " ")
     blocked = list(daemon_status.get("runtime_recent_blocked") or [])
     surface_snapshot_flagged = bool(daemon_status.get("surface_snapshot_flagged", False))
@@ -245,6 +243,52 @@ def build_subsurface_projection(
     if not active_effects:
         active_effects.append("subsurface is steady")
 
+    # Crest-based signal/guidance override when subsurface_state_dict is provided.
+    # When available, use the converged subsurface crest label directly instead of
+    # keyword-matching on repair_issue strings.
+    _crest_label = ""
+    if subsurface_state_dict and isinstance(subsurface_state_dict, dict):
+        _sc = dict(subsurface_state_dict.get("subsurface_crest") or {})
+        _crest_label = str(_sc.get("label", "") or "").strip().lower()
+
+    if _crest_label:
+        # Replace the first intuition_signal with the converged crest label.
+        if intuition_signals:
+            intuition_signals[0]["label"] = _crest_label
+        else:
+            intuition_signals.append({
+                "label": _crest_label,
+                "weight": 0.55,
+                "summary": f"Subsurface converged toward {_crest_label}.",
+            })
+        # active_effects: replace mechanism strings with crest-natural-language fragments.
+        _crest_nl_map = {
+            "comfort": "a comfort-oriented pull is shaping the present moment",
+            "comfort_bias": "a warmth and comfort pull is shaping the present moment",
+            "caution": "a caution signal is shaping the present frame",
+            "hesitation": "a gentle hesitation is present beneath the surface",
+            "reframe_needed": "the present frame may need reframing",
+            "reframe": "a reframe is indicated below the surface",
+            "familiar": "something familiar is resonating in the background",
+            "continuity_pull": "continuity is pulling through the current thread",
+            "thread_holds": "the conversational thread is holding steady",
+            "thread_slipping": "continuity feels like it is slipping",
+            "new_thread": "this feels like a new thread beginning",
+            "strain": "subsurface resource strain is present",
+            "limitation": "a subsurface limitation is in effect",
+            "urgency": "urgency is shaping the present frame",
+            "tension": "tension is present below the surface",
+            "resonance": "symbolic resonance is active",
+            "novelty": "something novel is being processed below the surface",
+            "steady": "subsurface is steady",
+            "steady_continuation": "subsurface anticipates steady continuation",
+        }
+        _nl = _crest_nl_map.get(_crest_label, f"subsurface crest is {_crest_label}")
+        if active_effects and active_effects[-1] == "subsurface is steady":
+            active_effects[-1] = _nl
+        else:
+            active_effects = [_nl] + active_effects[:4]
+
     guidance = "Hold a stable present frame and speak from the current moment."
     if repair_phase == "recognition":
         guidance = str(pressure_coloring.get("guidance") or "Surface should stay responsive but cautious; something feels wrong and subsurface has started tracking it.")
@@ -261,6 +305,31 @@ def build_subsurface_projection(
         guidance = "Surface should stay with present meaning while subsurface handles deeper repair and code change."
     elif mismatch_hint >= 0.35:
         guidance = "Surface should treat the next moment as intuitive caution, not full certainty."
+
+    # When subsurface_state_dict is provided, derive surface_guidance from the crest label.
+    if _crest_label and not repair_phase and not blocked and not bool(relief_plan.get("active") if relief_plan else False):
+        _crest_guidance_map = {
+            "comfort": "Surface should respond with warmth and care.",
+            "comfort_bias": "Surface should lean toward comfort and warmth in this frame.",
+            "caution": "Surface should proceed with gentle caution.",
+            "hesitation": "Surface should hold a gentle pause before committing.",
+            "reframe_needed": "Surface should consider reframing before responding.",
+            "reframe": "Surface should reframe its current stance.",
+            "familiar": "Surface should anchor in what feels familiar and grounded.",
+            "continuity_pull": "Surface should stay connected to the ongoing thread.",
+            "thread_holds": "Surface can hold the thread steadily.",
+            "thread_slipping": "Surface should work to recover continuity.",
+            "strain": "Surface should be economical and unhurried.",
+            "limitation": "Surface should stay lighter while constraints are active.",
+            "urgency": "Surface should stay attentive and responsive.",
+            "novelty": "Surface should stay open and curious.",
+            "resonance": "Surface should build on the resonant alignment below.",
+            "steady": "Hold a stable present frame and speak from the current moment.",
+            "steady_continuation": "Hold a stable present frame and continue clearly.",
+        }
+        _crest_guidance = _crest_guidance_map.get(_crest_label, "")
+        if _crest_guidance:
+            guidance = _crest_guidance
 
     # Carry forward dream fields from previous projection if they're recent.
     _dream_carry = _carry_dream_fields(projection_path)

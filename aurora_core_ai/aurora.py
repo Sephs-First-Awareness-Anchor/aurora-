@@ -17433,15 +17433,15 @@ def _read_live_dual_strata_runtime(systems: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(snapshot_payload, dict):
         snapshot_payload = {}
     conscious_frame = dict(snapshot_payload.get("conscious_frame") or {})
-    root_thought = dict(conscious_frame.get("root_thought") or {})
-    reactive_signal = dict(conscious_frame.get("reactive_signal") or {})
+    conscious_crest = dict(conscious_frame.get("conscious_crest") or {})
+    overlay = dict(conscious_frame.get("overlay") or {})
     return {
         "conscious_frame": conscious_frame,
-        "root_thought": root_thought,
+        "conscious_crest": conscious_crest,
         "processing_mode": str(
-            conscious_frame.get("processing_mode", "") or root_thought.get("mode", "")
+            conscious_frame.get("processing_mode", "") or conscious_crest.get("label", "")
         ),
-        "reactive_signal": reactive_signal,
+        "overlay": overlay,
         "subsurface_state": dict(snapshot_payload.get("subsurface_state") or {}),
     }
 
@@ -17485,11 +17485,12 @@ def _refresh_live_dual_strata_runtime(
     except Exception:
         return _read_live_dual_strata_runtime(systems)
 
+    _cf = dict(snapshot.conscious_frame or {})
     runtime = {
-        "conscious_frame": dict(snapshot.conscious_frame or {}),
-        "root_thought": dict(dict(snapshot.conscious_frame or {}).get("root_thought") or {}),
-        "processing_mode": str(dict(snapshot.conscious_frame or {}).get("processing_mode", "") or ""),
-        "reactive_signal": dict(dict(snapshot.conscious_frame or {}).get("reactive_signal") or {}),
+        "conscious_frame": _cf,
+        "conscious_crest": dict(_cf.get("conscious_crest") or {}),
+        "processing_mode": str(_cf.get("processing_mode", "") or ""),
+        "overlay": dict(_cf.get("overlay") or {}),
         "subsurface_state": dict(snapshot.subsurface_state or {}),
     }
     systems["_last_dual_strata_runtime"] = dict(runtime)
