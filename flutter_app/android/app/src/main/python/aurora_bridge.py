@@ -558,11 +558,24 @@ def handle_message(text: str) -> str:
                 "axis_state":     _last_axis_state.copy(),
                 "dominant_axis":  _get_dominant_axis(),
             }
-            explanation = _build_response_explanation()
+            explanation = _build_correction_explanation()
             _last_response = explanation  # so next turn's fidelity check sees the right response  # noqa: F841
             with _axis_state_lock:
                 _last_axis_state["speaking"] = False
             return explanation
+
+        # ── Relational claim: store + check for cross-entity shifts ──────────
+        # Every substantive turn is tagged with who/what it's about (self /
+        # another person / context / situation) and written to the relational
+        # claim log.  When a polarity flip is detected across different entities
+        # on the same topic, the synthesis is appended to the normal response.
+        _relational_synthesis: str = ""
+        if not _pending_correction_dialogue and not correction_acknowledged:
+            _claim_entity = _extract_claim_entity(text)
+            _store_relational_claim(text, _claim_entity[0], _claim_entity[1])
+            _shift = _detect_relational_shift(text, _claim_entity)
+            if _shift:
+                _relational_synthesis = _build_relational_synthesis(_claim_entity, _shift)
 
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
@@ -631,6 +644,12 @@ def handle_message(text: str) -> str:
         if correction_acknowledged:
             ack = "Understood — I've taken that on board."
             response = f"{ack} {response}" if response else ack
+
+        # Append relational synthesis when a cross-entity shift was detected.
+        # Comes after the normal response so it reads as a follow-on observation,
+        # not an interruption of the primary reply.
+        if _relational_synthesis:
+            response = f"{response}\n\n{_relational_synthesis}" if response else _relational_synthesis
 
         # Prepend any completed curiosity session report
         pending_report = (_systems or {}).pop("_pending_autonomous_report", None)
@@ -1040,6 +1059,188 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
                 f.write(_json.dumps(entry) + "\n")
     except Exception as exc:
         log.warning("Correction log write: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Relational comparison engine
+# ---------------------------------------------------------------------------
+# When the user says something that opposes a prior claim, the cause is
+# almost never a contradiction of self — it's a *variable*: a different
+# person, context, or situation.  This engine detects that variable and
+# surfaces a relational comparison so Aurora can deepen her model of how
+# the user's stance shifts across their relationships and situations.
+
+_PERSON_MARKERS = (
+    "my friend", "my partner", "my spouse", "my mom", "my dad",
+    "my sister", "my brother", "my coworker", "my colleague",
+    "my boss", "my manager", "my ex", "my roommate", "my neighbour",
+    "he ", "she ", "they ", "his ", "her ", "their ",
+)
+_CONTEXT_MARKERS = (
+    "at work", "at home", "at school", "at the gym", "online",
+    "in person", "in a group", "when i'm alone", "when i'm tired",
+    "when i'm stressed", "when i'm with", "in that environment",
+    "in that space",
+)
+_SITUATION_MARKERS = (
+    "when i", "if i", "sometimes i", "usually i", "normally i",
+    "except when", "unless i", "in that case", "that time", "back then",
+    "those times", "at that point",
+)
+
+_NEG_WORDS = frozenset({
+    "not", "never", "no", "hate", "dislike", "don't", "doesnt",
+    "doesn't", "wont", "won't", "cant", "can't", "shouldnt",
+    "shouldn't", "avoid", "against", "bad", "awful",
+})
+_POS_WORDS = frozenset({
+    "love", "like", "enjoy", "prefer", "always", "definitely",
+    "want", "need", "should", "agree", "support", "good", "great",
+})
+
+
+def _extract_claim_entity(text: str) -> tuple:
+    """
+    Returns (entity_type, entity_label):
+      ("self",      "you")           — user talking about themselves
+      ("other",     "<marker>")      — another person
+      ("context",   "<marker>")      — a different context/place
+      ("situation", "<marker>")      — a conditional/situational qualifier
+    """
+    t_low = text.lower()
+    for marker in _PERSON_MARKERS:
+        if marker in t_low:
+            return ("other", marker.strip())
+    for marker in _CONTEXT_MARKERS:
+        if marker in t_low:
+            return ("context", marker.strip())
+    for marker in _SITUATION_MARKERS:
+        if marker in t_low:
+            return ("situation", marker.strip())
+    return ("self", "you")
+
+
+def _store_relational_claim(text: str, entity_type: str, entity_label: str) -> None:
+    """Write this claim to relational_claims.jsonl for future comparison."""
+    import json as _json, time as _t
+    state_dir = os.environ.get("AURORA_STATE_DIR", "")
+    if not state_dir:
+        return
+    t_low = text.lower()
+    words = set(t_low.split())
+    try:
+        entry = {
+            "ts":           _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
+            "text":         text[:400],
+            "entity_type":  entity_type,
+            "entity_label": entity_label,
+            "neg":          bool(_NEG_WORDS & words),
+            "pos":          bool(_POS_WORDS & words),
+            "content":      [w for w in words if len(w) > 4][:20],
+        }
+        with open(os.path.join(state_dir, "relational_claims.jsonl"),
+                  "a", encoding="utf-8") as f:
+            f.write(_json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+
+def _detect_relational_shift(text: str, entity: tuple) -> dict | None:
+    """
+    Scan relational_claims.jsonl for a prior claim that:
+      - shares significant content words with this one (same topic)
+      - has opposite polarity (positive vs negative stance)
+      - came from a DIFFERENT entity/context
+
+    Returns a shift dict or None.
+    """
+    import json as _json
+    state_dir = os.environ.get("AURORA_STATE_DIR", "")
+    if not state_dir:
+        return None
+    log_path = os.path.join(state_dir, "relational_claims.jsonl")
+    if not os.path.exists(log_path):
+        return None
+
+    t_low = text.lower()
+    cur_words = set(t_low.split())
+    cur_content = {w for w in cur_words if len(w) > 4}
+    cur_neg = bool(_NEG_WORDS & cur_words)
+    cur_pos = bool(_POS_WORDS & cur_words)
+
+    # Only compare when current has clear polarity
+    if not cur_neg and not cur_pos:
+        return None
+
+    try:
+        entries = []
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    entries.append(_json.loads(line))
+                except Exception:
+                    continue
+        # Most recent first; skip the very last entry (just written)
+        for entry in reversed(entries[:-1]):
+            prior_entity_type  = entry.get("entity_type", "self")
+            prior_entity_label = entry.get("entity_label", "you")
+            # Only flag when entity is DIFFERENT — same entity updating a view is fine
+            if prior_entity_type == entity[0] and prior_entity_label == entity[1]:
+                continue
+            prior_content = set(entry.get("content", []))
+            overlap = cur_content & prior_content
+            if len(overlap) < 2:
+                continue
+            prior_neg = entry.get("neg", False)
+            prior_pos = entry.get("pos", False)
+            # Polarity flip = relational contradiction
+            polarity_flip = (cur_neg and prior_pos) or (cur_pos and prior_neg)
+            if polarity_flip:
+                return {
+                    "prior_text":         entry.get("text", ""),
+                    "prior_entity_type":  prior_entity_type,
+                    "prior_entity_label": prior_entity_label,
+                    "variable_type":      entity[0],
+                    "current_entity_label": entity[1],
+                    "overlap":            list(overlap)[:4],
+                }
+    except Exception:
+        pass
+    return None
+
+
+def _build_relational_synthesis(entity: tuple, shift: dict) -> str:
+    """
+    Generate a natural-language relational comparison.
+    Names the variable (person/context/situation) — no axis or pressure language.
+    """
+    var_type = shift["variable_type"]
+    prior_et = shift["prior_entity_type"]
+    prior_el = shift["prior_entity_label"]
+    cur_el   = shift["current_entity_label"]
+
+    if var_type == "other":
+        pole_a = "when it comes to you"
+        pole_b = f"when it's about {cur_el}"
+        if prior_et != "self":
+            pole_a = f"for {prior_el}"
+    elif var_type == "context":
+        pole_a = f"in one context"
+        pole_b = f"in a {cur_el} context"
+        if prior_et == "context":
+            pole_a = f"in a {prior_el} context"
+    else:
+        pole_a = "in one situation"
+        pole_b = f"when {cur_el}"
+        if prior_et == "situation":
+            pole_a = f"when {prior_el}"
+
+    return (
+        f"So {pole_a} the relationship is one thing, and {pole_b} it shifts — "
+        f"that reads as two different positions on the same thing, "
+        f"not a contradiction so much as a variable. "
+        f"What makes the difference between them?"
+    )
 
 
 def _apply_response_fidelity(
