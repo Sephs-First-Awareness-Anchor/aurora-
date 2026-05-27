@@ -48,12 +48,22 @@ jobs:
           printf "flutter.sdk=%s\nsdk.dir=%s\nndk.dir=%s\nndk.version=25.1.8937393\n" \
             "$FLUTTER_ROOT" "$ANDROID_SDK_ROOT" "$ANDROID_SDK_ROOT/ndk/25.1.8937393" > local.properties
 
-      - name: Create debug keystore
+      - name: Set up signing keystore
+        env:
+          RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE_B64 }}
         run: |
           mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android \
-            -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
-            -validity 10000 -dname "CN=Android Debug,O=Android,C=US" || true
+          if [ -n "$RELEASE_KEYSTORE_B64" ]; then
+            # Stable release keystore — same certificate every build, no Play Protect flag
+            echo "$RELEASE_KEYSTORE_B64" | base64 -d > ~/.android/release.keystore
+          else
+            # No secret set yet: generate a debug key (Play Protect will warn until you
+            # add RELEASE_KEYSTORE_B64 / RELEASE_STORE_PASS / RELEASE_KEY_ALIAS /
+            # RELEASE_KEY_PASS as repository secrets — see SIGNING.md)
+            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android \
+              -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+              -validity 10000 -dname "CN=Android Debug,O=Android,C=US" 2>/dev/null || true
+          fi
 
       - name: Install Flutter dependencies
         working-directory: flutter_app
@@ -65,6 +75,10 @@ jobs:
 
       - name: Build APK (release)
         working-directory: flutter_app
+        env:
+          RELEASE_STORE_PASS: ${{ secrets.RELEASE_STORE_PASS }}
+          RELEASE_KEY_ALIAS:  ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASS:   ${{ secrets.RELEASE_KEY_PASS }}
         run: |
           flutter build apk --release --no-shrink -v
           cp build/app/outputs/flutter-apk/app-release.apk ../aurora-release.apk
