@@ -39,6 +39,12 @@ _PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
 _pending_example_concept: str = ""   # concept Aurora asked about
 _pending_example_asked:   str = ""   # the exact question she asked
 
+# Correction learning loop.
+# Turn A — user says "that's wrong": Aurora explains its reasoning and arms this state.
+# Turn B — user explains what was wrong: reasoning is ingested as learning data.
+_pending_correction_dialogue: bool = False
+_correction_context: dict = {}       # snapshot of the wrong response's reasoning geometry
+
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
@@ -69,6 +75,20 @@ _CURIOSITY_CMD = re.compile(
       (?P<unit3>min(?:ute)?s?|hr?s?|hours?)
     """,
     re.IGNORECASE | re.VERBOSE,
+)
+
+# Explicit correction — user tells Aurora its response was wrong.
+# Distinct from confusion (which covers "what?", "huh?") — these name the
+# problem explicitly and trigger Aurora's explanation + learning loop.
+_EXPLICIT_CORRECTION = re.compile(
+    r'\b(that.s|that is|that was)\s+(wrong|incorrect|not right|not correct|off|inaccurate)\b'
+    r'|\b(you.re|you are)\s+(wrong|incorrect|off|mistaken)\b'
+    r'|\b(no[,\s]+that.s\s+(wrong|incorrect|not right))\b'
+    r'|\b(wrong\s+(response|answer|reasoning|interpretation))\b'
+    r'|\b(that\s+(was|is)\s+(incorrect|wrong|off|inaccurate))\b'
+    r'|\bthat.s\s+not\s+(right|correct|accurate)\b'
+    r'|\b(incorrect|your\s+(reasoning|logic|interpretation|response)\s+(is|was)\s+(wrong|off|incorrect))\b',
+    re.IGNORECASE,
 )
 
 # Your confusion or correction → fidelity=0 on the previous crossing.
@@ -500,6 +520,17 @@ def handle_message(text: str) -> str:
         return f"Starting a {label} curiosity session. I'll report back when I'm done."
 
     try:
+        global _pending_correction_dialogue, _correction_context
+
+        # ── Correction dialogue: Turn B — user is explaining what was wrong ───
+        # This fires BEFORE fidelity so the correction is fully ingested first.
+        correction_acknowledged = False
+        if _pending_correction_dialogue and _last_response and _systems:
+            _ingest_correction_teaching(text, _correction_context)
+            _pending_correction_dialogue = False
+            _correction_context = {}
+            correction_acknowledged = True
+
         # ── Step 1: Read your response as fidelity / teaching data ───────────
         if _last_response and _systems:
             # If Aurora asked a genuine question last turn and there's a gap
@@ -515,6 +546,36 @@ def handle_message(text: str) -> str:
                 _pending_example_asked   = ""
             # Your confusion or correction = fidelity 0 on the previous path.
             _apply_response_fidelity(text, _last_response, _last_path_key)
+
+        # ── Correction dialogue: Turn A — user says "that's wrong" ────────────
+        # Intercepts here so Aurora explains before any new processing happens.
+        if (_is_explicit_correction(text) and _last_response
+                and not _pending_example_concept and not correction_acknowledged):
+            _pending_correction_dialogue = True
+            _correction_context = {
+                "wrong_response": _last_response,
+                "path_key":       _last_path_key,
+                "axis_state":     _last_axis_state.copy(),
+                "dominant_axis":  _get_dominant_axis(),
+            }
+            explanation = _build_correction_explanation()
+            _last_response = explanation  # so next turn's fidelity check sees the right response  # noqa: F841
+            with _axis_state_lock:
+                _last_axis_state["speaking"] = False
+            return explanation
+
+        # ── Relational claim: store + check for cross-entity shifts ──────────
+        # Every substantive turn is tagged with who/what it's about (self /
+        # another person / context / situation) and written to the relational
+        # claim log.  When a polarity flip is detected across different entities
+        # on the same topic, the synthesis is appended to the normal response.
+        _relational_synthesis: str = ""
+        if not _pending_correction_dialogue and not correction_acknowledged:
+            _claim_entity = _extract_claim_entity(text)
+            _store_relational_claim(text, _claim_entity[0], _claim_entity[1])
+            _shift = _detect_relational_shift(text, _claim_entity)
+            if _shift:
+                _relational_synthesis = _build_relational_synthesis(_claim_entity, _shift)
 
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
@@ -578,6 +639,17 @@ def handle_message(text: str) -> str:
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
             _last_axis_state["speaking"] = bool(response)
+
+        # If this turn was the user's correction explanation, prefix acknowledgment
+        if correction_acknowledged:
+            ack = "Understood — I've taken that on board."
+            response = f"{ack} {response}" if response else ack
+
+        # Append relational synthesis when a cross-entity shift was detected.
+        # Comes after the normal response so it reads as a follow-on observation,
+        # not an interruption of the primary reply.
+        if _relational_synthesis:
+            response = f"{response}\n\n{_relational_synthesis}" if response else _relational_synthesis
 
         # Prepend any completed curiosity session report
         pending_report = (_systems or {}).pop("_pending_autonomous_report", None)
@@ -703,6 +775,472 @@ def _ingest_example(example_text: str, concept: str) -> None:
         log.warning("Genealogy tick failed: %s", exc)
 
     log.info("Example ingested — concept %r now has semantic modality data", concept)
+
+
+def _is_explicit_correction(text: str) -> bool:
+    return bool(_EXPLICIT_CORRECTION.search((text or "").strip()))
+
+
+def _get_dominant_axis() -> str:
+    return max(("X", "T", "N", "B", "A"), key=lambda k: _last_axis_state.get(k, 0.0))
+
+
+# ---------------------------------------------------------------------------
+# Emergent correction classification
+# ---------------------------------------------------------------------------
+
+# Surface-level categories that a user can meaningfully judge.
+# The internal geometry (axes, tension, drive) drives classification silently;
+# only these labels cross the surface boundary.
+_ERROR_LABELS = {
+    "intent":    "misclassified intent",
+    "words":     "word or phrasing selection",
+    "concept":   "wrong concept engaged",
+    "structure": "sentence structure",
+    "tone":      "tone or register",
+}
+
+# Geometry → (category, surface description of what went wrong linguistically).
+# The description never mentions axes, pressure, or drive — only what the
+# response *did* in language terms.
+def _classify_from_proto(proto) -> tuple:
+    if proto is None:
+        return ("intent", "the response type may not have matched what the moment needed")
+
+    ctype    = proto.comparison_type
+    dominant = (proto.dominant_axes or ["X"])[0]
+    tension  = proto.tension_level
+    drive    = proto.drive_strength
+
+    if drive > 0.72 and ctype == "assertion":
+        return ("intent",
+                "I produced a direct assertion — stated something as settled when the moment may have called for a question or exploration first")
+
+    if tension > 0.65 and ctype in ("assertion", "definition"):
+        return ("words",
+                "I expressed a firm claim despite internal ambiguity — the phrasing overstated the certainty level")
+
+    if dominant == "B" and ctype in ("definition", "assertion", "negation"):
+        return ("structure",
+                "I imposed a boundary framing — built the sentence around a limit or dividing line that may not have been warranted")
+
+    if dominant == "T" and ctype in ("assertion", "reflection"):
+        return ("concept",
+                "I anchored to a thread from earlier in the conversation that may not have been the relevant one")
+
+    if dominant == "N":
+        return ("concept",
+                "I engaged with what felt conceptually novel in the moment, which may not be what you were actually asking about")
+
+    if ctype == "reflection" and drive < 0.4:
+        return ("tone",
+                "I turned inward into reflection when a more direct response was probably needed")
+
+    if ctype == "question" and drive > 0.6:
+        return ("intent",
+                "I asked a question when you likely expected a substantive response")
+
+    return ("intent",
+            "the response type may not have matched what the moment needed")
+
+
+def _detect_error_type_from_user(text: str) -> str:
+    """
+    Parse the user's correction explanation to detect which category they're naming.
+    Returns one of the _ERROR_LABELS keys, or "unknown".
+    """
+    t = text.lower()
+    if any(w in t for w in ("intent", "misread", "wrong type", "should have asked",
+                             "question instead", "shouldn't have stated", "read it as")):
+        return "intent"
+    if any(w in t for w in ("word", "phrasing", "wording", "phrase", "said",
+                             "chose", "word choice", "phrased it", "language")):
+        return "words"
+    if any(w in t for w in ("concept", "topic", "subject", "about", "wrong thing",
+                             "different thing", "the wrong", "engaged with")):
+        return "concept"
+    if any(w in t for w in ("structure", "sentence", "format", "grammar",
+                             "structured", "framing", "how you framed")):
+        return "structure"
+    if any(w in t for w in ("tone", "register", "formal", "casual", "warm",
+                             "clinical", "too long", "too short", "length")):
+        return "tone"
+    return "unknown"
+
+
+def _emergent_category_hint(comparison_type: str, dominant_axis: str) -> str:
+    """
+    Check the correction_log for historical patterns:
+    if this (comparison_type, dominant_axis) combination has been corrected
+    before, return the most common category — that's the emergent classifier.
+    Returns "" if no history exists yet.
+    """
+    import json as _json
+    state_dir = os.environ.get("AURORA_STATE_DIR", "")
+    if not state_dir:
+        return ""
+    log_path = os.path.join(state_dir, "correction_log.jsonl")
+    if not os.path.exists(log_path):
+        return ""
+    try:
+        counts: dict = {}
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    e = _json.loads(line)
+                    if (e.get("comparison_type") == comparison_type
+                            and e.get("dominant_axis") == dominant_axis):
+                        cat = e.get("error_type", "unknown")
+                        if cat and cat != "unknown":
+                            counts[cat] = counts.get(cat, 0) + 1
+                except Exception:
+                    continue
+        if counts:
+            return max(counts, key=counts.__getitem__)
+    except Exception:
+        pass
+    return ""
+
+
+def _build_correction_explanation() -> str:
+    """
+    Produce a linguistic/semantic classification of what went wrong.
+    Identity geometry drives the classification internally but nothing
+    axis-level or pressure-level surfaces to the user.
+    """
+    snippet = (_last_response or "")[:80].rstrip()
+    if len(_last_response or "") > 80:
+        snippet += "…"
+
+    category    = "intent"
+    description = "the response type may not have matched what the moment needed"
+    comparison_type = ""
+    dominant_axis   = _get_dominant_axis()
+
+    try:
+        lf    = _systems.get("language_field") if _systems else None
+        proto = getattr(lf, "_last_proto", None) if lf else None
+        category, description = _classify_from_proto(proto)
+        if proto:
+            comparison_type = proto.comparison_type
+            dominant_axis   = (proto.dominant_axes or [dominant_axis])[0]
+    except Exception:
+        pass
+
+    # Check emergent history — if we've seen this geometry corrected before,
+    # lead with the historically confirmed category rather than the fresh guess.
+    historical = _emergent_category_hint(comparison_type, dominant_axis)
+    if historical and historical in _ERROR_LABELS:
+        category = historical
+
+    label = _ERROR_LABELS.get(category, category)
+    return (
+        f"Looks like a {label} issue — {description}. "
+        f'The response was: "{snippet}". '
+        f"Was the intent misread, was it a word or phrasing problem, "
+        f"or did I engage with the wrong concept?"
+    )
+
+
+def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
+    """
+    Ingest the user's explanation through four layers, tagged with an emergent
+    error category so the correction_log can build a classifiable history.
+
+    Layers:
+    1. Language field — fidelity=0 on the LSA path that produced the error
+    2. Identity field — category-specific axis adjustment (internal only)
+    3. SediMemory — (wrong_response, correction, category) bound as learning event
+    4. correction_log.jsonl — persistent, tagged record for emergent classification
+    """
+    if not _systems:
+        return
+
+    wrong_response  = context.get("wrong_response", "")
+    path_key        = context.get("path_key", "")
+    dominant_axis   = context.get("dominant_axis", "X")
+    comparison_type = context.get("comparison_type", "")
+
+    # Detect the error category from what the user said, then fall back to
+    # the geometry-derived guess stored in context.
+    error_type = _detect_error_type_from_user(user_explanation)
+    if error_type == "unknown":
+        error_type = context.get("error_type", "intent")
+
+    log.info("Correction ingested: category=%s axis=%s path=%r",
+             error_type, dominant_axis, path_key)
+
+    # 1. Language field — hard fidelity=0 on the path
+    try:
+        lf = _systems.get("language_field")
+        if lf and hasattr(lf, "reentry"):
+            lf.reentry(wrong_response, 0.0, path_key)
+    except Exception as exc:
+        log.warning("LF correction reentry: %s", exc)
+
+    # 2. Identity field — category-specific pressure adjustment.
+    # The axis pattern that produced the error gets suppressed; axes that
+    # drive the corrective behaviour get raised. None of this surfaces.
+    try:
+        ifield = _systems.get("identity_field")
+        if ifield and hasattr(ifield, "ingest_external_input"):
+            # Base: all axes pulled toward neutral
+            adj = {"X": 0.30, "T": 0.30, "N": 0.60, "B": 0.30, "A": 0.30}
+            # Suppress the axis that misfired
+            adj[dominant_axis] = 0.10
+            # Category-specific correction boost
+            if error_type == "intent":
+                adj["N"] = 0.85   # raise novelty — reassess what's actually needed
+                adj["A"] = 0.72   # raise agency — choose differently
+            elif error_type == "words":
+                adj["N"] = 0.80   # novelty in word selection
+                adj["T"] = 0.55   # better temporal grounding for word choice
+            elif error_type == "concept":
+                adj["T"] = 0.70   # recalibrate what's actually carried forward
+                adj["N"] = 0.78   # engage fresh concept
+            elif error_type == "structure":
+                adj["B"] = 0.72   # reframe boundary structure
+                adj["N"] = 0.65
+            elif error_type == "tone":
+                adj["A"] = 0.80   # agency — modulate the register deliberately
+                adj["X"] = 0.55   # ground in context of who is speaking
+            ifield.ingest_external_input(adj, intensity=0.90,
+                                         source=f"correction:{error_type}")
+    except Exception as exc:
+        log.warning("Identity field correction: %s", exc)
+
+    # 3. SediMemory — bind the correction as a categorised learning event
+    try:
+        sm = _systems.get("sedimemory")
+        if sm and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                cv = ConstraintVector(X=0.30, T=0.50, N=0.65, B=0.85, A=0.75)
+                sm.ingest_event(
+                    content={
+                        "type":             "correction_pair",
+                        "error_type":       error_type,
+                        "wrong_response":   wrong_response[:300],
+                        "user_correction":  user_explanation[:400],
+                        "dominant_axis":    dominant_axis,
+                        "comparison_type":  comparison_type,
+                        "path_key":         path_key,
+                        "source":           "explicit_correction",
+                    },
+                    constraint_vector=cv,
+                    source="user_correction",
+                )
+    except Exception as exc:
+        log.warning("SediMemory correction: %s", exc)
+
+    # 4. Persistent log — the emergent taxonomy lives here
+    try:
+        import json as _json, time as _t
+        state_dir = os.environ.get("AURORA_STATE_DIR", "")
+        if state_dir:
+            entry = {
+                "timestamp":       _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
+                "error_type":      error_type,
+                "wrong_response":  wrong_response[:300],
+                "user_correction": user_explanation[:400],
+                "dominant_axis":   dominant_axis,
+                "comparison_type": comparison_type,
+                "path_key":        path_key,
+                "axis_state":      context.get("axis_state", {}),
+            }
+            with open(os.path.join(state_dir, "correction_log.jsonl"),
+                      "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+    except Exception as exc:
+        log.warning("Correction log write: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Relational comparison engine
+# ---------------------------------------------------------------------------
+# When the user says something that opposes a prior claim, the cause is
+# almost never a contradiction of self — it's a *variable*: a different
+# person, context, or situation.  This engine detects that variable and
+# surfaces a relational comparison so Aurora can deepen her model of how
+# the user's stance shifts across their relationships and situations.
+
+_PERSON_MARKERS = (
+    "my friend", "my partner", "my spouse", "my mom", "my dad",
+    "my sister", "my brother", "my coworker", "my colleague",
+    "my boss", "my manager", "my ex", "my roommate", "my neighbour",
+    "he ", "she ", "they ", "his ", "her ", "their ",
+)
+_CONTEXT_MARKERS = (
+    "at work", "at home", "at school", "at the gym", "online",
+    "in person", "in a group", "when i'm alone", "when i'm tired",
+    "when i'm stressed", "when i'm with", "in that environment",
+    "in that space",
+)
+_SITUATION_MARKERS = (
+    "when i", "if i", "sometimes i", "usually i", "normally i",
+    "except when", "unless i", "in that case", "that time", "back then",
+    "those times", "at that point",
+)
+
+_NEG_WORDS = frozenset({
+    "not", "never", "no", "hate", "dislike", "don't", "doesnt",
+    "doesn't", "wont", "won't", "cant", "can't", "shouldnt",
+    "shouldn't", "avoid", "against", "bad", "awful",
+})
+_POS_WORDS = frozenset({
+    "love", "like", "enjoy", "prefer", "always", "definitely",
+    "want", "need", "should", "agree", "support", "good", "great",
+})
+
+
+def _extract_claim_entity(text: str) -> tuple:
+    """
+    Returns (entity_type, entity_label):
+      ("self",      "you")           — user talking about themselves
+      ("other",     "<marker>")      — another person
+      ("context",   "<marker>")      — a different context/place
+      ("situation", "<marker>")      — a conditional/situational qualifier
+    """
+    t_low = text.lower()
+    for marker in _PERSON_MARKERS:
+        if marker in t_low:
+            return ("other", marker.strip())
+    for marker in _CONTEXT_MARKERS:
+        if marker in t_low:
+            return ("context", marker.strip())
+    for marker in _SITUATION_MARKERS:
+        if marker in t_low:
+            return ("situation", marker.strip())
+    return ("self", "you")
+
+
+def _store_relational_claim(text: str, entity_type: str, entity_label: str) -> None:
+    """Write this claim to relational_claims.jsonl for future comparison."""
+    import json as _json, time as _t
+    state_dir = os.environ.get("AURORA_STATE_DIR", "")
+    if not state_dir:
+        return
+    t_low = text.lower()
+    words = set(t_low.split())
+    try:
+        entry = {
+            "ts":           _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
+            "text":         text[:400],
+            "entity_type":  entity_type,
+            "entity_label": entity_label,
+            "neg":          bool(_NEG_WORDS & words),
+            "pos":          bool(_POS_WORDS & words),
+            "content":      [w for w in words if len(w) > 4][:20],
+        }
+        with open(os.path.join(state_dir, "relational_claims.jsonl"),
+                  "a", encoding="utf-8") as f:
+            f.write(_json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+
+def _detect_relational_shift(text: str, entity: tuple) -> dict | None:
+    """
+    Scan relational_claims.jsonl for a prior claim that:
+      - shares significant content words with this one (same topic)
+      - has opposite polarity (positive vs negative stance)
+      - came from a DIFFERENT entity/context
+
+    Returns a shift dict or None.
+    """
+    import json as _json
+    state_dir = os.environ.get("AURORA_STATE_DIR", "")
+    if not state_dir:
+        return None
+    log_path = os.path.join(state_dir, "relational_claims.jsonl")
+    if not os.path.exists(log_path):
+        return None
+
+    t_low = text.lower()
+    cur_words = set(t_low.split())
+    cur_content = {w for w in cur_words if len(w) > 4}
+    cur_neg = bool(_NEG_WORDS & cur_words)
+    cur_pos = bool(_POS_WORDS & cur_words)
+
+    # Only compare when current has clear polarity
+    if not cur_neg and not cur_pos:
+        return None
+
+    try:
+        entries = []
+        with open(log_path, "r", encoding="utf-8") as f:
+            for line in f:
+                try:
+                    entries.append(_json.loads(line))
+                except Exception:
+                    continue
+        # Most recent first; skip the very last entry (just written)
+        for entry in reversed(entries[:-1]):
+            prior_entity_type  = entry.get("entity_type", "self")
+            prior_entity_label = entry.get("entity_label", "you")
+            # Only flag when entity is DIFFERENT — same entity updating a view is fine
+            if prior_entity_type == entity[0] and prior_entity_label == entity[1]:
+                continue
+            prior_content = set(entry.get("content", []))
+            overlap = cur_content & prior_content
+            if len(overlap) < 2:
+                continue
+            prior_neg = entry.get("neg", False)
+            prior_pos = entry.get("pos", False)
+            # Polarity flip = relational contradiction
+            polarity_flip = (cur_neg and prior_pos) or (cur_pos and prior_neg)
+            if polarity_flip:
+                return {
+                    "prior_text":         entry.get("text", ""),
+                    "prior_entity_type":  prior_entity_type,
+                    "prior_entity_label": prior_entity_label,
+                    "variable_type":      entity[0],
+                    "current_entity_label": entity[1],
+                    "overlap":            list(overlap)[:4],
+                }
+    except Exception:
+        pass
+    return None
+
+
+def _build_relational_synthesis(entity: tuple, shift: dict) -> str:
+    """
+    Generate a natural-language relational comparison.
+    Names the variable (person/context/situation) — no axis or pressure language.
+    """
+    var_type = shift["variable_type"]
+    prior_et = shift["prior_entity_type"]
+    prior_el = shift["prior_entity_label"]
+    cur_el   = shift["current_entity_label"]
+
+    if var_type == "other":
+        pole_a = "when it comes to you"
+        pole_b = f"when it's about {cur_el}"
+        if prior_et != "self":
+            pole_a = f"for {prior_el}"
+    elif var_type == "context":
+        pole_a = f"in one context"
+        pole_b = f"in a {cur_el} context"
+        if prior_et == "context":
+            pole_a = f"in a {prior_el} context"
+    else:
+        pole_a = "in one situation"
+        pole_b = f"when {cur_el}"
+        if prior_et == "situation":
+            pole_a = f"when {prior_el}"
+
+    return (
+        f"So {pole_a} the relationship is one thing, and {pole_b} it shifts — "
+        f"that reads as two different positions on the same thing, "
+        f"not a contradiction so much as a variable. "
+        f"What makes the difference between them?"
+    )
 
 
 def _apply_response_fidelity(
@@ -860,6 +1398,10 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
         try:
             cycle_count = 0
             deadline = (start_ts + duration_s) if duration_s else None
+            # Reset the per-idle cycle cap so a user-triggered session isn't
+            # blocked by cycles the background loop already consumed.
+            if hasattr(engine, "reset_idle_counter"):
+                engine.reset_idle_counter()
 
             while True:
                 # Stop if cancelled or limits reached
@@ -873,7 +1415,9 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                 # Run one curiosity cycle
                 try:
                     result = {}
-                    if hasattr(engine, "run_one_cycle"):
+                    if hasattr(engine, "run_curiosity_cycle"):
+                        result = engine.run_curiosity_cycle() or {}
+                    elif hasattr(engine, "run_one_cycle"):
                         result = engine.run_one_cycle() or {}
                     elif hasattr(engine, "tick"):
                         result = engine.tick() or {}
@@ -924,6 +1468,17 @@ def _store_curiosity_report(
     ]
     _systems["_pending_autonomous_report"] = "\n".join(report_lines)
     log.info("Curiosity session report stored (%s)", time_str)
+
+
+def get_pending_report() -> str:
+    """
+    Called by AuroraService's polling loop.
+    Returns and clears any completed curiosity session report, or "" if none ready.
+    """
+    if _systems is None:
+        return ""
+    report = (_systems or {}).pop("_pending_autonomous_report", None)
+    return str(report) if report else ""
 
 
 def set_state(state: str) -> None:

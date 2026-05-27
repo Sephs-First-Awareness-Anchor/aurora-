@@ -555,3 +555,33 @@ class ConversationEpisodeCompiler:
     def scored_conversation_count(self) -> int:
         return len(self._all_scored)
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
+
+
+_DIM_TO_AXIS = {
+    "emotional_calibration": "B",
+    "boundary_calibration": "B",
+    "ambiguity_handling": "B",
+    "framing_selection": "A",
+    "adaptive_strategy_selection": "A",
+    "perspective_integration": "X",
+    "uncertainty_signaling": "X",
+    "contradiction_handling": "X",
+    "context_carryover": "T",
+    "multi_turn_stability": "T",
+    "semantic_precision": "N",
+    "compression_elaboration_fit": "N",
+    "implied_intent_inference": "N",
+    "coherence_maintenance": "X",
+}
+
+_AXES = ("X", "T", "N", "B", "A")
+
+
+def _derive_signature(weights: dict, include_weighting: bool = True) -> str:
+    ordered = [ax for ax in _AXES if float(weights.get(ax, 0.0) or 0.0) > 0.0]
+    base = "".join(ordered) or "X"
+    if include_weighting and ordered:
+        dominant = max(ordered, key=lambda ax: float(weights.get(ax, 0.0) or 0.0))
+        if len(ordered) == 5 and float(weights.get(dominant, 0.0) or 0.0) >= 0.30:
+            return base + dominant
+    return base

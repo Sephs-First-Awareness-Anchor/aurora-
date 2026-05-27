@@ -1857,3 +1857,165 @@ def build_aurora_sensory_crystal(state_dir: str = _STATE_ROOT) -> "AuroraSensory
     crystal.boot()
     return crystal
 _STATE_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora_state")
+
+
+def build_audio_20d_from_der(
+    x: float, t: float, n: float, b: float, a: float
+) -> List[float]:
+    """
+    Synthesize a 20-d audio feature vector from DER axis pressures.
+
+    Used when no microphone is available (corpus training, daemon idle cycles).
+    Maps Aurora's internal constraint state to the acoustic dimensions the
+    sensory crystal's audio facets understand.
+    """
+    x = max(0.0, min(1.0, float(x)))
+    t = max(0.0, min(1.0, float(t)))
+    n = max(0.0, min(1.0, float(n)))
+    b = max(0.0, min(1.0, float(b)))
+    a = max(0.0, min(1.0, float(a)))
+
+    vec = [0.0] * 20
+    vec[0] = x           # RMS ← X (existence energy → amplitude)
+    vec[1] = n           # ZCR ← N (novelty → spectral roughness)
+    vec[2] = a           # centroid ← A (agency → timbral brightness)
+    vec[3] = b           # bandwidth ← B (boundary → spectral spread)
+    vec[4] = (x + b) * 0.5  # rolloff ← mean(X, B)
+    vec[5] = t           # flux ← T (temporal change rate)
+    vec[7] = 0.8 * t + 0.2 * a  # onset_density
+    vec[6] = a           # harmonicity ← A
+    dominant = int(a * 11.9999)
+    spread = max(0.5, (1.0 - n) * 2.5)
+    chroma_sum = 0.0
+    for i in range(12):
+        dist = min(abs(i - dominant), 12 - abs(i - dominant))
+        raw = math.exp(-dist / spread)
+        vec[8 + i] = raw
+        chroma_sum += raw
+    if chroma_sum > 0:
+        for i in range(12):
+            vec[8 + i] = vec[8 + i] / chroma_sum * a
+    return vec
+
+
+def build_vision_57d_from_image_file(image_path: str) -> Optional[List[float]]:
+    """
+    Extract a 57-d visual feature vector from an image file using PIL only.
+
+    No cv2 required — works in corpus training where cv2 may not be installed.
+    Returns None if PIL is unavailable or extraction fails.
+    """
+    try:
+        from PIL import Image as _PILImg
+    except ImportError:
+        return None
+
+    try:
+        img = _PILImg.open(image_path).convert("RGB")
+        w, h = img.size
+        pixels = list(img.getdata())
+        n_pix = max(1, len(pixels))
+
+        r_vals = [p[0] / 255.0 for p in pixels]
+        g_vals = [p[1] / 255.0 for p in pixels]
+        b_vals = [p[2] / 255.0 for p in pixels]
+        avg_r = sum(r_vals) / n_pix
+        avg_g = sum(g_vals) / n_pix
+        avg_b = sum(b_vals) / n_pix
+
+        hue_bins = [0.0] * 24
+        sat_sum = 0.0
+        for r, g, bv in zip(r_vals, g_vals, b_vals):
+            mx, mn = max(r, g, bv), min(r, g, bv)
+            delta = mx - mn
+            sat = delta / max(mx, 1e-9)
+            sat_sum += sat
+            if delta < 0.001:
+                continue
+            if mx == r:
+                hue = ((g - bv) / delta) % 6.0
+            elif mx == g:
+                hue = (bv - r) / delta + 2.0
+            else:
+                hue = (r - g) / delta + 4.0
+            hue_bins[int(hue / 6.0 * 24) % 24] += sat
+        hue_sum = sum(hue_bins) or 1.0
+        vec = [v / hue_sum for v in hue_bins]
+
+        brightness = avg_r * 0.299 + avg_g * 0.587 + avg_b * 0.114
+        var_r = sum((v - avg_r) ** 2 for v in r_vals) / n_pix
+        var_g = sum((v - avg_g) ** 2 for v in g_vals) / n_pix
+        var_b = sum((v - avg_b) ** 2 for v in b_vals) / n_pix
+        edge_proxy = _clamp01((var_r + var_g + var_b) ** 0.5 * 4.0)
+        saturation = sat_sum / n_pix
+        aspect = _clamp01(min(3.0, w / max(1, h)) / 3.0)
+        shape_complexity = _clamp01(abs(var_r - var_b) / max(var_g + 1e-9, 0.01))
+        vec.extend([
+            brightness, edge_proxy, 0.0, saturation, 0.0,
+            shape_complexity, avg_r, avg_g, avg_b, aspect,
+        ])
+        vec.extend([0.0] * 17)
+        vec.extend([0.0] * 6)  # motion facet — zeros for static image
+        return vec[:57]
+    except Exception:
+        return None
+
+
+@dataclass
+class CrystalConceptRecord:
+    """
+    Tracks which modalities (semantic/visual/audio) have been observed for a
+    named concept. Gates progression through the unified crystal lifecycle:
+
+        base         — only 1 modality observed
+        composite    — ANY 2 of 3 modalities observed
+        higher_order — ALL 3 modalities observed
+        quasicrystal — all 3 + deep integration (set externally)
+    """
+    concept: str
+    modalities: set = field(default_factory=set)
+    stage: str = "base"
+    semantic_weight: float = 0.0
+    visual_node_ids: List[str] = field(default_factory=list)
+    audio_node_ids: List[str] = field(default_factory=list)
+    semantic_node_ids: List[str] = field(default_factory=list)
+    usage_count: int = 0
+    first_seen: float = field(default_factory=time.time)
+    last_seen: float = field(default_factory=time.time)
+
+    def modality_count(self) -> int:
+        return len(self.modalities)
+
+    def can_promote_to_composite(self) -> bool:
+        return self.stage == "base" and self.modality_count() >= 2
+
+    def can_promote_to_higher_order(self) -> bool:
+        return self.stage == "composite" and self.modalities >= {"semantic", "visual", "audio"}
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "concept": self.concept,
+            "modalities": list(self.modalities),
+            "stage": self.stage,
+            "semantic_weight": self.semantic_weight,
+            "visual_node_ids": self.visual_node_ids,
+            "audio_node_ids": self.audio_node_ids,
+            "semantic_node_ids": self.semantic_node_ids,
+            "usage_count": self.usage_count,
+            "first_seen": self.first_seen,
+            "last_seen": self.last_seen,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "CrystalConceptRecord":
+        obj = cls(concept=d["concept"])
+        obj.modalities = set(d.get("modalities", []))
+        obj.stage = d.get("stage", "base")
+        obj.semantic_weight = d.get("semantic_weight", 0.0)
+        obj.visual_node_ids = d.get("visual_node_ids", [])
+        obj.audio_node_ids = d.get("audio_node_ids", [])
+        obj.semantic_node_ids = d.get("semantic_node_ids", [])
+        obj.usage_count = d.get("usage_count", 0)
+        obj.first_seen = d.get("first_seen", time.time())
+        obj.last_seen = d.get("last_seen", time.time())
+        return obj

@@ -138,6 +138,16 @@ class _HomeScreenState extends State<HomeScreen>
                 setState(() { _aiReady = true; _statusTxt = 'Listening…'; });
               }
               _speak('Aurora is online.');
+            case 'proactive':
+              // Curiosity session completed — Aurora reports back unprompted.
+              if (mounted && text.isNotEmpty) {
+                setState(() {
+                  _msgs.add(ChatMsg(text, isUser: false));
+                  _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
+                });
+                _scrollToBottom();
+                if (!_quietMode) _speak(text);
+              }
             case 'error':
               if (mounted) {
                 // Show the real error message so it's visible for diagnosis.
