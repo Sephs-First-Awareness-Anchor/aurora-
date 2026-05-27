@@ -25,12 +25,12 @@ class OverlayService : Service() {
     }
 
     private lateinit var windowManager: WindowManager
-    private lateinit var orbView: AuroraOrbView
+    private lateinit var aurora: AuroraCurtain
 
     private val animHandler = Handler(Looper.getMainLooper())
     private val animRunnable = object : Runnable {
         override fun run() {
-            orbView.tickAnimation()
+            aurora.tick()
             animHandler.postDelayed(this, 50L)
         }
     }
@@ -50,7 +50,7 @@ class OverlayService : Service() {
         createNotificationChannel()
         startForeground(NOTIF_ID, buildNotification())
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        addOrb()
+        addAurora()
         animHandler.post(animRunnable)
         stateHandler.postDelayed(stateRunnable, 4000L)
     }
@@ -61,7 +61,7 @@ class OverlayService : Service() {
             val mod = py.getModule("aurora_bridge")
             val raw = mod.callAttr("get_axis_state")?.toString() ?: return
             val j   = org.json.JSONObject(raw)
-            orbView.updateAxisState(
+            aurora.updateAxisState(
                 x        = j.optDouble("X", 0.5).toFloat(),
                 t        = j.optDouble("T", 0.5).toFloat(),
                 n        = j.optDouble("N", 0.5).toFloat(),
@@ -72,16 +72,17 @@ class OverlayService : Service() {
         } catch (_: Exception) {}
     }
 
-    private fun addOrb() {
-        orbView = AuroraOrbView(this)
+    private fun addAurora() {
+        aurora = AuroraCurtain(this)
 
         val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
         val dp = resources.displayMetrics.density
-        val w  = (220 * dp).toInt()
-        val h  = (120 * dp).toInt()
+        // Wide ribbon, short — spans most of the screen width like a real aurora band
+        val w  = (WindowManager.LayoutParams.MATCH_PARENT)
+        val h  = (88 * dp).toInt()
 
         val params = WindowManager.LayoutParams(
             w, h, layoutFlag,
@@ -89,17 +90,17 @@ class OverlayService : Service() {
                     or WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
-        ).apply { gravity = Gravity.TOP or Gravity.START; x = 60; y = 200 }
+        ).apply { gravity = Gravity.TOP or Gravity.START; x = 0; y = 180 }
 
-        var ix = 0; var iy = 0; var tx = 0f; var ty = 0f; var t0 = 0L
+        var iy = 0; var ty = 0f; var t0 = 0L
         val slop = 8f * dp
 
-        orbView.setOnTouchListener { _, e ->
+        aurora.setOnTouchListener { _, e ->
             when (e.action) {
-                MotionEvent.ACTION_DOWN -> { ix = params.x; iy = params.y; tx = e.rawX; ty = e.rawY; t0 = System.currentTimeMillis(); true }
-                MotionEvent.ACTION_MOVE -> { params.x = ix + (e.rawX - tx).toInt(); params.y = iy + (e.rawY - ty).toInt(); try { windowManager.updateViewLayout(orbView, params) } catch (_: Exception) {}; true }
+                MotionEvent.ACTION_DOWN -> { iy = params.y; ty = e.rawY; t0 = System.currentTimeMillis(); true }
+                MotionEvent.ACTION_MOVE -> { params.y = iy + (e.rawY - ty).toInt(); try { windowManager.updateViewLayout(aurora, params) } catch (_: Exception) {}; true }
                 MotionEvent.ACTION_UP   -> {
-                    val moved = Math.abs(e.rawX - tx) > slop || Math.abs(e.rawY - ty) > slop
+                    val moved = Math.abs(e.rawY - ty) > slop
                     if (!moved && System.currentTimeMillis() - t0 <= 300L) {
                         bringAppToForeground(); sendBroadcast(Intent(ACTION_OVERLAY_TAPPED))
                     }; true
@@ -108,7 +109,7 @@ class OverlayService : Service() {
             }
         }
 
-        try { windowManager.addView(orbView, params) } catch (e: Exception) { Log.e("Aurora", "orb add failed: ${e.message}") }
+        try { windowManager.addView(aurora, params) } catch (e: Exception) { Log.e("Aurora", "curtain add failed: ${e.message}") }
     }
 
     private fun bringAppToForeground() {
@@ -122,7 +123,7 @@ class OverlayService : Service() {
         super.onDestroy()
         animHandler.removeCallbacks(animRunnable)
         stateHandler.removeCallbacks(stateRunnable)
-        try { windowManager.removeView(orbView) } catch (_: Exception) {}
+        try { windowManager.removeView(aurora) } catch (_: Exception) {}
     }
 
     private fun createNotificationChannel() {
@@ -142,63 +143,40 @@ class OverlayService : Service() {
 
 
 // =============================================================================
-// AuroraOrbView
+// AuroraCurtain
 //
-// Displays aurora_orb.png with a scanline vertical-warp so the photo's own
-// plasma strands appear to undulate.  Dark pixels (the photo's black background)
-// are made transparent on load so the overlay floats without a black box.
-// Warp amplitude and speed are driven by the average of Aurora's axis values.
+// Full-width aurora borealis ribbon drawn entirely in code.  64 vertical
+// gradient columns each ride a three-harmonic wave; color drifts continuously
+// through green→teal→cyan→blue→violet.  Energy (avg axis value) drives wave
+// amplitude, brightness, and speed.  Speaking mode adds an extra phase pulse.
+// Left/right edges fade to transparent so it blends seamlessly into any screen.
 // =============================================================================
 
-class AuroraOrbView(context: Context) : View(context) {
+class AuroraCurtain(context: Context) : View(context) {
 
     private companion object {
-        const val N_SLICES = 80
+        private val COLORS = intArrayOf(
+            0xFF00FF7F.toInt(),  // spring green
+            0xFF00FFCC.toInt(),  // green-teal
+            0xFF00EEFF.toInt(),  // cyan
+            0xFF44AAFF.toInt(),  // sky blue
+            0xFF8855FF.toInt(),  // blue-violet
+            0xFFCC55FF.toInt(),  // violet
+            0xFF00FF7F.toInt(),  // loop back to green
+        )
+        private const val N_COLS = 80
     }
 
-    private var orbBitmap: Bitmap? = null
-    private var travelPhase = 0f
-    private val axes     = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f) // X T N B A
+    private var phase    = 0f
+    private val axes     = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f)
     private var speaking = false
+    private val paint    = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    private val paint    = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
-    private val srcRect  = Rect()
-    private val dstRectF = RectF()
+    init { setLayerType(LAYER_TYPE_HARDWARE, null) }
 
-    init {
-        setLayerType(LAYER_TYPE_HARDWARE, null)
-        Thread {
-            orbBitmap = loadAsset("aurora_orb.png")
-            postInvalidate()
-        }.start()
-    }
-
-    private fun loadAsset(name: String): Bitmap? {
-        return try {
-            val opts = BitmapFactory.Options().apply { inSampleSize = 2 }
-            val src  = context.assets.open("flutter_assets/assets/$name").use {
-                BitmapFactory.decodeStream(it, null, opts)
-            } ?: return null
-            // Make dark/black background pixels transparent — no black box on the overlay
-            val mutable = src.copy(Bitmap.Config.ARGB_8888, true)
-            src.recycle()
-            val pixels = IntArray(mutable.width * mutable.height)
-            mutable.getPixels(pixels, 0, mutable.width, 0, 0, mutable.width, mutable.height)
-            for (i in pixels.indices) {
-                val r = Color.red(pixels[i])
-                val g = Color.green(pixels[i])
-                val b = Color.blue(pixels[i])
-                if ((r * 299 + g * 587 + b * 114) / 1000 < 30) pixels[i] = Color.TRANSPARENT
-            }
-            mutable.setPixels(pixels, 0, mutable.width, 0, 0, mutable.width, mutable.height)
-            mutable
-        } catch (_: Exception) { null }
-    }
-
-    fun tickAnimation() {
-        val energy   = axes.average().toFloat().coerceIn(0f, 1f)
-        val periodMs = (8000f - energy * 7300f).coerceIn(700f, 8000f)
-        travelPhase  = (travelPhase + 50f / periodMs) % 1f
+    fun tick() {
+        val energy = axes.average().toFloat().coerceIn(0f, 1f)
+        phase = (phase + 0.006f + energy * 0.014f + if (speaking) 0.010f else 0f) % (2f * kPI.toFloat())
         invalidate()
     }
 
@@ -208,42 +186,67 @@ class AuroraOrbView(context: Context) : View(context) {
     }
 
     override fun onDraw(canvas: Canvas) {
-        val bmp = orbBitmap ?: return
-        val vw  = width.toFloat()
-        val vh  = height.toFloat()
-
-        // Clear to transparent so black-removed areas show the screen behind
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        val vw     = width.toFloat()
+        val vh     = height.toFloat()
+        val energy = axes.average().toFloat().coerceIn(0f, 1f)
+        val colW   = vw / N_COLS + 1f
 
-        val scale     = vh / bmp.height
-        val bw        = bmp.width * scale
-        val ox        = (vw - bw) / 2f
-        val energy    = axes.average().toFloat().coerceIn(0f, 1f)
-        val amp       = energy * 0.10f + if (speaking) energy * 0.08f else 0f
-        val tRad      = travelPhase * kPI.toFloat() * 2f
-        val srcSliceW = bmp.width.toFloat() / N_SLICES
-        val dstSliceW = bw / N_SLICES
+        for (col in 0 until N_COLS) {
+            val t = col.toFloat() / N_COLS
 
-        for (s in 0 until N_SLICES) {
-            val t      = s.toFloat() / N_SLICES
-            // env peaks at edges where strands radiate; zero at the stable core
-            val d      = Math.abs(t - 0.5f) * 2f
-            val env    = d * d
-            val inward = if (t < 0.5f) -tRad else tRad
+            // Three harmonics → organic curtain flutter
+            val waveAmp = vh * (0.10f + energy * 0.18f)
+            val waveY   = vh * 0.50f +
+                waveAmp *        ksin(t *  3.8f + phase                ).toFloat() +
+                waveAmp * 0.45f * ksin(t *  7.5f + phase * 1.4f + 1.2f).toFloat() +
+                waveAmp * 0.20f * ksin(t * 14.0f + phase * 2.1f        ).toFloat()
 
-            val dy = vh * amp * (
-                env * ksin(t * kPI.toFloat() * 3.8f  + tRad        + inward       ) * 0.080f
-              + env * ksin(t * kPI.toFloat() * 8.5f  + tRad * 1.5f + inward * 1.1f) * 0.035f
-              +       ksin(t * kPI.toFloat() * 14.0f + tRad * 2.2f                 ) * 0.010f
+            // Color drifts rightward across the palette over time
+            val palT   = ((t + phase * 0.04f) % 1f) * (COLORS.size - 1)
+            val palIdx = palT.toInt().coerceIn(0, COLORS.size - 2)
+            val color  = lerpColor(COLORS[palIdx], COLORS[palIdx + 1], palT - palIdx)
+
+            // Per-column brightness shimmer
+            val bright = (0.55f + 0.25f * energy +
+                0.15f * ksin(t * 23f + phase * 3f).toFloat()).coerceIn(0.2f, 1f)
+
+            // Left/right edge fade so the ribbon dissolves into the screen
+            val edgeFade = ksin(t * kPI.toFloat()).toFloat().coerceIn(0f, 1f)
+
+            val bandH = vh * (0.60f + energy * 0.20f)
+            val top   = waveY - bandH * 0.30f
+            val bot   = waveY + bandH * 0.70f
+
+            // Vertical gradient: transparent top/bottom, bright center
+            paint.shader = LinearGradient(
+                0f, top, 0f, bot,
+                intArrayOf(
+                    Color.TRANSPARENT,
+                    withAlpha(color, bright * edgeFade * 0.80f),
+                    withAlpha(color, bright * edgeFade),
+                    withAlpha(color, bright * edgeFade * 0.50f),
+                    Color.TRANSPARENT
+                ),
+                floatArrayOf(0f, 0.20f, 0.50f, 0.78f, 1f),
+                Shader.TileMode.CLAMP
             )
-
-            srcRect.set(
-                (t * bmp.width).toInt(), 0,
-                ((t + 1f / N_SLICES) * bmp.width + 1).toInt().coerceAtMost(bmp.width),
-                bmp.height
-            )
-            dstRectF.set(ox + t * bw, dy, ox + t * bw + dstSliceW, vh + dy)
-            canvas.drawBitmap(bmp, srcRect, dstRectF, paint)
+            canvas.drawRect(t * vw, top.coerceAtLeast(0f), t * vw + colW, bot.coerceAtMost(vh), paint)
         }
+        paint.shader = null
     }
+
+    private fun lerpColor(a: Int, b: Int, f: Float): Int {
+        val inv = 1f - f
+        return Color.rgb(
+            (Color.red(a)   * inv + Color.red(b)   * f).toInt(),
+            (Color.green(a) * inv + Color.green(b) * f).toInt(),
+            (Color.blue(a)  * inv + Color.blue(b)  * f).toInt(),
+        )
+    }
+
+    private fun withAlpha(color: Int, alpha: Float) = Color.argb(
+        (alpha * 255f).toInt().coerceIn(0, 255),
+        Color.red(color), Color.green(color), Color.blue(color)
+    )
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark background for the adaptive icon — eliminates the white squircle
+         that launchers add when no adaptive icon is defined. Pick the darkest
+         colour present in the icon artwork so edges blend seamlessly. -->
+    <color name="ic_launcher_background">#080810</color>
+</resources>
