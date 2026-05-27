@@ -25508,8 +25508,10 @@ def dual_question_pipeline(
                             reason_about=(gap_action != 'applied'),
                         ),
                     )
-                    # Keep the gap signal internal unless explicit surface surfacing is enabled.
-                    if bool(systems.get("_surface_gap_asks_enabled", False)):
+                    # IMPROVEMENT: Only surface gap questions immediately.
+                    # For resolutions (applied/reasoning), let the pipeline continue
+                    # so she can 'talk out' the new learning using the main engine.
+                    if gap_action == "ask":
                         resp_gap = _MiniResp(str(gap_result["content"]), gap_tone, gap_conf)
                         resp_gap.src = "comprehension_gap"
                         try:
@@ -25517,6 +25519,10 @@ def dual_question_pipeline(
                         except Exception:
                             pass
                         return resp_gap, None, False
+                    
+                    # If it was an application/correction, the content is an internal
+                    # 'thought' that should be used as context for the main response.
+                    user_text = f"{user_text} [Internal: {gap_result['content']}]"
             except Exception:
                 pass
 

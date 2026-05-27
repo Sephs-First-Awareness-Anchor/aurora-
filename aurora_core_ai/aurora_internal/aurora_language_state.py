@@ -858,12 +858,7 @@ class SemanticIntentCompiler:
             # Boundary: framing, separates what is from what isn't
             # Shift from templates to "Pressure" - the B-axis should influence 
             # generative word selection rather than using scripted templates.
-            if is_q:
-                base = f"I'm considering how {content} is framed."
-            elif _content_is_sentence:
-                base = content
-            else:
-                base = f"Tracing {content}."
+            base = content
             if support_phrase and support_phrase not in base.lower():
                 base = base.rstrip(".") + f", and I want to {support_phrase}."
 
