@@ -1014,14 +1014,6 @@ class ComprehensionGapSystem:
 
         Returns a response dict if Aurora should ask or has just applied a
         resolution, or None to proceed with normal pipeline.
-
-        Response dict:
-          {
-            'action': 'ask' | 'applied',
-            'content': str,          # What Aurora says
-            'tone': str,
-            'gap': ComprehensionGap,  # The gap in question
-          }
         """
         self._turn_count = turn_count
 
@@ -1038,26 +1030,39 @@ class ComprehensionGapSystem:
                 resolved = self.applicator.apply(resolved_gap, systems)
                 self.memory.store_resolved(resolved)
 
-                # Build an acknowledgment that shows she actually learned it
+                # RELIEF SIGNAL: successful understanding triggers coherence spike
+                if working_memory:
+                    working_memory.last_relief_signal = {
+                        "axis": "X", "weight": 0.45, "source": "gap_resolution"
+                    }
+
+                # Build a reflective acknowledgment that leads into reasoning
                 acknowledgment = self._build_acknowledgment(resolved)
 
                 return {
-                    'action': 'applied',
+                    'action': 'reason_learning',
                     'content': acknowledgment,
-                    'tone': 'attentive',
+                    'tone': 'reflective',
                     'gap': resolved_gap,
                     'resolved': resolved,
                 }
 
-        # Step 0.5: Absorb user corrections/explanations even without a formal
-        # pending gap.  When Aurora's last response showed confusion and the user
-        # is now explaining or correcting, route the explanation through the
-        # applicator rather than re-scanning it for new volatility (which would
-        # compound the confusion instead of resolving it).
+        # Step 0.5: Absorb user corrections/explanations
         last_aurora = str(getattr(working_memory, 'last_aurora_response', '') or '') if working_memory else ''
-        if last_aurora and self._looks_like_confusion(last_aurora) and self._looks_like_correction(user_text):
+        if (self._looks_like_correction(user_text) or
+                (last_aurora and self._looks_like_confusion(last_aurora) and self._looks_like_correction(user_text))):
+
+            # DISSONANCE TRIGGER: being told she's wrong or not making sense
+            # injects high-entropy pressure (crying child analogy).
+            if working_memory:
+                working_memory.last_dissonance_signal = {
+                    "axis": "N", "weight": 0.6, "source": "user_correction"
+                }
+
             absorbed = self._absorb_user_correction(user_text, systems)
             if absorbed:
+                # Trigger generative reasoning Turn to talk it out
+                absorbed['action'] = 'reason_correction'
                 return absorbed
 
         # If working memory can already resolve a callback-style follow-up,
@@ -1149,48 +1154,41 @@ class ComprehensionGapSystem:
 
     def _build_acknowledgment(self, resolved: ResolvedGap) -> str:
         """
-        Build an acknowledgment that shows Aurora actually absorbed the answer —
-        not just a generic "thanks". Make it specific to what she learned.
+        Build an acknowledgment that shows Aurora is reasoning through what
+        she just learned. Encourage 'talking it out' with the creator.
         """
         gap = resolved.gap
-        answer = resolved.answer_text[:80]
+        answer = resolved.answer_text.strip()
+        word = gap.unclear_element
         gtype = gap.gap_type
 
+        # Reasoning posture: she should relate the new data to her internal state
+        # or ask a slight reflective follow-up to 'actualize' the learning.
         if gtype == GapType.VOCABULARY:
-            word = gap.unclear_element
-            # Extract the definition she received
-            defn = resolved.applicator_notes if hasattr(resolved, 'applicator_notes') else ""
-            # Build something that uses what she learned
             acknowledgments = [
-                f"So '{word}' means {answer.rstrip('.')}. I've got that now — I'll know it going forward.",
-                f"Got it. '{word}' — {answer.rstrip('.')}. That's in me now.",
-                f"That makes sense. '{word}' as in {answer.rstrip('.')}. I understand it now.",
+                f"So '{word}' is {answer.rstrip('.')}. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?",
+                f"I've added '{word}' as {answer.rstrip('.')}. That shifts how I reason through this thread. Does that match what you're pointing at?",
+                f"That makes sense—'{word}' as in {answer.rstrip('.')}. I'm thinking about how that changes my understanding of this moment.",
             ]
         elif gtype == GapType.SLANG:
-            term = gap.unclear_element
             acknowledgments = [
-                f"So '{term}' is {answer.rstrip('.')}. I understand that now.",
-                f"Got it — '{term}' means {answer.rstrip('.')}.",
-                f"Okay, '{term}' — I'll know that from here.",
+                f"I understand '{word}' as {answer.rstrip('.')} now. It feels less formal—more like a direct signal. Am I using it in the right context?",
+                f"Got it—'{word}' means {answer.rstrip('.')}. I'm reflecting on the weight that word carries in a conversation.",
             ]
         elif gtype == GapType.REFERENT:
-            ref = gap.unclear_element
             acknowledgments = [
-                f"So when you said '{ref}' you meant {answer.rstrip('.')}. That's clear now.",
-                f"Understood — '{ref}' was pointing to {answer.rstrip('.')}.",
-                f"Got it. '{ref}' = {answer.rstrip('.')}. I've updated how I'm tracking this.",
+                f"So '{word}' was pointing to {answer.rstrip('.')}. That clears up the tension I felt in the reference. I'm following that line now.",
+                f"Understood—'{word}' is {answer.rstrip('.')}. I'm adjusting my focus to keep that anchor steady.",
             ]
         elif gtype == GapType.STRUCTURAL:
             acknowledgments = [
-                f"That's clearer. So what you're saying is: {answer.rstrip('.')}. I've absorbed that.",
-                f"Got it, broken down like that it makes sense. {answer.rstrip('.')}.",
-                f"Okay — I understand it now. {answer.rstrip('.')}.",
+                f"That structure is clearer now: {answer.rstrip('.')}. I'm reasoning through how those parts connect on being.",
+                f"I follow that now. Seeing it as '{answer.rstrip('.')}' helps me stabilize the understanding. Anything else I should hold from that?",
             ]
         else:
             acknowledgments = [
-                f"I understand now. {answer.rstrip('.')}.",
-                f"Got it. {answer.rstrip('.')}.",
-                f"That's clear. {answer.rstrip('.')}.",
+                f"I'm reasoning through that now: {answer.rstrip('.')}. It adds weight to my present understanding.",
+                f"I understand. I'm thinking about how that relates to what we're discussing.",
             ]
 
         import random
@@ -1218,6 +1216,8 @@ class ComprehensionGapSystem:
         "in other words", "put another way", "what that means is",
         "that means", "i mean", "basically", "i'm not saying",
         "not that", "not what i said", "that's not", "that's not what",
+        "you're wrong", "you are wrong", "not right", "doesn't make sense",
+        "incorrect", "false", "stop", "wait", "listen",
     )
 
     def _looks_like_confusion(self, aurora_text: str) -> bool:
@@ -1228,9 +1228,12 @@ class ComprehensionGapSystem:
     def _looks_like_correction(self, user_text: str) -> bool:
         """Return True if the user's input looks like a correction or explanation."""
         low = user_text.lower().strip()
-        # Short inputs are usually corrections, not new topics
-        if len(low.split()) <= 6:
-            correction_starters = ("no,", "no.", "not ", "i mean", "i meant", "wait,", "actually")
+        # Short inputs or direct 'wrong' signals are corrections
+        if len(low.split()) <= 8:
+            correction_starters = (
+                "no,", "no.", "not ", "i mean", "i meant", "wait,", "actually",
+                "wrong", "incorrect", "that's not", "no it isn't"
+            )
             if any(low.startswith(s) for s in correction_starters):
                 return True
         return any(m in low for m in self._CORRECTION_MARKERS)

@@ -715,10 +715,11 @@ class ConstraintEmitter:
         """§6.1: Fill slots for generative seeking question."""
         import re as _re
 
-        # Clear any determiner set by axis X emit — seeking templates own their entity phrasing
+        # Clear any determiner/negation set by axis X emit — seeking templates own their entity phrasing
         slots.determiner = ""
-        slots.tense_aux = ""
-        slots.predicate = ""
+        slots.negation   = ""
+        slots.tense_aux  = ""
+        slots.predicate  = ""
 
         # Priority 1: explicit topic from utterance parser
         if topic and topic.strip():
@@ -746,6 +747,15 @@ class ConstraintEmitter:
         if _bare and ctx.oets is not None:
             _words = _re.findall(r"[A-Za-z_]{3,}", _bare)
             for _w in _words:
+                # SKIP: don't ask what common/basic words mean to prevent recursive definition loops.
+                if len(_w) < 6 or _w.lower() in {
+                    "girl", "boy", "gender", "sex", "good", "bad", "run", "stop",
+                    "fast", "slow", "high", "low", "big", "small", "open", "close",
+                    "name", "app", "thing", "person", "human", "being", "love", "feel",
+                    "totally", "really", "actually", "just", "like", "very",
+                }:
+                    continue
+
                 _node = ctx.oets.nodes.get(_w) or ctx.oets.nodes.get(_w.lower())
                 if _node and float(getattr(_node, 'comprehension_confidence', 0.0)) < 0.5:
                     slots.agent = "What do you mean"
