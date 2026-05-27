@@ -662,17 +662,25 @@ class GapResolutionApplicator:
         if oets:
             web = getattr(oets, 'web', None)
             if web:
+                # SYSTEM PROSE FILTER: Don't learn internal framing words as facts.
+                _prose_blocklist = {
+                    "tracing", "framing", "grounding", "manifold", "pipeline",
+                    "axis", "resolution", "tension", "resonance", "coherence"
+                }
+                if word in _prose_blocklist:
+                    return updated, "System prose ignored."
+
                 if not web.has_node(word):
                     web.add_node(word, role, valence,
                                  meaning=definition or answer[:100],
                                  lineage='creator_taught')
                 node = web.get_node(word)
                 if node:
-                    # High confidence definition — came from the creator directly
+                    # MAX RELIEF: confidence 1.0 satiates the definition hunger immediately.
                     node.add_definition(
                         definition or answer[:200],
                         source='creator_clarification',
-                        confidence=0.95
+                        confidence=1.0
                     )
                     # The original sentence is now a usage example
                     node.add_example(
