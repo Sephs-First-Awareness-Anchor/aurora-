@@ -238,6 +238,15 @@ class RoleTagger:
             tok = tokens[i]
             tl = tok.lower().strip(".,!?;:'\"")
 
+            # ── System Jargon Check ──
+            # If the token contains underscores, it's almost certainly a manifold
+            # cell label or system internal state. Tag as UNKNOWN so the SIC
+            # can penalize it and prevent it from filling a grammatical role.
+            if "_" in tl:
+                result[i] = (tok, TokenRole.UNKNOWN)
+                i += 1
+                continue
+
             # 2-gram context check
             if i + 1 < len(tokens):
                 bigram = tl + " " + tokens[i + 1].lower().strip(".,!?;:'\"")

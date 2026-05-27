@@ -2327,13 +2327,37 @@ class SentenceComposer:
                 if len(w) >= 4 and w not in _SLOT_NOISE
                 and infer_word_role(w) in ('verb', 'noun', 'adjective', 'adverb')
             }
+            # Get current axis activations (if available on self)
+            axis_act = getattr(self, '_axis_activation', {}) or {}
+            b_pressure = axis_act.get('B', 0.0)
+
             weights = []
             for e in candidates:
+                # Base weight from usage and coherence
                 w = max(0.1, 1.0 + e.usage_count * 0.1 * coherence)
+                
+                # Context boost: reduced to influence rather than dominate
                 if e.word in context_set:
-                    w *= 3.0  # Reduced from 10x -- context should influence, not dominate
+                    w *= 3.0
+                
+                # Valence boost
                 if vmin <= e.emotional_valence <= vmax:
                     w *= 1.5
+
+                # ---- BOUNDARY AXIS PRESSURE (§3.3) ----
+                # High B-axis pressure weights words that frame or distinguish.
+                if b_pressure > 0.4:
+                    _is_boundary_word = (
+                        e.lineage in ('boundary_system', 'distinction_marker') or
+                        e.word in {
+                            'separate', 'distinguish', 'frame', 'limit', 'edge',
+                            'boundary', 'threshold', 'line', 'within', 'beyond',
+                            'contrast', 'opposition', 'tension', 'difference'
+                        }
+                    )
+                    if _is_boundary_word:
+                        w *= (1.0 + b_pressure * 4.0)
+
                 weights.append(w)
 
             chosen = random.choices(candidates, weights=weights, k=1)[0]

@@ -506,6 +506,19 @@ def _is_word_salad(text: str) -> bool:
         r"\bi understand your name is\b",
         # N-axis question template bleeding: "What does X actually cost from here?"
         r"\bwhat does\b.{1,60}\bactually cost from here\b",
+        # Manifold / Crest Propagation leaks
+        r"\bagentive operator\b",
+        r"\bexistential polarity\b",
+        r"\btemporal magnitude\b",
+        r"\benergetic cost\b",
+        r"\bboundary difference\b",
+        r"\bof existence\b",
+        r"\bof agency\b",
+        r"\bof temporal\b",
+        r"\bof energetic\b",
+        r"\bof boundary\b",
+        r"\bmanifold cell\b",
+        r"\bcrest propagation\b",
     ]
     for _pat in _artifact_pats:
         if re.search(_pat, t_lower):

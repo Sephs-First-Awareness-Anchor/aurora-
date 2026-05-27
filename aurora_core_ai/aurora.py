@@ -17726,35 +17726,20 @@ def _apply_pipeline_modulation(
             pass
 
     # ---- Paradoxes: opposing I-State beings both activated ----
-    # Only append when the base response is substantive (≥8 words). Fallback
-    # responses like "I don't have a grounded answer" are already expressing
-    # uncertainty — stacking the paradox phrase compounds rather than clarifies.
+    # Paradoxes now modulate tone and confidence directly rather than being
+    # appended as scripted strings. This allows the dissonance to be felt
+    # in her voice choice.
     paradoxes = signals.get('paradoxes', [])
-    if paradoxes and len(text.split()) >= 8:
-        # Skip if the response already describes the tension/paradox itself — e.g.
-        # self-reflection responses that say "X is pulling on both Y and Z" already
-        # communicate the axis conflict; appending the phrase doubles up and misreads
-        # as if the *user's* words contain a tension rather than Aurora's state.
-        _tension_already_expressed = any(
-            _kw in text.lower() for _kw in (
-                "tension", "pulling on both", "simultaneously", "opposite direction",
-                "unresolved", "conflict", "paradox", "both sides", "two competing",
-            )
-        )
-        if not _tension_already_expressed:
-            _axis_names = {
-                'existence': 'being', 'temporal': 'time',
-                'energy': 'action', 'boundary': 'boundary', 'agency': 'agency',
-            }
-            axes = [_axis_names.get(p, p) for p in paradoxes[:2]]
-            text = (text + f" There's a tension in what you're describing — "
-                    f"I see it pulling in opposite directions on {' and '.join(axes)}.")
-            conf = min(conf, 0.75)
+    if paradoxes:
+        if tone in ('neutral', 'attentive', 'precise'):
+            tone = 'uncertain'
+        conf = min(conf, 0.72)
 
     # ---- Thought killed by DMM moral friction ----
     if signals.get('thought_killed'):
-        text = text + " I weighed something there and chose not to follow it."
-        conf = max(conf, 0.85)
+        if tone in ('neutral', 'attentive'):
+            tone = 'reflective'
+        conf = min(conf, 0.85)
 
     # ---- Dominant axis → tone register ----
     # Note: dominant_axis is stored as a letter (X/T/N/B/A), not a full name.
@@ -17821,7 +17806,7 @@ def _ensure_pipeline_abilities(genealogy: Any) -> None:
                 "energy_read", "thermal_snapshot", "entropy_snapshot",
                 "dmm_state_read", "boundary_presence",
             ),
-            notes="Read live N/T/B/A pipeline state: DER thermal, L4 entropy, DMM vitality.",
+            notes="Map pipeline signals to generative tone and confidence.",
         )
         _mod_ap = AbilityProfile(
             id="B:SHAPE_EXPRESSION_BOUNDARY",

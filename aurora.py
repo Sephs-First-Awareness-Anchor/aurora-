@@ -3578,8 +3578,12 @@ def _evolutionary_response_refinement(
 
                 # When thought is settled and confident, synthesize self_application
                 # — what Aurora's formed thought specifically means for her.
-                _jargon = {"axis", "pressure", "vec", "lsv", "oets", "dpme", "stratum",
-                           "admissible", "manifold", "lattice"}
+                _jargon = {
+                    "axis", "pressure", "vec", "lsv", "oets", "dpme", "stratum",
+                    "admissible", "manifold", "lattice", "crest", "propagation",
+                    "energetic", "agency", "temporal", "boundary", "existence",
+                    "operator", "polarity", "magnitude", "difference",
+                }
                 if _ts_conf > 0.60 and _ts_conv in ("settled", "converging"):
                     # Use axes + self_application to guide synthesis fragments
                     _axis_hint = (_ts_axes[0] if _ts_axes else "A").lower()
