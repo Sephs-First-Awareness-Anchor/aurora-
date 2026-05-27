@@ -2542,7 +2542,7 @@ class WorkingMemory:
             supporting_concepts=[best_field, value, 'user'],
             constraints=['recall', 'speaker_fact'],
         )
-        return str(rendered or WorkingMemory._data_to_minimal_speech(core_claim, 'precise', 'neutral')).strip()
+        return str(rendered or "").strip()
 
     def answer_from_recent_utterance_recall(
         self,
@@ -2587,7 +2587,7 @@ class WorkingMemory:
         prior_text = str(best_match.get('text', '') or '').strip()
         if not prior_text:
             return ""
-        core_claim = f"earlier user utterance {prior_text[:220]}"
+        core_claim = prior_text[:220]
         rendered = self._render_from_comprehension_intent(
             systems,
             core_claim=core_claim,
@@ -2598,7 +2598,7 @@ class WorkingMemory:
             supporting_concepts=[prior_text[:220], 'earlier', 'utterance'],
             constraints=['recall', 'utterance'],
         )
-        return str(rendered or WorkingMemory._data_to_minimal_speech(core_claim, 'precise', 'recognition')).strip()
+        return str(rendered or "").strip()
 
     def answer_from_context_carryover(
         self,
@@ -3435,6 +3435,23 @@ class WorkingMemory:
         """
         clean = str(core_claim or '').strip().strip('.')
         if not clean:
+            return ""
+        # Surface boundary guard — reject any string that carries raw mechanism data.
+        # Internal labels, mutation tracking strings, and system state keys must never
+        # cross into the language template layer.  Only compressed semantic content
+        # (the result of waveform traversal) is permitted past this point.
+        _MECH_LEAK_PATTERNS = (
+            "earlier user utterance",
+            "mutation_id=", "mutation_id =",
+            "code evolution outcome",
+            "accepted=false", "accepted=true", "accepted=0", "accepted=1",
+            "operator_key=", "change_count=", "avg_fitness=",
+            "genealogy_pressure=", "apply_duration=", "temporal_overhead=",
+            "researcher lookup failed",
+            "http error",
+        )
+        _clean_low = clean.lower()
+        if any(pat in _clean_low for pat in _MECH_LEAK_PATTERNS):
             return ""
 
         perception = systems.get('perception') if isinstance(systems, dict) else None
@@ -5089,8 +5106,16 @@ class WorkingMemory:
             else:
                 # Only use summary text if it's concise (not a prior turn's full response).
                 # Long summaries > 5 words are almost certainly recycled Aurora responses.
-                _summary_words = len(str(summary or '').split())
-                if _summary_words <= 5 and '?' not in str(summary or ''):
+                _summary_str = str(summary or '')
+                _summary_words = len(_summary_str.split())
+                _summary_low = _summary_str.lower()
+                _social_starts = ('hey', 'hi ', 'hello', 'how are', 'how is',
+                                  'what\'s up', "what is up", 'greet', 'good morning',
+                                  'good afternoon', 'good evening')
+                _mech_chars = any(c in _summary_str for c in ('=', '{', '}'))
+                _is_social = any(_summary_low.startswith(s) for s in _social_starts)
+                if (_summary_words <= 5 and not _mech_chars and not _is_social
+                        and '?' not in _summary_str):
                     core_claim = f"it works through {summary}"
                 # else: leave core_claim="" so the function returns "" instead of echoing
             tone = 'reflective'
@@ -9184,17 +9209,16 @@ def _project_utterance_axes(text: str, systems: dict, parsed: Optional[Dict[str,
         # 1. Start with the raw textual projection
         projection = _axis_projector.project(parsed, systems)
         
-        # 2. Blend the Subsurface DCE Convergence (Root Thought)
-        # If the subsurface is delibating on a specific axis, the surface 
-        # perception should lean toward that axis (Closure Symmetry).
-        _live_thought = dict(systems.get("_live_root_thought") or {})
-        _thought_axes = dict(_live_thought.get("axis_activations") or {})
-        if _thought_axes:
-            for ax in ("X", "T", "N", "B", "A"):
-                if ax in _thought_axes:
-                    # Blend at 25% weight — the subsurface frames the surface
-                    _cur = float(projection.get(ax, 0.2))
-                    projection[ax] = (_cur * 0.75) + (float(_thought_axes[ax]) * 0.25)
+        # 2. Blend the Subsurface DCE Convergence (Conscious Crest axis)
+        # If the subsurface crest has a dominant axis, lean the surface
+        # perception toward that axis (Closure Symmetry).
+        _live_crest = dict(systems.get("_live_conscious_crest") or {})
+        _crest_axis = str(_live_crest.get("axis", "") or "").upper()
+        _crest_intensity = float(_live_crest.get("intensity", 0.0) or 0.0)
+        if _crest_axis in ("X", "T", "N", "B", "A") and _crest_intensity >= 0.35:
+            # Blend at 25% weight — the subsurface crest frames the surface
+            _cur = float(projection.get(_crest_axis, 0.2))
+            projection[_crest_axis] = (_cur * 0.75) + (_crest_intensity * 0.25)
 
         # 3. Blend live Sensory Vitals (Physical perturbation)
         _live_sensory = dict(systems.get("_live_sensory_state") or {})
@@ -10759,7 +10783,7 @@ def _answer_from_sedimemory_context(
             if quoted:
                 return _render_runtime_intent(
                     systems,
-                    f"earlier user utterance {quoted[:220]}",
+                    quoted[:220],
                     emotion_tone='precise',
                     relationship_signal='recognition',
                     certainty=0.88,
@@ -10794,7 +10818,7 @@ def _answer_from_sedimemory_context(
         if user_line:
             return _render_runtime_intent(
                 systems,
-                f"earlier user utterance {user_line[:220]}",
+                user_line[:220],
                 emotion_tone='precise',
                 relationship_signal='recognition',
                 certainty=0.84,
@@ -17433,15 +17457,15 @@ def _read_live_dual_strata_runtime(systems: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(snapshot_payload, dict):
         snapshot_payload = {}
     conscious_frame = dict(snapshot_payload.get("conscious_frame") or {})
-    root_thought = dict(conscious_frame.get("root_thought") or {})
-    reactive_signal = dict(conscious_frame.get("reactive_signal") or {})
+    conscious_crest = dict(conscious_frame.get("conscious_crest") or {})
+    overlay = dict(conscious_frame.get("overlay") or {})
     return {
         "conscious_frame": conscious_frame,
-        "root_thought": root_thought,
+        "conscious_crest": conscious_crest,
         "processing_mode": str(
-            conscious_frame.get("processing_mode", "") or root_thought.get("mode", "")
+            conscious_frame.get("processing_mode", "") or conscious_crest.get("label", "")
         ),
-        "reactive_signal": reactive_signal,
+        "overlay": overlay,
         "subsurface_state": dict(snapshot_payload.get("subsurface_state") or {}),
     }
 
@@ -17485,11 +17509,12 @@ def _refresh_live_dual_strata_runtime(
     except Exception:
         return _read_live_dual_strata_runtime(systems)
 
+    _cf = dict(snapshot.conscious_frame or {})
     runtime = {
-        "conscious_frame": dict(snapshot.conscious_frame or {}),
-        "root_thought": dict(dict(snapshot.conscious_frame or {}).get("root_thought") or {}),
-        "processing_mode": str(dict(snapshot.conscious_frame or {}).get("processing_mode", "") or ""),
-        "reactive_signal": dict(dict(snapshot.conscious_frame or {}).get("reactive_signal") or {}),
+        "conscious_frame": _cf,
+        "conscious_crest": dict(_cf.get("conscious_crest") or {}),
+        "processing_mode": str(_cf.get("processing_mode", "") or ""),
+        "overlay": dict(_cf.get("overlay") or {}),
         "subsurface_state": dict(snapshot.subsurface_state or {}),
     }
     systems["_last_dual_strata_runtime"] = dict(runtime)
@@ -18989,13 +19014,9 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     break
 
 def _generate_from_manifold(systems: dict, user_text: str, state: any, core_claim: str = None) -> tuple:
-    live_thought = systems.get("_live_root_thought") or {}
-    native_meaning = dict(
-        live_thought.get("native_meaning")
-        or live_thought.get("native_meaning_bundle")
-        or {}
-    )
-    law_bindings = list(live_thought.get("law_bindings") or [])
+    live_thought = {}  # law_bindings now live in subsurface_detail; use native_meaning_obj below
+    native_meaning = {}
+    law_bindings = []
     if not law_bindings:
         law_bindings = list(native_meaning.get("law_bindings", []) or [])
     # Also check the per-turn NativeMeaningObject built by the pipeline this turn
@@ -19841,11 +19862,19 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
     # Constraint emission — shape final surface output through IVM pressure lens
     # Also clears internal-format strings that must never reach the speaker.
     _INTERNAL_PREFIXES = ("earlier user utterance", "researcher lookup failed", "http error")
+    _INTERNAL_MECH_SUBSTRINGS = (
+        "mutation_id=", "mutation_id =",
+        "code evolution outcome",
+        "accepted=false", "accepted=true", "accepted=0", "accepted=1",
+        "operator_key=", "change_count=", "avg_fitness=",
+        "genealogy_pressure=", "apply_duration=", "temporal_overhead=",
+    )
     _cur_resp = str(getattr(state, "response_content", "") or "").strip()
     _cur_resp_low = _cur_resp.lower()
     _has_json = ("```" in _cur_resp or "proposed_action" in _cur_resp
                  or '"file":' in _cur_resp or "contradiction_handler" in _cur_resp_low)
     if (any(_cur_resp_low.startswith(p) for p in _INTERNAL_PREFIXES)
+            or any(p in _cur_resp_low for p in _INTERNAL_MECH_SUBSTRINGS)
             or any(p in _cur_resp_low for p in _INTERNAL_INSTRUCTION_PHRASES)
             or _has_json):
         state.response_content = ""
@@ -20085,17 +20114,17 @@ def _run_reasoning_pipeline(
     try:
         # Pull latest Subsurface DCE convergence
         _live_frame = dict(systems.get("_live_conscious_frame") or {})
-        _live_thought = dict(systems.get("_live_root_thought") or {})
+        _live_crest = dict(systems.get("_live_conscious_crest") or {})
         _live_sensory = dict(systems.get("_live_sensory_state") or {})
-        
+
         if _live_frame and isinstance(state.pipeline_state, dict):
             state.pipeline_state["subsurface_conscious_frame"] = _live_frame
-            state.pipeline_state["subsurface_root_thought"] = _live_thought
+            state.pipeline_state["subsurface_conscious_crest"] = _live_crest
             state.pipeline_state["live_sensory_vitals"] = _live_sensory
-            
-            # If the subsurface has a strong 'reactive signal', prioritize it!
-            _reactive = dict(_live_frame.get("reactive_signal") or {})
-            if _reactive.get("text"):
+
+            # If the subsurface crest is high-intensity, flag reactive priority
+            _crest_intensity = float(_live_crest.get("intensity", 0.0) or 0.0)
+            if _crest_intensity >= 0.72:
                 state.pipeline_state["subsurface_reactive_priority"] = True
     except Exception:
         pass
@@ -20268,9 +20297,9 @@ def _run_reasoning_pipeline(
                 _pcf_mode = str(_pre_cf.get("processing_mode", "") or "")
                 if _pcf_mode:
                     state.pipeline_state.setdefault("conscious_frame_mode", _pcf_mode)
-                _pcf_reactive = dict(_pre_cf.get("reactive_signal") or {})
-                if _pcf_reactive:
-                    state.pipeline_state["conscious_frame_reactive"] = _pcf_reactive
+                _pcf_crest = dict(_pre_cf.get("conscious_crest") or {})
+                if _pcf_crest:
+                    state.pipeline_state["conscious_frame_crest"] = _pcf_crest
             if _pre_ss:
                 state.pipeline_state["pre_generation_subsurface_state"] = _pre_ss
                 _pss_axis = str(_pre_ss.get("dominant_axis", "") or "")
@@ -25570,14 +25599,14 @@ def _run_live_response_turn(
         turn_tick = int(getattr(working_memory, 'turn_count', 0) or 0) + 1
 
     # ---- STRATA-AWARE INTAKE: Resolve Vitals BEFORE parsing Signal ----
-    # 1. Pull the Subsurface DCE Convergence (Root Thought)
+    # 1. Pull the Subsurface DCE Convergence (Conscious Crest)
     try:
         dual_strata_runtime = _read_live_dual_strata_runtime(systems)
         conscious_frame = dict(dual_strata_runtime.get("conscious_frame") or {})
-        root_thought = dict(dual_strata_runtime.get("root_thought") or {})
+        conscious_crest = dict(dual_strata_runtime.get("conscious_crest") or {})
         # Stamp into systems so the parser can use it as context
         systems["_live_conscious_frame"] = conscious_frame
-        systems["_live_root_thought"] = root_thought
+        systems["_live_conscious_crest"] = conscious_crest
     except Exception:
         dual_strata_runtime = {}
 
@@ -26588,9 +26617,9 @@ def _run_live_response_turn(
         'poedex_representation': _poedex_representation_out,
         'other_model': dict(getattr(_last_turn_state_out, "other_model", {}) or {}),
         'conscious_frame': dict(_dual_strata_runtime_out.get('conscious_frame') or {}),
-        'root_thought': dict(_dual_strata_runtime_out.get('root_thought') or {}),
+        'conscious_crest': dict(_dual_strata_runtime_out.get('conscious_crest') or {}),
         'processing_mode': str(_dual_strata_runtime_out.get('processing_mode', '') or ''),
-        'reactive_signal': dict(_dual_strata_runtime_out.get('reactive_signal') or {}),
+        'overlay': dict(_dual_strata_runtime_out.get('overlay') or {}),
     }
 
 
@@ -26794,9 +26823,9 @@ def _run_surface_queued_turn(
         "turn_tick": turn_tick,
         "runtime_contract": dict(queued.get("runtime_contract") or {}),
         "conscious_frame": dict(queued.get("conscious_frame") or {}),
-        "root_thought": dict(queued.get("root_thought") or {}),
+        "conscious_crest": dict(queued.get("conscious_crest") or {}),
         "processing_mode": str(queued.get("processing_mode", "") or ""),
-        "reactive_signal": dict(queued.get("reactive_signal") or {}),
+        "overlay": dict(queued.get("overlay") or {}),
         "understanding_observation": {},
         "understanding_application": {},
         "memory_sweep": None,

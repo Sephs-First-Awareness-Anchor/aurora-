@@ -18,7 +18,6 @@ task preparePythonSources {
 
     inputs.files fileTree(repoRoot) {
         include "aurora_core_ai/**/*.py"
-        include "aurora_internal/**/*.py"
         include "aurora_manifold_directory/**"
         include "*.py"
         exclude "**/__pycache__/**"
@@ -32,13 +31,16 @@ task preparePythonSources {
     }
 
     doLast {
+        // Copy canonical engine — aurora_internal lives inside aurora_core_ai/
         copy {
             from(repoRoot) { include "aurora_core_ai/**/*.py"; exclude "**/__pycache__/**" }
             into destDir
         }
+        // Expose aurora_internal at top level so bridge imports work unchanged:
+        //   from aurora_internal.X import Y  →  src/main/python/aurora_internal/
         copy {
-            from(repoRoot) { include "aurora_internal/**/*.py"; exclude "**/__pycache__/**" }
-            into destDir
+            from("${repoRoot}/aurora_core_ai/aurora_internal") { include "**/*.py"; exclude "**/__pycache__/**" }
+            into "${destDir}/aurora_internal"
         }
         // Manifold directory — King Quasicrystal identity field data + Python package
         copy {
@@ -111,6 +113,19 @@ android {
         versionName "1.0"
 
         ndk { abiFilters "arm64-v8a", "x86_64" }
+
+        python {
+            version "3.12"
+            buildPython "python3"
+            pip {
+                install "requests==2.25.1"
+                install "python-dateutil==2.9.0.post0"
+                install "pytz==2022.1"
+                install "psutil==7.1.3"
+                install "numpy==1.26.2"
+                install "Pillow"
+            }
+        }
     }
 
     signingConfigs {
@@ -127,22 +142,6 @@ android {
             signingConfig signingConfigs.debug
             minifyEnabled false
             shrinkResources false
-        }
-    }
-}
-
-// ── Chaquopy 17.0 DSL (top-level block, not inside android.defaultConfig) ──
-chaquopy {
-    defaultConfig {
-        version "3.12"
-        buildPython "python3"
-        pip {
-            install "requests==2.25.1"
-            install "python-dateutil==2.9.0.post0"
-            install "pytz==2022.1"
-            install "psutil==7.1.3"
-            install "numpy==1.26.2"
-            install "Pillow"          // used by cv2 Android shim (imwrite/imread)
         }
     }
 }

@@ -2010,3 +2010,37 @@ AURORA_NATIVE_EVOLUTION_OVERRIDES = {'aurora_internal.aurora_cost_diff_score._de
                                                                    'mode': 'callable_override',
                                                                    'target': 'verify_cost_diff_score'}}
 # AURORA_EVOLVED_NATIVE_END
+
+
+def _derive_operator_scales() -> Dict[Constraint, float]:
+    """
+    Derive gradient scales from each layer's cost density.
+
+    Returns cost-derived scales where every layer contributes in proportion to
+    its shift cost relative to the maximum, preserving A dominance without
+    making X/T/N silent.
+    """
+    max_coeff = max(
+        REGISTRY.cost(c).shift_cost_coeff
+        for c in (Constraint.X, Constraint.T, Constraint.N, Constraint.B, Constraint.A)
+    )
+    if max_coeff <= 0:
+        return {c: 0.0 for c in (Constraint.X, Constraint.T, Constraint.N, Constraint.B, Constraint.A)}
+    return {
+        c: REGISTRY.cost(c).shift_cost_coeff / max_coeff
+        for c in (Constraint.X, Constraint.T, Constraint.N, Constraint.B, Constraint.A)
+    }
+
+
+def _xt_energy_support(abs_deltas: Dict[Constraint, float]) -> float:
+    """
+    Energy is only meaningful when grounded by existence and time.
+
+    Produces a small support term from X and T drift so N can participate
+    when the substrate is moving even if N itself is quiet.
+    """
+    x = max(0.0, float(abs_deltas.get(Constraint.X, 0.0)))
+    t = max(0.0, float(abs_deltas.get(Constraint.T, 0.0)))
+    if x <= 0.0 and t <= 0.0:
+        return 0.0
+    return (0.40 * x) + (0.60 * t)
