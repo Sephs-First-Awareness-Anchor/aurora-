@@ -1227,13 +1227,13 @@ class ExpressionPressure:
             self._lineage_history[lineage] = self._lineage_history[lineage][-10:]
 
         # Enhanced fitness - NOW INCLUDES MORAL + INTENT (GAP 4)
-        # Transcript: "Does this response match the Moral Pillars
-        #  Does it match the energetic intent"
+        # Relief is Coherence (§3.3) — coherence is the primary reward
+        # that satisfy the pressure-action-relief loop.
         enhanced = _clamp(
-            base_fitness * 0.30 +
-            rhythm.rhythm_score * 0.15 +
-            creativity.creativity_score * 0.15 +
-            moral_alignment * 0.25 +
+            base_fitness * 0.60 +
+            rhythm.rhythm_score * 0.05 +
+            creativity.creativity_score * 0.05 +
+            moral_alignment * 0.15 +
             intent_match * 0.15
         )
 
@@ -1667,11 +1667,29 @@ class SentenceComposer:
         Extract sentence patterns from input text and add to template pool.
         When OETS is available, creates scaffolded patterns with semantic
         annotations based on the ontological depth of the words encountered.
+
+        Author: Sunni (Sir) Morningstar
+        Validation: Skip correction turns to avoid learning incorrect patterns.
         """
         if not text or len(text.strip()) < 5:
             return
 
-        sentences = [s.strip() for s in text.replace('!', '.').replace('', '.')
+        # --- CORRECTION FILTER (§5.4) ---
+        # If the user is correcting me, don't absorb the pattern.
+        # Otherwise I learn the very error they are trying to fix.
+        _CORRECTION_MARKERS = {
+            'instead of', 'should have said', 'you said', 'stop saying',
+            'not correct', 'incorrect', 'wrong', 'mistake', 'you mean',
+            'did you mean', 'you are saying it correctly', 'you are wrong',
+        }
+        lowered = text.lower()
+        if any(marker in lowered for marker in _CORRECTION_MARKERS):
+            # If the user is correcting me, don't absorb the pattern,
+            # and penalize the last expression that caused this correction.
+            self.feedback(0.1)
+            return
+
+        sentences = [s.strip() for s in text.replace('!', '.').replace('?', '.')
                      .split('.') if s.strip() and len(s.strip().split()) >= 3]
 
         for sentence in sentences[:3]:
@@ -2291,7 +2309,7 @@ class SentenceComposer:
                     )
 
                 if slot_code == 'V':
-                    word = self._conjugate_first_person(word, result, slot_marker)
+                    word = self._conjugate_verb(word, result, slot_marker)
 
                 result = result.replace(slot_marker, word, 1)
 
@@ -2501,14 +2519,15 @@ class SentenceComposer:
 
         return frame
 
-    def _conjugate_first_person(self, verb: str, template_so_far: str,
-                                slot_marker: str) -> str:
-        """Conjugate a verb for first-person 'I' subject."""
+    def _conjugate_verb(self, verb: str, template_so_far: str,
+                       slot_marker: str) -> str:
+        """Conjugate a verb based on the subject found in the template so far."""
         idx = template_so_far.find(slot_marker)
         before = template_so_far[:idx].rstrip().lower() if idx > 0 else ""
+        v = verb.lower()
 
+        # --- First person 'I' ---
         if before.endswith('i') or before.endswith('i '):
-            v = verb.lower()
             if v in self._CONJUGATIONS:
                 return self._CONJUGATIONS[v]
             if v.endswith('es') and len(v) > 3:
@@ -2518,6 +2537,26 @@ class SentenceComposer:
                 return base
             if v.endswith('s') and not v.endswith('ss') and len(v) > 2:
                 return v[:-1]
+
+        # --- Second person 'you' ---
+        elif before.endswith('you') or before.endswith('you '):
+            # 'be'
+            if v in ('am', 'is', 'are', 'be', 'being'):
+                return 'are'
+            if v in ('was', 'were'):
+                return 'were'
+            # 'have'
+            if v in ('has', 'have'):
+                return 'have'
+            # 'do'
+            if v in ('does', 'do'):
+                return 'do'
+            # General: you [verb] (no -s suffix)
+            if v.endswith('es') and len(v) > 3:
+                return v[:-2]
+            if v.endswith('s') and not v.endswith('ss') and len(v) > 2:
+                return v[:-1]
+
         return verb
 
     # ================================================================

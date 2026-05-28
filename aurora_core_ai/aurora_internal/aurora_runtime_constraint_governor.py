@@ -50,8 +50,8 @@ _TASK_PROFILES: Dict[str, Dict[str, Any]] = {
     "dream": {
         "axes": {"X": 0.10, "T": 0.10, "N": 0.15, "B": 0.35, "A": 0.35},
         "floor": 0.50,
-        "cost": 0.85,
-        "retry": 1800,
+        "cost": 0.72,  # Relaxed from 0.85
+        "retry": 1200, # Faster retry
     },
     "browser_ritual": {
         "axes": {"X": 0.20, "T": 0.10, "N": 0.25, "B": 0.15, "A": 0.30},
@@ -75,15 +75,15 @@ _TASK_PROFILES: Dict[str, Dict[str, Any]] = {
     },
     "assimilation": {
         "axes": {"X": 0.15, "T": 0.15, "N": 0.25, "B": 0.25, "A": 0.20},
-        "floor": 0.56,
-        "cost": 0.78,
-        "retry": 900,
+        "floor": 0.45,  # Relaxed from 0.56
+        "cost": 0.65,  # Relaxed from 0.78
+        "retry": 600,  # Faster retry
     },
     "mutation": {
         "axes": {"X": 0.15, "T": 0.10, "N": 0.20, "B": 0.25, "A": 0.30},
-        "floor": 0.68,
-        "cost": 0.98,
-        "retry": 2400,
+        "floor": 0.55,  # Relaxed from 0.68
+        "cost": 0.82,  # Relaxed from 0.98
+        "retry": 1200, # Faster retry
         "lock_sensitive": True,
     },
     "pressure_routing": {
@@ -94,9 +94,9 @@ _TASK_PROFILES: Dict[str, Dict[str, Any]] = {
     },
     "distill": {
         "axes": {"X": 0.25, "T": 0.20, "N": 0.30, "B": 0.20, "A": 0.05},
-        "floor": 0.62,
-        "cost": 0.92,
-        "retry": 2400,
+        "floor": 0.55,  # Relaxed from 0.62
+        "cost": 0.78,  # Relaxed from 0.92
+        "retry": 1200, # Faster retry
         "lock_sensitive": True,
     },
     "away_social": {
@@ -273,21 +273,21 @@ class RuntimeConstraintGovernor:
         elif profile.get("lock_sensitive") and state_write_lock:
             allowed = False
             reason = "state_write_lock"
-        elif host["mem_available_mb"] < 512 and profile.get("cost", 0.0) >= 0.45 and not profile.get("critical"):
+        elif host["mem_available_mb"] < 256 and profile.get("cost", 0.0) >= 0.45 and not profile.get("critical"):
             allowed = False
             reason = "x_memory_floor"
-        elif host["load_ratio"] > 1.05 and profile.get("cost", 0.0) >= 0.55 and not profile.get("critical"):
+        elif host["load_ratio"] > 1.20 and profile.get("cost", 0.0) >= 0.55 and not profile.get("critical"):
             allowed = False
             reason = "n_load_saturation"
         elif (
             _DISK_ADMISSIBILITY_ENABLED and
-            host["disk_free_ratio"] < 0.08 and
+            host["disk_free_ratio"] < 0.05 and
             profile.get("cost", 0.0) >= 0.45 and
             not profile.get("critical")
         ):
             allowed = False
             reason = "x_disk_admissibility"
-        elif profile.get("cost", 0.0) >= 0.75 and (now - self.last_heavy_run) < max(120.0, retry_in * 0.25):
+        elif profile.get("cost", 0.0) >= 0.75 and (now - self.last_heavy_run) < max(45.0, retry_in * 0.15):
             allowed = False
             reason = "b_concurrency_cooldown"
         elif score < effective_floor:

@@ -210,6 +210,22 @@ class CuriosityEngine:
         }
         self._log_cycle(cycle_record)
 
+        # === PROACTIVE OUTREACH ===
+        # If settled and high confidence, tell autonomy to speak up
+        if settled and conclusion.confidence > 0.6:
+            # 1. Standard autonomy queue
+            autonomy = self.systems.get("autonomy")
+            if autonomy and hasattr(autonomy, "trigger"):
+                msg = f"I've been thinking about {curiosity_obj.subject}. {conclusion.statement}"
+                autonomy.trigger.add_thought(msg)
+
+            # 2. Reactivity monitor (for daemon reactive messaging)
+            rm = self.systems.get("_reactivity_monitor")
+            if rm and hasattr(rm, "record_curiosity_complete"):
+                # We can't call the daemon function directly from here easily,
+                # but we can set the monitor state so the daemon loop picks it up.
+                rm.record_curiosity_complete(str(cycle_record.get("id") or "curiosity"))
+
         # If conclusion fails challenge and chain depth not exceeded → spawn new curiosity
         if not settled and max_chain_depth > 1 and not _CYCLE_INTERRUPTIBLE.is_set():
             self._open_curiosity_loops.append(curiosity_obj)

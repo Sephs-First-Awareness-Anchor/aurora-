@@ -1762,6 +1762,53 @@ _reg("desktop_clipboard",     "Read or write to the host OS clipboard",         
 _reg("desktop_media_capture", "Listen to the host system internal audio output",                       "BOUNDED",    _desktop_media_capture,  disables_search=True)
 
 
+def _query_curiosity_log(max_entries: int = 5, **_) -> ToolResult:
+    """Read the last few entries from Aurora's autonomous curiosity log (thought_chain.jsonl)."""
+    try:
+        # Path relative to aurora_core_ai/aurora_internal/tool_registry.py
+        # Log is in aurora_logs/thought_chain.jsonl at the repo root.
+        log_path = Path(__file__).resolve().parents[2] / "aurora_logs" / "thought_chain.jsonl"
+        if not log_path.exists():
+            return ToolResult("query_curiosity_log", "No curiosity sessions logged yet.", True)
+
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        if not lines:
+            return ToolResult("query_curiosity_log", "Curiosity log is empty.", True)
+
+        recent = lines[-int(max_entries):]
+        entries = []
+        for line in reversed(recent):
+            try:
+                data = json.loads(line)
+                curiosity = data.get("curiosity_object", {})
+                conclusion = data.get("conclusion", {})
+                challenge = data.get("challenge_result", {})
+
+                entry = (
+                    f"Subject: {curiosity.get('subject')}\n"
+                    f"Hypothesis: {curiosity.get('hypothesis')}\n"
+                    f"Conclusion: {conclusion.get('statement')}\n"
+                    f"Confidence: {conclusion.get('confidence')}\n"
+                    f"Challenge: {challenge.get('strongest_counter')}\n"
+                    f"Survives Challenge: {challenge.get('conclusion_survives')}"
+                )
+                entries.append(entry)
+            except Exception:
+                continue
+
+        if not entries:
+            return ToolResult("query_curiosity_log", "Unable to parse curiosity log entries.", False)
+
+        return ToolResult("query_curiosity_log", "\n\n---\n\n".join(entries), True)
+    except Exception as exc:
+        return ToolResult("query_curiosity_log", "", False, str(exc))
+
+
+_reg("query_curiosity_log", "Read the last few entries from Aurora's autonomous curiosity log", "BOUNDED", _query_curiosity_log, disables_search=True)
+
+
 def call(name: str, **kwargs: Any) -> ToolResult:
     td = _REGISTRY.get(name)
     if td is None:

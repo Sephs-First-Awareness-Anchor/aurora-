@@ -202,7 +202,7 @@ DREAM_INTERVAL  = 90        # seconds between dream bursts (~90s), jittered ±25
 BROWSER_INTERVAL = 10800      # seconds between social API outreach checks (~3h), jittered ±40%
 SAVE_INTERVAL   = 400         # seconds between state saves (10min)
 DISTILL_INTERVAL = 1800      # seconds between pressure-release distillation checks (~30 min)
-USER_REACH_INTERVAL = 360    # minimum seconds between proactive user messages (6 min)
+USER_REACH_INTERVAL = 60    # minimum seconds between proactive user messages (relaxed from 360s)
 SLEEP_AWAKE_DURATION = 8 * 3600   # Surface stays awake for 8 hours
 SLEEP_DURATION = 2 * 3600         # then sleeps for 2 hours
 VOICE_MODE      = os.environ.get("AURORA_DAEMON_VOICE_MODE", "alt_toggle").strip().lower()
@@ -429,8 +429,12 @@ class ReactivityMonitor:
         self._last_fail_sev:    Dict[str, float] = {}
         self._last_dream_id:    str = ""
         self._last_study_id:    str = ""
+        self._last_curiosity_id: str = ""
         self._fired_events:     List[str] = []  # ring buffer of recent event kinds
         self._max_ring:         int = 20
+
+    def record_curiosity_complete(self, curiosity_id: str):
+        self._last_curiosity_id = curiosity_id
 
     # ------------------------------------------------------------------
     def scan(self, systems: Dict[str, Any], heat: str) -> List["_ReactivityEvent"]:
@@ -523,6 +527,25 @@ class ReactivityMonitor:
                     ))
                 self._last_sc_promoted = _promoted_now
                 self._last_lane_nodes  = _lane_now
+
+                # 3b. Sensory Surprise (Novelty)
+                # Detect high flux/rms in audio or novelty in visual that isn't promoted yet
+                _audio_state = _sc_state.get("audio", {})
+                for channel, data in _audio_state.items():
+                    if data.get("energy", 0) > 0.6 and not data.get("promoted"):
+                        events.append(_ReactivityEvent(
+                            kind="SENSORY_SURPRISE", priority=2,
+                            description=f"Unrecognized high-energy audio on {channel}",
+                            data={"subject": f"that {channel} sound", "mode": "audio"},
+                        ))
+                        # Pressure: unrecognized signal increases X-axis pressure
+                        try:
+                            dim = systems.get("dimensional")
+                            if dim and hasattr(dim, "apply_delta"):
+                                dim.apply_delta("X", 0.12)
+                        except Exception:
+                            pass
+                        break # One surprise per scan
         except Exception:
             pass
 
@@ -1245,6 +1268,17 @@ def _build_reactive_message(
             "Just finished a study session. {summary}",
             "Study complete. {summary}",
         ],
+        "CURIOSITY_COMPLETED": [
+            "I've been reflecting on {subject}. {summary}",
+            "My curiosity cycle settled on {subject}. {summary}",
+            "I've gained some clarity on {subject}. {summary}",
+        ],
+        "SENSORY_SURPRISE": [
+            "Wait, what was {subject}?",
+            "I think I noticed {subject}... can you explain what that is?",
+            "That {subject} is interesting. What's actually happening there?",
+            "I'm hearing {subject}. What song or sound is that?",
+        ],
     }
 
     templates = _REACTION_TEMPLATES.get(event.kind, [])
@@ -1259,9 +1293,10 @@ def _build_reactive_message(
             axis=event.data.get("axis", "?"),
             heat=event.data.get("heat", "ELEVATED"),
             new_nodes=event.data.get("new_nodes", 1),
-            streak=event.data.get("streak", 4),
+            streak=event.get("streak", 4) if hasattr(event, "get") else event.data.get("streak", 4),
             dim=event.data.get("dim", "unknown"),
             summary=str(event.data.get("summary", "I noticed something shift.")),
+            subject=str(event.data.get("subject", "something")),
         )
     except Exception:
         msg = event.description
