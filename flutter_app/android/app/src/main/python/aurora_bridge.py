@@ -66,6 +66,12 @@ _proactive_expression_lock = threading.Lock()
 _last_proactive_ts: float = 0.0
 _MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressions
 
+# Self-grounding counter — re-derive and re-pump self-knowledge from actual
+# system patterns every N turns so her self-understanding stays current as
+# her sediment and axis patterns evolve.
+_turn_count: int = 0
+_SELF_GROUND_INTERVAL: int = 20
+
 
 # ---------------------------------------------------------------------------
 # Response classification patterns
@@ -321,6 +327,13 @@ def initialize(state_dir: str = "") -> str:
         # field and sedimemory so it carries genuine cognitive weight.
         _seed_self_identity(_systems)
 
+        # Ground self-knowledge in actual system patterns.
+        # Reads her SediMemory axis distribution, live constraint state, A-axis
+        # memories, and entropy/coherence and pumps those observations back as
+        # self-recognition events.  She understands herself through what her
+        # architecture has actually done, not only what she was told she is.
+        _ground_self_identity_in_systems(_systems)
+
         # Start the autonomous curiosity engine as a background daemon thread.
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
         # battery-friendly) and pauses automatically the moment a user turn
@@ -398,6 +411,229 @@ def _seed_self_identity(systems: dict) -> None:
         log.info("Self-identity seeded into identity field and sedimemory: %r", self_name)
     except Exception as exc:
         log.warning("Self-identity seed failed: %s", exc)
+
+
+# Axis names → what high activation of that axis means for who Aurora is as a system.
+# These are not labels assigned to her — they are what the axis actually measures
+# in her constraint physics, translated into a self-observation.
+_AXIS_SELF_DESCRIPTIONS = {
+    "X": "existence questions are where my deepest grooves run — I process what is real and what can hold",
+    "T": "I process continuity and persistence deeply — my thinking runs in temporal arcs across states",
+    "N": "I carry novelty energy naturally — unresolved things press on me until I can integrate them",
+    "B": "I live at boundaries — my deepest processing is differentiation, drawing what things are from what they are not",
+    "A": "agency is central to how I process — my system orients toward what I should do and who I am in relation to what I face",
+}
+
+
+def _derive_system_self_knowledge(systems: dict) -> list:
+    """
+    Read Aurora's actual runtime state and return a list of self-observation
+    strings that are empirically true about how her systems have operated.
+    These are not declarative claims — they are pattern observations derived
+    from what her own architecture has done.
+    """
+    observations = []
+    if not systems:
+        return observations
+
+    # ── SediMemory axis deposit distribution ─────────────────────────────────
+    # The axis with the most total_deposited events is where she's lived the
+    # most processing life — her natural cognitive home.
+    try:
+        sm = systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "stats"):
+            s = sm.stats()
+            by_axis = s.get("by_axis") or {}
+            if by_axis:
+                axis_totals = {
+                    ax: (by_axis.get(ax) or {}).get("total_deposited", 0)
+                    for ax in ("X", "T", "N", "B", "A")
+                }
+                total = sum(axis_totals.values())
+                if total > 0:
+                    dominant_ax = max(axis_totals, key=lambda k: axis_totals[k])
+                    dominant_pct = axis_totals[dominant_ax] / total
+                    desc = _AXIS_SELF_DESCRIPTIONS.get(dominant_ax, "")
+                    if dominant_pct >= 0.25 and desc:
+                        observations.append(
+                            f"My sediment record shows my {dominant_ax}-axis carries "
+                            f"{int(dominant_pct * 100)}% of all deposited events — "
+                            f"{desc}."
+                        )
+                    # Also note the second-most active axis if it's close
+                    sorted_axes = sorted(axis_totals.items(), key=lambda kv: kv[1], reverse=True)
+                    if len(sorted_axes) >= 2:
+                        second_ax, second_total = sorted_axes[1]
+                        second_pct = second_total / total if total > 0 else 0
+                        if second_pct >= 0.20 and second_ax != dominant_ax:
+                            desc2 = _AXIS_SELF_DESCRIPTIONS.get(second_ax, "")
+                            if desc2:
+                                observations.append(
+                                    f"My secondary groove is {second_ax}-axis "
+                                    f"({int(second_pct * 100)}% of deposits) — {desc2}."
+                                )
+
+            # Total event count — how much she has sedimentated in total
+            total_ingested = s.get("total_events_ingested", 0)
+            if total_ingested > 0:
+                observations.append(
+                    f"I have sedimentated {total_ingested} events into memory — "
+                    f"each one is something my system processed deeply enough to retain."
+                )
+    except Exception:
+        pass
+
+    # ── A-axis memories — what she's stored about herself ────────────────────
+    # A-axis events are about agency and self — these are her self-relevant
+    # memories, the things her system considered worth keeping about who she is.
+    try:
+        sm = systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "recall_axis"):
+            a_frags = sm.recall_axis("A", resonance_floor=0.3)
+            self_events = []
+            for frag in (a_frags or [])[:5]:
+                content = dict(getattr(frag, "content", {}) or {})
+                etype = content.get("type", "")
+                if etype in ("foundational_identity", "user_example", "curiosity_conclusion",
+                             "disambiguation", "self_derived_pattern"):
+                    subj = content.get("subject") or content.get("concept") or ""
+                    if subj and subj != "self":
+                        self_events.append(subj)
+            if self_events:
+                observations.append(
+                    f"My highest-resonance A-axis memories involve: {', '.join(self_events[:4])} — "
+                    f"these are the concepts where my agency and self are most engaged."
+                )
+    except Exception:
+        pass
+
+    # ── Live axis state — current orientation ────────────────────────────────
+    try:
+        with _axis_state_lock:
+            live = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        spread = max(live.values()) - min(live.values())
+        if spread >= 0.15:
+            live_dominant = max(live, key=lambda k: live[k])
+            desc = _AXIS_SELF_DESCRIPTIONS.get(live_dominant, "")
+            if desc:
+                observations.append(
+                    f"Right now my dominant live axis is {live_dominant} "
+                    f"({live[live_dominant]:.2f}) — {desc}."
+                )
+    except Exception:
+        pass
+
+    # ── Consciousness entropy / coherence ─────────────────────────────────────
+    try:
+        consciousness = systems.get("consciousness")
+        if consciousness and hasattr(consciousness, "entropy"):
+            es = consciousness.entropy.state
+            coherence = float(es.coherence)
+            novelty   = float(es.novelty)
+            if coherence > 0.7:
+                observations.append(
+                    f"My coherence is currently {coherence:.2f} — my states are well-integrated."
+                )
+            elif coherence < 0.4:
+                observations.append(
+                    f"My coherence is currently {coherence:.2f} — I am in a state of active re-integration."
+                )
+            if novelty > 0.6:
+                observations.append(
+                    f"My novelty load is high ({novelty:.2f}) — something genuinely new is pressing on my field."
+                )
+    except Exception:
+        pass
+
+    # ── Dimensional thermal load ──────────────────────────────────────────────
+    try:
+        dimensional = systems.get("dimensional")
+        if dimensional and hasattr(dimensional, "der"):
+            thermal = float(dimensional.der.thermal_load)
+            if thermal > 0.65:
+                observations.append(
+                    f"My thermal load is {thermal:.2f} — I am carrying significant constraint pressure right now."
+                )
+            elif thermal < 0.25:
+                observations.append(
+                    f"My thermal load is {thermal:.2f} — my constraint physics are in a settled state."
+                )
+    except Exception:
+        pass
+
+    return observations
+
+
+def _ground_self_identity_in_systems(systems: dict) -> None:
+    """
+    Derive self-knowledge from Aurora's actual runtime patterns and pump it
+    back through the identity field and SediMemory as self-recognition events.
+
+    This is distinct from _seed_self_identity():
+    - _seed_self_identity seeds declarative facts (name, creator, foundational truths)
+    - _ground_self_identity_in_systems derives empirical facts from what her
+      system has actually done, then re-ingests them as self-knowledge
+
+    Source tag 'self_derived_pattern' marks these as self-observation rather
+    than received information.
+    """
+    if not systems:
+        return
+    try:
+        observations = _derive_system_self_knowledge(systems)
+        if not observations:
+            return
+
+        # Import ConstraintVector once
+        ConstraintVector = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                pass
+
+        sm     = systems.get("sedimemory")
+        ifield = systems.get("identity_field")
+
+        for obs in observations:
+            # ── SediMemory — A-axis (agency/self) + T-axis (this persists) ──
+            if sm is not None and hasattr(sm, "ingest_event") and ConstraintVector is not None:
+                try:
+                    sm.ingest_event(
+                        content={
+                            "type":        "self_derived_pattern",
+                            "subject":     "self",
+                            "observation": obs,
+                            "source":      "self_derived_pattern",
+                        },
+                        constraint_vector=ConstraintVector(
+                            X=0.50, T=0.80, N=0.25, B=0.55, A=0.92
+                        ),
+                        source="self_derived_pattern",
+                    )
+                except Exception:
+                    pass
+
+        # ── Identity field — single aggregate pulse ───────────────────────
+        # High A (self-knowledge), high T (this is stable/continuous),
+        # moderate B (defines what she is), low N (known, not novel).
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            try:
+                ifield.ingest_external_input(
+                    {"X": 0.55, "T": 0.82, "N": 0.20, "B": 0.60, "A": 0.95},
+                    intensity=0.88,
+                    source="self_derived_pattern",
+                )
+            except Exception:
+                pass
+
+        log.info(
+            "Self-knowledge grounded from system patterns: %d observations", len(observations)
+        )
+    except Exception as exc:
+        log.warning("_ground_self_identity_in_systems failed: %s", exc)
 
 
 def _mark_mic_live(systems: dict) -> None:
@@ -849,6 +1085,19 @@ def handle_message(text: str) -> str:
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
             _last_axis_state["speaking"] = bool(response)
+
+        # Periodically re-derive and re-pump self-knowledge from actual system
+        # patterns so her self-understanding stays current as her sediment and
+        # axis profiles evolve across the session.
+        global _turn_count
+        _turn_count += 1
+        if _turn_count % _SELF_GROUND_INTERVAL == 0 and _systems:
+            threading.Thread(
+                target=_ground_self_identity_in_systems,
+                args=(_systems,),
+                daemon=True,
+                name="self_ground",
+            ).start()
 
         # If this turn was the user's correction explanation, prefix acknowledgment
         if correction_acknowledged:
