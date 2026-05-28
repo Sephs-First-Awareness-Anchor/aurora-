@@ -161,6 +161,27 @@ _MEANS_DIFFERENTLY_RE = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
+# User is describing something in sensory, affective, or comparative terms.
+# Triggers referential self-comparison — Aurora maps the described quality
+# against her own axis state to understand how it relates to her own felt state.
+_AFFECTIVE_PATTERNS = re.compile(
+    r"""
+    \b(feels?\s+(like|warm|cold|heavy|light|rough|smooth|sharp|soft|hard|
+                  easy|difficult|bright|dark|loud|quiet|fast|slow|
+                  familiar|strange|calm|intense|alive|empty|alive|still))
+    | \b(looks?\s+(like|bright|dark|large|small|familiar|strange|similar|different))
+    | \b(sounds?\s+(like|familiar|strange|loud|quiet|sharp|smooth|warm|cold|harsh))
+    | \b(reminds?\s+(me\s+of|you\s+of|me\s+a\s+little))
+    | \b(similar\s+to|different\s+from|compared\s+to|contrast\s+(with|to))
+    | \b(it\s+(is|was)\s+(like|similar\s+to|different\s+from|unlike))
+    | \b(makes?\s+(me\s+)?(feel|sense|think\s+of))
+    | \b(I\s+find\s+it|it\s+(feels|felt|looks|looked|sounds|sounded))
+    | \b(by\s+comparison|in\s+contrast|the\s+way\s+it\s+(feels|looks|sounds|works))
+    | \b(how\s+(it|that|this)\s+(feels|looks|sounds|works|operates))
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
 
 def _is_confusion_signal(text: str) -> bool:
     """True when the user's message signals the previous output was bad."""
@@ -737,6 +758,123 @@ def _sanitize_response(response: str, user_text: str) -> str:
     return response
 
 
+def _feed_sensory_crystal_frames(
+    systems: dict,
+    audio_data: dict,
+    visual_data: dict,
+) -> None:
+    """
+    Convert raw ambient audio/visual dicts to sensory crystal vectors and call
+    observe_frame(). This is what keeps the sensory crystal learning from real
+    perceptual input rather than sitting empty with only archetype seed nodes.
+    """
+    if not systems or (not audio_data and not visual_data):
+        return
+    sc = (
+        systems.get("sensory_crystal")
+        or getattr(systems.get("hardware"), "sensory_crystal", None)
+        or getattr(systems.get("sensory_integration"), "sensory_crystal", None)
+    )
+    if sc is None or not hasattr(sc, "observe_frame"):
+        return
+    try:
+        try:
+            from aurora_core_ai.aurora_internal.aurora_sensory_crystal import (  # type: ignore
+                audio_dict_to_crystal_20d, visual_dict_to_crystal_57d,
+            )
+        except ImportError:
+            from aurora_internal.aurora_sensory_crystal import (  # type: ignore
+                audio_dict_to_crystal_20d, visual_dict_to_crystal_57d,
+            )
+        audio_20d  = audio_dict_to_crystal_20d(audio_data  or {})
+        visual_57d = visual_dict_to_crystal_57d(visual_data or {})
+        audio_conf  = min(1.0, float((audio_data  or {}).get("confidence", 0.45)))
+        visual_conf = min(1.0, float((visual_data or {}).get("confidence", 0.45)))
+        sc.observe_frame(
+            audio_20d, visual_57d,
+            session_id="mobile",
+            audio_conf=audio_conf,
+            visual_conf=visual_conf,
+        )
+        log.debug("Sensory crystal fed: audio_conf=%.2f visual_conf=%.2f", audio_conf, visual_conf)
+    except Exception as exc:
+        log.debug("_feed_sensory_crystal_frames: %s", exc)
+
+
+def _affective_self_comparison(text: str, systems: dict) -> None:
+    """
+    When the user describes something in sensory, affective, or comparative terms,
+    map the described quality to Aurora's constraint axis space and compare it to
+    her own current axis state. Feed the result as either a recognition event
+    (quality is similar to her own state) or a contrast event (it differs).
+
+    This is referential self-comparison — she has a felt state, and new descriptions
+    are understood relative to it. The comparison feeds the identity field so her
+    waveform synthesis carries this orientation when she generates her response.
+    """
+    if not systems or not _AFFECTIVE_PATTERNS.search(text):
+        return
+    t = text.lower()
+
+    # Build a rough quality axis vector from the described qualities
+    qX, qT, qN, qB, qA = 0.5, 0.5, 0.5, 0.5, 0.5
+
+    # High-cost, high-pressure, high-boundary qualities
+    if re.search(r'\b(heavy|difficult|hard|intense|sharp|harsh|cold|dark|loud|overwhelming|painful|tense)\b', t):
+        qN = 0.80; qX = 0.65
+    # Low-cost, continuous, settled qualities
+    if re.search(r'\b(light|easy|warm|calm|soft|bright|familiar|smooth|gentle|quiet|steady|peaceful|safe)\b', t):
+        qN = 0.22; qT = 0.75
+    # High-novelty, sudden, unfamiliar qualities
+    if re.search(r'\b(alive|active|fast|sudden|new|strange|unexpected|surprising|exciting|jarring|sharp)\b', t):
+        qN = 0.82
+    # Similarity / recognition / continuity
+    if re.search(r'\b(similar|reminds|like|familiar|same|comparable|reminiscent|recogni)\b', t):
+        qT = 0.78; qN = max(0.0, qN - 0.15)
+    # Difference / boundary / contrast
+    if re.search(r'\b(different|unlike|contrast|opposite|distinct|separate|unrelated|nothing\s+like)\b', t):
+        qB = 0.82; qN = min(1.0, qN + 0.10)
+    # Self-relevance / agency / impact
+    if re.search(r'\b(makes?\s+(me|you)\s+feel|affects?\s+(me|you)|means?\s+something|I\s+find\s+it|impacts?)\b', t):
+        qA = 0.80
+
+    # Compare described quality to her own live axis state
+    with _axis_state_lock:
+        own = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+    quality = {"X": qX, "T": qT, "N": qN, "B": qB, "A": qA}
+
+    # Similarity: how aligned is this quality with her current state?
+    similarity = sum(quality[k] * own[k] for k in quality) / 5.0
+
+    ifield = systems.get("identity_field")
+    if ifield is None:
+        return
+    try:
+        if similarity >= 0.52:
+            # Described quality resonates with her current state — recognition/continuity
+            ifield.ingest_external_input(
+                {"X": 0.42, "T": 0.78, "N": 0.18, "B": 0.48, "A": 0.68},
+                intensity=0.68,
+                source="affective_recognition",
+            )
+        else:
+            # Quality differs from her state — novelty/boundary/differentiation
+            ifield.ingest_external_input(
+                {"X": 0.52, "T": 0.32, "N": 0.78, "B": 0.75, "A": 0.62},
+                intensity=0.72,
+                source="affective_contrast",
+            )
+        if hasattr(ifield, "ingest_sensory_event"):
+            ifield.ingest_sensory_event(
+                "language",
+                intensity=0.62,
+                novelty=max(0.0, 1.0 - similarity),
+                valence=similarity - 0.5,
+            )
+    except Exception:
+        pass
+
+
 def _sample_ambient_perception(systems: dict) -> None:
     """
     Sample camera and audio hardware each turn (throttled).
@@ -759,6 +897,8 @@ def _sample_ambient_perception(systems: dict) -> None:
     cam_novelty   = 0.20
     audio_obs     = ""
     audio_novelty = 0.10
+    _raw_cam:   dict = {}
+    _raw_audio: dict = {}
 
     # ── Camera ────────────────────────────────────────────────────────────────
     hw = systems.get("hardware")
@@ -766,6 +906,7 @@ def _sample_ambient_perception(systems: dict) -> None:
         try:
             cam = hw.capture_visual()
             if cam and isinstance(cam, dict):
+                _raw_cam   = cam
                 brightness = float(cam.get("brightness", 0.0))
                 objects    = list(cam.get("objects", []) or [])[:4]
                 faces_raw  = cam.get("faces", 0)
@@ -795,12 +936,21 @@ def _sample_ambient_perception(systems: dict) -> None:
         _f = _P(_state) / "ambient_audio_latest.json"
         if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
             _d = _json.loads(_f.read_text())
+            _raw_audio = _d
             _act  = str(_d.get("activity", "ambient"))
             _rms  = float(_d.get("rms_db", -60.0))
             audio_obs     = f"{_act}, {_rms:.0f} dB"
             audio_novelty = 0.50 if _act in ("speech", "music") else 0.10
     except Exception:
         pass
+
+    # ── Feed sensory crystal with actual vectors ──────────────────────────────
+    # The sensory crystal needs real audio/visual observations to build its
+    # cross-modal semantic nodes and generate gap reports for the curiosity
+    # engine. Without this call the crystal is starved and the gap-seeking
+    # curiosity loop has nothing to drive it.
+    if _raw_cam or _raw_audio:
+        _feed_sensory_crystal_frames(systems, _raw_audio, _raw_cam)
 
     screen_obs = dict(_last_screen_observation or {})
     if not cam_obs and not audio_obs and not screen_obs:
@@ -1000,6 +1150,13 @@ def handle_message(text: str) -> str:
         # her own felt orientation rather than from a blank position.
         _inject_self_state_context(_systems)
 
+        # ── Affective / sensory self-comparison ──────────────────────────────
+        # When the user describes something in sensory or affective terms, map
+        # the described quality against Aurora's own axis state and feed the
+        # comparison into the identity field so she processes from a position
+        # of "how does this relate to how I feel right now."
+        _affective_self_comparison(text, _systems)
+
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
         print("AURORA_BRIDGE: Processing turn...")
@@ -1070,7 +1227,10 @@ def handle_message(text: str) -> str:
                         log.info("Gap %r found in SediMemory — trusting own understanding", gap_concept)
                     else:
                         # Genuinely unknown — fire background search immediately.
-                        _search_for_gap(gap_concept)
+                        # Route to the right tools based on what kind of gap it is.
+                        _gap_type = (_systems.pop("_gap_seeking_concept_type", None)
+                                     or "semantic_gap")
+                        _search_for_gap(gap_concept, gap_type=_gap_type)
                         if response and response.rstrip().endswith("?"):
                             # She naturally asked about it — next turn is the answer
                             _pending_example_concept = gap_concept
@@ -1122,30 +1282,80 @@ def handle_message(text: str) -> str:
         return "I encountered an error processing your request."
 
 
-def _search_for_gap(concept: str) -> None:
+def _search_for_gap(concept: str, gap_type: str = "semantic_gap") -> None:
     """
-    Trigger Aurora's search tools for a concept the user couldn't explain.
+    Trigger Aurora's search tools for an unresolved gap concept.
+    Routes to the appropriate modality tools based on gap_type:
+      semantic_gap   → world_knowledge_search, corpus_hunter
+      perceptual_gap → visual_analysis / audio_analysis / mobile_image_search
+      conceptual     → world_knowledge_search, challenge_my_conclusion
+      self           → self_state, query_unresolved_tensions
+      default        → world_knowledge_search, corpus_hunter
+
     Runs in a background thread so it doesn't block the current response.
     """
     if not _systems or not concept:
         return
+    _snap = _systems  # capture reference before thread starts
+
     def _run():
         try:
             from aurora_core_ai.aurora_internal.tool_registry import call as _tool_call  # type: ignore
-            # World knowledge search first — fastest
-            r1 = _tool_call("world_knowledge_search", query=concept, systems=_systems)
-            log.info("Gap search (world_knowledge) for %r: success=%s", concept, r1.success)
-            # If that resolved something, ingest the result as learning data
-            if r1.success and r1.data:
-                _ingest_example(r1.data, concept)
+            subj = concept.strip()
+            log.info("Gap search starting: concept=%r type=%s", subj, gap_type)
+
+            if gap_type == "perceptual_gap":
+                hint = subj.lower()
+                if "audio" in hint or "sound" in hint or "music" in hint or "voice" in hint:
+                    r = _tool_call("audio_analysis", analysis_intent=subj, systems=_snap)
+                    log.info("Gap search (audio_analysis) for %r: success=%s", subj, r.success)
+                    if r.success and r.data:
+                        _ingest_example(r.data, subj)
+                    else:
+                        r2 = _tool_call("mobile_music_identify", duration_s=8, systems=_snap)
+                        if r2.success and r2.data:
+                            _ingest_example(r2.data, subj)
+                else:
+                    r = _tool_call("visual_analysis", analysis_intent=subj, systems=_snap)
+                    log.info("Gap search (visual_analysis) for %r: success=%s", subj, r.success)
+                    if r.success and r.data:
+                        _ingest_example(r.data, subj)
+                    else:
+                        r2 = _tool_call("mobile_image_search", query=subj, count=4, systems=_snap)
+                        log.info("Gap search (mobile_image_search) for %r: success=%s", subj, r2.success)
+                        if r2.success and r2.data:
+                            _ingest_example(r2.data, subj)
+                        else:
+                            _tool_call("world_knowledge_search", query=subj, systems=_snap)
+
+            elif gap_type == "conceptual":
+                r = _tool_call("world_knowledge_search", query=subj, systems=_snap)
+                log.info("Gap search (world_knowledge) for %r: success=%s", subj, r.success)
+                if r.success and r.data:
+                    _ingest_example(r.data, subj)
+                _tool_call("challenge_my_conclusion", systems=_snap)
+
+            elif gap_type == "self":
+                _tool_call("self_state", systems=_snap)
+                _tool_call("query_unresolved_tensions", systems=_snap)
+
             else:
-                # Fall back to corpus hunter — finds raw datasets on the topic
-                _tool_call("corpus_hunter", topic=concept, systems=_systems)
-                log.info("Gap search (corpus_hunter) triggered for %r", concept)
+                # semantic_gap + default — text knowledge acquisition
+                r = _tool_call("world_knowledge_search", query=subj, systems=_snap)
+                log.info("Gap search (world_knowledge) for %r: success=%s", subj, r.success)
+                if r.success and r.data:
+                    _ingest_example(r.data, subj)
+                else:
+                    _tool_call("corpus_hunter", topic=subj, systems=_snap)
+                    log.info("Gap search (corpus_hunter) triggered for %r", subj)
+
         except Exception as exc:
             log.warning("_search_for_gap failed for %r: %s", concept, exc)
+
     import threading as _threading
-    _threading.Thread(target=_run, daemon=True, name=f"gap_search:{concept[:20]}").start()
+    _threading.Thread(
+        target=_run, daemon=True, name=f"gap_search:{concept[:20]}"
+    ).start()
 
 
 def _lookup_existing_understanding(concept: str, systems: dict) -> str:
