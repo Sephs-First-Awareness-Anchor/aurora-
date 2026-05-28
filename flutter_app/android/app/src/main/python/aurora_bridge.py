@@ -137,6 +137,24 @@ _CANT_ANSWER_PATTERNS = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
+# User is clarifying that they mean something differently from what Aurora understands.
+# Triggers B-axis disambiguation ingest rather than a plain user_example.
+_MEANS_DIFFERENTLY_RE = re.compile(
+    r"""
+    \b(by\s+(that|it|this|which)\s+I\s+mean)
+    | \b(what\s+I\s+mean\s+(is|by))
+    | \b(I\s+(use|mean)\s+it\s+(to\s+mean|as|like))
+    | \b(in\s+(this|my|that)\s+context)
+    | \b(not\s+(exactly|quite|in\s+that)\s+(way|sense|meaning))
+    | \b(more\s+(like|of\s+a))
+    | \b(to\s+me\s+it\s+(means|is|represents))
+    | \b(I\s+(define|understand|see)\s+it\s+as)
+    | \b(I\s+meant\s+it\s+(as|like|to\s+mean))
+    | \b(the\s+way\s+I\s+(use|mean|see)\s+it)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
 
 def _is_confusion_signal(text: str) -> bool:
     """True when the user's message signals the previous output was bad."""
@@ -691,11 +709,18 @@ def handle_message(text: str) -> str:
             # concept pending, your reply is either an answer or a can't-answer.
             if _pending_example_concept:
                 if _CANT_ANSWER_PATTERNS.search(text):
-                    # You don't know — search is already running in background
-                    # (fired the moment the gap was detected), nothing more to do.
+                    # You don't know — search already running in background.
                     pass
+                elif _MEANS_DIFFERENTLY_RE.search(text):
+                    # You're clarifying a different meaning from what Aurora has.
+                    # Check what she currently has so the disambiguation event
+                    # can pair her understanding against yours.
+                    existing_def = _lookup_existing_understanding(
+                        _pending_example_concept, _systems
+                    ) or ""
+                    _ingest_disambiguation(text, _pending_example_concept, existing_def)
                 else:
-                    # You answered — ingest what you said as learning data.
+                    # Straight answer — ingest as learning data.
                     _ingest_example(text, _pending_example_concept)
                 _pending_example_concept = ""
                 _pending_example_asked   = ""
@@ -731,6 +756,13 @@ def handle_message(text: str) -> str:
             _shift = _detect_relational_shift(text, _claim_entity)
             if _shift:
                 _relational_synthesis = _build_relational_synthesis(_claim_entity, _shift)
+
+        # ── Self-state context — ground Aurora in her own orientation ───────────
+        # Inject current axis pressures into the perceptual snapshot so her
+        # waveform synthesis has her own system state as reference material.
+        # This means when she encounters something unfamiliar she processes from
+        # her own felt orientation rather than from a blank position.
+        _inject_self_state_context(_systems)
 
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
@@ -790,15 +822,25 @@ def handle_message(text: str) -> str:
                     _systems["_gap_seeking_concept"] = None
                     log.info("Gap concept %r already ingested — skipping re-arm", gap_concept)
                 else:
-                    # Fire background search immediately so she looks it up before
-                    # (or in parallel with) asking the user about it.
-                    _search_for_gap(gap_concept)
-                    if response and response.rstrip().endswith("?"):
-                        # She naturally asked something — next turn is the answer
-                        _pending_example_concept = gap_concept
-                        _pending_example_asked   = response
+                    # Check SediMemory — if she already has a sedimentated
+                    # understanding of this concept, she should trust it and not
+                    # re-open the teaching loop. She knows this.
+                    _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
+                    if _existing_def:
                         _systems["_gap_seeking_concept"] = None
-                        log.info("Gap question detected for concept: %r", gap_concept)
+                        # Mark it as known so the curiosity engine won't keep
+                        # flagging it this session
+                        _ingested_concepts.add(_gap_norm)
+                        log.info("Gap %r found in SediMemory — trusting own understanding", gap_concept)
+                    else:
+                        # Genuinely unknown — fire background search immediately.
+                        _search_for_gap(gap_concept)
+                        if response and response.rstrip().endswith("?"):
+                            # She naturally asked about it — next turn is the answer
+                            _pending_example_concept = gap_concept
+                            _pending_example_asked   = response
+                            _systems["_gap_seeking_concept"] = None
+                            log.info("Gap question detected for concept: %r", gap_concept)
 
         _last_response = response
         _last_path_key = path_key
@@ -855,6 +897,142 @@ def _search_for_gap(concept: str) -> None:
             log.warning("_search_for_gap failed for %r: %s", concept, exc)
     import threading as _threading
     _threading.Thread(target=_run, daemon=True, name=f"gap_search:{concept[:20]}").start()
+
+
+def _lookup_existing_understanding(concept: str, systems: dict) -> str:
+    """
+    Query SediMemory for any sedimentated understanding Aurora already has of
+    concept. Returns the best-match content summary (may be empty string), or
+    None if SediMemory is unavailable or no relevant fragments exist.
+    """
+    if not systems or not concept:
+        return None
+    sm = systems.get("sedimemory")
+    if sm is None or not hasattr(sm, "recall_semantic"):
+        return None
+    try:
+        results = sm.recall_semantic(concept.strip(), max_results=3, min_score=0.40)
+        if results:
+            best = max(results, key=lambda r: r.get("score", 0.0))
+            summary = best.get("summary") or ""
+            content = best.get("content") or {}
+            if not summary:
+                # Extract from content dict
+                for key in ("example", "text", "statement", "description"):
+                    val = content.get(key)
+                    if val and isinstance(val, str):
+                        summary = val[:220]
+                        break
+            return summary
+    except Exception:
+        pass
+    return None
+
+
+def _ingest_disambiguation(user_text: str, concept: str, existing_def: str) -> None:
+    """
+    Ingest a disambiguation event when the user's meaning of concept diverges
+    from Aurora's existing understanding. The existing_def (what Aurora already
+    has) is paired with user_text (what the user clarified) as a B-axis
+    boundary-differentiation event — the boundary between two meanings of the
+    same word is being drawn.
+    """
+    if not _systems or not user_text.strip():
+        return
+    log.info("Ingesting disambiguation for %r — new: %.60s | existing: %.60s",
+             concept, user_text, existing_def)
+    try:
+        sm = _systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                # B-axis very high: this IS about definition boundaries.
+                # N-axis elevated: there's real differentiation energy here.
+                # A-axis high: Aurora must understand this to stay aligned.
+                cv = ConstraintVector(X=0.45, T=0.35, N=0.65, B=0.95, A=0.80)
+                sm.ingest_event(
+                    content={
+                        "type":         "disambiguation",
+                        "concept":      concept,
+                        "my_definition": existing_def,
+                        "their_meaning": user_text,
+                        "source":       "user_clarification",
+                    },
+                    constraint_vector=cv,
+                    source="user_teaching",
+                )
+    except Exception as exc:
+        log.warning("Disambiguation SediMemory ingest failed: %s", exc)
+
+    try:
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            # B-axis dominant + N-axis elevated = "the boundary I drew here was
+            # approximate — here is where it actually lies"
+            ifield.ingest_external_input(
+                {"X": 0.45, "T": 0.35, "N": 0.65, "B": 0.95, "A": 0.80},
+                intensity=0.88,
+                source=f"disambiguation:{concept}",
+            )
+    except Exception as exc:
+        log.warning("Disambiguation identity-field ingest failed: %s", exc)
+
+    _ingested_concepts.add(concept.lower().strip())
+
+
+def _inject_self_state_context(systems: dict) -> None:
+    """
+    Write Aurora's current constraint axis pressures as a self-perceptual note
+    in _ambient_perceptual so her own system state is front-and-center when she
+    processes each turn. She knows what she's feeling and can use that as a
+    reference point when interpreting what the user says.
+    """
+    if not systems:
+        return
+    try:
+        with _axis_state_lock:
+            axes = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        dominant = max(axes, key=lambda k: axes[k])
+        # Brief description of what each dominant axis means for her current orientation
+        _axis_meanings = {
+            "X": "grounded in what is real and admissible right now",
+            "T": "oriented toward continuity and what persists over time",
+            "N": "carrying high novelty energy — something is unresolved or costly",
+            "B": "at a boundary — distinguishing what this is from what it isn't",
+            "A": "strongly present in agency — this bears on what I do and who I am",
+        }
+        dominant_meaning = _axis_meanings.get(dominant, "")
+        # Only inject if axis values are meaningfully differentiated (not flat 0.5)
+        spread = max(axes.values()) - min(axes.values())
+        if spread < 0.08:
+            return  # flat state — nothing informative to say about orientation
+        self_note = (
+            f"self-state: dominant {dominant}-axis ({axes[dominant]:.2f}) — "
+            f"{dominant_meaning}; "
+            f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
+            f"B={axes['B']:.2f} A={axes['A']:.2f}"
+        )
+        existing = systems.get("_ambient_perceptual") or {}
+        obs = existing.get("observation", "")
+        # Append self-state to whatever sensory observation is already there
+        if obs:
+            systems["_ambient_perceptual"] = {
+                **existing,
+                "observation": f"{obs}; {self_note}",
+            }
+        else:
+            systems["_ambient_perceptual"] = {
+                "observation": self_note,
+                "source":      "self_state",
+            }
+    except Exception:
+        pass
 
 
 def _ingest_example(example_text: str, concept: str) -> None:
