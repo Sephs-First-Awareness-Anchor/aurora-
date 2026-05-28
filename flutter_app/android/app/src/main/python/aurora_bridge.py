@@ -39,6 +39,11 @@ _PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
 _pending_example_concept: str = ""   # concept Aurora asked about
 _pending_example_asked:   str = ""   # the exact question she asked
 
+# Concepts that have already been taught this session — prevents the gap
+# detector from re-arming the teaching loop for something she was already
+# given.  Cleared on initialize() so each session starts fresh.
+_ingested_concepts: set = set()
+
 # Correction learning loop.
 # Turn A — user says "that's wrong": Aurora explains its reasoning and arms this state.
 # Turn B — user explains what was wrong: reasoning is ingested as learning data.
@@ -258,7 +263,8 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems
+    global _systems, _ingested_concepts
+    _ingested_concepts = set()   # fresh session — no concepts pre-marked as learned
     _setup_paths()
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
@@ -291,6 +297,12 @@ def initialize(state_dir: str = "") -> str:
         # may be absent when aurora_manifold_directory is not present).
         _init_language_field(_systems, state_dir)
 
+        # Seed Aurora's self-identity into the cognitive stores so her generative
+        # system has self-referential data to draw from.  core_identity already
+        # holds her name from persistence; here we pump it through the identity
+        # field and sedimemory so it carries genuine cognitive weight.
+        _seed_self_identity(_systems)
+
         # Start the autonomous curiosity engine as a background daemon thread.
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
         # battery-friendly) and pauses automatically the moment a user turn
@@ -309,6 +321,65 @@ def initialize(state_dir: str = "") -> str:
         log.error("boot_aurora failed: %s\n%s", exc, tb)
         last_line = [l.strip() for l in tb.splitlines() if l.strip()][-1]
         return f"error: {last_line}"
+
+
+def _seed_self_identity(systems: dict) -> None:
+    """
+    Pump Aurora's foundational self-identity through the identity field and
+    sedimemory so her generative system has self-referential pressure to draw
+    from.  The name and creator facts already live in core_identity from
+    persistence; this makes them cognitively active, not just stored.
+    No scripted responses — only raw data seeded through the proper channels.
+    """
+    try:
+        core_identity = systems.get("core_identity")
+        self_name = "Aurora"
+        if core_identity is not None:
+            self_name = str(getattr(core_identity, "self_name", "Aurora") or "Aurora")
+
+        # Identity field — strong A-axis (self/agency) and T-axis (continuity
+        # of self across time).  High intensity signals this is foundational.
+        ifield = systems.get("identity_field")
+        if ifield is not None:
+            if hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.65, "T": 0.85, "N": 0.30, "B": 0.60, "A": 0.90},
+                    intensity=0.92,
+                    source="self_identity_seed",
+                )
+            if hasattr(ifield, "ingest_sensory_event"):
+                ifield.ingest_sensory_event(
+                    "internal", intensity=0.88, novelty=0.0, valence=0.5
+                )
+
+        # Sedimemory — plant as a foundational event so the memory waveform
+        # can draw on self-referential continuity across turns.
+        sm = systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                sm.ingest_event(
+                    content={
+                        "type":    "foundational_identity",
+                        "subject": "self",
+                        "name":    self_name,
+                        "source":  "boot_seed",
+                    },
+                    constraint_vector=ConstraintVector(
+                        X=0.65, T=0.85, N=0.30, B=0.60, A=0.90
+                    ),
+                    source="boot_identity",
+                )
+
+        log.info("Self-identity seeded into identity field and sedimemory: %r", self_name)
+    except Exception as exc:
+        log.warning("Self-identity seed failed: %s", exc)
 
 
 def _mark_mic_live(systems: dict) -> None:
@@ -370,6 +441,15 @@ _AUDIO_QUERY_RE = re.compile(
     r'\b(?:can|could|do)\s+you\s+hear\s+me\b',
     re.IGNORECASE,
 )
+# Internal language templates that should never reach the surface
+_ACTUALLY_HERE_RE = re.compile(
+    r"What's actually here is\b[^.!?\n]*[.!?]?\s*",
+    re.IGNORECASE,
+)
+_REVISE_FRAMING_RE = re.compile(
+    r"before I revise my own framing\b[^.!?\n]*[.!?]?\s*",
+    re.IGNORECASE,
+)
 
 
 def _sanitize_response(response: str, user_text: str) -> str:
@@ -395,6 +475,10 @@ def _sanitize_response(response: str, user_text: str) -> str:
     # 3. Strip stray offline-feed sentences
     response = _AUDIO_OFFLINE_RE.sub('', response).strip()
     response = _CAM_OFFLINE_RE.sub('', response).strip()
+
+    # 4. Strip internal language templates that escaped the surface boundary
+    response = _ACTUALLY_HERE_RE.sub('', response).strip()
+    response = _REVISE_FRAMING_RE.sub('', response).strip()
 
     return response
 
@@ -638,7 +722,13 @@ def handle_message(text: str) -> str:
         if _systems:
             gap_concept = _systems.get("_gap_seeking_concept") or ""
             if gap_concept and not _pending_example_concept:
-                if response and response.rstrip().endswith("?"):
+                # Don't re-arm the teaching loop if this concept was already
+                # taught this session — the ingestion went through and the
+                # pressure was relieved; firing again would undo that.
+                if gap_concept in _ingested_concepts:
+                    _systems["_gap_seeking_concept"] = None
+                    log.info("Gap concept %r already ingested — skipping re-arm", gap_concept)
+                elif response and response.rstrip().endswith("?"):
                     # She asked something — your next turn is the answer
                     _pending_example_concept = gap_concept
                     _pending_example_asked   = response
@@ -788,6 +878,9 @@ def _ingest_example(example_text: str, concept: str) -> None:
         log.warning("Genealogy tick failed: %s", exc)
 
     log.info("Example ingested — concept %r now has semantic modality data", concept)
+    # Mark resolved so the gap detector doesn't re-arm the teaching loop for
+    # this concept — the pressure has been relieved through ingestion.
+    _ingested_concepts.add(concept.lower().strip())
 
 
 def _is_explicit_correction(text: str) -> bool:
