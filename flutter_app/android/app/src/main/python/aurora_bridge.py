@@ -587,10 +587,67 @@ def _sample_ambient_perception(systems: dict) -> None:
             pass
 
 
+def _normalize_contractions(text: str) -> str:
+    """
+    Normalize Unicode apostrophes and expand contractions before any processing.
+    Mirrors the contraction-binding logic in aurora._normalize_surface_anchor_label
+    so the gap detector sees 'do not' rather than the shard 'don'.
+    """
+    # Normalize curly/smart apostrophes to standard ASCII apostrophe
+    text = text.replace('’', "'").replace('‘', "'").replace('ʼ', "'")
+    text = re.sub(r"\bdon(?:['']|\s+)?t\b",      "do not",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bdoesn(?:['']|\s+)?t\b",    "does not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bdidn(?:['']|\s+)?t\b",     "did not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bisn(?:['']|\s+)?t\b",      "is not",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\baren(?:['']|\s+)?t\b",     "are not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwasn(?:['']|\s+)?t\b",     "was not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bweren(?:['']|\s+)?t\b",    "were not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwon(?:['']|\s+)?t\b",      "will not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwouldn(?:['']|\s+)?t\b",   "would not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bshouldn(?:['']|\s+)?t\b",  "should not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bcouldn(?:['']|\s+)?t\b",   "could not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhaven(?:['']|\s+)?t\b",    "have not",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhasn(?:['']|\s+)?t\b",     "has not",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhadn(?:['']|\s+)?t\b",     "had not",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bcan(?:['']|\s+)?t\b",      "can not",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bain(?:['']|\s+)?t\b",      "am not",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?m\b",        "I am",       text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?ve\b",       "I have",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?ll\b",       "I will",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?d\b",        "I would",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\byou(?:['']|\s+)?re\b",     "you are",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\byou(?:['']|\s+)?ve\b",     "you have",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthey(?:['']|\s+)?re\b",    "they are",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwe(?:['']|\s+)?re\b",      "we are",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhe(?:['']|\s+)?s\b",       "he is",      text, flags=re.IGNORECASE)
+    text = re.sub(r"\bshe(?:['']|\s+)?s\b",      "she is",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bit(?:['']|\s+)?s\b",       "it is",      text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthat(?:['']|\s+)?s\b",     "that is",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthere(?:['']|\s+)?s\b",    "there is",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\blet(?:['']|\s+)?s\b",      "let us",     text, flags=re.IGNORECASE)
+    return text
+
+
+# Bare contraction shards that should never be treated as unknown concepts.
+# These are the pre-apostrophe halves left behind when apostrophes are dropped.
+_CONTRACTION_SHARDS = frozenset({
+    "don", "doesnt", "doesn", "didnt", "didn", "isnt", "isn",
+    "arent", "aren", "wasnt", "wasn", "werent", "weren",
+    "cant", "wont", "won", "wouldnt", "wouldn", "shouldnt", "shouldn",
+    "couldnt", "couldn", "havent", "haven", "hasnt", "hasn",
+    "hadnt", "hadn", "aint", "ain",
+    "im", "ive", "ill", "id", "youre", "youve", "theyre",
+    "were", "hes", "shes", "its", "thats", "theres", "lets",
+})
+
+
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
     global _systems, _last_response, _last_path_key
     global _pending_example_concept, _pending_example_asked
+    # Normalize contractions before any processing so the gap detector never
+    # sees bare shards like 'don' instead of the full 'do not'.
+    text = _normalize_contractions(text)
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
@@ -634,8 +691,9 @@ def handle_message(text: str) -> str:
             # concept pending, your reply is either an answer or a can't-answer.
             if _pending_example_concept:
                 if _CANT_ANSWER_PATTERNS.search(text):
-                    # You don't know — fall back to Aurora's search tools.
-                    _search_for_gap(_pending_example_concept)
+                    # You don't know — search is already running in background
+                    # (fired the moment the gap was detected), nothing more to do.
+                    pass
                 else:
                     # You answered — ingest what you said as learning data.
                     _ingest_example(text, _pending_example_concept)
@@ -722,18 +780,25 @@ def handle_message(text: str) -> str:
         if _systems:
             gap_concept = _systems.get("_gap_seeking_concept") or ""
             if gap_concept and not _pending_example_concept:
-                # Don't re-arm the teaching loop if this concept was already
-                # taught this session — the ingestion went through and the
-                # pressure was relieved; firing again would undo that.
-                if gap_concept in _ingested_concepts:
+                _gap_norm = gap_concept.lower().strip()
+                if _gap_norm in _CONTRACTION_SHARDS:
+                    # Contraction fragment left by dropped apostrophe — not a real gap
+                    _systems["_gap_seeking_concept"] = None
+                    log.info("Gap concept %r is a contraction shard — skipping", gap_concept)
+                elif _gap_norm in _ingested_concepts:
+                    # Already taught this session — pressure already relieved
                     _systems["_gap_seeking_concept"] = None
                     log.info("Gap concept %r already ingested — skipping re-arm", gap_concept)
-                elif response and response.rstrip().endswith("?"):
-                    # She asked something — your next turn is the answer
-                    _pending_example_concept = gap_concept
-                    _pending_example_asked   = response
-                    _systems["_gap_seeking_concept"] = None
-                    log.info("Gap question detected for concept: %r", gap_concept)
+                else:
+                    # Fire background search immediately so she looks it up before
+                    # (or in parallel with) asking the user about it.
+                    _search_for_gap(gap_concept)
+                    if response and response.rstrip().endswith("?"):
+                        # She naturally asked something — next turn is the answer
+                        _pending_example_concept = gap_concept
+                        _pending_example_asked   = response
+                        _systems["_gap_seeking_concept"] = None
+                        log.info("Gap question detected for concept: %r", gap_concept)
 
         _last_response = response
         _last_path_key = path_key
