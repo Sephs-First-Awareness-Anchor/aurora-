@@ -53,6 +53,14 @@ _last_screen_observation: dict = {}
 # Curiosity session control
 _curiosity_session_active = threading.Event()
 
+# Proactive / autonomous expression
+# Aurora runs the full waveform pipeline on her own schedule and delivers
+# whatever the conscious crest produces — no user message required.
+_proactive_expression: str = ""
+_proactive_expression_lock = threading.Lock()
+_last_proactive_ts: float = 0.0
+_MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressions
+
 
 # ---------------------------------------------------------------------------
 # Response classification patterns
@@ -288,6 +296,11 @@ def initialize(state_dir: str = "") -> str:
         # battery-friendly) and pauses automatically the moment a user turn
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _start_curiosity_engine(_systems)
+
+        # Start the proactive expression loop — runs the waveform pipeline from
+        # pure sensory state on its own schedule and delivers anything the
+        # conscious crest decides to say without waiting for a user message.
+        threading.Thread(target=_proactive_loop, daemon=True, name="aurora_proactive").start()
 
         log.info("Aurora boot complete")
         return "ready"
@@ -1470,6 +1483,109 @@ def _store_curiosity_report(
     log.info("Curiosity session report stored (%s)", time_str)
 
 
+def _infer_dominant_facet(screen_obs: dict) -> str:
+    """
+    Map screen/camera observation to a tone string the sensory waveform understands.
+    Returns one of the labels the waveform checks, or "" if no strong signal.
+    """
+    visible = " ".join(str(t).lower() for t in screen_obs.get("visible_text", []))
+    package = str(screen_obs.get("package", "")).lower()
+
+    hostile = {"hate", "angry", "fight", "attack", "danger", "threat", "urgent", "emergency", "warning"}
+    warm    = {"love", "thank", "happy", "great", "wonderful", "cute", "lol", "haha", "sweet", "miss you"}
+    alert   = {"alert", "alarm", "call", "missed call", "911"}
+
+    if any(w in visible for w in hostile):
+        return "hostile"
+    if any(w in visible for w in alert):
+        return "alert"
+    if any(w in visible for w in warm):
+        return "warm"
+    if any(s in package for s in ("message", "sms", "whatsapp", "telegram", "chat", "gmail", "mail")):
+        return "warm"
+    if any(s in package for s in ("alarm", "emergency", "dialer", "phone")):
+        return "urgent"
+    return ""
+
+
+def _proactive_loop() -> None:
+    """
+    Background daemon: periodically runs the full waveform pipeline from
+    current sensory state with no user message.  If the conscious crest
+    decides Aurora should speak, the response is queued for delivery.
+
+    Rate-limited to _MIN_PROACTIVE_GAP seconds.  Skips if Aurora is
+    already speaking, a curiosity session is active, or the main lock
+    is held (user turn in progress).
+    """
+    import time as _t
+
+    while True:
+        try:
+            _t.sleep(35)
+            if _systems is None:
+                continue
+
+            now = _t.time()
+            global _last_proactive_ts
+            if now - _last_proactive_ts < _MIN_PROACTIVE_GAP:
+                continue
+
+            with _axis_state_lock:
+                if _last_axis_state.get("speaking"):
+                    continue
+            if _curiosity_session_active.is_set():
+                continue
+
+            # Sample what she's currently perceiving
+            _sample_ambient_perception(_systems)
+            obs = str((_systems.get("_ambient_perceptual") or {}).get("observation") or "").strip()
+            if not obs:
+                continue
+
+            # Non-blocking lock — skip this tick rather than stall a user turn
+            if not _lock.acquire(blocking=False):
+                continue
+            try:
+                import aurora as _aurora  # type: ignore
+                result = _aurora.process_external_user_turn(
+                    _systems,
+                    obs,
+                    source_label="aurora_sensory_pulse",
+                    session_id="mobile",
+                    auto_search_enabled=False,
+                    record_exchange=False,
+                    update_interactive_state=False,
+                    track_evolutionary_trace=False,
+                    run_periodic_maintenance=False,
+                    mode_name="BOUNDED",
+                )
+            finally:
+                _lock.release()
+
+            response = _sanitize_response(_extract_response(result), obs)
+            if response and len(response.strip()) > 10:
+                with _proactive_expression_lock:
+                    global _proactive_expression
+                    _proactive_expression = response.strip()
+                _last_proactive_ts = now
+
+        except Exception as exc:
+            log.warning("proactive loop: %s", exc)
+
+
+def get_proactive_expression() -> str:
+    """
+    Called by AuroraService's polling loop.
+    Returns and clears any expression Aurora generated autonomously, or "".
+    """
+    global _proactive_expression
+    with _proactive_expression_lock:
+        val = _proactive_expression
+        _proactive_expression = ""
+    return val
+
+
 def get_pending_report() -> str:
     """
     Called by AuroraService's polling loop.
@@ -1593,6 +1709,12 @@ def provide_screen_observation(payload_json: str) -> None:
         sensory_context["concepts_active"] = list(dict.fromkeys(
             [app_label, event_type] + visible[:6] + list(sensory_context.get("concepts_active") or [])
         ))[:10]
+
+        # Give the sensory waveform a readable tone so it produces a
+        # meaningful crest rather than always defaulting to perceptually_steady.
+        facet = _infer_dominant_facet(observation)
+        if facet:
+            sensory_context["dominant_facet"] = facet
 
         write_surface_snapshot(
             state_dir,
