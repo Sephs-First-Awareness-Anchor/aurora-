@@ -3092,12 +3092,12 @@ class ProactiveTrigger:
         # Priority 2: Interesting observations
         if self.observation_buffer:
             obs = self.observation_buffer.pop(0)
-            if obs.get('salience', 0) > 0.7:
+            if obs.get('salience', 0) > 0.4:  # Relaxed from 0.7
                 self.last_speakup_time = now
                 return obs.get('description', '')
 
         # Priority 3: Curiosity-driven questions
-        if self.curiosity_queue and random.random() < 0.3:  # 30% chance
+        if self.curiosity_queue and random.random() < 0.7:  # Increased from 0.3
             question = self.curiosity_queue.pop(0)
             self.last_speakup_time = now
             return question
@@ -3796,6 +3796,17 @@ class AutonomyEngine:
                 )
             else:
                 thought = f"I dreamed through a shifting scenario around: {seed}."
+
+            # --- Bridge experiential learning into semantic memory (OETS) ---
+            if simulation and hasattr(simulation, "session"):
+                perception = self.systems.get("perception")
+                if perception and hasattr(perception, "oets") and perception.oets:
+                    try:
+                        n_shards = simulation.session.learner.inject_into_oets(perception.oets)
+                        if n_shards > 0:
+                            logger.info(f"[AUTONOMY] Injected {n_shards} understanding shard(s) into OETS.")
+                    except Exception as e_bridge:
+                        logger.debug(f"[AUTONOMY] OETS injection error: {e_bridge}")
 
             self.action_log.log(
                 "dream",

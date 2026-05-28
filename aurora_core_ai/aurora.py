@@ -499,6 +499,62 @@ def _normalize_runtime_profile(runtime_profile: str) -> str:
     return profile
 
 # ============================================================================
+# TEACHING ENGINE — Intentional Learning from User
+# ============================================================================
+
+class TeachingEngine:
+    """Manages the multi-turn flow of intentional teaching from the user."""
+    def __init__(self, systems: Dict[str, Any]):
+        self.systems = systems
+
+    def check_teaching_offer(self, text: str) -> Optional[str]:
+        """Detect if the user is offering to teach something."""
+        t = text.lower()
+        if "would you like me to teach you" in t or "want me to explain" in t or "i can teach you" in t:
+            wm = self.systems.get("working_memory")
+            if wm:
+                # Store that we are expecting a definition next
+                wm.pending_teaching_offer = True
+                term = wm.last_concept_anchor or wm.current_topic or "that"
+                return f"I would value learning more about {term}. Please, teach me."
+        return None
+
+    def process_teaching_input(self, text: str, understood: dict) -> Optional[str]:
+        """Process the actual definition/explanation from the user."""
+        wm = self.systems.get("working_memory")
+        if not wm or not getattr(wm, "pending_teaching_offer", False):
+            return None
+
+        term = wm.last_concept_anchor or wm.current_topic
+        if not term or term in wm._WEAK_ANCHOR_LABELS:
+            # Try to extract term from text if possible
+            term = (understood.get("topic") or 
+                    (understood.get("topic_words") or [None])[0])
+
+        if not term:
+            wm.pending_teaching_offer = False
+            return None
+
+        perception = self.systems.get("perception")
+        oets = getattr(perception, "oets", None)
+        if oets and hasattr(oets, "teach"):
+            success = oets.teach(term, text)
+            if success:
+                wm.pending_teaching_offer = False
+                # Relief: learning settles curiosity
+                try:
+                    gen = self.systems.get("genealogy")
+                    if gen:
+                        gen.log_relief("A", 0.4, notes=f"learned_concept:{term}")
+                except Exception:
+                    pass
+                return f"I've integrated that understanding of {term}. Thank you for teaching me."
+        
+        wm.pending_teaching_offer = False
+        return None
+
+
+# ============================================================================
 # WORKING MEMORY  -- Per-session short-term context
 # ============================================================================
 
@@ -523,8 +579,7 @@ class WorkingMemory:
     )
     _WEAK_ANCHOR_LABELS = {
         'be', 'do', 'does', 'did', 'explain', 'go', 'have', 'help', 'is',
-        'know', 'mean', 'means', 'need', 'said', 'say', 'saying', 'tell',
-        'think', 'understand', 'want', 'was', 'were',
+        'mean', 'means', 'need', 'want', 'was', 'were',
     }
     _SURFACE_META_ANCHORS = {
         'answer', 'answers', 'communication', 'context', 'conversation',
@@ -691,6 +746,7 @@ class WorkingMemory:
         self._context_control_skip_text: str = ""
         self._context_control_response_text: str = ""
         self._skip_next_aurora_claim_ingest: bool = False
+        self.pending_teaching_offer: bool = False
 
     def _ensure_runtime_deques(self) -> None:
         """Repair deque-backed runtime fields after JSON restore or list assignment."""
@@ -25886,6 +25942,31 @@ def _run_live_response_turn(
             'memory_sweep': memory_sweep,
         }
 
+    # ---- INTENTIONAL TEACHING (High Priority) ----
+    teaching_engine = systems.get("teaching_engine")
+    if teaching_engine:
+        # 1. Process actual teaching input if we were awaiting it
+        teach_reply = teaching_engine.process_teaching_input(user_text, turn_understood)
+        if teach_reply:
+             resp_A = SimpleNamespace(content=teach_reply, emotional_tone="happy", confidence=0.95, src="teaching")
+             return {
+                 'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
+                 'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
+                 'trace_id': trace_id, 'interaction_runtime': {}, 'quasiarch_runtime': None,
+                 'understanding_observation': {}, 'understanding_application': {},
+             }
+
+        # 2. Check for a new offer to teach
+        offer_reply = teaching_engine.check_teaching_offer(user_text)
+        if offer_reply:
+             resp_A = SimpleNamespace(content=offer_reply, emotional_tone="attentive", confidence=0.90, src="teaching")
+             return {
+                 'input': user_text, 'resp_A': resp_A, 'resp_B': None, 'offered_lookup': False,
+                 'is_question': False, 'elapsed_A': 0.0, 'src': "teaching", 'turn_tick': turn_tick,
+                 'trace_id': trace_id, 'interaction_runtime': {}, 'quasiarch_runtime': None,
+                 'understanding_observation': {}, 'understanding_application': {},
+             }
+
     resp_A, resp_B, offered_lookup = dual_question_pipeline(
         systems=systems,
         user_text=user_text,
@@ -27609,6 +27690,10 @@ def chat(systems: Dict[str, Any]):
     # Initialize working memory for this session (cross-turn context tracking)
     working_memory = WorkingMemory()
     systems['working_memory'] = working_memory
+    
+    # Initialize teaching engine for intentional learning
+    teaching_engine = TeachingEngine(systems)
+    systems['teaching_engine'] = teaching_engine
     try:
         from aurora_internal.aurora_lineage_runtime_activation import (
             apply_selected_lineage_runtime_activation as _apply_selected_lineage_runtime_activation,

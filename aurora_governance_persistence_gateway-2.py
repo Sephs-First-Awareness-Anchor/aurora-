@@ -4575,7 +4575,7 @@ class ProactiveTrigger:
             signal = self._signal_score("thought", thought)
             counter_factors = self._counter_factors("thought", thought, context, now)
             counter_pressure = _clamp(sum(float(v) for v in counter_factors.values()), 0.0, 0.78)
-            threshold = 0.62 + counter_pressure
+            threshold = 0.40 + counter_pressure  # Lowered from 0.62
             decision = self.response_tuner.evaluate(
                 kind="thought",
                 content=thought,
@@ -4600,7 +4600,7 @@ class ProactiveTrigger:
             signal = self._signal_score("observation", obs)
             counter_factors = self._counter_factors("observation", obs.get('description', ''), context, now)
             counter_pressure = _clamp(sum(float(v) for v in counter_factors.values()), 0.0, 0.78)
-            threshold = 0.68 + counter_pressure
+            threshold = 0.45 + counter_pressure  # Lowered from 0.68
             decision = self.response_tuner.evaluate(
                 kind="observation",
                 content=obs.get('description', ''),
@@ -4622,8 +4622,8 @@ class ProactiveTrigger:
             counter_factors = self._counter_factors("curiosity", question, context, now)
             counter_pressure = _clamp(sum(float(v) for v in counter_factors.values()), 0.0, 0.78)
             signal = self._signal_score("curiosity", question)
-            threshold = 0.74 + counter_pressure
-            chance = max(0.05, 0.30 - counter_pressure * 0.35)
+            threshold = 0.50 + counter_pressure  # Lowered from 0.74
+            chance = max(0.05, 0.70 - counter_pressure * 0.35)  # Increased from 0.30
             lottery = random.random()
             decision = self.response_tuner.evaluate(
                 kind="curiosity",
@@ -5505,6 +5505,17 @@ class AutonomyEngine:
                     "response_pressure_plan": dream_plan,
                 },
             )
+
+            # --- Bridge experiential learning into semantic memory (OETS) ---
+            if simulation and hasattr(simulation, "session"):
+                perception = self.systems.get("perception")
+                if perception and hasattr(perception, "oets") and perception.oets:
+                    try:
+                        n_shards = simulation.session.learner.inject_into_oets(perception.oets)
+                        if n_shards > 0:
+                            logger.info(f"[AUTONOMY] Injected {n_shards} understanding shard(s) into OETS.")
+                    except Exception as e_bridge:
+                        logger.debug(f"[AUTONOMY] OETS injection error: {e_bridge}")
 
             thought = f"I dreamed through a shifting scenario around: {seed}."
             payload: Dict[str, Any] = {"seed": seed, "result": result, "thought": thought}

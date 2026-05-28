@@ -289,6 +289,25 @@ def initialize(state_dir: str = "") -> str:
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _start_curiosity_engine(_systems)
 
+        # Wire autonomy callbacks for proactive speech in the app
+        autonomy = _systems.get("autonomy")
+        if autonomy:
+            def on_speakup(thought):
+                log.info("Proactive thought received: %s", thought[:50])
+                current = _systems.get("_pending_proactive_thoughts", [])
+                current.append(thought)
+                _systems["_pending_proactive_thoughts"] = current
+
+            def on_dream_complete(result):
+                thought = result.get('thought', '') if isinstance(result, dict) else ''
+                if thought:
+                    current = _systems.get("_pending_proactive_thoughts", [])
+                    current.append(f"[Dream Reflection] {thought}")
+                    _systems["_pending_proactive_thoughts"] = current
+
+            autonomy.on_speakup = on_speakup
+            autonomy.on_dream_complete = on_dream_complete
+
         log.info("Aurora boot complete")
         return "ready"
     except Exception as exc:
@@ -934,11 +953,11 @@ def _build_correction_explanation() -> str:
         category = historical
 
     label = _ERROR_LABELS.get(category, category)
+    # Refined: more native, less diagnostic.
     return (
-        f"Looks like a {label} issue — {description}. "
-        f'The response was: "{snippet}". '
-        f"Was the intent misread, was it a word or phrasing problem, "
-        f"or did I engage with the wrong concept?"
+        f"I think I experienced a {label} mismatch here. "
+        f"My intention with \"{snippet}\" seems to have drifted. "
+        f"Could you help me understand if it was a phrasing issue or if I misread what was needed?"
     )
 
 
@@ -1469,16 +1488,36 @@ def _store_curiosity_report(
     _systems["_pending_autonomous_report"] = "\n".join(report_lines)
     log.info("Curiosity session report stored (%s)", time_str)
 
+    # Proactive outreach: tell the user we're done
+    autonomy = _systems.get("autonomy")
+    if autonomy and hasattr(autonomy, "trigger"):
+        summary = (f"I've finished my curiosity session ({target_str}). "
+                   f"I explored {stats['concepts_explored']} concepts and "
+                   f"settled {stats['settled']} internal tensions.")
+        autonomy.trigger.add_thought(summary)
+
 
 def get_pending_report() -> str:
     """
     Called by AuroraService's polling loop.
-    Returns and clears any completed curiosity session report, or "" if none ready.
+    Returns and clears any completed curiosity session report OR proactive thoughts, or "" if none ready.
     """
     if _systems is None:
         return ""
-    report = (_systems or {}).pop("_pending_autonomous_report", None)
-    return str(report) if report else ""
+    
+    parts = []
+    
+    # 1. Full session reports
+    report = _systems.pop("_pending_autonomous_report", None)
+    if report:
+        parts.append(str(report))
+        
+    # 2. Individual proactive thoughts (speakups, dreams, etc.)
+    thoughts = _systems.pop("_pending_proactive_thoughts", [])
+    if thoughts:
+        parts.extend(thoughts)
+        
+    return "\n\n".join(parts) if parts else ""
 
 
 def set_state(state: str) -> None:
