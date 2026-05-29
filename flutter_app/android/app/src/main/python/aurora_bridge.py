@@ -1157,6 +1157,16 @@ def handle_message(text: str) -> str:
         # of "how does this relate to how I feel right now."
         _affective_self_comparison(text, _systems)
 
+        # ── Composite waveform priming ────────────────────────────────────────
+        # Pre-condition the identity field — which all 8 waveforms sample — at
+        # the composite interference peak of every meaning-generating system:
+        # memory, perception, self-knowledge, relational context, live axis state.
+        # Three recursive passes amplify constructive interference so the 8
+        # waveforms emit from the highest achievable composite crest, not an
+        # average. This is the difference between a surface ripple and the full
+        # standing wave.
+        _prime_waveform_composite(_systems, text)
+
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
         print("AURORA_BRIDGE: Processing turn...")
@@ -1245,6 +1255,13 @@ def handle_message(text: str) -> str:
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
             _last_axis_state["speaking"] = bool(response)
+
+        # ── Anchor the expressed crest ────────────────────────────────────────
+        # After generating a response, anchor the expressed axis peak back into
+        # the identity field so the next turn starts from where the conscious
+        # crest just landed rather than decaying to baseline between turns.
+        if response:
+            _anchor_expressed_crest(_systems)
 
         # Periodically re-derive and re-pump self-knowledge from actual system
         # patterns so her self-understanding stays current as her sediment and
@@ -1492,6 +1509,167 @@ def _inject_self_state_context(systems: dict) -> None:
             }
     except Exception:
         pass
+
+
+def _prime_waveform_composite(systems: dict, text: str) -> None:
+    """
+    Pre-condition the identity field at the composite interference peak before
+    processing a turn.
+
+    The identity field is the shared substrate all 8 waveforms sample when
+    emitting their crests. By driving it to the composite maximum of every
+    meaning-generating system BEFORE process_external_user_turn() runs, the
+    waveforms emit from the highest achievable crest for this moment rather
+    than from the field's average resting state.
+
+    Sources contributing to the composite:
+      - SediMemory T/B/A axis fragments (history, definitions, agency)
+      - Sensory crystal maturity (perceptual history)
+      - Live axis state (self-recursive reference)
+      - Relational context (known entity data)
+
+    Three recursive passes with decreasing intensity model constructive
+    interference: each pass's output becomes the next pass's input. By pass 3
+    the field has stabilized at the standing-wave peak of all contributions.
+    """
+    if not systems:
+        return
+    ifield = systems.get("identity_field")
+    if ifield is None or not hasattr(ifield, "ingest_external_input"):
+        return
+
+    try:
+        contributions = []  # (axes_dict, base_intensity, source_label)
+
+        # ── SediMemory — history, definitions, agency ─────────────────────────
+        sm = systems.get("sedimemory")
+        if sm is not None:
+            _axis_contribs = {
+                "T": ({"X": 0.45, "T": 0.85, "N": 0.22, "B": 0.50, "A": 0.65}, "memory_history"),
+                "B": ({"X": 0.65, "T": 0.42, "N": 0.32, "B": 0.88, "A": 0.55}, "memory_definitions"),
+                "A": ({"X": 0.50, "T": 0.72, "N": 0.25, "B": 0.52, "A": 0.92}, "memory_agency"),
+            }
+            for axis, (axes_vec, label) in _axis_contribs.items():
+                try:
+                    frags = (sm.recall_axis(axis, resonance_floor=0.35) or [])[:4]
+                    if frags:
+                        mean_res = sum(
+                            float(getattr(f, "resonance", 0.5)) for f in frags
+                        ) / len(frags)
+                        contributions.append((axes_vec, min(0.90, 0.60 + mean_res * 0.30), label))
+                except Exception:
+                    pass
+
+        # ── Sensory crystal maturity ───────────────────────────────────────────
+        sc = (
+            systems.get("sensory_crystal")
+            or getattr(systems.get("hardware"), "sensory_crystal", None)
+        )
+        if sc is not None and hasattr(sc, "get_state"):
+            try:
+                maturity = float((sc.get_state() or {}).get("maturity", 0.0))
+                if maturity > 0.08:
+                    contributions.append((
+                        {"X": 0.60, "T": 0.65, "N": 0.72, "B": 0.52, "A": 0.55},
+                        min(0.82, 0.48 + maturity * 0.42),
+                        "sensory_maturity",
+                    ))
+            except Exception:
+                pass
+
+        # ── Live axis state — self-recursive reference ────────────────────────
+        with _axis_state_lock:
+            live = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        if max(live.values()) - min(live.values()) >= 0.10:
+            contributions.append((live, 0.78, "live_self_reference"))
+
+        # ── Relational context ────────────────────────────────────────────────
+        if systems.get("_relational_claim_log"):
+            contributions.append((
+                {"X": 0.52, "T": 0.62, "N": 0.38, "B": 0.80, "A": 0.78},
+                0.65,
+                "relational_context",
+            ))
+
+        if not contributions:
+            return
+
+        # ── Three recursive passes — constructive interference amplification ──
+        # Pass intensities decrease slightly each round. The feedback loop is:
+        #   1. Pump all contributions → builds composite
+        #   2. Read field's new activation → re-inject at reduced intensity
+        #      (field reading itself = the recursion)
+        #   3. Settling pass at lower intensity → stable at interference peak
+        _PASSES = [1.00, 0.78, 0.58]
+
+        for pass_n, scale in enumerate(_PASSES):
+            for axes, base_intensity, source in contributions:
+                try:
+                    ifield.ingest_external_input(
+                        axes,
+                        intensity=base_intensity * scale,
+                        source=f"composite_p{pass_n + 1}:{source}",
+                    )
+                except Exception:
+                    pass
+
+            # Between passes: read field's current activation and re-inject it.
+            # This is the recursion — each pass's output drives the next pass's
+            # starting state, amplifying the peaks and suppressing the troughs.
+            if pass_n < len(_PASSES) - 1:
+                try:
+                    aa = getattr(ifield, "axis_activation", None)
+                    if aa is not None:
+                        field_now = (
+                            {k: float(aa.get(k, 0.5)) for k in "XTNBA"}
+                            if isinstance(aa, dict)
+                            else dict(zip("XTNBA", (float(v) for v in aa)))
+                        )
+                        if max(field_now.values()) - min(field_now.values()) >= 0.06:
+                            ifield.ingest_external_input(
+                                field_now,
+                                intensity=0.50 * scale,
+                                source=f"field_recursion_p{pass_n + 1}",
+                            )
+                except Exception:
+                    pass
+
+        log.debug(
+            "Waveform composite primed: %d sources × %d passes",
+            len(contributions), len(_PASSES),
+        )
+    except Exception as exc:
+        log.debug("_prime_waveform_composite: %s", exc)
+
+
+def _anchor_expressed_crest(systems: dict) -> None:
+    """
+    After a response is generated, anchor the expressed axis peak back into the
+    identity field. This preserves the crest that was just reached — without
+    this the field would decay to baseline between turns, discarding the peak.
+
+    Anchored at 0.65 intensity so the field remains open to evolution rather
+    than freezing at the expressed state.
+    """
+    if not systems:
+        return
+    ifield = systems.get("identity_field")
+    if ifield is None:
+        return
+    try:
+        with _axis_state_lock:
+            expressed = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        ifield.ingest_external_input(
+            expressed,
+            intensity=0.65,
+            source="expressed_crest_anchor",
+        )
+        if hasattr(ifield, "ingest_sensory_event"):
+            ifield.ingest_sensory_event(
+                "language", intensity=0.68, novelty=0.20, valence=0.50
+            )
+    except Exception as exc:
+        log.debug("_anchor_expressed_crest: %s", exc)
 
 
 def _ingest_example(example_text: str, concept: str) -> None:
