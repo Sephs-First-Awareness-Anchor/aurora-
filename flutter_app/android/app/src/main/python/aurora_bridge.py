@@ -1731,6 +1731,21 @@ def handle_message(text: str) -> str:
                         except Exception:
                             pass
                     lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
+
+                    # Feed fidelity back into recently deposited sediment fragments.
+                    # High fidelity → slow their decay (longer-lived, more influential).
+                    # Low fidelity → accelerate decay (shorter-lived, outcompeted sooner).
+                    # This is how SediMemory learns which deposits produced quality output.
+                    _sm = _systems.get("sedimemory") if _systems else None
+                    if _sm is not None and hasattr(_sm, "get_recent_fragments"):
+                        try:
+                            for _frag in _sm.get_recent_fragments(6):
+                                if fidelity > 0.65:
+                                    _frag.tick_rate = max(0.30, _frag.tick_rate * 0.72)
+                                elif fidelity < 0.35:
+                                    _frag.tick_rate = min(2.00, _frag.tick_rate * 1.38)
+                        except Exception:
+                            pass
             except Exception:
                 pass
 
@@ -2908,6 +2923,56 @@ def _parse_curiosity_cmd(text: str):
     return None, n * 60.0
 
 
+def _deposit_curiosity_conclusion(conclusion: dict, identity_delta: str) -> None:
+    """
+    Deposit a settled curiosity conclusion into SediMemory so it persists
+    across sessions and can be recalled in future turns.
+
+    The axis vector reflects the conclusion's epistemic character:
+    - High T: it survived challenge → temporal stability
+    - High A: Aurora's own knowing → agency
+    - N proportional to confidence: novel if uncertain, settled if high
+    - B from axis_support: definition/boundary work done
+    """
+    if _systems is None:
+        return
+    statement = str(conclusion.get("statement", "")).strip()[:500]
+    if not statement:
+        return
+    ConstraintVector = None
+    try:
+        from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+    except ImportError:
+        try:
+            from aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            pass
+    sm = _systems.get("sedimemory")
+    if sm is None or not hasattr(sm, "ingest_event") or ConstraintVector is None:
+        return
+    confidence  = float(conclusion.get("confidence", 0.5))
+    axis_supp   = list(conclusion.get("axis_support", []))
+    b_val       = min(1.0, 0.50 + len(axis_supp) * 0.08)
+    n_val       = max(0.15, 0.65 - confidence * 0.40)  # lower N = more settled
+    cv_kwargs   = {"X": 0.52, "T": 0.78, "N": n_val, "B": b_val, "A": 0.84}
+    try:
+        sm.ingest_event(
+            content={
+                "statement":           statement,
+                "confidence":          confidence,
+                "axis_support":        axis_supp,
+                "hypothesis_confirmed": bool(conclusion.get("hypothesis_confirmed", False)),
+                "identity_delta":      str(identity_delta or ""),
+                "src":                 "curiosity_conclusion",
+            },
+            constraint_vector=ConstraintVector(**cv_kwargs),
+            source="curiosity_engine",
+        )
+        log.info("Curiosity conclusion deposited to SediMemory: %.80s", statement)
+    except Exception as _e:
+        log.debug("Conclusion deposit error: %s", _e)
+
+
 def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> None:
     """
     Run a bounded curiosity session in a background daemon thread.
@@ -2971,6 +3036,14 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                                                       or result.get("tool_calls", 0))
                     stats["settled"]           += int(result.get("settled", 0)
                                                       or result.get("tensions_settled", 0))
+
+                    # Persist settled conclusions to SediMemory so they survive
+                    # session boundaries and can be recalled in future turns.
+                    if result.get("settled") and result.get("conclusion"):
+                        _deposit_curiosity_conclusion(
+                            result["conclusion"],
+                            result.get("identity_delta", ""),
+                        )
                 except Exception as exc:
                     log.warning("Curiosity cycle error: %s", exc)
                     break
