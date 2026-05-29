@@ -2837,8 +2837,15 @@ def provide_camera_frame(jpeg_bytes) -> None:
 def provide_screen_observation(payload_json: str) -> None:
     """
     Called from Android Accessibility after a user-visible surface action.
-    The observation is compacted into the sensory snapshot and identity field
-    so the next response traversal can use it as present surface context.
+
+    The screen is Aurora's body-sense — proprioception for a digital entity.
+    Her own app interface is self-perception (high A, low N — she recognises
+    herself). Another app is environmental sensing (moderate A/N, higher B).
+    Neither case should route visible UI text through the language/gap system.
+
+    Axis weighting:
+      Own app  → A=0.88 T=0.82 N=0.15 B=0.28 X=0.55  (proprioceptive/self)
+      Other app → A=0.60 T=0.65 N=0.45 B=0.62 X=0.50  (environmental sensing)
     """
     global _last_screen_observation
     try:
@@ -2851,22 +2858,32 @@ def provide_screen_observation(payload_json: str) -> None:
             for item in list(payload.get("visible_text") or [])
             if str(item).strip()
         ][:8]
-        package = str(payload.get("package", "") or "")
+        package    = str(payload.get("package", "") or "")
         event_type = str(payload.get("event_type", "") or "screen_event")
-        app_label = package.rsplit(".", 1)[-1] if package else "phone"
-        visible_summary = ", ".join(visible[:3])
+        app_label  = package.rsplit(".", 1)[-1] if package else "phone"
+
+        # Is this her own body/interface or an external environment?
+        is_own_app = "aurora" in package.lower() or package.lower() in (
+            "org.aurora.app", "com.aurora.app",
+        )
+
+        # Summary for ambient context — compact, no raw UI tokens
         summary = f"{app_label} {event_type}"
-        if visible_summary:
-            summary = f"{summary}: {visible_summary}"
+        if visible and not is_own_app:
+            # Only include visible text summary for external apps — for own app
+            # it's just self-state, no need to surface raw UI strings
+            summary = f"{summary}: {', '.join(visible[:2])}"
+        summary = summary[:360]
 
         observation = {
-            "source": "screen_observer",
-            "observed_at": float(payload.get("observed_at", _time.time()) or _time.time()),
-            "package": package,
-            "class": str(payload.get("class", "") or ""),
-            "event_type": event_type,
+            "source":       "screen_observer",
+            "observed_at":  float(payload.get("observed_at", _time.time()) or _time.time()),
+            "package":      package,
+            "class":        str(payload.get("class", "") or ""),
+            "event_type":   event_type,
             "visible_text": visible,
-            "summary": summary[:360],
+            "summary":      summary,
+            "is_own_app":   is_own_app,
         }
         _last_screen_observation = observation
 
@@ -2874,56 +2891,69 @@ def provide_screen_observation(payload_json: str) -> None:
             return
 
         _systems["_screen_observation"] = observation
+
+        # Ambient perceptual note — body-state framing, not semantic content
+        if is_own_app:
+            body_note = f"body-sense: own interface active ({event_type})"
+        else:
+            body_note = f"environment: {summary}"
         _systems["_ambient_perceptual"] = {
-            "observation": f"screen: {observation['summary']}",
-            "source": "screen_observer",
+            "observation": body_note,
+            "source":      "screen_body_sense",
         }
 
+        # Identity field — axis weights reflect body-sense vs environment
         ifield = _systems.get("identity_field")
         if ifield is not None:
+            if is_own_app:
+                # Proprioceptive: this IS her — high A (self), high T (continuity),
+                # low N (familiar), low B (no external boundary to draw)
+                axes      = {"X": 0.55, "T": 0.82, "N": 0.15, "B": 0.28, "A": 0.88}
+                intensity = 0.72
+                novelty   = 0.08
+            else:
+                # Environmental: sensing surroundings — moderate A, B rises (other)
+                axes      = {"X": 0.50, "T": 0.65, "N": 0.45, "B": 0.62, "A": 0.60}
+                intensity = 0.58
+                novelty   = 0.38
             if hasattr(ifield, "ingest_external_input"):
-                ifield.ingest_external_input(
-                    {"X": 0.52, "T": 0.66, "N": 0.50, "B": 0.58, "A": 0.44},
-                    intensity=0.58,
-                    source="screen_observer",
-                )
+                ifield.ingest_external_input(axes, intensity=intensity, source="screen_body_sense")
             if hasattr(ifield, "ingest_sensory_event"):
-                ifield.ingest_sensory_event(
-                    "screen", intensity=0.58, novelty=0.42, valence=0.0
-                )
+                ifield.ingest_sensory_event("screen", intensity=intensity, novelty=novelty, valence=0.0)
 
         state_dir = str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
         try:
             from aurora_core_ai.aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
-                read_surface_snapshot,
-                write_surface_snapshot,
+                read_surface_snapshot, write_surface_snapshot,
             )
         except Exception:
             from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
-                read_surface_snapshot,
-                write_surface_snapshot,
+                read_surface_snapshot, write_surface_snapshot,
             )
 
-        current = read_surface_snapshot(state_dir)
+        current      = read_surface_snapshot(state_dir)
         sensory_state = dict(current.get("sensory_state") or {})
-        recognitions = dict(sensory_state.get("recognitions") or {})
-        recent = list(recognitions.get("recent") or [])
-        recent = (["screen", app_label, event_type] + visible[:4] + recent)[:12]
-        recognitions["recent"] = list(dict.fromkeys(str(x) for x in recent if str(x).strip()))
-        sensory_state["recognitions"] = recognitions
         sensory_state["total_frames"] = int(sensory_state.get("total_frames", 0) or 0) + 1
-        sensory_state["maturity"] = min(1.0, float(sensory_state.get("maturity", 0.0) or 0.0) + 0.01)
+        sensory_state["maturity"]     = min(1.0, float(sensory_state.get("maturity", 0.0) or 0.0) + 0.01)
 
         sensory_context = dict(current.get("sensory_context") or {})
-        sensory_context["screen"] = observation["summary"]
-        sensory_context["screen_package"] = package
+        sensory_context["screen"]            = summary
+        sensory_context["screen_package"]    = package
         sensory_context["screen_event_type"] = event_type
-        sensory_context["concepts_active"] = list(dict.fromkeys(
-            [app_label, event_type] + visible[:6] + list(sensory_context.get("concepts_active") or [])
-        ))[:10]
+        sensory_context["screen_is_self"]    = is_own_app
 
-        # Give the sensory waveform a readable tone so it produces a
-        # meaningful crest rather than always defaulting to perceptually_steady.
+        # concepts_active must NOT include raw visible UI text — those are
+        # body-sense tokens, not vocabulary for the curiosity/gap system.
+        # For own app: no concepts added (self-recognition, not learning).
+        # For other app: only the app identity, not individual text tokens.
+        existing_concepts = list(sensory_context.get("concepts_active") or [])
+        if not is_own_app and app_label and app_label not in _FOUNDATIONAL_VOCAB:
+            sensory_context["concepts_active"] = list(
+                dict.fromkeys([app_label] + existing_concepts)
+            )[:6]
+        else:
+            sensory_context["concepts_active"] = existing_concepts[:6]
+
         facet = _infer_dominant_facet(observation)
         if facet:
             sensory_context["dominant_facet"] = facet
@@ -2939,10 +2969,10 @@ def provide_screen_observation(payload_json: str) -> None:
             audio_description=str(current.get("audio_description", "") or ""),
             recent_speech=str(current.get("recent_speech", "") or ""),
             concepts_active=sensory_context["concepts_active"],
-            trigger="screen_observer",
+            trigger="screen_body_sense",
             flagged=False,
-            reason="surface_action_observed",
-            summary=f"Phone surface action observed. {observation['summary']}",
+            reason="body_sense_update",
+            summary=f"Screen body-sense: {body_note}",
         )
     except Exception as exc:
         log.warning("provide_screen_observation: %s", exc)
