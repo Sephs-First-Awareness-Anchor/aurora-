@@ -47,8 +47,8 @@ class AuroraBridge {
       'B': _parseDouble(json, 'B'),
       'A': _parseDouble(json, 'A'),
       // Training turn fields — present on type=="training_turn"/"training_done" events
-      'partner':    partnerMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
-      'aurora_msg': auroraMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'partner':    partnerMatch?.group(1)?.replaceAll(r'\"', '"').replaceAll(r'\n', '\n') ?? '',
+      'aurora_msg': auroraMatch?.group(1)?.replaceAll(r'\"', '"').replaceAll(r'\n', '\n') ?? '',
       'lsa_paths':  lsaMatch  != null ? int.tryParse(lsaMatch.group(1)!)    : null,
       'turn_num':   turnMatch  != null ? int.tryParse(turnMatch.group(1)!)   : null,
       'elapsed':    elapsedMatch != null ? int.tryParse(elapsedMatch.group(1)!) : null,

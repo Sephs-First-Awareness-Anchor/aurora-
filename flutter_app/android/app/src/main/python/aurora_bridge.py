@@ -89,19 +89,23 @@ _TRAINER_OPENERS = [
 ]
 
 
-def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
-    """Call Gemini REST API. Raises RuntimeError with detail on failure."""
+def _partner_chat(api_key: str, model: str, history: list, system: str) -> str:
+    """Call Groq chat-completions API. Raises RuntimeError with detail on failure."""
     import requests as _req
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model}:generateContent?key={api_key}"
-    )
+    # history is [{role, content}, ...] — standard OpenAI format
+    messages = [{"role": "system", "content": system}] + history
     payload: dict = {
-        "system_instruction": {"parts": [{"text": system}]},
-        "contents": history,
-        "generationConfig": {"maxOutputTokens": 120, "temperature": 0.9},
+        "model": model,
+        "messages": messages,
+        "max_tokens": 120,
+        "temperature": 0.9,
     }
-    r = _req.post(url, json=payload, timeout=30)
+    r = _req.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        json=payload,
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        timeout=30,
+    )
     if not r.ok:
         try:
             detail = r.json().get("error", {}).get("message", r.text[:300])
@@ -110,7 +114,7 @@ def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
         raise RuntimeError(f"HTTP {r.status_code}: {detail}")
     data = r.json()
     try:
-        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        return data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError) as exc:
         raise RuntimeError(f"Unexpected response shape: {str(data)[:200]}") from exc
 
@@ -134,6 +138,7 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     history: list = []
     opener  = _rnd.choice(_TRAINER_OPENERS)
     turn    = 0
+    _prev_reply: str = ""
 
     while _time.time() < deadline and not _training_stop.is_set():
         turn += 1
@@ -142,6 +147,16 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         # Aurora processes the partner's message (full pipeline + re-entry)
         aurora_reply = handle_message(partner_said)
         aurora_reply = aurora_reply or "(no response)"
+
+        # Stuck-phrase guard — if Aurora repeats herself verbatim or near-verbatim
+        # (>80% word overlap with previous turn), mark as no-response so the loop
+        # doesn't feed the same phrase back to the partner and reinforce it.
+        if aurora_reply != "(no response)" and _prev_reply:
+            _r = set(aurora_reply.lower().split())
+            _p = set(_prev_reply.lower().split())
+            if _r and _p and len(_r & _p) / max(len(_r), len(_p)) >= 0.80:
+                aurora_reply = "(no response)"
+        _prev_reply = aurora_reply
 
         # Telemetry snapshot
         lsa_paths = 0
@@ -180,16 +195,16 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         if _training_stop.is_set() or _time.time() >= deadline:
             break
 
-        # Gemini generates next message
-        history.append({"role": "user",  "parts": [{"text": aurora_reply}]})
+        # Partner (Groq) generates next message
+        history.append({"role": "user", "content": aurora_reply})
         if len(history) > 20:
             history = history[-20:]
 
         try:
-            partner_msg = _gemini_chat(api_key, model, history, _TRAINER_SYSTEM)
-        except Exception as _g_exc:
-            _err = str(_g_exc)
-            log.warning("Gemini API error: %s", _err)
+            partner_msg = _partner_chat(api_key, model, history, _TRAINER_SYSTEM)
+        except Exception as _p_exc:
+            _err = str(_p_exc)
+            log.warning("Partner API error: %s", _err)
             _training_event_queue.append({
                 "type":      "training_error",
                 "error_msg": _err,
@@ -200,7 +215,7 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         if not partner_msg:
             partner_msg = "What are you noticing right now?"
 
-        history.append({"role": "model", "parts": [{"text": partner_msg}]})
+        history.append({"role": "assistant", "content": partner_msg})
         opener = partner_msg
 
     # Save LSA on completion
@@ -265,6 +280,7 @@ def get_training_events() -> str:
         except IndexError:
             break
     return _json.dumps(events)
+
 
 # Proactive / autonomous expression
 # Aurora runs the full waveform pipeline on her own schedule and delivers
@@ -1324,7 +1340,10 @@ def _sanitize_response(response: str, user_text: str) -> str:
     response = _ACTUALLY_HERE_RE.sub('', response).strip()
     response = _REVISE_FRAMING_RE.sub('', response).strip()
 
-    # 5. Echo guard — strip verbatim or near-verbatim echoes of user input
+    # 5. Echo guard — strip verbatim echoes and very-short near-echoes of user input.
+    # Only apply word-overlap check for short responses (≤ 5 unique words) — longer
+    # responses that reuse input vocabulary are genuine engagement with the topic, not
+    # parroting.
     if response and user_text:
         _r_low = response.strip().lower().rstrip('.!?,')
         _u_low = user_text.strip().lower().rstrip('.!?,')
@@ -1333,10 +1352,10 @@ def _sanitize_response(response: str, user_text: str) -> str:
             return ""
         _r_words = set(re.findall(r'[a-z]{3,}', response.lower()))
         _u_words = set(re.findall(r'[a-z]{3,}', user_text.lower()))
-        if _r_words and _u_words:
+        if _r_words and _u_words and len(_r_words) <= 5:
             overlap = len(_r_words & _u_words) / len(_r_words)
-            if overlap > 0.75 and len(_r_words) <= len(_u_words):
-                log.debug("Echo guard: high-overlap echo (%.0f%%) suppressed", overlap * 100)
+            if overlap > 0.75:
+                log.debug("Echo guard: short high-overlap echo (%.0f%%) suppressed", overlap * 100)
                 return ""
 
     return response
