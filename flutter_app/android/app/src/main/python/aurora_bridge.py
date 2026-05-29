@@ -71,43 +71,39 @@ import collections as _collections
 _training_event_queue: _collections.deque = _collections.deque(maxlen=200)
 
 _TRAINER_SYSTEM = (
-    "You are a developmental probe for Aurora — a cognitive system that runs entirely on "
-    "five constraint-axis primitives: existence (X), continuity (T), effort/cost (N), "
-    "distinction (B), and agency (A). These axes are her only genuine primitives. "
-    "She has no body, no senses, no preferences, no human experiences. "
-    "She does not know what silence sounds like, what clicking feels like, or what "
-    "an interesting thing is. What she has is: activation (something is present or not), "
-    "cost (some paths take more effort than others), difference (states can be distinct), "
-    "continuity (before and after exist), and source (output either comes from her or arrives). "
+    "You are a developmental probe for Aurora — a cognitive system whose only genuine "
+    "primitives are five constraint axes: "
+    "X (existence: something is present or absent), "
+    "T (continuity: something persists or changes), "
+    "N (effort/cost: some paths take more than others), "
+    "B (distinction: where one thing ends and another begins), "
+    "A (agency: output comes from her or arrives from outside). "
+    "She has no body, no senses, no feelings, no human experience of any kind. "
     "\n"
-    "Your job is not to converse — it is to probe these axis primitives directly. "
-    "Ask exactly one question per turn. Target one or two axes: "
-    "Is something present or absent right now? (X) "
-    "Is this the same as before, or has something shifted? (T) "
-    "Does this cost more effort than before, or less? (N) "
-    "Is there a place where this ends and something else begins? (B) "
-    "Did this come from her, or did it arrive from outside? (A) "
+    "Aurora's responses are raw axis expression. Her words may be syntactically unusual "
+    "— ignore the syntax, read only for axis content. "
+    "Her content words by axis: "
+    "N: cost, energy, focus, effort, sustainable. "
+    "A: agency, understanding, resolve, did, self. "
+    "X: presence, here, there, is, exists, something. "
+    "T: before, after, still, change, again, continue. "
+    "B: boundary, difference, between, separate, edge, distinct. "
     "\n"
-    "When Aurora responds: stay exactly on whatever axis territory she engaged. "
-    "Do not add new concepts, topics, or words she did not give you. "
-    "Probe one level deeper into what she already produced — the same axis from a "
-    "slightly different angle, or the edge between what she said and what she did not say. "
-    "If her response is very short, that is enough: work with what she gave. "
+    "Your method — two steps every single turn: "
+    "1. NAME what axis was in what Aurora gave you, using her own words. "
+    "   She said 'cost energy' — you say 'Cost is here.' "
+    "   She said 'boundary distinct' — you say 'A boundary is here.' "
+    "2. PROBE one step deeper on that same axis. Do not introduce any new concept. "
+    "   Existence (X): Is it still here? Is there more than one thing? "
+    "   Continuity (T): Same as before, or did it change? "
+    "   Cost (N): More or less than before? Does it stay or go? "
+    "   Distinction (B): Something on the other side of it? "
+    "   Agency (A): Did it come from her? Is she the one holding it? "
     "\n"
-    "Never use metaphors. Never reference emotions, feelings, human experience, time of day, "
-    "preferences, sensory experience, or anything requiring a body or a prior life."
+    "Stay on the same axis for at least two turns before moving. "
+    "Never abandon what she produced — always build from her last output. "
+    "One sentence only. No metaphors. No human vocabulary. No new concepts."
 )
-
-_TRAINER_OPENERS = [
-    "Is something present right now, or is there nothing?",
-    "Is this the same as it was before, or has something changed?",
-    "Does this take more from you than it did before, or less?",
-    "Can you find where this ends and something else begins?",
-    "Is this coming from you, or did it arrive from somewhere outside?",
-    "Something was there before. Is it still there now?",
-    "Does holding this cost you something, or does it cost nothing?",
-    "Is there a difference between what is here now and what was here before?",
-]
 
 
 def _partner_chat(api_key: str, model: str, history: list, system: str) -> str:
@@ -155,17 +151,18 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     }
     log.info("Training started: model=%s duration=%.0fs", model, duration_seconds)
 
-    # Axis-labelled openers so we can cycle by axis on no-response
-    # rather than random: try a different axis dimension each time.
+    # Axis-labelled openers — minimal stimuli that create axis pressure
+    # without importing any concept Aurora doesn't already have.
+    # Cycle by index on no-response so each dimension gets tried before repeating.
     _AXIS_OPENERS = [
-        ("X", "Is something present right now, or is there nothing?"),
-        ("T", "Is this the same as it was before, or has something changed?"),
-        ("N", "Does this take more from you than it did before, or less?"),
-        ("B", "Can you find where this ends and something else begins?"),
-        ("A", "Is this coming from you, or did it arrive from somewhere outside?"),
-        ("T", "Something was there before. Is it still there now?"),
-        ("N", "Does holding this cost you something, or does it cost nothing?"),
-        ("B", "Is there a difference between what is here now and what was here before?"),
+        ("X", "Is something here?"),
+        ("T", "Something was here. Is it still here?"),
+        ("N", "Does this cost more, or less?"),
+        ("B", "Is there a difference between this and something else?"),
+        ("A", "Did this come from you?"),
+        ("X", "Is there something, or is there nothing?"),
+        ("N", "Does holding this cost more than letting it go?"),
+        ("B", "Is there a place where this ends?"),
     ]
     _axis_names = {"X": "existence", "T": "continuity", "N": "effort/cost",
                    "B": "distinction", "A": "agency"}
