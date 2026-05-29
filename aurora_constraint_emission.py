@@ -279,6 +279,16 @@ class ConstraintEmitter:
 
         topic  = (fr.topic_concept or "").lower()
         query  = (fr.text or "").lower()
+        # Introspective questions ("what are you noticing/thinking/feeling") are
+        # self-referential but are NOT identity questions — let the normal axis
+        # emission handle them so Aurora can express her current state.
+        _introspective_verbs = (
+            "noticing", "thinking", "feeling", "sensing", "processing",
+            "experiencing", "wondering", "doing", "working on",
+        )
+        if any(v in query for v in _introspective_verbs):
+            return None
+
         is_id_topic = (
             topic in _IDENTITY_TOPICS
             or any(t in query for t in ("name", "who are you", "what are you", "aurora"))
