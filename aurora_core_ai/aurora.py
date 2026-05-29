@@ -3628,11 +3628,53 @@ class WorkingMemory:
                     except Exception:
                         ivm_heat = 0.3
 
+                # Feed crossing path geometry back into the identity field as substrate signal.
+                # The field integrates this alongside all other active signals; its evolved
+                # N-axis state then surfaces as autonomy_mode — no categorical branching on
+                # path labels.
+                _lf_rci = systems.get("language_field") if isinstance(systems, dict) else None
+                _proto_rci = getattr(_lf_rci, "_last_proto", None) if _lf_rci else None
+                _ifield_rci = systems.get("identity_field") if isinstance(systems, dict) else None
+
+                if _lf_rci is not None and _proto_rci is not None and hasattr(_lf_rci, "select_crossing_path"):
+                    try:
+                        _xing = _lf_rci.select_crossing_path(_proto_rci) or {}
+                        if _xing and _ifield_rci is not None and hasattr(_ifield_rci, "ingest_external_input"):
+                            _nc = float(_xing.get("n_cost", 0.5))
+                            _bm = float(_xing.get("b_match", 0.5))
+                            if _xing.get("is_novel"):
+                                # High N-cost → field is in uncharted territory; A-axis active (pioneering)
+                                _xpulse = {"N": 0.50 + _nc * 0.40, "A": 0.45 + _nc * 0.25, "X": 0.35, "T": 0.30, "B": 0.30}
+                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.35, source="crossing_novel")
+                            elif _xing.get("is_metaphor"):
+                                # Approximating via proxy: N-pressure + B-boundary tension from poor match
+                                _xpulse = {"N": 0.45 + _nc * 0.25, "B": 0.50 + (1.0 - _bm) * 0.25, "X": 0.35, "T": 0.35, "A": 0.38}
+                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.30, source="crossing_metaphor")
+                            else:
+                                # Worn path: field settling into familiar, grounded territory
+                                _xpulse = {"X": 0.45 + _bm * 0.20, "T": 0.50 + _bm * 0.20, "N": 0.28, "B": 0.38, "A": 0.35}
+                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.25, source="crossing_worn")
+                    except Exception:
+                        pass
+
+                # autonomy_mode reads the field's live N-axis after all signals have settled
+                _autonomy_mode = "GUIDED"
+                if _ifield_rci is not None and hasattr(_ifield_rci, "status"):
+                    try:
+                        _fld_axes = (_ifield_rci.status().get("axis_pressures") or {})
+                        _fld_n = float(_fld_axes.get("N", 0.3))
+                        if _fld_n >= 0.62:
+                            _autonomy_mode = "EXPLORER"
+                        elif _fld_n >= 0.48:
+                            _autonomy_mode = "EXPANSIVE"
+                    except Exception:
+                        pass
+
                 draft = evo.multi_draft.generate(
                     intent,
                     candidates,
                     ivm_heat=ivm_heat,
-                    autonomy_mode="GUIDED",
+                    autonomy_mode=_autonomy_mode,
                     user_verbosity=0.5,
                 )
 
@@ -21417,6 +21459,38 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         systems["_prev_axis_activation"] = dict(_axis_activation)
         systems["_prev_emotional_state"] = dict(_der_emotional_state)
         systems["_prev_dominant_axis"] = str(_dominant_axis)
+    except Exception:
+        pass
+
+    # ── Fix 1: Feed utterance axes into identity field substrate ──────────────
+    # Without this the waveforms sample the pre-turn resting state; with it
+    # they sample a field that has absorbed the semantic shape of what was said.
+    # Axis projection already ran → _axis_activation carries the utterance signal.
+    try:
+        _ifield_u = systems.get("identity_field")
+        if _ifield_u is not None and hasattr(_ifield_u, "ingest_external_input") and _axis_activation:
+            _ifield_u.ingest_external_input(
+                _axis_activation,
+                intensity=0.65,
+                source="user_utterance",
+            )
+    except Exception:
+        pass
+
+    # ── Fix 2: Language field ignition + proto-language extraction ────────────
+    # Run ignition now that the field carries the utterance signal. Calling
+    # extract_proto_language() sets lf._last_proto to this turn's geometry so
+    # the mandatory re-entry loop measures fidelity against THIS turn, not the
+    # previous one. The ignition result is stored in systems for inspection.
+    try:
+        _lf_ign = systems.get("language_field")
+        if _lf_ign is not None and hasattr(_lf_ign, "ignition_check"):
+            _ign_result = _lf_ign.ignition_check()
+            systems["_language_ignition"] = _ign_result
+            if hasattr(_lf_ign, "extract_proto_language"):
+                _lf_ign.extract_proto_language(
+                    user_text=_raw_user_text, source="comprehension"
+                )
     except Exception:
         pass
 

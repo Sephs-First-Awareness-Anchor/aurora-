@@ -1371,6 +1371,18 @@ class SedimentColumn:
         return {axis: self.decompress(axis, fidelity) for axis in ['A', 'B', 'N', 'T', 'X']}
 
     # ------------------------------------------------------------------
+    # RECENT FRAGMENT LOOKUP — for post-hoc fidelity feedback
+    # ------------------------------------------------------------------
+
+    def get_recent_fragments(self, n: int = 5) -> list:
+        """Return the n most recently deposited active SedimentFragments."""
+        all_frags: list = []
+        for basin in self._basins.values():
+            all_frags.extend(basin.fragments)
+        all_frags.sort(key=lambda f: f.deposit_time, reverse=True)
+        return all_frags[:n]
+
+    # ------------------------------------------------------------------
     # STATS
     # ------------------------------------------------------------------
 
@@ -1520,6 +1532,10 @@ class SediMemory:
 
     def recall_event(self, event_id: str) -> List[SedimentFragment]:
         return self._column.recall_event(event_id)
+
+    def get_recent_fragments(self, n: int = 5) -> List[SedimentFragment]:
+        """Return n most recently deposited active fragments (for fidelity feedback)."""
+        return self._column.get_recent_fragments(n)
 
     @staticmethod
     def _normalize_axis_filter(axis_filter: Any) -> Set[str]:

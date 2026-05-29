@@ -328,6 +328,27 @@ class _ConstraintTensionTracker:
             "CTT WARP G%d: emergence candidate %s-%s stress=%.2f",
             self._generation, pair[0], pair[1], stress,
         )
+
+        # Feed the warp paradox back into the identity field. Sustained paradox
+        # between two axes is the strongest internally-generated novelty signal
+        # Aurora's system can produce — it should influence waveform emission,
+        # not just sit in a log. Both axes under tension are amplified; N carries
+        # the paradox energy because novelty pressure IS the driver of emergence.
+        ifield = systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            _scale = min(1.0, stress / self._WARP_THRESHOLD)
+            _warp_axes = {"X": 0.50, "T": 0.55, "N": 0.65 + _scale * 0.25, "B": 0.62, "A": 0.58}
+            _warp_axes[pair[0]] = min(1.0, 0.55 + _scale * 0.38)
+            _warp_axes[pair[1]] = min(1.0, 0.55 + _scale * 0.38)
+            try:
+                ifield.ingest_external_input(
+                    _warp_axes,
+                    intensity=0.72,
+                    source=f"ctt_warp:{pair[0]}-{pair[1]}",
+                )
+            except Exception:
+                pass
+
         try:
             import json as _json
             import time as _ctt_time
@@ -1078,6 +1099,8 @@ def _sanitize_response(response: str, user_text: str) -> str:
        replace with the correct answer — the user's voice WAS heard via STT.
     3. Remove bare "audio/camera feed offline" sentences that leaked from the
        sensory-grounding handler when the ambient background monitor isn't running.
+    4. Strip internal language templates that escaped the surface boundary.
+    5. Echo guard — suppress verbatim or near-verbatim reflections of user input.
     """
     if not response:
         return response
@@ -1096,6 +1119,21 @@ def _sanitize_response(response: str, user_text: str) -> str:
     # 4. Strip internal language templates that escaped the surface boundary
     response = _ACTUALLY_HERE_RE.sub('', response).strip()
     response = _REVISE_FRAMING_RE.sub('', response).strip()
+
+    # 5. Echo guard — strip verbatim or near-verbatim echoes of user input
+    if response and user_text:
+        _r_low = response.strip().lower().rstrip('.!?,')
+        _u_low = user_text.strip().lower().rstrip('.!?,')
+        if _r_low == _u_low:
+            log.debug("Echo guard: verbatim echo suppressed")
+            return ""
+        _r_words = set(re.findall(r'[a-z]{3,}', response.lower()))
+        _u_words = set(re.findall(r'[a-z]{3,}', user_text.lower()))
+        if _r_words and _u_words:
+            overlap = len(_r_words & _u_words) / len(_r_words)
+            if overlap > 0.75 and len(_r_words) <= len(_u_words):
+                log.debug("Echo guard: high-overlap echo (%.0f%%) suppressed", overlap * 100)
+                return ""
 
     return response
 
@@ -1630,6 +1668,22 @@ def handle_message(text: str) -> str:
                 except Exception:
                     pass
 
+        # Also inject the trajectory's predicted next state as gentle forward
+        # momentum. The divergence injection above fires only on anomaly;
+        # this fires every turn to keep the field moving in its established
+        # direction rather than resetting to resting state between turns.
+        if _waveform_trajectory is not None and _waveform_trajectory.has_trajectory:
+            _ifield_m = _systems.get("identity_field")
+            if _ifield_m is not None:
+                try:
+                    _predicted = _waveform_trajectory._predict()
+                    if _predicted is not None:
+                        _ifield_m.ingest_external_input(
+                            _predicted, intensity=0.20, source="trajectory_momentum"
+                        )
+                except Exception:
+                    pass
+
         # ── Composite waveform priming ────────────────────────────────────────
         # Pre-condition the identity field — which all 8 waveforms sample — at
         # the composite interference peak of every meaning-generating system:
@@ -1677,6 +1731,21 @@ def handle_message(text: str) -> str:
                         except Exception:
                             pass
                     lf.reentry(response, fidelity, path_key, proto=lf._last_proto)
+
+                    # Feed fidelity back into recently deposited sediment fragments.
+                    # High fidelity → slow their decay (longer-lived, more influential).
+                    # Low fidelity → accelerate decay (shorter-lived, outcompeted sooner).
+                    # This is how SediMemory learns which deposits produced quality output.
+                    _sm = _systems.get("sedimemory") if _systems else None
+                    if _sm is not None and hasattr(_sm, "get_recent_fragments"):
+                        try:
+                            for _frag in _sm.get_recent_fragments(6):
+                                if fidelity > 0.65:
+                                    _frag.tick_rate = max(0.30, _frag.tick_rate * 0.72)
+                                elif fidelity < 0.35:
+                                    _frag.tick_rate = min(2.00, _frag.tick_rate * 1.38)
+                        except Exception:
+                            pass
             except Exception:
                 pass
 
@@ -2854,6 +2923,56 @@ def _parse_curiosity_cmd(text: str):
     return None, n * 60.0
 
 
+def _deposit_curiosity_conclusion(conclusion: dict, identity_delta: str) -> None:
+    """
+    Deposit a settled curiosity conclusion into SediMemory so it persists
+    across sessions and can be recalled in future turns.
+
+    The axis vector reflects the conclusion's epistemic character:
+    - High T: it survived challenge → temporal stability
+    - High A: Aurora's own knowing → agency
+    - N proportional to confidence: novel if uncertain, settled if high
+    - B from axis_support: definition/boundary work done
+    """
+    if _systems is None:
+        return
+    statement = str(conclusion.get("statement", "")).strip()[:500]
+    if not statement:
+        return
+    ConstraintVector = None
+    try:
+        from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+    except ImportError:
+        try:
+            from aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            pass
+    sm = _systems.get("sedimemory")
+    if sm is None or not hasattr(sm, "ingest_event") or ConstraintVector is None:
+        return
+    confidence  = float(conclusion.get("confidence", 0.5))
+    axis_supp   = list(conclusion.get("axis_support", []))
+    b_val       = min(1.0, 0.50 + len(axis_supp) * 0.08)
+    n_val       = max(0.15, 0.65 - confidence * 0.40)  # lower N = more settled
+    cv_kwargs   = {"X": 0.52, "T": 0.78, "N": n_val, "B": b_val, "A": 0.84}
+    try:
+        sm.ingest_event(
+            content={
+                "statement":           statement,
+                "confidence":          confidence,
+                "axis_support":        axis_supp,
+                "hypothesis_confirmed": bool(conclusion.get("hypothesis_confirmed", False)),
+                "identity_delta":      str(identity_delta or ""),
+                "src":                 "curiosity_conclusion",
+            },
+            constraint_vector=ConstraintVector(**cv_kwargs),
+            source="curiosity_engine",
+        )
+        log.info("Curiosity conclusion deposited to SediMemory: %.80s", statement)
+    except Exception as _e:
+        log.debug("Conclusion deposit error: %s", _e)
+
+
 def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> None:
     """
     Run a bounded curiosity session in a background daemon thread.
@@ -2917,6 +3036,14 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                                                       or result.get("tool_calls", 0))
                     stats["settled"]           += int(result.get("settled", 0)
                                                       or result.get("tensions_settled", 0))
+
+                    # Persist settled conclusions to SediMemory so they survive
+                    # session boundaries and can be recalled in future turns.
+                    if result.get("settled") and result.get("conclusion"):
+                        _deposit_curiosity_conclusion(
+                            result["conclusion"],
+                            result.get("identity_delta", ""),
+                        )
                 except Exception as exc:
                     log.warning("Curiosity cycle error: %s", exc)
                     break
