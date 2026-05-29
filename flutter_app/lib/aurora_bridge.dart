@@ -141,4 +141,43 @@ class AuroraBridge {
     final json = await _channel.invokeMethod<String>('getTrainingStatus') ?? '{}';
     return _parseEvent(json);
   }
+
+  // ── Self-model (simulated self + hardware body) ───────────────────────────
+
+  /// Aurora's live self-model: axis state, hardware body (battery/motion/light),
+  /// self-entity telemetry, LSA paths, SediMemory depth.
+  static Future<Map<String, dynamic>> getSelfModel() async {
+    final json = await _channel.invokeMethod<String>('getSelfModel') ?? '{}';
+    return _parseSelfModel(json);
+  }
+
+  static Map<String, dynamic> _parseSelfModel(String json) {
+    final domMatch      = RegExp(r'"dominant"\s*:\s*"([^"]+)"').firstMatch(json);
+    final batteryMatch  = RegExp(r'"battery_pct"\s*:\s*([0-9.]+)').firstMatch(json);
+    final motionMatch   = RegExp(r'"motion"\s*:\s*([0-9.]+)').firstMatch(json);
+    final lightMatch    = RegExp(r'"light_lux"\s*:\s*([0-9.]+)').firstMatch(json);
+    final chargingMatch = RegExp(r'"charging"\s*:\s*([0-9.]+)').firstMatch(json);
+    final expMatch      = RegExp(r'"experiences"\s*:\s*(\d+)').firstMatch(json);
+    final insMatch      = RegExp(r'"insights"\s*:\s*(\d+)').firstMatch(json);
+    final genMatch      = RegExp(r'"generation"\s*:\s*(\d+)').firstMatch(json);
+    final lsaMatch      = RegExp(r'"lsa_paths"\s*:\s*(\d+)').firstMatch(json);
+    final sediMatch     = RegExp(r'"sedi_depth"\s*:\s*(\d+)').firstMatch(json);
+    return {
+      'X': _parseDouble(json, 'X') ?? 0.5,
+      'T': _parseDouble(json, 'T') ?? 0.5,
+      'N': _parseDouble(json, 'N') ?? 0.5,
+      'B': _parseDouble(json, 'B') ?? 0.5,
+      'A': _parseDouble(json, 'A') ?? 0.5,
+      'dominant':    domMatch?.group(1) ?? 'X',
+      'battery_pct': batteryMatch  != null ? double.tryParse(batteryMatch.group(1)!)  : null,
+      'motion':      motionMatch   != null ? double.tryParse(motionMatch.group(1)!)   : null,
+      'light_lux':   lightMatch    != null ? double.tryParse(lightMatch.group(1)!)    : null,
+      'charging':    chargingMatch != null ? (chargingMatch.group(1) == '1.0') : null,
+      'experiences': expMatch != null ? int.tryParse(expMatch.group(1)!) : 0,
+      'insights':    insMatch != null ? int.tryParse(insMatch.group(1)!) : 0,
+      'generation':  genMatch != null ? int.tryParse(genMatch.group(1)!) : 0,
+      'lsa_paths':   lsaMatch  != null ? int.tryParse(lsaMatch.group(1)!)  : 0,
+      'sedi_depth':  sediMatch != null ? int.tryParse(sediMatch.group(1)!) : 0,
+    };
+  }
 }

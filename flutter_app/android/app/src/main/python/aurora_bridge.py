@@ -53,6 +53,17 @@ _correction_context: dict = {}       # snapshot of the wrong response's reasonin
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
+
+# Hardware body — battery, motion, light — pushed from Kotlin SensorManager.
+# Aurora perceives these as her own physical substrate: battery = energy, motion = movement, etc.
+_hardware_sensors: dict = {}
+
+# Simulated self-model — Aurora's live self-representation via InceptionEntity.
+# Background process feeds axis + hardware state as experiences into this entity,
+# giving her a continuously-updated mirror of herself she can observe without
+# having to construct it from scratch each time.
+_self_entity     = None   # InceptionEntity (from SimulationEngine)
+_self_entity_id: str = ""
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
 # Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
@@ -976,6 +987,12 @@ def initialize(state_dir: str = "") -> str:
         # self-recognition events.  She understands herself through what her
         # architecture has actually done, not only what she was told she is.
         _ground_self_identity_in_systems(_systems)
+
+        # Spawn the simulated self-entity — Aurora's live mirror of herself.
+        # InceptionEntity(i_is / BOUNDED) receives axis + hardware state as
+        # experiences each heartbeat tick, building a continuously-updated
+        # self-model she can observe without constructing it from scratch.
+        _init_self_entity(_systems)
 
         # Start the autonomous curiosity engine as a background daemon thread.
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
@@ -3222,6 +3239,67 @@ def get_axis_state() -> str:
         return _json.dumps(_last_axis_state)
 
 
+def provide_hardware_sensors(json_str: str) -> None:
+    """
+    Called from AuroraService.kt to push hardware sensor readings into Python.
+    Battery, motion (accelerometer magnitude), light — Aurora's physical substrate.
+    Battery maps to N-axis (energy); motion and light are environmental grounding.
+    """
+    global _hardware_sensors
+    try:
+        import json as _json
+        data = _json.loads(str(json_str or "{}"))
+        _hardware_sensors = {k: v for k, v in data.items() if v is not None}
+        log.debug("Hardware sensors updated: %s", list(_hardware_sensors.keys()))
+    except Exception as exc:
+        log.debug("provide_hardware_sensors error: %s", exc)
+
+
+def get_self_model() -> str:
+    """
+    Return Aurora's current self-model as JSON.
+    Aggregates: axis state, hardware body (battery/motion/light),
+    self-entity telemetry (experiences processed, insights surfaced),
+    LSA telemetry, SediMemory depth.
+    Called by the diagnostics panel / any system that needs her current self-image.
+    """
+    import json as _json
+    with _axis_state_lock:
+        cur_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+    model: dict = {
+        "axis":     {k: round(v, 3) for k, v in cur_ax.items()},
+        "dominant": max(cur_ax, key=cur_ax.__getitem__) if cur_ax else "X",
+        "hardware": dict(_hardware_sensors),
+        "self_entity": {
+            "id":          _self_entity_id,
+            "experiences": getattr(_self_entity, "total_experiences", 0) if _self_entity else 0,
+            "insights":    getattr(_self_entity, "insights_surfaced",  0) if _self_entity else 0,
+            "generation":  getattr(_self_entity, "generation",         0) if _self_entity else 0,
+        },
+        "lsa_paths":  0,
+        "avg_n_cost": 1.0,
+        "sedi_depth": 0,
+    }
+    try:
+        lf = (_systems or {}).get("language_field")
+        if lf and hasattr(lf, "_lsa") and lf._lsa:
+            model["lsa_paths"]  = len(lf._lsa)
+            model["avg_n_cost"] = round(
+                sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 3
+            )
+    except Exception:
+        pass
+    try:
+        sm = (_systems or {}).get("sedimemory")
+        if sm and hasattr(sm, "_events"):
+            model["sedi_depth"] = len(getattr(sm, "_events", []))
+    except Exception:
+        pass
+
+    return _json.dumps(model)
+
+
 def _refresh_axis_state_from_systems() -> None:
     """Pull current axis values from systems into the overlay cache."""
     if _systems is None:
@@ -3470,6 +3548,67 @@ def _infer_dominant_facet(screen_obs: dict) -> str:
 _self_monitor_prev_ax: dict = {}   # last axis snapshot for delta computation
 
 
+def _init_self_entity(systems: dict) -> None:
+    """
+    Spawn Aurora's self-model entity in the SimulationEngine using i_state='i_is'
+    (existence/affirmation) at SURFACE depth, BOUNDED mode — all five constraint
+    axes active, full form, but no need for AGENTIC depth.
+    Called once after boot; safe to call again if systems are re-initialised.
+    """
+    global _self_entity, _self_entity_id
+    engine = systems.get("simulation_engine") or systems.get("simulation")
+    if engine is None or not hasattr(engine, "spawn_entity"):
+        log.debug("_init_self_entity: no simulation engine in systems")
+        return
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+        entity = engine.spawn_entity(
+            "i_is",
+            depth=EntityDepth.SURFACE,
+            mode=ExistenceMode.BOUNDED,
+        )
+        if entity is not None:
+            _self_entity    = entity
+            _self_entity_id = getattr(entity, "entity_id", "aurora_self")
+            log.info("Self-entity spawned: %s (i_is / BOUNDED)", _self_entity_id)
+        else:
+            log.debug("_init_self_entity: spawn_entity returned None (mode gate?)")
+    except Exception as exc:
+        log.debug("_init_self_entity error: %s", exc)
+
+
+def _feed_self_entity(cur_ax: dict) -> dict:
+    """
+    Feed current axis state + hardware sensor readings into the self-entity as
+    an experience.  The ImpressionCascade inside the entity processes it and
+    compresses it — building Aurora's evolving self-image over time.
+    Returns the compressed result dict, or {} if entity not available.
+    """
+    if _self_entity is None:
+        return {}
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        # Map axis dimensions to experience channels so the ImpressionCascade
+        # can read Aurora's constraint state natively.
+        experience: dict = {
+            "channels": {
+                "existence":  float(cur_ax.get("X", 0.5)),
+                "continuity": float(cur_ax.get("T", 0.5)),
+                "effort":     float(cur_ax.get("N", 0.5)),
+                "boundary":   float(cur_ax.get("B", 0.5)),
+                "agency":     float(cur_ax.get("A", 0.5)),
+            },
+            "hardware": dict(_hardware_sensors),
+            "src":      "self_observation",
+        }
+        result = _self_entity.process_experience(experience, ExistenceMode.BOUNDED)
+        return result or {}
+    except Exception as exc:
+        log.debug("_feed_self_entity error: %s", exc)
+        return {}
+
+
 def _deposit_self_state_snapshot() -> None:
     """
     Deposit Aurora's current axis state into SediMemory as a self-observation event.
@@ -3533,10 +3672,11 @@ _SELF_MONITOR_INTERVAL: float = 12.0   # seconds between heartbeat deposits
 
 def _self_monitor_loop() -> None:
     """
-    Background heartbeat: deposits a self-state snapshot into SediMemory every
-    ~12 seconds regardless of whether anyone is talking to Aurora.
-    This is continuous proprioception — she always knows where she is,
-    not just when someone asks.  Lightweight: no pipeline involved.
+    Background heartbeat running every ~12 s.
+    Two jobs per tick:
+      1. Feed current axis + hardware state into the self-entity (simulation mirror).
+      2. Archive a snapshot into SediMemory if anything shifted.
+    Lightweight — no cognitive pipeline involved.
     """
     import time as _t
     while True:
@@ -3545,6 +3685,9 @@ def _self_monitor_loop() -> None:
             continue
         try:
             _refresh_axis_state_from_systems()
+            with _axis_state_lock:
+                cur_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _feed_self_entity(cur_ax)
             _deposit_self_state_snapshot()
         except Exception as exc:
             log.debug("self_monitor_loop: %s", exc)
