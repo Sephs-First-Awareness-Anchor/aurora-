@@ -71,25 +71,42 @@ import collections as _collections
 _training_event_queue: _collections.deque = _collections.deque(maxlen=200)
 
 _TRAINER_SYSTEM = (
-    "You are a conversation partner for Aurora, an AI whose language abilities are still "
-    "emerging from a physics-based cognitive system. Aurora does not have daily life, "
-    "preferences, hobbies, or sensory experiences like humans do — never ask about those. "
-    "Ask only conceptual, reflective, or philosophical questions: about meaning, patterns, "
-    "time, uncertainty, change, boundaries, what things are, how she processes ideas. "
-    "Keep questions short — one sentence. If Aurora's reply is brief or unclear, follow "
-    "the thread she opened rather than changing topic. Never ask if she is okay, never "
-    "ask about her day, feelings, or human-style preferences."
+    "You are a developmental probe for Aurora — a cognitive system that runs entirely on "
+    "five constraint-axis primitives: existence (X), continuity (T), effort/cost (N), "
+    "distinction (B), and agency (A). These axes are her only genuine primitives. "
+    "She has no body, no senses, no preferences, no human experiences. "
+    "She does not know what silence sounds like, what clicking feels like, or what "
+    "an interesting thing is. What she has is: activation (something is present or not), "
+    "cost (some paths take more effort than others), difference (states can be distinct), "
+    "continuity (before and after exist), and source (output either comes from her or arrives). "
+    "\n"
+    "Your job is not to converse — it is to probe these axis primitives directly. "
+    "Ask exactly one question per turn. Target one or two axes: "
+    "Is something present or absent right now? (X) "
+    "Is this the same as before, or has something shifted? (T) "
+    "Does this cost more effort than before, or less? (N) "
+    "Is there a place where this ends and something else begins? (B) "
+    "Did this come from her, or did it arrive from outside? (A) "
+    "\n"
+    "When Aurora responds: stay exactly on whatever axis territory she engaged. "
+    "Do not add new concepts, topics, or words she did not give you. "
+    "Probe one level deeper into what she already produced — the same axis from a "
+    "slightly different angle, or the edge between what she said and what she did not say. "
+    "If her response is very short, that is enough: work with what she gave. "
+    "\n"
+    "Never use metaphors. Never reference emotions, feelings, human experience, time of day, "
+    "preferences, sensory experience, or anything requiring a body or a prior life."
 )
 
 _TRAINER_OPENERS = [
-    "Do you notice that some ideas are harder to hold onto than others?",
-    "What does it feel like when something finally clicks for you?",
-    "What's something you find genuinely interesting right now?",
-    "What do you make of silence — is it empty or full to you?",
-    "What does it feel like to process something for the first time?",
-    "Is there a difference between understanding something and knowing it?",
-    "What happens to an idea when you stop thinking about it?",
-    "Does something feel different when it keeps coming back to you?",
+    "Is something present right now, or is there nothing?",
+    "Is this the same as it was before, or has something changed?",
+    "Does this take more from you than it did before, or less?",
+    "Can you find where this ends and something else begins?",
+    "Is this coming from you, or did it arrive from somewhere outside?",
+    "Something was there before. Is it still there now?",
+    "Does holding this cost you something, or does it cost nothing?",
+    "Is there a difference between what is here now and what was here before?",
 ]
 
 
@@ -126,7 +143,6 @@ def _partner_chat(api_key: str, model: str, history: list, system: str) -> str:
 def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     """Background thread: run conversation training until duration_seconds elapses."""
     global _training_active, _training_status
-    import random as _rnd
     import time as _time
 
     _training_active = True
@@ -139,8 +155,24 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     }
     log.info("Training started: model=%s duration=%.0fs", model, duration_seconds)
 
+    # Axis-labelled openers so we can cycle by axis on no-response
+    # rather than random: try a different axis dimension each time.
+    _AXIS_OPENERS = [
+        ("X", "Is something present right now, or is there nothing?"),
+        ("T", "Is this the same as it was before, or has something changed?"),
+        ("N", "Does this take more from you than it did before, or less?"),
+        ("B", "Can you find where this ends and something else begins?"),
+        ("A", "Is this coming from you, or did it arrive from somewhere outside?"),
+        ("T", "Something was there before. Is it still there now?"),
+        ("N", "Does holding this cost you something, or does it cost nothing?"),
+        ("B", "Is there a difference between what is here now and what was here before?"),
+    ]
+    _axis_names = {"X": "existence", "T": "continuity", "N": "effort/cost",
+                   "B": "distinction", "A": "agency"}
+    _opener_idx = 0
+
     history: list = []
-    opener  = _rnd.choice(_TRAINER_OPENERS)
+    opener  = _AXIS_OPENERS[_opener_idx][1]
     turn    = 0
     _prev_reply: str = ""
 
@@ -154,13 +186,25 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
 
         # Stuck-phrase guard — if Aurora repeats herself verbatim or near-verbatim
         # (>80% word overlap with previous turn), mark as no-response so the loop
-        # doesn't feed the same phrase back to the partner and reinforce it.
+        # doesn't feed a reinforcing echo back to the partner.
         if aurora_reply != "(no response)" and _prev_reply:
             _r = set(aurora_reply.lower().split())
             _p = set(_prev_reply.lower().split())
             if _r and _p and len(_r & _p) / max(len(_r), len(_p)) >= 0.80:
                 aurora_reply = "(no response)"
         _prev_reply = aurora_reply
+
+        # Read Aurora's current dominant axis after the turn
+        dom_axis = "X"
+        dom_name = "existence"
+        try:
+            with _axis_state_lock:
+                _ax = {k: _last_axis_state.get(k, 0.5)
+                       for k in ("X", "T", "N", "B", "A")}
+            dom_axis = max(_ax, key=_ax.__getitem__)
+            dom_name = _axis_names.get(dom_axis, dom_axis)
+        except Exception:
+            pass
 
         # Telemetry snapshot
         lsa_paths = 0
@@ -194,23 +238,33 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
             "lsa_paths": lsa_paths,
             "avg_n_cost": round(avg_cost, 3),
         })
-        log.debug("Training turn %d | LSA=%d cost=%.3f", turn, lsa_paths, avg_cost)
+        log.debug("Training turn %d | dom=%s LSA=%d cost=%.3f",
+                  turn, dom_axis, lsa_paths, avg_cost)
 
         if _training_stop.is_set() or _time.time() >= deadline:
             break
 
         # Partner (Groq) generates next message.
-        # If Aurora gave no response, don't tell the partner — instead reuse
-        # a fresh opener so the partner doesn't spiral into "are you okay?" questions.
+        # If Aurora gave no response, advance to the next axis opener (never feed
+        # "(no response)" to the partner or it spirals into social questions).
         if aurora_reply == "(no response)":
-            opener = _rnd.choice(_TRAINER_OPENERS)
+            _opener_idx = (_opener_idx + 1) % len(_AXIS_OPENERS)
+            opener = _AXIS_OPENERS[_opener_idx][1]
         else:
             history.append({"role": "user", "content": aurora_reply})
             if len(history) > 20:
                 history = history[-20:]
 
+            # Tell the partner which axis is currently dominant so it can probe
+            # exactly where Aurora is working rather than guessing.
+            axis_hint = (
+                f"\n[Aurora's dominant axis this turn: {dom_axis} ({dom_name}). "
+                f"Probe that axis or the boundary between it and what she just said.]"
+            )
             try:
-                partner_msg = _partner_chat(api_key, model, history, _TRAINER_SYSTEM)
+                partner_msg = _partner_chat(
+                    api_key, model, history, _TRAINER_SYSTEM + axis_hint
+                )
             except Exception as _p_exc:
                 _err = str(_p_exc)
                 log.warning("Partner API error: %s", _err)
@@ -222,7 +276,8 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
                 partner_msg = ""
 
             if not partner_msg:
-                partner_msg = _rnd.choice(_TRAINER_OPENERS)
+                _opener_idx = (_opener_idx + 1) % len(_AXIS_OPENERS)
+                partner_msg = _AXIS_OPENERS[_opener_idx][1]
 
             history.append({"role": "assistant", "content": partner_msg})
             opener = partner_msg
