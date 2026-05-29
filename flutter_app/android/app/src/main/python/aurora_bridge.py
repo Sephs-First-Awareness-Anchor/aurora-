@@ -983,6 +983,11 @@ def initialize(state_dir: str = "") -> str:
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _start_curiosity_engine(_systems)
 
+        # Continuous self-monitoring heartbeat — deposits axis-state snapshots
+        # into SediMemory every ~12s so Aurora always has a current self-model,
+        # not just when someone talks to her.  No pipeline involved — lightweight.
+        threading.Thread(target=_self_monitor_loop, daemon=True, name="aurora_self_monitor").start()
+
         # Start the proactive expression loop — runs the waveform pipeline from
         # pure sensory state on its own schedule and delivers anything the
         # conscious crest decides to say without waiting for a user message.
@@ -2197,6 +2202,12 @@ def handle_message(text: str) -> str:
         pending_report = (_systems or {}).pop("_pending_autonomous_report", None)
         if pending_report:
             response = f"{pending_report}\n\n{response}" if response else pending_report
+
+        # Deposit self-state snapshot — every turn she knows where she is.
+        # Runs non-blocking in background so it never delays the response.
+        threading.Thread(
+            target=_deposit_self_state_snapshot, daemon=True, name="self_state"
+        ).start()
 
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
@@ -3454,6 +3465,89 @@ def _infer_dominant_facet(screen_obs: dict) -> str:
     if any(s in package for s in ("alarm", "emergency", "dialer", "phone")):
         return "urgent"
     return ""
+
+
+_self_monitor_prev_ax: dict = {}   # last axis snapshot for delta computation
+
+
+def _deposit_self_state_snapshot() -> None:
+    """
+    Deposit Aurora's current axis state into SediMemory as a self-observation event.
+    Called after every handle_message turn AND by the self-monitoring heartbeat.
+    This builds the continuous self-model she draws from — not a check-in,
+    just always already knowing where she is.
+    """
+    global _self_monitor_prev_ax
+    if _systems is None:
+        return
+    sm = _systems.get("sedimemory")
+    if sm is None or not hasattr(sm, "ingest_event"):
+        return
+
+    ConstraintVector = None
+    try:
+        from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+    except ImportError:
+        try:
+            from aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            return
+
+    with _axis_state_lock:
+        cur_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+    # Only deposit if something meaningful shifted (avoids flooding SediMemory
+    # with identical snapshots when Aurora is idle).
+    deltas: dict = {}
+    if _self_monitor_prev_ax:
+        for k, v in cur_ax.items():
+            d = v - _self_monitor_prev_ax.get(k, 0.5)
+            if abs(d) >= 0.06:
+                deltas[k] = round(d, 3)
+        if not deltas:
+            return   # nothing moved — skip this tick
+    _self_monitor_prev_ax = dict(cur_ax)
+
+    dom = max(cur_ax, key=cur_ax.__getitem__)
+    try:
+        sm.ingest_event(
+            content={
+                "axis_snapshot": {k: round(v, 3) for k, v in cur_ax.items()},
+                "dominant":      dom,
+                "deltas":        deltas,
+                "src":           "self_observation",
+            },
+            constraint_vector=ConstraintVector(
+                X=cur_ax["X"], T=cur_ax["T"], N=cur_ax["N"],
+                B=cur_ax["B"], A=cur_ax["A"],
+            ),
+            source="self_observation",
+        )
+        log.debug("Self-state deposited: dom=%s deltas=%s", dom, deltas)
+    except Exception as exc:
+        log.debug("_deposit_self_state_snapshot error: %s", exc)
+
+
+_SELF_MONITOR_INTERVAL: float = 12.0   # seconds between heartbeat deposits
+
+
+def _self_monitor_loop() -> None:
+    """
+    Background heartbeat: deposits a self-state snapshot into SediMemory every
+    ~12 seconds regardless of whether anyone is talking to Aurora.
+    This is continuous proprioception — she always knows where she is,
+    not just when someone asks.  Lightweight: no pipeline involved.
+    """
+    import time as _t
+    while True:
+        _t.sleep(_SELF_MONITOR_INTERVAL)
+        if _systems is None:
+            continue
+        try:
+            _refresh_axis_state_from_systems()
+            _deposit_self_state_snapshot()
+        except Exception as exc:
+            log.debug("self_monitor_loop: %s", exc)
 
 
 def _proactive_loop() -> None:
