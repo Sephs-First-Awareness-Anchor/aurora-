@@ -54,6 +54,10 @@ _correction_context: dict = {}       # snapshot of the wrong response's reasonin
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
 _last_screen_observation: dict = {}
+# Synthetic visual properties extracted from the latest screen observation.
+# Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
+# from the information channel — what the screen LOOKS LIKE vs what it SAYS.
+_last_screen_visual_data: dict = {}
 
 # Curiosity session control
 _curiosity_session_active = threading.Event()
@@ -1027,12 +1031,14 @@ def _sample_ambient_perception(systems: dict) -> None:
         pass
 
     # ── Feed sensory crystal with actual vectors ──────────────────────────────
-    # The sensory crystal needs real audio/visual observations to build its
-    # cross-modal semantic nodes and generate gap reports for the curiosity
-    # engine. Without this call the crystal is starved and the gap-seeking
-    # curiosity loop has nothing to drive it.
-    if _raw_cam or _raw_audio:
-        _feed_sensory_crystal_frames(systems, _raw_audio, _raw_cam)
+    # Camera/audio → primary visual and auditory channels.
+    # Screen visual → visual channel only (what the screen LOOKS like, not
+    # what it says). Screen information is a separate modality and does NOT
+    # enter the sensory crystal — the crystal processes perceptual qualities,
+    # not semantic content.
+    visual_source = _raw_cam or _last_screen_visual_data or {}
+    if visual_source or _raw_audio:
+        _feed_sensory_crystal_frames(systems, _raw_audio, visual_source)
 
     screen_obs = dict(_last_screen_observation or {})
     if not cam_obs and not audio_obs and not screen_obs:
@@ -2870,56 +2876,94 @@ def provide_screen_observation(payload_json: str) -> None:
         # Summary for ambient context — compact, no raw UI tokens
         summary = f"{app_label} {event_type}"
         if visible and not is_own_app:
-            # Only include visible text summary for external apps — for own app
-            # it's just self-state, no need to surface raw UI strings
             summary = f"{summary}: {', '.join(visible[:2])}"
         summary = summary[:360]
 
+        # ── Separate VISUAL properties from INFORMATION content ───────────────
+        # What the screen LOOKS LIKE → sensory crystal visual channel.
+        # What it SAYS → information channel (own app = continuity, other = env).
+        # These are different modalities and must not collapse into the same stream.
+        brightness   = float(payload.get("brightness", 0.5) or 0.5)
+        text_density = min(1.0, len(visible) / 8.0)     # 0–8 tokens → 0–1
+        has_motion   = event_type in ("scroll", "swipe", "animation", "TYPE_VIEW_SCROLLED")
+        is_dark_ui   = brightness < 0.35
+
+        # Synthetic visual dict for sensory crystal — captures perceptual
+        # properties of the screen as a visual object, not its text content
+        screen_visual = {
+            "brightness":       brightness,
+            "objects":          [],           # no physical objects in screen
+            "faces":            0,
+            "motion_detected":  has_motion,
+            "confidence":       0.70,
+            # Extra hints for hue/shape facets
+            "dark_ui":          is_dark_ui,
+            "text_density":     text_density,
+            "is_self_surface":  is_own_app,
+        }
+
         observation = {
-            "source":       "screen_observer",
-            "observed_at":  float(payload.get("observed_at", _time.time()) or _time.time()),
-            "package":      package,
-            "class":        str(payload.get("class", "") or ""),
-            "event_type":   event_type,
-            "visible_text": visible,
-            "summary":      summary,
-            "is_own_app":   is_own_app,
+            "source":        "screen_observer",
+            "observed_at":   float(payload.get("observed_at", _time.time()) or _time.time()),
+            "package":       package,
+            "class":         str(payload.get("class", "") or ""),
+            "event_type":    event_type,
+            "visible_text":  visible,
+            "summary":       summary,
+            "is_own_app":    is_own_app,
+            "screen_visual": screen_visual,
         }
         _last_screen_observation = observation
+
+        global _last_screen_visual_data
+        _last_screen_visual_data = screen_visual
 
         if _systems is None:
             return
 
-        _systems["_screen_observation"] = observation
+        _systems["_screen_observation"]   = observation
+        _systems["_screen_visual_data"]   = screen_visual
 
-        # Ambient perceptual note — body-state framing, not semantic content
+        # Ambient perceptual note:
+        #   screen_visual  — what it looks like (visual channel, body-sense)
+        #   screen_info    — what it says (information channel, only for other apps)
+        # Own app's text is her OWN expression — continuity, not new information.
         if is_own_app:
-            body_note = f"body-sense: own interface active ({event_type})"
+            body_note = f"screen_visual: own interface ({event_type}, {'dark' if is_dark_ui else 'bright'}, {'motion' if has_motion else 'still'})"
         else:
-            body_note = f"environment: {summary}"
+            info_note = f"screen_info: {summary}" if visible else f"screen_visual: {app_label}"
+            body_note = info_note
         _systems["_ambient_perceptual"] = {
             "observation": body_note,
             "source":      "screen_body_sense",
         }
 
-        # Identity field — axis weights reflect body-sense vs environment
+        # Identity field:
+        #   Visual event → sensory_event("screen_visual") — perceptual
+        #   Information event (other app only) → ingest_external_input with
+        #     appropriate axis weights. Own app text is T-axis continuity only.
         ifield = _systems.get("identity_field")
         if ifield is not None:
             if is_own_app:
-                # Proprioceptive: this IS her — high A (self), high T (continuity),
-                # low N (familiar), low B (no external boundary to draw)
+                # Proprioceptive self-sense: high A, high T, low N, low B
                 axes      = {"X": 0.55, "T": 0.82, "N": 0.15, "B": 0.28, "A": 0.88}
                 intensity = 0.72
                 novelty   = 0.08
             else:
-                # Environmental: sensing surroundings — moderate A, B rises (other)
+                # Environmental sensing: moderate A, B rises (boundary — this is other)
                 axes      = {"X": 0.50, "T": 0.65, "N": 0.45, "B": 0.62, "A": 0.60}
                 intensity = 0.58
                 novelty   = 0.38
             if hasattr(ifield, "ingest_external_input"):
                 ifield.ingest_external_input(axes, intensity=intensity, source="screen_body_sense")
             if hasattr(ifield, "ingest_sensory_event"):
-                ifield.ingest_sensory_event("screen", intensity=intensity, novelty=novelty, valence=0.0)
+                # Visual channel — what the screen looks like
+                ifield.ingest_sensory_event("screen_visual", intensity=intensity,
+                                            novelty=novelty, valence=0.0)
+                if not is_own_app and visible:
+                    # Information channel — separate event, lower intensity
+                    ifield.ingest_sensory_event("screen_info", intensity=0.38,
+                                                novelty=0.25, valence=0.0)
 
         state_dir = str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
         try:
