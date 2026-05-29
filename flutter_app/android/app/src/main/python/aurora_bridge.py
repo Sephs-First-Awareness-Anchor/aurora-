@@ -1126,6 +1126,68 @@ _CONTRACTION_SHARDS = frozenset({
     "were", "hes", "shes", "its", "thats", "theres", "lets",
 })
 
+# Foundational vocabulary that should NEVER trigger the curiosity gap loop.
+# These are words so common and contextually obvious that asking the user to
+# define them signals a failure of basic language grounding, not a genuine gap.
+# This covers everyday verbs, states, UI labels, and abstract nouns that appear
+# constantly in natural conversation and screen text.
+_FOUNDATIONAL_VOCAB = frozenset({
+    # Being / existence
+    "be", "being", "been", "is", "are", "was", "were", "am",
+    # Doing / action
+    "do", "doing", "did", "done", "make", "making", "made",
+    "go", "going", "gone", "went", "come", "coming", "came",
+    "get", "getting", "got", "take", "taking", "took", "taken",
+    "give", "giving", "gave", "given", "work", "working", "worked",
+    "run", "running", "ran", "put", "putting", "use", "using", "used",
+    "try", "trying", "tried", "want", "wanting", "wanted",
+    "need", "needing", "needed", "ask", "asking", "asked",
+    "say", "saying", "said", "tell", "telling", "told",
+    "show", "showing", "showed", "shown", "let", "letting",
+    # Cognition / feeling
+    "think", "thinking", "thought", "know", "knowing", "knew", "known",
+    "feel", "feeling", "felt", "mean", "meaning", "meant",
+    "understand", "understanding", "understood", "see", "seeing", "saw", "seen",
+    "look", "looking", "looked", "find", "finding", "found",
+    "hear", "hearing", "heard", "sense", "sensing", "sensed",
+    "notice", "noticing", "noticed", "wonder", "wondering", "wondered",
+    # State / condition
+    "state", "states", "status", "condition", "mode", "phase",
+    "level", "stage", "degree", "point", "place", "position",
+    "moment", "present", "current", "now", "here", "there",
+    "active", "inactive", "running", "ready", "open", "closed",
+    # Common nouns — things / objects
+    "thing", "things", "stuff", "something", "anything", "nothing", "everything",
+    "someone", "anyone", "everyone", "no one", "nobody",
+    "way", "ways", "kind", "kinds", "type", "types", "sort", "sorts",
+    "form", "forms", "part", "parts", "piece", "pieces",
+    "word", "words", "name", "names", "idea", "ideas",
+    "question", "questions", "answer", "answers",
+    "time", "times", "day", "days", "moment", "moments",
+    "place", "places", "space", "world", "area",
+    # System / interface labels — common in screen observation text
+    "system", "systems", "screen", "screens", "display", "displays",
+    "message", "messages", "button", "buttons", "input", "output",
+    "text", "app", "application", "interface", "window", "menu",
+    "page", "view", "panel", "tab", "field", "box", "list",
+    "notification", "alert", "dialog", "overlay", "icon",
+    # Common adjectives / descriptors
+    "good", "bad", "great", "okay", "fine", "right", "wrong",
+    "true", "false", "real", "actual", "possible", "different",
+    "same", "similar", "new", "old", "big", "small", "large",
+    "high", "low", "full", "empty", "clear", "simple", "easy",
+    "hard", "important", "normal", "basic", "general", "specific",
+    # Common abstract nouns
+    "result", "results", "effect", "effects", "cause", "causes",
+    "reason", "reasons", "purpose", "goal", "goals", "value", "values",
+    "process", "processes", "action", "actions", "response", "responses",
+    "change", "changes", "movement", "connection", "connections",
+    "function", "functions", "behavior", "behaviours", "pattern", "patterns",
+    # Relationship words
+    "like", "unlike", "similar", "different", "same", "with", "without",
+    "between", "among", "through", "about", "around", "under", "over",
+})
+
 
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
@@ -1336,6 +1398,13 @@ def handle_message(text: str) -> str:
                     # Contraction fragment left by dropped apostrophe — not a real gap
                     _systems["_gap_seeking_concept"] = None
                     log.info("Gap concept %r is a contraction shard — skipping", gap_concept)
+                elif _gap_norm in _FOUNDATIONAL_VOCAB:
+                    # Everyday word — asking the user to define this signals broken
+                    # language grounding, not genuine curiosity. Silence it and mark
+                    # known so the curiosity engine stops flagging it.
+                    _systems["_gap_seeking_concept"] = None
+                    _ingested_concepts.add(_gap_norm)
+                    log.info("Gap concept %r is foundational vocab — skipping", gap_concept)
                 elif _gap_norm in _ingested_concepts:
                     # Already taught this session — pressure already relieved
                     _systems["_gap_seeking_concept"] = None
@@ -1447,6 +1516,9 @@ def _search_for_gap(concept: str, gap_type: str = "semantic_gap") -> None:
     Runs in a background thread so it doesn't block the current response.
     """
     if not _systems or not concept:
+        return
+    if concept.lower().strip() in _FOUNDATIONAL_VOCAB or concept.lower().strip() in _CONTRACTION_SHARDS:
+        log.debug("_search_for_gap: skipping foundational/shard concept %r", concept)
         return
     _snap = _systems  # capture reference before thread starts
 
