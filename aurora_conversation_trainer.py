@@ -48,7 +48,7 @@ def _make_partner(provider: str):
         except ImportError:
             print("google-generativeai not found — install with: pip install google-generativeai")
             sys.exit(1)
-        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        api_key = "AIzaSyARHDXdCAbNdJxdiYsVUN1684x8WMBbECQ" or os.environ.get("GEMINI_API_KEY") or os.environ.get("AIzaSyARHDXdCAbNdJxdiYsVUN1684x8WMBbECQ")
         if not api_key:
             print("Set GEMINI_API_KEY (or GOOGLE_API_KEY) before running.")
             sys.exit(1)
