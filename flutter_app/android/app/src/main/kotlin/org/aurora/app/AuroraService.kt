@@ -108,6 +108,40 @@ class AuroraService : Service() {
                 } catch (_: Exception) {}
             }
         }
+
+        fun startTraining(apiKey: String, model: String, durationMinutes: Double, callback: (String) -> Unit) {
+            scope?.launch {
+                val result = try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("start_training", apiKey, model, durationMinutes)
+                        .toString()
+                } catch (e: Exception) { "error: ${e.message}" }
+                withContext(Dispatchers.Main) { callback(result) }
+            }
+        }
+
+        fun stopTraining() {
+            scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("stop_training")
+                } catch (_: Exception) {}
+            }
+        }
+
+        fun getTrainingStatus(callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("get_training_status")
+                        .toString()
+                } catch (_: Exception) { "{\"active\":false,\"turn\":0,\"total\":0}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
     }
 
     override fun onCreate() {
@@ -122,11 +156,10 @@ class AuroraService : Service() {
     }
 
     private suspend fun pollPendingReport() {
-        // Check every 5 seconds for completed curiosity reports and autonomous
-        // proactive expressions. Both arrive as proactive events so Flutter
-        // displays and speaks them without waiting for user input.
+        // Check every 3 seconds for completed curiosity reports, autonomous
+        // proactive expressions, and training turn events.
         while (true) {
-            kotlinx.coroutines.delay(5_000L)
+            kotlinx.coroutines.delay(3_000L)
             try {
                 val bridge = Python.getInstance().getModule("aurora_bridge")
 
@@ -149,6 +182,19 @@ class AuroraService : Service() {
                             JSONObject()
                                 .put("type", "proactive")
                                 .put("text", proactive)
+                                .toString()
+                        )
+                    }
+                }
+
+                // Training events — batch of turn records as JSON array
+                val trainingBatch = bridge.callAttr("get_training_events").toString()
+                if (trainingBatch.isNotBlank() && trainingBatch != "[]") {
+                    withContext(Dispatchers.Main) {
+                        eventSink?.success(
+                            JSONObject()
+                                .put("type", "training_batch")
+                                .put("batch", trainingBatch)
                                 .toString()
                         )
                     }

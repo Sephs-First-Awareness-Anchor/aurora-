@@ -407,10 +407,10 @@ class _HomeScreenState extends State<HomeScreen>
         child: Column(
           children: [
             _Header(
-              state: _embState,
-              quietMode: _quietMode,
+              state:         _embState,
+              quietMode:     _quietMode,
               onQuietToggle: () => _toggleQuietMode(!_quietMode),
-              onBackground: isSummoned ? _background : null,
+              onBackground:  isSummoned ? _background : null,
             ),
             if (isSummoned) ...[
               // ── Summoned: compact orb at top, chat below ─────────────────
@@ -511,7 +511,12 @@ class _Header extends StatelessWidget {
   final bool quietMode;
   final VoidCallback onQuietToggle;
   final AsyncCallback? onBackground;
-  _Header({required this.state, required this.quietMode, required this.onQuietToggle, this.onBackground});
+  _Header({
+    required this.state,
+    required this.quietMode,
+    required this.onQuietToggle,
+    this.onBackground,
+  });
 
   @override
   Widget build(BuildContext context) {
