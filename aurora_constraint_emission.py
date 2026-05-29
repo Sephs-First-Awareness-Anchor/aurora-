@@ -190,12 +190,12 @@ class ConstraintEmitter:
         if act == SpeechAct.ABSTAIN:
             fr = ctx.input_frame
             if fr and fr.is_question and fr.is_directed:
-                # Constraint inability (I_CANT/I_DONOT firing) → true abstain
+                # Constraint inability (I_CANT/I_DONOT firing) → voiced abstain
                 ip = ctx.i_state_polarities
                 if ip.get("I_CANNOT", 0.0) > 0.5 or ip.get("I_DONOT", 0.0) > 0.5:
                     return self._emit_abstain(ctx)
-                # No content for this question — step aside so comprehension can respond
-                return self._emit_abstain(ctx)
+                # No content for this question — silent, let comprehension respond
+                return self._emit_silent(ctx)
             return self._emit_abstain(ctx)
 
         # 3.5 INVALIDATION fast-path (100% scripted-free)
@@ -241,17 +241,17 @@ class ConstraintEmitter:
             slot_kind = "both" if not entity_ok else "predicate"
             return self._seek_gap(ctx, slot_kind, slots, act)
 
-        # 7b. Acknowledgment with no content on a question — step aside for comprehension
+        # 7b. Acknowledgment with no content on a question — silent, let comprehension respond
         if (act == SpeechAct.ACKNOWLEDGMENT
                 and not entity_ok and not predicate_ok
                 and ctx.input_frame and ctx.input_frame.is_question):
-            return self._emit_abstain(ctx)
+            return self._emit_silent(ctx)
 
         # 8. Surface assembly (§9)
         text = self._assemble(slots, act, ctx)
         if not text.strip():
-            # Empty assembly — step aside so comprehension can generate the response
-            return self._emit_abstain(ctx)
+            # Empty assembly — silent, let comprehension generate the response
+            return self._emit_silent(ctx)
 
         return EmissionResult(
             text=text,
@@ -1005,6 +1005,15 @@ class ConstraintEmitter:
         # if it still fails, seeking naturally re-fires — no extra bookkeeping needed.
 
     # ── honest constraint-driven abstain (§2.5) ──────────────────────────────
+    def _emit_silent(self, ctx: EmissionContext) -> EmissionResult:
+        """Empty pass-through — emitter has nothing to contribute; comprehension runs instead."""
+        return EmissionResult(
+            text="",
+            speech_act=SpeechAct.ABSTAIN,
+            abstained=True,
+            axis_signature=self._axis_signature(ctx),
+        )
+
     def _emit_abstain(self, ctx: EmissionContext) -> EmissionResult:
         """
         Fires only when speech-act is ABSTAIN (constraint-native inability).
