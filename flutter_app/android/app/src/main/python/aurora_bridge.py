@@ -1714,10 +1714,6 @@ def handle_message(text: str) -> str:
                     _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
                     _ingested_concepts.add(_gap_norm)
                     log.info("Gap %r — silent search triggered, optimistically ingested", _gap_concept_pending)
-                        log.info(
-                            "Gap %r resolved through reasoning — response did not ask about it",
-                            _gap_concept_pending,
-                        )
 
         _last_response = response
         _last_path_key = path_key
