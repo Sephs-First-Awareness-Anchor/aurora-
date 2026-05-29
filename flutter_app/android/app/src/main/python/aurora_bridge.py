@@ -1448,6 +1448,24 @@ _FOUNDATIONAL_VOCAB = frozenset({
     # Relationship words
     "like", "unlike", "similar", "different", "same", "with", "without",
     "between", "among", "through", "about", "around", "under", "over",
+    # Aurora's own name and familiar names — must never be a gap subject
+    "aurora", "seph", "cael",
+    # Greetings / discourse particles
+    "hey", "hi", "hello", "oh", "ok", "okay", "yeah", "yes", "no",
+    "please", "thanks", "thank", "sorry", "wait", "wow",
+    # Pronouns
+    "i", "me", "my", "mine", "you", "your", "yours", "he", "him",
+    "she", "her", "it", "its", "we", "us", "our", "they", "them", "their",
+    # Verb forms not already covered
+    "happen", "happens", "happened", "happening",
+    "have", "has", "had", "having",
+    "start", "starts", "started", "starting",
+    "stop", "stops", "stopped", "stopping",
+    "call", "calls", "called", "calling",
+    "turn", "turns", "turned", "turning",
+    # Question words
+    "what", "which", "who", "where", "when", "why", "how",
+    "this", "that", "these", "those",
 })
 
 

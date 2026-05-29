@@ -33,6 +33,96 @@ _MAX_CYCLES_PER_IDLE = 3
 _MAX_CHAIN_DEPTH = 5   # linked curiosity cycles before mandatory settlement
 _CYCLE_INTERRUPTIBLE = threading.Event()  # set to interrupt immediately on user turn
 
+# Words that are too foundational or personally self-evident to ever trigger
+# a gap pressure spike. Asking about these signals a language grounding failure,
+# not genuine semantic uncertainty. Checked BEFORE the identity-field spike fires
+# so the field never gets contaminated with gap pressure for these words.
+_GAP_STOP_WORDS: frozenset = frozenset({
+    # Aurora's own name and the names she knows
+    "aurora", "seph", "cael",
+    # Greetings / discourse particles
+    "hey", "hi", "hello", "oh", "ok", "okay", "yeah", "yes", "no", "nope",
+    "please", "thanks", "thank", "sorry", "wait", "wow",
+    # Personal pronouns
+    "i", "me", "my", "mine", "myself",
+    "you", "your", "yours", "yourself",
+    "he", "him", "his", "himself",
+    "she", "her", "hers", "herself",
+    "it", "its", "itself",
+    "we", "us", "our", "ours", "ourselves",
+    "they", "them", "their", "theirs", "themselves",
+    # Question / demonstrative words
+    "this", "that", "these", "those",
+    "what", "which", "who", "whom", "whose", "where", "when", "why", "how",
+    # Core verbs — all common tenses
+    "be", "am", "is", "are", "was", "were", "been", "being",
+    "have", "has", "had", "having",
+    "do", "does", "did", "doing", "done",
+    "make", "makes", "made", "making",
+    "go", "goes", "went", "gone", "going",
+    "come", "comes", "came", "coming",
+    "get", "gets", "got", "gotten", "getting",
+    "take", "takes", "took", "taken", "taking",
+    "give", "gives", "gave", "given", "giving",
+    "work", "works", "worked", "working",
+    "run", "runs", "ran", "running",
+    "happen", "happens", "happened", "happening",
+    "see", "sees", "saw", "seen", "seeing",
+    "know", "knows", "knew", "known", "knowing",
+    "think", "thinks", "thought", "thinking",
+    "feel", "feels", "felt", "feeling",
+    "mean", "means", "meant", "meaning",
+    "say", "says", "said", "saying",
+    "tell", "tells", "told", "telling",
+    "use", "uses", "used", "using",
+    "want", "wants", "wanted", "wanting",
+    "need", "needs", "needed", "needing",
+    "try", "tries", "tried", "trying",
+    "ask", "asks", "asked", "asking",
+    "look", "looks", "looked", "looking",
+    "find", "finds", "found", "finding",
+    "understand", "understands", "understood", "understanding",
+    "put", "puts", "putting",
+    "let", "lets", "letting",
+    "show", "shows", "showed", "shown", "showing",
+    "hear", "hears", "heard", "hearing",
+    "call", "calls", "called", "calling",
+    "turn", "turns", "turned", "turning",
+    "start", "starts", "started", "starting",
+    "stop", "stops", "stopped", "stopping",
+    "change", "changes", "changed", "changing",
+    # State / condition / time
+    "state", "states", "status", "mode", "phase", "level", "stage",
+    "condition", "position", "moment", "present", "current",
+    "now", "here", "there", "today", "just", "still", "already",
+    "active", "inactive", "ready", "open", "closed",
+    # High-frequency nouns
+    "thing", "things", "stuff",
+    "way", "ways", "kind", "type", "sort", "form", "part",
+    "word", "words", "name", "names",
+    "time", "times", "day", "days", "place", "space", "world",
+    "person", "people",
+    "idea", "ideas", "question", "answer", "reason", "purpose",
+    "result", "cause", "effect",
+    # System / interface words
+    "system", "systems", "screen", "screens", "display",
+    "message", "messages", "button", "text", "app", "phone",
+    "interface", "window", "menu", "page", "view", "icon",
+    # Common adjectives
+    "good", "bad", "great", "fine", "right", "wrong",
+    "true", "false", "real", "new", "old", "big", "small",
+    "same", "different", "possible", "important", "normal", "basic",
+    # Prepositions / conjunctions / particles
+    "a", "an", "the", "and", "or", "but", "so", "if", "as",
+    "of", "in", "on", "at", "to", "for", "with", "by", "from",
+    "up", "out", "not", "no", "all", "any", "more", "also",
+    "than", "then", "when", "just", "like", "over", "into",
+    "about", "through", "after", "before", "between", "during",
+    # Indefinite pronouns
+    "something", "anything", "nothing", "everything",
+    "someone", "anyone", "everyone", "nobody",
+})
+
 
 def interrupt_curiosity_cycles() -> None:
     """Call when user sends a message — curiosity cycles yield immediately."""
@@ -307,10 +397,13 @@ class CuriosityEngine:
             if sc is not None and hasattr(sc, "get_gap_report"):
                 gap_report = sc.get_gap_report()
                 # Priority: concepts stuck at base needing a second modality first
-                needs_second   = list(gap_report.get("needs_second", []))
-                needs_semantic = list(gap_report.get("needs_semantic", []))
-                needs_visual   = list(gap_report.get("needs_visual", []))
-                needs_audio    = list(gap_report.get("needs_audio", []))
+                # Filter stop words before any concept becomes a gap subject.
+                def _not_stop(c: str) -> bool:
+                    return c.lower().strip().split(":")[0].strip() not in _GAP_STOP_WORDS
+                needs_second   = [c for c in gap_report.get("needs_second",   []) if _not_stop(c)]
+                needs_semantic = [c for c in gap_report.get("needs_semantic", []) if _not_stop(c)]
+                needs_visual   = [c for c in gap_report.get("needs_visual",   []) if _not_stop(c)]
+                needs_audio    = [c for c in gap_report.get("needs_audio",    []) if _not_stop(c)]
 
                 target_concept = None
                 gap_type       = "perceptual_gap"
@@ -717,20 +810,28 @@ class CuriosityEngine:
             if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual"):
                 try:
                     subj = curiosity.subject[:60]
-                    existing = self.systems.get("_gap_seeking_concept")
-                    if not existing:
-                        self.systems["_gap_seeking_concept"]      = subj
-                        self.systems["_gap_seeking_concept_type"] = curiosity.curiosity_type
-                        # Spike the identity field — N-axis (cost of not knowing)
-                        # + A-axis (drive toward resolution) so the field is
-                        # genuinely reaching when it next speaks.
-                        ifield = self.systems.get("identity_field")
-                        if ifield and hasattr(ifield, "ingest_external_input"):
-                            ifield.ingest_external_input(
-                                {"X": 0.3, "T": 0.3, "N": 0.90, "B": 0.5, "A": 0.80},
-                                intensity=0.85,
-                                source=f"gap_pressure:{subj}",
-                            )
+                    # Never fire gap pressure for foundational / self-evident concepts.
+                    # The stop-word check runs HERE — before the identity-field spike —
+                    # because the spike contaminates the language field immediately in the
+                    # background thread, before handle_message() ever runs its own filter.
+                    _subj_check = subj.lower().strip().split(":")[0].strip()
+                    if _subj_check in _GAP_STOP_WORDS:
+                        pass  # silently resolved — not a real gap
+                    else:
+                        existing = self.systems.get("_gap_seeking_concept")
+                        if not existing:
+                            self.systems["_gap_seeking_concept"]      = subj
+                            self.systems["_gap_seeking_concept_type"] = curiosity.curiosity_type
+                            # Spike the identity field — N-axis (cost of not knowing)
+                            # + A-axis (drive toward resolution) so the field is
+                            # genuinely reaching when it next speaks.
+                            ifield = self.systems.get("identity_field")
+                            if ifield and hasattr(ifield, "ingest_external_input"):
+                                ifield.ingest_external_input(
+                                    {"X": 0.3, "T": 0.3, "N": 0.90, "B": 0.5, "A": 0.80},
+                                    intensity=0.85,
+                                    source=f"gap_pressure:{subj}",
+                                )
                 except Exception:
                     pass
 
