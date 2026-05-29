@@ -3628,23 +3628,45 @@ class WorkingMemory:
                     except Exception:
                         ivm_heat = 0.3
 
-                # Let the language field's crossing path geometry shape draft selection.
-                # Novel crossing → EXPLORER mode unlocks Aurora's RAW dialect (Draft 0:
-                # direct from core claim, unstructured, her own voice).
-                # Metaphor crossing → tag the N-axis so SIC knows it's working via proxy.
-                # Default stays GUIDED (STRUCTURED draft) when no crossing is active.
-                _xing_mode = "GUIDED"
+                # Feed crossing path geometry back into the identity field as substrate signal.
+                # The field integrates this alongside all other active signals; its evolved
+                # N-axis state then surfaces as autonomy_mode — no categorical branching on
+                # path labels.
                 _lf_rci = systems.get("language_field") if isinstance(systems, dict) else None
                 _proto_rci = getattr(_lf_rci, "_last_proto", None) if _lf_rci else None
+                _ifield_rci = systems.get("identity_field") if isinstance(systems, dict) else None
+
                 if _lf_rci is not None and _proto_rci is not None and hasattr(_lf_rci, "select_crossing_path"):
                     try:
                         _xing = _lf_rci.select_crossing_path(_proto_rci) or {}
-                        if _xing.get("is_novel") and intent.certainty >= 0.45:
-                            _xing_mode = "EXPLORER"
-                            if "deep_field" not in intent.constraints:
-                                intent.constraints.append("deep_field")
-                        if _xing.get("is_metaphor") and "ax:N" not in intent.constraints:
-                            intent.constraints.append("ax:N")
+                        if _xing and _ifield_rci is not None and hasattr(_ifield_rci, "ingest_external_input"):
+                            _nc = float(_xing.get("n_cost", 0.5))
+                            _bm = float(_xing.get("b_match", 0.5))
+                            if _xing.get("is_novel"):
+                                # High N-cost → field is in uncharted territory; A-axis active (pioneering)
+                                _xpulse = {"N": 0.50 + _nc * 0.40, "A": 0.45 + _nc * 0.25, "X": 0.35, "T": 0.30, "B": 0.30}
+                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.35, source="crossing_novel")
+                            elif _xing.get("is_metaphor"):
+                                # Approximating via proxy: N-pressure + B-boundary tension from poor match
+                                _xpulse = {"N": 0.45 + _nc * 0.25, "B": 0.50 + (1.0 - _bm) * 0.25, "X": 0.35, "T": 0.35, "A": 0.38}
+                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.30, source="crossing_metaphor")
+                            else:
+                                # Worn path: field settling into familiar, grounded territory
+                                _xpulse = {"X": 0.45 + _bm * 0.20, "T": 0.50 + _bm * 0.20, "N": 0.28, "B": 0.38, "A": 0.35}
+                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.25, source="crossing_worn")
+                    except Exception:
+                        pass
+
+                # autonomy_mode reads the field's live N-axis after all signals have settled
+                _autonomy_mode = "GUIDED"
+                if _ifield_rci is not None and hasattr(_ifield_rci, "status"):
+                    try:
+                        _fld_axes = (_ifield_rci.status().get("axis_pressures") or {})
+                        _fld_n = float(_fld_axes.get("N", 0.3))
+                        if _fld_n >= 0.62:
+                            _autonomy_mode = "EXPLORER"
+                        elif _fld_n >= 0.48:
+                            _autonomy_mode = "EXPANSIVE"
                     except Exception:
                         pass
 
@@ -3652,7 +3674,7 @@ class WorkingMemory:
                     intent,
                     candidates,
                     ivm_heat=ivm_heat,
-                    autonomy_mode=_xing_mode,
+                    autonomy_mode=_autonomy_mode,
                     user_verbosity=0.5,
                 )
 
