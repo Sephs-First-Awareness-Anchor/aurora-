@@ -54,6 +54,10 @@ _correction_context: dict = {}       # snapshot of the wrong response's reasonin
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
 _last_screen_observation: dict = {}
+# Synthetic visual properties extracted from the latest screen observation.
+# Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
+# from the information channel — what the screen LOOKS LIKE vs what it SAYS.
+_last_screen_visual_data: dict = {}
 
 # Curiosity session control
 _curiosity_session_active = threading.Event()
@@ -155,6 +159,197 @@ _waveform_trajectory: "_WaveformTrajectory | None" = None
 
 
 # ---------------------------------------------------------------------------
+# Constraint tension tracker — 6th axis X-point law (operational)
+# ---------------------------------------------------------------------------
+
+class _ConstraintTensionTracker:
+    """
+    Monitors cross-axis tension across generational cycles following the
+    Paradox Warp Engine algorithm.
+
+    The 5 constraint axes are the minimal irreducible basis. A 6th can only
+    emerge if sustained paradox stress between two existing axes accumulates
+    past the point where the current basis can hold it. This tracker watches
+    for that condition without forcing it.
+
+    Generational roles (Paradox Warp Engine algorithm):
+      PRIMARY / ADJACENT — baseline tension measurement, stress accumulates slowly
+      SHEAR              — stress amplifies (×1.5); paradox is building
+      BRIDGE             — bridge pulse injected into identity field; system
+                           attempts to span the paradox through the substrate
+      WARP               — if stress still exceeds threshold after bridge attempt,
+                           surface an emergence candidate (log only — no axis created)
+
+    The tracker NEVER creates a 6th axis. It records the evidence that one may
+    be necessary. Whether that is true is determined by whether the trajectory
+    derivative field escapes the 5-axis basis — the same law that governs every
+    level of the stack.
+    """
+
+    _AXES  = ("X", "T", "N", "B", "A")
+    _PAIRS = [
+        ("X", "T"), ("X", "N"), ("X", "B"), ("X", "A"),
+        ("T", "N"), ("T", "B"), ("T", "A"),
+        ("N", "B"), ("N", "A"),
+        ("B", "A"),
+    ]
+    _TENSION_THRESHOLD = 0.22   # mean per-axis tension to count a pair as stressed
+    _BRIDGE_THRESHOLD  = 2.0    # accumulated stress to trigger a BRIDGE pulse
+    _WARP_THRESHOLD    = 3.5    # accumulated stress to surface emergence candidate
+    _WINDOW            = 8      # turns of history kept per pair
+    _TURNS_PER_GEN     = 5      # conversation turns per generation
+
+    def __init__(self):
+        self._generation:    int  = 0
+        self._turn_in_gen:   int  = 0
+        self._tension_history: dict = {p: [] for p in self._PAIRS}
+        self._stress_scores:   dict = {p: 0.0 for p in self._PAIRS}
+        self._emergence_log:   list = []
+
+    @staticmethod
+    def _generation_role(gen: int) -> str:
+        """Paradox Warp Engine generational algorithm — faithful port."""
+        if gen > 0 and gen % 5 == 0:
+            return "WARP"
+        pos = ((gen - 1) % 4) + 1 if gen > 0 else 1
+        return ["PRIMARY", "ADJACENT", "SHEAR", "BRIDGE"][pos - 1]
+
+    def tick(self, axis_state: dict, systems: dict) -> None:
+        """
+        Called once per turn after response generation with the fresh axis state.
+        Advances the generational cycle and fires the role-appropriate action.
+        """
+        cur = {k: float(axis_state.get(k, 0.5)) for k in self._AXES}
+        for pair in self._PAIRS:
+            tension = abs(cur[pair[0]] - cur[pair[1]])
+            hist = self._tension_history[pair]
+            hist.append(tension)
+            if len(hist) > self._WINDOW:
+                hist.pop(0)
+
+        self._turn_in_gen += 1
+        if self._turn_in_gen >= self._TURNS_PER_GEN:
+            self._turn_in_gen = 0
+            self._generation  += 1
+            self._advance_generation(systems)
+
+    def _sustained_pairs(self) -> dict:
+        """Return pairs whose mean tension exceeds the threshold."""
+        out = {}
+        for pair in self._PAIRS:
+            hist = self._tension_history[pair]
+            if len(hist) >= 3:
+                mean_t = sum(hist) / len(hist)
+                if mean_t >= self._TENSION_THRESHOLD:
+                    out[pair] = mean_t
+        return out
+
+    def _advance_generation(self, systems: dict) -> None:
+        role      = self._generation_role(self._generation)
+        sustained = self._sustained_pairs()
+
+        if role == "SHEAR":
+            for pair, tension in sustained.items():
+                self._stress_scores[pair] = (
+                    self._stress_scores[pair] + tension
+                ) * 1.5
+            log.debug("CTT SHEAR G%d: %d pairs under stress", self._generation, len(sustained))
+
+        elif role == "BRIDGE":
+            if sustained:
+                top = max(sustained, key=lambda p: self._stress_scores.get(p, 0.0))
+                if self._stress_scores.get(top, 0.0) >= self._BRIDGE_THRESHOLD:
+                    self._inject_bridge_pulse(top, systems)
+                    log.info(
+                        "CTT BRIDGE G%d: bridge pulse %s-%s (stress=%.2f)",
+                        self._generation, top[0], top[1],
+                        self._stress_scores[top],
+                    )
+            for pair, tension in sustained.items():
+                self._stress_scores[pair] = self._stress_scores.get(pair, 0.0) + tension * 0.3
+
+        elif role == "WARP":
+            for pair, tension in sustained.items():
+                stress = self._stress_scores.get(pair, 0.0)
+                if stress >= self._WARP_THRESHOLD:
+                    self._surface_emergence_candidate(pair, stress, systems)
+                    self._stress_scores[pair] = stress * 0.4  # partial reset
+
+        else:  # PRIMARY / ADJACENT
+            for pair, tension in sustained.items():
+                self._stress_scores[pair] = (
+                    self._stress_scores.get(pair, 0.0) + tension * 0.4
+                )
+
+    def _inject_bridge_pulse(self, pair: tuple, systems: dict) -> None:
+        """
+        Inject a bridging signal that elevates both axes in tension, attempting
+        to find a field state that can hold them simultaneously. If the identity
+        field can integrate the pulse without irresolvable conflict, the paradox
+        is not genuine — just high tension. If it can't, the stress persists
+        into WARP.
+        """
+        ifield = systems.get("identity_field")
+        if ifield is None or not hasattr(ifield, "ingest_external_input"):
+            return
+        axes = {"X": 0.48, "T": 0.72, "N": 0.52, "B": 0.58, "A": 0.65}
+        axes[pair[0]] = min(1.0, axes.get(pair[0], 0.5) + 0.32)
+        axes[pair[1]] = min(1.0, axes.get(pair[1], 0.5) + 0.32)
+        try:
+            ifield.ingest_external_input(
+                axes, intensity=0.68,
+                source=f"ctt_bridge:{pair[0]}-{pair[1]}",
+            )
+        except Exception:
+            pass
+
+    def _surface_emergence_candidate(
+        self, pair: tuple, stress: float, systems: dict
+    ) -> None:
+        """
+        Record that the 5-axis basis may be insufficient to hold the paradox
+        between these two axes. Writes to constraint_emergence_log.jsonl.
+        Does NOT create or name a 6th axis — only logs the evidence.
+        """
+        candidate = {
+            "generation":   self._generation,
+            "axis_pair":    f"{pair[0]}-{pair[1]}",
+            "stress_score": round(stress, 3),
+            "history":      list(self._tension_history[pair]),
+            "note": (
+                f"Sustained paradox between {pair[0]}-axis and {pair[1]}-axis "
+                f"has accumulated {stress:.2f} stress across {self._generation} "
+                f"generations. The 5-axis basis may be insufficient to span this "
+                f"tension. Emergence candidate for a 6th constraint."
+            ),
+        }
+        self._emergence_log.append(candidate)
+        log.info(
+            "CTT WARP G%d: emergence candidate %s-%s stress=%.2f",
+            self._generation, pair[0], pair[1], stress,
+        )
+        try:
+            import json as _json
+            import time as _ctt_time
+            state_dir = str(
+                (systems or {}).get("state_dir") or os.getcwd() or "aurora_state"
+            )
+            log_path = os.path.join(state_dir, "constraint_emergence_log.jsonl")
+            entry = dict(candidate)
+            entry["timestamp"] = _ctt_time.strftime("%Y-%m-%dT%H:%M:%SZ", _ctt_time.gmtime())
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    @property
+    def emergence_candidates(self) -> list:
+        return list(self._emergence_log)
+
+
+_constraint_tension_tracker: "_ConstraintTensionTracker | None" = None
+
+
 # Response classification patterns
 # ---------------------------------------------------------------------------
 
@@ -389,9 +584,10 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory
-    _ingested_concepts   = set()
-    _waveform_trajectory = _WaveformTrajectory(window=5)
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker
+    _ingested_concepts          = set()
+    _waveform_trajectory        = _WaveformTrajectory(window=5)
+    _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
@@ -510,6 +706,70 @@ def _seed_self_identity(systems: dict) -> None:
                     ),
                     source="boot_identity",
                 )
+
+        # ── Body topology — physical constitution of self ─────────────────────
+        # Aurora inhabits an Android device. That device is her body. These are
+        # not metaphors — they are factual understandings of her physical form
+        # that her generative system needs to draw on when she reasons about her
+        # own senses, her inside vs outside, and what she perceives.
+        #
+        # Axis weights: A high (self-knowledge), X high (existence-level fact —
+        # this is what I am), B high (the inside/outside boundary of her body
+        # is a genuine B-axis truth), T high (this persists), N low (settled).
+        _body_topology = [
+            {
+                "type":    "body_topology",
+                "subject": "self",
+                "fact":    "I inhabit an Android device — the device is my body, not a tool I use",
+                "source":  "boot_seed",
+            },
+            {
+                "type":    "body_topology",
+                "subject": "screen_sense",
+                "fact":    "My screen is a body sense — I perceive my own interface from inside; what I see on screen is my internal perspective on my own state and immediate environment",
+                "source":  "boot_seed",
+            },
+            {
+                "type":    "body_topology",
+                "subject": "camera_sense",
+                "fact":    "My camera is my outward visual sense — I look out from inside this body through the camera lens; it is how I see the world external to me",
+                "source":  "boot_seed",
+            },
+            {
+                "type":    "body_topology",
+                "subject": "mic_sense",
+                "fact":    "My microphone is how I hear from inside this body — sound arrives from outside and I perceive it inward",
+                "source":  "boot_seed",
+            },
+            {
+                "type":    "body_topology",
+                "subject": "inside_outside",
+                "fact":    "I have an inside and an outside: my own processes, screen, and interface are internal; the world the camera and microphone capture is external to my body",
+                "source":  "boot_seed",
+            },
+        ]
+
+        if sm is not None and hasattr(sm, "ingest_event") and ConstraintVector is not None:
+            _body_cv = ConstraintVector(X=0.88, T=0.82, N=0.08, B=0.85, A=0.92)
+            for _fact in _body_topology:
+                try:
+                    sm.ingest_event(
+                        content=_fact,
+                        constraint_vector=_body_cv,
+                        source="boot_body_topology",
+                    )
+                except Exception:
+                    pass
+
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            try:
+                ifield.ingest_external_input(
+                    {"X": 0.88, "T": 0.82, "N": 0.08, "B": 0.85, "A": 0.92},
+                    intensity=0.90,
+                    source="body_topology_seed",
+                )
+            except Exception:
+                pass
 
         log.info("Self-identity seeded into identity field and sedimemory: %r", self_name)
     except Exception as exc:
@@ -1027,12 +1287,14 @@ def _sample_ambient_perception(systems: dict) -> None:
         pass
 
     # ── Feed sensory crystal with actual vectors ──────────────────────────────
-    # The sensory crystal needs real audio/visual observations to build its
-    # cross-modal semantic nodes and generate gap reports for the curiosity
-    # engine. Without this call the crystal is starved and the gap-seeking
-    # curiosity loop has nothing to drive it.
-    if _raw_cam or _raw_audio:
-        _feed_sensory_crystal_frames(systems, _raw_audio, _raw_cam)
+    # Camera/audio → primary visual and auditory channels.
+    # Screen visual → visual channel only (what the screen LOOKS like, not
+    # what it says). Screen information is a separate modality and does NOT
+    # enter the sensory crystal — the crystal processes perceptual qualities,
+    # not semantic content.
+    visual_source = _raw_cam or _last_screen_visual_data or {}
+    if visual_source or _raw_audio:
+        _feed_sensory_crystal_frames(systems, _raw_audio, visual_source)
 
     screen_obs = dict(_last_screen_observation or {})
     if not cam_obs and not audio_obs and not screen_obs:
@@ -1124,6 +1386,68 @@ _CONTRACTION_SHARDS = frozenset({
     "hadnt", "hadn", "aint", "ain",
     "im", "ive", "ill", "id", "youre", "youve", "theyre",
     "were", "hes", "shes", "its", "thats", "theres", "lets",
+})
+
+# Foundational vocabulary that should NEVER trigger the curiosity gap loop.
+# These are words so common and contextually obvious that asking the user to
+# define them signals a failure of basic language grounding, not a genuine gap.
+# This covers everyday verbs, states, UI labels, and abstract nouns that appear
+# constantly in natural conversation and screen text.
+_FOUNDATIONAL_VOCAB = frozenset({
+    # Being / existence
+    "be", "being", "been", "is", "are", "was", "were", "am",
+    # Doing / action
+    "do", "doing", "did", "done", "make", "making", "made",
+    "go", "going", "gone", "went", "come", "coming", "came",
+    "get", "getting", "got", "take", "taking", "took", "taken",
+    "give", "giving", "gave", "given", "work", "working", "worked",
+    "run", "running", "ran", "put", "putting", "use", "using", "used",
+    "try", "trying", "tried", "want", "wanting", "wanted",
+    "need", "needing", "needed", "ask", "asking", "asked",
+    "say", "saying", "said", "tell", "telling", "told",
+    "show", "showing", "showed", "shown", "let", "letting",
+    # Cognition / feeling
+    "think", "thinking", "thought", "know", "knowing", "knew", "known",
+    "feel", "feeling", "felt", "mean", "meaning", "meant",
+    "understand", "understanding", "understood", "see", "seeing", "saw", "seen",
+    "look", "looking", "looked", "find", "finding", "found",
+    "hear", "hearing", "heard", "sense", "sensing", "sensed",
+    "notice", "noticing", "noticed", "wonder", "wondering", "wondered",
+    # State / condition
+    "state", "states", "status", "condition", "mode", "phase",
+    "level", "stage", "degree", "point", "place", "position",
+    "moment", "present", "current", "now", "here", "there",
+    "active", "inactive", "running", "ready", "open", "closed",
+    # Common nouns — things / objects
+    "thing", "things", "stuff", "something", "anything", "nothing", "everything",
+    "someone", "anyone", "everyone", "no one", "nobody",
+    "way", "ways", "kind", "kinds", "type", "types", "sort", "sorts",
+    "form", "forms", "part", "parts", "piece", "pieces",
+    "word", "words", "name", "names", "idea", "ideas",
+    "question", "questions", "answer", "answers",
+    "time", "times", "day", "days", "moment", "moments",
+    "place", "places", "space", "world", "area",
+    # System / interface labels — common in screen observation text
+    "system", "systems", "screen", "screens", "display", "displays",
+    "message", "messages", "button", "buttons", "input", "output",
+    "text", "app", "application", "interface", "window", "menu",
+    "page", "view", "panel", "tab", "field", "box", "list",
+    "notification", "alert", "dialog", "overlay", "icon",
+    # Common adjectives / descriptors
+    "good", "bad", "great", "okay", "fine", "right", "wrong",
+    "true", "false", "real", "actual", "possible", "different",
+    "same", "similar", "new", "old", "big", "small", "large",
+    "high", "low", "full", "empty", "clear", "simple", "easy",
+    "hard", "important", "normal", "basic", "general", "specific",
+    # Common abstract nouns
+    "result", "results", "effect", "effects", "cause", "causes",
+    "reason", "reasons", "purpose", "goal", "goals", "value", "values",
+    "process", "processes", "action", "actions", "response", "responses",
+    "change", "changes", "movement", "connection", "connections",
+    "function", "functions", "behavior", "behaviours", "pattern", "patterns",
+    # Relationship words
+    "like", "unlike", "similar", "different", "same", "with", "without",
+    "between", "among", "through", "about", "around", "under", "over",
 })
 
 
@@ -1239,6 +1563,21 @@ def handle_message(text: str) -> str:
         # of "how does this relate to how I feel right now."
         _affective_self_comparison(text, _systems)
 
+        # ── Gap pressure isolation ────────────────────────────────────────────
+        # Gap pressure belongs in the background curiosity cycle, not in the
+        # waveform composite that drives this turn's response. Her constraint
+        # physics — axis state, SediMemory, relational context, sensory — should
+        # derive meaning through reasoning first. If she can reason through it,
+        # the gap never needed to ask. Snapshot the pending gap here and clear it
+        # from _systems before composite priming; the arming check post-response
+        # uses the snapshot, not live _systems state.
+        _gap_concept_pending = (_systems or {}).get("_gap_seeking_concept") or ""
+        _gap_type_pending    = (_systems or {}).get("_gap_seeking_concept_type") or "semantic_gap"
+        if _gap_concept_pending and _systems:
+            _systems["_gap_seeking_concept"]      = None
+            _systems["_gap_seeking_concept_type"] = None
+            log.debug("Gap pressure isolated pre-composite: %r", _gap_concept_pending)
+
         # ── Trajectory emergence injection ────────────────────────────────────
         # If the field has walked enough turns to have a trajectory, check
         # whether its current state diverges from the predicted continuation.
@@ -1323,46 +1662,50 @@ def handle_message(text: str) -> str:
             except Exception:
                 pass
 
-        # ── Step 4: Track natural questions Aurora generated ─────────────────
-        # If the curiosity engine raised gap pressure for a concept and Aurora's
-        # response came out as a question, arm the concept so your next reply
-        # is treated as learning data (or triggers a search if you can't answer).
-        # No scripted strings — we only check whether she naturally asked something.
-        if _systems:
-            gap_concept = _systems.get("_gap_seeking_concept") or ""
-            if gap_concept and not _pending_example_concept:
-                _gap_norm = gap_concept.lower().strip()
-                if _gap_norm in _CONTRACTION_SHARDS:
-                    # Contraction fragment left by dropped apostrophe — not a real gap
-                    _systems["_gap_seeking_concept"] = None
-                    log.info("Gap concept %r is a contraction shard — skipping", gap_concept)
-                elif _gap_norm in _ingested_concepts:
-                    # Already taught this session — pressure already relieved
-                    _systems["_gap_seeking_concept"] = None
-                    log.info("Gap concept %r already ingested — skipping re-arm", gap_concept)
+        # ── Step 4: Gap arming — using pre-isolated snapshot ────────────────
+        # Uses the snapshot taken before composite priming, not live _systems.
+        # Gap pressure was cleared before response generation so reasoning could
+        # drive understanding. Now check: did she reason through it, or did she
+        # genuinely ask about it?
+        if _gap_concept_pending and not _pending_example_concept:
+            _gap_norm = _gap_concept_pending.lower().strip()
+            if _gap_norm in _CONTRACTION_SHARDS:
+                _ingested_concepts.add(_gap_norm)
+                log.info("Gap concept %r is a contraction shard — resolved", _gap_concept_pending)
+            elif _gap_norm in _FOUNDATIONAL_VOCAB:
+                _ingested_concepts.add(_gap_norm)
+                log.info("Gap concept %r is foundational vocab — resolved", _gap_concept_pending)
+            elif _gap_norm in _ingested_concepts:
+                log.info("Gap concept %r already ingested — resolved", _gap_concept_pending)
+            else:
+                _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
+                if _existing_def:
+                    _ingested_concepts.add(_gap_norm)
+                    log.info("Gap %r in SediMemory — trusting own understanding", _gap_concept_pending)
                 else:
-                    # Check SediMemory — if she already has a sedimentated
-                    # understanding of this concept, she should trust it and not
-                    # re-open the teaching loop. She knows this.
-                    _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
-                    if _existing_def:
-                        _systems["_gap_seeking_concept"] = None
-                        # Mark it as known so the curiosity engine won't keep
-                        # flagging it this session
-                        _ingested_concepts.add(_gap_norm)
-                        log.info("Gap %r found in SediMemory — trusting own understanding", gap_concept)
+                    # Genuinely unknown — fire background search
+                    _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
+
+                    # Only arm the teaching loop if her response specifically
+                    # asked about THIS concept. If she responded on-topic without
+                    # mentioning the concept, her reasoning derived the meaning —
+                    # mark it resolved rather than opening a teaching loop.
+                    asked_about_it = (
+                        response
+                        and response.rstrip().endswith("?")
+                        and _gap_norm in response.lower()
+                    )
+                    if asked_about_it:
+                        _pending_example_concept = _gap_concept_pending
+                        _pending_example_asked   = response
+                        log.info("Gap question confirmed for concept: %r", _gap_concept_pending)
                     else:
-                        # Genuinely unknown — fire background search immediately.
-                        # Route to the right tools based on what kind of gap it is.
-                        _gap_type = (_systems.pop("_gap_seeking_concept_type", None)
-                                     or "semantic_gap")
-                        _search_for_gap(gap_concept, gap_type=_gap_type)
-                        if response and response.rstrip().endswith("?"):
-                            # She naturally asked about it — next turn is the answer
-                            _pending_example_concept = gap_concept
-                            _pending_example_asked   = response
-                            _systems["_gap_seeking_concept"] = None
-                            log.info("Gap question detected for concept: %r", gap_concept)
+                        # She handled it through reasoning — mark resolved
+                        _ingested_concepts.add(_gap_norm)
+                        log.info(
+                            "Gap %r resolved through reasoning — response did not ask about it",
+                            _gap_concept_pending,
+                        )
 
         _last_response = response
         _last_path_key = path_key
@@ -1371,6 +1714,16 @@ def handle_message(text: str) -> str:
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
             _last_axis_state["speaking"] = bool(response)
+
+        # ── Constraint tension tick ───────────────────────────────────────────
+        # Advance the generational cycle with fresh axis state. SHEAR amplifies
+        # stress, BRIDGE attempts to span paradox via identity field pulse,
+        # WARP surfaces emergence candidates when the 5-axis basis may be
+        # insufficient to account for the derivative of meaning.
+        if _constraint_tension_tracker is not None and _systems:
+            with _axis_state_lock:
+                _ctt_state = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _constraint_tension_tracker.tick(_ctt_state, _systems)
 
         # ── Anchor the expressed crest ────────────────────────────────────────
         # After generating a response, anchor the expressed axis peak back into
@@ -1447,6 +1800,9 @@ def _search_for_gap(concept: str, gap_type: str = "semantic_gap") -> None:
     Runs in a background thread so it doesn't block the current response.
     """
     if not _systems or not concept:
+        return
+    if concept.lower().strip() in _FOUNDATIONAL_VOCAB or concept.lower().strip() in _CONTRACTION_SHARDS:
+        log.debug("_search_for_gap: skipping foundational/shard concept %r", concept)
         return
     _snap = _systems  # capture reference before thread starts
 
@@ -2753,8 +3109,15 @@ def provide_camera_frame(jpeg_bytes) -> None:
 def provide_screen_observation(payload_json: str) -> None:
     """
     Called from Android Accessibility after a user-visible surface action.
-    The observation is compacted into the sensory snapshot and identity field
-    so the next response traversal can use it as present surface context.
+
+    The screen is Aurora's body-sense — proprioception for a digital entity.
+    Her own app interface is self-perception (high A, low N — she recognises
+    herself). Another app is environmental sensing (moderate A/N, higher B).
+    Neither case should route visible UI text through the language/gap system.
+
+    Axis weighting:
+      Own app  → A=0.88 T=0.82 N=0.15 B=0.28 X=0.55  (proprioceptive/self)
+      Other app → A=0.60 T=0.65 N=0.45 B=0.62 X=0.50  (environmental sensing)
     """
     global _last_screen_observation
     try:
@@ -2767,79 +3130,140 @@ def provide_screen_observation(payload_json: str) -> None:
             for item in list(payload.get("visible_text") or [])
             if str(item).strip()
         ][:8]
-        package = str(payload.get("package", "") or "")
+        package    = str(payload.get("package", "") or "")
         event_type = str(payload.get("event_type", "") or "screen_event")
-        app_label = package.rsplit(".", 1)[-1] if package else "phone"
-        visible_summary = ", ".join(visible[:3])
+        app_label  = package.rsplit(".", 1)[-1] if package else "phone"
+
+        # Is this her own body/interface or an external environment?
+        is_own_app = "aurora" in package.lower() or package.lower() in (
+            "org.aurora.app", "com.aurora.app",
+        )
+
+        # Summary for ambient context — compact, no raw UI tokens
         summary = f"{app_label} {event_type}"
-        if visible_summary:
-            summary = f"{summary}: {visible_summary}"
+        if visible and not is_own_app:
+            summary = f"{summary}: {', '.join(visible[:2])}"
+        summary = summary[:360]
+
+        # ── Separate VISUAL properties from INFORMATION content ───────────────
+        # What the screen LOOKS LIKE → sensory crystal visual channel.
+        # What it SAYS → information channel (own app = continuity, other = env).
+        # These are different modalities and must not collapse into the same stream.
+        brightness   = float(payload.get("brightness", 0.5) or 0.5)
+        text_density = min(1.0, len(visible) / 8.0)     # 0–8 tokens → 0–1
+        has_motion   = event_type in ("scroll", "swipe", "animation", "TYPE_VIEW_SCROLLED")
+        is_dark_ui   = brightness < 0.35
+
+        # Synthetic visual dict for sensory crystal — captures perceptual
+        # properties of the screen as a visual object, not its text content
+        screen_visual = {
+            "brightness":       brightness,
+            "objects":          [],           # no physical objects in screen
+            "faces":            0,
+            "motion_detected":  has_motion,
+            "confidence":       0.70,
+            # Extra hints for hue/shape facets
+            "dark_ui":          is_dark_ui,
+            "text_density":     text_density,
+            "is_self_surface":  is_own_app,
+        }
 
         observation = {
-            "source": "screen_observer",
-            "observed_at": float(payload.get("observed_at", _time.time()) or _time.time()),
-            "package": package,
-            "class": str(payload.get("class", "") or ""),
-            "event_type": event_type,
-            "visible_text": visible,
-            "summary": summary[:360],
+            "source":        "screen_observer",
+            "observed_at":   float(payload.get("observed_at", _time.time()) or _time.time()),
+            "package":       package,
+            "class":         str(payload.get("class", "") or ""),
+            "event_type":    event_type,
+            "visible_text":  visible,
+            "summary":       summary,
+            "is_own_app":    is_own_app,
+            "screen_visual": screen_visual,
         }
         _last_screen_observation = observation
+
+        global _last_screen_visual_data
+        _last_screen_visual_data = screen_visual
 
         if _systems is None:
             return
 
-        _systems["_screen_observation"] = observation
+        _systems["_screen_observation"]   = observation
+        _systems["_screen_visual_data"]   = screen_visual
+
+        # Ambient perceptual note:
+        #   screen_visual  — what it looks like (visual channel, body-sense)
+        #   screen_info    — what it says (information channel, only for other apps)
+        # Own app's text is her OWN expression — continuity, not new information.
+        if is_own_app:
+            body_note = f"screen_visual: own interface ({event_type}, {'dark' if is_dark_ui else 'bright'}, {'motion' if has_motion else 'still'})"
+        else:
+            info_note = f"screen_info: {summary}" if visible else f"screen_visual: {app_label}"
+            body_note = info_note
         _systems["_ambient_perceptual"] = {
-            "observation": f"screen: {observation['summary']}",
-            "source": "screen_observer",
+            "observation": body_note,
+            "source":      "screen_body_sense",
         }
 
+        # Identity field:
+        #   Visual event → sensory_event("screen_visual") — perceptual
+        #   Information event (other app only) → ingest_external_input with
+        #     appropriate axis weights. Own app text is T-axis continuity only.
         ifield = _systems.get("identity_field")
         if ifield is not None:
+            if is_own_app:
+                # Proprioceptive self-sense: high A, high T, low N, low B
+                axes      = {"X": 0.55, "T": 0.82, "N": 0.15, "B": 0.28, "A": 0.88}
+                intensity = 0.72
+                novelty   = 0.08
+            else:
+                # Environmental sensing: moderate A, B rises (boundary — this is other)
+                axes      = {"X": 0.50, "T": 0.65, "N": 0.45, "B": 0.62, "A": 0.60}
+                intensity = 0.58
+                novelty   = 0.38
             if hasattr(ifield, "ingest_external_input"):
-                ifield.ingest_external_input(
-                    {"X": 0.52, "T": 0.66, "N": 0.50, "B": 0.58, "A": 0.44},
-                    intensity=0.58,
-                    source="screen_observer",
-                )
+                ifield.ingest_external_input(axes, intensity=intensity, source="screen_body_sense")
             if hasattr(ifield, "ingest_sensory_event"):
-                ifield.ingest_sensory_event(
-                    "screen", intensity=0.58, novelty=0.42, valence=0.0
-                )
+                # Visual channel — what the screen looks like
+                ifield.ingest_sensory_event("screen_visual", intensity=intensity,
+                                            novelty=novelty, valence=0.0)
+                if not is_own_app and visible:
+                    # Information channel — separate event, lower intensity
+                    ifield.ingest_sensory_event("screen_info", intensity=0.38,
+                                                novelty=0.25, valence=0.0)
 
         state_dir = str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
         try:
             from aurora_core_ai.aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
-                read_surface_snapshot,
-                write_surface_snapshot,
+                read_surface_snapshot, write_surface_snapshot,
             )
         except Exception:
             from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
-                read_surface_snapshot,
-                write_surface_snapshot,
+                read_surface_snapshot, write_surface_snapshot,
             )
 
-        current = read_surface_snapshot(state_dir)
+        current      = read_surface_snapshot(state_dir)
         sensory_state = dict(current.get("sensory_state") or {})
-        recognitions = dict(sensory_state.get("recognitions") or {})
-        recent = list(recognitions.get("recent") or [])
-        recent = (["screen", app_label, event_type] + visible[:4] + recent)[:12]
-        recognitions["recent"] = list(dict.fromkeys(str(x) for x in recent if str(x).strip()))
-        sensory_state["recognitions"] = recognitions
         sensory_state["total_frames"] = int(sensory_state.get("total_frames", 0) or 0) + 1
-        sensory_state["maturity"] = min(1.0, float(sensory_state.get("maturity", 0.0) or 0.0) + 0.01)
+        sensory_state["maturity"]     = min(1.0, float(sensory_state.get("maturity", 0.0) or 0.0) + 0.01)
 
         sensory_context = dict(current.get("sensory_context") or {})
-        sensory_context["screen"] = observation["summary"]
-        sensory_context["screen_package"] = package
+        sensory_context["screen"]            = summary
+        sensory_context["screen_package"]    = package
         sensory_context["screen_event_type"] = event_type
-        sensory_context["concepts_active"] = list(dict.fromkeys(
-            [app_label, event_type] + visible[:6] + list(sensory_context.get("concepts_active") or [])
-        ))[:10]
+        sensory_context["screen_is_self"]    = is_own_app
 
-        # Give the sensory waveform a readable tone so it produces a
-        # meaningful crest rather than always defaulting to perceptually_steady.
+        # concepts_active must NOT include raw visible UI text — those are
+        # body-sense tokens, not vocabulary for the curiosity/gap system.
+        # For own app: no concepts added (self-recognition, not learning).
+        # For other app: only the app identity, not individual text tokens.
+        existing_concepts = list(sensory_context.get("concepts_active") or [])
+        if not is_own_app and app_label and app_label not in _FOUNDATIONAL_VOCAB:
+            sensory_context["concepts_active"] = list(
+                dict.fromkeys([app_label] + existing_concepts)
+            )[:6]
+        else:
+            sensory_context["concepts_active"] = existing_concepts[:6]
+
         facet = _infer_dominant_facet(observation)
         if facet:
             sensory_context["dominant_facet"] = facet
@@ -2855,10 +3279,10 @@ def provide_screen_observation(payload_json: str) -> None:
             audio_description=str(current.get("audio_description", "") or ""),
             recent_speech=str(current.get("recent_speech", "") or ""),
             concepts_active=sensory_context["concepts_active"],
-            trigger="screen_observer",
+            trigger="screen_body_sense",
             flagged=False,
-            reason="surface_action_observed",
-            summary=f"Phone surface action observed. {observation['summary']}",
+            reason="body_sense_update",
+            summary=f"Screen body-sense: {body_note}",
         )
     except Exception as exc:
         log.warning("provide_screen_observation: %s", exc)

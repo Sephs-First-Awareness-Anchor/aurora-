@@ -12193,6 +12193,20 @@ def _answer_live_sensory_question(
         or ""
     ).strip()
 
+    # Screen-directed: asking about the phone screen / display / interface.
+    # Routes to screen observation data — this is her body-sense / proprioception.
+    screen_query = bool(re.search(
+        r"\bwhat\s+(?:do\s+you\s+see\s+on|is\s+on)\s+(?:the\s+)?(?:phone|screen|display|your\s+screen)\b|"
+        r"\bwhat(?:'s|\s+is)\s+on\s+(?:the\s+)?(?:phone|screen|display|your\s+screen)\b|"
+        r"\bwhat\s+(?:does\s+your|can\s+you\s+see\s+on\s+the)\s+screen\b|"
+        r"\bwhat\s+are\s+you\s+(?:looking\s+at|seeing)\s+on\s+(?:the\s+)?(?:phone|screen|display)\b|"
+        r"\blook\s+at\s+(?:the\s+)?screen\b|"
+        r"\bwhat\s+does\s+(?:the\s+)?(?:screen|phone|display)\s+show\b|"
+        r"\bwhat\s+(?:do|can)\s+you\s+see\s+(?:on\s+)?(?:the\s+)?(?:phone|screen|display)\b",
+        text_low,
+    ))
+    # Camera-directed: asking if she can see the person or what the camera captures.
+    # "do you see me" / "can you see me" / "are you looking at me" → camera.
     visual_query = bool(re.search(
         r"\b(?:can|could|do)\s+you\s+see\s+me\b|"
         r"\b(?:can|could)\s+you\s+tell\s+if\s+you\s+can\s+see\s+me\b|"
@@ -12204,6 +12218,9 @@ def _answer_live_sensory_question(
         r"\b(?:your\s+)?visual\s+system\b",
         text_low,
     ))
+    # Screen query takes priority over generic visual_query for phone/screen context.
+    if screen_query:
+        visual_query = False
     audio_query = bool(re.search(
         r"\b(?:can|could|do)\s+you\s+hear\s+me\b|"
         r"\b(?:can|could)\s+you\s+tell\s+if\s+you\s+can\s+hear\s+me\b|"
@@ -12214,7 +12231,7 @@ def _answer_live_sensory_question(
         r"\bthrough\s+your\s+(?:audio|hearing|microphone|mic)\b",
         text_low,
     ))
-    if not visual_query and not audio_query:
+    if not visual_query and not audio_query and not screen_query:
         return None
 
     if not snapshot:
@@ -12226,6 +12243,10 @@ def _answer_live_sensory_question(
             answer = "I do not have a fresh live camera read right now, so I cannot honestly tell you what I see."
             issue = 'live_visual_grounding_unavailable'
             tags = ['sensory', 'vision', 'grounding']
+        elif screen_query:
+            answer = "I haven't observed my screen yet, so I can't tell you what's on it right now."
+            issue = 'live_screen_grounding_unavailable'
+            tags = ['sensory', 'screen', 'grounding']
         else:
             answer = "I do not have a fresh live audio read right now, so I cannot honestly tell you what I hear."
             issue = 'live_audio_grounding_unavailable'
@@ -12242,6 +12263,39 @@ def _answer_live_sensory_question(
                 intended_effect='prevent stale sensory claims from being presented as live',
                 observed_effect='resolved_partially',
                 tags=tags,
+            ),
+        )
+
+    if screen_query:
+        # Screen is her body-sense / proprioception — she reads from the
+        # screen observation data, not the camera.
+        sensory_context = dict(
+            present.get("sensory_context") or snapshot.get("sensory_context") or {}
+        )
+        screen_summary   = str(sensory_context.get("screen") or "").strip()
+        screen_is_self   = bool(sensory_context.get("screen_is_self", False))
+        screen_pkg       = str(sensory_context.get("screen_package") or "").strip()
+        screen_app_label = screen_pkg.rsplit(".", 1)[-1] if screen_pkg else ""
+
+        if screen_summary and screen_is_self:
+            answer = f"On my own interface right now: {screen_summary}."
+        elif screen_summary:
+            app_part = f" in {screen_app_label}" if screen_app_label else ""
+            answer   = f"On the phone screen{app_part}: {screen_summary}."
+        else:
+            answer = "I have screen observation active but I don't have a clear read of it right now."
+        return (
+            answer,
+            "honest",
+            0.82,
+            _make_quasiarch_runtime_event(
+                target='aurora.dialogue.sensory_grounding',
+                issue='screen_body_sense_query',
+                logic_tier='runtime_orchestration',
+                intervention='screen_observation_answer',
+                intended_effect='answer screen-directed visual questions from body-sense data',
+                observed_effect='resolved_partially',
+                tags=['sensory', 'screen', 'body_sense', 'grounding'],
             ),
         )
 
