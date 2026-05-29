@@ -138,6 +138,7 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     history: list = []
     opener  = _rnd.choice(_TRAINER_OPENERS)
     turn    = 0
+    _prev_reply: str = ""
 
     while _time.time() < deadline and not _training_stop.is_set():
         turn += 1
@@ -146,6 +147,16 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         # Aurora processes the partner's message (full pipeline + re-entry)
         aurora_reply = handle_message(partner_said)
         aurora_reply = aurora_reply or "(no response)"
+
+        # Stuck-phrase guard — if Aurora repeats herself verbatim or near-verbatim
+        # (>80% word overlap with previous turn), mark as no-response so the loop
+        # doesn't feed the same phrase back to the partner and reinforce it.
+        if aurora_reply != "(no response)" and _prev_reply:
+            _r = set(aurora_reply.lower().split())
+            _p = set(_prev_reply.lower().split())
+            if _r and _p and len(_r & _p) / max(len(_r), len(_p)) >= 0.80:
+                aurora_reply = "(no response)"
+        _prev_reply = aurora_reply
 
         # Telemetry snapshot
         lsa_paths = 0
