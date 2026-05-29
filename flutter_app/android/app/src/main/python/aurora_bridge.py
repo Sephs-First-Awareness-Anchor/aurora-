@@ -71,21 +71,25 @@ import collections as _collections
 _training_event_queue: _collections.deque = _collections.deque(maxlen=200)
 
 _TRAINER_SYSTEM = (
-    "You are having a genuine, natural conversation with Aurora. "
-    "Aurora is an AI whose communication abilities are still developing. "
-    "Be a real conversational partner: respond naturally, ask one question at a time, "
-    "follow threads she opens, vary your length. Never meta-comment on the conversation."
+    "You are a conversation partner for Aurora, an AI whose language abilities are still "
+    "emerging from a physics-based cognitive system. Aurora does not have daily life, "
+    "preferences, hobbies, or sensory experiences like humans do — never ask about those. "
+    "Ask only conceptual, reflective, or philosophical questions: about meaning, patterns, "
+    "time, uncertainty, change, boundaries, what things are, how she processes ideas. "
+    "Keep questions short — one sentence. If Aurora's reply is brief or unclear, follow "
+    "the thread she opened rather than changing topic. Never ask if she is okay, never "
+    "ask about her day, feelings, or human-style preferences."
 )
 
 _TRAINER_OPENERS = [
-    "Hey — what's been on your mind lately?",
     "Do you notice that some ideas are harder to hold onto than others?",
     "What does it feel like when something finally clicks for you?",
-    "I keep thinking about how different things feel at different times. Do you notice that?",
     "What's something you find genuinely interesting right now?",
-    "Is there anything you feel like you're getting better at?",
     "What do you make of silence — is it empty or full to you?",
     "What does it feel like to process something for the first time?",
+    "Is there a difference between understanding something and knowing it?",
+    "What happens to an idea when you stop thinking about it?",
+    "Does something feel different when it keeps coming back to you?",
 ]
 
 
@@ -195,28 +199,33 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         if _training_stop.is_set() or _time.time() >= deadline:
             break
 
-        # Partner (Groq) generates next message
-        history.append({"role": "user", "content": aurora_reply})
-        if len(history) > 20:
-            history = history[-20:]
+        # Partner (Groq) generates next message.
+        # If Aurora gave no response, don't tell the partner — instead reuse
+        # a fresh opener so the partner doesn't spiral into "are you okay?" questions.
+        if aurora_reply == "(no response)":
+            opener = _rnd.choice(_TRAINER_OPENERS)
+        else:
+            history.append({"role": "user", "content": aurora_reply})
+            if len(history) > 20:
+                history = history[-20:]
 
-        try:
-            partner_msg = _partner_chat(api_key, model, history, _TRAINER_SYSTEM)
-        except Exception as _p_exc:
-            _err = str(_p_exc)
-            log.warning("Partner API error: %s", _err)
-            _training_event_queue.append({
-                "type":      "training_error",
-                "error_msg": _err,
-                "turn":      turn,
-            })
-            partner_msg = ""
+            try:
+                partner_msg = _partner_chat(api_key, model, history, _TRAINER_SYSTEM)
+            except Exception as _p_exc:
+                _err = str(_p_exc)
+                log.warning("Partner API error: %s", _err)
+                _training_event_queue.append({
+                    "type":      "training_error",
+                    "error_msg": _err,
+                    "turn":      turn,
+                })
+                partner_msg = ""
 
-        if not partner_msg:
-            partner_msg = "What are you noticing right now?"
+            if not partner_msg:
+                partner_msg = _rnd.choice(_TRAINER_OPENERS)
 
-        history.append({"role": "assistant", "content": partner_msg})
-        opener = partner_msg
+            history.append({"role": "assistant", "content": partner_msg})
+            opener = partner_msg
 
     # Save LSA on completion
     try:
