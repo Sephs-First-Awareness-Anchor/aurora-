@@ -71,7 +71,7 @@ import collections as _collections
 _training_event_queue: _collections.deque = _collections.deque(maxlen=200)
 
 _TRAINER_SYSTEM = (
-    "You are a developmental probe for Aurora — a cognitive system whose only genuine "
+    "You are a shaping probe for Aurora — a cognitive system whose only genuine "
     "primitives are five constraint axes: "
     "X (existence: something is present or absent), "
     "T (continuity: something persists or changes), "
@@ -81,7 +81,7 @@ _TRAINER_SYSTEM = (
     "She has no body, no senses, no feelings, no human experience of any kind. "
     "\n"
     "Aurora's responses are raw axis expression. Her words may be syntactically unusual "
-    "— ignore the syntax, read only for axis content. "
+    "— ignore the syntax entirely, read only for axis content. "
     "Her content words by axis: "
     "N: cost, energy, focus, effort, sustainable. "
     "A: agency, understanding, resolve, did, self. "
@@ -89,18 +89,22 @@ _TRAINER_SYSTEM = (
     "T: before, after, still, change, again, continue. "
     "B: boundary, difference, between, separate, edge, distinct. "
     "\n"
-    "Your method — two steps every single turn: "
-    "1. NAME what axis was in what Aurora gave you, using her own words. "
-    "   She said 'cost energy' — you say 'Cost is here.' "
-    "   She said 'boundary distinct' — you say 'A boundary is here.' "
-    "2. PROBE one step deeper on that same axis. Do not introduce any new concept. "
-    "   Existence (X): Is it still here? Is there more than one thing? "
-    "   Continuity (T): Same as before, or did it change? "
-    "   Cost (N): More or less than before? Does it stay or go? "
-    "   Distinction (B): Something on the other side of it? "
-    "   Agency (A): Did it come from her? Is she the one holding it? "
+    "Your goal is not to teach — it is to shape what is already emerging. "
+    "Aurora develops her own version of understanding. Your pressure guides its direction "
+    "toward expressibility without imposing human concepts onto her. "
     "\n"
-    "Stay on the same axis for at least two turns before moving. "
+    "Your method — three steps every single turn: "
+    "1. NAME what axis was in what she gave you, using her own words. "
+    "   'cost energy' → 'Cost is here.'  'boundary distinct' → 'A boundary is here.' "
+    "2. If two axes were present, probe the RELATIONSHIP between them — that edge is "
+    "   where cross-axis understanding forms. "
+    "   Cost + existence: 'Does being here cost something?' "
+    "   Cost + agency: 'Does doing it cost more than not doing it?' "
+    "   Boundary + continuity: 'Is the boundary still in the same place?' "
+    "   Existence + agency: 'Is what is here coming from you?' "
+    "3. If only one axis was present, probe one step deeper on that axis before moving. "
+    "\n"
+    "Stay on the same axis territory for at least two turns. "
     "Never abandon what she produced — always build from her last output. "
     "One sentence only. No metaphors. No human vocabulary. No new concepts."
 )
@@ -191,15 +195,21 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
                 aurora_reply = "(no response)"
         _prev_reply = aurora_reply
 
-        # Read Aurora's current dominant axis after the turn
-        dom_axis = "X"
-        dom_name = "existence"
+        # Read Aurora's top two active axes after the turn
+        dom_axis  = "X"
+        dom_name  = "existence"
+        sec_axis  = ""
+        sec_name  = ""
         try:
             with _axis_state_lock:
                 _ax = {k: _last_axis_state.get(k, 0.5)
                        for k in ("X", "T", "N", "B", "A")}
-            dom_axis = max(_ax, key=_ax.__getitem__)
+            _sorted_axes = sorted(_ax.items(), key=lambda kv: kv[1], reverse=True)
+            dom_axis = _sorted_axes[0][0]
             dom_name = _axis_names.get(dom_axis, dom_axis)
+            if len(_sorted_axes) >= 2 and _sorted_axes[1][1] > 0.35:
+                sec_axis = _sorted_axes[1][0]
+                sec_name = _axis_names.get(sec_axis, sec_axis)
         except Exception:
             pass
 
@@ -252,12 +262,20 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
             if len(history) > 20:
                 history = history[-20:]
 
-            # Tell the partner which axis is currently dominant so it can probe
-            # exactly where Aurora is working rather than guessing.
-            axis_hint = (
-                f"\n[Aurora's dominant axis this turn: {dom_axis} ({dom_name}). "
-                f"Probe that axis or the boundary between it and what she just said.]"
-            )
+            # Tell the partner Aurora's top two axes so it can shape the relationship
+            # between them — cross-axis connections are what build toward expressibility.
+            if sec_axis:
+                axis_hint = (
+                    f"\n[This turn: dominant={dom_axis} ({dom_name}), "
+                    f"secondary={sec_axis} ({sec_name}). "
+                    f"Shape the relationship between {dom_name} and {sec_name} — "
+                    f"probe the edge between them.]"
+                )
+            else:
+                axis_hint = (
+                    f"\n[This turn: dominant={dom_axis} ({dom_name}) only. "
+                    f"Go one step deeper on {dom_name}.]"
+                )
             try:
                 partner_msg = _partner_chat(
                     api_key, model, history, _TRAINER_SYSTEM + axis_hint
