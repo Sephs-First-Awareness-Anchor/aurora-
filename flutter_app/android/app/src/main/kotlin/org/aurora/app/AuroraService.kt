@@ -108,6 +108,40 @@ class AuroraService : Service() {
                 } catch (_: Exception) {}
             }
         }
+
+        fun startTraining(apiKey: String, model: String, nTurns: Int, callback: (String) -> Unit) {
+            scope?.launch {
+                val result = try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("start_training", apiKey, model, nTurns)
+                        .toString()
+                } catch (e: Exception) { "error: ${e.message}" }
+                withContext(Dispatchers.Main) { callback(result) }
+            }
+        }
+
+        fun stopTraining() {
+            scope?.launch(Dispatchers.IO) {
+                try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("stop_training")
+                } catch (_: Exception) {}
+            }
+        }
+
+        fun getTrainingStatus(callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("get_training_status")
+                        .toString()
+                } catch (_: Exception) { "{\"active\":false,\"turn\":0,\"total\":0}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
     }
 
     override fun onCreate() {

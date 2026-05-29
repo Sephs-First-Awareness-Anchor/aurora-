@@ -62,6 +62,148 @@ _last_screen_visual_data: dict = {}
 # Curiosity session control
 _curiosity_session_active = threading.Event()
 
+# ── Conversation training ─────────────────────────────────────────────────────
+_training_active: bool = False
+_training_stop   = threading.Event()
+_training_status: dict = {"active": False, "turn": 0, "total": 0, "lsa_paths": 0, "avg_n_cost": 1.0}
+
+_TRAINER_SYSTEM = (
+    "You are having a genuine, natural conversation with Aurora. "
+    "Aurora is an AI whose communication abilities are still developing. "
+    "Be a real conversational partner: respond naturally, ask one question at a time, "
+    "follow threads she opens, vary your length. Never meta-comment on the conversation."
+)
+
+_TRAINER_OPENERS = [
+    "Hey — what's been on your mind lately?",
+    "Do you notice that some ideas are harder to hold onto than others?",
+    "What does it feel like when something finally clicks for you?",
+    "I keep thinking about how different things feel at different times. Do you notice that?",
+    "What's something you find genuinely interesting right now?",
+    "Is there anything you feel like you're getting better at?",
+    "What do you make of silence — is it empty or full to you?",
+    "What does it feel like to process something for the first time?",
+]
+
+
+def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
+    """Call Gemini REST API using requests (no SDK needed)."""
+    import requests as _req
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{model}:generateContent?key={api_key}"
+    )
+    payload: dict = {
+        "system_instruction": {"parts": [{"text": system}]},
+        "contents": history,
+        "generationConfig": {"maxOutputTokens": 120, "temperature": 0.9},
+    }
+    try:
+        r = _req.post(url, json=payload, timeout=30)
+        r.raise_for_status()
+        return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except Exception as exc:
+        log.warning("Gemini API error: %s", exc)
+        return ""
+
+
+def _training_loop(api_key: str, model: str, n_turns: int) -> None:
+    """Background thread: run n_turns of AI-driven conversation training."""
+    global _training_active, _training_status
+    import random as _rnd
+
+    _training_active = True
+    _training_status = {"active": True, "turn": 0, "total": n_turns, "lsa_paths": 0, "avg_n_cost": 1.0}
+    log.info("Training started: model=%s turns=%d", model, n_turns)
+
+    history: list = []
+    opener = _rnd.choice(_TRAINER_OPENERS)
+
+    for turn in range(1, n_turns + 1):
+        if _training_stop.is_set():
+            break
+
+        # Aurora processes the partner's message (full pipeline + re-entry)
+        aurora_reply = handle_message(opener)
+        aurora_reply = aurora_reply or "(no response)"
+
+        # Update status
+        lsa_paths = 0
+        avg_cost  = 1.0
+        try:
+            lf = (_systems or {}).get("language_field")
+            if lf and hasattr(lf, "_lsa") and lf._lsa:
+                lsa_paths = len(lf._lsa)
+                avg_cost  = sum(e.n_cost for e in lf._lsa.values()) / lsa_paths
+        except Exception:
+            pass
+
+        _training_status = {
+            "active":    True,
+            "turn":      turn,
+            "total":     n_turns,
+            "lsa_paths": lsa_paths,
+            "avg_n_cost": round(avg_cost, 3),
+        }
+        log.debug("Training turn %d/%d | LSA=%d avg_cost=%.3f", turn, n_turns, lsa_paths, avg_cost)
+
+        if _training_stop.is_set():
+            break
+
+        # Partner generates next message
+        history.append({"role": "user",  "parts": [{"text": aurora_reply}]})
+        if len(history) > 20:
+            history = history[-20:]
+
+        partner_msg = _gemini_chat(api_key, model, history, _TRAINER_SYSTEM)
+        if not partner_msg:
+            partner_msg = "What are you noticing right now?"
+
+        history.append({"role": "model", "parts": [{"text": partner_msg}]})
+        opener = partner_msg
+
+    # Save LSA on completion
+    try:
+        lf = (_systems or {}).get("language_field")
+        if lf and hasattr(lf, "_save_lsa"):
+            lf._save_lsa()
+    except Exception:
+        pass
+
+    _training_active = False
+    _training_status["active"] = False
+    log.info("Training complete: %d turns | LSA=%d avg_cost=%.3f",
+             _training_status["turn"], _training_status["lsa_paths"], _training_status["avg_n_cost"])
+
+
+def start_training(api_key: str, model: str = "gemini-2.5-flash", n_turns: int = 200) -> str:
+    """Start AI conversation training. Returns 'started' or 'already_running'."""
+    global _training_stop
+    if _training_active:
+        return "already_running"
+    if not api_key or not api_key.strip():
+        return "error: no api key"
+    _training_stop.clear()
+    t = threading.Thread(
+        target=_training_loop,
+        args=(api_key.strip(), model.strip() or "gemini-2.5-flash", max(1, int(n_turns))),
+        daemon=True,
+        name="aurora_training",
+    )
+    t.start()
+    return "started"
+
+
+def stop_training() -> None:
+    """Signal the training loop to stop after the current turn."""
+    _training_stop.set()
+
+
+def get_training_status() -> str:
+    """Return current training status as JSON string."""
+    import json as _json
+    return _json.dumps(_training_status)
+
 # Proactive / autonomous expression
 # Aurora runs the full waveform pipeline on her own schedule and delivers
 # whatever the conscious crest produces — no user message required.

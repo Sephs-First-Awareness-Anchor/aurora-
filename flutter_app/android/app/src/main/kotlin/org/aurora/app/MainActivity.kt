@@ -161,6 +161,20 @@ class MainActivity : FlutterActivity() {
                         )
                         result.success(null)
                     }
+                    "startTraining" -> {
+                        val apiKey = call.argument<String>("apiKey") ?: ""
+                        val model  = call.argument<String>("model")  ?: "gemini-2.5-flash"
+                        val turns  = call.argument<Int>("turns")     ?: 200
+                        AuroraService.startTraining(apiKey, model, turns) { reply ->
+                            runOnUiThread { result.success(reply) }
+                        }
+                    }
+                    "stopTraining"      -> { AuroraService.stopTraining(); result.success(null) }
+                    "getTrainingStatus" -> {
+                        AuroraService.getTrainingStatus { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     else             -> result.notImplemented()
                 }
             }

@@ -103,4 +103,26 @@ class AuroraBridge {
   /// the app was backgrounded.  Call this in onResume.
   static Future<bool> consumeOverlayTap() async =>
       await _channel.invokeMethod<bool>('consumeOverlayTap') ?? false;
+
+  // ── Conversation training ─────────────────────────────────────────────────
+
+  static Future<String> startTraining({
+    required String apiKey,
+    String model = 'gemini-2.5-flash',
+    int turns = 200,
+  }) async {
+    final result = await _channel.invokeMethod<String>(
+      'startTraining',
+      {'apiKey': apiKey, 'model': model, 'turns': turns},
+    );
+    return result ?? 'error';
+  }
+
+  static Future<void> stopTraining() =>
+      _channel.invokeMethod('stopTraining');
+
+  static Future<Map<String, dynamic>> getTrainingStatus() async {
+    final json = await _channel.invokeMethod<String>('getTrainingStatus') ?? '{}';
+    return _parseEvent(json);
+  }
 }
