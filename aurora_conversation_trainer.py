@@ -1,17 +1,21 @@
 """
 aurora_conversation_trainer.py
 
-Train Aurora's communication mechanics through simulated conversation with Claude.
+Train Aurora's communication mechanics through simulated conversation with an LLM.
 
 Every turn exercises the full language field pipeline:
   - Language field ignition → proto-language extraction → crossing path selection
   - SIC → MultiDraft candidate generation
   - Re-entry loop → LSA n_cost/b_gate learning + SentenceComposer pattern absorption
 
+Supported providers (set via --provider or AURORA_TRAINER_PROVIDER env var):
+  gemini   — Google Gemini Flash (free tier). Set GEMINI_API_KEY.
+  openai   — OpenAI. Set OPENAI_API_KEY.
+
 Usage:
     python aurora_conversation_trainer.py --turns 200
+    python aurora_conversation_trainer.py --duration 60 --provider gemini
     python aurora_conversation_trainer.py --turns 500 --state-dir /path/to/aurora_state
-    python aurora_conversation_trainer.py --duration 60   # 60 minutes
 """
 
 from __future__ import annotations
@@ -32,13 +36,69 @@ for _p in (_ROOT, _CORE, _MANIFOLD):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-# ── Anthropic client ──────────────────────────────────────────────────────────
+# ── LLM provider ─────────────────────────────────────────────────────────────
 
-try:
-    import anthropic
-except ImportError:
-    print("anthropic package not found — install with: pip install anthropic")
+def _make_partner(provider: str):
+    """Return a callable(history, system) -> str for the chosen provider."""
+    provider = provider.lower().strip()
+
+    if provider == "gemini":
+        try:
+            import google.generativeai as genai  # type: ignore
+        except ImportError:
+            print("google-generativeai not found — install with: pip install google-generativeai")
+            sys.exit(1)
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        if not api_key:
+            print("Set GEMINI_API_KEY (or GOOGLE_API_KEY) before running.")
+            sys.exit(1)
+        genai.configure(api_key=api_key)
+        _model = genai.GenerativeModel(
+            model_name="gemini-2.0-flash",
+            system_instruction=_PARTNER_SYSTEM,
+        )
+
+        def _gemini_call(history: list[dict], _system: str) -> str:
+            # Gemini uses role="user"/"model" alternating
+            gemini_hist = []
+            for m in history:
+                role = "user" if m["role"] == "user" else "model"
+                gemini_hist.append({"role": role, "parts": [m["content"]]})
+            # Must start with user turn
+            if not gemini_hist or gemini_hist[0]["role"] != "user":
+                return "What are you noticing right now?"
+            chat = _model.start_chat(history=gemini_hist[:-1])
+            resp = chat.send_message(gemini_hist[-1]["parts"][0])
+            return resp.text.strip()
+
+        return _gemini_call
+
+    if provider == "openai":
+        try:
+            from openai import OpenAI  # type: ignore
+        except ImportError:
+            print("openai not found — install with: pip install openai")
+            sys.exit(1)
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            print("Set OPENAI_API_KEY before running.")
+            sys.exit(1)
+        _client = OpenAI(api_key=api_key)
+
+        def _openai_call(history: list[dict], system: str) -> str:
+            msgs = [{"role": "system", "content": system}] + history
+            resp = _client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=msgs,
+                max_tokens=120,
+            )
+            return resp.choices[0].message.content.strip()
+
+        return _openai_call
+
+    print(f"Unknown provider '{provider}'. Choose: gemini, openai")
     sys.exit(1)
+
 
 # ── Conversation partner prompt ───────────────────────────────────────────────
 
@@ -181,13 +241,13 @@ def _aurora_turn(systems: dict, user_text: str) -> str:
 
 def run_training(
     systems: dict,
+    partner_fn,
     n_turns: int = 200,
     duration_minutes: float = 0.0,
     verbose: bool = True,
 ) -> None:
     import random
 
-    client = anthropic.Anthropic()
     history: list[dict] = []
 
     deadline = time.time() + duration_minutes * 60 if duration_minutes > 0 else None
@@ -251,16 +311,10 @@ def run_training(
             history = history[-20:]
 
         try:
-            msg = client.messages.create(
-                model="claude-haiku-4-5-20251001",
-                max_tokens=120,
-                system=_PARTNER_SYSTEM,
-                messages=history,
-            )
-            opening = msg.content[0].text.strip()
+            opening = partner_fn(history, _PARTNER_SYSTEM)
             history.append({"role": "assistant", "content": opening})
         except Exception as exc:
-            print(f"  [warn] Claude API error: {exc} — using fallback")
+            print(f"  [warn] partner API error: {exc} — using fallback")
             opening = "What does that feel like from the inside?"
 
     # Final LSA report
@@ -294,9 +348,17 @@ def main() -> None:
     parser.add_argument("--duration", type=float, default=0.0, help="Duration in minutes (overrides --turns)")
     parser.add_argument("--state-dir", type=str, default="", help="Aurora state directory")
     parser.add_argument("--quiet", action="store_true", help="Suppress per-turn output")
+    parser.add_argument(
+        "--provider", type=str,
+        default=os.environ.get("AURORA_TRAINER_PROVIDER", "gemini"),
+        help="LLM provider for conversation partner: gemini (default) or openai",
+    )
     args = parser.parse_args()
 
     state_dir = args.state_dir or os.path.join(_CORE, "aurora_state")
+
+    print(f"Provider: {args.provider}")
+    partner_fn = _make_partner(args.provider)
 
     print("Booting Aurora...")
     try:
@@ -310,6 +372,7 @@ def main() -> None:
 
     run_training(
         systems,
+        partner_fn,
         n_turns=args.turns,
         duration_minutes=args.duration,
         verbose=not args.quiet,
