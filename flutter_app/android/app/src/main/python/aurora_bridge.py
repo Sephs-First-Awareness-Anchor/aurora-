@@ -328,6 +328,27 @@ class _ConstraintTensionTracker:
             "CTT WARP G%d: emergence candidate %s-%s stress=%.2f",
             self._generation, pair[0], pair[1], stress,
         )
+
+        # Feed the warp paradox back into the identity field. Sustained paradox
+        # between two axes is the strongest internally-generated novelty signal
+        # Aurora's system can produce — it should influence waveform emission,
+        # not just sit in a log. Both axes under tension are amplified; N carries
+        # the paradox energy because novelty pressure IS the driver of emergence.
+        ifield = systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            _scale = min(1.0, stress / self._WARP_THRESHOLD)
+            _warp_axes = {"X": 0.50, "T": 0.55, "N": 0.65 + _scale * 0.25, "B": 0.62, "A": 0.58}
+            _warp_axes[pair[0]] = min(1.0, 0.55 + _scale * 0.38)
+            _warp_axes[pair[1]] = min(1.0, 0.55 + _scale * 0.38)
+            try:
+                ifield.ingest_external_input(
+                    _warp_axes,
+                    intensity=0.72,
+                    source=f"ctt_warp:{pair[0]}-{pair[1]}",
+                )
+            except Exception:
+                pass
+
         try:
             import json as _json
             import time as _ctt_time
@@ -1644,6 +1665,22 @@ def handle_message(text: str) -> str:
                                 "Trajectory emergence: T=%.2f N=%.2f B=%.2f",
                                 _em["T"], _em["N"], _em["B"],
                             )
+                except Exception:
+                    pass
+
+        # Also inject the trajectory's predicted next state as gentle forward
+        # momentum. The divergence injection above fires only on anomaly;
+        # this fires every turn to keep the field moving in its established
+        # direction rather than resetting to resting state between turns.
+        if _waveform_trajectory is not None and _waveform_trajectory.has_trajectory:
+            _ifield_m = _systems.get("identity_field")
+            if _ifield_m is not None:
+                try:
+                    _predicted = _waveform_trajectory._predict()
+                    if _predicted is not None:
+                        _ifield_m.ingest_external_input(
+                            _predicted, intensity=0.20, source="trajectory_momentum"
+                        )
                 except Exception:
                     pass
 

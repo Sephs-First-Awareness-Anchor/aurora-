@@ -21420,6 +21420,38 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     except Exception:
         pass
 
+    # ── Fix 1: Feed utterance axes into identity field substrate ──────────────
+    # Without this the waveforms sample the pre-turn resting state; with it
+    # they sample a field that has absorbed the semantic shape of what was said.
+    # Axis projection already ran → _axis_activation carries the utterance signal.
+    try:
+        _ifield_u = systems.get("identity_field")
+        if _ifield_u is not None and hasattr(_ifield_u, "ingest_external_input") and _axis_activation:
+            _ifield_u.ingest_external_input(
+                _axis_activation,
+                intensity=0.65,
+                source="user_utterance",
+            )
+    except Exception:
+        pass
+
+    # ── Fix 2: Language field ignition + proto-language extraction ────────────
+    # Run ignition now that the field carries the utterance signal. Calling
+    # extract_proto_language() sets lf._last_proto to this turn's geometry so
+    # the mandatory re-entry loop measures fidelity against THIS turn, not the
+    # previous one. The ignition result is stored in systems for inspection.
+    try:
+        _lf_ign = systems.get("language_field")
+        if _lf_ign is not None and hasattr(_lf_ign, "ignition_check"):
+            _ign_result = _lf_ign.ignition_check()
+            systems["_language_ignition"] = _ign_result
+            if hasattr(_lf_ign, "extract_proto_language"):
+                _lf_ign.extract_proto_language(
+                    user_text=_raw_user_text, source="comprehension"
+                )
+    except Exception:
+        pass
+
     _native_meaning_obj = _build_native_meaning(
         _raw_user_text,
         _parsed_intent,
