@@ -1078,6 +1078,8 @@ def _sanitize_response(response: str, user_text: str) -> str:
        replace with the correct answer — the user's voice WAS heard via STT.
     3. Remove bare "audio/camera feed offline" sentences that leaked from the
        sensory-grounding handler when the ambient background monitor isn't running.
+    4. Strip internal language templates that escaped the surface boundary.
+    5. Echo guard — suppress verbatim or near-verbatim reflections of user input.
     """
     if not response:
         return response
@@ -1096,6 +1098,21 @@ def _sanitize_response(response: str, user_text: str) -> str:
     # 4. Strip internal language templates that escaped the surface boundary
     response = _ACTUALLY_HERE_RE.sub('', response).strip()
     response = _REVISE_FRAMING_RE.sub('', response).strip()
+
+    # 5. Echo guard — strip verbatim or near-verbatim echoes of user input
+    if response and user_text:
+        _r_low = response.strip().lower().rstrip('.!?,')
+        _u_low = user_text.strip().lower().rstrip('.!?,')
+        if _r_low == _u_low:
+            log.debug("Echo guard: verbatim echo suppressed")
+            return ""
+        _r_words = set(re.findall(r'[a-z]{3,}', response.lower()))
+        _u_words = set(re.findall(r'[a-z]{3,}', user_text.lower()))
+        if _r_words and _u_words:
+            overlap = len(_r_words & _u_words) / len(_r_words)
+            if overlap > 0.75 and len(_r_words) <= len(_u_words):
+                log.debug("Echo guard: high-overlap echo (%.0f%%) suppressed", overlap * 100)
+                return ""
 
     return response
 

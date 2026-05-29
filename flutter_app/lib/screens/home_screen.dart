@@ -331,14 +331,18 @@ class _HomeScreenState extends State<HomeScreen>
     if (!mounted) return;
 
     setState(() {
-      _msgs.add(ChatMsg(reply, isUser: false));
+      if (reply.isNotEmpty) _msgs.add(ChatMsg(reply, isUser: false));
       _statusTxt = _inConversation ? 'Listening…' : 'Listening for "Aurora"…';
     });
-    _scrollToBottom();
-    if (_quietMode) {
-      _startListening();
+    if (reply.isNotEmpty) {
+      _scrollToBottom();
+      if (_quietMode) {
+        _startListening();
+      } else {
+        _speak(reply);
+      }
     } else {
-      _speak(reply);
+      _startListening();
     }
     _resetConversationWindow();
   }
