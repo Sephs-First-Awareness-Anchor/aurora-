@@ -383,6 +383,20 @@ class _HomeScreenState extends State<HomeScreen>
                      : !_aiReady   ? OrbState.thinking
                      : OrbState.dormant;
 
+    final statusWidget = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: Text(
+        _partialText.isNotEmpty ? _partialText : _statusTxt,
+        key: ValueKey(_partialText.isNotEmpty),
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.6),
+          fontSize: 13,
+          fontStyle: _partialText.isNotEmpty ? FontStyle.italic : FontStyle.normal,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
+
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
@@ -394,43 +408,24 @@ class _HomeScreenState extends State<HomeScreen>
               onQuietToggle: () => _toggleQuietMode(!_quietMode),
               onBackground: isSummoned ? _background : null,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Column(
-                children: [
-                  AuroraOrb(
-                    state:     orbState,
-                    pulse:     _pulseAnim,
-                    axisState: _axisState,
-                    size:      isSummoned ? 100 : 140,
-                    onTap:     isSummoned ? null : _summon,
-                  ),
-                  const SizedBox(height: 12),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Text(
-                      _partialText.isNotEmpty ? _partialText : _statusTxt,
-                      key: ValueKey(_partialText.isNotEmpty),
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
-                        fontSize: 13,
-                        fontStyle: _partialText.isNotEmpty
-                            ? FontStyle.italic : FontStyle.normal,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  if (!_screenObserverReady) ...[
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: _requestScreenObserver,
-                      child: const Text('Enable screen observer'),
-                    ),
-                  ],
-                ],
-              ),
-            ),
             if (isSummoned) ...[
+              // ── Summoned: compact orb at top, chat below ─────────────────
+              AuroraOrb(
+                state:     orbState,
+                pulse:     _pulseAnim,
+                axisState: _axisState,
+                size:      116,   // height ≈ 116 × 1.9 = 220 dp
+              ),
+              const SizedBox(height: 6),
+              statusWidget,
+              if (!_screenObserverReady) ...[
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: _requestScreenObserver,
+                  child: const Text('Enable screen observer'),
+                ),
+              ],
+              const SizedBox(height: 4),
               Expanded(
                 child: ListView.builder(
                   controller: _scrollCtrl,
@@ -440,8 +435,51 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               _InputBar(controller: _textCtrl, onSend: _sendMessage),
-            ] else
-              const Spacer(),
+            ] else ...[
+              // ── Idle: orb fills all available space ──────────────────────
+              // Tap anywhere on the avatar to summon Aurora.
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (_, constraints) {
+                    final h = constraints.maxHeight;
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _summon,
+                      child: Stack(
+                        children: [
+                          AuroraOrb(
+                            state:     orbState,
+                            pulse:     _pulseAnim,
+                            axisState: _axisState,
+                            size:      h * 0.48,
+                            height:    h,
+                          ),
+                          // Status / partial-speech text floats near the bottom
+                          Positioned(
+                            bottom: 28,
+                            left: 0,
+                            right: 0,
+                            child: Center(child: statusWidget),
+                          ),
+                          if (!_screenObserverReady)
+                            Positioned(
+                              bottom: 6,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: TextButton(
+                                  onPressed: _requestScreenObserver,
+                                  child: const Text('Enable screen observer'),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ],
         ),
       ),

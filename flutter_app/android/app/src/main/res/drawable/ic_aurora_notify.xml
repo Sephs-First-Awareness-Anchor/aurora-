@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome notification icon: two aurora-borealis wave bands (white on transparent). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M2,11.5 Q5,7.5 8,11 Q11,14.5 14,10 Q17,5.5 22,9 L22,11.5 Q17,8 14,12.5 Q11,17 8,13.5 Q5,10 2,14 Z"/>
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.60"
+        android:pathData="M2,15.5 Q5,12 8,15 Q11,18 14,14.5 Q17,11 22,13.5 L22,16 Q17,13.5 14,17 Q11,20.5 8,17.5 Q5,14.5 2,18 Z"/>
+</vector>
