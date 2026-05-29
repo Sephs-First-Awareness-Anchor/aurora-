@@ -220,7 +220,7 @@ class AuroraService : Service() {
         return builder
             .setContentTitle("Aurora")
             .setContentText("AI assistant active")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_aurora_notify)
             .setOngoing(true)
             .build()
     }

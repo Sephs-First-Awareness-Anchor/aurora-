@@ -8,6 +8,9 @@ enum OrbState { dormant, listening, thinking, speaking }
 class AuroraOrb extends StatefulWidget {
   final OrbState state;
   final double size;
+  /// Explicit canvas height. When null the widget uses [size] × 1.9.
+  /// Pass the available layout height here for full-screen idle display.
+  final double? height;
   final Animation<double> pulse;
   final Map<String, double> axisState;
   final VoidCallback? onTap;
@@ -18,6 +21,7 @@ class AuroraOrb extends StatefulWidget {
     required this.pulse,
     required this.axisState,
     this.size = 120,
+    this.height,
     this.onTap,
   });
 
@@ -90,7 +94,7 @@ class _AuroraOrbState extends State<AuroraOrb> with SingleTickerProviderStateMix
       onTap: widget.onTap,
       child: SizedBox(
         width: double.infinity,
-        height: widget.size * 1.9,
+        height: widget.height ?? widget.size * 1.9,
         child: AnimatedBuilder(
           animation: Listenable.merge([widget.pulse, _travel]),
           builder: (_, __) => CustomPaint(
