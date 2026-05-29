@@ -822,15 +822,19 @@ class CuriosityEngine:
                         if not existing:
                             self.systems["_gap_seeking_concept"]      = subj
                             self.systems["_gap_seeking_concept_type"] = curiosity.curiosity_type
-                            # Spike the identity field — N-axis (cost of not knowing)
-                            # + A-axis (drive toward resolution) so the field is
-                            # genuinely reaching when it next speaks.
+                            # Spike the identity field with a DIVERGENCE profile:
+                            # B high  — she has a definition and is checking context against it
+                            # T high  — temporal/contextual sensitivity: what is the context here?
+                            # N low   — she is NOT completely lost; she has partial knowledge
+                            # A mod   — engaged but not desperate
+                            # This produces "I know X as Y, but your use seems different — why?"
+                            # rather than "I have no idea what X means, please explain."
                             ifield = self.systems.get("identity_field")
                             if ifield and hasattr(ifield, "ingest_external_input"):
                                 ifield.ingest_external_input(
-                                    {"X": 0.3, "T": 0.3, "N": 0.90, "B": 0.5, "A": 0.80},
-                                    intensity=0.85,
-                                    source=f"gap_pressure:{subj}",
+                                    {"X": 0.55, "T": 0.72, "N": 0.38, "B": 0.85, "A": 0.62},
+                                    intensity=0.72,
+                                    source=f"gap_divergence:{subj}",
                                 )
                 except Exception:
                     pass

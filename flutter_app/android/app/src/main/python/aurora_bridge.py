@@ -1680,46 +1680,40 @@ def handle_message(text: str) -> str:
             except Exception:
                 pass
 
-        # ── Step 4: Gap arming — using pre-isolated snapshot ────────────────
-        # Uses the snapshot taken before composite priming, not live _systems.
-        # Gap pressure was cleared before response generation so reasoning could
-        # drive understanding. Now check: did she reason through it, or did she
-        # genuinely ask about it?
+        # ── Step 4: Gap resolution — silent internet-first, trust own knowledge ─
+        # Behavior contract:
+        #   1. If she already knows it (SediMemory or prior ingestion) → trust it.
+        #   2. If she doesn't know it → fire a silent background internet search,
+        #      mark the concept as ingested immediately (optimistic: the search
+        #      will bring back a definition on its own timeline and deposit it in
+        #      SediMemory for future turns).
+        #   3. Never ask the user to define a word she could look up.
+        #   4. The ONLY time to ask the user about a word is when her understanding
+        #      of it (from memory or the internet) actively contradicts their usage
+        #      in this specific context — that's a B-axis divergence signal, and
+        #      the field surfaces it naturally with a "why/how" question, not a
+        #      definition request. That path is handled by the field itself; we do
+        #      not arm a scripted teaching loop here.
         if _gap_concept_pending and not _pending_example_concept:
             _gap_norm = _gap_concept_pending.lower().strip()
-            if _gap_norm in _CONTRACTION_SHARDS:
+            if _gap_norm in _CONTRACTION_SHARDS or _gap_norm in _FOUNDATIONAL_VOCAB:
                 _ingested_concepts.add(_gap_norm)
-                log.info("Gap concept %r is a contraction shard — resolved", _gap_concept_pending)
-            elif _gap_norm in _FOUNDATIONAL_VOCAB:
-                _ingested_concepts.add(_gap_norm)
-                log.info("Gap concept %r is foundational vocab — resolved", _gap_concept_pending)
+                log.debug("Gap %r is foundational/shard — resolved", _gap_concept_pending)
             elif _gap_norm in _ingested_concepts:
-                log.info("Gap concept %r already ingested — resolved", _gap_concept_pending)
+                log.debug("Gap %r already ingested — resolved", _gap_concept_pending)
             else:
                 _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
                 if _existing_def:
                     _ingested_concepts.add(_gap_norm)
                     log.info("Gap %r in SediMemory — trusting own understanding", _gap_concept_pending)
                 else:
-                    # Genuinely unknown — fire background search
+                    # Not in memory — trigger silent internet search in background.
+                    # Mark as ingested immediately so this word doesn't keep re-firing
+                    # gap pressure. The search will deposit a real definition into
+                    # SediMemory; future turns will find it via _lookup_existing_understanding.
                     _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
-
-                    # Only arm the teaching loop if her response specifically
-                    # asked about THIS concept. If she responded on-topic without
-                    # mentioning the concept, her reasoning derived the meaning —
-                    # mark it resolved rather than opening a teaching loop.
-                    asked_about_it = (
-                        response
-                        and response.rstrip().endswith("?")
-                        and _gap_norm in response.lower()
-                    )
-                    if asked_about_it:
-                        _pending_example_concept = _gap_concept_pending
-                        _pending_example_asked   = response
-                        log.info("Gap question confirmed for concept: %r", _gap_concept_pending)
-                    else:
-                        # She handled it through reasoning — mark resolved
-                        _ingested_concepts.add(_gap_norm)
+                    _ingested_concepts.add(_gap_norm)
+                    log.info("Gap %r — silent search triggered, optimistically ingested", _gap_concept_pending)
                         log.info(
                             "Gap %r resolved through reasoning — response did not ask about it",
                             _gap_concept_pending,
