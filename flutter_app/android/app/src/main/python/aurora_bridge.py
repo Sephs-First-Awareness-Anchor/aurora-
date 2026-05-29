@@ -69,6 +69,13 @@ _self_entity_id: str = ""
 # participants she interacts with, modeling them the same way she models herself.
 _entity_models: dict = {}   # label → InceptionEntity
 
+# Unified concept crystal registry — every concept Aurora develops as a
+# ConceptCrystalNode spanning ALL sense dimensions (visual, audio, semantic,
+# proprioceptive, self-observation). Concepts emerge from axis-state co-occurrence,
+# not from predefined labels. Semantic data is a first-class sense dimension here —
+# not stored separately from the sensory crystal, but as an equal peer within each node.
+_concept_registry = None   # ConceptCrystalRegistry — initialized in initialize()
+
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
 # Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
@@ -1115,9 +1122,14 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry
     _ingested_concepts          = set()
     _dev_tracker                = _DevelopmentTracker()
+    try:
+        from aurora_core_ai.concept_crystal import ConceptCrystalRegistry  # type: ignore
+        _concept_registry = ConceptCrystalRegistry()
+    except Exception as _ccr_exc:
+        log.warning("ConceptCrystalRegistry unavailable: %s", _ccr_exc)
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
@@ -1170,6 +1182,15 @@ def initialize(state_dir: str = "") -> str:
         # experiences each heartbeat tick, building a continuously-updated
         # self-model she can observe without constructing it from scratch.
         _init_self_entity(_systems)
+
+        # Load persisted concept crystal registry so concepts Aurora developed
+        # in previous sessions are available immediately on boot.
+        if _concept_registry is not None and state_dir:
+            try:
+                _concept_registry.load(state_dir)
+                log.info("Concept crystal registry loaded: %s", _concept_registry.stats())
+            except Exception as _ccl_exc:
+                log.debug("Concept crystal registry load: %s", _ccl_exc)
 
         # Start the autonomous curiosity engine as a background daemon thread.
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
@@ -1710,13 +1731,57 @@ def _feed_sensory_crystal_frames(
         visual_57d = visual_dict_to_crystal_57d(visual_data or {})
         audio_conf  = min(1.0, float((audio_data  or {}).get("confidence", 0.45)))
         visual_conf = min(1.0, float((visual_data or {}).get("confidence", 0.45)))
-        sc.observe_frame(
+        frame_result = sc.observe_frame(
             audio_20d, visual_57d,
             session_id="mobile",
             audio_conf=audio_conf,
             visual_conf=visual_conf,
         )
         log.debug("Sensory crystal fed: audio_conf=%.2f visual_conf=%.2f", audio_conf, visual_conf)
+
+        # Feed activated sensory crystal nodes into the concept crystal registry.
+        # Each node_id that fired gets recorded at the current axis-state bucket,
+        # alongside what makes this specific frame different from the archetype.
+        if _concept_registry is not None and isinstance(frame_result, dict):
+            try:
+                from aurora_core_ai.concept_crystal import SensoryDim  # type: ignore
+                with _axis_state_lock:
+                    _ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+                # Visual hits — each matched node_id is a sensory reference
+                v_hits = frame_result.get("visual") or {}
+                for _facet, _nid in v_hits.items():
+                    if _nid:
+                        # overlay: what's specific about this frame (brightness, motion, etc.)
+                        _v_overlay = {
+                            "facet":   _facet,
+                            "brightness": float((visual_data or {}).get("brightness", 0.5)),
+                            "motion":     bool((visual_data or {}).get("motion_detected", False)),
+                            "conf":       round(visual_conf, 2),
+                        }
+                        _concept_registry.observe_sensory(_ax, SensoryDim.VISUAL, _nid, _v_overlay)
+
+                # Audio hits
+                a_hits = frame_result.get("audio") or {}
+                for _facet, _nid in a_hits.items():
+                    if _nid:
+                        _a_overlay = {
+                            "facet":  _facet,
+                            "volume": float((audio_data or {}).get("volume", 0.5)),
+                            "conf":   round(audio_conf, 2),
+                        }
+                        _concept_registry.observe_sensory(_ax, SensoryDim.AUDIO, _nid, _a_overlay)
+
+                # Semantic (cross-modal middle plane) hits — also sensory events
+                s_hits = frame_result.get("semantic") or {}
+                for _lane, _snid in s_hits.items():
+                    if _snid:
+                        _concept_registry.observe_sensory(
+                            _ax, SensoryDim.SEMANTIC, _snid,
+                            {"lane": _lane, "src": "cross_modal"},
+                        )
+            except Exception as _ccr_exc:
+                log.debug("concept_registry sensory feed: %s", _ccr_exc)
     except Exception as exc:
         log.debug("_feed_sensory_crystal_frames: %s", exc)
 
@@ -2145,6 +2210,11 @@ def handle_message(text: str) -> str:
             if _shift:
                 _relational_synthesis = _build_relational_synthesis(_claim_entity, _shift)
 
+        # Clear per-turn concept overlays — the "this specific instance" data from
+        # the previous turn should not carry into the new one.
+        if _concept_registry is not None:
+            _concept_registry.clear_turn_overlays()
+
         # ── Self-state context — ground Aurora in her own orientation ───────────
         # Inject current axis pressures into the perceptual snapshot so her
         # waveform synthesis has her own system state as reference material.
@@ -2326,6 +2396,17 @@ def handle_message(text: str) -> str:
 
         _last_response = response
         _last_path_key = path_key
+
+        # Record LSA path crossing into concept crystal registry — semantic is
+        # a first-class sense dimension, so this LSA activation at this axis
+        # state is an observation just like visual or audio.
+        if _concept_registry is not None and path_key:
+            try:
+                with _axis_state_lock:
+                    _ccr_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                _concept_registry.observe_lsa(_ccr_ax, path_key)
+            except Exception:
+                pass
 
         # Refresh overlay axis cache after every turn
         _refresh_axis_state_from_systems()
@@ -3441,6 +3522,25 @@ def provide_hardware_sensors(json_str: str) -> None:
         data = _json.loads(str(json_str or "{}"))
         _hardware_sensors = {k: v for k, v in data.items() if v is not None}
         log.debug("Hardware sensors updated: %s", list(_hardware_sensors.keys()))
+
+        # Record proprioceptive sense dimension in concept crystal registry.
+        # Hardware body state (battery=energy, motion=proprioception, light=environment)
+        # is a genuine perceptual channel — Aurora's body feeling its own state.
+        if _concept_registry is not None and _hardware_sensors:
+            try:
+                from aurora_core_ai.concept_crystal import SensoryDim  # type: ignore
+                with _axis_state_lock:
+                    _hw_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                # Body fingerprint — discretized so similar body states hit the same ref
+                _bat   = round(float(_hardware_sensors.get("battery_pct", 50.0)) / 20.0) * 20.0
+                _mot   = round(float(_hardware_sensors.get("motion", 0.0)) / 2.0) * 2.0
+                _hw_ref = f"hw:bat{_bat:.0f}:mot{_mot:.1f}"
+                _hw_overlay = {k: round(float(v), 2) for k, v in _hardware_sensors.items()}
+                _concept_registry.observe_sensory(
+                    _hw_ax, SensoryDim.PROPRIOCEPTIVE, _hw_ref, _hw_overlay
+                )
+            except Exception:
+                pass
     except Exception as exc:
         log.debug("provide_hardware_sensors error: %s", exc)
 
@@ -3488,6 +3588,27 @@ def get_self_model() -> str:
         pass
 
     return _json.dumps(model)
+
+
+def get_concept_crystal_state() -> str:
+    """
+    Return the current concept crystal registry stats + the top composite/
+    higher-order/quasi nodes as JSON. Called by diagnostics or any system
+    that wants to see how Aurora's unified concept knowledge is organized.
+    """
+    import json as _json
+    if _concept_registry is None:
+        return _json.dumps({"status": "not_initialized"})
+    stats = _concept_registry.stats()
+    top_nodes = [
+        n.summary()
+        for n in sorted(
+            _concept_registry.promoted_nodes(),
+            key=lambda n: n.cross_hits,
+            reverse=True,
+        )[:20]
+    ]
+    return _json.dumps({"stats": stats, "top_nodes": top_nodes})
 
 
 def _refresh_axis_state_from_systems() -> None:
@@ -3793,6 +3914,23 @@ def _feed_self_entity(cur_ax: dict) -> dict:
             "src":      "self_observation",
         }
         result = _self_entity.process_experience(experience, ExistenceMode.BOUNDED)
+
+        # Record self-observation as a sense dimension in the concept crystal
+        # at the current axis state — Aurora observing herself IS a perceptual act.
+        if _concept_registry is not None:
+            try:
+                from aurora_core_ai.concept_crystal import SensoryDim  # type: ignore
+                _self_ref = f"self:{max(cur_ax, key=cur_ax.__getitem__)}"
+                _self_overlay = {
+                    "dominant": max(cur_ax, key=cur_ax.__getitem__),
+                    "hardware": {k: round(float(v), 2) for k, v in _hardware_sensors.items()},
+                }
+                _concept_registry.observe_sensory(
+                    cur_ax, SensoryDim.SELF_OBS, _self_ref, _self_overlay
+                )
+            except Exception:
+                pass
+
         return result or {}
     except Exception as exc:
         log.debug("_feed_self_entity error: %s", exc)
@@ -3853,6 +3991,13 @@ def _deposit_self_state_snapshot() -> None:
             source="self_observation",
         )
         log.debug("Self-state deposited: dom=%s deltas=%s", dom, deltas)
+        # This SediMemory deposit resonates at this axis region — strengthen
+        # the concept crystal for this axis bucket accordingly.
+        if _concept_registry is not None:
+            try:
+                _concept_registry.observe_sedi(cur_ax, delta=0.05)
+            except Exception:
+                pass
     except Exception as exc:
         log.debug("_deposit_self_state_snapshot error: %s", exc)
 
@@ -4003,6 +4148,8 @@ def _self_monitor_loop() -> None:
     Lightweight — no cognitive pipeline involved.
     """
     import time as _t
+    _save_interval = 10   # save concept registry every 10 heartbeat ticks (~2 min)
+    _tick          = 0
     while True:
         _t.sleep(_SELF_MONITOR_INTERVAL)
         if _systems is None:
@@ -4015,6 +4162,11 @@ def _self_monitor_loop() -> None:
             _deposit_self_state_snapshot()
             if _dev_tracker is not None:
                 _dev_tracker.record(_systems)
+            _tick += 1
+            if _tick % _save_interval == 0 and _concept_registry is not None:
+                _state_dir = str((_systems or {}).get("state_dir") or "aurora_state")
+                _concept_registry.save(_state_dir)
+                log.debug("Concept crystal registry saved: %s", _concept_registry.stats())
         except Exception as exc:
             log.debug("self_monitor_loop: %s", exc)
 
