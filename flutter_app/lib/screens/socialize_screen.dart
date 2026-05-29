@@ -426,7 +426,7 @@ class _TurnBubble extends StatelessWidget {
     final isAurora  = turn.role == 'aurora';
     final bubbleClr = isAurora ? const Color(0xFF2A0A4A) : const Color(0xFF0F1E3A);
     final nameClr   = isAurora ? _purple : const Color(0xFF4A8FD4);
-    final name      = isAurora ? 'Aurora' : 'Gemini';
+    final name      = isAurora ? 'Aurora' : 'Partner';
 
     return Align(
       alignment: isAurora ? Alignment.centerRight : Alignment.centerLeft,
