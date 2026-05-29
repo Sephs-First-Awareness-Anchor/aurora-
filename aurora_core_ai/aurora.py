@@ -19158,29 +19158,12 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
     manifold_dir = os.path.join(os.getcwd(), "aurora_manifold_directory")
     if not os.path.exists(manifold_dir):
         return None, None, None
-
+        
     directory = ManifoldDirectory(manifold_dir)
     tokens = []
     selected_records = []
     systems["_fgae_selected_entries"] = []
-
-    # Pull the language field's crossing path geometry so it shapes FGAE selection.
-    # is_novel=True → unlock marginal-tier entries (exploratory vocabulary reach).
-    # is_metaphor=True → enable perceptual path (metaphoric/proxy word selection).
-    # Both adjust commitment_level downward so the manifold can reach further from
-    # the dominant binding without requiring high emotional intensity or resonance.
-    _lf_gfm = systems.get("language_field")
-    _proto_gfm = getattr(_lf_gfm, "_last_proto", None) if _lf_gfm else None
-    _crossing = {}
-    if _lf_gfm is not None and _proto_gfm is not None and hasattr(_lf_gfm, "select_crossing_path"):
-        try:
-            _crossing = _lf_gfm.select_crossing_path(_proto_gfm) or {}
-        except Exception:
-            pass
-    _crossing_novel    = bool(_crossing.get("is_novel",    False))
-    _crossing_metaphor = bool(_crossing.get("is_metaphor", False))
-    systems["_crossing_path"] = _crossing
-
+    
     # Intent consolidation — reduce to the 1-2 dominant bindings by score.
     # Iterating the full pressure field emits a multi-anchor cluster; selecting
     # the dominant binding(s) produces one communicative act.
@@ -19218,10 +19201,6 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                 commitment_level = intensity
                 if isinstance(binding, dict):
                     commitment_level = max(commitment_level, float(binding.get("score", 0.0) or 0.0))
-                # Novel crossing lowers commitment so the manifold can reach beyond
-                # the dominant reading without needing high intensity or resonance.
-                if _crossing_novel or _crossing_metaphor:
-                    commitment_level = max(0.20, commitment_level * 0.72)
 
                 # FGAE first: the slot, not a template or external dictionary,
                 # selects the word and its grammar affordance.
@@ -19233,8 +19212,8 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                     commitment_level=commitment_level,
                     allow_suppressed=(resonance >= 0.85 and turn_demands_high_register),
                     conditional_available=(resonance >= 0.10 or intensity >= 0.35),
-                    marginal_available=(_crossing_novel or (intensity >= 0.75 and turn_demands_high_register) or resonance >= 0.65),
-                    perceptual_path_available=(_crossing_metaphor or bool(anchors or recognitions or resonance >= 0.40)),
+                    marginal_available=((intensity >= 0.75 and turn_demands_high_register) or resonance >= 0.65),
+                    perceptual_path_available=bool(anchors or recognitions or resonance >= 0.40),
                 )
                 if selected:
                     slot, selected_entry = selected
@@ -19248,8 +19227,8 @@ def _generate_from_manifold(systems: dict, user_text: str, state: any, core_clai
                         commitment_level=commitment_level,
                         allow_suppressed=(resonance >= 0.85 and turn_demands_high_register),
                         conditional_available=(resonance >= 0.10 or intensity >= 0.35),
-                        marginal_available=(_crossing_novel or (intensity >= 0.75 and turn_demands_high_register) or resonance >= 0.65),
-                        perceptual_path_available=(_crossing_metaphor or bool(anchors or recognitions or resonance >= 0.40)),
+                        marginal_available=((intensity >= 0.75 and turn_demands_high_register) or resonance >= 0.65),
+                        perceptual_path_available=bool(anchors or recognitions or resonance >= 0.40),
                     )
                     if selected_entry:
                         word = str(selected_entry.get("word_or_phrase") or "").strip().lower()
