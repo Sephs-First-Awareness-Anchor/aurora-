@@ -194,8 +194,8 @@ class ConstraintEmitter:
                 ip = ctx.i_state_polarities
                 if ip.get("I_CANNOT", 0.0) > 0.5 or ip.get("I_DONOT", 0.0) > 0.5:
                     return self._emit_abstain(ctx)
-                # No content → seek
-                return self._seek_gap(ctx, "both", SlotFrame(), SpeechAct.ABSTAIN)
+                # No content for this question — step aside so comprehension can respond
+                return self._emit_abstain(ctx)
             return self._emit_abstain(ctx)
 
         # 3.5 INVALIDATION fast-path (100% scripted-free)
@@ -241,18 +241,17 @@ class ConstraintEmitter:
             slot_kind = "both" if not entity_ok else "predicate"
             return self._seek_gap(ctx, slot_kind, slots, act)
 
-        # 7b. Acknowledgment with no content on a question → seek instead of "mm"
+        # 7b. Acknowledgment with no content on a question — step aside for comprehension
         if (act == SpeechAct.ACKNOWLEDGMENT
                 and not entity_ok and not predicate_ok
                 and ctx.input_frame and ctx.input_frame.is_question):
-            return self._seek_gap(ctx, "both", slots, act)
+            return self._emit_abstain(ctx)
 
         # 8. Surface assembly (§9)
         text = self._assemble(slots, act, ctx)
         if not text.strip():
-            # CBU Directive Alignment: If we have no words, don't just go silent.
-            # Seek grounded identity for the dominant tension.
-            return self._seek_gap(ctx, "both", slots, act)
+            # Empty assembly — step aside so comprehension can generate the response
+            return self._emit_abstain(ctx)
 
         return EmissionResult(
             text=text,
@@ -724,10 +723,20 @@ class ConstraintEmitter:
         # Priority 1: explicit topic from utterance parser
         if topic and topic.strip():
             unclear = topic.strip()
-            slots.agent = "What do you mean"
-            slots.predicate = "by"
-            slots.entity = f"'{unclear}'"
-            return
+            _tl = unclear.lower()
+            # Don't seek on short words, common vocabulary, or names — the field
+            # should generate from its state, not interrogate the user about basics
+            _trivial = {
+                "bro", "sis", "dude", "mate", "yall", "guys", "man", "fam",
+                "what", "that", "this", "like", "just", "okay", "yeah", "nope",
+                "nah", "huh", "hmm", "sup", "hey", "hi", "yo", "oh", "up",
+                "aurora", "seph", "cael", "me", "you", "us", "them", "it",
+            }
+            if len(_tl) >= 5 and _tl not in _trivial:
+                slots.agent = "What do you mean"
+                slots.predicate = "by"
+                slots.entity = f"'{unclear}'"
+                return
 
         # Priority 2: axis reference in input text ("T axis", "X-axis", etc.)
         # input_text may be "[Conversation so far:\n...\n]\n\n{query}" — strip context prefix
@@ -748,11 +757,26 @@ class ConstraintEmitter:
             _words = _re.findall(r"[A-Za-z_]{3,}", _bare)
             for _w in _words:
                 # SKIP: don't ask what common/basic words mean to prevent recursive definition loops.
-                if len(_w) < 6 or _w.lower() in {
-                    "girl", "boy", "gender", "sex", "good", "bad", "run", "stop",
-                    "fast", "slow", "high", "low", "big", "small", "open", "close",
-                    "name", "app", "thing", "person", "human", "being", "love", "feel",
-                    "totally", "really", "actually", "just", "like", "very",
+                if len(_w) < 5 or _w.lower() in {
+                    # People / relationships
+                    "girl", "boy", "gender", "sex", "person", "human", "being", "friend",
+                    "people", "someone", "anyone", "everyone",
+                    # Common actions / states
+                    "good", "bad", "great", "fine", "okay", "right", "wrong",
+                    "run", "stop", "start", "open", "close", "done", "work",
+                    "fast", "slow", "high", "low", "big", "small", "long", "short",
+                    # Cognition / feeling
+                    "love", "feel", "think", "know", "want", "need", "mean", "said",
+                    "understand", "heard", "sense",
+                    # Filler / discourse
+                    "totally", "really", "actually", "just", "like", "very", "pretty",
+                    "basically", "literally", "honestly", "definitely", "probably",
+                    # Common nouns
+                    "name", "app", "thing", "stuff", "part", "time", "place", "word",
+                    "screen", "text", "message", "button", "input", "system", "state",
+                    "idea", "point", "question", "answer", "reason", "result",
+                    # Aurora's world
+                    "aurora", "field", "wave", "axis", "crest",
                 }:
                     continue
 
