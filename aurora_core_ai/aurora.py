@@ -3628,11 +3628,31 @@ class WorkingMemory:
                     except Exception:
                         ivm_heat = 0.3
 
+                # Let the language field's crossing path geometry shape draft selection.
+                # Novel crossing → EXPLORER mode unlocks Aurora's RAW dialect (Draft 0:
+                # direct from core claim, unstructured, her own voice).
+                # Metaphor crossing → tag the N-axis so SIC knows it's working via proxy.
+                # Default stays GUIDED (STRUCTURED draft) when no crossing is active.
+                _xing_mode = "GUIDED"
+                _lf_rci = systems.get("language_field") if isinstance(systems, dict) else None
+                _proto_rci = getattr(_lf_rci, "_last_proto", None) if _lf_rci else None
+                if _lf_rci is not None and _proto_rci is not None and hasattr(_lf_rci, "select_crossing_path"):
+                    try:
+                        _xing = _lf_rci.select_crossing_path(_proto_rci) or {}
+                        if _xing.get("is_novel") and intent.certainty >= 0.45:
+                            _xing_mode = "EXPLORER"
+                            if "deep_field" not in intent.constraints:
+                                intent.constraints.append("deep_field")
+                        if _xing.get("is_metaphor") and "ax:N" not in intent.constraints:
+                            intent.constraints.append("ax:N")
+                    except Exception:
+                        pass
+
                 draft = evo.multi_draft.generate(
                     intent,
                     candidates,
                     ivm_heat=ivm_heat,
-                    autonomy_mode="GUIDED",
+                    autonomy_mode=_xing_mode,
                     user_verbosity=0.5,
                 )
 
