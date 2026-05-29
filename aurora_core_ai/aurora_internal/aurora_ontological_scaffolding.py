@@ -1275,6 +1275,31 @@ class ResearchStudyMode:
         self.total_definitions_learned = 0
         self.total_relations_discovered = 0
 
+    def teach_concept(self, word: str, definition: str,
+                      synonyms: List[str] = None,
+                      related: List[str] = None) -> bool:
+        """Manually teach Aurora a concept (intentional learning)."""
+        res = ResearchResult(
+            word=word,
+            definitions_found=[{"text": definition, "source": "user_teaching"}],
+            synonyms=synonyms or [],
+            related_words=[{"word": r, "relation": "user_taught", "confidence": 0.8} for r in (related or [])],
+            success=True,
+            source="user_teaching"
+        )
+        # Ensure node exists
+        if not self.web.has_node(word):
+            from aurora_expression_perception import infer_word_role
+            try:
+                role = infer_word_role(word)
+            except Exception:
+                role = "noun"
+            self.web.add_node(word, role, 0.0, meaning="waiting_for_teaching")
+
+        self._integrate_result(word, res)
+        self.cluster_engine.discover_clusters() # Re-cluster
+        return True
+
     def set_fetch_callback(self, callback: Callable[[str], ResearchResult]):
         """
         Set the callback that performs actual internet lookups.
@@ -1851,6 +1876,12 @@ class OntologicalScaffoldingEngine:
         # Bridge state
         self._initialized = False
         self._recent_interaction_contexts = deque(maxlen=24)
+
+    def teach(self, word: str, definition: str,
+              synonyms: List[str] = None,
+              related: List[str] = None) -> bool:
+        """Manually teach a concept (intentional learning)."""
+        return self.research.teach_concept(word, definition, synonyms, related)
 
     # ================================================================
     # INITIALIZATION — Seed the web from L5's lexicon

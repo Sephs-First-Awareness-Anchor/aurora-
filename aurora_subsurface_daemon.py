@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
-from __future__ import annotations
-
-from aurora_daemon import main as run_subsurface
-
-
-if __name__ == "__main__":
-    run_subsurface(runtime_profile="subsurface")
+import sys, os; from pathlib import Path
+_HERE = Path(__file__).resolve().parent; _CORE = _HERE / "aurora_core_ai"
+if str(_CORE) not in sys.path: sys.path.insert(0, str(_CORE))
+from aurora_subsurface_daemon import *

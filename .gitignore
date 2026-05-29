@@ -33,10 +33,6 @@ CrystalZip_Archives/
 *.7z
 
 # Documents (non-Markdown)
-*.pdf
-*.docx
-*.jpg
-*.png
 !flutter_app/android/app/src/main/res/mipmap-*/*.png
 !flutter_app/assets/*.png
 

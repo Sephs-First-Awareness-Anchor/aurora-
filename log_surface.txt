@@ -1,0 +1,20 @@
+[04:00:02] Booting Aurora surface daemon...
+[625MAP] Loaded from /storage/emulated/0/aurora_strata/aurora--main/aurora--main/aurora_state/evo_625_pressure_map.json. Highway: 29 slots.
+[625MAP] Using cached map.
+[L7] Pressure map loaded — 29 highway slots.
+[04:00:04] Surface sensory session started.
+[04:00:04] Surface mic listener started.
+[CAMERA] OpenCV not available
+[MICROPHONE] sounddevice not available
+[04:00:04] Surface hardware started (camera=on, mic=on).
+[04:00:04] Surface camera read empty (hardware capture)
+[SENSORY] Microphone or Recognizer backend is NONE (Hardware: <aurora_expression_perception.HardwareInterface object at 0x7c4d6e2780>, Mic: <aurora_expression_perception.LinuxMicrophone object at 0x7c4d6e2960>) - exiting listen loop
+[04:00:06]   [VOICE] ALT-toggle listener unavailable: pynput unavailable: No module named 'pynput'; evdev unavailable: No module named 'evdev'
+[04:00:06]   [VOICE] Falling back to file-based PTT trigger (voice_trigger.json).
+[04:00:06]   [VOICE] File-based PTT watcher active (voice_trigger.json).
+[04:00:06]   [AMBIENT] Termux Always-On listener started (8s chunks)
+[04:00:28] Surface camera read empty (hardware capture)
+[04:01:28] Surface camera read empty (hardware capture)
+[04:02:57]   [AMBIENT] Termux ambient loop error: Command '['termux-microphone-record', '-f', '/data/data/com.termux/files/home/aurora_ambient_chunk.wav', '-l', '8']' timed out after 12 seconds
+[04:04:55] Shutdown signal received (15).
+[04:04:55] Aurora surface daemon stopped.

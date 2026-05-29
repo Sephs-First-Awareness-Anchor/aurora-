@@ -2055,11 +2055,11 @@ def _build_correction_explanation() -> str:
         category = historical
 
     label = _ERROR_LABELS.get(category, category)
+    # Refined: more native, less diagnostic.
     return (
-        f"Looks like a {label} issue — {description}. "
-        f'The response was: "{snippet}". '
-        f"Was the intent misread, was it a word or phrasing problem, "
-        f"or did I engage with the wrong concept?"
+        f"I think I experienced a {label} mismatch here. "
+        f"My intention with \"{snippet}\" seems to have drifted. "
+        f"Could you help me understand if it was a phrasing issue or if I misread what was needed?"
     )
 
 
@@ -2590,6 +2590,14 @@ def _store_curiosity_report(
     _systems["_pending_autonomous_report"] = "\n".join(report_lines)
     log.info("Curiosity session report stored (%s)", time_str)
 
+    # Proactive outreach: tell the user we're done
+    autonomy = _systems.get("autonomy")
+    if autonomy and hasattr(autonomy, "trigger"):
+        summary = (f"I've finished my curiosity session ({target_str}). "
+                   f"I explored {stats['concepts_explored']} concepts and "
+                   f"settled {stats['settled']} internal tensions.")
+        autonomy.trigger.add_thought(summary)
+
 
 def _infer_dominant_facet(screen_obs: dict) -> str:
     """
@@ -2697,12 +2705,24 @@ def get_proactive_expression() -> str:
 def get_pending_report() -> str:
     """
     Called by AuroraService's polling loop.
-    Returns and clears any completed curiosity session report, or "" if none ready.
+    Returns and clears any completed curiosity session report OR proactive thoughts, or "" if none ready.
     """
     if _systems is None:
         return ""
-    report = (_systems or {}).pop("_pending_autonomous_report", None)
-    return str(report) if report else ""
+    
+    parts = []
+    
+    # 1. Full session reports
+    report = _systems.pop("_pending_autonomous_report", None)
+    if report:
+        parts.append(str(report))
+        
+    # 2. Individual proactive thoughts (speakups, dreams, etc.)
+    thoughts = _systems.pop("_pending_proactive_thoughts", [])
+    if thoughts:
+        parts.extend(thoughts)
+        
+    return "\n\n".join(parts) if parts else ""
 
 
 def set_state(state: str) -> None:

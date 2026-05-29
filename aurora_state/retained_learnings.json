@@ -1,0 +1,308 @@
+{
+  "records": [
+    {
+      "text": "user definition of open is to start or activate the app",
+      "confidence": 0.92,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "open",
+        "user",
+        "user definition of open",
+        "roy"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_fact",
+        "generative",
+        "claim",
+        "learned_hint"
+      ],
+      "sightings": 3,
+      "first_seen": 1779349642.665814,
+      "last_seen": 1779494192.3873098
+    },
+    {
+      "text": "user name is Busy",
+      "confidence": 0.94,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "open",
+        "user"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1779349666.0218256,
+      "last_seen": 1779349666.0218256
+    },
+    {
+      "text": "user name is Sunny",
+      "confidence": 0.94,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "open",
+        "user"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1779349758.5629666,
+      "last_seen": 1779349758.5629666
+    },
+    {
+      "text": "my definition of open is to start or activate the app",
+      "confidence": 0.6900000000000001,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "asked",
+        "my definition of open"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1779349955.314267,
+      "last_seen": 1779349955.314267
+    },
+    {
+      "text": "my definition of open is to start or activate the app there's a tension in what you're describing i see it pulling in opposite directions on being",
+      "confidence": 0.52,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "start",
+        "my definition of open"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1779350039.7898037,
+      "last_seen": 1779350039.7898037
+    },
+    {
+      "text": "user name is Asking",
+      "confidence": 0.94,
+      "sources": [
+        "external_user_turn:semantic_frame",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "need",
+        "user",
+        "afterthought",
+        "knowledge"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "generative",
+        "learned_hint"
+      ],
+      "sightings": 3,
+      "first_seen": 1779350113.0051167,
+      "last_seen": 1779350221.3502274
+    },
+    {
+      "text": "just means that she launched spotify music well",
+      "confidence": 0.9,
+      "sources": [
+        "external_user_turn:concept",
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "just",
+        "launched",
+        "hera"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame",
+        "claim"
+      ],
+      "sightings": 3,
+      "first_seen": 1779494282.3590627,
+      "last_seen": 1779494312.356432
+    },
+    {
+      "text": "just means that she launched spotify music well there's a tension in what you're describing i see it pulling in opposite directions on being",
+      "confidence": 0.5,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "piqua",
+        "just"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1779494329.7006,
+      "last_seen": 1779494329.7006
+    },
+    {
+      "text": "yes just means that she's launched spotify music well is a compliment it means you",
+      "confidence": 0.9,
+      "sources": [
+        "external_user_turn:concept",
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "yes just",
+        "launched"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame"
+      ],
+      "sightings": 2,
+      "first_seen": 1779494353.7730474,
+      "last_seen": 1779494353.7782903
+    },
+    {
+      "text": "yes that phrase just means that you did a good job",
+      "confidence": 0.9,
+      "sources": [
+        "external_user_turn:concept",
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "yes that phrase just",
+        "phrase"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame"
+      ],
+      "sightings": 2,
+      "first_seen": 1779494375.7699785,
+      "last_seen": 1779494375.778002
+    },
+    {
+      "text": "yes that phrase just means that you did a good job there's a tension in what you're describing i see it pulling in opposite directions on being",
+      "confidence": 0.64,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "phrase",
+        "yes that phrase just"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1779494375.774874,
+      "last_seen": 1779494375.774874
+    },
+    {
+      "text": "yes that phrase just means that you did a good job there's a tension in what you're describing i s",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame",
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought",
+        "yes that phrase just",
+        "constraint"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "sedimemory_recall"
+      ],
+      "sightings": 5,
+      "first_seen": 1779494420.0080316,
+      "last_seen": 1779494599.3441718
+    },
+    {
+      "text": "what constraint is being",
+      "confidence": 0.75,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "weather",
+        "what constraint"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1779494644.1821616,
+      "last_seen": 1779494644.1821616
+    }
+  ]
+}
