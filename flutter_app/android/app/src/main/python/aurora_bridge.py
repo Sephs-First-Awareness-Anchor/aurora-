@@ -74,6 +74,87 @@ _SELF_GROUND_INTERVAL: int = 20
 
 
 # ---------------------------------------------------------------------------
+# Waveform trajectory tracker — lowest-level emergence detection
+# ---------------------------------------------------------------------------
+
+class _WaveformTrajectory:
+    """
+    Rolling trajectory tracker at the identity field substrate level.
+
+    Records axis_activation states across turns and detects when the current
+    state diverges from the trajectory's predicted continuation. That divergence
+    IS the emergence signal — something is happening at this level that cannot
+    be inferred from the field's own recent trajectory.
+
+    Starter genetic: T + N + A
+      T — trajectory lives in time; temporal continuity gives it direction
+      N — divergence energy; when the field breaks its trajectory, N carries that
+      A — self-reference anchor; without A this is drift, not her trajectory
+
+    X and B are not seeds — they emerge from the trajectory running:
+      B rises with divergence magnitude (a boundary is being crossed)
+      X rises slowly as the trajectory establishes new stable ground
+    """
+
+    _AXES      = ("X", "T", "N", "B", "A")
+    _THRESHOLD = 0.07   # mean per-axis divergence below which we treat as continuation
+
+    def __init__(self, window: int = 5):
+        self._window = window
+        self._states: list = []
+
+    def record(self, axis_state: dict) -> None:
+        snap = {k: float(axis_state.get(k, 0.5)) for k in self._AXES}
+        self._states.append(snap)
+        if len(self._states) > self._window:
+            self._states.pop(0)
+
+    def _predict(self) -> "dict | None":
+        if len(self._states) < 2:
+            return None
+        deltas = [
+            {k: self._states[i][k] - self._states[i - 1][k] for k in self._AXES}
+            for i in range(1, len(self._states))
+        ]
+        mean_d = {k: sum(d[k] for d in deltas) / len(deltas) for k in self._AXES}
+        last   = self._states[-1]
+        return {k: max(0.0, min(1.0, last[k] + mean_d[k])) for k in self._AXES}
+
+    def emergence_signal(self, current: dict) -> "dict | None":
+        """
+        Compare current field state against predicted trajectory.
+        Returns an axis pulse if divergence exceeds threshold, else None.
+
+        Signal shape: T stable (temporal), N rises with divergence (energy
+        of breaking from trajectory), B rises (boundary being crossed), A
+        stable (self-reference), X rises slowly (new ground being established).
+        """
+        predicted = self._predict()
+        if predicted is None:
+            return None
+        cur  = {k: float(current.get(k, 0.5)) for k in self._AXES}
+        diffs = {k: abs(cur[k] - predicted[k]) for k in self._AXES}
+        mean_div = sum(diffs.values()) / len(diffs)
+        if mean_div < self._THRESHOLD:
+            return None
+        scale = min(1.0, mean_div / 0.25)   # 0.07–0.25 range maps to 0–1
+        return {
+            "X": 0.45 + scale * 0.12,        # X rises slowly — new ground forming
+            "T": 0.80,                         # T constant  — this IS temporal
+            "N": 0.52 + scale * 0.42,         # N steeply   — divergence energy
+            "B": 0.38 + scale * 0.50,         # B rises     — boundary being crossed
+            "A": 0.74,                         # A constant  — self-reference anchor
+        }
+
+    @property
+    def has_trajectory(self) -> bool:
+        return len(self._states) >= 2
+
+
+_waveform_trajectory: "_WaveformTrajectory | None" = None
+
+
+# ---------------------------------------------------------------------------
 # Response classification patterns
 # ---------------------------------------------------------------------------
 
@@ -308,8 +389,9 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts
-    _ingested_concepts = set()   # fresh session — no concepts pre-marked as learned
+    global _systems, _ingested_concepts, _waveform_trajectory
+    _ingested_concepts   = set()
+    _waveform_trajectory = _WaveformTrajectory(window=5)
     _setup_paths()
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
@@ -1157,6 +1239,40 @@ def handle_message(text: str) -> str:
         # of "how does this relate to how I feel right now."
         _affective_self_comparison(text, _systems)
 
+        # ── Trajectory emergence injection ────────────────────────────────────
+        # If the field has walked enough turns to have a trajectory, check
+        # whether its current state diverges from the predicted continuation.
+        # Divergence means something is happening at the substrate level that
+        # the trajectory cannot account for — inject that signal BEFORE composite
+        # priming so all 8 waveforms sample a field already carrying the
+        # emergence energy. Natural propagation: one injection at the bottom,
+        # waveforms carry it upward from there.
+        # Starter genetic is T+N+A: T holds the temporal direction, N carries
+        # the divergence energy, A anchors it as her trajectory not random drift.
+        # B and X emerge from the signal's content — not seeded.
+        if _waveform_trajectory is not None and _waveform_trajectory.has_trajectory:
+            _ifield = _systems.get("identity_field")
+            if _ifield is not None:
+                try:
+                    _aa = getattr(_ifield, "axis_activation", None)
+                    if _aa is not None:
+                        _cur = (
+                            {k: float(_aa.get(k, 0.5)) for k in "XTNBA"}
+                            if isinstance(_aa, dict)
+                            else dict(zip("XTNBA", (float(v) for v in _aa)))
+                        )
+                        _em = _waveform_trajectory.emergence_signal(_cur)
+                        if _em is not None:
+                            _ifield.ingest_external_input(
+                                _em, intensity=0.75, source="trajectory_emergence"
+                            )
+                            log.info(
+                                "Trajectory emergence: T=%.2f N=%.2f B=%.2f",
+                                _em["T"], _em["N"], _em["B"],
+                            )
+                except Exception:
+                    pass
+
         # ── Composite waveform priming ────────────────────────────────────────
         # Pre-condition the identity field — which all 8 waveforms sample — at
         # the composite interference peak of every meaning-generating system:
@@ -1262,6 +1378,25 @@ def handle_message(text: str) -> str:
         # crest just landed rather than decaying to baseline between turns.
         if response:
             _anchor_expressed_crest(_systems)
+
+        # ── Record trajectory state ───────────────────────────────────────────
+        # Snapshot the field's axis_activation AFTER the anchor so the
+        # trajectory buffer captures the stable expressed endpoint for this turn.
+        # Next turn will measure divergence against this recorded state.
+        if _waveform_trajectory is not None and _systems:
+            _traj_ifield = _systems.get("identity_field")
+            if _traj_ifield is not None:
+                try:
+                    _traj_aa = getattr(_traj_ifield, "axis_activation", None)
+                    if _traj_aa is not None:
+                        _traj_state = (
+                            {k: float(_traj_aa.get(k, 0.5)) for k in "XTNBA"}
+                            if isinstance(_traj_aa, dict)
+                            else dict(zip("XTNBA", (float(v) for v in _traj_aa)))
+                        )
+                        _waveform_trajectory.record(_traj_state)
+                except Exception:
+                    pass
 
         # Periodically re-derive and re-pump self-knowledge from actual system
         # patterns so her self-understanding stays current as her sediment and
