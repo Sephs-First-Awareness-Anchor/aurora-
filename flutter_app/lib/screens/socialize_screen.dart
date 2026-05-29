@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../aurora_bridge.dart';
 
@@ -50,40 +49,38 @@ class _SocializeScreenState extends State<SocializeScreen> {
   void _onEvent(Map<String, dynamic> ev) {
     final type = ev['type'] as String? ?? '';
 
-    if (type == 'training_batch') {
-      final raw = ev['batch'] as String? ?? '[]';
-      try {
-        final list = jsonDecode(raw) as List<dynamic>;
-        final newTurns = <_Turn>[];
-        for (final item in list) {
-          final m = item as Map<String, dynamic>;
-          final t = (m['turn'] as num?)?.toInt() ?? 0;
+    if (type == 'training_turn') {
+      final t       = (ev['turn_num']   as int?) ?? 0;
+      final partner = (ev['partner']    as String?) ?? '';
+      final aurora  = (ev['aurora_msg'] as String?) ?? '';
 
-          newTurns.add(_Turn('partner', m['partner'] as String? ?? '', t));
-          newTurns.add(_Turn('aurora',  m['aurora']  as String? ?? '', t));
-
-          // Update telemetry from last event in batch
-          _lsaPaths  = (m['lsa_paths']  as num?)?.toInt() ?? _lsaPaths;
-          _avgNCost  = (m['avg_n_cost'] as num?)?.toDouble() ?? _avgNCost;
-          _turn      = t;
-          _elapsed   = (m['elapsed']    as num?)?.toInt() ?? _elapsed;
-          _totalSecs = (m['total_secs'] as num?)?.toInt() ?? _totalSecs;
-
-          if (m['type'] == 'training_done') _active = false;
+      if (!mounted) return;
+      setState(() {
+        if (partner.isNotEmpty) _turns.add(_Turn('partner', partner, t));
+        if (aurora.isNotEmpty)  _turns.add(_Turn('aurora',  aurora,  t));
+        _lsaPaths  = (ev['lsa_paths']  as int?)    ?? _lsaPaths;
+        _avgNCost  = (ev['avg_n_cost'] as double?)  ?? _avgNCost;
+        _turn      = t;
+        _elapsed   = (ev['elapsed']    as int?)    ?? _elapsed;
+        _totalSecs = (ev['total_secs'] as int?)    ?? _totalSecs;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollCtrl.hasClients) {
+          _scrollCtrl.animateTo(
+            _scrollCtrl.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
         }
-        if (mounted) {
-          setState(() => _turns.addAll(newTurns));
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (_scrollCtrl.hasClients) {
-              _scrollCtrl.animateTo(
-                _scrollCtrl.position.maxScrollExtent,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOut,
-              );
-            }
-          });
-        }
-      } catch (_) {}
+      });
+    } else if (type == 'training_done') {
+      if (!mounted) return;
+      setState(() {
+        _active   = false;
+        _lsaPaths = (ev['lsa_paths']  as int?)    ?? _lsaPaths;
+        _avgNCost = (ev['avg_n_cost'] as double?)  ?? _avgNCost;
+        _turn     = (ev['turn_num']   as int?)    ?? _turn;
+      });
     }
   }
 

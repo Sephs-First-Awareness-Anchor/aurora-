@@ -20,25 +20,39 @@ class AuroraBridge {
   }
 
   static Map<String, dynamic> _parseEvent(String json) {
-    final sourceMatch  = RegExp(r'"source"\s*:\s*"([^"]*)"').firstMatch(json);
-    final typeMatch    = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
-    final textMatch    = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
-    final errorMatch   = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
-    final summaryMatch = RegExp(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final sourceMatch   = RegExp(r'"source"\s*:\s*"([^"]*)"').firstMatch(json);
+    final typeMatch     = RegExp(r'"type"\s*:\s*"([^"]*)"').firstMatch(json);
+    final textMatch     = RegExp(r'"text"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final errorMatch    = RegExp(r'"error"\s*:\s*(\d+)').firstMatch(json);
+    final summaryMatch  = RegExp(r'"summary"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final partnerMatch  = RegExp(r'"partner"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final auroraMatch   = RegExp(r'"aurora"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
+    final lsaMatch      = RegExp(r'"lsa_paths"\s*:\s*(\d+)').firstMatch(json);
+    final turnMatch     = RegExp(r'"turn"\s*:\s*(\d+)').firstMatch(json);
+    final elapsedMatch  = RegExp(r'"elapsed"\s*:\s*(\d+)').firstMatch(json);
+    final totalMatch    = RegExp(r'"total_secs"\s*:\s*(\d+)').firstMatch(json);
     return {
-      'source':  sourceMatch?.group(1) ?? 'aurora',
-      'type':    typeMatch?.group(1)   ?? 'unknown',
-      'text':    textMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
-      'summary': summaryMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
-      'error':   errorMatch != null ? int.tryParse(errorMatch.group(1)!) : null,
-      'final':   json.contains('"final":true'),
-      'granted': json.contains('"granted":true'),
+      'source':    sourceMatch?.group(1) ?? 'aurora',
+      'type':      typeMatch?.group(1)   ?? 'unknown',
+      'text':      textMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'summary':   summaryMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'error':     errorMatch != null ? int.tryParse(errorMatch.group(1)!) : null,
+      'final':     json.contains('"final":true'),
+      'granted':   json.contains('"granted":true'),
       // Emotional axis values — present on type=="axis_state" events
       'X': _parseDouble(json, 'X'),
       'T': _parseDouble(json, 'T'),
       'N': _parseDouble(json, 'N'),
       'B': _parseDouble(json, 'B'),
       'A': _parseDouble(json, 'A'),
+      // Training turn fields — present on type=="training_turn"/"training_done" events
+      'partner':    partnerMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'aurora_msg': auroraMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
+      'lsa_paths':  lsaMatch  != null ? int.tryParse(lsaMatch.group(1)!)    : null,
+      'turn_num':   turnMatch  != null ? int.tryParse(turnMatch.group(1)!)   : null,
+      'elapsed':    elapsedMatch != null ? int.tryParse(elapsedMatch.group(1)!) : null,
+      'total_secs': totalMatch   != null ? int.tryParse(totalMatch.group(1)!)  : null,
+      'avg_n_cost': _parseDouble(json, 'avg_n_cost'),
     };
   }
 
