@@ -7,7 +7,7 @@ const _bg     = Color(0xFF0D0D0F);
 const _card   = Color(0xFF1A1A2E);
 
 class _Turn {
-  final String role;  // 'partner' or 'aurora'
+  final String role;  // 'partner', 'aurora', or 'error'
   final String text;
   final int turn;
   _Turn(this.role, this.text, this.turn);
@@ -63,6 +63,21 @@ class _SocializeScreenState extends State<SocializeScreen> {
         _turn      = t;
         _elapsed   = (ev['elapsed']    as int?)    ?? _elapsed;
         _totalSecs = (ev['total_secs'] as int?)    ?? _totalSecs;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollCtrl.hasClients) {
+          _scrollCtrl.animateTo(
+            _scrollCtrl.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    } else if (type == 'training_error') {
+      final errMsg = (ev['error_msg'] as String?) ?? 'unknown error';
+      if (!mounted) return;
+      setState(() {
+        _turns.add(_Turn('error', errMsg, _turn));
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scrollCtrl.hasClients) {
@@ -315,8 +330,12 @@ class _SocializeScreenState extends State<SocializeScreen> {
                     style: const TextStyle(color: Colors.white70, fontSize: 12),
                     icon: const Icon(Icons.expand_more, color: Colors.white38, size: 16),
                     items: const [
-                      DropdownMenuItem(value: 'gemini-2.5-flash', child: Text('2.5 Flash')),
-                      DropdownMenuItem(value: 'gemini-2.5-pro',   child: Text('2.5 Pro')),
+                      DropdownMenuItem(value: 'gemini-2.5-flash',      child: Text('2.5 Flash')),
+                      DropdownMenuItem(value: 'gemini-2.5-pro',         child: Text('2.5 Pro')),
+                      DropdownMenuItem(value: 'gemini-2.0-flash',       child: Text('2.0 Flash')),
+                      DropdownMenuItem(value: 'gemini-2.0-flash-lite',  child: Text('2.0 Flash Lite')),
+                      DropdownMenuItem(value: 'gemini-1.5-flash',       child: Text('1.5 Flash')),
+                      DropdownMenuItem(value: 'gemini-1.5-flash-8b',    child: Text('1.5 Flash 8B')),
                     ],
                     onChanged: _active ? null : (v) => setState(() => _model = v ?? _model),
                   ),
@@ -378,6 +397,34 @@ class _TurnBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (turn.role == 'error') {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF3A0A0A),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.red.shade900.withOpacity(0.6)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.error_outline, color: Colors.red.shade400, size: 14),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Gemini: ${turn.text}',
+                  style: TextStyle(color: Colors.red.shade300, fontSize: 12, height: 1.4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final isAurora  = turn.role == 'aurora';
     final bubbleClr = isAurora ? const Color(0xFF2A0A4A) : const Color(0xFF0F1E3A);
     final nameClr   = isAurora ? _purple : const Color(0xFF4A8FD4);

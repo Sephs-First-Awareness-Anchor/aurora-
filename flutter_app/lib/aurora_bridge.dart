@@ -31,6 +31,7 @@ class AuroraBridge {
     final turnMatch     = RegExp(r'"turn"\s*:\s*(\d+)').firstMatch(json);
     final elapsedMatch  = RegExp(r'"elapsed"\s*:\s*(\d+)').firstMatch(json);
     final totalMatch    = RegExp(r'"total_secs"\s*:\s*(\d+)').firstMatch(json);
+    final errMsgMatch   = RegExp(r'"error_msg"\s*:\s*"((?:[^"\\]|\\.)*)"').firstMatch(json);
     return {
       'source':    sourceMatch?.group(1) ?? 'aurora',
       'type':      typeMatch?.group(1)   ?? 'unknown',
@@ -53,6 +54,7 @@ class AuroraBridge {
       'elapsed':    elapsedMatch != null ? int.tryParse(elapsedMatch.group(1)!) : null,
       'total_secs': totalMatch   != null ? int.tryParse(totalMatch.group(1)!)  : null,
       'avg_n_cost': _parseDouble(json, 'avg_n_cost'),
+      'error_msg':  errMsgMatch?.group(1)?.replaceAll(r'\"', '"') ?? '',
     };
   }
 
