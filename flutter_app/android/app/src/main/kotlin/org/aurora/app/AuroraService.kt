@@ -122,13 +122,14 @@ class AuroraService : Service() {
     }
 
     private suspend fun pollPendingReport() {
-        // Check every 5 seconds for a completed curiosity session report.
-        // When one arrives, push it to Flutter as a proactive message so it
-        // displays and is spoken without the user needing to send anything.
+        // Check every 5 seconds for completed curiosity reports and autonomous
+        // proactive expressions. Both arrive as proactive events so Flutter
+        // displays and speaks them without waiting for user input.
         while (true) {
             kotlinx.coroutines.delay(5_000L)
             try {
                 val bridge = Python.getInstance().getModule("aurora_bridge")
+
                 val report = bridge.callAttr("get_pending_report").toString()
                 if (report.isNotBlank()) {
                     withContext(Dispatchers.Main) {
@@ -136,6 +137,18 @@ class AuroraService : Service() {
                             JSONObject()
                                 .put("type", "proactive")
                                 .put("text", report)
+                                .toString()
+                        )
+                    }
+                }
+
+                val proactive = bridge.callAttr("get_proactive_expression").toString()
+                if (proactive.isNotBlank()) {
+                    withContext(Dispatchers.Main) {
+                        eventSink?.success(
+                            JSONObject()
+                                .put("type", "proactive")
+                                .put("text", proactive)
                                 .toString()
                         )
                     }

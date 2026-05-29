@@ -719,7 +719,8 @@ class CuriosityEngine:
                     subj = curiosity.subject[:60]
                     existing = self.systems.get("_gap_seeking_concept")
                     if not existing:
-                        self.systems["_gap_seeking_concept"] = subj
+                        self.systems["_gap_seeking_concept"]      = subj
+                        self.systems["_gap_seeking_concept_type"] = curiosity.curiosity_type
                         # Spike the identity field — N-axis (cost of not knowing)
                         # + A-axis (drive toward resolution) so the field is
                         # genuinely reaching when it next speaks.

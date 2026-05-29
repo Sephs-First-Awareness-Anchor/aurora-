@@ -1290,6 +1290,87 @@ class AuroraSensoryCrystal:
     # Session end  —  Operation: sensory.end_session (T, B, A)
     # ------------------------------------------------------------------
 
+    def get_gap_report(self) -> Dict[str, List[str]]:
+        """
+        Report which sensory modalities and concepts have gaps.
+        Called by the curiosity engine each cycle to drive multi-modal gap resolution.
+
+        Returns dict with four lists:
+          needs_visual   — facets with no real visual observations beyond archetypes
+          needs_audio    — facets with no real audio observations beyond archetypes
+          needs_second   — audio nodes present but lacking any cross-modal visual link
+          needs_semantic — cross-modal semantic nodes stuck at candidate stage
+        """
+        needs_visual:   List[str] = []
+        needs_audio:    List[str] = []
+        needs_second:   List[str] = []
+        needs_semantic: List[str] = []
+
+        for name, facet in self._visual.items():
+            real = [n for n in facet._nodes.values()
+                    if str(getattr(n, "lineage_id", "")) != "archetype"]
+            if not real:
+                needs_visual.append(name)
+
+        for name, facet in self._audio.items():
+            real = [n for n in facet._nodes.values()
+                    if str(getattr(n, "lineage_id", "")) != "archetype"]
+            if not real:
+                needs_audio.append(name)
+            else:
+                for node in real:
+                    if (getattr(node, "stage", "") in ("base", "candidate")
+                            and not getattr(node, "cross_modal_links", None)):
+                        label = str(getattr(node, "name", None) or name)
+                        if label not in needs_second:
+                            needs_second.append(label)
+
+        for node in self._semantic.values():
+            if getattr(node, "stage", "") == "candidate":
+                label = f"{getattr(node, 'lane', 'cross-modal')} perception"
+                if label not in needs_semantic:
+                    needs_semantic.append(label)
+
+        return {
+            "needs_visual":   needs_visual[:6],
+            "needs_audio":    needs_audio[:6],
+            "needs_second":   needs_second[:6],
+            "needs_semantic": needs_semantic[:6],
+        }
+
+    def ingest(self, concept: str, modality: str = "semantic",
+               data: str = "", source: str = "") -> None:
+        """
+        Ingest concept-level observational data from external sources (teaching,
+        user examples, world-knowledge search results).
+
+        For semantic modality: promotes the concept into the DPS crystal if wired.
+        For visual/audio modality: treated as a novelty observation bump so the
+        pressure axes update and curiosity engine registers the gap as partially filled.
+        """
+        if not concept or not data:
+            return
+        label = f"{concept}:{modality}"
+        if label not in self._last_recognitions:
+            self._last_recognitions.append(label)
+            if len(self._last_recognitions) > 32:
+                self._last_recognitions = self._last_recognitions[-32:]
+
+        self._novelty_window.append(1)
+        if len(self._novelty_window) > 48:
+            self._novelty_window = self._novelty_window[-48:]
+
+        if modality == "semantic" and self._dps_ref is not None:
+            try:
+                key = f"concept:{concept[:40]}"
+                crystal = self._dps_ref._get_or_create(key)
+                crystal.add_facet("semantic_definition", (data or "")[:80], confidence=0.72)
+                if source:
+                    crystal.add_facet("semantic_source", source[:40], confidence=0.50)
+                crystal.evolve()
+            except Exception:
+                pass
+
     def end_session(self) -> List[Dict[str, Any]]:
         """
         End-of-interaction consolidation.  Runs promotion, maturity, cull, save.

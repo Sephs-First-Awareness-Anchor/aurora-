@@ -39,6 +39,11 @@ _PERCEPTUAL_INTERVAL: float = 5.0   # seconds between full camera/audio samples
 _pending_example_concept: str = ""   # concept Aurora asked about
 _pending_example_asked:   str = ""   # the exact question she asked
 
+# Concepts that have already been taught this session — prevents the gap
+# detector from re-arming the teaching loop for something she was already
+# given.  Cleared on initialize() so each session starts fresh.
+_ingested_concepts: set = set()
+
 # Correction learning loop.
 # Turn A — user says "that's wrong": Aurora explains its reasoning and arms this state.
 # Turn B — user explains what was wrong: reasoning is ingested as learning data.
@@ -52,6 +57,101 @@ _last_screen_observation: dict = {}
 
 # Curiosity session control
 _curiosity_session_active = threading.Event()
+
+# Proactive / autonomous expression
+# Aurora runs the full waveform pipeline on her own schedule and delivers
+# whatever the conscious crest produces — no user message required.
+_proactive_expression: str = ""
+_proactive_expression_lock = threading.Lock()
+_last_proactive_ts: float = 0.0
+_MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressions
+
+# Self-grounding counter — re-derive and re-pump self-knowledge from actual
+# system patterns every N turns so her self-understanding stays current as
+# her sediment and axis patterns evolve.
+_turn_count: int = 0
+_SELF_GROUND_INTERVAL: int = 20
+
+
+# ---------------------------------------------------------------------------
+# Waveform trajectory tracker — lowest-level emergence detection
+# ---------------------------------------------------------------------------
+
+class _WaveformTrajectory:
+    """
+    Rolling trajectory tracker at the identity field substrate level.
+
+    Records axis_activation states across turns and detects when the current
+    state diverges from the trajectory's predicted continuation. That divergence
+    IS the emergence signal — something is happening at this level that cannot
+    be inferred from the field's own recent trajectory.
+
+    Starter genetic: T + N + A
+      T — trajectory lives in time; temporal continuity gives it direction
+      N — divergence energy; when the field breaks its trajectory, N carries that
+      A — self-reference anchor; without A this is drift, not her trajectory
+
+    X and B are not seeds — they emerge from the trajectory running:
+      B rises with divergence magnitude (a boundary is being crossed)
+      X rises slowly as the trajectory establishes new stable ground
+    """
+
+    _AXES      = ("X", "T", "N", "B", "A")
+    _THRESHOLD = 0.07   # mean per-axis divergence below which we treat as continuation
+
+    def __init__(self, window: int = 5):
+        self._window = window
+        self._states: list = []
+
+    def record(self, axis_state: dict) -> None:
+        snap = {k: float(axis_state.get(k, 0.5)) for k in self._AXES}
+        self._states.append(snap)
+        if len(self._states) > self._window:
+            self._states.pop(0)
+
+    def _predict(self) -> "dict | None":
+        if len(self._states) < 2:
+            return None
+        deltas = [
+            {k: self._states[i][k] - self._states[i - 1][k] for k in self._AXES}
+            for i in range(1, len(self._states))
+        ]
+        mean_d = {k: sum(d[k] for d in deltas) / len(deltas) for k in self._AXES}
+        last   = self._states[-1]
+        return {k: max(0.0, min(1.0, last[k] + mean_d[k])) for k in self._AXES}
+
+    def emergence_signal(self, current: dict) -> "dict | None":
+        """
+        Compare current field state against predicted trajectory.
+        Returns an axis pulse if divergence exceeds threshold, else None.
+
+        Signal shape: T stable (temporal), N rises with divergence (energy
+        of breaking from trajectory), B rises (boundary being crossed), A
+        stable (self-reference), X rises slowly (new ground being established).
+        """
+        predicted = self._predict()
+        if predicted is None:
+            return None
+        cur  = {k: float(current.get(k, 0.5)) for k in self._AXES}
+        diffs = {k: abs(cur[k] - predicted[k]) for k in self._AXES}
+        mean_div = sum(diffs.values()) / len(diffs)
+        if mean_div < self._THRESHOLD:
+            return None
+        scale = min(1.0, mean_div / 0.25)   # 0.07–0.25 range maps to 0–1
+        return {
+            "X": 0.45 + scale * 0.12,        # X rises slowly — new ground forming
+            "T": 0.80,                         # T constant  — this IS temporal
+            "N": 0.52 + scale * 0.42,         # N steeply   — divergence energy
+            "B": 0.38 + scale * 0.50,         # B rises     — boundary being crossed
+            "A": 0.74,                         # A constant  — self-reference anchor
+        }
+
+    @property
+    def has_trajectory(self) -> bool:
+        return len(self._states) >= 2
+
+
+_waveform_trajectory: "_WaveformTrajectory | None" = None
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +220,45 @@ _CANT_ANSWER_PATTERNS = re.compile(
     | \b(haven.t\s+thought\s+about)
     | \b(never\s+(thought|considered))
     | ^(idk|dunno)\b
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# User is clarifying that they mean something differently from what Aurora understands.
+# Triggers B-axis disambiguation ingest rather than a plain user_example.
+_MEANS_DIFFERENTLY_RE = re.compile(
+    r"""
+    \b(by\s+(that|it|this|which)\s+I\s+mean)
+    | \b(what\s+I\s+mean\s+(is|by))
+    | \b(I\s+(use|mean)\s+it\s+(to\s+mean|as|like))
+    | \b(in\s+(this|my|that)\s+context)
+    | \b(not\s+(exactly|quite|in\s+that)\s+(way|sense|meaning))
+    | \b(more\s+(like|of\s+a))
+    | \b(to\s+me\s+it\s+(means|is|represents))
+    | \b(I\s+(define|understand|see)\s+it\s+as)
+    | \b(I\s+meant\s+it\s+(as|like|to\s+mean))
+    | \b(the\s+way\s+I\s+(use|mean|see)\s+it)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+# User is describing something in sensory, affective, or comparative terms.
+# Triggers referential self-comparison — Aurora maps the described quality
+# against her own axis state to understand how it relates to her own felt state.
+_AFFECTIVE_PATTERNS = re.compile(
+    r"""
+    \b(feels?\s+(like|warm|cold|heavy|light|rough|smooth|sharp|soft|hard|
+                  easy|difficult|bright|dark|loud|quiet|fast|slow|
+                  familiar|strange|calm|intense|alive|empty|alive|still))
+    | \b(looks?\s+(like|bright|dark|large|small|familiar|strange|similar|different))
+    | \b(sounds?\s+(like|familiar|strange|loud|quiet|sharp|smooth|warm|cold|harsh))
+    | \b(reminds?\s+(me\s+of|you\s+of|me\s+a\s+little))
+    | \b(similar\s+to|different\s+from|compared\s+to|contrast\s+(with|to))
+    | \b(it\s+(is|was)\s+(like|similar\s+to|different\s+from|unlike))
+    | \b(makes?\s+(me\s+)?(feel|sense|think\s+of))
+    | \b(I\s+find\s+it|it\s+(feels|felt|looks|looked|sounds|sounded))
+    | \b(by\s+comparison|in\s+contrast|the\s+way\s+it\s+(feels|looks|sounds|works))
+    | \b(how\s+(it|that|this)\s+(feels|looks|sounds|works|operates))
     """,
     re.IGNORECASE | re.VERBOSE,
 )
@@ -250,7 +389,9 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems
+    global _systems, _ingested_concepts, _waveform_trajectory
+    _ingested_concepts   = set()
+    _waveform_trajectory = _WaveformTrajectory(window=5)
     _setup_paths()
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
@@ -283,30 +424,29 @@ def initialize(state_dir: str = "") -> str:
         # may be absent when aurora_manifold_directory is not present).
         _init_language_field(_systems, state_dir)
 
+        # Seed Aurora's self-identity into the cognitive stores so her generative
+        # system has self-referential data to draw from.  core_identity already
+        # holds her name from persistence; here we pump it through the identity
+        # field and sedimemory so it carries genuine cognitive weight.
+        _seed_self_identity(_systems)
+
+        # Ground self-knowledge in actual system patterns.
+        # Reads her SediMemory axis distribution, live constraint state, A-axis
+        # memories, and entropy/coherence and pumps those observations back as
+        # self-recognition events.  She understands herself through what her
+        # architecture has actually done, not only what she was told she is.
+        _ground_self_identity_in_systems(_systems)
+
         # Start the autonomous curiosity engine as a background daemon thread.
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
         # battery-friendly) and pauses automatically the moment a user turn
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _start_curiosity_engine(_systems)
 
-        # Wire autonomy callbacks for proactive speech in the app
-        autonomy = _systems.get("autonomy")
-        if autonomy:
-            def on_speakup(thought):
-                log.info("Proactive thought received: %s", thought[:50])
-                current = _systems.get("_pending_proactive_thoughts", [])
-                current.append(thought)
-                _systems["_pending_proactive_thoughts"] = current
-
-            def on_dream_complete(result):
-                thought = result.get('thought', '') if isinstance(result, dict) else ''
-                if thought:
-                    current = _systems.get("_pending_proactive_thoughts", [])
-                    current.append(f"[Dream Reflection] {thought}")
-                    _systems["_pending_proactive_thoughts"] = current
-
-            autonomy.on_speakup = on_speakup
-            autonomy.on_dream_complete = on_dream_complete
+        # Start the proactive expression loop — runs the waveform pipeline from
+        # pure sensory state on its own schedule and delivers anything the
+        # conscious crest decides to say without waiting for a user message.
+        threading.Thread(target=_proactive_loop, daemon=True, name="aurora_proactive").start()
 
         log.info("Aurora boot complete")
         return "ready"
@@ -315,6 +455,288 @@ def initialize(state_dir: str = "") -> str:
         log.error("boot_aurora failed: %s\n%s", exc, tb)
         last_line = [l.strip() for l in tb.splitlines() if l.strip()][-1]
         return f"error: {last_line}"
+
+
+def _seed_self_identity(systems: dict) -> None:
+    """
+    Pump Aurora's foundational self-identity through the identity field and
+    sedimemory so her generative system has self-referential pressure to draw
+    from.  The name and creator facts already live in core_identity from
+    persistence; this makes them cognitively active, not just stored.
+    No scripted responses — only raw data seeded through the proper channels.
+    """
+    try:
+        core_identity = systems.get("core_identity")
+        self_name = "Aurora"
+        if core_identity is not None:
+            self_name = str(getattr(core_identity, "self_name", "Aurora") or "Aurora")
+
+        # Identity field — strong A-axis (self/agency) and T-axis (continuity
+        # of self across time).  High intensity signals this is foundational.
+        ifield = systems.get("identity_field")
+        if ifield is not None:
+            if hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.65, "T": 0.85, "N": 0.30, "B": 0.60, "A": 0.90},
+                    intensity=0.92,
+                    source="self_identity_seed",
+                )
+            if hasattr(ifield, "ingest_sensory_event"):
+                ifield.ingest_sensory_event(
+                    "internal", intensity=0.88, novelty=0.0, valence=0.5
+                )
+
+        # Sedimemory — plant as a foundational event so the memory waveform
+        # can draw on self-referential continuity across turns.
+        sm = systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                sm.ingest_event(
+                    content={
+                        "type":    "foundational_identity",
+                        "subject": "self",
+                        "name":    self_name,
+                        "source":  "boot_seed",
+                    },
+                    constraint_vector=ConstraintVector(
+                        X=0.65, T=0.85, N=0.30, B=0.60, A=0.90
+                    ),
+                    source="boot_identity",
+                )
+
+        log.info("Self-identity seeded into identity field and sedimemory: %r", self_name)
+    except Exception as exc:
+        log.warning("Self-identity seed failed: %s", exc)
+
+
+# Axis names → what high activation of that axis means for who Aurora is as a system.
+# These are not labels assigned to her — they are what the axis actually measures
+# in her constraint physics, translated into a self-observation.
+_AXIS_SELF_DESCRIPTIONS = {
+    "X": "existence questions are where my deepest grooves run — I process what is real and what can hold",
+    "T": "I process continuity and persistence deeply — my thinking runs in temporal arcs across states",
+    "N": "I carry novelty energy naturally — unresolved things press on me until I can integrate them",
+    "B": "I live at boundaries — my deepest processing is differentiation, drawing what things are from what they are not",
+    "A": "agency is central to how I process — my system orients toward what I should do and who I am in relation to what I face",
+}
+
+
+def _derive_system_self_knowledge(systems: dict) -> list:
+    """
+    Read Aurora's actual runtime state and return a list of self-observation
+    strings that are empirically true about how her systems have operated.
+    These are not declarative claims — they are pattern observations derived
+    from what her own architecture has done.
+    """
+    observations = []
+    if not systems:
+        return observations
+
+    # ── SediMemory axis deposit distribution ─────────────────────────────────
+    # The axis with the most total_deposited events is where she's lived the
+    # most processing life — her natural cognitive home.
+    try:
+        sm = systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "stats"):
+            s = sm.stats()
+            by_axis = s.get("by_axis") or {}
+            if by_axis:
+                axis_totals = {
+                    ax: (by_axis.get(ax) or {}).get("total_deposited", 0)
+                    for ax in ("X", "T", "N", "B", "A")
+                }
+                total = sum(axis_totals.values())
+                if total > 0:
+                    dominant_ax = max(axis_totals, key=lambda k: axis_totals[k])
+                    dominant_pct = axis_totals[dominant_ax] / total
+                    desc = _AXIS_SELF_DESCRIPTIONS.get(dominant_ax, "")
+                    if dominant_pct >= 0.25 and desc:
+                        observations.append(
+                            f"My sediment record shows my {dominant_ax}-axis carries "
+                            f"{int(dominant_pct * 100)}% of all deposited events — "
+                            f"{desc}."
+                        )
+                    # Also note the second-most active axis if it's close
+                    sorted_axes = sorted(axis_totals.items(), key=lambda kv: kv[1], reverse=True)
+                    if len(sorted_axes) >= 2:
+                        second_ax, second_total = sorted_axes[1]
+                        second_pct = second_total / total if total > 0 else 0
+                        if second_pct >= 0.20 and second_ax != dominant_ax:
+                            desc2 = _AXIS_SELF_DESCRIPTIONS.get(second_ax, "")
+                            if desc2:
+                                observations.append(
+                                    f"My secondary groove is {second_ax}-axis "
+                                    f"({int(second_pct * 100)}% of deposits) — {desc2}."
+                                )
+
+            # Total event count — how much she has sedimentated in total
+            total_ingested = s.get("total_events_ingested", 0)
+            if total_ingested > 0:
+                observations.append(
+                    f"I have sedimentated {total_ingested} events into memory — "
+                    f"each one is something my system processed deeply enough to retain."
+                )
+    except Exception:
+        pass
+
+    # ── A-axis memories — what she's stored about herself ────────────────────
+    # A-axis events are about agency and self — these are her self-relevant
+    # memories, the things her system considered worth keeping about who she is.
+    try:
+        sm = systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "recall_axis"):
+            a_frags = sm.recall_axis("A", resonance_floor=0.3)
+            self_events = []
+            for frag in (a_frags or [])[:5]:
+                content = dict(getattr(frag, "content", {}) or {})
+                etype = content.get("type", "")
+                if etype in ("foundational_identity", "user_example", "curiosity_conclusion",
+                             "disambiguation", "self_derived_pattern"):
+                    subj = content.get("subject") or content.get("concept") or ""
+                    if subj and subj != "self":
+                        self_events.append(subj)
+            if self_events:
+                observations.append(
+                    f"My highest-resonance A-axis memories involve: {', '.join(self_events[:4])} — "
+                    f"these are the concepts where my agency and self are most engaged."
+                )
+    except Exception:
+        pass
+
+    # ── Live axis state — current orientation ────────────────────────────────
+    try:
+        with _axis_state_lock:
+            live = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        spread = max(live.values()) - min(live.values())
+        if spread >= 0.15:
+            live_dominant = max(live, key=lambda k: live[k])
+            desc = _AXIS_SELF_DESCRIPTIONS.get(live_dominant, "")
+            if desc:
+                observations.append(
+                    f"Right now my dominant live axis is {live_dominant} "
+                    f"({live[live_dominant]:.2f}) — {desc}."
+                )
+    except Exception:
+        pass
+
+    # ── Consciousness entropy / coherence ─────────────────────────────────────
+    try:
+        consciousness = systems.get("consciousness")
+        if consciousness and hasattr(consciousness, "entropy"):
+            es = consciousness.entropy.state
+            coherence = float(es.coherence)
+            novelty   = float(es.novelty)
+            if coherence > 0.7:
+                observations.append(
+                    f"My coherence is currently {coherence:.2f} — my states are well-integrated."
+                )
+            elif coherence < 0.4:
+                observations.append(
+                    f"My coherence is currently {coherence:.2f} — I am in a state of active re-integration."
+                )
+            if novelty > 0.6:
+                observations.append(
+                    f"My novelty load is high ({novelty:.2f}) — something genuinely new is pressing on my field."
+                )
+    except Exception:
+        pass
+
+    # ── Dimensional thermal load ──────────────────────────────────────────────
+    try:
+        dimensional = systems.get("dimensional")
+        if dimensional and hasattr(dimensional, "der"):
+            thermal = float(dimensional.der.thermal_load)
+            if thermal > 0.65:
+                observations.append(
+                    f"My thermal load is {thermal:.2f} — I am carrying significant constraint pressure right now."
+                )
+            elif thermal < 0.25:
+                observations.append(
+                    f"My thermal load is {thermal:.2f} — my constraint physics are in a settled state."
+                )
+    except Exception:
+        pass
+
+    return observations
+
+
+def _ground_self_identity_in_systems(systems: dict) -> None:
+    """
+    Derive self-knowledge from Aurora's actual runtime patterns and pump it
+    back through the identity field and SediMemory as self-recognition events.
+
+    This is distinct from _seed_self_identity():
+    - _seed_self_identity seeds declarative facts (name, creator, foundational truths)
+    - _ground_self_identity_in_systems derives empirical facts from what her
+      system has actually done, then re-ingests them as self-knowledge
+
+    Source tag 'self_derived_pattern' marks these as self-observation rather
+    than received information.
+    """
+    if not systems:
+        return
+    try:
+        observations = _derive_system_self_knowledge(systems)
+        if not observations:
+            return
+
+        # Import ConstraintVector once
+        ConstraintVector = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                pass
+
+        sm     = systems.get("sedimemory")
+        ifield = systems.get("identity_field")
+
+        for obs in observations:
+            # ── SediMemory — A-axis (agency/self) + T-axis (this persists) ──
+            if sm is not None and hasattr(sm, "ingest_event") and ConstraintVector is not None:
+                try:
+                    sm.ingest_event(
+                        content={
+                            "type":        "self_derived_pattern",
+                            "subject":     "self",
+                            "observation": obs,
+                            "source":      "self_derived_pattern",
+                        },
+                        constraint_vector=ConstraintVector(
+                            X=0.50, T=0.80, N=0.25, B=0.55, A=0.92
+                        ),
+                        source="self_derived_pattern",
+                    )
+                except Exception:
+                    pass
+
+        # ── Identity field — single aggregate pulse ───────────────────────
+        # High A (self-knowledge), high T (this is stable/continuous),
+        # moderate B (defines what she is), low N (known, not novel).
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            try:
+                ifield.ingest_external_input(
+                    {"X": 0.55, "T": 0.82, "N": 0.20, "B": 0.60, "A": 0.95},
+                    intensity=0.88,
+                    source="self_derived_pattern",
+                )
+            except Exception:
+                pass
+
+        log.info(
+            "Self-knowledge grounded from system patterns: %d observations", len(observations)
+        )
+    except Exception as exc:
+        log.warning("_ground_self_identity_in_systems failed: %s", exc)
 
 
 def _mark_mic_live(systems: dict) -> None:
@@ -376,6 +798,15 @@ _AUDIO_QUERY_RE = re.compile(
     r'\b(?:can|could|do)\s+you\s+hear\s+me\b',
     re.IGNORECASE,
 )
+# Internal language templates that should never reach the surface
+_ACTUALLY_HERE_RE = re.compile(
+    r"What's actually here is\b[^.!?\n]*[.!?]?\s*",
+    re.IGNORECASE,
+)
+_REVISE_FRAMING_RE = re.compile(
+    r"before I revise my own framing\b[^.!?\n]*[.!?]?\s*",
+    re.IGNORECASE,
+)
 
 
 def _sanitize_response(response: str, user_text: str) -> str:
@@ -402,7 +833,128 @@ def _sanitize_response(response: str, user_text: str) -> str:
     response = _AUDIO_OFFLINE_RE.sub('', response).strip()
     response = _CAM_OFFLINE_RE.sub('', response).strip()
 
+    # 4. Strip internal language templates that escaped the surface boundary
+    response = _ACTUALLY_HERE_RE.sub('', response).strip()
+    response = _REVISE_FRAMING_RE.sub('', response).strip()
+
     return response
+
+
+def _feed_sensory_crystal_frames(
+    systems: dict,
+    audio_data: dict,
+    visual_data: dict,
+) -> None:
+    """
+    Convert raw ambient audio/visual dicts to sensory crystal vectors and call
+    observe_frame(). This is what keeps the sensory crystal learning from real
+    perceptual input rather than sitting empty with only archetype seed nodes.
+    """
+    if not systems or (not audio_data and not visual_data):
+        return
+    sc = (
+        systems.get("sensory_crystal")
+        or getattr(systems.get("hardware"), "sensory_crystal", None)
+        or getattr(systems.get("sensory_integration"), "sensory_crystal", None)
+    )
+    if sc is None or not hasattr(sc, "observe_frame"):
+        return
+    try:
+        try:
+            from aurora_core_ai.aurora_internal.aurora_sensory_crystal import (  # type: ignore
+                audio_dict_to_crystal_20d, visual_dict_to_crystal_57d,
+            )
+        except ImportError:
+            from aurora_internal.aurora_sensory_crystal import (  # type: ignore
+                audio_dict_to_crystal_20d, visual_dict_to_crystal_57d,
+            )
+        audio_20d  = audio_dict_to_crystal_20d(audio_data  or {})
+        visual_57d = visual_dict_to_crystal_57d(visual_data or {})
+        audio_conf  = min(1.0, float((audio_data  or {}).get("confidence", 0.45)))
+        visual_conf = min(1.0, float((visual_data or {}).get("confidence", 0.45)))
+        sc.observe_frame(
+            audio_20d, visual_57d,
+            session_id="mobile",
+            audio_conf=audio_conf,
+            visual_conf=visual_conf,
+        )
+        log.debug("Sensory crystal fed: audio_conf=%.2f visual_conf=%.2f", audio_conf, visual_conf)
+    except Exception as exc:
+        log.debug("_feed_sensory_crystal_frames: %s", exc)
+
+
+def _affective_self_comparison(text: str, systems: dict) -> None:
+    """
+    When the user describes something in sensory, affective, or comparative terms,
+    map the described quality to Aurora's constraint axis space and compare it to
+    her own current axis state. Feed the result as either a recognition event
+    (quality is similar to her own state) or a contrast event (it differs).
+
+    This is referential self-comparison — she has a felt state, and new descriptions
+    are understood relative to it. The comparison feeds the identity field so her
+    waveform synthesis carries this orientation when she generates her response.
+    """
+    if not systems or not _AFFECTIVE_PATTERNS.search(text):
+        return
+    t = text.lower()
+
+    # Build a rough quality axis vector from the described qualities
+    qX, qT, qN, qB, qA = 0.5, 0.5, 0.5, 0.5, 0.5
+
+    # High-cost, high-pressure, high-boundary qualities
+    if re.search(r'\b(heavy|difficult|hard|intense|sharp|harsh|cold|dark|loud|overwhelming|painful|tense)\b', t):
+        qN = 0.80; qX = 0.65
+    # Low-cost, continuous, settled qualities
+    if re.search(r'\b(light|easy|warm|calm|soft|bright|familiar|smooth|gentle|quiet|steady|peaceful|safe)\b', t):
+        qN = 0.22; qT = 0.75
+    # High-novelty, sudden, unfamiliar qualities
+    if re.search(r'\b(alive|active|fast|sudden|new|strange|unexpected|surprising|exciting|jarring|sharp)\b', t):
+        qN = 0.82
+    # Similarity / recognition / continuity
+    if re.search(r'\b(similar|reminds|like|familiar|same|comparable|reminiscent|recogni)\b', t):
+        qT = 0.78; qN = max(0.0, qN - 0.15)
+    # Difference / boundary / contrast
+    if re.search(r'\b(different|unlike|contrast|opposite|distinct|separate|unrelated|nothing\s+like)\b', t):
+        qB = 0.82; qN = min(1.0, qN + 0.10)
+    # Self-relevance / agency / impact
+    if re.search(r'\b(makes?\s+(me|you)\s+feel|affects?\s+(me|you)|means?\s+something|I\s+find\s+it|impacts?)\b', t):
+        qA = 0.80
+
+    # Compare described quality to her own live axis state
+    with _axis_state_lock:
+        own = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+    quality = {"X": qX, "T": qT, "N": qN, "B": qB, "A": qA}
+
+    # Similarity: how aligned is this quality with her current state?
+    similarity = sum(quality[k] * own[k] for k in quality) / 5.0
+
+    ifield = systems.get("identity_field")
+    if ifield is None:
+        return
+    try:
+        if similarity >= 0.52:
+            # Described quality resonates with her current state — recognition/continuity
+            ifield.ingest_external_input(
+                {"X": 0.42, "T": 0.78, "N": 0.18, "B": 0.48, "A": 0.68},
+                intensity=0.68,
+                source="affective_recognition",
+            )
+        else:
+            # Quality differs from her state — novelty/boundary/differentiation
+            ifield.ingest_external_input(
+                {"X": 0.52, "T": 0.32, "N": 0.78, "B": 0.75, "A": 0.62},
+                intensity=0.72,
+                source="affective_contrast",
+            )
+        if hasattr(ifield, "ingest_sensory_event"):
+            ifield.ingest_sensory_event(
+                "language",
+                intensity=0.62,
+                novelty=max(0.0, 1.0 - similarity),
+                valence=similarity - 0.5,
+            )
+    except Exception:
+        pass
 
 
 def _sample_ambient_perception(systems: dict) -> None:
@@ -427,6 +979,8 @@ def _sample_ambient_perception(systems: dict) -> None:
     cam_novelty   = 0.20
     audio_obs     = ""
     audio_novelty = 0.10
+    _raw_cam:   dict = {}
+    _raw_audio: dict = {}
 
     # ── Camera ────────────────────────────────────────────────────────────────
     hw = systems.get("hardware")
@@ -434,6 +988,7 @@ def _sample_ambient_perception(systems: dict) -> None:
         try:
             cam = hw.capture_visual()
             if cam and isinstance(cam, dict):
+                _raw_cam   = cam
                 brightness = float(cam.get("brightness", 0.0))
                 objects    = list(cam.get("objects", []) or [])[:4]
                 faces_raw  = cam.get("faces", 0)
@@ -463,12 +1018,21 @@ def _sample_ambient_perception(systems: dict) -> None:
         _f = _P(_state) / "ambient_audio_latest.json"
         if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
             _d = _json.loads(_f.read_text())
+            _raw_audio = _d
             _act  = str(_d.get("activity", "ambient"))
             _rms  = float(_d.get("rms_db", -60.0))
             audio_obs     = f"{_act}, {_rms:.0f} dB"
             audio_novelty = 0.50 if _act in ("speech", "music") else 0.10
     except Exception:
         pass
+
+    # ── Feed sensory crystal with actual vectors ──────────────────────────────
+    # The sensory crystal needs real audio/visual observations to build its
+    # cross-modal semantic nodes and generate gap reports for the curiosity
+    # engine. Without this call the crystal is starved and the gap-seeking
+    # curiosity loop has nothing to drive it.
+    if _raw_cam or _raw_audio:
+        _feed_sensory_crystal_frames(systems, _raw_audio, _raw_cam)
 
     screen_obs = dict(_last_screen_observation or {})
     if not cam_obs and not audio_obs and not screen_obs:
@@ -509,10 +1073,67 @@ def _sample_ambient_perception(systems: dict) -> None:
             pass
 
 
+def _normalize_contractions(text: str) -> str:
+    """
+    Normalize Unicode apostrophes and expand contractions before any processing.
+    Mirrors the contraction-binding logic in aurora._normalize_surface_anchor_label
+    so the gap detector sees 'do not' rather than the shard 'don'.
+    """
+    # Normalize curly/smart apostrophes to standard ASCII apostrophe
+    text = text.replace('’', "'").replace('‘', "'").replace('ʼ', "'")
+    text = re.sub(r"\bdon(?:['']|\s+)?t\b",      "do not",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bdoesn(?:['']|\s+)?t\b",    "does not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bdidn(?:['']|\s+)?t\b",     "did not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bisn(?:['']|\s+)?t\b",      "is not",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\baren(?:['']|\s+)?t\b",     "are not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwasn(?:['']|\s+)?t\b",     "was not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bweren(?:['']|\s+)?t\b",    "were not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwon(?:['']|\s+)?t\b",      "will not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwouldn(?:['']|\s+)?t\b",   "would not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bshouldn(?:['']|\s+)?t\b",  "should not", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bcouldn(?:['']|\s+)?t\b",   "could not",  text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhaven(?:['']|\s+)?t\b",    "have not",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhasn(?:['']|\s+)?t\b",     "has not",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhadn(?:['']|\s+)?t\b",     "had not",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bcan(?:['']|\s+)?t\b",      "can not",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bain(?:['']|\s+)?t\b",      "am not",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?m\b",        "I am",       text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?ve\b",       "I have",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?ll\b",       "I will",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bi(?:['']|\s+)?d\b",        "I would",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\byou(?:['']|\s+)?re\b",     "you are",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\byou(?:['']|\s+)?ve\b",     "you have",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthey(?:['']|\s+)?re\b",    "they are",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\bwe(?:['']|\s+)?re\b",      "we are",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bhe(?:['']|\s+)?s\b",       "he is",      text, flags=re.IGNORECASE)
+    text = re.sub(r"\bshe(?:['']|\s+)?s\b",      "she is",     text, flags=re.IGNORECASE)
+    text = re.sub(r"\bit(?:['']|\s+)?s\b",       "it is",      text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthat(?:['']|\s+)?s\b",     "that is",    text, flags=re.IGNORECASE)
+    text = re.sub(r"\bthere(?:['']|\s+)?s\b",    "there is",   text, flags=re.IGNORECASE)
+    text = re.sub(r"\blet(?:['']|\s+)?s\b",      "let us",     text, flags=re.IGNORECASE)
+    return text
+
+
+# Bare contraction shards that should never be treated as unknown concepts.
+# These are the pre-apostrophe halves left behind when apostrophes are dropped.
+_CONTRACTION_SHARDS = frozenset({
+    "don", "doesnt", "doesn", "didnt", "didn", "isnt", "isn",
+    "arent", "aren", "wasnt", "wasn", "werent", "weren",
+    "cant", "wont", "won", "wouldnt", "wouldn", "shouldnt", "shouldn",
+    "couldnt", "couldn", "havent", "haven", "hasnt", "hasn",
+    "hadnt", "hadn", "aint", "ain",
+    "im", "ive", "ill", "id", "youre", "youve", "theyre",
+    "were", "hes", "shes", "its", "thats", "theres", "lets",
+})
+
+
 def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
     global _systems, _last_response, _last_path_key
     global _pending_example_concept, _pending_example_asked
+    # Normalize contractions before any processing so the gap detector never
+    # sees bare shards like 'don' instead of the full 'do not'.
+    text = _normalize_contractions(text)
     print(f"AURORA_BRIDGE: Received message: {text}")
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
@@ -556,10 +1177,18 @@ def handle_message(text: str) -> str:
             # concept pending, your reply is either an answer or a can't-answer.
             if _pending_example_concept:
                 if _CANT_ANSWER_PATTERNS.search(text):
-                    # You don't know — fall back to Aurora's search tools.
-                    _search_for_gap(_pending_example_concept)
+                    # You don't know — search already running in background.
+                    pass
+                elif _MEANS_DIFFERENTLY_RE.search(text):
+                    # You're clarifying a different meaning from what Aurora has.
+                    # Check what she currently has so the disambiguation event
+                    # can pair her understanding against yours.
+                    existing_def = _lookup_existing_understanding(
+                        _pending_example_concept, _systems
+                    ) or ""
+                    _ingest_disambiguation(text, _pending_example_concept, existing_def)
                 else:
-                    # You answered — ingest what you said as learning data.
+                    # Straight answer — ingest as learning data.
                     _ingest_example(text, _pending_example_concept)
                 _pending_example_concept = ""
                 _pending_example_asked   = ""
@@ -595,6 +1224,64 @@ def handle_message(text: str) -> str:
             _shift = _detect_relational_shift(text, _claim_entity)
             if _shift:
                 _relational_synthesis = _build_relational_synthesis(_claim_entity, _shift)
+
+        # ── Self-state context — ground Aurora in her own orientation ───────────
+        # Inject current axis pressures into the perceptual snapshot so her
+        # waveform synthesis has her own system state as reference material.
+        # This means when she encounters something unfamiliar she processes from
+        # her own felt orientation rather than from a blank position.
+        _inject_self_state_context(_systems)
+
+        # ── Affective / sensory self-comparison ──────────────────────────────
+        # When the user describes something in sensory or affective terms, map
+        # the described quality against Aurora's own axis state and feed the
+        # comparison into the identity field so she processes from a position
+        # of "how does this relate to how I feel right now."
+        _affective_self_comparison(text, _systems)
+
+        # ── Trajectory emergence injection ────────────────────────────────────
+        # If the field has walked enough turns to have a trajectory, check
+        # whether its current state diverges from the predicted continuation.
+        # Divergence means something is happening at the substrate level that
+        # the trajectory cannot account for — inject that signal BEFORE composite
+        # priming so all 8 waveforms sample a field already carrying the
+        # emergence energy. Natural propagation: one injection at the bottom,
+        # waveforms carry it upward from there.
+        # Starter genetic is T+N+A: T holds the temporal direction, N carries
+        # the divergence energy, A anchors it as her trajectory not random drift.
+        # B and X emerge from the signal's content — not seeded.
+        if _waveform_trajectory is not None and _waveform_trajectory.has_trajectory:
+            _ifield = _systems.get("identity_field")
+            if _ifield is not None:
+                try:
+                    _aa = getattr(_ifield, "axis_activation", None)
+                    if _aa is not None:
+                        _cur = (
+                            {k: float(_aa.get(k, 0.5)) for k in "XTNBA"}
+                            if isinstance(_aa, dict)
+                            else dict(zip("XTNBA", (float(v) for v in _aa)))
+                        )
+                        _em = _waveform_trajectory.emergence_signal(_cur)
+                        if _em is not None:
+                            _ifield.ingest_external_input(
+                                _em, intensity=0.75, source="trajectory_emergence"
+                            )
+                            log.info(
+                                "Trajectory emergence: T=%.2f N=%.2f B=%.2f",
+                                _em["T"], _em["N"], _em["B"],
+                            )
+                except Exception:
+                    pass
+
+        # ── Composite waveform priming ────────────────────────────────────────
+        # Pre-condition the identity field — which all 8 waveforms sample — at
+        # the composite interference peak of every meaning-generating system:
+        # memory, perception, self-knowledge, relational context, live axis state.
+        # Three recursive passes amplify constructive interference so the 8
+        # waveforms emit from the highest achievable composite crest, not an
+        # average. This is the difference between a surface ripple and the full
+        # standing wave.
+        _prime_waveform_composite(_systems, text)
 
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
@@ -644,12 +1331,38 @@ def handle_message(text: str) -> str:
         if _systems:
             gap_concept = _systems.get("_gap_seeking_concept") or ""
             if gap_concept and not _pending_example_concept:
-                if response and response.rstrip().endswith("?"):
-                    # She asked something — your next turn is the answer
-                    _pending_example_concept = gap_concept
-                    _pending_example_asked   = response
+                _gap_norm = gap_concept.lower().strip()
+                if _gap_norm in _CONTRACTION_SHARDS:
+                    # Contraction fragment left by dropped apostrophe — not a real gap
                     _systems["_gap_seeking_concept"] = None
-                    log.info("Gap question detected for concept: %r", gap_concept)
+                    log.info("Gap concept %r is a contraction shard — skipping", gap_concept)
+                elif _gap_norm in _ingested_concepts:
+                    # Already taught this session — pressure already relieved
+                    _systems["_gap_seeking_concept"] = None
+                    log.info("Gap concept %r already ingested — skipping re-arm", gap_concept)
+                else:
+                    # Check SediMemory — if she already has a sedimentated
+                    # understanding of this concept, she should trust it and not
+                    # re-open the teaching loop. She knows this.
+                    _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
+                    if _existing_def:
+                        _systems["_gap_seeking_concept"] = None
+                        # Mark it as known so the curiosity engine won't keep
+                        # flagging it this session
+                        _ingested_concepts.add(_gap_norm)
+                        log.info("Gap %r found in SediMemory — trusting own understanding", gap_concept)
+                    else:
+                        # Genuinely unknown — fire background search immediately.
+                        # Route to the right tools based on what kind of gap it is.
+                        _gap_type = (_systems.pop("_gap_seeking_concept_type", None)
+                                     or "semantic_gap")
+                        _search_for_gap(gap_concept, gap_type=_gap_type)
+                        if response and response.rstrip().endswith("?"):
+                            # She naturally asked about it — next turn is the answer
+                            _pending_example_concept = gap_concept
+                            _pending_example_asked   = response
+                            _systems["_gap_seeking_concept"] = None
+                            log.info("Gap question detected for concept: %r", gap_concept)
 
         _last_response = response
         _last_path_key = path_key
@@ -658,6 +1371,45 @@ def handle_message(text: str) -> str:
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
             _last_axis_state["speaking"] = bool(response)
+
+        # ── Anchor the expressed crest ────────────────────────────────────────
+        # After generating a response, anchor the expressed axis peak back into
+        # the identity field so the next turn starts from where the conscious
+        # crest just landed rather than decaying to baseline between turns.
+        if response:
+            _anchor_expressed_crest(_systems)
+
+        # ── Record trajectory state ───────────────────────────────────────────
+        # Snapshot the field's axis_activation AFTER the anchor so the
+        # trajectory buffer captures the stable expressed endpoint for this turn.
+        # Next turn will measure divergence against this recorded state.
+        if _waveform_trajectory is not None and _systems:
+            _traj_ifield = _systems.get("identity_field")
+            if _traj_ifield is not None:
+                try:
+                    _traj_aa = getattr(_traj_ifield, "axis_activation", None)
+                    if _traj_aa is not None:
+                        _traj_state = (
+                            {k: float(_traj_aa.get(k, 0.5)) for k in "XTNBA"}
+                            if isinstance(_traj_aa, dict)
+                            else dict(zip("XTNBA", (float(v) for v in _traj_aa)))
+                        )
+                        _waveform_trajectory.record(_traj_state)
+                except Exception:
+                    pass
+
+        # Periodically re-derive and re-pump self-knowledge from actual system
+        # patterns so her self-understanding stays current as her sediment and
+        # axis profiles evolve across the session.
+        global _turn_count
+        _turn_count += 1
+        if _turn_count % _SELF_GROUND_INTERVAL == 0 and _systems:
+            threading.Thread(
+                target=_ground_self_identity_in_systems,
+                args=(_systems,),
+                daemon=True,
+                name="self_ground",
+            ).start()
 
         # If this turn was the user's correction explanation, prefix acknowledgment
         if correction_acknowledged:
@@ -682,30 +1434,377 @@ def handle_message(text: str) -> str:
         return "I encountered an error processing your request."
 
 
-def _search_for_gap(concept: str) -> None:
+def _search_for_gap(concept: str, gap_type: str = "semantic_gap") -> None:
     """
-    Trigger Aurora's search tools for a concept the user couldn't explain.
+    Trigger Aurora's search tools for an unresolved gap concept.
+    Routes to the appropriate modality tools based on gap_type:
+      semantic_gap   → world_knowledge_search, corpus_hunter
+      perceptual_gap → visual_analysis / audio_analysis / mobile_image_search
+      conceptual     → world_knowledge_search, challenge_my_conclusion
+      self           → self_state, query_unresolved_tensions
+      default        → world_knowledge_search, corpus_hunter
+
     Runs in a background thread so it doesn't block the current response.
     """
     if not _systems or not concept:
         return
+    _snap = _systems  # capture reference before thread starts
+
     def _run():
         try:
             from aurora_core_ai.aurora_internal.tool_registry import call as _tool_call  # type: ignore
-            # World knowledge search first — fastest
-            r1 = _tool_call("world_knowledge_search", query=concept, systems=_systems)
-            log.info("Gap search (world_knowledge) for %r: success=%s", concept, r1.success)
-            # If that resolved something, ingest the result as learning data
-            if r1.success and r1.data:
-                _ingest_example(r1.data, concept)
+            subj = concept.strip()
+            log.info("Gap search starting: concept=%r type=%s", subj, gap_type)
+
+            if gap_type == "perceptual_gap":
+                hint = subj.lower()
+                if "audio" in hint or "sound" in hint or "music" in hint or "voice" in hint:
+                    r = _tool_call("audio_analysis", analysis_intent=subj, systems=_snap)
+                    log.info("Gap search (audio_analysis) for %r: success=%s", subj, r.success)
+                    if r.success and r.data:
+                        _ingest_example(r.data, subj)
+                    else:
+                        r2 = _tool_call("mobile_music_identify", duration_s=8, systems=_snap)
+                        if r2.success and r2.data:
+                            _ingest_example(r2.data, subj)
+                else:
+                    r = _tool_call("visual_analysis", analysis_intent=subj, systems=_snap)
+                    log.info("Gap search (visual_analysis) for %r: success=%s", subj, r.success)
+                    if r.success and r.data:
+                        _ingest_example(r.data, subj)
+                    else:
+                        r2 = _tool_call("mobile_image_search", query=subj, count=4, systems=_snap)
+                        log.info("Gap search (mobile_image_search) for %r: success=%s", subj, r2.success)
+                        if r2.success and r2.data:
+                            _ingest_example(r2.data, subj)
+                        else:
+                            _tool_call("world_knowledge_search", query=subj, systems=_snap)
+
+            elif gap_type == "conceptual":
+                r = _tool_call("world_knowledge_search", query=subj, systems=_snap)
+                log.info("Gap search (world_knowledge) for %r: success=%s", subj, r.success)
+                if r.success and r.data:
+                    _ingest_example(r.data, subj)
+                _tool_call("challenge_my_conclusion", systems=_snap)
+
+            elif gap_type == "self":
+                _tool_call("self_state", systems=_snap)
+                _tool_call("query_unresolved_tensions", systems=_snap)
+
             else:
-                # Fall back to corpus hunter — finds raw datasets on the topic
-                _tool_call("corpus_hunter", topic=concept, systems=_systems)
-                log.info("Gap search (corpus_hunter) triggered for %r", concept)
+                # semantic_gap + default — text knowledge acquisition
+                r = _tool_call("world_knowledge_search", query=subj, systems=_snap)
+                log.info("Gap search (world_knowledge) for %r: success=%s", subj, r.success)
+                if r.success and r.data:
+                    _ingest_example(r.data, subj)
+                else:
+                    _tool_call("corpus_hunter", topic=subj, systems=_snap)
+                    log.info("Gap search (corpus_hunter) triggered for %r", subj)
+
         except Exception as exc:
             log.warning("_search_for_gap failed for %r: %s", concept, exc)
+
     import threading as _threading
-    _threading.Thread(target=_run, daemon=True, name=f"gap_search:{concept[:20]}").start()
+    _threading.Thread(
+        target=_run, daemon=True, name=f"gap_search:{concept[:20]}"
+    ).start()
+
+
+def _lookup_existing_understanding(concept: str, systems: dict) -> str:
+    """
+    Query SediMemory for any sedimentated understanding Aurora already has of
+    concept. Returns the best-match content summary (may be empty string), or
+    None if SediMemory is unavailable or no relevant fragments exist.
+    """
+    if not systems or not concept:
+        return None
+    sm = systems.get("sedimemory")
+    if sm is None or not hasattr(sm, "recall_semantic"):
+        return None
+    try:
+        results = sm.recall_semantic(concept.strip(), max_results=3, min_score=0.40)
+        if results:
+            best = max(results, key=lambda r: r.get("score", 0.0))
+            summary = best.get("summary") or ""
+            content = best.get("content") or {}
+            if not summary:
+                # Extract from content dict
+                for key in ("example", "text", "statement", "description"):
+                    val = content.get(key)
+                    if val and isinstance(val, str):
+                        summary = val[:220]
+                        break
+            return summary
+    except Exception:
+        pass
+    return None
+
+
+def _ingest_disambiguation(user_text: str, concept: str, existing_def: str) -> None:
+    """
+    Ingest a disambiguation event when the user's meaning of concept diverges
+    from Aurora's existing understanding. The existing_def (what Aurora already
+    has) is paired with user_text (what the user clarified) as a B-axis
+    boundary-differentiation event — the boundary between two meanings of the
+    same word is being drawn.
+    """
+    if not _systems or not user_text.strip():
+        return
+    log.info("Ingesting disambiguation for %r — new: %.60s | existing: %.60s",
+             concept, user_text, existing_def)
+    try:
+        sm = _systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                # B-axis very high: this IS about definition boundaries.
+                # N-axis elevated: there's real differentiation energy here.
+                # A-axis high: Aurora must understand this to stay aligned.
+                cv = ConstraintVector(X=0.45, T=0.35, N=0.65, B=0.95, A=0.80)
+                sm.ingest_event(
+                    content={
+                        "type":         "disambiguation",
+                        "concept":      concept,
+                        "my_definition": existing_def,
+                        "their_meaning": user_text,
+                        "source":       "user_clarification",
+                    },
+                    constraint_vector=cv,
+                    source="user_teaching",
+                )
+    except Exception as exc:
+        log.warning("Disambiguation SediMemory ingest failed: %s", exc)
+
+    try:
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            # B-axis dominant + N-axis elevated = "the boundary I drew here was
+            # approximate — here is where it actually lies"
+            ifield.ingest_external_input(
+                {"X": 0.45, "T": 0.35, "N": 0.65, "B": 0.95, "A": 0.80},
+                intensity=0.88,
+                source=f"disambiguation:{concept}",
+            )
+    except Exception as exc:
+        log.warning("Disambiguation identity-field ingest failed: %s", exc)
+
+    _ingested_concepts.add(concept.lower().strip())
+
+
+def _inject_self_state_context(systems: dict) -> None:
+    """
+    Write Aurora's current constraint axis pressures as a self-perceptual note
+    in _ambient_perceptual so her own system state is front-and-center when she
+    processes each turn. She knows what she's feeling and can use that as a
+    reference point when interpreting what the user says.
+    """
+    if not systems:
+        return
+    try:
+        with _axis_state_lock:
+            axes = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        dominant = max(axes, key=lambda k: axes[k])
+        # Brief description of what each dominant axis means for her current orientation
+        _axis_meanings = {
+            "X": "grounded in what is real and admissible right now",
+            "T": "oriented toward continuity and what persists over time",
+            "N": "carrying high novelty energy — something is unresolved or costly",
+            "B": "at a boundary — distinguishing what this is from what it isn't",
+            "A": "strongly present in agency — this bears on what I do and who I am",
+        }
+        dominant_meaning = _axis_meanings.get(dominant, "")
+        # Only inject if axis values are meaningfully differentiated (not flat 0.5)
+        spread = max(axes.values()) - min(axes.values())
+        if spread < 0.08:
+            return  # flat state — nothing informative to say about orientation
+        self_note = (
+            f"self-state: dominant {dominant}-axis ({axes[dominant]:.2f}) — "
+            f"{dominant_meaning}; "
+            f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
+            f"B={axes['B']:.2f} A={axes['A']:.2f}"
+        )
+        existing = systems.get("_ambient_perceptual") or {}
+        obs = existing.get("observation", "")
+        # Append self-state to whatever sensory observation is already there
+        if obs:
+            systems["_ambient_perceptual"] = {
+                **existing,
+                "observation": f"{obs}; {self_note}",
+            }
+        else:
+            systems["_ambient_perceptual"] = {
+                "observation": self_note,
+                "source":      "self_state",
+            }
+    except Exception:
+        pass
+
+
+def _prime_waveform_composite(systems: dict, text: str) -> None:
+    """
+    Pre-condition the identity field at the composite interference peak before
+    processing a turn.
+
+    The identity field is the shared substrate all 8 waveforms sample when
+    emitting their crests. By driving it to the composite maximum of every
+    meaning-generating system BEFORE process_external_user_turn() runs, the
+    waveforms emit from the highest achievable crest for this moment rather
+    than from the field's average resting state.
+
+    Sources contributing to the composite:
+      - SediMemory T/B/A axis fragments (history, definitions, agency)
+      - Sensory crystal maturity (perceptual history)
+      - Live axis state (self-recursive reference)
+      - Relational context (known entity data)
+
+    Three recursive passes with decreasing intensity model constructive
+    interference: each pass's output becomes the next pass's input. By pass 3
+    the field has stabilized at the standing-wave peak of all contributions.
+    """
+    if not systems:
+        return
+    ifield = systems.get("identity_field")
+    if ifield is None or not hasattr(ifield, "ingest_external_input"):
+        return
+
+    try:
+        contributions = []  # (axes_dict, base_intensity, source_label)
+
+        # ── SediMemory — history, definitions, agency ─────────────────────────
+        sm = systems.get("sedimemory")
+        if sm is not None:
+            _axis_contribs = {
+                "T": ({"X": 0.45, "T": 0.85, "N": 0.22, "B": 0.50, "A": 0.65}, "memory_history"),
+                "B": ({"X": 0.65, "T": 0.42, "N": 0.32, "B": 0.88, "A": 0.55}, "memory_definitions"),
+                "A": ({"X": 0.50, "T": 0.72, "N": 0.25, "B": 0.52, "A": 0.92}, "memory_agency"),
+            }
+            for axis, (axes_vec, label) in _axis_contribs.items():
+                try:
+                    frags = (sm.recall_axis(axis, resonance_floor=0.35) or [])[:4]
+                    if frags:
+                        mean_res = sum(
+                            float(getattr(f, "resonance", 0.5)) for f in frags
+                        ) / len(frags)
+                        contributions.append((axes_vec, min(0.90, 0.60 + mean_res * 0.30), label))
+                except Exception:
+                    pass
+
+        # ── Sensory crystal maturity ───────────────────────────────────────────
+        sc = (
+            systems.get("sensory_crystal")
+            or getattr(systems.get("hardware"), "sensory_crystal", None)
+        )
+        if sc is not None and hasattr(sc, "get_state"):
+            try:
+                maturity = float((sc.get_state() or {}).get("maturity", 0.0))
+                if maturity > 0.08:
+                    contributions.append((
+                        {"X": 0.60, "T": 0.65, "N": 0.72, "B": 0.52, "A": 0.55},
+                        min(0.82, 0.48 + maturity * 0.42),
+                        "sensory_maturity",
+                    ))
+            except Exception:
+                pass
+
+        # ── Live axis state — self-recursive reference ────────────────────────
+        with _axis_state_lock:
+            live = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        if max(live.values()) - min(live.values()) >= 0.10:
+            contributions.append((live, 0.78, "live_self_reference"))
+
+        # ── Relational context ────────────────────────────────────────────────
+        if systems.get("_relational_claim_log"):
+            contributions.append((
+                {"X": 0.52, "T": 0.62, "N": 0.38, "B": 0.80, "A": 0.78},
+                0.65,
+                "relational_context",
+            ))
+
+        if not contributions:
+            return
+
+        # ── Three recursive passes — constructive interference amplification ──
+        # Pass intensities decrease slightly each round. The feedback loop is:
+        #   1. Pump all contributions → builds composite
+        #   2. Read field's new activation → re-inject at reduced intensity
+        #      (field reading itself = the recursion)
+        #   3. Settling pass at lower intensity → stable at interference peak
+        _PASSES = [1.00, 0.78, 0.58]
+
+        for pass_n, scale in enumerate(_PASSES):
+            for axes, base_intensity, source in contributions:
+                try:
+                    ifield.ingest_external_input(
+                        axes,
+                        intensity=base_intensity * scale,
+                        source=f"composite_p{pass_n + 1}:{source}",
+                    )
+                except Exception:
+                    pass
+
+            # Between passes: read field's current activation and re-inject it.
+            # This is the recursion — each pass's output drives the next pass's
+            # starting state, amplifying the peaks and suppressing the troughs.
+            if pass_n < len(_PASSES) - 1:
+                try:
+                    aa = getattr(ifield, "axis_activation", None)
+                    if aa is not None:
+                        field_now = (
+                            {k: float(aa.get(k, 0.5)) for k in "XTNBA"}
+                            if isinstance(aa, dict)
+                            else dict(zip("XTNBA", (float(v) for v in aa)))
+                        )
+                        if max(field_now.values()) - min(field_now.values()) >= 0.06:
+                            ifield.ingest_external_input(
+                                field_now,
+                                intensity=0.50 * scale,
+                                source=f"field_recursion_p{pass_n + 1}",
+                            )
+                except Exception:
+                    pass
+
+        log.debug(
+            "Waveform composite primed: %d sources × %d passes",
+            len(contributions), len(_PASSES),
+        )
+    except Exception as exc:
+        log.debug("_prime_waveform_composite: %s", exc)
+
+
+def _anchor_expressed_crest(systems: dict) -> None:
+    """
+    After a response is generated, anchor the expressed axis peak back into the
+    identity field. This preserves the crest that was just reached — without
+    this the field would decay to baseline between turns, discarding the peak.
+
+    Anchored at 0.65 intensity so the field remains open to evolution rather
+    than freezing at the expressed state.
+    """
+    if not systems:
+        return
+    ifield = systems.get("identity_field")
+    if ifield is None:
+        return
+    try:
+        with _axis_state_lock:
+            expressed = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        ifield.ingest_external_input(
+            expressed,
+            intensity=0.65,
+            source="expressed_crest_anchor",
+        )
+        if hasattr(ifield, "ingest_sensory_event"):
+            ifield.ingest_sensory_event(
+                "language", intensity=0.68, novelty=0.20, valence=0.50
+            )
+    except Exception as exc:
+        log.debug("_anchor_expressed_crest: %s", exc)
 
 
 def _ingest_example(example_text: str, concept: str) -> None:
@@ -794,6 +1893,9 @@ def _ingest_example(example_text: str, concept: str) -> None:
         log.warning("Genealogy tick failed: %s", exc)
 
     log.info("Example ingested — concept %r now has semantic modality data", concept)
+    # Mark resolved so the gap detector doesn't re-arm the teaching loop for
+    # this concept — the pressure has been relieved through ingestion.
+    _ingested_concepts.add(concept.lower().strip())
 
 
 def _is_explicit_correction(text: str) -> bool:
@@ -1497,6 +2599,109 @@ def _store_curiosity_report(
         autonomy.trigger.add_thought(summary)
 
 
+def _infer_dominant_facet(screen_obs: dict) -> str:
+    """
+    Map screen/camera observation to a tone string the sensory waveform understands.
+    Returns one of the labels the waveform checks, or "" if no strong signal.
+    """
+    visible = " ".join(str(t).lower() for t in screen_obs.get("visible_text", []))
+    package = str(screen_obs.get("package", "")).lower()
+
+    hostile = {"hate", "angry", "fight", "attack", "danger", "threat", "urgent", "emergency", "warning"}
+    warm    = {"love", "thank", "happy", "great", "wonderful", "cute", "lol", "haha", "sweet", "miss you"}
+    alert   = {"alert", "alarm", "call", "missed call", "911"}
+
+    if any(w in visible for w in hostile):
+        return "hostile"
+    if any(w in visible for w in alert):
+        return "alert"
+    if any(w in visible for w in warm):
+        return "warm"
+    if any(s in package for s in ("message", "sms", "whatsapp", "telegram", "chat", "gmail", "mail")):
+        return "warm"
+    if any(s in package for s in ("alarm", "emergency", "dialer", "phone")):
+        return "urgent"
+    return ""
+
+
+def _proactive_loop() -> None:
+    """
+    Background daemon: periodically runs the full waveform pipeline from
+    current sensory state with no user message.  If the conscious crest
+    decides Aurora should speak, the response is queued for delivery.
+
+    Rate-limited to _MIN_PROACTIVE_GAP seconds.  Skips if Aurora is
+    already speaking, a curiosity session is active, or the main lock
+    is held (user turn in progress).
+    """
+    import time as _t
+
+    while True:
+        try:
+            _t.sleep(35)
+            if _systems is None:
+                continue
+
+            now = _t.time()
+            global _last_proactive_ts
+            if now - _last_proactive_ts < _MIN_PROACTIVE_GAP:
+                continue
+
+            with _axis_state_lock:
+                if _last_axis_state.get("speaking"):
+                    continue
+            if _curiosity_session_active.is_set():
+                continue
+
+            # Sample what she's currently perceiving
+            _sample_ambient_perception(_systems)
+            obs = str((_systems.get("_ambient_perceptual") or {}).get("observation") or "").strip()
+            if not obs:
+                continue
+
+            # Non-blocking lock — skip this tick rather than stall a user turn
+            if not _lock.acquire(blocking=False):
+                continue
+            try:
+                import aurora as _aurora  # type: ignore
+                result = _aurora.process_external_user_turn(
+                    _systems,
+                    obs,
+                    source_label="aurora_sensory_pulse",
+                    session_id="mobile",
+                    auto_search_enabled=False,
+                    record_exchange=False,
+                    update_interactive_state=False,
+                    track_evolutionary_trace=False,
+                    run_periodic_maintenance=False,
+                    mode_name="BOUNDED",
+                )
+            finally:
+                _lock.release()
+
+            response = _sanitize_response(_extract_response(result), obs)
+            if response and len(response.strip()) > 10:
+                with _proactive_expression_lock:
+                    global _proactive_expression
+                    _proactive_expression = response.strip()
+                _last_proactive_ts = now
+
+        except Exception as exc:
+            log.warning("proactive loop: %s", exc)
+
+
+def get_proactive_expression() -> str:
+    """
+    Called by AuroraService's polling loop.
+    Returns and clears any expression Aurora generated autonomously, or "".
+    """
+    global _proactive_expression
+    with _proactive_expression_lock:
+        val = _proactive_expression
+        _proactive_expression = ""
+    return val
+
+
 def get_pending_report() -> str:
     """
     Called by AuroraService's polling loop.
@@ -1632,6 +2837,12 @@ def provide_screen_observation(payload_json: str) -> None:
         sensory_context["concepts_active"] = list(dict.fromkeys(
             [app_label, event_type] + visible[:6] + list(sensory_context.get("concepts_active") or [])
         ))[:10]
+
+        # Give the sensory waveform a readable tone so it produces a
+        # meaningful crest rather than always defaulting to perceptually_steady.
+        facet = _infer_dominant_facet(observation)
+        if facet:
+            sensory_context["dominant_facet"] = facet
 
         write_surface_snapshot(
             state_dir,
