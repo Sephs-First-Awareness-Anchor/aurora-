@@ -1740,28 +1740,32 @@ def _feed_sensory_crystal_frames(
         log.debug("Sensory crystal fed: audio_conf=%.2f visual_conf=%.2f", audio_conf, visual_conf)
 
         # Feed activated sensory crystal nodes into the concept crystal registry.
-        # Each node_id that fired gets recorded at the current axis-state bucket,
-        # alongside what makes this specific frame different from the archetype.
+        # Each node_id that fired is recorded at the current axis-state bucket.
+        # The cross-modal middle plane hits are SEMANTIC GROUNDING events —
+        # they represent audio↔visual co-occurrence reaching the semantic plane,
+        # which is what connects raw sense data to meaning and enables composite
+        # promotion. They call observe_lsa(), not observe_sensory().
         if _concept_registry is not None and isinstance(frame_result, dict):
             try:
-                from aurora_core_ai.concept_crystal import SensoryDim  # type: ignore
                 with _axis_state_lock:
                     _ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
 
-                # Visual hits — each matched node_id is a sensory reference
+                # Visual hits — raw sense activations. Cannot promote to composite
+                # alone; they need semantic grounding (LSA or cross-modal).
                 v_hits = frame_result.get("visual") or {}
                 for _facet, _nid in v_hits.items():
                     if _nid:
-                        # overlay: what's specific about this frame (brightness, motion, etc.)
                         _v_overlay = {
-                            "facet":   _facet,
+                            "facet":      _facet,
                             "brightness": float((visual_data or {}).get("brightness", 0.5)),
                             "motion":     bool((visual_data or {}).get("motion_detected", False)),
                             "conf":       round(visual_conf, 2),
                         }
-                        _concept_registry.observe_sensory(_ax, SensoryDim.VISUAL, _nid, _v_overlay)
+                        _concept_registry.observe_sensory(
+                            _ax, "visual", _nid, _v_overlay
+                        )
 
-                # Audio hits
+                # Audio hits — raw sense activations, same principle.
                 a_hits = frame_result.get("audio") or {}
                 for _facet, _nid in a_hits.items():
                     if _nid:
@@ -1770,16 +1774,20 @@ def _feed_sensory_crystal_frames(
                             "volume": float((audio_data or {}).get("volume", 0.5)),
                             "conf":   round(audio_conf, 2),
                         }
-                        _concept_registry.observe_sensory(_ax, SensoryDim.AUDIO, _nid, _a_overlay)
+                        _concept_registry.observe_sensory(
+                            _ax, "audio", _nid, _a_overlay
+                        )
 
-                # Semantic (cross-modal middle plane) hits — also sensory events
+                # Cross-modal middle plane hits — these ARE semantic grounding.
+                # When visual and audio co-occur at the sensory crystal's semantic
+                # plane (tonal_colour / texture_form / tempo_flow lanes), that IS
+                # the moment raw signal connects to the meaning plane. These call
+                # observe_lsa() because they perform the same function as an LSA
+                # path: they ground a sense at its semantic coordinate.
                 s_hits = frame_result.get("semantic") or {}
                 for _lane, _snid in s_hits.items():
                     if _snid:
-                        _concept_registry.observe_sensory(
-                            _ax, SensoryDim.SEMANTIC, _snid,
-                            {"lane": _lane, "src": "cross_modal"},
-                        )
+                        _concept_registry.observe_lsa(_ax, f"xmodal:{_lane}:{_snid}")
             except Exception as _ccr_exc:
                 log.debug("concept_registry sensory feed: %s", _ccr_exc)
     except Exception as exc:
@@ -3528,16 +3536,14 @@ def provide_hardware_sensors(json_str: str) -> None:
         # is a genuine perceptual channel — Aurora's body feeling its own state.
         if _concept_registry is not None and _hardware_sensors:
             try:
-                from aurora_core_ai.concept_crystal import SensoryDim  # type: ignore
                 with _axis_state_lock:
                     _hw_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
-                # Body fingerprint — discretized so similar body states hit the same ref
-                _bat   = round(float(_hardware_sensors.get("battery_pct", 50.0)) / 20.0) * 20.0
-                _mot   = round(float(_hardware_sensors.get("motion", 0.0)) / 2.0) * 2.0
+                _bat    = round(float(_hardware_sensors.get("battery_pct", 50.0)) / 20.0) * 20.0
+                _mot    = round(float(_hardware_sensors.get("motion", 0.0)) / 2.0) * 2.0
                 _hw_ref = f"hw:bat{_bat:.0f}:mot{_mot:.1f}"
                 _hw_overlay = {k: round(float(v), 2) for k, v in _hardware_sensors.items()}
                 _concept_registry.observe_sensory(
-                    _hw_ax, SensoryDim.PROPRIOCEPTIVE, _hw_ref, _hw_overlay
+                    _hw_ax, "proprioceptive", _hw_ref, _hw_overlay
                 )
             except Exception:
                 pass
@@ -3919,14 +3925,13 @@ def _feed_self_entity(cur_ax: dict) -> dict:
         # at the current axis state — Aurora observing herself IS a perceptual act.
         if _concept_registry is not None:
             try:
-                from aurora_core_ai.concept_crystal import SensoryDim  # type: ignore
                 _self_ref = f"self:{max(cur_ax, key=cur_ax.__getitem__)}"
                 _self_overlay = {
                     "dominant": max(cur_ax, key=cur_ax.__getitem__),
                     "hardware": {k: round(float(v), 2) for k, v in _hardware_sensors.items()},
                 }
                 _concept_registry.observe_sensory(
-                    cur_ax, SensoryDim.SELF_OBS, _self_ref, _self_overlay
+                    cur_ax, "self_obs", _self_ref, _self_overlay
                 )
             except Exception:
                 pass
