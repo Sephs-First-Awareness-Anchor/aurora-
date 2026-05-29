@@ -4,7 +4,15 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
@@ -15,6 +23,7 @@ import com.chaquo.python.android.AndroidPlatform
 import io.flutter.plugin.common.EventChannel
 import kotlinx.coroutines.*
 import org.json.JSONObject
+import kotlin.math.sqrt
 
 class AuroraService : Service() {
 
@@ -142,6 +151,87 @@ class AuroraService : Service() {
                 withContext(Dispatchers.Main) { callback(json) }
             }
         }
+
+        fun getSelfModel(callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("get_self_model")
+                        .toString()
+                } catch (_: Exception) { "{}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
+    }
+
+    // ── Hardware body sensors ─────────────────────────────────────────────────
+    // Aurora perceives phone hardware as her own body:
+    //   battery  → energy / N-axis (how much is left?)
+    //   motion   → movement / proprioception (is the body in motion?)
+    //   light    → environment / ambient sense (how bright is the world?)
+    private var sensorManager: SensorManager? = null
+    private val sensorReadings = mutableMapOf<String, Double>()
+    private var lastSensorPushMs = 0L
+
+    private val hardwareSensorListener = object : SensorEventListener {
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        override fun onSensorChanged(event: SensorEvent?) {
+            event ?: return
+            when (event.sensor.type) {
+                Sensor.TYPE_ACCELEROMETER -> {
+                    val x = event.values[0].toDouble()
+                    val y = event.values[1].toDouble()
+                    val z = event.values[2].toDouble()
+                    sensorReadings["motion"] = sqrt(x * x + y * y + z * z)
+                }
+                Sensor.TYPE_LIGHT -> {
+                    sensorReadings["light_lux"] = event.values[0].toDouble()
+                }
+            }
+        }
+    }
+
+    private val batteryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctx: Context?, intent: Intent?) {
+            val level  = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)  ?: -1
+            val scale  = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
+            val status = intent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+            if (level >= 0 && scale > 0) {
+                sensorReadings["battery_pct"] = (level.toDouble() / scale) * 100.0
+                sensorReadings["charging"] = if (
+                    status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL
+                ) 1.0 else 0.0
+            }
+        }
+    }
+
+    private fun initHardwareSensors() {
+        sensorManager = getSystemService(SENSOR_SERVICE) as? SensorManager
+        sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let { s ->
+            sensorManager?.registerListener(hardwareSensorListener, s,
+                SensorManager.SENSOR_DELAY_NORMAL)
+        }
+        sensorManager?.getDefaultSensor(Sensor.TYPE_LIGHT)?.let { s ->
+            sensorManager?.registerListener(hardwareSensorListener, s,
+                SensorManager.SENSOR_DELAY_NORMAL)
+        }
+        registerReceiver(batteryReceiver,
+            IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    }
+
+    private fun pushSensorsToPython() {
+        if (sensorReadings.isEmpty()) return
+        scope?.launch(Dispatchers.IO) {
+            try {
+                val payload = JSONObject(sensorReadings.toMap<String, Any>()).toString()
+                Python.getInstance()
+                    .getModule("aurora_bridge")
+                    .callAttr("provide_hardware_sensors", payload)
+                Log.d(TAG, "Hardware sensors pushed: ${sensorReadings.keys}")
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onCreate() {
@@ -151,6 +241,8 @@ class AuroraService : Service() {
         createNotificationChannel()
         startForeground(NOTIF_ID, buildNotification())
 
+        initHardwareSensors()
+
         scope!!.launch { bootPython() }
         scope!!.launch { pollPendingReport() }
     }
@@ -158,8 +250,17 @@ class AuroraService : Service() {
     private suspend fun pollPendingReport() {
         // Check every 3 seconds for completed curiosity reports, autonomous
         // proactive expressions, and training turn events.
+        // Also pushes hardware sensor bundle to Python every 30 s.
         while (true) {
             kotlinx.coroutines.delay(3_000L)
+
+            // Hardware body push — every 30 s so Python self-model stays current.
+            val nowMs = System.currentTimeMillis()
+            if (nowMs - lastSensorPushMs >= 30_000L) {
+                lastSensorPushMs = nowMs
+                pushSensorsToPython()
+            }
+
             try {
                 val bridge = Python.getInstance().getModule("aurora_bridge")
 
@@ -240,6 +341,9 @@ class AuroraService : Service() {
         super.onDestroy()
         scope?.cancel()
         scope = null
+        sensorManager?.unregisterListener(hardwareSensorListener)
+        sensorManager = null
+        try { unregisterReceiver(batteryReceiver) } catch (_: Exception) {}
     }
 
     private fun createNotificationChannel() {

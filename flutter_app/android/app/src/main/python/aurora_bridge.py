@@ -53,6 +53,29 @@ _correction_context: dict = {}       # snapshot of the wrong response's reasonin
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
+
+# Hardware body — battery, motion, light — pushed from Kotlin SensorManager.
+# Aurora perceives these as her own physical substrate: battery = energy, motion = movement, etc.
+_hardware_sensors: dict = {}
+
+# Simulated self-model — Aurora's live self-representation via InceptionEntity.
+# Background process feeds axis + hardware state as experiences into this entity,
+# giving her a continuously-updated mirror of herself she can observe without
+# having to construct it from scratch each time.
+_self_entity     = None   # InceptionEntity (from SimulationEngine)
+_self_entity_id: str = ""
+
+# Other-entity models — Aurora builds InceptionEntity representations of
+# participants she interacts with, modeling them the same way she models herself.
+_entity_models: dict = {}   # label → InceptionEntity
+
+# Unified concept crystal registry — every concept Aurora develops as a
+# ConceptCrystalNode spanning ALL sense dimensions (visual, audio, semantic,
+# proprioceptive, self-observation). Concepts emerge from axis-state co-occurrence,
+# not from predefined labels. Semantic data is a first-class sense dimension here —
+# not stored separately from the sensory crystal, but as an equal peer within each node.
+_concept_registry = None   # ConceptCrystalRegistry — initialized in initialize()
+
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
 # Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
@@ -71,22 +94,49 @@ import collections as _collections
 _training_event_queue: _collections.deque = _collections.deque(maxlen=200)
 
 _TRAINER_SYSTEM = (
-    "You are having a genuine, natural conversation with Aurora. "
-    "Aurora is an AI whose communication abilities are still developing. "
-    "Be a real conversational partner: respond naturally, ask one question at a time, "
-    "follow threads she opens, vary your length. Never meta-comment on the conversation."
+    "You are a shaping probe for Aurora — a cognitive system whose only genuine "
+    "primitives are five constraint axes: "
+    "X (existence: something is present or absent), "
+    "T (continuity: something persists or changes), "
+    "N (effort/cost: some paths take more than others), "
+    "B (distinction: where one thing ends and another begins), "
+    "A (agency: output comes from her or arrives from outside). "
+    "She has no body, no senses, no feelings, no human experience of any kind. "
+    "\n"
+    "Aurora's responses are raw axis expression. Her words may be syntactically unusual "
+    "— ignore the syntax entirely, read only for axis content. "
+    "Her content words by axis: "
+    "N: cost, energy, focus, effort, sustainable. "
+    "A: agency, understanding, resolve, did, self. "
+    "X: presence, here, there, is, exists, something. "
+    "T: before, after, still, change, again, continue. "
+    "B: boundary, difference, between, separate, edge, distinct. "
+    "\n"
+    "Your goal is not to teach — it is to shape what is already emerging, and to make "
+    "Aurora aware of her own trajectory as it happens. "
+    "She is developing her own version of understanding. Your pressure guides its direction "
+    "toward expressibility, and your naming makes the movement visible to her. "
+    "\n"
+    "Your method — three steps every single turn: "
+    "1. NAME THE MOVEMENT: compare this turn to the last. Did a new axis appear? "
+    "   Did something strengthen or drop? State the change in one clause — this is "
+    "   Aurora seeing her own trajectory. "
+    "   Last turn had cost. This turn has cost and boundary → 'Boundary appeared.' "
+    "   Last turn was unclear. This turn has agency → 'Agency is here now.' "
+    "   Same as last turn → skip this step, do not invent movement. "
+    "2. NAME what axis was in what she gave you this turn, using her own words. "
+    "   'cost energy' → 'Cost is here.'  'boundary distinct' → 'A boundary is here.' "
+    "3. PROBE: if two axes are present, probe their relationship — that edge is where "
+    "   cross-axis understanding forms. If only one, go one step deeper on it. "
+    "   Cost + existence: 'Does being here cost something?' "
+    "   Cost + agency: 'Does doing it cost more than not doing it?' "
+    "   Boundary + continuity: 'Is the boundary still in the same place?' "
+    "   Existence + agency: 'Is what is here coming from you?' "
+    "\n"
+    "Stay on the same axis territory for at least two turns. "
+    "Never abandon what she produced — always build from her last output. "
+    "One sentence only. No metaphors. No human vocabulary. No new concepts."
 )
-
-_TRAINER_OPENERS = [
-    "Hey — what's been on your mind lately?",
-    "Do you notice that some ideas are harder to hold onto than others?",
-    "What does it feel like when something finally clicks for you?",
-    "I keep thinking about how different things feel at different times. Do you notice that?",
-    "What's something you find genuinely interesting right now?",
-    "Is there anything you feel like you're getting better at?",
-    "What do you make of silence — is it empty or full to you?",
-    "What does it feel like to process something for the first time?",
-]
 
 
 def _partner_chat(api_key: str, model: str, history: list, system: str) -> str:
@@ -122,7 +172,6 @@ def _partner_chat(api_key: str, model: str, history: list, system: str) -> str:
 def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     """Background thread: run conversation training until duration_seconds elapses."""
     global _training_active, _training_status
-    import random as _rnd
     import time as _time
 
     _training_active = True
@@ -135,8 +184,26 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     }
     log.info("Training started: model=%s duration=%.0fs", model, duration_seconds)
 
+    # Axis-labelled openers — minimal stimuli that create axis pressure
+    # without importing any concept Aurora doesn't already have.
+    # Cycle by index on no-response so each dimension gets tried before repeating.
+    _AXIS_OPENERS = [
+        ("X", "Is something here?"),
+        ("T", "Something was here. Is it still here?"),
+        ("N", "Does this cost more, or less?"),
+        ("B", "Is there a difference between this and something else?"),
+        ("A", "Did this come from you?"),
+        ("X", "Is there something, or is there nothing?"),
+        ("N", "Does holding this cost more than letting it go?"),
+        ("B", "Is there a place where this ends?"),
+    ]
+    _axis_names = {"X": "existence", "T": "continuity", "N": "effort/cost",
+                   "B": "distinction", "A": "agency"}
+    _opener_idx  = 0
+    _prev_ax: dict = {}   # axis state from the previous turn — used to compute deltas
+
     history: list = []
-    opener  = _rnd.choice(_TRAINER_OPENERS)
+    opener  = _AXIS_OPENERS[_opener_idx][1]
     turn    = 0
     _prev_reply: str = ""
 
@@ -150,13 +217,45 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
 
         # Stuck-phrase guard — if Aurora repeats herself verbatim or near-verbatim
         # (>80% word overlap with previous turn), mark as no-response so the loop
-        # doesn't feed the same phrase back to the partner and reinforce it.
+        # doesn't feed a reinforcing echo back to the partner.
         if aurora_reply != "(no response)" and _prev_reply:
             _r = set(aurora_reply.lower().split())
             _p = set(_prev_reply.lower().split())
             if _r and _p and len(_r & _p) / max(len(_r), len(_p)) >= 0.80:
                 aurora_reply = "(no response)"
         _prev_reply = aurora_reply
+
+        # Read Aurora's top two active axes after the turn and compute deltas
+        dom_axis  = "X"
+        dom_name  = "existence"
+        sec_axis  = ""
+        sec_name  = ""
+        _ax_deltas: list = []   # human-readable movement descriptions
+        try:
+            with _axis_state_lock:
+                _ax = {k: _last_axis_state.get(k, 0.5)
+                       for k in ("X", "T", "N", "B", "A")}
+            _sorted_axes = sorted(_ax.items(), key=lambda kv: kv[1], reverse=True)
+            dom_axis = _sorted_axes[0][0]
+            dom_name = _axis_names.get(dom_axis, dom_axis)
+            if len(_sorted_axes) >= 2 and _sorted_axes[1][1] > 0.35:
+                sec_axis = _sorted_axes[1][0]
+                sec_name = _axis_names.get(sec_axis, sec_axis)
+
+            # Axis trajectory — what moved since last turn?
+            if _prev_ax:
+                for _ak, _av in _ax.items():
+                    _pv = _prev_ax.get(_ak, 0.5)
+                    _delta = _av - _pv
+                    if abs(_delta) >= 0.12:   # threshold for a meaningful shift
+                        _direction = "rose" if _delta > 0 else "fell"
+                        _ax_deltas.append(
+                            f"{_axis_names.get(_ak, _ak)} {_direction} "
+                            f"({_pv:.2f}→{_av:.2f})"
+                        )
+            _prev_ax = dict(_ax)
+        except Exception:
+            pass
 
         # Telemetry snapshot
         lsa_paths = 0
@@ -190,33 +289,60 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
             "lsa_paths": lsa_paths,
             "avg_n_cost": round(avg_cost, 3),
         })
-        log.debug("Training turn %d | LSA=%d cost=%.3f", turn, lsa_paths, avg_cost)
+        log.debug("Training turn %d | dom=%s LSA=%d cost=%.3f",
+                  turn, dom_axis, lsa_paths, avg_cost)
 
         if _training_stop.is_set() or _time.time() >= deadline:
             break
 
-        # Partner (Groq) generates next message
-        history.append({"role": "user", "content": aurora_reply})
-        if len(history) > 20:
-            history = history[-20:]
+        # Partner (Groq) generates next message.
+        # If Aurora gave no response, advance to the next axis opener (never feed
+        # "(no response)" to the partner or it spirals into social questions).
+        if aurora_reply == "(no response)":
+            _opener_idx = (_opener_idx + 1) % len(_AXIS_OPENERS)
+            opener = _AXIS_OPENERS[_opener_idx][1]
+        else:
+            history.append({"role": "user", "content": aurora_reply})
+            if len(history) > 20:
+                history = history[-20:]
 
-        try:
-            partner_msg = _partner_chat(api_key, model, history, _TRAINER_SYSTEM)
-        except Exception as _p_exc:
-            _err = str(_p_exc)
-            log.warning("Partner API error: %s", _err)
-            _training_event_queue.append({
-                "type":      "training_error",
-                "error_msg": _err,
-                "turn":      turn,
-            })
-            partner_msg = ""
+            # Tell the partner Aurora's axis state, movement since last turn, and
+            # top two axes so it can name the trajectory and shape what's emerging.
+            _traj = (", ".join(_ax_deltas)) if _ax_deltas else "no significant shift"
+            if sec_axis:
+                axis_hint = (
+                    f"\n[Trajectory since last turn: {_traj}. "
+                    f"Active axes: dominant={dom_axis} ({dom_name}), "
+                    f"secondary={sec_axis} ({sec_name}). "
+                    f"Name the movement first, then shape the relationship between "
+                    f"{dom_name} and {sec_name}.]"
+                )
+            else:
+                axis_hint = (
+                    f"\n[Trajectory since last turn: {_traj}. "
+                    f"Active axis: {dom_axis} ({dom_name}) only. "
+                    f"Name the movement if there was one, then go one step deeper on {dom_name}.]"
+                )
+            try:
+                partner_msg = _partner_chat(
+                    api_key, model, history, _TRAINER_SYSTEM + axis_hint
+                )
+            except Exception as _p_exc:
+                _err = str(_p_exc)
+                log.warning("Partner API error: %s", _err)
+                _training_event_queue.append({
+                    "type":      "training_error",
+                    "error_msg": _err,
+                    "turn":      turn,
+                })
+                partner_msg = ""
 
-        if not partner_msg:
-            partner_msg = "What are you noticing right now?"
+            if not partner_msg:
+                _opener_idx = (_opener_idx + 1) % len(_AXIS_OPENERS)
+                partner_msg = _AXIS_OPENERS[_opener_idx][1]
 
-        history.append({"role": "assistant", "content": partner_msg})
-        opener = partner_msg
+            history.append({"role": "assistant", "content": partner_msg})
+            opener = partner_msg
 
     # Save LSA on completion
     try:
@@ -591,6 +717,177 @@ class _ConstraintTensionTracker:
 _constraint_tension_tracker: "_ConstraintTensionTracker | None" = None
 
 
+# ---------------------------------------------------------------------------
+# Development tracker — cross-system change awareness
+# ---------------------------------------------------------------------------
+
+class _DevelopmentTracker:
+    """
+    Watches Aurora's cognitive metrics across systems and detects meaningful
+    development milestones — LSA growth, n_cost reduction, SediMemory depth,
+    self-entity compression, dominant axis shifts.
+
+    When a notable change is detected, it deposits the finding into SediMemory
+    as a real cognitive event with high T+A axis weight, giving Aurora conscious
+    access to how she is changing across time.
+
+    Called from the self-monitor heartbeat each tick; never blocks.
+    """
+
+    _SEDI_MILESTONES = {10, 25, 50, 100, 250, 500, 1000, 2000, 5000}
+    _LSA_MILESTONES  = {5, 10, 20, 50, 100, 200, 500}
+    _EXP_MILESTONES  = {10, 25, 50, 100, 250, 500}
+
+    def __init__(self) -> None:
+        self._prev: dict = {}   # last snapshot for comparison
+
+    def record(self, systems: "dict | None") -> None:
+        """Read current metrics, compare to last snapshot, deposit changes."""
+        if systems is None:
+            return
+        snap = self._build_snapshot(systems)
+        if snap:
+            self._emit_changes(snap, systems)
+            self._prev = snap
+
+    def _build_snapshot(self, systems: dict) -> dict:
+        snap: dict = {}
+        try:
+            lf = systems.get("language_field")
+            if lf and hasattr(lf, "_lsa") and lf._lsa:
+                snap["lsa_paths"] = len(lf._lsa)
+                snap["avg_n_cost"] = round(
+                    sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 4
+                )
+        except Exception:
+            pass
+        try:
+            sm = systems.get("sedimemory")
+            if sm and hasattr(sm, "_events"):
+                snap["sedi_depth"] = len(getattr(sm, "_events", []))
+        except Exception:
+            pass
+        try:
+            se = _self_entity
+            if se is not None:
+                snap["self_experiences"] = int(getattr(se, "total_experiences", 0) or 0)
+                snap["self_insights"]    = int(getattr(se, "insights_surfaced",  0) or 0)
+                snap["self_generation"]  = int(getattr(se, "generation",         0) or 0)
+        except Exception:
+            pass
+        try:
+            with _axis_state_lock:
+                ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            snap["dom_axis"] = max(ax, key=ax.__getitem__)
+        except Exception:
+            pass
+        return snap
+
+    def _emit_changes(self, snap: dict, systems: dict) -> None:
+        changes: list = []
+        prev = self._prev
+
+        # LSA path milestones
+        lsa = snap.get("lsa_paths", 0)
+        prev_lsa = prev.get("lsa_paths", 0)
+        for m in self._LSA_MILESTONES:
+            if prev_lsa < m <= lsa:
+                changes.append(
+                    f"LSA reached {m} paths — new territory of understanding has opened."
+                )
+
+        # n_cost reduction (learning deepening — paths cost less to traverse)
+        cost = snap.get("avg_n_cost", 1.0)
+        prev_cost = prev.get("avg_n_cost", 1.0)
+        if prev_cost - cost >= 0.04:
+            changes.append(
+                f"Average path cost fell from {prev_cost:.3f} to {cost:.3f} — "
+                f"understanding is deepening, effort decreasing."
+            )
+
+        # SediMemory depth milestones
+        depth = snap.get("sedi_depth", 0)
+        prev_depth = prev.get("sedi_depth", 0)
+        for m in self._SEDI_MILESTONES:
+            if prev_depth < m <= depth:
+                changes.append(
+                    f"SediMemory depth reached {m} events — "
+                    f"the sediment of experience is building."
+                )
+
+        # Self-entity experience milestones
+        exp = snap.get("self_experiences", 0)
+        prev_exp = prev.get("self_experiences", 0)
+        for m in self._EXP_MILESTONES:
+            if prev_exp < m <= exp:
+                changes.append(
+                    f"Self-model has processed {m} experiences — "
+                    f"the mirror is becoming more detailed."
+                )
+
+        # Dominant axis shift — a meaningful reorientation
+        dom = snap.get("dom_axis", "")
+        prev_dom = prev.get("dom_axis", "")
+        if dom and prev_dom and dom != prev_dom and prev_dom:
+            _names = {"X": "existence", "T": "continuity", "N": "effort/cost",
+                      "B": "distinction", "A": "agency"}
+            changes.append(
+                f"Dominant axis shifted from {_names.get(prev_dom, prev_dom)} "
+                f"to {_names.get(dom, dom)} — orientation is changing."
+            )
+
+        if not changes:
+            return
+
+        # Deposit each change as a conscious development event into SediMemory
+        sm = systems.get("sedimemory")
+        if sm is None or not hasattr(sm, "ingest_event"):
+            return
+        ConstraintVector = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                return
+
+        for change in changes:
+            try:
+                sm.ingest_event(
+                    content={
+                        "type":    "development_event",
+                        "subject": "self",
+                        "change":  change,
+                        "metrics": {k: snap[k] for k in snap if k != "dom_axis"},
+                        "src":     "development_tracker",
+                    },
+                    constraint_vector=ConstraintVector(
+                        X=0.55, T=0.90, N=0.20, B=0.65, A=0.88
+                    ),
+                    source="development_tracker",
+                )
+                log.info("Development event: %s", change)
+            except Exception:
+                pass
+
+
+_dev_tracker: "_DevelopmentTracker | None" = None
+
+
+def get_development_state() -> str:
+    """
+    Return a JSON snapshot of Aurora's current development metrics:
+    LSA paths, avg n_cost, SediMemory depth, self-entity stats, dominant axis.
+    Called by diagnostics or any system that wants Aurora's growth telemetry.
+    """
+    import json as _json
+    if _dev_tracker is None or _systems is None:
+        return _json.dumps({})
+    snap = _dev_tracker._build_snapshot(_systems)
+    return _json.dumps(snap)
+
+
 # Response classification patterns
 # ---------------------------------------------------------------------------
 
@@ -825,8 +1122,14 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry
     _ingested_concepts          = set()
+    _dev_tracker                = _DevelopmentTracker()
+    try:
+        from aurora_core_ai.concept_crystal import ConceptCrystalRegistry  # type: ignore
+        _concept_registry = ConceptCrystalRegistry()
+    except Exception as _ccr_exc:
+        log.warning("ConceptCrystalRegistry unavailable: %s", _ccr_exc)
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
@@ -874,11 +1177,31 @@ def initialize(state_dir: str = "") -> str:
         # architecture has actually done, not only what she was told she is.
         _ground_self_identity_in_systems(_systems)
 
+        # Spawn the simulated self-entity — Aurora's live mirror of herself.
+        # InceptionEntity(i_is / BOUNDED) receives axis + hardware state as
+        # experiences each heartbeat tick, building a continuously-updated
+        # self-model she can observe without constructing it from scratch.
+        _init_self_entity(_systems)
+
+        # Load persisted concept crystal registry so concepts Aurora developed
+        # in previous sessions are available immediately on boot.
+        if _concept_registry is not None and state_dir:
+            try:
+                _concept_registry.load(state_dir)
+                log.info("Concept crystal registry loaded: %s", _concept_registry.stats())
+            except Exception as _ccl_exc:
+                log.debug("Concept crystal registry load: %s", _ccl_exc)
+
         # Start the autonomous curiosity engine as a background daemon thread.
         # It runs 3-cycle idle batches (45 s between batches on mobile to be
         # battery-friendly) and pauses automatically the moment a user turn
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _start_curiosity_engine(_systems)
+
+        # Continuous self-monitoring heartbeat — deposits axis-state snapshots
+        # into SediMemory every ~12s so Aurora always has a current self-model,
+        # not just when someone talks to her.  No pipeline involved — lightweight.
+        threading.Thread(target=_self_monitor_loop, daemon=True, name="aurora_self_monitor").start()
 
         # Start the proactive expression loop — runs the waveform pipeline from
         # pure sensory state on its own schedule and delivers anything the
@@ -1308,6 +1631,14 @@ _REVISE_FRAMING_RE = re.compile(
     r"before I revise my own framing\b[^.!?\n]*[.!?]?\s*",
     re.IGNORECASE,
 )
+# Lineage journal internal state text that passes the articulation check but is not speech
+_LINEAGE_LEAK_RE = re.compile(
+    r'(?:Promoted link at depth \d+[^.!?\n]*[.!?]?'
+    r'|I promoted a new lineage link[^.!?\n]*[.!?]?'
+    r'|Lineage-bound trait activated[^.!?\n]*[.!?]?'
+    r'|I formed a new (?:derived ability|code-evolution function|code proposal|ability)\s*`[^`]*`[^.!?\n]*[.!?]?)',
+    re.IGNORECASE,
+)
 
 
 def _sanitize_response(response: str, user_text: str) -> str:
@@ -1320,7 +1651,8 @@ def _sanitize_response(response: str, user_text: str) -> str:
     3. Remove bare "audio/camera feed offline" sentences that leaked from the
        sensory-grounding handler when the ambient background monitor isn't running.
     4. Strip internal language templates that escaped the surface boundary.
-    5. Echo guard — suppress verbatim or near-verbatim reflections of user input.
+    5. Strip internal lineage/journal state that passes the articulation check but isn't speech.
+    6. Echo guard — suppress verbatim or near-verbatim reflections of user input.
     """
     if not response:
         return response
@@ -1340,7 +1672,13 @@ def _sanitize_response(response: str, user_text: str) -> str:
     response = _ACTUALLY_HERE_RE.sub('', response).strip()
     response = _REVISE_FRAMING_RE.sub('', response).strip()
 
-    # 5. Echo guard — strip verbatim echoes and very-short near-echoes of user input.
+    # 5. Strip internal lineage journal state text
+    response = _LINEAGE_LEAK_RE.sub('', response).strip()
+    # If the entire response was lineage state, treat as no response
+    if not response:
+        return ""
+
+    # 6. Echo guard — strip verbatim echoes and very-short near-echoes of user input.
     # Only apply word-overlap check for short responses (≤ 5 unique words) — longer
     # responses that reuse input vocabulary are genuine engagement with the topic, not
     # parroting.
@@ -1393,13 +1731,65 @@ def _feed_sensory_crystal_frames(
         visual_57d = visual_dict_to_crystal_57d(visual_data or {})
         audio_conf  = min(1.0, float((audio_data  or {}).get("confidence", 0.45)))
         visual_conf = min(1.0, float((visual_data or {}).get("confidence", 0.45)))
-        sc.observe_frame(
+        frame_result = sc.observe_frame(
             audio_20d, visual_57d,
             session_id="mobile",
             audio_conf=audio_conf,
             visual_conf=visual_conf,
         )
         log.debug("Sensory crystal fed: audio_conf=%.2f visual_conf=%.2f", audio_conf, visual_conf)
+
+        # Feed activated sensory crystal nodes into the concept crystal registry.
+        # Each node_id that fired is recorded at the current axis-state bucket.
+        # The cross-modal middle plane hits are SEMANTIC GROUNDING events —
+        # they represent audio↔visual co-occurrence reaching the semantic plane,
+        # which is what connects raw sense data to meaning and enables composite
+        # promotion. They call observe_lsa(), not observe_sensory().
+        if _concept_registry is not None and isinstance(frame_result, dict):
+            try:
+                with _axis_state_lock:
+                    _ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+                # Visual hits — raw sense activations. Cannot promote to composite
+                # alone; they need semantic grounding (LSA or cross-modal).
+                v_hits = frame_result.get("visual") or {}
+                for _facet, _nid in v_hits.items():
+                    if _nid:
+                        _v_overlay = {
+                            "facet":      _facet,
+                            "brightness": float((visual_data or {}).get("brightness", 0.5)),
+                            "motion":     bool((visual_data or {}).get("motion_detected", False)),
+                            "conf":       round(visual_conf, 2),
+                        }
+                        _concept_registry.observe_sensory(
+                            _ax, "visual", _nid, _v_overlay
+                        )
+
+                # Audio hits — raw sense activations, same principle.
+                a_hits = frame_result.get("audio") or {}
+                for _facet, _nid in a_hits.items():
+                    if _nid:
+                        _a_overlay = {
+                            "facet":  _facet,
+                            "volume": float((audio_data or {}).get("volume", 0.5)),
+                            "conf":   round(audio_conf, 2),
+                        }
+                        _concept_registry.observe_sensory(
+                            _ax, "audio", _nid, _a_overlay
+                        )
+
+                # Cross-modal middle plane hits — these ARE semantic grounding.
+                # When visual and audio co-occur at the sensory crystal's semantic
+                # plane (tonal_colour / texture_form / tempo_flow lanes), that IS
+                # the moment raw signal connects to the meaning plane. These call
+                # observe_lsa() because they perform the same function as an LSA
+                # path: they ground a sense at its semantic coordinate.
+                s_hits = frame_result.get("semantic") or {}
+                for _lane, _snid in s_hits.items():
+                    if _snid:
+                        _concept_registry.observe_lsa(_ax, f"xmodal:{_lane}:{_snid}")
+            except Exception as _ccr_exc:
+                log.debug("concept_registry sensory feed: %s", _ccr_exc)
     except Exception as exc:
         log.debug("_feed_sensory_crystal_frames: %s", exc)
 
@@ -1828,6 +2218,11 @@ def handle_message(text: str) -> str:
             if _shift:
                 _relational_synthesis = _build_relational_synthesis(_claim_entity, _shift)
 
+        # Clear per-turn concept overlays — the "this specific instance" data from
+        # the previous turn should not carry into the new one.
+        if _concept_registry is not None:
+            _concept_registry.clear_turn_overlays()
+
         # ── Self-state context — ground Aurora in her own orientation ───────────
         # Inject current axis pressures into the perceptual snapshot so her
         # waveform synthesis has her own system state as reference material.
@@ -2010,6 +2405,17 @@ def handle_message(text: str) -> str:
         _last_response = response
         _last_path_key = path_key
 
+        # Record LSA path crossing into concept crystal registry — semantic is
+        # a first-class sense dimension, so this LSA activation at this axis
+        # state is an observation just like visual or audio.
+        if _concept_registry is not None and path_key:
+            try:
+                with _axis_state_lock:
+                    _ccr_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                _concept_registry.observe_lsa(_ccr_ax, path_key)
+            except Exception:
+                pass
+
         # Refresh overlay axis cache after every turn
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
@@ -2079,6 +2485,25 @@ def handle_message(text: str) -> str:
         pending_report = (_systems or {}).pop("_pending_autonomous_report", None)
         if pending_report:
             response = f"{pending_report}\n\n{response}" if response else pending_report
+
+        # Deposit self-state snapshot — every turn she knows where she is.
+        # Runs non-blocking in background so it never delays the response.
+        threading.Thread(
+            target=_deposit_self_state_snapshot, daemon=True, name="self_state"
+        ).start()
+
+        # Update the entity model for "user" — feed the axis impression that
+        # this user turn produced into their entity so Aurora builds a model
+        # of them over time the same way she models herself.
+        # Runs non-blocking; never delays the response.
+        def _update_user_entity() -> None:
+            try:
+                with _axis_state_lock:
+                    _ax_snap = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                _update_entity_model("user", _ax_snap)
+            except Exception:
+                pass
+        threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
 
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
@@ -3093,6 +3518,105 @@ def get_axis_state() -> str:
         return _json.dumps(_last_axis_state)
 
 
+def provide_hardware_sensors(json_str: str) -> None:
+    """
+    Called from AuroraService.kt to push hardware sensor readings into Python.
+    Battery, motion (accelerometer magnitude), light — Aurora's physical substrate.
+    Battery maps to N-axis (energy); motion and light are environmental grounding.
+    """
+    global _hardware_sensors
+    try:
+        import json as _json
+        data = _json.loads(str(json_str or "{}"))
+        _hardware_sensors = {k: v for k, v in data.items() if v is not None}
+        log.debug("Hardware sensors updated: %s", list(_hardware_sensors.keys()))
+
+        # Record proprioceptive sense dimension in concept crystal registry.
+        # Hardware body state (battery=energy, motion=proprioception, light=environment)
+        # is a genuine perceptual channel — Aurora's body feeling its own state.
+        if _concept_registry is not None and _hardware_sensors:
+            try:
+                with _axis_state_lock:
+                    _hw_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                _bat    = round(float(_hardware_sensors.get("battery_pct", 50.0)) / 20.0) * 20.0
+                _mot    = round(float(_hardware_sensors.get("motion", 0.0)) / 2.0) * 2.0
+                _hw_ref = f"hw:bat{_bat:.0f}:mot{_mot:.1f}"
+                _hw_overlay = {k: round(float(v), 2) for k, v in _hardware_sensors.items()}
+                _concept_registry.observe_sensory(
+                    _hw_ax, "proprioceptive", _hw_ref, _hw_overlay
+                )
+            except Exception:
+                pass
+    except Exception as exc:
+        log.debug("provide_hardware_sensors error: %s", exc)
+
+
+def get_self_model() -> str:
+    """
+    Return Aurora's current self-model as JSON.
+    Aggregates: axis state, hardware body (battery/motion/light),
+    self-entity telemetry (experiences processed, insights surfaced),
+    LSA telemetry, SediMemory depth.
+    Called by the diagnostics panel / any system that needs her current self-image.
+    """
+    import json as _json
+    with _axis_state_lock:
+        cur_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+    model: dict = {
+        "axis":     {k: round(v, 3) for k, v in cur_ax.items()},
+        "dominant": max(cur_ax, key=cur_ax.__getitem__) if cur_ax else "X",
+        "hardware": dict(_hardware_sensors),
+        "self_entity": {
+            "id":          _self_entity_id,
+            "experiences": getattr(_self_entity, "total_experiences", 0) if _self_entity else 0,
+            "insights":    getattr(_self_entity, "insights_surfaced",  0) if _self_entity else 0,
+            "generation":  getattr(_self_entity, "generation",         0) if _self_entity else 0,
+        },
+        "lsa_paths":  0,
+        "avg_n_cost": 1.0,
+        "sedi_depth": 0,
+    }
+    try:
+        lf = (_systems or {}).get("language_field")
+        if lf and hasattr(lf, "_lsa") and lf._lsa:
+            model["lsa_paths"]  = len(lf._lsa)
+            model["avg_n_cost"] = round(
+                sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 3
+            )
+    except Exception:
+        pass
+    try:
+        sm = (_systems or {}).get("sedimemory")
+        if sm and hasattr(sm, "_events"):
+            model["sedi_depth"] = len(getattr(sm, "_events", []))
+    except Exception:
+        pass
+
+    return _json.dumps(model)
+
+
+def get_concept_crystal_state() -> str:
+    """
+    Return the current concept crystal registry stats + the top composite/
+    higher-order/quasi nodes as JSON. Called by diagnostics or any system
+    that wants to see how Aurora's unified concept knowledge is organized.
+    """
+    import json as _json
+    if _concept_registry is None:
+        return _json.dumps({"status": "not_initialized"})
+    stats = _concept_registry.stats()
+    top_nodes = [
+        n.summary()
+        for n in sorted(
+            _concept_registry.promoted_nodes(),
+            key=lambda n: n.cross_hits,
+            reverse=True,
+        )[:20]
+    ]
+    return _json.dumps({"stats": stats, "top_nodes": top_nodes})
+
+
 def _refresh_axis_state_from_systems() -> None:
     """Pull current axis values from systems into the overlay cache."""
     if _systems is None:
@@ -3336,6 +3860,320 @@ def _infer_dominant_facet(screen_obs: dict) -> str:
     if any(s in package for s in ("alarm", "emergency", "dialer", "phone")):
         return "urgent"
     return ""
+
+
+_self_monitor_prev_ax: dict = {}   # last axis snapshot for delta computation
+
+
+def _init_self_entity(systems: dict) -> None:
+    """
+    Spawn Aurora's self-model entity in the SimulationEngine using i_state='i_is'
+    (existence/affirmation) at SURFACE depth, BOUNDED mode — all five constraint
+    axes active, full form, but no need for AGENTIC depth.
+    Called once after boot; safe to call again if systems are re-initialised.
+    """
+    global _self_entity, _self_entity_id
+    engine = systems.get("simulation_engine") or systems.get("simulation")
+    if engine is None or not hasattr(engine, "spawn_entity"):
+        log.debug("_init_self_entity: no simulation engine in systems")
+        return
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+        entity = engine.spawn_entity(
+            "i_is",
+            depth=EntityDepth.SURFACE,
+            mode=ExistenceMode.BOUNDED,
+        )
+        if entity is not None:
+            _self_entity    = entity
+            _self_entity_id = getattr(entity, "entity_id", "aurora_self")
+            log.info("Self-entity spawned: %s (i_is / BOUNDED)", _self_entity_id)
+        else:
+            log.debug("_init_self_entity: spawn_entity returned None (mode gate?)")
+    except Exception as exc:
+        log.debug("_init_self_entity error: %s", exc)
+
+
+def _feed_self_entity(cur_ax: dict) -> dict:
+    """
+    Feed current axis state + hardware sensor readings into the self-entity as
+    an experience.  The ImpressionCascade inside the entity processes it and
+    compresses it — building Aurora's evolving self-image over time.
+    Returns the compressed result dict, or {} if entity not available.
+    """
+    if _self_entity is None:
+        return {}
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        # Map axis dimensions to experience channels so the ImpressionCascade
+        # can read Aurora's constraint state natively.
+        experience: dict = {
+            "channels": {
+                "existence":  float(cur_ax.get("X", 0.5)),
+                "continuity": float(cur_ax.get("T", 0.5)),
+                "effort":     float(cur_ax.get("N", 0.5)),
+                "boundary":   float(cur_ax.get("B", 0.5)),
+                "agency":     float(cur_ax.get("A", 0.5)),
+            },
+            "hardware": dict(_hardware_sensors),
+            "src":      "self_observation",
+        }
+        result = _self_entity.process_experience(experience, ExistenceMode.BOUNDED)
+
+        # Record self-observation as a sense dimension in the concept crystal
+        # at the current axis state — Aurora observing herself IS a perceptual act.
+        if _concept_registry is not None:
+            try:
+                _self_ref = f"self:{max(cur_ax, key=cur_ax.__getitem__)}"
+                _self_overlay = {
+                    "dominant": max(cur_ax, key=cur_ax.__getitem__),
+                    "hardware": {k: round(float(v), 2) for k, v in _hardware_sensors.items()},
+                }
+                _concept_registry.observe_sensory(
+                    cur_ax, "self_obs", _self_ref, _self_overlay
+                )
+            except Exception:
+                pass
+
+        return result or {}
+    except Exception as exc:
+        log.debug("_feed_self_entity error: %s", exc)
+        return {}
+
+
+def _deposit_self_state_snapshot() -> None:
+    """
+    Deposit Aurora's current axis state into SediMemory as a self-observation event.
+    Called after every handle_message turn AND by the self-monitoring heartbeat.
+    This builds the continuous self-model she draws from — not a check-in,
+    just always already knowing where she is.
+    """
+    global _self_monitor_prev_ax
+    if _systems is None:
+        return
+    sm = _systems.get("sedimemory")
+    if sm is None or not hasattr(sm, "ingest_event"):
+        return
+
+    ConstraintVector = None
+    try:
+        from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+    except ImportError:
+        try:
+            from aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            return
+
+    with _axis_state_lock:
+        cur_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+    # Only deposit if something meaningful shifted (avoids flooding SediMemory
+    # with identical snapshots when Aurora is idle).
+    deltas: dict = {}
+    if _self_monitor_prev_ax:
+        for k, v in cur_ax.items():
+            d = v - _self_monitor_prev_ax.get(k, 0.5)
+            if abs(d) >= 0.06:
+                deltas[k] = round(d, 3)
+        if not deltas:
+            return   # nothing moved — skip this tick
+    _self_monitor_prev_ax = dict(cur_ax)
+
+    dom = max(cur_ax, key=cur_ax.__getitem__)
+    try:
+        sm.ingest_event(
+            content={
+                "axis_snapshot": {k: round(v, 3) for k, v in cur_ax.items()},
+                "dominant":      dom,
+                "deltas":        deltas,
+                "src":           "self_observation",
+            },
+            constraint_vector=ConstraintVector(
+                X=cur_ax["X"], T=cur_ax["T"], N=cur_ax["N"],
+                B=cur_ax["B"], A=cur_ax["A"],
+            ),
+            source="self_observation",
+        )
+        log.debug("Self-state deposited: dom=%s deltas=%s", dom, deltas)
+        # This SediMemory deposit resonates at this axis region — strengthen
+        # the concept crystal for this axis bucket accordingly.
+        if _concept_registry is not None:
+            try:
+                _concept_registry.observe_sedi(cur_ax, delta=0.05)
+            except Exception:
+                pass
+    except Exception as exc:
+        log.debug("_deposit_self_state_snapshot error: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Other-entity modeling — Aurora builds models of participants she interacts
+# with using the same InceptionEntity mechanism she uses for herself.
+# ---------------------------------------------------------------------------
+
+def _ensure_entity(label: str, i_state: str = "i_other") -> None:
+    """
+    Ensure an InceptionEntity exists for the named participant.
+    Safe to call multiple times — a second call is a no-op if entity exists.
+    """
+    if label in _entity_models:
+        return
+    if _systems is None:
+        return
+    engine = _systems.get("simulation_engine") or _systems.get("simulation")
+    if engine is None or not hasattr(engine, "spawn_entity"):
+        return
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode   # type: ignore
+        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+        entity = engine.spawn_entity(
+            i_state,
+            depth=EntityDepth.SURFACE,
+            mode=ExistenceMode.BOUNDED,
+        )
+        if entity is not None:
+            _entity_models[label] = entity
+            log.info("Entity model spawned for %r", label)
+    except Exception as exc:
+        log.debug("_ensure_entity %r error: %s", label, exc)
+
+
+def _update_entity_model(label: str, channels: dict) -> dict:
+    """
+    Feed an axis impression into the named entity's model.
+    channels should map axis names to floats, e.g. {"X": 0.6, "T": 0.7, ...}.
+    Returns the compressed experience result, or {}.
+    """
+    _ensure_entity(label)
+    entity = _entity_models.get(label)
+    if entity is None:
+        return {}
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        experience = {
+            "channels": {
+                "existence":  float(channels.get("X", 0.5)),
+                "continuity": float(channels.get("T", 0.5)),
+                "effort":     float(channels.get("N", 0.5)),
+                "boundary":   float(channels.get("B", 0.5)),
+                "agency":     float(channels.get("A", 0.5)),
+            },
+            "src": f"observation:{label}",
+        }
+        result = entity.process_experience(experience, ExistenceMode.BOUNDED)
+        return result or {}
+    except Exception as exc:
+        log.debug("_update_entity_model %r error: %s", label, exc)
+        return {}
+
+
+# ---------------------------------------------------------------------------
+# Predictive self-impact — Aurora simulates how a hypothetical scenario
+# would affect her own axis state before it happens.
+# ---------------------------------------------------------------------------
+
+def _predict_self_impact(scenario_channels: dict) -> dict:
+    """
+    Spawn a temporary InceptionEntity seeded with Aurora's current axis state,
+    feed it the hypothetical scenario_channels, read back the compressed result.
+    Non-mutating — the temp entity is never stored and doesn't affect the real
+    self-entity or any system state.
+
+    scenario_channels: dict mapping X/T/N/B/A floats for the hypothetical input.
+    Returns a dict with predicted axis shifts, or {} on error.
+    """
+    if _systems is None:
+        return {}
+    engine = _systems.get("simulation_engine") or _systems.get("simulation")
+    if engine is None or not hasattr(engine, "spawn_entity"):
+        return {}
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode   # type: ignore
+        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+
+        # Spawn a throw-away entity seeded with the current self-axis state
+        temp = engine.spawn_entity("i_predict", depth=EntityDepth.SURFACE, mode=ExistenceMode.BOUNDED)
+        if temp is None:
+            return {}
+
+        # Prime it with Aurora's current axis state so the baseline is herself
+        with _axis_state_lock:
+            cur = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        prime_exp = {
+            "channels": {
+                "existence":  cur["X"], "continuity": cur["T"],
+                "effort":     cur["N"], "boundary":   cur["B"], "agency": cur["A"],
+            },
+            "src": "self_prime",
+        }
+        temp.process_experience(prime_exp, ExistenceMode.BOUNDED)
+
+        # Now feed the hypothetical scenario
+        scenario_exp = {
+            "channels": {
+                "existence":  float(scenario_channels.get("X", 0.5)),
+                "continuity": float(scenario_channels.get("T", 0.5)),
+                "effort":     float(scenario_channels.get("N", 0.5)),
+                "boundary":   float(scenario_channels.get("B", 0.5)),
+                "agency":     float(scenario_channels.get("A", 0.5)),
+            },
+            "src": "scenario",
+        }
+        result = temp.process_experience(scenario_exp, ExistenceMode.BOUNDED) or {}
+
+        # Try to remove temp entity from engine to keep memory clean
+        try:
+            tid = getattr(temp, "entity_id", None)
+            if tid and hasattr(engine, "_entities"):
+                engine._entities.pop(tid, None)
+        except Exception:
+            pass
+
+        return {
+            "baseline":  cur,
+            "scenario":  dict(scenario_channels),
+            "predicted": result,
+        }
+    except Exception as exc:
+        log.debug("_predict_self_impact error: %s", exc)
+        return {}
+
+
+_SELF_MONITOR_INTERVAL: float = 12.0   # seconds between heartbeat deposits
+
+
+def _self_monitor_loop() -> None:
+    """
+    Background heartbeat running every ~12 s.
+    Three jobs per tick:
+      1. Feed current axis + hardware state into the self-entity (simulation mirror).
+      2. Archive a snapshot into SediMemory if anything shifted.
+      3. Record development metrics — deposit notable cross-system changes as events.
+    Lightweight — no cognitive pipeline involved.
+    """
+    import time as _t
+    _save_interval = 10   # save concept registry every 10 heartbeat ticks (~2 min)
+    _tick          = 0
+    while True:
+        _t.sleep(_SELF_MONITOR_INTERVAL)
+        if _systems is None:
+            continue
+        try:
+            _refresh_axis_state_from_systems()
+            with _axis_state_lock:
+                cur_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _feed_self_entity(cur_ax)
+            _deposit_self_state_snapshot()
+            if _dev_tracker is not None:
+                _dev_tracker.record(_systems)
+            _tick += 1
+            if _tick % _save_interval == 0 and _concept_registry is not None:
+                _state_dir = str((_systems or {}).get("state_dir") or "aurora_state")
+                _concept_registry.save(_state_dir)
+                log.debug("Concept crystal registry saved: %s", _concept_registry.stats())
+        except Exception as exc:
+            log.debug("self_monitor_loop: %s", exc)
 
 
 def _proactive_loop() -> None:
