@@ -76,7 +76,6 @@ class OverlayService : Service() {
         else @Suppress("DEPRECATION") WindowManager.LayoutParams.TYPE_PHONE
 
         val dp     = resources.displayMetrics.density
-        // 100dp square — sphere fills ~64% of the view, outer glow uses the rest
         val orbPx  = (100 * dp).toInt()
 
         val params = WindowManager.LayoutParams(
@@ -86,36 +85,63 @@ class OverlayService : Service() {
                     or WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
             PixelFormat.TRANSLUCENT
         ).apply {
-            // Bottom-right corner; BOTTOM|END gravity so x/y are margins from the edge
             gravity = Gravity.BOTTOM or Gravity.END
             x = (16 * dp).toInt()
             y = (80 * dp).toInt()
         }
 
         var ix = 0; var iy = 0; var tx = 0f; var ty = 0f; var t0 = 0L
-        val slop = 8f * dp
+        var hasMoved     = false
+        var dismissArmed = false
+        val slop         = 8f * dp
+
+        // After 650 ms of motionless hold the orb enters dismiss-ready state:
+        // the glow turns red and an × appears. Lifting the finger then stops the service.
+        val longPressRunnable = Runnable {
+            dismissArmed = true
+            aurora.setDismissMode(true)
+        }
 
         aurora.setOnTouchListener { _, e ->
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
                     ix = params.x; iy = params.y
-                    tx = e.rawX; ty = e.rawY
+                    tx = e.rawX;   ty = e.rawY
                     t0 = System.currentTimeMillis()
+                    hasMoved     = false
+                    dismissArmed = false
+                    animHandler.postDelayed(longPressRunnable, 650L)
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    // With BOTTOM|END gravity: x increases leftward, y increases upward
-                    params.x = ix + (tx - e.rawX).toInt()
-                    params.y = iy + (ty - e.rawY).toInt()
-                    try { windowManager.updateViewLayout(aurora, params) } catch (_: Exception) {}
+                    val dist = hypot((e.rawX - tx).toDouble(), (e.rawY - ty).toDouble())
+                    if (dist > slop) {
+                        if (!hasMoved) {
+                            // Cancel long-press timer the moment the finger moves
+                            animHandler.removeCallbacks(longPressRunnable)
+                            aurora.setDismissMode(false)
+                            dismissArmed = false
+                            hasMoved = true
+                        }
+                        params.x = ix + (tx - e.rawX).toInt()
+                        params.y = iy + (ty - e.rawY).toInt()
+                        try { windowManager.updateViewLayout(aurora, params) } catch (_: Exception) {}
+                    }
                     true
                 }
                 MotionEvent.ACTION_UP -> {
-                    val moved = hypot((e.rawX - tx).toDouble(), (e.rawY - ty).toDouble()) > slop
-                    if (!moved && System.currentTimeMillis() - t0 <= 300L) {
-                        bringAppToForeground()
-                        sendBroadcast(Intent(ACTION_OVERLAY_TAPPED))
+                    animHandler.removeCallbacks(longPressRunnable)
+                    aurora.setDismissMode(false)
+                    val dist    = hypot((e.rawX - tx).toDouble(), (e.rawY - ty).toDouble())
+                    val elapsed = System.currentTimeMillis() - t0
+                    when {
+                        dismissArmed -> stopSelf()   // long-press confirmed → dismiss
+                        !hasMoved && elapsed <= 300L -> {
+                            bringAppToForeground()
+                            sendBroadcast(Intent(ACTION_OVERLAY_TAPPED))
+                        }
                     }
+                    dismissArmed = false
                     true
                 }
                 else -> false
@@ -192,16 +218,27 @@ class AuroraOrbView(context: Context) : View(context) {
         private const val N_COLS = 60
     }
 
-    private var phase    = 0f
-    private val axes     = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f)
-    private var speaking = false
-    private val paint    = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var phase       = 0f
+    private val axes        = floatArrayOf(0.5f, 0.5f, 0.5f, 0.5f, 0.5f)
+    private var speaking    = false
+    private var dismissMode = false
+    private val paint       = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val xPaint      = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color       = Color.WHITE
+        strokeCap   = Paint.Cap.ROUND
+        style       = Paint.Style.STROKE
+    }
     private val clipPath = Path()
     private var cx = 0f
     private var cy = 0f
     private var radius = 0f   // sphere clip radius
 
     init { setLayerType(LAYER_TYPE_HARDWARE, null) }
+
+    fun setDismissMode(on: Boolean) {
+        dismissMode = on
+        invalidate()
+    }
 
     override fun onSizeChanged(w: Int, h: Int, oldW: Int, oldH: Int) {
         cx = w / 2f
@@ -233,13 +270,17 @@ class AuroraOrbView(context: Context) : View(context) {
         val vh = height.toFloat()
 
         // ── Outer glow ring — drawn BEFORE clip so it bleeds beyond sphere edge ─
-        val glowA = (0.22f + energy * 0.30f + speakBoost * 0.18f).coerceIn(0f, 1f)
+        // Dismiss mode: glow turns red to signal "lift to close".
+        val glowA = (0.22f + energy * 0.30f + speakBoost * 0.18f +
+                if (dismissMode) 0.30f else 0f).coerceIn(0f, 1f)
+        val (gr, gg, gb) = if (dismissMode) Triple(255, 55, 55) else Triple(160, 80, 255)
+        val (gr2, gg2, gb2) = if (dismissMode) Triple(200, 30, 30) else Triple(100, 40, 200)
         paint.style = Paint.Style.FILL
         paint.shader = RadialGradient(
             cx, cy, cx,
             intArrayOf(
-                Color.argb((glowA * 170).toInt().coerceIn(0, 255), 160, 80, 255),
-                Color.argb((glowA *  55).toInt().coerceIn(0, 255), 100, 40, 200),
+                Color.argb((glowA * 170).toInt().coerceIn(0, 255), gr,  gg,  gb),
+                Color.argb((glowA *  55).toInt().coerceIn(0, 255), gr2, gg2, gb2),
                 Color.TRANSPARENT,
             ),
             floatArrayOf(radius / cx, 0.84f, 1.0f),
@@ -315,6 +356,15 @@ class AuroraOrbView(context: Context) : View(context) {
         )
         canvas.drawCircle(hx, hy, hr, paint)
         paint.shader = null
+
+        // ── Dismiss indicator — × drawn over the sphere in dismiss mode ────
+        if (dismissMode) {
+            val arm = radius * 0.38f
+            xPaint.strokeWidth = radius * 0.13f
+            xPaint.alpha = 230
+            canvas.drawLine(cx - arm, cy - arm, cx + arm, cy + arm, xPaint)
+            canvas.drawLine(cx + arm, cy - arm, cx - arm, cy + arm, xPaint)
+        }
     }
 
     private fun lerpColor(a: Int, b: Int, f: Float): Int {
