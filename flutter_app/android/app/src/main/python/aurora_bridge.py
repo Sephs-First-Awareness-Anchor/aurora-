@@ -67,6 +67,9 @@ _training_active: bool = False
 _training_stop   = threading.Event()
 _training_status: dict = {"active": False, "turn": 0, "total": 0, "lsa_paths": 0, "avg_n_cost": 1.0}
 
+import collections as _collections
+_training_event_queue: _collections.deque = _collections.deque(maxlen=200)
+
 _TRAINER_SYSTEM = (
     "You are having a genuine, natural conversation with Aurora. "
     "Aurora is an AI whose communication abilities are still developing. "
@@ -107,27 +110,35 @@ def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
         return ""
 
 
-def _training_loop(api_key: str, model: str, n_turns: int) -> None:
-    """Background thread: run n_turns of AI-driven conversation training."""
+def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
+    """Background thread: run conversation training until duration_seconds elapses."""
     global _training_active, _training_status
     import random as _rnd
+    import time as _time
 
     _training_active = True
-    _training_status = {"active": True, "turn": 0, "total": n_turns, "lsa_paths": 0, "avg_n_cost": 1.0}
-    log.info("Training started: model=%s turns=%d", model, n_turns)
+    _training_event_queue.clear()
+    deadline = _time.time() + duration_seconds
+    total_secs = int(duration_seconds)
+    _training_status = {
+        "active": True, "turn": 0, "elapsed": 0, "total_secs": total_secs,
+        "lsa_paths": 0, "avg_n_cost": 1.0,
+    }
+    log.info("Training started: model=%s duration=%.0fs", model, duration_seconds)
 
     history: list = []
-    opener = _rnd.choice(_TRAINER_OPENERS)
+    opener  = _rnd.choice(_TRAINER_OPENERS)
+    turn    = 0
 
-    for turn in range(1, n_turns + 1):
-        if _training_stop.is_set():
-            break
+    while _time.time() < deadline and not _training_stop.is_set():
+        turn += 1
+        partner_said = opener
 
         # Aurora processes the partner's message (full pipeline + re-entry)
-        aurora_reply = handle_message(opener)
+        aurora_reply = handle_message(partner_said)
         aurora_reply = aurora_reply or "(no response)"
 
-        # Update status
+        # Telemetry snapshot
         lsa_paths = 0
         avg_cost  = 1.0
         try:
@@ -138,19 +149,33 @@ def _training_loop(api_key: str, model: str, n_turns: int) -> None:
         except Exception:
             pass
 
+        elapsed = int(_time.time() - (deadline - duration_seconds))
         _training_status = {
-            "active":    True,
-            "turn":      turn,
-            "total":     n_turns,
-            "lsa_paths": lsa_paths,
+            "active":     True,
+            "turn":       turn,
+            "elapsed":    elapsed,
+            "total_secs": total_secs,
+            "lsa_paths":  lsa_paths,
             "avg_n_cost": round(avg_cost, 3),
         }
-        log.debug("Training turn %d/%d | LSA=%d avg_cost=%.3f", turn, n_turns, lsa_paths, avg_cost)
 
-        if _training_stop.is_set():
+        # Push turn to event queue for Flutter to consume
+        _training_event_queue.append({
+            "type":      "training_turn",
+            "turn":      turn,
+            "elapsed":   elapsed,
+            "total_secs": total_secs,
+            "partner":   partner_said,
+            "aurora":    aurora_reply,
+            "lsa_paths": lsa_paths,
+            "avg_n_cost": round(avg_cost, 3),
+        })
+        log.debug("Training turn %d | LSA=%d cost=%.3f", turn, lsa_paths, avg_cost)
+
+        if _training_stop.is_set() or _time.time() >= deadline:
             break
 
-        # Partner generates next message
+        # Gemini generates next message
         history.append({"role": "user",  "parts": [{"text": aurora_reply}]})
         if len(history) > 20:
             history = history[-20:]
@@ -172,21 +197,30 @@ def _training_loop(api_key: str, model: str, n_turns: int) -> None:
 
     _training_active = False
     _training_status["active"] = False
+    # Push a sentinel so Flutter knows it ended
+    _training_event_queue.append({
+        "type": "training_done",
+        "turn": turn,
+        "lsa_paths": _training_status["lsa_paths"],
+        "avg_n_cost": _training_status["avg_n_cost"],
+    })
     log.info("Training complete: %d turns | LSA=%d avg_cost=%.3f",
-             _training_status["turn"], _training_status["lsa_paths"], _training_status["avg_n_cost"])
+             turn, _training_status["lsa_paths"], _training_status["avg_n_cost"])
 
 
-def start_training(api_key: str, model: str = "gemini-2.5-flash", n_turns: int = 200) -> str:
-    """Start AI conversation training. Returns 'started' or 'already_running'."""
+def start_training(api_key: str, model: str = "gemini-2.5-flash",
+                   duration_minutes: float = 10.0) -> str:
+    """Start AI conversation training for duration_minutes. Returns 'started' or 'already_running'."""
     global _training_stop
     if _training_active:
         return "already_running"
     if not api_key or not api_key.strip():
         return "error: no api key"
+    dur = max(1.0, float(duration_minutes)) * 60.0
     _training_stop.clear()
     t = threading.Thread(
         target=_training_loop,
-        args=(api_key.strip(), model.strip() or "gemini-2.5-flash", max(1, int(n_turns))),
+        args=(api_key.strip(), model.strip() or "gemini-2.5-flash", dur),
         daemon=True,
         name="aurora_training",
     )
@@ -203,6 +237,18 @@ def get_training_status() -> str:
     """Return current training status as JSON string."""
     import json as _json
     return _json.dumps(_training_status)
+
+
+def get_training_events() -> str:
+    """Drain and return all pending training turn events as a JSON array."""
+    import json as _json
+    events: list = []
+    while _training_event_queue:
+        try:
+            events.append(_training_event_queue.popleft())
+        except IndexError:
+            break
+    return _json.dumps(events)
 
 # Proactive / autonomous expression
 # Aurora runs the full waveform pipeline on her own schedule and delivers

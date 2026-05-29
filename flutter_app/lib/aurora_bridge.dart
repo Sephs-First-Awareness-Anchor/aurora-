@@ -109,11 +109,11 @@ class AuroraBridge {
   static Future<String> startTraining({
     required String apiKey,
     String model = 'gemini-2.5-flash',
-    int turns = 200,
+    double durationMinutes = 10.0,
   }) async {
     final result = await _channel.invokeMethod<String>(
       'startTraining',
-      {'apiKey': apiKey, 'model': model, 'turns': turns},
+      {'apiKey': apiKey, 'model': model, 'durationMinutes': durationMinutes},
     );
     return result ?? 'error';
   }

@@ -57,12 +57,6 @@ class _HomeScreenState extends State<HomeScreen>
   bool   _inConversation = false;
   bool   _screenObserverReady = false;
 
-  // ── Conversation training ─────────────────────────────────────────────────
-  bool   _trainingActive = false;
-  int    _trainingTurn   = 0;
-  int    _trainingTotal  = 0;
-  Timer? _trainingPollTimer;
-
   // ── Bridge events ────────────────────────────────────────────────────────
   StreamSubscription? _bridgeSub;
 
@@ -413,12 +407,10 @@ class _HomeScreenState extends State<HomeScreen>
         child: Column(
           children: [
             _Header(
-              state:          _embState,
-              quietMode:      _quietMode,
-              trainingActive: _trainingActive,
-              onQuietToggle:  () => _toggleQuietMode(!_quietMode),
-              onTrainingTap:  _showTrainingDialog,
-              onBackground:   isSummoned ? _background : null,
+              state:         _embState,
+              quietMode:     _quietMode,
+              onQuietToggle: () => _toggleQuietMode(!_quietMode),
+              onBackground:  isSummoned ? _background : null,
             ),
             if (isSummoned) ...[
               // ── Summoned: compact orb at top, chat below ─────────────────
@@ -498,158 +490,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // ── Training ──────────────────────────────────────────────────────────────
-
-  void _startTrainingPoll() {
-    _trainingPollTimer?.cancel();
-    _trainingPollTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
-      final status = await AuroraBridge.getTrainingStatus();
-      final active = status['active'] == true;
-      final turn   = (status['turn']  as num?)?.toInt() ?? 0;
-      final total  = (status['total'] as num?)?.toInt() ?? 0;
-      if (mounted) {
-        setState(() {
-          _trainingActive = active;
-          _trainingTurn   = turn;
-          _trainingTotal  = total;
-        });
-        if (!active) _trainingPollTimer?.cancel();
-      }
-    });
-  }
-
-  Future<void> _showTrainingDialog() async {
-    final keyCtrl   = TextEditingController();
-    String selModel = 'gemini-2.5-flash';
-    int    selTurns = 200;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: const Color(0xFF1A1A2E),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            24, 20, 24,
-            MediaQuery.of(ctx).viewInsets.bottom + 24,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Language Training',
-                style: TextStyle(color: _purple, fontSize: 18, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 4),
-              const Text(
-                'Aurora converses with Gemini to warm her language field, '
-                'LSA paths, and expression mechanics.',
-                style: TextStyle(color: Colors.white54, fontSize: 13),
-              ),
-              const SizedBox(height: 16),
-              if (_trainingActive) ...[
-                LinearProgressIndicator(
-                  value: _trainingTotal > 0 ? _trainingTurn / _trainingTotal : null,
-                  color: _purple,
-                  backgroundColor: Colors.white12,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Turn $_trainingTurn / $_trainingTotal',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade800),
-                    onPressed: () async {
-                      await AuroraBridge.stopTraining();
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text('Stop Training'),
-                  ),
-                ),
-              ] else ...[
-                TextField(
-                  controller: keyCtrl,
-                  obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Gemini API Key',
-                    labelStyle: TextStyle(color: Colors.white54),
-                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: _purple)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selModel,
-                  dropdownColor: const Color(0xFF1A1A2E),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Model',
-                    labelStyle: TextStyle(color: Colors.white54),
-                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 'gemini-2.5-flash', child: Text('Gemini 2.5 Flash (fast)')),
-                    DropdownMenuItem(value: 'gemini-2.5-pro',   child: Text('Gemini 2.5 Pro (best)')),
-                  ],
-                  onChanged: (v) => setSheet(() => selModel = v ?? selModel),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: selTurns,
-                  dropdownColor: const Color(0xFF1A1A2E),
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
-                    labelText: 'Turns',
-                    labelStyle: TextStyle(color: Colors.white54),
-                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                  ),
-                  items: const [
-                    DropdownMenuItem(value: 50,  child: Text('50  (quick warm-up)')),
-                    DropdownMenuItem(value: 100, child: Text('100')),
-                    DropdownMenuItem(value: 200, child: Text('200 (recommended)')),
-                    DropdownMenuItem(value: 500, child: Text('500 (deep session)')),
-                  ],
-                  onChanged: (v) => setSheet(() => selTurns = v ?? selTurns),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: _purple),
-                    onPressed: () async {
-                      final key = keyCtrl.text.trim();
-                      if (key.isEmpty) return;
-                      final r = await AuroraBridge.startTraining(
-                        apiKey: key, model: selModel, turns: selTurns,
-                      );
-                      if (r == 'started' && mounted) {
-                        setState(() { _trainingActive = true; _trainingTotal = selTurns; });
-                        _startTrainingPoll();
-                        Navigator.pop(ctx);
-                        setState(() => _msgs.add(ChatMsg(
-                          'Language training started — $selTurns turns with $selModel.',
-                          isUser: false,
-                        )));
-                      }
-                    },
-                    child: const Text('Start Training'),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -658,7 +498,6 @@ class _HomeScreenState extends State<HomeScreen>
     _scrollCtrl.dispose();
     _bridgeSub?.cancel();
     _convTimer?.cancel();
-    _trainingPollTimer?.cancel();
     AuroraBridge.stopListening();
     AuroraBridge.stopSpeaking();
     super.dispose();
@@ -670,16 +509,12 @@ class _HomeScreenState extends State<HomeScreen>
 class _Header extends StatelessWidget {
   final String state;
   final bool quietMode;
-  final bool trainingActive;
   final VoidCallback onQuietToggle;
-  final VoidCallback onTrainingTap;
   final AsyncCallback? onBackground;
   _Header({
     required this.state,
     required this.quietMode,
-    required this.trainingActive,
     required this.onQuietToggle,
-    required this.onTrainingTap,
     this.onBackground,
   });
 
@@ -696,14 +531,6 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          IconButton(
-            icon: Icon(
-              Icons.psychology_rounded,
-              color: trainingActive ? _purple : Colors.white38,
-            ),
-            onPressed: onTrainingTap,
-            tooltip: trainingActive ? 'Training active' : 'Language training',
-          ),
           IconButton(
             icon: Icon(
               quietMode ? Icons.volume_off_rounded : Icons.volume_up_rounded,
