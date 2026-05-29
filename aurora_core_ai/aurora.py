@@ -8199,7 +8199,7 @@ def _inject_surface_recent_context(
     state.pipeline_state["recent_context_turns"] = int(turns_used)
 
 
-def _is_aurora_self_question(text: str) -> bool:
+def _is_aurora_self_question(text: str, parsed: dict = None) -> bool:
     """
     If the question is about Aurora's internal architecture/state/identity,
     or a personal wellbeing question directed at Aurora,
