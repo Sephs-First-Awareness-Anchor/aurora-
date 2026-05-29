@@ -90,7 +90,7 @@ _TRAINER_OPENERS = [
 
 
 def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
-    """Call Gemini REST API using requests (no SDK needed)."""
+    """Call Gemini REST API. Raises RuntimeError with detail on failure."""
     import requests as _req
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
@@ -101,13 +101,18 @@ def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
         "contents": history,
         "generationConfig": {"maxOutputTokens": 120, "temperature": 0.9},
     }
+    r = _req.post(url, json=payload, timeout=30)
+    if not r.ok:
+        try:
+            detail = r.json().get("error", {}).get("message", r.text[:300])
+        except Exception:
+            detail = r.text[:300]
+        raise RuntimeError(f"HTTP {r.status_code}: {detail}")
+    data = r.json()
     try:
-        r = _req.post(url, json=payload, timeout=30)
-        r.raise_for_status()
-        return r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-    except Exception as exc:
-        log.warning("Gemini API error: %s", exc)
-        return ""
+        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except (KeyError, IndexError) as exc:
+        raise RuntimeError(f"Unexpected response shape: {str(data)[:200]}") from exc
 
 
 def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
@@ -180,7 +185,18 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         if len(history) > 20:
             history = history[-20:]
 
-        partner_msg = _gemini_chat(api_key, model, history, _TRAINER_SYSTEM)
+        try:
+            partner_msg = _gemini_chat(api_key, model, history, _TRAINER_SYSTEM)
+        except Exception as _g_exc:
+            _err = str(_g_exc)
+            log.warning("Gemini API error: %s", _err)
+            _training_event_queue.append({
+                "type":      "training_error",
+                "error_msg": _err,
+                "turn":      turn,
+            })
+            partner_msg = ""
+
         if not partner_msg:
             partner_msg = "What are you noticing right now?"
 
