@@ -12243,6 +12243,10 @@ def _answer_live_sensory_question(
             answer = "I do not have a fresh live camera read right now, so I cannot honestly tell you what I see."
             issue = 'live_visual_grounding_unavailable'
             tags = ['sensory', 'vision', 'grounding']
+        elif screen_query:
+            answer = "I haven't observed my screen yet, so I can't tell you what's on it right now."
+            issue = 'live_screen_grounding_unavailable'
+            tags = ['sensory', 'screen', 'grounding']
         else:
             answer = "I do not have a fresh live audio read right now, so I cannot honestly tell you what I hear."
             issue = 'live_audio_grounding_unavailable'

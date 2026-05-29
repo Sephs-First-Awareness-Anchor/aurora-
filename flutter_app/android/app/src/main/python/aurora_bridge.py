@@ -159,6 +159,197 @@ _waveform_trajectory: "_WaveformTrajectory | None" = None
 
 
 # ---------------------------------------------------------------------------
+# Constraint tension tracker — 6th axis X-point law (operational)
+# ---------------------------------------------------------------------------
+
+class _ConstraintTensionTracker:
+    """
+    Monitors cross-axis tension across generational cycles following the
+    Paradox Warp Engine algorithm.
+
+    The 5 constraint axes are the minimal irreducible basis. A 6th can only
+    emerge if sustained paradox stress between two existing axes accumulates
+    past the point where the current basis can hold it. This tracker watches
+    for that condition without forcing it.
+
+    Generational roles (Paradox Warp Engine algorithm):
+      PRIMARY / ADJACENT — baseline tension measurement, stress accumulates slowly
+      SHEAR              — stress amplifies (×1.5); paradox is building
+      BRIDGE             — bridge pulse injected into identity field; system
+                           attempts to span the paradox through the substrate
+      WARP               — if stress still exceeds threshold after bridge attempt,
+                           surface an emergence candidate (log only — no axis created)
+
+    The tracker NEVER creates a 6th axis. It records the evidence that one may
+    be necessary. Whether that is true is determined by whether the trajectory
+    derivative field escapes the 5-axis basis — the same law that governs every
+    level of the stack.
+    """
+
+    _AXES  = ("X", "T", "N", "B", "A")
+    _PAIRS = [
+        ("X", "T"), ("X", "N"), ("X", "B"), ("X", "A"),
+        ("T", "N"), ("T", "B"), ("T", "A"),
+        ("N", "B"), ("N", "A"),
+        ("B", "A"),
+    ]
+    _TENSION_THRESHOLD = 0.22   # mean per-axis tension to count a pair as stressed
+    _BRIDGE_THRESHOLD  = 2.0    # accumulated stress to trigger a BRIDGE pulse
+    _WARP_THRESHOLD    = 3.5    # accumulated stress to surface emergence candidate
+    _WINDOW            = 8      # turns of history kept per pair
+    _TURNS_PER_GEN     = 5      # conversation turns per generation
+
+    def __init__(self):
+        self._generation:    int  = 0
+        self._turn_in_gen:   int  = 0
+        self._tension_history: dict = {p: [] for p in self._PAIRS}
+        self._stress_scores:   dict = {p: 0.0 for p in self._PAIRS}
+        self._emergence_log:   list = []
+
+    @staticmethod
+    def _generation_role(gen: int) -> str:
+        """Paradox Warp Engine generational algorithm — faithful port."""
+        if gen > 0 and gen % 5 == 0:
+            return "WARP"
+        pos = ((gen - 1) % 4) + 1 if gen > 0 else 1
+        return ["PRIMARY", "ADJACENT", "SHEAR", "BRIDGE"][pos - 1]
+
+    def tick(self, axis_state: dict, systems: dict) -> None:
+        """
+        Called once per turn after response generation with the fresh axis state.
+        Advances the generational cycle and fires the role-appropriate action.
+        """
+        cur = {k: float(axis_state.get(k, 0.5)) for k in self._AXES}
+        for pair in self._PAIRS:
+            tension = abs(cur[pair[0]] - cur[pair[1]])
+            hist = self._tension_history[pair]
+            hist.append(tension)
+            if len(hist) > self._WINDOW:
+                hist.pop(0)
+
+        self._turn_in_gen += 1
+        if self._turn_in_gen >= self._TURNS_PER_GEN:
+            self._turn_in_gen = 0
+            self._generation  += 1
+            self._advance_generation(systems)
+
+    def _sustained_pairs(self) -> dict:
+        """Return pairs whose mean tension exceeds the threshold."""
+        out = {}
+        for pair in self._PAIRS:
+            hist = self._tension_history[pair]
+            if len(hist) >= 3:
+                mean_t = sum(hist) / len(hist)
+                if mean_t >= self._TENSION_THRESHOLD:
+                    out[pair] = mean_t
+        return out
+
+    def _advance_generation(self, systems: dict) -> None:
+        role      = self._generation_role(self._generation)
+        sustained = self._sustained_pairs()
+
+        if role == "SHEAR":
+            for pair, tension in sustained.items():
+                self._stress_scores[pair] = (
+                    self._stress_scores[pair] + tension
+                ) * 1.5
+            log.debug("CTT SHEAR G%d: %d pairs under stress", self._generation, len(sustained))
+
+        elif role == "BRIDGE":
+            if sustained:
+                top = max(sustained, key=lambda p: self._stress_scores.get(p, 0.0))
+                if self._stress_scores.get(top, 0.0) >= self._BRIDGE_THRESHOLD:
+                    self._inject_bridge_pulse(top, systems)
+                    log.info(
+                        "CTT BRIDGE G%d: bridge pulse %s-%s (stress=%.2f)",
+                        self._generation, top[0], top[1],
+                        self._stress_scores[top],
+                    )
+            for pair, tension in sustained.items():
+                self._stress_scores[pair] = self._stress_scores.get(pair, 0.0) + tension * 0.3
+
+        elif role == "WARP":
+            for pair, tension in sustained.items():
+                stress = self._stress_scores.get(pair, 0.0)
+                if stress >= self._WARP_THRESHOLD:
+                    self._surface_emergence_candidate(pair, stress, systems)
+                    self._stress_scores[pair] = stress * 0.4  # partial reset
+
+        else:  # PRIMARY / ADJACENT
+            for pair, tension in sustained.items():
+                self._stress_scores[pair] = (
+                    self._stress_scores.get(pair, 0.0) + tension * 0.4
+                )
+
+    def _inject_bridge_pulse(self, pair: tuple, systems: dict) -> None:
+        """
+        Inject a bridging signal that elevates both axes in tension, attempting
+        to find a field state that can hold them simultaneously. If the identity
+        field can integrate the pulse without irresolvable conflict, the paradox
+        is not genuine — just high tension. If it can't, the stress persists
+        into WARP.
+        """
+        ifield = systems.get("identity_field")
+        if ifield is None or not hasattr(ifield, "ingest_external_input"):
+            return
+        axes = {"X": 0.48, "T": 0.72, "N": 0.52, "B": 0.58, "A": 0.65}
+        axes[pair[0]] = min(1.0, axes.get(pair[0], 0.5) + 0.32)
+        axes[pair[1]] = min(1.0, axes.get(pair[1], 0.5) + 0.32)
+        try:
+            ifield.ingest_external_input(
+                axes, intensity=0.68,
+                source=f"ctt_bridge:{pair[0]}-{pair[1]}",
+            )
+        except Exception:
+            pass
+
+    def _surface_emergence_candidate(
+        self, pair: tuple, stress: float, systems: dict
+    ) -> None:
+        """
+        Record that the 5-axis basis may be insufficient to hold the paradox
+        between these two axes. Writes to constraint_emergence_log.jsonl.
+        Does NOT create or name a 6th axis — only logs the evidence.
+        """
+        candidate = {
+            "generation":   self._generation,
+            "axis_pair":    f"{pair[0]}-{pair[1]}",
+            "stress_score": round(stress, 3),
+            "history":      list(self._tension_history[pair]),
+            "note": (
+                f"Sustained paradox between {pair[0]}-axis and {pair[1]}-axis "
+                f"has accumulated {stress:.2f} stress across {self._generation} "
+                f"generations. The 5-axis basis may be insufficient to span this "
+                f"tension. Emergence candidate for a 6th constraint."
+            ),
+        }
+        self._emergence_log.append(candidate)
+        log.info(
+            "CTT WARP G%d: emergence candidate %s-%s stress=%.2f",
+            self._generation, pair[0], pair[1], stress,
+        )
+        try:
+            import json as _json
+            import time as _ctt_time
+            state_dir = str(
+                (systems or {}).get("state_dir") or os.getcwd() or "aurora_state"
+            )
+            log_path = os.path.join(state_dir, "constraint_emergence_log.jsonl")
+            entry = dict(candidate)
+            entry["timestamp"] = _ctt_time.strftime("%Y-%m-%dT%H:%M:%SZ", _ctt_time.gmtime())
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    @property
+    def emergence_candidates(self) -> list:
+        return list(self._emergence_log)
+
+
+_constraint_tension_tracker: "_ConstraintTensionTracker | None" = None
+
+
 # Response classification patterns
 # ---------------------------------------------------------------------------
 
@@ -393,9 +584,10 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory
-    _ingested_concepts   = set()
-    _waveform_trajectory = _WaveformTrajectory(window=5)
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker
+    _ingested_concepts          = set()
+    _waveform_trajectory        = _WaveformTrajectory(window=5)
+    _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
     # Prevent _ensure_runtime_dependencies() from running subprocess pip-install,
     # which crashes Chaquopy's Android Python.
@@ -1522,6 +1714,16 @@ def handle_message(text: str) -> str:
         _refresh_axis_state_from_systems()
         with _axis_state_lock:
             _last_axis_state["speaking"] = bool(response)
+
+        # ── Constraint tension tick ───────────────────────────────────────────
+        # Advance the generational cycle with fresh axis state. SHEAR amplifies
+        # stress, BRIDGE attempts to span paradox via identity field pulse,
+        # WARP surfaces emergence candidates when the 5-axis basis may be
+        # insufficient to account for the derivative of meaning.
+        if _constraint_tension_tracker is not None and _systems:
+            with _axis_state_lock:
+                _ctt_state = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _constraint_tension_tracker.tick(_ctt_state, _systems)
 
         # ── Anchor the expressed crest ────────────────────────────────────────
         # After generating a response, anchor the expressed axis peak back into
