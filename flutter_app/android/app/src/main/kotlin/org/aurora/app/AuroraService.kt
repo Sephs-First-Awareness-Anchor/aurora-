@@ -187,17 +187,16 @@ class AuroraService : Service() {
                     }
                 }
 
-                // Training events — batch of turn records as JSON array
+                // Training events — emit each turn individually
                 val trainingBatch = bridge.callAttr("get_training_events").toString()
                 if (trainingBatch.isNotBlank() && trainingBatch != "[]") {
-                    withContext(Dispatchers.Main) {
-                        eventSink?.success(
-                            JSONObject()
-                                .put("type", "training_batch")
-                                .put("batch", trainingBatch)
-                                .toString()
-                        )
-                    }
+                    try {
+                        val arr = org.json.JSONArray(trainingBatch)
+                        for (i in 0 until arr.length()) {
+                            val evt = arr.getJSONObject(i).toString()
+                            withContext(Dispatchers.Main) { eventSink?.success(evt) }
+                        }
+                    } catch (_: Exception) {}
                 }
             } catch (_: Exception) { /* Python not ready yet — skip this tick */ }
         }
