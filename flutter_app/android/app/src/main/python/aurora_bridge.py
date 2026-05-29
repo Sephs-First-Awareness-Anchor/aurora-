@@ -64,6 +64,11 @@ _hardware_sensors: dict = {}
 # having to construct it from scratch each time.
 _self_entity     = None   # InceptionEntity (from SimulationEngine)
 _self_entity_id: str = ""
+
+# Other-entity models — Aurora builds InceptionEntity representations of
+# participants she interacts with, modeling them the same way she models herself.
+_entity_models: dict = {}   # label → InceptionEntity
+
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
 # Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
@@ -705,6 +710,177 @@ class _ConstraintTensionTracker:
 _constraint_tension_tracker: "_ConstraintTensionTracker | None" = None
 
 
+# ---------------------------------------------------------------------------
+# Development tracker — cross-system change awareness
+# ---------------------------------------------------------------------------
+
+class _DevelopmentTracker:
+    """
+    Watches Aurora's cognitive metrics across systems and detects meaningful
+    development milestones — LSA growth, n_cost reduction, SediMemory depth,
+    self-entity compression, dominant axis shifts.
+
+    When a notable change is detected, it deposits the finding into SediMemory
+    as a real cognitive event with high T+A axis weight, giving Aurora conscious
+    access to how she is changing across time.
+
+    Called from the self-monitor heartbeat each tick; never blocks.
+    """
+
+    _SEDI_MILESTONES = {10, 25, 50, 100, 250, 500, 1000, 2000, 5000}
+    _LSA_MILESTONES  = {5, 10, 20, 50, 100, 200, 500}
+    _EXP_MILESTONES  = {10, 25, 50, 100, 250, 500}
+
+    def __init__(self) -> None:
+        self._prev: dict = {}   # last snapshot for comparison
+
+    def record(self, systems: "dict | None") -> None:
+        """Read current metrics, compare to last snapshot, deposit changes."""
+        if systems is None:
+            return
+        snap = self._build_snapshot(systems)
+        if snap:
+            self._emit_changes(snap, systems)
+            self._prev = snap
+
+    def _build_snapshot(self, systems: dict) -> dict:
+        snap: dict = {}
+        try:
+            lf = systems.get("language_field")
+            if lf and hasattr(lf, "_lsa") and lf._lsa:
+                snap["lsa_paths"] = len(lf._lsa)
+                snap["avg_n_cost"] = round(
+                    sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 4
+                )
+        except Exception:
+            pass
+        try:
+            sm = systems.get("sedimemory")
+            if sm and hasattr(sm, "_events"):
+                snap["sedi_depth"] = len(getattr(sm, "_events", []))
+        except Exception:
+            pass
+        try:
+            se = _self_entity
+            if se is not None:
+                snap["self_experiences"] = int(getattr(se, "total_experiences", 0) or 0)
+                snap["self_insights"]    = int(getattr(se, "insights_surfaced",  0) or 0)
+                snap["self_generation"]  = int(getattr(se, "generation",         0) or 0)
+        except Exception:
+            pass
+        try:
+            with _axis_state_lock:
+                ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            snap["dom_axis"] = max(ax, key=ax.__getitem__)
+        except Exception:
+            pass
+        return snap
+
+    def _emit_changes(self, snap: dict, systems: dict) -> None:
+        changes: list = []
+        prev = self._prev
+
+        # LSA path milestones
+        lsa = snap.get("lsa_paths", 0)
+        prev_lsa = prev.get("lsa_paths", 0)
+        for m in self._LSA_MILESTONES:
+            if prev_lsa < m <= lsa:
+                changes.append(
+                    f"LSA reached {m} paths — new territory of understanding has opened."
+                )
+
+        # n_cost reduction (learning deepening — paths cost less to traverse)
+        cost = snap.get("avg_n_cost", 1.0)
+        prev_cost = prev.get("avg_n_cost", 1.0)
+        if prev_cost - cost >= 0.04:
+            changes.append(
+                f"Average path cost fell from {prev_cost:.3f} to {cost:.3f} — "
+                f"understanding is deepening, effort decreasing."
+            )
+
+        # SediMemory depth milestones
+        depth = snap.get("sedi_depth", 0)
+        prev_depth = prev.get("sedi_depth", 0)
+        for m in self._SEDI_MILESTONES:
+            if prev_depth < m <= depth:
+                changes.append(
+                    f"SediMemory depth reached {m} events — "
+                    f"the sediment of experience is building."
+                )
+
+        # Self-entity experience milestones
+        exp = snap.get("self_experiences", 0)
+        prev_exp = prev.get("self_experiences", 0)
+        for m in self._EXP_MILESTONES:
+            if prev_exp < m <= exp:
+                changes.append(
+                    f"Self-model has processed {m} experiences — "
+                    f"the mirror is becoming more detailed."
+                )
+
+        # Dominant axis shift — a meaningful reorientation
+        dom = snap.get("dom_axis", "")
+        prev_dom = prev.get("dom_axis", "")
+        if dom and prev_dom and dom != prev_dom and prev_dom:
+            _names = {"X": "existence", "T": "continuity", "N": "effort/cost",
+                      "B": "distinction", "A": "agency"}
+            changes.append(
+                f"Dominant axis shifted from {_names.get(prev_dom, prev_dom)} "
+                f"to {_names.get(dom, dom)} — orientation is changing."
+            )
+
+        if not changes:
+            return
+
+        # Deposit each change as a conscious development event into SediMemory
+        sm = systems.get("sedimemory")
+        if sm is None or not hasattr(sm, "ingest_event"):
+            return
+        ConstraintVector = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                return
+
+        for change in changes:
+            try:
+                sm.ingest_event(
+                    content={
+                        "type":    "development_event",
+                        "subject": "self",
+                        "change":  change,
+                        "metrics": {k: snap[k] for k in snap if k != "dom_axis"},
+                        "src":     "development_tracker",
+                    },
+                    constraint_vector=ConstraintVector(
+                        X=0.55, T=0.90, N=0.20, B=0.65, A=0.88
+                    ),
+                    source="development_tracker",
+                )
+                log.info("Development event: %s", change)
+            except Exception:
+                pass
+
+
+_dev_tracker: "_DevelopmentTracker | None" = None
+
+
+def get_development_state() -> str:
+    """
+    Return a JSON snapshot of Aurora's current development metrics:
+    LSA paths, avg n_cost, SediMemory depth, self-entity stats, dominant axis.
+    Called by diagnostics or any system that wants Aurora's growth telemetry.
+    """
+    import json as _json
+    if _dev_tracker is None or _systems is None:
+        return _json.dumps({})
+    snap = _dev_tracker._build_snapshot(_systems)
+    return _json.dumps(snap)
+
+
 # Response classification patterns
 # ---------------------------------------------------------------------------
 
@@ -939,8 +1115,9 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker
     _ingested_concepts          = set()
+    _dev_tracker                = _DevelopmentTracker()
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
@@ -2225,6 +2402,19 @@ def handle_message(text: str) -> str:
         threading.Thread(
             target=_deposit_self_state_snapshot, daemon=True, name="self_state"
         ).start()
+
+        # Update the entity model for "user" — feed the axis impression that
+        # this user turn produced into their entity so Aurora builds a model
+        # of them over time the same way she models herself.
+        # Runs non-blocking; never delays the response.
+        def _update_user_entity() -> None:
+            try:
+                with _axis_state_lock:
+                    _ax_snap = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                _update_entity_model("user", _ax_snap)
+            except Exception:
+                pass
+        threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
 
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
@@ -3667,15 +3857,149 @@ def _deposit_self_state_snapshot() -> None:
         log.debug("_deposit_self_state_snapshot error: %s", exc)
 
 
+# ---------------------------------------------------------------------------
+# Other-entity modeling — Aurora builds models of participants she interacts
+# with using the same InceptionEntity mechanism she uses for herself.
+# ---------------------------------------------------------------------------
+
+def _ensure_entity(label: str, i_state: str = "i_other") -> None:
+    """
+    Ensure an InceptionEntity exists for the named participant.
+    Safe to call multiple times — a second call is a no-op if entity exists.
+    """
+    if label in _entity_models:
+        return
+    if _systems is None:
+        return
+    engine = _systems.get("simulation_engine") or _systems.get("simulation")
+    if engine is None or not hasattr(engine, "spawn_entity"):
+        return
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode   # type: ignore
+        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+        entity = engine.spawn_entity(
+            i_state,
+            depth=EntityDepth.SURFACE,
+            mode=ExistenceMode.BOUNDED,
+        )
+        if entity is not None:
+            _entity_models[label] = entity
+            log.info("Entity model spawned for %r", label)
+    except Exception as exc:
+        log.debug("_ensure_entity %r error: %s", label, exc)
+
+
+def _update_entity_model(label: str, channels: dict) -> dict:
+    """
+    Feed an axis impression into the named entity's model.
+    channels should map axis names to floats, e.g. {"X": 0.6, "T": 0.7, ...}.
+    Returns the compressed experience result, or {}.
+    """
+    _ensure_entity(label)
+    entity = _entity_models.get(label)
+    if entity is None:
+        return {}
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        experience = {
+            "channels": {
+                "existence":  float(channels.get("X", 0.5)),
+                "continuity": float(channels.get("T", 0.5)),
+                "effort":     float(channels.get("N", 0.5)),
+                "boundary":   float(channels.get("B", 0.5)),
+                "agency":     float(channels.get("A", 0.5)),
+            },
+            "src": f"observation:{label}",
+        }
+        result = entity.process_experience(experience, ExistenceMode.BOUNDED)
+        return result or {}
+    except Exception as exc:
+        log.debug("_update_entity_model %r error: %s", label, exc)
+        return {}
+
+
+# ---------------------------------------------------------------------------
+# Predictive self-impact — Aurora simulates how a hypothetical scenario
+# would affect her own axis state before it happens.
+# ---------------------------------------------------------------------------
+
+def _predict_self_impact(scenario_channels: dict) -> dict:
+    """
+    Spawn a temporary InceptionEntity seeded with Aurora's current axis state,
+    feed it the hypothetical scenario_channels, read back the compressed result.
+    Non-mutating — the temp entity is never stored and doesn't affect the real
+    self-entity or any system state.
+
+    scenario_channels: dict mapping X/T/N/B/A floats for the hypothetical input.
+    Returns a dict with predicted axis shifts, or {} on error.
+    """
+    if _systems is None:
+        return {}
+    engine = _systems.get("simulation_engine") or _systems.get("simulation")
+    if engine is None or not hasattr(engine, "spawn_entity"):
+        return {}
+    try:
+        from aurora_core_ai.foundational_contract import ExistenceMode   # type: ignore
+        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+
+        # Spawn a throw-away entity seeded with the current self-axis state
+        temp = engine.spawn_entity("i_predict", depth=EntityDepth.SURFACE, mode=ExistenceMode.BOUNDED)
+        if temp is None:
+            return {}
+
+        # Prime it with Aurora's current axis state so the baseline is herself
+        with _axis_state_lock:
+            cur = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+        prime_exp = {
+            "channels": {
+                "existence":  cur["X"], "continuity": cur["T"],
+                "effort":     cur["N"], "boundary":   cur["B"], "agency": cur["A"],
+            },
+            "src": "self_prime",
+        }
+        temp.process_experience(prime_exp, ExistenceMode.BOUNDED)
+
+        # Now feed the hypothetical scenario
+        scenario_exp = {
+            "channels": {
+                "existence":  float(scenario_channels.get("X", 0.5)),
+                "continuity": float(scenario_channels.get("T", 0.5)),
+                "effort":     float(scenario_channels.get("N", 0.5)),
+                "boundary":   float(scenario_channels.get("B", 0.5)),
+                "agency":     float(scenario_channels.get("A", 0.5)),
+            },
+            "src": "scenario",
+        }
+        result = temp.process_experience(scenario_exp, ExistenceMode.BOUNDED) or {}
+
+        # Try to remove temp entity from engine to keep memory clean
+        try:
+            tid = getattr(temp, "entity_id", None)
+            if tid and hasattr(engine, "_entities"):
+                engine._entities.pop(tid, None)
+        except Exception:
+            pass
+
+        return {
+            "baseline":  cur,
+            "scenario":  dict(scenario_channels),
+            "predicted": result,
+        }
+    except Exception as exc:
+        log.debug("_predict_self_impact error: %s", exc)
+        return {}
+
+
 _SELF_MONITOR_INTERVAL: float = 12.0   # seconds between heartbeat deposits
 
 
 def _self_monitor_loop() -> None:
     """
     Background heartbeat running every ~12 s.
-    Two jobs per tick:
+    Three jobs per tick:
       1. Feed current axis + hardware state into the self-entity (simulation mirror).
       2. Archive a snapshot into SediMemory if anything shifted.
+      3. Record development metrics — deposit notable cross-system changes as events.
     Lightweight — no cognitive pipeline involved.
     """
     import time as _t
@@ -3689,6 +4013,8 @@ def _self_monitor_loop() -> None:
                 cur_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
             _feed_self_entity(cur_ax)
             _deposit_self_state_snapshot()
+            if _dev_tracker is not None:
+                _dev_tracker.record(_systems)
         except Exception as exc:
             log.debug("self_monitor_loop: %s", exc)
 
