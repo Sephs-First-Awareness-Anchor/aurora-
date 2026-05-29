@@ -1301,6 +1301,21 @@ def handle_message(text: str) -> str:
         # of "how does this relate to how I feel right now."
         _affective_self_comparison(text, _systems)
 
+        # ── Gap pressure isolation ────────────────────────────────────────────
+        # Gap pressure belongs in the background curiosity cycle, not in the
+        # waveform composite that drives this turn's response. Her constraint
+        # physics — axis state, SediMemory, relational context, sensory — should
+        # derive meaning through reasoning first. If she can reason through it,
+        # the gap never needed to ask. Snapshot the pending gap here and clear it
+        # from _systems before composite priming; the arming check post-response
+        # uses the snapshot, not live _systems state.
+        _gap_concept_pending = (_systems or {}).get("_gap_seeking_concept") or ""
+        _gap_type_pending    = (_systems or {}).get("_gap_seeking_concept_type") or "semantic_gap"
+        if _gap_concept_pending and _systems:
+            _systems["_gap_seeking_concept"]      = None
+            _systems["_gap_seeking_concept_type"] = None
+            log.debug("Gap pressure isolated pre-composite: %r", _gap_concept_pending)
+
         # ── Trajectory emergence injection ────────────────────────────────────
         # If the field has walked enough turns to have a trajectory, check
         # whether its current state diverges from the predicted continuation.
@@ -1385,53 +1400,50 @@ def handle_message(text: str) -> str:
             except Exception:
                 pass
 
-        # ── Step 4: Track natural questions Aurora generated ─────────────────
-        # If the curiosity engine raised gap pressure for a concept and Aurora's
-        # response came out as a question, arm the concept so your next reply
-        # is treated as learning data (or triggers a search if you can't answer).
-        # No scripted strings — we only check whether she naturally asked something.
-        if _systems:
-            gap_concept = _systems.get("_gap_seeking_concept") or ""
-            if gap_concept and not _pending_example_concept:
-                _gap_norm = gap_concept.lower().strip()
-                if _gap_norm in _CONTRACTION_SHARDS:
-                    # Contraction fragment left by dropped apostrophe — not a real gap
-                    _systems["_gap_seeking_concept"] = None
-                    log.info("Gap concept %r is a contraction shard — skipping", gap_concept)
-                elif _gap_norm in _FOUNDATIONAL_VOCAB:
-                    # Everyday word — asking the user to define this signals broken
-                    # language grounding, not genuine curiosity. Silence it and mark
-                    # known so the curiosity engine stops flagging it.
-                    _systems["_gap_seeking_concept"] = None
+        # ── Step 4: Gap arming — using pre-isolated snapshot ────────────────
+        # Uses the snapshot taken before composite priming, not live _systems.
+        # Gap pressure was cleared before response generation so reasoning could
+        # drive understanding. Now check: did she reason through it, or did she
+        # genuinely ask about it?
+        if _gap_concept_pending and not _pending_example_concept:
+            _gap_norm = _gap_concept_pending.lower().strip()
+            if _gap_norm in _CONTRACTION_SHARDS:
+                _ingested_concepts.add(_gap_norm)
+                log.info("Gap concept %r is a contraction shard — resolved", _gap_concept_pending)
+            elif _gap_norm in _FOUNDATIONAL_VOCAB:
+                _ingested_concepts.add(_gap_norm)
+                log.info("Gap concept %r is foundational vocab — resolved", _gap_concept_pending)
+            elif _gap_norm in _ingested_concepts:
+                log.info("Gap concept %r already ingested — resolved", _gap_concept_pending)
+            else:
+                _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
+                if _existing_def:
                     _ingested_concepts.add(_gap_norm)
-                    log.info("Gap concept %r is foundational vocab — skipping", gap_concept)
-                elif _gap_norm in _ingested_concepts:
-                    # Already taught this session — pressure already relieved
-                    _systems["_gap_seeking_concept"] = None
-                    log.info("Gap concept %r already ingested — skipping re-arm", gap_concept)
+                    log.info("Gap %r in SediMemory — trusting own understanding", _gap_concept_pending)
                 else:
-                    # Check SediMemory — if she already has a sedimentated
-                    # understanding of this concept, she should trust it and not
-                    # re-open the teaching loop. She knows this.
-                    _existing_def = _lookup_existing_understanding(_gap_norm, _systems)
-                    if _existing_def:
-                        _systems["_gap_seeking_concept"] = None
-                        # Mark it as known so the curiosity engine won't keep
-                        # flagging it this session
-                        _ingested_concepts.add(_gap_norm)
-                        log.info("Gap %r found in SediMemory — trusting own understanding", gap_concept)
+                    # Genuinely unknown — fire background search
+                    _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
+
+                    # Only arm the teaching loop if her response specifically
+                    # asked about THIS concept. If she responded on-topic without
+                    # mentioning the concept, her reasoning derived the meaning —
+                    # mark it resolved rather than opening a teaching loop.
+                    asked_about_it = (
+                        response
+                        and response.rstrip().endswith("?")
+                        and _gap_norm in response.lower()
+                    )
+                    if asked_about_it:
+                        _pending_example_concept = _gap_concept_pending
+                        _pending_example_asked   = response
+                        log.info("Gap question confirmed for concept: %r", _gap_concept_pending)
                     else:
-                        # Genuinely unknown — fire background search immediately.
-                        # Route to the right tools based on what kind of gap it is.
-                        _gap_type = (_systems.pop("_gap_seeking_concept_type", None)
-                                     or "semantic_gap")
-                        _search_for_gap(gap_concept, gap_type=_gap_type)
-                        if response and response.rstrip().endswith("?"):
-                            # She naturally asked about it — next turn is the answer
-                            _pending_example_concept = gap_concept
-                            _pending_example_asked   = response
-                            _systems["_gap_seeking_concept"] = None
-                            log.info("Gap question detected for concept: %r", gap_concept)
+                        # She handled it through reasoning — mark resolved
+                        _ingested_concepts.add(_gap_norm)
+                        log.info(
+                            "Gap %r resolved through reasoning — response did not ask about it",
+                            _gap_concept_pending,
+                        )
 
         _last_response = response
         _last_path_key = path_key
