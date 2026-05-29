@@ -25,7 +25,7 @@ class _SocializeScreenState extends State<SocializeScreen> {
   final _minutesCtrl  = TextEditingController(text: '10');
   final _scrollCtrl   = ScrollController();
 
-  String _model          = 'gemini-2.0-flash';
+  String _model          = 'llama-3.1-8b-instant';
   bool   _active         = false;
   bool   _keyVisible     = false;
 
@@ -104,7 +104,7 @@ class _SocializeScreenState extends State<SocializeScreen> {
     final minutes = double.tryParse(_minutesCtrl.text.trim()) ?? 10.0;
     if (key.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter your Gemini API key first')),
+        const SnackBar(content: Text('Enter your Groq API key first')),
       );
       return;
     }
@@ -297,7 +297,7 @@ class _SocializeScreenState extends State<SocializeScreen> {
                   obscureText: !_keyVisible,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'Gemini API Key',
+                    hintText: 'Groq API Key',
                     hintStyle: const TextStyle(color: Colors.white30),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -330,11 +330,10 @@ class _SocializeScreenState extends State<SocializeScreen> {
                     style: const TextStyle(color: Colors.white70, fontSize: 12),
                     icon: const Icon(Icons.expand_more, color: Colors.white38, size: 16),
                     items: const [
-                      DropdownMenuItem(value: 'gemini-2.5-flash',      child: Text('2.5 Flash (5 RPM)')),
-                      DropdownMenuItem(value: 'gemini-2.5-pro',         child: Text('2.5 Pro')),
-                      DropdownMenuItem(value: 'gemini-2.5-flash-lite',  child: Text('2.5 Flash Lite (10 RPM)')),
-                      DropdownMenuItem(value: 'gemini-2.0-flash',       child: Text('2.0 Flash')),
-                      DropdownMenuItem(value: 'gemini-2.0-flash-lite',  child: Text('2.0 Flash Lite')),
+                      DropdownMenuItem(value: 'llama-3.1-8b-instant',    child: Text('Llama 3.1 8B')),
+                      DropdownMenuItem(value: 'llama-3.3-70b-versatile', child: Text('Llama 3.3 70B')),
+                      DropdownMenuItem(value: 'gemma2-9b-it',            child: Text('Gemma 2 9B')),
+                      DropdownMenuItem(value: 'mistral-saba-24b',        child: Text('Mistral Saba 24B')),
                     ],
                     onChanged: _active ? null : (v) => setState(() => _model = v ?? _model),
                   ),

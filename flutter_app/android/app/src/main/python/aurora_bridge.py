@@ -89,19 +89,23 @@ _TRAINER_OPENERS = [
 ]
 
 
-def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
-    """Call Gemini REST API. Raises RuntimeError with detail on failure."""
+def _partner_chat(api_key: str, model: str, history: list, system: str) -> str:
+    """Call Groq chat-completions API. Raises RuntimeError with detail on failure."""
     import requests as _req
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model}:generateContent?key={api_key}"
-    )
+    # history is [{role, content}, ...] — standard OpenAI format
+    messages = [{"role": "system", "content": system}] + history
     payload: dict = {
-        "system_instruction": {"parts": [{"text": system}]},
-        "contents": history,
-        "generationConfig": {"maxOutputTokens": 120, "temperature": 0.9},
+        "model": model,
+        "messages": messages,
+        "max_tokens": 120,
+        "temperature": 0.9,
     }
-    r = _req.post(url, json=payload, timeout=30)
+    r = _req.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        json=payload,
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        timeout=30,
+    )
     if not r.ok:
         try:
             detail = r.json().get("error", {}).get("message", r.text[:300])
@@ -110,7 +114,7 @@ def _gemini_chat(api_key: str, model: str, history: list, system: str) -> str:
         raise RuntimeError(f"HTTP {r.status_code}: {detail}")
     data = r.json()
     try:
-        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        return data["choices"][0]["message"]["content"].strip()
     except (KeyError, IndexError) as exc:
         raise RuntimeError(f"Unexpected response shape: {str(data)[:200]}") from exc
 
@@ -180,16 +184,16 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         if _training_stop.is_set() or _time.time() >= deadline:
             break
 
-        # Gemini generates next message
-        history.append({"role": "user",  "parts": [{"text": aurora_reply}]})
+        # Partner (Groq) generates next message
+        history.append({"role": "user", "content": aurora_reply})
         if len(history) > 20:
             history = history[-20:]
 
         try:
-            partner_msg = _gemini_chat(api_key, model, history, _TRAINER_SYSTEM)
-        except Exception as _g_exc:
-            _err = str(_g_exc)
-            log.warning("Gemini API error: %s", _err)
+            partner_msg = _partner_chat(api_key, model, history, _TRAINER_SYSTEM)
+        except Exception as _p_exc:
+            _err = str(_p_exc)
+            log.warning("Partner API error: %s", _err)
             _training_event_queue.append({
                 "type":      "training_error",
                 "error_msg": _err,
@@ -200,7 +204,7 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
         if not partner_msg:
             partner_msg = "What are you noticing right now?"
 
-        history.append({"role": "model", "parts": [{"text": partner_msg}]})
+        history.append({"role": "assistant", "content": partner_msg})
         opener = partner_msg
 
     # Save LSA on completion
@@ -265,6 +269,7 @@ def get_training_events() -> str:
         except IndexError:
             break
     return _json.dumps(events)
+
 
 # Proactive / autonomous expression
 # Aurora runs the full waveform pipeline on her own schedule and delivers
