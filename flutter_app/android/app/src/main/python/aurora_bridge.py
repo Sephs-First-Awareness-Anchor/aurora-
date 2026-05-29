@@ -1317,6 +1317,14 @@ _REVISE_FRAMING_RE = re.compile(
     r"before I revise my own framing\b[^.!?\n]*[.!?]?\s*",
     re.IGNORECASE,
 )
+# Lineage journal internal state text that passes the articulation check but is not speech
+_LINEAGE_LEAK_RE = re.compile(
+    r'(?:Promoted link at depth \d+[^.!?\n]*[.!?]?'
+    r'|I promoted a new lineage link[^.!?\n]*[.!?]?'
+    r'|Lineage-bound trait activated[^.!?\n]*[.!?]?'
+    r'|I formed a new (?:derived ability|code-evolution function|code proposal|ability)\s*`[^`]*`[^.!?\n]*[.!?]?)',
+    re.IGNORECASE,
+)
 
 
 def _sanitize_response(response: str, user_text: str) -> str:
@@ -1329,7 +1337,8 @@ def _sanitize_response(response: str, user_text: str) -> str:
     3. Remove bare "audio/camera feed offline" sentences that leaked from the
        sensory-grounding handler when the ambient background monitor isn't running.
     4. Strip internal language templates that escaped the surface boundary.
-    5. Echo guard — suppress verbatim or near-verbatim reflections of user input.
+    5. Strip internal lineage/journal state that passes the articulation check but isn't speech.
+    6. Echo guard — suppress verbatim or near-verbatim reflections of user input.
     """
     if not response:
         return response
@@ -1349,7 +1358,13 @@ def _sanitize_response(response: str, user_text: str) -> str:
     response = _ACTUALLY_HERE_RE.sub('', response).strip()
     response = _REVISE_FRAMING_RE.sub('', response).strip()
 
-    # 5. Echo guard — strip verbatim echoes and very-short near-echoes of user input.
+    # 5. Strip internal lineage journal state text
+    response = _LINEAGE_LEAK_RE.sub('', response).strip()
+    # If the entire response was lineage state, treat as no response
+    if not response:
+        return ""
+
+    # 6. Echo guard — strip verbatim echoes and very-short near-echoes of user input.
     # Only apply word-overlap check for short responses (≤ 5 unique words) — longer
     # responses that reuse input vocabulary are genuine engagement with the topic, not
     # parroting.
