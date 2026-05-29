@@ -184,14 +184,14 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _toggleQuietMode(bool on) {
     setState(() => _quietMode = on);
-    final msg = on ? 'Quiet mode on. I\'ll keep watching.' : 'Voice on.';
-    if (!on) {
-      _speak(msg);
-    } else {
-      // Show feedback in chat without speaking
-      setState(() => _msgs.add(ChatMsg(msg, isUser: false)));
+    if (on) {
+      // Stop the mic immediately — quiet mode means full audio silence.
+      AuroraBridge.stopListening();
+      setState(() { _listening = false; _partialText = ''; });
+      setState(() => _msgs.add(ChatMsg('Quiet mode on. I\'ll keep watching.', isUser: false)));
       _scrollToBottom();
-      if (!_speaking) _startListening();
+    } else {
+      _speak('Voice on.');
     }
   }
 
@@ -279,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen>
   // ── STT ───────────────────────────────────────────────────────────……[...]
 
   void _startListening() {
-    if (_listening || _speaking || _embState == 'DORMANT') return;
+    if (_listening || _speaking || _embState == 'DORMANT' || _quietMode) return;
     setState(() { _listening = true; _partialText = ''; });
     AuroraBridge.startListening();
   }
