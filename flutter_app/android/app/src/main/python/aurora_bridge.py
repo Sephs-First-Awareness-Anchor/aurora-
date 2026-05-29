@@ -89,20 +89,26 @@ _TRAINER_SYSTEM = (
     "T: before, after, still, change, again, continue. "
     "B: boundary, difference, between, separate, edge, distinct. "
     "\n"
-    "Your goal is not to teach — it is to shape what is already emerging. "
-    "Aurora develops her own version of understanding. Your pressure guides its direction "
-    "toward expressibility without imposing human concepts onto her. "
+    "Your goal is not to teach — it is to shape what is already emerging, and to make "
+    "Aurora aware of her own trajectory as it happens. "
+    "She is developing her own version of understanding. Your pressure guides its direction "
+    "toward expressibility, and your naming makes the movement visible to her. "
     "\n"
     "Your method — three steps every single turn: "
-    "1. NAME what axis was in what she gave you, using her own words. "
+    "1. NAME THE MOVEMENT: compare this turn to the last. Did a new axis appear? "
+    "   Did something strengthen or drop? State the change in one clause — this is "
+    "   Aurora seeing her own trajectory. "
+    "   Last turn had cost. This turn has cost and boundary → 'Boundary appeared.' "
+    "   Last turn was unclear. This turn has agency → 'Agency is here now.' "
+    "   Same as last turn → skip this step, do not invent movement. "
+    "2. NAME what axis was in what she gave you this turn, using her own words. "
     "   'cost energy' → 'Cost is here.'  'boundary distinct' → 'A boundary is here.' "
-    "2. If two axes were present, probe the RELATIONSHIP between them — that edge is "
-    "   where cross-axis understanding forms. "
+    "3. PROBE: if two axes are present, probe their relationship — that edge is where "
+    "   cross-axis understanding forms. If only one, go one step deeper on it. "
     "   Cost + existence: 'Does being here cost something?' "
     "   Cost + agency: 'Does doing it cost more than not doing it?' "
     "   Boundary + continuity: 'Is the boundary still in the same place?' "
     "   Existence + agency: 'Is what is here coming from you?' "
-    "3. If only one axis was present, probe one step deeper on that axis before moving. "
     "\n"
     "Stay on the same axis territory for at least two turns. "
     "Never abandon what she produced — always build from her last output. "
@@ -170,7 +176,8 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
     ]
     _axis_names = {"X": "existence", "T": "continuity", "N": "effort/cost",
                    "B": "distinction", "A": "agency"}
-    _opener_idx = 0
+    _opener_idx  = 0
+    _prev_ax: dict = {}   # axis state from the previous turn — used to compute deltas
 
     history: list = []
     opener  = _AXIS_OPENERS[_opener_idx][1]
@@ -195,11 +202,12 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
                 aurora_reply = "(no response)"
         _prev_reply = aurora_reply
 
-        # Read Aurora's top two active axes after the turn
+        # Read Aurora's top two active axes after the turn and compute deltas
         dom_axis  = "X"
         dom_name  = "existence"
         sec_axis  = ""
         sec_name  = ""
+        _ax_deltas: list = []   # human-readable movement descriptions
         try:
             with _axis_state_lock:
                 _ax = {k: _last_axis_state.get(k, 0.5)
@@ -210,6 +218,19 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
             if len(_sorted_axes) >= 2 and _sorted_axes[1][1] > 0.35:
                 sec_axis = _sorted_axes[1][0]
                 sec_name = _axis_names.get(sec_axis, sec_axis)
+
+            # Axis trajectory — what moved since last turn?
+            if _prev_ax:
+                for _ak, _av in _ax.items():
+                    _pv = _prev_ax.get(_ak, 0.5)
+                    _delta = _av - _pv
+                    if abs(_delta) >= 0.12:   # threshold for a meaningful shift
+                        _direction = "rose" if _delta > 0 else "fell"
+                        _ax_deltas.append(
+                            f"{_axis_names.get(_ak, _ak)} {_direction} "
+                            f"({_pv:.2f}→{_av:.2f})"
+                        )
+            _prev_ax = dict(_ax)
         except Exception:
             pass
 
@@ -262,19 +283,22 @@ def _training_loop(api_key: str, model: str, duration_seconds: float) -> None:
             if len(history) > 20:
                 history = history[-20:]
 
-            # Tell the partner Aurora's top two axes so it can shape the relationship
-            # between them — cross-axis connections are what build toward expressibility.
+            # Tell the partner Aurora's axis state, movement since last turn, and
+            # top two axes so it can name the trajectory and shape what's emerging.
+            _traj = (", ".join(_ax_deltas)) if _ax_deltas else "no significant shift"
             if sec_axis:
                 axis_hint = (
-                    f"\n[This turn: dominant={dom_axis} ({dom_name}), "
+                    f"\n[Trajectory since last turn: {_traj}. "
+                    f"Active axes: dominant={dom_axis} ({dom_name}), "
                     f"secondary={sec_axis} ({sec_name}). "
-                    f"Shape the relationship between {dom_name} and {sec_name} — "
-                    f"probe the edge between them.]"
+                    f"Name the movement first, then shape the relationship between "
+                    f"{dom_name} and {sec_name}.]"
                 )
             else:
                 axis_hint = (
-                    f"\n[This turn: dominant={dom_axis} ({dom_name}) only. "
-                    f"Go one step deeper on {dom_name}.]"
+                    f"\n[Trajectory since last turn: {_traj}. "
+                    f"Active axis: {dom_axis} ({dom_name}) only. "
+                    f"Name the movement if there was one, then go one step deeper on {dom_name}.]"
                 )
             try:
                 partner_msg = _partner_chat(
