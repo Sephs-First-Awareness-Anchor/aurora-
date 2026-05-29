@@ -53,10 +53,12 @@ def _make_partner(provider: str):
             print("Set GEMINI_API_KEY (or GOOGLE_API_KEY) before running.")
             sys.exit(1)
         genai.configure(api_key=api_key)
+        _model_name = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
         _model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
+            model_name=_model_name,
             system_instruction=_PARTNER_SYSTEM,
         )
+        print(f"  Gemini model: {_model_name}")
 
         def _gemini_call(history: list[dict], _system: str) -> str:
             # Gemini uses role="user"/"model" alternating
@@ -353,10 +355,17 @@ def main() -> None:
         default=os.environ.get("AURORA_TRAINER_PROVIDER", "gemini"),
         help="LLM provider for conversation partner: gemini (default) or openai",
     )
+    parser.add_argument(
+        "--model", type=str,
+        default="",
+        help="Override the model name (e.g. gemini-2.5-pro, gemini-2.5-flash)",
+    )
     args = parser.parse_args()
 
     state_dir = args.state_dir or os.path.join(_CORE, "aurora_state")
 
+    if args.model:
+        os.environ["GEMINI_MODEL"] = args.model
     print(f"Provider: {args.provider}")
     partner_fn = _make_partner(args.provider)
 
