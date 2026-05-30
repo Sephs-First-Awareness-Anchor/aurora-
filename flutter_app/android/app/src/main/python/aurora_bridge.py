@@ -82,6 +82,22 @@ _last_screen_observation: dict = {}
 # from the information channel — what the screen LOOKS LIKE vs what it SAYS.
 _last_screen_visual_data: dict = {}
 
+# ── Room / Hub state ──────────────────────────────────────────────────────────
+# Aurora's room is her inner control panel — notes, observations, and intentions
+# written by her daemon and room operator thread.  On Android, the room state
+# reaches her through these JSON files rather than through Xlib computer-use.
+# The bridge reads them and injects them as ambient background awareness so
+# Aurora perceives her own room state each turn.
+_last_room_notes_ts:    float = 0.0   # last time room notes were injected
+_ROOM_NOTES_INTERVAL:   float = 30.0  # re-read every 30 s
+_last_room_notes_digest: str  = ""    # last injected note content (dedup)
+
+# Pending room command from the Flutter app — a JSON command Aurora wrote for
+# herself (e.g. {"navigate": "Health"}) that gets injected as a self-directive
+# observation on her next cognitive turn.
+_pending_room_cmd: str = ""
+_pending_room_cmd_lock = threading.Lock()
+
 # Curiosity session control
 _curiosity_session_active = threading.Event()
 
@@ -2925,6 +2941,124 @@ def _inject_self_state_context(systems: dict) -> None:
     except Exception:
         pass
 
+    # Room awareness — inject recent room notes and any pending self-directives
+    # so Aurora perceives her own inner space as part of her self-state context.
+    _inject_room_context(systems)
+
+
+def _read_room_notes(state_dir: str, max_items: int = 3) -> list:
+    """
+    Read the most recent entries from aurora_room_notes.json.
+    Returns a list of dicts with 'type', 'content', 'ts_str'.
+    """
+    import json as _json
+    from pathlib import Path as _P
+    try:
+        p = _P(state_dir) / "aurora_room_notes.json"
+        if not p.exists():
+            return []
+        notes = _json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(notes, list):
+            return []
+        # Most recent first
+        return list(reversed(notes[-max_items * 2:]))[:max_items]
+    except Exception:
+        return []
+
+
+def _inject_room_context(systems: dict) -> None:
+    """
+    Read Aurora's room notes and any pending room command, then append them
+    as ambient background context so her cognition perceives her own room state.
+
+    The room is her inner space — capability notes, self-directed observations,
+    boot-tour readings.  On Android this arrives through state files; on desktop
+    through the Xlib room operator.  Either way it's the same file interface.
+    """
+    global _last_room_notes_ts, _last_room_notes_digest, _pending_room_cmd
+
+    if not systems:
+        return
+
+    import time as _t
+    now = _t.time()
+    state_dir = str(systems.get("state_dir") or systems.get("_state_dir") or "aurora_state")
+
+    # ── Pending room command (Flutter → Aurora self-directive) ────────────────
+    cmd_obs = ""
+    with _pending_room_cmd_lock:
+        if _pending_room_cmd:
+            cmd_obs = _pending_room_cmd
+            _pending_room_cmd = ""
+
+    # ── Room notes (throttled) ────────────────────────────────────────────────
+    note_obs = ""
+    if now - _last_room_notes_ts >= _ROOM_NOTES_INTERVAL:
+        _last_room_notes_ts = now
+        notes = _read_room_notes(state_dir, max_items=2)
+        if notes:
+            # Digest the two most recent note types and first 120 chars of content
+            parts = []
+            for n in notes:
+                ntype   = str(n.get("type", "note"))
+                content = str(n.get("content", "")).strip()[:120]
+                if content:
+                    parts.append(f"room-{ntype}: {content}")
+            digest = " | ".join(parts)
+            if digest and digest != _last_room_notes_digest:
+                _last_room_notes_digest = digest
+                note_obs = digest
+
+    # ── Room messages (direct messages from daemon to Aurora) ─────────────────
+    msg_obs = ""
+    try:
+        import json as _json
+        from pathlib import Path as _P
+        msgs_path = _P(state_dir) / "aurora_room_messages.json"
+        if msgs_path.exists() and now - msgs_path.stat().st_mtime <= 120:
+            msgs = _json.loads(msgs_path.read_text(encoding="utf-8"))
+            if isinstance(msgs, list) and msgs:
+                latest = msgs[-1]
+                body = str(latest.get("body", "") or latest.get("content", "")).strip()[:100]
+                if body:
+                    msg_obs = f"room-message: {body}"
+    except Exception:
+        pass
+
+    # ── Combine and inject ────────────────────────────────────────────────────
+    room_parts = [p for p in (cmd_obs, note_obs, msg_obs) if p]
+    if not room_parts:
+        return
+
+    room_text = "; ".join(room_parts)
+    existing = systems.get("_ambient_perceptual") or {}
+    obs = existing.get("observation", "")
+    if obs:
+        systems["_ambient_perceptual"] = {
+            **existing,
+            "observation": f"{obs}; {room_text}",
+        }
+    else:
+        systems["_ambient_perceptual"] = {
+            "observation": room_text,
+            "source":      "room_context",
+        }
+
+    # Pump identity field: room notes are inner-awareness events.
+    # N-axis (unresolved cost) rises when there is something to attend to;
+    # A-axis (agency) rises because these are self-directed observations.
+    ifield = systems.get("identity_field")
+    if ifield and hasattr(ifield, "ingest_sensory_event"):
+        try:
+            ifield.ingest_sensory_event(
+                "internal",
+                intensity=0.45,
+                novelty=0.30,
+                valence=0.0,
+            )
+        except Exception:
+            pass
+
 
 def _prime_waveform_composite(systems: dict, text: str) -> None:
     """
@@ -4549,8 +4683,9 @@ def _proactive_loop() -> None:
             if _curiosity_session_active.is_set():
                 continue
 
-            # Sample what she's currently perceiving
+            # Sample what she's currently perceiving — sensors + room context
             _sample_ambient_perception(_systems)
+            _inject_room_context(_systems)  # room notes / pending commands as awareness
             obs = str((_systems.get("_ambient_perceptual") or {}).get("observation") or "").strip()
             if not obs:
                 continue
@@ -4861,3 +4996,191 @@ def provide_screen_observation(payload_json: str) -> None:
         )
     except Exception as exc:
         log.warning("provide_screen_observation: %s", exc)
+
+
+# ── Room / Hub public interface ───────────────────────────────────────────────
+
+def provide_room_command(json_str: str) -> None:
+    """
+    Called from Flutter when the user (or the hub UI) issues a command for
+    Aurora's room.  The command is queued as a self-directive observation and
+    injected into Aurora's ambient context on her next cognitive turn.
+
+    Also writes to room_operator_cmd.json so the desktop daemon can act on it
+    when connected.
+
+    Expected format: {"navigate": "Health"}, {"poedex": "define N"},
+                     {"boot_tour": true}, or a free-text message string.
+    """
+    global _pending_room_cmd
+    try:
+        import json as _json
+        raw = str(json_str or "").strip()
+        if not raw:
+            return
+
+        # Parse to get a human-readable directive
+        try:
+            cmd = _json.loads(raw)
+        except Exception:
+            cmd = {"message": raw}
+
+        if "navigate" in cmd:
+            directive = f"room navigation requested: visit {cmd['navigate']} tab"
+        elif "poedex" in cmd:
+            directive = f"room Poedex query: {cmd['poedex']}"
+        elif "boot_tour" in cmd:
+            directive = "room boot tour requested"
+        elif "message" in cmd:
+            directive = f"room message: {str(cmd['message'])[:120]}"
+        else:
+            directive = f"room command: {raw[:120]}"
+
+        with _pending_room_cmd_lock:
+            _pending_room_cmd = directive
+
+        # Write to the operator command file (desktop daemon picks this up)
+        if _systems is not None:
+            state_dir = str(_systems.get("state_dir") or _systems.get("_state_dir") or "")
+            if state_dir:
+                try:
+                    import os as _os
+                    cmd_path = _os.path.join(state_dir, "room_operator_cmd.json")
+                    with open(cmd_path, "w", encoding="utf-8") as _f:
+                        _f.write(raw)
+                except Exception:
+                    pass
+    except Exception as exc:
+        log.warning("provide_room_command: %s", exc)
+
+
+def get_room_state() -> str:
+    """
+    Called from Flutter to retrieve Aurora's current room state for display in
+    the hub UI.  Returns a JSON string with recent notes, latest messages,
+    room activity, and hub vitals (axis pressures, daemon status).
+
+    This is the Android equivalent of reading the hub's state panel — the same
+    JSON files the desktop hub reads, surfaced to the Flutter layer.
+    """
+    import json as _json
+    import time as _t
+
+    if _systems is None:
+        return _json.dumps({"error": "not_initialized"})
+
+    state_dir = str(_systems.get("state_dir") or _systems.get("_state_dir") or "aurora_state")
+
+    out: dict = {
+        "ts":              _t.time(),
+        "notes":           [],
+        "messages":        [],
+        "activity":        [],
+        "axis_pressures":  {},
+        "daemon_status":   {},
+        "room_state":      {},
+    }
+
+    try:
+        from pathlib import Path as _P
+
+        # Recent room notes (last 5)
+        notes_path = _P(state_dir) / "aurora_room_notes.json"
+        if notes_path.exists():
+            notes = _json.loads(notes_path.read_text(encoding="utf-8"))
+            if isinstance(notes, list):
+                out["notes"] = [
+                    {"type": str(n.get("type","")), "content": str(n.get("content",""))[:300],
+                     "ts_str": str(n.get("ts_str",""))}
+                    for n in list(reversed(notes))[:5]
+                ]
+
+        # Recent room messages (last 5)
+        msgs_path = _P(state_dir) / "aurora_room_messages.json"
+        if msgs_path.exists():
+            msgs = _json.loads(msgs_path.read_text(encoding="utf-8"))
+            if isinstance(msgs, list):
+                out["messages"] = [
+                    {"body": str(m.get("body", m.get("content","")) or "")[:200],
+                     "ts_str": str(m.get("ts_str",""))}
+                    for m in list(reversed(msgs))[:5]
+                ]
+
+        # Recent room activity (last 10)
+        activity_path = _P(state_dir) / "aurora_room_activity.json"
+        if activity_path.exists():
+            activity = _json.loads(activity_path.read_text(encoding="utf-8"))
+            if isinstance(activity, list):
+                out["activity"] = [
+                    {"action": str(a.get("action","")), "detail": str(a.get("detail",""))[:100],
+                     "ts_str": str(a.get("ts_str",""))}
+                    for a in list(reversed(activity))[:10]
+                ]
+
+        # Current room state / intentions
+        room_state_path = _P(state_dir) / "aurora_room_state.json"
+        if room_state_path.exists():
+            rs = _json.loads(room_state_path.read_text(encoding="utf-8"))
+            if isinstance(rs, dict):
+                out["room_state"] = rs
+
+        # Live axis pressures from identity field
+        ifield = _systems.get("identity_field")
+        if ifield and hasattr(ifield, "status"):
+            try:
+                out["axis_pressures"] = ifield.status().get("axis_pressures", {})
+            except Exception:
+                pass
+
+        # Daemon status
+        ds_path = _P(state_dir) / "daemon_status.json"
+        if ds_path.exists():
+            try:
+                ds = _json.loads(ds_path.read_text(encoding="utf-8"))
+                # Surface only safe keys — no raw internals
+                out["daemon_status"] = {
+                    "heat":    str(ds.get("heat", "NORMAL")),
+                    "epoch":   int(ds.get("epoch", 0)),
+                    "uptime":  str(ds.get("uptime", "")),
+                    "running": bool(ds.get("running", False)),
+                }
+            except Exception:
+                pass
+
+    except Exception as exc:
+        out["error"] = str(exc)
+
+    return _json.dumps(out, default=str)
+
+
+def post_room_note(content: str, note_type: str = "observation") -> None:
+    """
+    Called from Flutter to write a note into Aurora's room notes file.
+    This is how the app injects coaching or hub observations into her inner space.
+    """
+    if not content or _systems is None:
+        return
+    try:
+        import json as _json
+        import time as _t
+        from pathlib import Path as _P
+        state_dir = str(_systems.get("state_dir") or _systems.get("_state_dir") or "aurora_state")
+        p = _P(state_dir) / "aurora_room_notes.json"
+        notes: list = []
+        if p.exists():
+            try:
+                notes = _json.loads(p.read_text(encoding="utf-8"))
+                if not isinstance(notes, list):
+                    notes = []
+            except Exception:
+                pass
+        notes.append({
+            "ts":      _t.time(),
+            "ts_str":  _t.strftime("%Y-%m-%d %H:%M:%S"),
+            "type":    str(note_type),
+            "content": str(content)[:500],
+            "source":  "app_bridge",
+        })
+        p.write_text(_json.dumps(notes[-200:], indent=2), encoding="utf-8")
+    except Exception as exc:
+        log.warning("post_room_note: %s", exc)
