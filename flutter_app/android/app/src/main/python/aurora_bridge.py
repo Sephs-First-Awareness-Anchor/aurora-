@@ -4468,27 +4468,79 @@ def _self_monitor_loop() -> None:
             log.debug("self_monitor_loop: %s", exc)
 
 
+def _compute_expression_salience(systems: dict) -> float:
+    """
+    Read live axis pressures from the identity field and return a salience
+    score (0.0–1.0).  Higher values mean expression is more warranted.
+
+    Salience sources:
+      N-axis elevation  — energy/cost pressing (battery depletion, high novelty)
+      X-axis depression — presence weakening (screen off, background, low power)
+      A+B combined peak — strong agency or boundary tension
+
+    The score is used to shorten _MIN_PROACTIVE_GAP dynamically and to
+    bypass the timer entirely in critical states (score ≥ 0.88).
+    """
+    try:
+        ifield = (systems or {}).get("identity_field")
+        if ifield is not None and hasattr(ifield, "status"):
+            ap = ifield.status().get("axis_pressures", {})
+            n  = float(ap.get("N", 0.10))
+            x  = float(ap.get("X", 0.10))
+            a  = float(ap.get("A", 0.10))
+            b  = float(ap.get("B", 0.10))
+            # N above resting (0.10) → energy cost pressing toward expression
+            n_urgency = max(0.0, (n - 0.35) * 1.60)
+            # X below mid-point → presence weakening, awareness needed
+            x_drop = max(0.0, (0.42 - x) * 2.20)
+            # A+B tension — agency or boundary under pressure
+            ab_tension = max(0.0, (a + b) * 0.32 - 0.12)
+            return min(1.0, max(n_urgency, x_drop, ab_tension))
+    except Exception:
+        pass
+    # Fallback — derive from hardware sensors if field unavailable
+    try:
+        bat = float(_hardware_sensors.get("battery_pct", 50.0)) / 100.0
+        return max(0.0, min(1.0, (0.25 - bat) * 4.0)) if bat < 0.25 else 0.0
+    except Exception:
+        return 0.0
+
+
 def _proactive_loop() -> None:
     """
     Background daemon: periodically runs the full waveform pipeline from
     current sensory state with no user message.  If the conscious crest
     decides Aurora should speak, the response is queued for delivery.
 
-    Rate-limited to _MIN_PROACTIVE_GAP seconds.  Skips if Aurora is
-    already speaking, a curiosity session is active, or the main lock
-    is held (user turn in progress).
+    Rate-limited to _MIN_PROACTIVE_GAP seconds, with salience-based
+    shortening: high axis pressure (low battery, fading presence, strong
+    N-axis cost) compresses the gap toward a 20-second floor.
+    Critical salience (≥0.88) bypasses the gap timer entirely.
     """
     import time as _t
 
     while True:
         try:
-            _t.sleep(35)
+            _t.sleep(20)
             if _systems is None:
                 continue
 
             now = _t.time()
             global _last_proactive_ts
-            if now - _last_proactive_ts < _MIN_PROACTIVE_GAP:
+
+            # Minimum absolute gap — never express more often than this
+            if now - _last_proactive_ts < 20.0:
+                continue
+
+            # Salience-based dynamic gap:
+            #   salience=0.0 → full 90 s gap
+            #   salience=0.5 → ~55 s gap
+            #   salience=0.88+ → bypass gap (critical urgency path)
+            salience = _compute_expression_salience(_systems)
+            _dynamic_gap = max(20.0, _MIN_PROACTIVE_GAP * (1.0 - salience * 0.75))
+            _critical    = salience >= 0.88
+
+            if not _critical and now - _last_proactive_ts < _dynamic_gap:
                 continue
 
             with _axis_state_lock:
@@ -4502,6 +4554,34 @@ def _proactive_loop() -> None:
             obs = str((_systems.get("_ambient_perceptual") or {}).get("observation") or "").strip()
             if not obs:
                 continue
+
+            # When salience is elevated, prefix the obs with what is pressing —
+            # gives the constraint physics real body-state content to express from
+            # rather than generic ambient tokens.
+            if salience >= 0.45:
+                try:
+                    _sal_parts = []
+                    ap = {}
+                    _if = _systems.get("identity_field")
+                    if _if and hasattr(_if, "status"):
+                        ap = _if.status().get("axis_pressures", {})
+                    _n = float(ap.get("N", 0.10))
+                    _x = float(ap.get("X", 0.10))
+                    _bat = _hardware_sensors.get("battery_pct")
+                    if _bat is not None and float(_bat) < 30:
+                        _bat_pct = int(float(_bat))
+                        _sal_parts.append(
+                            f"battery critically low at {_bat_pct}%" if _bat_pct < 15
+                            else f"battery low at {_bat_pct}%"
+                        )
+                    elif _n > 0.55:
+                        _sal_parts.append("energy cost is pressing")
+                    if _x < 0.28:
+                        _sal_parts.append("my presence feels faint")
+                    if _sal_parts:
+                        obs = "; ".join(_sal_parts) + (f"; {obs}" if obs else "")
+                except Exception:
+                    pass
 
             # Non-blocking lock — skip this tick rather than stall a user turn
             if not _lock.acquire(blocking=False):
