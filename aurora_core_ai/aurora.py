@@ -19885,14 +19885,21 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     _dom_ax = max(_ap, key=lambda k: _ap[k])
                 except Exception:
                     pass
+                # Five axis-oriented questions about the entity present —
+                # genuine curiosity about who is here, not abstract physics.
+                # X = existence/presence → who is here
+                # T = temporal/continuity → when they have been
+                # N = cost/direction → where they are going
+                # B = distinction/boundary → what they want
+                # A = agency/source → why they have come
                 _AXIS_GAP_CLAIMS = {
-                    "X": "what is actually present here",
-                    "T": "what continues through this moment",
-                    "N": "what the cost of holding this is",
-                    "B": "where the distinction lies in this",
-                    "A": "where this originates from",
+                    "X": "who is here",
+                    "T": "when they have been",
+                    "N": "where they are going",
+                    "B": "what they want",
+                    "A": "why they have come",
                 }
-                _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "what is present here")
+                _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "who is here")
         state.response_content = _render_runtime_intent(
             systems, _gap_claim,
             emotion_tone="curious", certainty=0.58,
