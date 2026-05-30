@@ -828,6 +828,11 @@ class SemanticIntentCompiler:
             # Pipeline-signal mapping note from aurora.py ability profile
             "map pipeline signals to generative tone",
             "map pipeline signals",
+            # Hardware body-state labels that must stay in constraint physics
+            # and must not be re-emitted as literal speech
+            "self-state: dominant", "self-state:",
+            "hardware_body", "body_power", "battery_pct",
+            "screen: own interface", "screen_is_self",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp

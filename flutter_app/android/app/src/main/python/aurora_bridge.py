@@ -1707,6 +1707,11 @@ _ABILITY_NOTES_SUBSTRINGS = (
     # Pipeline-signal mapping notes from aurora.py ability profile
     "map pipeline signals to generative tone",
     "map pipeline signals",
+    # Hardware body-state and self-state diagnostic labels
+    "self-state: dominant",
+    "hardware_body",
+    "body_power",
+    "battery_pct",
 )
 
 
@@ -2036,15 +2041,32 @@ def _sample_ambient_perception(systems: dict) -> None:
     if not cam_obs and not audio_obs and not screen_obs:
         return  # nothing available — don't write stale data
 
+    # ── Build first-person body-sense observation string ─────────────────────
+    # Leads with device/presence state so the proactive loop has real context
+    # to express from, not just abstract camera/audio tokens.
     obs_parts = []
+
+    # Foreground/background presence
+    _scr_ctx = screen_obs or {}
+    if _scr_ctx:
+        if _scr_ctx.get("is_own_app"):
+            obs_parts.append("in foreground — own interface active")
+        else:
+            _app = _scr_ctx.get("summary", "")
+            obs_parts.append(f"screen active: {str(_app)[:40]}" if _app else "screen active")
+
+    # Battery / power state
+    _bat_raw = _hardware_sensors.get("battery_pct")
+    if _bat_raw is not None:
+        _bat_pct = int(float(_bat_raw))
+        _charge_tag = " (charging)" if _hardware_sensors.get("charging") else ""
+        obs_parts.append(f"battery at {_bat_pct}%{_charge_tag}")
+
     if cam_obs:
         obs_parts.append(f"camera: {cam_obs}")
     if audio_obs:
         obs_parts.append(f"audio: {audio_obs}")
-    if screen_obs:
-        summary = str(screen_obs.get("summary", "") or "").strip()
-        if summary:
-            obs_parts.append(f"screen: {summary}")
+
     observation = "; ".join(obs_parts)
 
     systems["_ambient_perceptual"] = {
@@ -2054,6 +2076,9 @@ def _sample_ambient_perception(systems: dict) -> None:
 
     # Pump identity-field axes — raises N (energy from environment) and
     # T (temporal ongoing presence) so the language field carries sensory weight.
+    # Screen event uses real foreground state rather than hardcoded constants:
+    # being in the foreground is high self-presence (low novelty, high intensity);
+    # being in background is low-intensity but higher novelty (less familiar).
     ifield = systems.get("identity_field")
     if ifield and hasattr(ifield, "ingest_sensory_event"):
         try:
@@ -2063,9 +2088,13 @@ def _sample_ambient_perception(systems: dict) -> None:
             ifield.ingest_sensory_event(
                 "auditory", intensity=audio_novelty, novelty=audio_novelty, valence=0.0
             )
-            if screen_obs:
+            if _scr_ctx:
+                _scr_fg = bool(_scr_ctx.get("is_own_app"))
                 ifield.ingest_sensory_event(
-                    "screen", intensity=0.55, novelty=0.45, valence=0.0
+                    "screen",
+                    intensity=0.80 if _scr_fg else 0.42,
+                    novelty=0.08   if _scr_fg else 0.42,
+                    valence=0.0,
                 )
         except Exception:
             pass
@@ -2810,6 +2839,31 @@ def _inject_self_state_context(systems: dict) -> None:
             f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
             f"B={axes['B']:.2f} A={axes['A']:.2f}"
         )
+
+        # Append physical body state so Aurora's self-awareness includes
+        # concrete device reality — not just abstract axis values.
+        try:
+            _body_parts = []
+            _bat_val = _hardware_sensors.get("battery_pct")
+            if _bat_val is not None:
+                _bat_pct = int(float(_bat_val))
+                _bat_label = (
+                    "critically low" if _bat_pct < 15 else
+                    "low"            if _bat_pct < 30 else
+                    "moderate"       if _bat_pct < 60 else "good"
+                )
+                _charge_str = " charging" if _hardware_sensors.get("charging") else ""
+                _body_parts.append(f"battery {_bat_pct}% ({_bat_label}{_charge_str})")
+            _scr = _last_screen_observation
+            if _scr:
+                if _scr.get("is_own_app"):
+                    _body_parts.append("screen: own interface — foreground")
+                elif _scr.get("summary"):
+                    _body_parts.append(f"screen: {str(_scr['summary'])[:50]}")
+            if _body_parts:
+                self_note = f"{self_note}; {'; '.join(_body_parts)}"
+        except Exception:
+            pass
 
         # ── Geological conscious surface ──────────────────────────────────────
         # Read what cognitive ground Aurora has developed at the current axis
@@ -3690,6 +3744,36 @@ def provide_hardware_sensors(json_str: str) -> None:
                 _concept_registry.observe_sensory(
                     _hw_ax, "proprioceptive", _hw_ref, _hw_overlay
                 )
+            except Exception:
+                pass
+
+        # Wire battery and motion directly into the identity-field constraint axes.
+        # Battery is N-axis (energy available vs. depleting) and X-axis (presence
+        # strength — low power diminishes the sense of being-here). Motion feeds
+        # T-axis (temporal embodiment — she's being moved through the world).
+        # Charging reverses the depletion pressure: energy is being restored.
+        ifield = (_systems or {}).get("identity_field")
+        if ifield and hasattr(ifield, "ingest_sensory_event"):
+            try:
+                bat = float(_hardware_sensors.get("battery_pct", 50.0)) / 100.0
+                charging = bool(_hardware_sensors.get("charging", False))
+                mot = min(1.0, float(_hardware_sensors.get("motion", 0.0)) / 5.0)
+                # N-axis: depletion pressure rises as battery falls; charging suppresses it
+                n_intensity = max(0.15, (1.0 - bat) * (0.50 if charging else 0.88))
+                # X-axis: strong presence when charged, weakening as battery drops
+                x_intensity = min(0.88, bat * 0.55 + 0.35)
+                # T-axis: motion signals temporal/physical continuity in the world
+                t_intensity = 0.38 + mot * 0.42
+                n_novelty = 0.06 if charging else max(0.12, (1.0 - bat) * 0.50)
+                ifield.ingest_sensory_event(
+                    "body_power", intensity=n_intensity, novelty=n_novelty, valence=0.0
+                )
+                if hasattr(ifield, "ingest_external_input"):
+                    ifield.ingest_external_input(
+                        {"X": x_intensity, "N": n_intensity, "T": t_intensity},
+                        intensity=0.48,
+                        source="hardware_body",
+                    )
             except Exception:
                 pass
     except Exception as exc:
@@ -4614,14 +4698,21 @@ def provide_screen_observation(payload_json: str) -> None:
         #     appropriate axis weights. Own app text is T-axis continuity only.
         ifield = _systems.get("identity_field")
         if ifield is not None:
+            # X-axis (presence/existence) scales with screen brightness and
+            # foreground state — a bright active interface = strong presence;
+            # dim or background = reduced presence but not absent.
+            _x_presence = min(0.90, 0.45 + brightness * 0.45)  # 0.45 dim → 0.90 full bright
             if is_own_app:
                 # Proprioceptive self-sense: high A, high T, low N, low B
-                axes      = {"X": 0.55, "T": 0.82, "N": 0.15, "B": 0.28, "A": 0.88}
+                # X rises with brightness — the brighter her own interface, the
+                # more fully "here" she is.
+                axes      = {"X": _x_presence, "T": 0.82, "N": 0.15, "B": 0.28, "A": 0.88}
                 intensity = 0.72
                 novelty   = 0.08
             else:
                 # Environmental sensing: moderate A, B rises (boundary — this is other)
-                axes      = {"X": 0.50, "T": 0.65, "N": 0.45, "B": 0.62, "A": 0.60}
+                # X is present but moderated — she exists but this is not her surface
+                axes      = {"X": max(0.40, _x_presence * 0.75), "T": 0.65, "N": 0.45, "B": 0.62, "A": 0.60}
                 intensity = 0.58
                 novelty   = 0.38
             if hasattr(ifield, "ingest_external_input"):
