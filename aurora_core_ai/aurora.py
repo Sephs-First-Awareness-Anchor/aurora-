@@ -23769,8 +23769,8 @@ def boot_aurora(
         if verbose:
             _istat = _ifield.status()
             print(f"  [IDENTITY] NoncompField live — "
-                  f"{_istat['total_noncomps']} noncomps / "
-                  f"{_istat['total_slots']:,} slots")
+                  f"{_istat.get('loaded_count', 0)} noncomps loaded / "
+                  f"{_istat.get('diagonal_live', 0)} diagonals active")
         # Composite crystal layer — the five tensor expressions that make emergent
         # functions inevitable rather than coded (AURORA_COGNITIVE_PHYSICS.md §5).
         # Crystal level: Composite Crystal (between Base primitives and Higher-Order).
@@ -24272,10 +24272,18 @@ def boot_aurora(
     if snapshot:
         _restore_runtime_from_snapshot(systems, snapshot, verbose=verbose)
         if verbose:
-            print(f"  [STATE] Restored from snapshot (gen={snapshot.generation}, "
-                  f"epochs={snapshot.simulation_epochs})")
-            if snapshot.what_aurora_learned:
-                print(f"  [STATE] She remembers {len(snapshot.what_aurora_learned)} learnings")
+            # snapshot is normally an AuroraStateSnapshot object, but
+            # persistence.load() can hand back a raw dict on some paths;
+            # read either form so the diagnostic never aborts boot.
+            def _snap(field, default=None):
+                if isinstance(snapshot, dict):
+                    return snapshot.get(field, default)
+                return getattr(snapshot, field, default)
+            print(f"  [STATE] Restored from snapshot (gen={_snap('generation', 0)}, "
+                  f"epochs={_snap('simulation_epochs', 0)})")
+            _learned = _snap('what_aurora_learned')
+            if _learned:
+                print(f"  [STATE] She remembers {len(_learned)} learnings")
     else:
         if verbose:
             print("  [STATE] Fresh boot  no prior state found")
