@@ -872,16 +872,16 @@ class _DevelopmentTracker:
                 pass
 
 
-_dev_tracker:          "_DevelopmentTracker | None"   = None
-_geological_baseline:  "GeologicalBaseline | None"    = None
+_dev_tracker:          "_DevelopmentTracker | None"               = None
+_geological_baseline:  "GeologicalBaseline | None"                = None
+_evo_sim:              "ConstraintEvolutionarySimulator | None"   = None
 
 
 def get_development_state() -> str:
     """
     Return a JSON snapshot of Aurora's current development metrics:
     LSA paths, avg n_cost, SediMemory depth, self-entity stats, dominant axis,
-    and geological baseline (wave-particle stratification state).
-    Called by diagnostics or any system that wants Aurora's growth telemetry.
+    geological baseline (wave-particle stratification state), and evo-sim stats.
     """
     import json as _json
     if _dev_tracker is None or _systems is None:
@@ -889,7 +889,44 @@ def get_development_state() -> str:
     snap = _dev_tracker._build_snapshot(_systems)
     if _geological_baseline is not None:
         snap["geological_baseline"] = _geological_baseline.summary()
+    if _evo_sim is not None:
+        snap["evolutionary_sim"] = _evo_sim.summary()
     return _json.dumps(snap)
+
+
+def run_evolutionary_burst(n_generations: int = 5) -> str:
+    """
+    Run N consecutive evolutionary generations right now, regardless of idle state.
+
+    Useful for accelerating Aurora's development before a socialization session
+    or after a significant interaction that changed her axis state substantially.
+
+    Returns JSON summary of all generations run.
+    """
+    import json as _json
+    if _evo_sim is None or _concept_registry is None:
+        return _json.dumps({"error": "evolutionary sim not initialized"})
+    if _systems is None:
+        return _json.dumps({"error": "systems not initialized"})
+
+    results = []
+    for _ in range(max(1, n_generations)):
+        try:
+            with _axis_state_lock:
+                seed = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            result = _evo_sim.run_generation(
+                seed_axes        = seed,
+                n_variants       = 24,
+                n_steps          = 60,
+                concept_registry = _concept_registry,
+                sedimemory       = _systems.get("sedimemory"),
+                identity_field   = _systems.get("identity_field"),
+            )
+            results.append(result)
+        except Exception as exc:
+            results.append({"error": str(exc)})
+
+    return _json.dumps({"generations": results})
 
 
 # Response classification patterns
@@ -1126,7 +1163,7 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim
     _ingested_concepts          = set()
     _dev_tracker                = _DevelopmentTracker()
     try:
@@ -1139,6 +1176,11 @@ def initialize(state_dir: str = "") -> str:
         _geological_baseline = GeologicalBaseline()
     except Exception as _gb_exc:
         log.warning("GeologicalBaseline unavailable: %s", _gb_exc)
+    try:
+        from aurora_core_ai.constraint_evolutionary_sim import ConstraintEvolutionarySimulator  # type: ignore
+        _evo_sim = ConstraintEvolutionarySimulator()
+    except Exception as _evo_exc:
+        log.warning("ConstraintEvolutionarySimulator unavailable: %s", _evo_exc)
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
@@ -4223,6 +4265,26 @@ def _self_monitor_loop() -> None:
                     (_systems or {}).get("identity_field"),
                 )
             _tick += 1
+            # Evolutionary sim tick — every 5 ticks (~60s) run one generation to
+            # grow crystal structures from compressed constraint-physics evolution.
+            # Only fires when not in an active user turn (lock not held).
+            if _tick % 5 == 0 and _evo_sim is not None and _concept_registry is not None:
+                if _lock.acquire(blocking=False):
+                    try:
+                        with _axis_state_lock:
+                            _evo_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                        _evo_sim.run_generation(
+                            seed_axes        = _evo_ax,
+                            n_variants       = 20,
+                            n_steps          = 50,
+                            concept_registry = _concept_registry,
+                            sedimemory       = (_systems or {}).get("sedimemory"),
+                            identity_field   = (_systems or {}).get("identity_field"),
+                        )
+                    except Exception as _evo_exc:
+                        log.debug("evo_sim tick: %s", _evo_exc)
+                    finally:
+                        _lock.release()
             if _tick % _save_interval == 0 and _concept_registry is not None:
                 _state_dir = str((_systems or {}).get("state_dir") or "aurora_state")
                 _concept_registry.save(_state_dir)
