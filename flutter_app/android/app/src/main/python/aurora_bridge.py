@@ -1687,23 +1687,17 @@ def _sanitize_response(response: str, user_text: str) -> str:
     if not response:
         return ""
 
-    # 6. Echo guard — strip verbatim echoes and very-short near-echoes of user input.
-    # Only apply word-overlap check for short responses (≤ 5 unique words) — longer
-    # responses that reuse input vocabulary are genuine engagement with the topic, not
-    # parroting.
+    # 6. Echo guard — verbatim-only check.
+    # Word-overlap heuristics were removed: any topical response to a minimal
+    # stimulus naturally reuses the question's vocabulary, and suppressing those
+    # responses hides what Aurora's constraint physics is actually producing.
+    # True parroting (exact repetition) is caught by the verbatim check below.
     if response and user_text:
         _r_low = response.strip().lower().rstrip('.!?,')
         _u_low = user_text.strip().lower().rstrip('.!?,')
         if _r_low == _u_low:
             log.debug("Echo guard: verbatim echo suppressed")
             return ""
-        _r_words = set(re.findall(r'[a-z]{3,}', response.lower()))
-        _u_words = set(re.findall(r'[a-z]{3,}', user_text.lower()))
-        if _r_words and _u_words and len(_r_words) <= 5:
-            overlap = len(_r_words & _u_words) / len(_r_words)
-            if overlap > 0.75:
-                log.debug("Echo guard: short high-overlap echo (%.0f%%) suppressed", overlap * 100)
-                return ""
 
     return response
 
