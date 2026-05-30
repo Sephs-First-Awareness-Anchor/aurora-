@@ -362,7 +362,13 @@ def _ensure_seeded_sensory_crystal_state(state_dir: str, *, verbose: bool = Fals
     if not _sensory_crystal_needs_seeding(state_dir):
         return False
 
-    script_path = Path(__file__).resolve().parent / "seed_sensory_crystals.py"
+    # seed_sensory_crystals.py lives at the repo root, which may be aurora.py's
+    # own directory (Chaquopy srcDir) or one level up (aurora_core_ai/ layout).
+    # Probe both so the bootstrap subprocess finds the real script.
+    _here = Path(__file__).resolve().parent
+    script_path = _here / "seed_sensory_crystals.py"
+    if not script_path.exists() and (_here.parent / "seed_sensory_crystals.py").exists():
+        script_path = _here.parent / "seed_sensory_crystals.py"
     env = os.environ.copy()
     env["AURORA_SENSORY_STATE_DIR"] = str(Path(state_dir).resolve())
 
@@ -14634,7 +14640,16 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
     systems["_last_noncomp_input"] = {}
     systems["_last_noncomp_output"] = {}
 
-    repo_root = Path(__file__).resolve().parent
+    # The semantics file + manifold directory live at the repo root.  aurora.py
+    # may sit at the repo root (Chaquopy srcDir) or one level down (aurora_core_ai/),
+    # so probe both candidate roots and use whichever actually holds the data
+    # rather than assuming aurora.py's own directory is the root.
+    _here = Path(__file__).resolve().parent
+    repo_root = _here
+    for _cand in (_here, _here.parent):
+        if (_cand / "aurora_full_noncomp_rich_semantics.json").exists():
+            repo_root = _cand
+            break
     semantics_path = repo_root / "aurora_full_noncomp_rich_semantics.json"
     manifold_dir = repo_root / "aurora_manifold_directory"
     systems["noncomp_semantics_path"] = str(semantics_path)
@@ -24268,7 +24283,17 @@ def boot_aurora(
 
     # Try to restore saved state (standard L8 snapshot)
     if verbose: print()
-    snapshot = aurora.load_state()
+    # Read the snapshot straight from the persistence layer.  The gateway's
+    # load_state() is wrapped by the evolved-surface reflection layer, which
+    # can turn a real AuroraStateSnapshot (or a clean None) into a metadata
+    # dict — that breaks the `if snapshot:` check below and silently prevents
+    # her learned state from rehydrating.  persistence.load() is not wrapped,
+    # so it always returns a real AuroraStateSnapshot or None.
+    _persist = getattr(aurora, 'persistence', None)
+    if _persist is not None and hasattr(_persist, 'load'):
+        snapshot = _persist.load()
+    else:
+        snapshot = aurora.load_state()
     if snapshot:
         _restore_runtime_from_snapshot(systems, snapshot, verbose=verbose)
         if verbose:

@@ -10472,10 +10472,14 @@ def load_state_evolved(payload=None, **kwargs):
         }
     return getattr(engine, 'reflect_aurora_governance_persistence_gateway_governancepersistencegateway_load_state')(payload=payload, **kwargs)
 
+# NOTE: load_state is intentionally NOT wrapped by the evolved-surface layer.
+# State persistence I/O is infrastructure, not a cognitive surface that should
+# "evolve": the reflection/rewrite path converts a real AuroraStateSnapshot
+# (or a clean None) into a metadata dict, which silently breaks state restore
+# on boot.  The original method is preserved untouched so restore always sees
+# a real snapshot.
 if _aurora_get_target(['GovernancePersistenceGateway', 'load_state']) is not None:
     _AURORA_NATIVE_EVOLVED_ORIGINALS['GovernancePersistenceGateway.load_state'] = _aurora_get_target(['GovernancePersistenceGateway', 'load_state'])
-    _aurora_assign_target(['GovernancePersistenceGateway', 'load_state'], _aurora_make_override('load_state_evolved', 'GovernancePersistenceGateway.load_state'))
-    _AURORA_NATIVE_EVOLVED_LAST['GovernancePersistenceGateway.load_state'] = {'alignment_gap': 0.747333, 'override_active': True}
 
 def governanceviolation_evolved(payload=None, **kwargs):
     engine = _aurora_native_evolved_engine()
