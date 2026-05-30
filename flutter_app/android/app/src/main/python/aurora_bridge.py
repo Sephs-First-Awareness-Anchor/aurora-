@@ -872,19 +872,23 @@ class _DevelopmentTracker:
                 pass
 
 
-_dev_tracker: "_DevelopmentTracker | None" = None
+_dev_tracker:          "_DevelopmentTracker | None"   = None
+_geological_baseline:  "GeologicalBaseline | None"    = None
 
 
 def get_development_state() -> str:
     """
     Return a JSON snapshot of Aurora's current development metrics:
-    LSA paths, avg n_cost, SediMemory depth, self-entity stats, dominant axis.
+    LSA paths, avg n_cost, SediMemory depth, self-entity stats, dominant axis,
+    and geological baseline (wave-particle stratification state).
     Called by diagnostics or any system that wants Aurora's growth telemetry.
     """
     import json as _json
     if _dev_tracker is None or _systems is None:
         return _json.dumps({})
     snap = _dev_tracker._build_snapshot(_systems)
+    if _geological_baseline is not None:
+        snap["geological_baseline"] = _geological_baseline.summary()
     return _json.dumps(snap)
 
 
@@ -1122,7 +1126,7 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline
     _ingested_concepts          = set()
     _dev_tracker                = _DevelopmentTracker()
     try:
@@ -1130,6 +1134,11 @@ def initialize(state_dir: str = "") -> str:
         _concept_registry = ConceptCrystalRegistry()
     except Exception as _ccr_exc:
         log.warning("ConceptCrystalRegistry unavailable: %s", _ccr_exc)
+    try:
+        from aurora_core_ai.geological_baseline import GeologicalBaseline  # type: ignore
+        _geological_baseline = GeologicalBaseline()
+    except Exception as _gb_exc:
+        log.warning("GeologicalBaseline unavailable: %s", _gb_exc)
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
@@ -2710,17 +2719,62 @@ def _inject_self_state_context(systems: dict) -> None:
             f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
             f"B={axes['B']:.2f} A={axes['A']:.2f}"
         )
+
+        # ── Geological conscious surface ──────────────────────────────────────
+        # Read what cognitive ground Aurora has developed at the current axis
+        # position. This tells synthesis whether it's drawing from instinct
+        # (BASE-layer ground), developing understanding (COMPOSITE), or deep
+        # established knowledge (HIGHER_ORDER / QUASI). The waveform can then
+        # naturally produce expression depth that matches the developed ground.
+        geo_note = ""
+        if _geological_baseline is not None:
+            try:
+                surface = _geological_baseline.get_conscious_surface(axes)
+                stage   = surface.get("surface_stage", "base")
+                wave_v  = surface.get("wave_visibility", 1.0)
+                inst_f  = surface.get("instinct_fraction", 0.0)
+                g_w     = surface.get("geological_weight", 0.0)
+                g_surf  = surface.get("global_surface", "base")
+
+                # Only emit if the geological ground is meaningful
+                if wave_v > 0.0:
+                    _stage_descriptions = {
+                        "base":         "raw sensory ground — direct constraint-physics contact",
+                        "composite":    "grounded understanding forming — sense meeting meaning",
+                        "higher_order": "integrated reasoning ground — multiple senses woven",
+                        "quasi":        "deep knowledge ground — cross-system, time-stable",
+                    }
+                    stage_desc = _stage_descriptions.get(stage, stage)
+                    geo_note = (
+                        f"conscious-ground: {stage} ({wave_v:.2f} wave-visible) — {stage_desc}"
+                    )
+                    if inst_f > 0.15:
+                        geo_note += (
+                            f"; {inst_f:.2f} instinct-fraction "
+                            f"(primitives running as background)"
+                        )
+                    if g_surf != stage:
+                        # Global surface differs from local — e.g. higher_order globally
+                        # but only base at this specific axis position
+                        geo_note += f"; system-wide surface: {g_surf}"
+            except Exception:
+                pass
+
+        parts = [self_note]
+        if geo_note:
+            parts.append(geo_note)
+        full_note = "; ".join(parts)
+
         existing = systems.get("_ambient_perceptual") or {}
         obs = existing.get("observation", "")
-        # Append self-state to whatever sensory observation is already there
         if obs:
             systems["_ambient_perceptual"] = {
                 **existing,
-                "observation": f"{obs}; {self_note}",
+                "observation": f"{obs}; {full_note}",
             }
         else:
             systems["_ambient_perceptual"] = {
-                "observation": self_note,
+                "observation": full_note,
                 "source":      "self_state",
             }
     except Exception:
@@ -4167,6 +4221,13 @@ def _self_monitor_loop() -> None:
             _deposit_self_state_snapshot()
             if _dev_tracker is not None:
                 _dev_tracker.record(_systems)
+            # Geological baseline tick — recalculates wave-particle stratification
+            # from current crystal distribution and applies to identity field.
+            if _geological_baseline is not None and _concept_registry is not None:
+                _geological_baseline.tick(
+                    _concept_registry,
+                    (_systems or {}).get("identity_field"),
+                )
             _tick += 1
             if _tick % _save_interval == 0 and _concept_registry is not None:
                 _state_dir = str((_systems or {}).get("state_dir") or "aurora_state")
