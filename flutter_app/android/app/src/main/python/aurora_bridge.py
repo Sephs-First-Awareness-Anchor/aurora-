@@ -1690,6 +1690,18 @@ _LINEAGE_LEAK_RE = re.compile(
     r'|I formed a new (?:derived ability|code-evolution function|code proposal|ability)\s*`[^`]*`[^.!?\n]*[.!?]?)',
     re.IGNORECASE,
 )
+# AbilityProfile notes text that sometimes reaches the surface through
+# crystal actuation events or proactive-expression paths.
+_ABILITY_NOTES_SUBSTRINGS = (
+    "preserve a coherent runtime state",
+    "npmi cross-modal",
+    "cross-modal linking",
+    "tone↔hue",           # "tone↔hue"
+    "timbre↔shape",       # "timbre↔shape"
+    "rhythm↔motion",      # "rhythm↔motion"
+    "maturity-gated distillation",
+    "wisdomshard emission",
+)
 
 
 def _sanitize_response(response: str, user_text: str) -> str:
@@ -1727,6 +1739,13 @@ def _sanitize_response(response: str, user_text: str) -> str:
     response = _LINEAGE_LEAK_RE.sub('', response).strip()
     # If the entire response was lineage state, treat as no response
     if not response:
+        return ""
+
+    # 5b. Strip AbilityProfile notes that leak through crystal actuation paths.
+    # These are internal metadata fields, not speech — if any appear in the
+    # response the whole turn is suppressed (the notes are never partial content).
+    _resp_low = response.lower()
+    if any(phrase in _resp_low for phrase in _ABILITY_NOTES_SUBSTRINGS):
         return ""
 
     # 6. Echo guard — verbatim-only check.

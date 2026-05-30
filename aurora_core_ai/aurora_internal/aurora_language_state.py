@@ -819,6 +819,10 @@ class SemanticIntentCompiler:
             "signature:", "dominant_axis:", "effect_tags",
             "generation_role", "semantic_translation",
             "inheritance_breach", "persistent_pressure_root",
+            # AbilityProfile notes that must not reach speech surface
+            "preserve a coherent runtime state",
+            "npmi cross-modal", "cross-modal linking",
+            "npmi cross", "tone↔hue", "timbre↔shape",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp

@@ -19831,10 +19831,23 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                         break
         except Exception:
             pass
-        _fb_data = [_fb_topic] if _fb_topic else []
-        _fb_data.append("context; continuity; needed")
+        # Build a gap-state claim from available content.
+        # "context; continuity; needed" is listed in _INTERNAL_INSTRUCTION_PHRASES
+        # and is blocked before it can reach the SIC — resulting in a silent turn.
+        # Instead, derive the claim from real input content + axis uncertainty so
+        # the SIC can synthesize genuine speech from the constraint state.
+        if _fb_topic:
+            _gap_claim = "uncertain about " + _fb_topic
+        else:
+            _uw = [w.lower() for w in re.findall(r"[a-zA-Z]{4,}", str(user_text or ""))
+                   if w.lower() not in {"that", "this", "with", "what", "from",
+                                        "have", "does", "here", "there", "than",
+                                        "some", "more", "less", "come", "been",
+                                        "will", "your", "just", "when", "also"}]
+            _gap_claim = ("uncertain what this " + _uw[0] + " points to"
+                          if _uw else "uncertain what is being indicated")
         state.response_content = _render_runtime_intent(
-            systems, "; ".join(_fb_data),
+            systems, _gap_claim,
             emotion_tone="curious", certainty=0.58,
             supporting_concepts=[_fb_topic] if _fb_topic else [],
         )
