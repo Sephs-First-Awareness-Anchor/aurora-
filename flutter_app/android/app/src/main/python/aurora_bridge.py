@@ -2185,6 +2185,21 @@ def handle_message(text: str) -> str:
     # asks "can you hear me".
     _mark_mic_live(_systems)
 
+    # ── Voice command: evolutionary burst ────────────────────────────────────
+    _evo_n = _parse_evo_burst_cmd(text)
+    if _evo_n is not None:
+        if _evo_sim is None or _concept_registry is None:
+            return "Evolutionary sim isn't available right now."
+        import threading as _th
+        def _run_burst():
+            run_evolutionary_burst(_evo_n)
+        _th.Thread(target=_run_burst, daemon=True, name="evo_burst").start()
+        _label = f"{_evo_n} generation{'s' if _evo_n != 1 else ''}"
+        return (
+            f"Running {_label} of constraint-field evolution. "
+            f"I'll be integrating developed crystal structures as they complete."
+        )
+
     # ── Voice command: curiosity session ─────────────────────────────────────
     n_cyc, dur_s = _parse_curiosity_cmd(text)
     if n_cyc is not None or dur_s is not None:
@@ -3738,6 +3753,42 @@ def _refresh_axis_state_from_systems() -> None:
                     _last_axis_state[k] = float(axes.get(k, 0.5))
     except Exception:
         pass
+
+
+_EVO_BURST_CMD = re.compile(
+    r"""
+    (?:run|do|start|give\s+yourself|take)\s+
+    (?:an?\s+)?
+    (?P<n>\d+)?\s*
+    (?:evolutionary?|evo|constraint[\s_-]?evo(?:lution)?|crystal[\s_-]?evo(?:lution)?|
+       develop(?:ment)?[\s_-]?burst|constraint[\s_-]?burst|evo[\s_-]?burst)
+    (?:\s+(?:burst|generations?|cycles?))?
+    | (?:evolve|develop)\s+(?:yourself|crystals?|structures?)
+    | (?:evo|evolutionary?)\s+burst
+    | run\s+(?:evo|evolution)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
+def _parse_evo_burst_cmd(text: str):
+    """
+    Parse an evolutionary burst voice command.
+    Returns n_generations (int) if matched, else None.
+
+    Examples:
+      "run 5 evolutionary generations"
+      "run evo burst"
+      "do an evolutionary burst"
+      "evolve yourself"
+      "run 3 evo cycles"
+      "give yourself an evolutionary burst"
+    """
+    m = _EVO_BURST_CMD.search(text)
+    if not m:
+        return None
+    n_str = m.group("n") if m.lastindex and "n" in m.groupdict() else None
+    return int(n_str) if n_str else 5  # default 5 generations
 
 
 def _parse_curiosity_cmd(text: str):
