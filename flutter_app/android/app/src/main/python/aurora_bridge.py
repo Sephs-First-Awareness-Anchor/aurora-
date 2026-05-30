@@ -2615,6 +2615,47 @@ def handle_message(text: str) -> str:
                 name="self_ground",
             ).start()
 
+        # Emergence evolution — tick the EvolutionaryChamber with live axis
+        # geometry every 15 turns so Aurora's constraint physics evolve from
+        # live interaction the same way they evolve during corpus training runs.
+        # Runs non-blocking so it never delays the response.
+        if _turn_count % 15 == 0 and _systems:
+            def _run_live_evo(systems_ref: dict) -> None:
+                try:
+                    import sys as _sys
+                    import importlib.util as _ilu
+                    # Load corpus_runner from its canonical location
+                    for _try_mod in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                        try:
+                            _cr = __import__(_try_mod, fromlist=["evolve_chain"])
+                            _evolve_chain = getattr(_cr, "evolve_chain", None)
+                            if _evolve_chain is not None:
+                                with _axis_state_lock:
+                                    _live_ax = {k: _last_axis_state.get(k, 0.5)
+                                                for k in ("X", "T", "N", "B", "A")}
+                                # Map live axis pressures onto constraint geometry fields
+                                # so evolve_chain uses the same axis-to-constraint mapping
+                                # as it does during corpus training.
+                                class _LiveGeometry:
+                                    x_activation = _live_ax.get("X", 0.5)
+                                    t_activation = _live_ax.get("T", 0.5)
+                                    n_activation = _live_ax.get("N", 0.5)
+                                    b_activation = _live_ax.get("B", 0.5)
+                                    a_activation = _live_ax.get("A", 0.5)
+                                    class depth:
+                                        name = "SURFACE"
+                                _evolve_chain(systems_ref, ticks=10,
+                                              truth_geom=_LiveGeometry(), verbose=False)
+                            break
+                        except (ImportError, AttributeError):
+                            continue
+                except Exception:
+                    pass
+            threading.Thread(
+                target=_run_live_evo, args=(_systems,),
+                daemon=True, name="live_evo",
+            ).start()
+
         # If this turn was the user's correction explanation, prefix acknowledgment
         if correction_acknowledged:
             ack = "Understood — I've taken that on board."
@@ -5151,6 +5192,157 @@ def get_room_state() -> str:
         out["error"] = str(exc)
 
     return _json.dumps(out, default=str)
+
+
+def get_cognitive_stats() -> str:
+    """
+    Called from Flutter hub/monitoring UI to get a live snapshot of Aurora's
+    cognitive state — evolution, language field, axis pressures, memory depth.
+
+    Returns JSON with all key metrics the hub needs to display.
+    """
+    import json as _json
+    import time as _t
+
+    if _systems is None:
+        return _json.dumps({"error": "not_initialized"})
+
+    stats: dict = {
+        "ts":              _t.time(),
+        "turn_count":      _turn_count,
+
+        # Language field — LSA paths and N-cost
+        "lsa_paths":       0,
+        "avg_n_cost":      1.0,
+        "lf_active":       False,
+
+        # Evolution / emergence
+        "evo_cycles":      0,
+        "sentence_target": 10,
+        "evo_available":   False,
+
+        # Axis pressures
+        "axis_pressures":  {},
+
+        # Understanding / OETS
+        "understanding_index": 0.0,
+        "coherence_index":     0.0,
+        "grounding_index":     0.0,
+        "topic_tracking":      0.0,
+
+        # SediMemory
+        "sedimemory_depth": 0,
+
+        # Noncomp manifold
+        "noncomp_loaded":   0,
+        "noncomp_diagonal_live": 0,
+
+        # Sensory crystal
+        "crystal_maturity": 0.0,
+        "crystal_nodes":    0,
+
+        # Chamber (EvolutionaryChamber)
+        "chamber_fossils":  0,
+    }
+
+    try:
+        # ── Language field ────────────────────────────────────────────────────
+        lf = _systems.get("language_field")
+        if lf is not None:
+            stats["lf_active"] = True
+            try:
+                if hasattr(lf, "_lsa") and lf._lsa:
+                    stats["lsa_paths"] = len(lf._lsa)
+                    stats["avg_n_cost"] = round(
+                        sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 3
+                    )
+            except Exception:
+                pass
+
+        # ── Evolution cycles (LSV) ────────────────────────────────────────────
+        perception = _systems.get("perception")
+        if perception is not None and hasattr(perception, "evo_status"):
+            try:
+                evo = perception.evo_status() or {}
+                lsv = evo.get("lsv", {}) or {}
+                stats["evo_cycles"]      = int(lsv.get("evolution_cycles", 0) or 0)
+                stats["sentence_target"] = int(lsv.get("sentence_length_target", 10) or 10)
+                stats["evo_available"]   = True
+            except Exception:
+                pass
+
+        # ── Axis pressures (identity field) ──────────────────────────────────
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "status"):
+            try:
+                ifield_status = ifield.status()
+                stats["axis_pressures"]   = ifield_status.get("axis_pressures", {})
+                stats["noncomp_loaded"]   = int(ifield_status.get("loaded_count", 0))
+                stats["noncomp_diagonal_live"] = int(ifield_status.get("diagonal_live", 0))
+            except Exception:
+                pass
+
+        # ── Understanding / OETS ──────────────────────────────────────────────
+        if perception is not None and hasattr(perception, "oets") and perception.oets is not None:
+            try:
+                oets_stats = perception.oets.get_stats() if hasattr(perception.oets, "get_stats") else {}
+                u = oets_stats.get("understanding", {})
+                stats["understanding_index"] = round(float(u.get("understanding_index", 0.0)), 3)
+                stats["coherence_index"]     = round(float(u.get("coherence_index", 0.0)), 3)
+                stats["grounding_index"]     = round(float(u.get("grounding_index", 0.0)), 3)
+                stats["topic_tracking"]      = round(float(u.get("topic_tracking", 0.0)), 3)
+            except Exception:
+                pass
+
+        # ── SediMemory depth ──────────────────────────────────────────────────
+        sm = _systems.get("sedimemory")
+        if sm is not None:
+            try:
+                if hasattr(sm, "fragment_count"):
+                    stats["sedimemory_depth"] = int(sm.fragment_count())
+                elif hasattr(sm, "_fragments"):
+                    stats["sedimemory_depth"] = len(sm._fragments)
+            except Exception:
+                pass
+
+        # ── Sensory crystal ───────────────────────────────────────────────────
+        sc = (
+            _systems.get("sensory_crystal")
+            or getattr(_systems.get("hardware"), "sensory_crystal", None)
+        )
+        if sc is not None:
+            try:
+                sc_state = sc.get_state() if hasattr(sc, "get_state") else {}
+                stats["crystal_maturity"] = round(float(sc_state.get("maturity", 0.0)), 3)
+                stats["crystal_nodes"]    = int(sc_state.get("active_nodes", 0))
+            except Exception:
+                pass
+
+        # ── EvolutionaryChamber ───────────────────────────────────────────────
+        chamber = _systems.get("chamber")
+        if chamber is not None and hasattr(chamber, "_genealogy"):
+            try:
+                cr = chamber._genealogy.chain_report()
+                stats["chamber_fossils"] = int(cr.get("total_links", 0))
+            except Exception:
+                pass
+
+        # ── Training status (if active) ───────────────────────────────────────
+        if _training_status.get("active"):
+            stats["training_active"]    = True
+            stats["training_turn"]      = _training_status.get("turn", 0)
+            stats["training_total_secs"] = _training_status.get("total_secs", 0)
+            stats["training_elapsed"]   = _training_status.get("elapsed", 0)
+            # Override lsa/n_cost with live training values when training
+            stats["lsa_paths"]  = _training_status.get("lsa_paths", stats["lsa_paths"])
+            stats["avg_n_cost"] = _training_status.get("avg_n_cost", stats["avg_n_cost"])
+        else:
+            stats["training_active"] = False
+
+    except Exception as exc:
+        stats["error"] = str(exc)
+
+    return _json.dumps(stats, default=str)
 
 
 def post_room_note(content: str, note_type: str = "observation") -> None:

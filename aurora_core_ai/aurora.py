@@ -19840,8 +19840,15 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         try:
             _fb_parsed = state.parsed or {}
             _fb_topic = str(_fb_parsed.get("topic", "") or _fb_parsed.get("search_query", "") or "").strip()
+            # Reject single-word weak topics
             if _is_weak_response_topic(_fb_topic):
                 _fb_topic = ""
+            # Also reject multi-word phrases where every word is weak
+            # (e.g. "something here" → all weak → not a usable anchor)
+            if _fb_topic:
+                _topic_words = re.findall(r"[a-zA-Z]{3,}", _fb_topic)
+                if _topic_words and all(_is_weak_response_topic(w.lower()) for w in _topic_words):
+                    _fb_topic = ""
             if not _fb_topic:
                 for _cand in list(_fb_parsed.get("topic_words", []) or []):
                     _cand_s = str(_cand or "").strip()
@@ -19862,8 +19869,30 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                                         "some", "more", "less", "come", "been",
                                         "will", "your", "just", "when", "also"}
                    and not _is_weak_response_topic(w.lower())]
-            _gap_claim = ("what " + _uw[0] + " points to"
-                          if _uw else "what is being pointed to")
+            if _uw:
+                _gap_claim = "what " + _uw[0] + " points to"
+            else:
+                # Derive gap claim from the dominant active axis so each turn's
+                # gap claim reflects Aurora's current constraint orientation
+                # rather than repeating the same generic phrase.
+                _dom_ax = "X"
+                try:
+                    _ap = {k: float((systems.get("identity_field") or {})
+                                    if isinstance(systems.get("identity_field"), dict)
+                                    else (getattr(systems.get("identity_field"), "_axis_p", {}) or {}))
+                               .get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[k], 0.10)
+                           for k in ("X", "T", "N", "B", "A")}
+                    _dom_ax = max(_ap, key=lambda k: _ap[k])
+                except Exception:
+                    pass
+                _AXIS_GAP_CLAIMS = {
+                    "X": "what is actually present here",
+                    "T": "what continues through this moment",
+                    "N": "what the cost of holding this is",
+                    "B": "where the distinction lies in this",
+                    "A": "where this originates from",
+                }
+                _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "what is present here")
         state.response_content = _render_runtime_intent(
             systems, _gap_claim,
             emotion_tone="curious", certainty=0.58,
