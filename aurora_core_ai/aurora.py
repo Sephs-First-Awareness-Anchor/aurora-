@@ -11989,6 +11989,10 @@ _WEAK_RESPONSE_TOPICS = {
     "know", "understand", "mean", "means", "asking", "saying",
     "actually", "anything", "something", "nothing", "any",
     "aurora", "play", "call", "pandora",
+    # location / temporal / state words that cannot anchor a response
+    "here", "there", "change", "still", "being", "present", "now",
+    "anymore", "things", "going", "happening", "exist", "exists",
+    "there", "real", "true", "same", "different", "that", "this",
 }
 
 
@@ -19832,20 +19836,19 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         except Exception:
             pass
         # Build a gap-state claim from available content.
-        # "context; continuity; needed" is listed in _INTERNAL_INSTRUCTION_PHRASES
-        # and is blocked before it can reach the SIC — resulting in a silent turn.
-        # Instead, derive the claim from real input content + axis uncertainty so
-        # the SIC can synthesize genuine speech from the constraint state.
+        # Claims are phrased as noun clauses ("what X means here") so they read
+        # naturally when the SIC wraps them in "I understand X." via _bundle_direct_line.
         if _fb_topic:
-            _gap_claim = "uncertain about " + _fb_topic
+            _gap_claim = "what " + _fb_topic + " means here"
         else:
             _uw = [w.lower() for w in re.findall(r"[a-zA-Z]{4,}", str(user_text or ""))
                    if w.lower() not in {"that", "this", "with", "what", "from",
                                         "have", "does", "here", "there", "than",
                                         "some", "more", "less", "come", "been",
-                                        "will", "your", "just", "when", "also"}]
-            _gap_claim = ("uncertain what this " + _uw[0] + " points to"
-                          if _uw else "uncertain what is being indicated")
+                                        "will", "your", "just", "when", "also"}
+                   and not _is_weak_response_topic(w.lower())]
+            _gap_claim = ("what " + _uw[0] + " points to"
+                          if _uw else "what is being pointed to")
         state.response_content = _render_runtime_intent(
             systems, _gap_claim,
             emotion_tone="curious", certainty=0.58,

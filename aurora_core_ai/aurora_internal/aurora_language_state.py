@@ -823,6 +823,11 @@ class SemanticIntentCompiler:
             "preserve a coherent runtime state",
             "npmi cross-modal", "cross-modal linking",
             "npmi cross", "tone↔hue", "timbre↔shape",
+            # Ambient screen-observation labels that leak through sensory pulse
+            "screen and systemui", "systemui", "screen and system",
+            # Pipeline-signal mapping note from aurora.py ability profile
+            "map pipeline signals to generative tone",
+            "map pipeline signals",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp

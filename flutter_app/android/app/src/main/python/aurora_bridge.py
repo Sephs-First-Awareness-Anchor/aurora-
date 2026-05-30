@@ -1696,11 +1696,17 @@ _ABILITY_NOTES_SUBSTRINGS = (
     "preserve a coherent runtime state",
     "npmi cross-modal",
     "cross-modal linking",
-    "tone↔hue",           # "tone↔hue"
-    "timbre↔shape",       # "timbre↔shape"
-    "rhythm↔motion",      # "rhythm↔motion"
+    "tone↔hue",
+    "timbre↔shape",
+    "rhythm↔motion",
     "maturity-gated distillation",
     "wisdomshard emission",
+    # Screen-observation labels from ambient sensory pulse
+    "screen and systemui",
+    "systemui",
+    # Pipeline-signal mapping notes from aurora.py ability profile
+    "map pipeline signals to generative tone",
+    "map pipeline signals",
 )
 
 
@@ -1748,17 +1754,32 @@ def _sanitize_response(response: str, user_text: str) -> str:
     if any(phrase in _resp_low for phrase in _ABILITY_NOTES_SUBSTRINGS):
         return ""
 
-    # 6. Echo guard — verbatim-only check.
-    # Word-overlap heuristics were removed: any topical response to a minimal
-    # stimulus naturally reuses the question's vocabulary, and suppressing those
-    # responses hides what Aurora's constraint physics is actually producing.
-    # True parroting (exact repetition) is caught by the verbatim check below.
+    # 6. Echo guard.
+    # a) Verbatim match — exact repetition of the user's input.
+    # b) Prefixed echo — "I understand <user_text>" or "I understand <most of user_text>".
+    #    The SIC's agentive bundle wraps gap claims in "I understand X." which can
+    #    accidentally swallow the entire partner message when the native_bundle comes
+    #    from the prior chain turn rather than a genuine gap claim.
     if response and user_text:
         _r_low = response.strip().lower().rstrip('.!?,')
         _u_low = user_text.strip().lower().rstrip('.!?,')
         if _r_low == _u_low:
             log.debug("Echo guard: verbatim echo suppressed")
             return ""
+        # Check for "I understand <near-verbatim user text>"
+        _UNDERSTAND_PREFIXES = ("i understand ", "i understand that ")
+        for _pfx in _UNDERSTAND_PREFIXES:
+            if _r_low.startswith(_pfx):
+                _tail = _r_low[len(_pfx):]
+                # If the tail is ≥70% word-overlap with user text, it's an echo
+                _u_words = set(re.findall(r"[a-z]{3,}", _u_low))
+                _t_words = set(re.findall(r"[a-z]{3,}", _tail))
+                if _u_words and _t_words:
+                    _overlap = len(_u_words & _t_words) / max(1, len(_t_words))
+                    if _overlap >= 0.70 and len(_tail.split()) >= 4:
+                        log.debug("Echo guard: prefixed echo suppressed")
+                        return ""
+                break
 
     return response
 
