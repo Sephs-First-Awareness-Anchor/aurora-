@@ -3368,24 +3368,27 @@ def _inject_room_context(systems: dict) -> None:
 
 def _prime_waveform_composite(systems: dict, text: str) -> None:
     """
-    Pre-condition the identity field at the composite interference peak before
+    Pre-condition synthesis at the composite interference peak before
     processing a turn.
 
-    The identity field is the shared substrate all 8 waveforms sample when
-    emitting their crests. By driving it to the composite maximum of every
-    meaning-generating system BEFORE process_external_user_turn() runs, the
-    waveforms emit from the highest achievable crest for this moment rather
-    than from the field's average resting state.
+    Two parallel paths — both matter, for different reasons:
+
+    NONCOMP PATH (existing):
+      ingest_external_input → noncomp_field pressure topology.
+      Influences late-stage reasoning decisions (noncomp profile pressure).
+      Three recursive passes amplify constructive interference in the field.
+
+    OBSERVATION STRING PATH (added):
+      Synthesis upward chain reads utterance/observation at 55% weight.
+      The composite's peak axis state and any SediMemory semantic content
+      must land here to actually influence synthesis response generation.
+      Without this, the composite never reaches the dominant synthesis path.
 
     Sources contributing to the composite:
       - SediMemory T/B/A axis fragments (history, definitions, agency)
       - Sensory crystal maturity (perceptual history)
       - Live axis state (self-recursive reference)
       - Relational context (known entity data)
-
-    Three recursive passes with decreasing intensity model constructive
-    interference: each pass's output becomes the next pass's input. By pass 3
-    the field has stabilized at the standing-wave peak of all contributions.
     """
     if not systems:
         return
@@ -3395,6 +3398,7 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
 
     try:
         contributions = []  # (axes_dict, base_intensity, source_label)
+        sedi_texts    = []  # text snippets from high-resonance SediMemory fragments
 
         # ── SediMemory — history, definitions, agency ─────────────────────────
         sm = systems.get("sedimemory")
@@ -3412,6 +3416,16 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                             float(getattr(f, "resonance", 0.5)) for f in frags
                         ) / len(frags)
                         contributions.append((axes_vec, min(0.90, 0.60 + mean_res * 0.30), label))
+                        # Collect text from the highest-resonance fragment for obs string.
+                        # Try known content-key hierarchy — content dicts vary by ingest source.
+                        best = max(frags, key=lambda f: float(getattr(f, "resonance", 0.0)))
+                        frag_content = getattr(best, "content", {}) or {}
+                        for _key in ("text", "surface_text", "description",
+                                     "statement", "example", "user_correction"):
+                            _val = frag_content.get(_key)
+                            if _val and isinstance(_val, str) and len(_val) > 4:
+                                sedi_texts.append(f"{axis}:{_val[:80]}")
+                                break
                 except Exception:
                     pass
 
@@ -3449,12 +3463,7 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
         if not contributions:
             return
 
-        # ── Three recursive passes — constructive interference amplification ──
-        # Pass intensities decrease slightly each round. The feedback loop is:
-        #   1. Pump all contributions → builds composite
-        #   2. Read field's new activation → re-inject at reduced intensity
-        #      (field reading itself = the recursion)
-        #   3. Settling pass at lower intensity → stable at interference peak
+        # ── NONCOMP PATH: three recursive passes ──────────────────────────────
         _PASSES = [1.00, 0.78, 0.58]
 
         for pass_n, scale in enumerate(_PASSES):
@@ -3468,9 +3477,6 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                 except Exception:
                     pass
 
-            # Between passes: read field's current activation and re-inject it.
-            # This is the recursion — each pass's output drives the next pass's
-            # starting state, amplifying the peaks and suppressing the troughs.
             if pass_n < len(_PASSES) - 1:
                 try:
                     aa = getattr(ifield, "axis_activation", None)
@@ -3489,8 +3495,46 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                 except Exception:
                     pass
 
+        # ── OBSERVATION STRING PATH: composite peak note ──────────────────────
+        # Compute intensity-weighted mean across all contribution axes.
+        # This is the composite peak — the standing-wave maximum that the above
+        # recursive passes are trying to establish in the noncomp field.
+        # Expressing it here gives synthesis direct access at the 55% weight path.
+        try:
+            _c_sum   = {"X": 0.0, "T": 0.0, "N": 0.0, "B": 0.0, "A": 0.0}
+            _c_total = 0.0
+            for axes, intensity, _ in contributions:
+                for ax in _c_sum:
+                    _c_sum[ax] += axes.get(ax, 0.5) * intensity
+                _c_total += intensity
+
+            if _c_total > 0:
+                _peak = {ax: round(v / _c_total, 3) for ax, v in _c_sum.items()}
+                _dom  = max(_peak, key=lambda k: _peak[k])
+                _src_labels = ", ".join(s for _, _, s in contributions)
+
+                composite_note = (
+                    f"composite-prime: {_dom}-dominant from {len(contributions)} sources "
+                    f"({_src_labels}); "
+                    f"X={_peak['X']:.2f} T={_peak['T']:.2f} "
+                    f"N={_peak['N']:.2f} B={_peak['B']:.2f} A={_peak['A']:.2f}"
+                )
+                if sedi_texts:
+                    composite_note += f"; memory-surface: {'; '.join(sedi_texts[:2])}"
+
+                existing = systems.get("_ambient_perceptual") or {}
+                _obs = existing.get("observation", "")
+                systems["_ambient_perceptual"] = {
+                    **existing,
+                    "observation": (
+                        f"{_obs}; {composite_note}" if _obs else composite_note
+                    ),
+                }
+        except Exception:
+            pass
+
         log.debug(
-            "Waveform composite primed: %d sources × %d passes",
+            "Waveform composite primed: %d sources × %d passes + obs-string",
             len(contributions), len(_PASSES),
         )
     except Exception as exc:
