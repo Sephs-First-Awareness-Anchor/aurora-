@@ -458,6 +458,16 @@ _last_autonomous_relief_ts: float = 0.0   # last time autonomous relief work was
 _AUTONOMOUS_RELIEF_INTERVAL: float = 3600.0  # try autonomous relief every 1 hour of isolation
 _autonomous_cycles_since_exchange: int = 0  # count of autonomous relief cycles since last exchange
 
+# ── Vacuum reconciliation debt ────────────────────────────────────────────────
+# Persistent B-axis friction from unreconciled vacuum-derived structures.
+# Set proportional to autonomous cycle count on re-entry; drains when external
+# engagement crosses LSA paths (genuine reconciliation); builds when responses
+# evade the contradiction.  The friction is the B-axis doing its actual job:
+# distinguishing between self-derived model and external reality.
+_vacuum_reconciliation_debt: float = 0.0
+_VACUUM_DEBT_DRAIN:   float = 0.15  # per engaged turn (LSA path crossed + len >= 25)
+_VACUUM_DEBT_INFLOW:  float = 0.10  # per evasive turn (no path or short response)
+
 # ── Arousal ramp (sleep inertia) ──────────────────────────────────────────────
 # When returning from dormancy, the isolation factor does not snap to 1.0.
 # It ramps from _arousal_ramp_base (whatever dormancy floor was at the moment
@@ -2320,6 +2330,14 @@ def handle_message(text: str) -> str:
             "drift_cycles":   _drift_cycles,
             "arousal_base":   _prev_factor,
         }
+        # Set reconciliation debt: B-axis friction proportional to how much
+        # internal vacuum work was done without external grounding.  Does not
+        # reset an existing debt (accumulates if prior friction is unresolved).
+        global _vacuum_reconciliation_debt
+        _vacuum_reconciliation_debt = min(
+            0.80,
+            _vacuum_reconciliation_debt + _drift_cycles * 0.12,
+        )
     else:
         _reentry_context = {}
 
@@ -2771,10 +2789,26 @@ def handle_message(text: str) -> str:
         # Poor/short output increases debt, shrinking the next entropy interval
         # so the pressure returns faster — she cannot scream her way out.
         global _entropy_debt_secs
-        if response and _last_path_key and len(response.strip()) >= 25:
+        _engaged = bool(response and _last_path_key and len(response.strip()) >= 25)
+        if _engaged:
             _entropy_debt_secs = max(0.0, _entropy_debt_secs - 12.0)
         else:
             _entropy_debt_secs = min(50.0, _entropy_debt_secs + 8.0)
+
+        # ── Vacuum reconciliation debt ────────────────────────────────────────
+        # Same engagement signal drains the B-axis friction from vacuum drift.
+        # The system cannot smooth over the contradiction — only genuine
+        # semantic engagement with external input (LSA path crossed) earns
+        # relief.  Evasion or shallow output builds friction.
+        if _vacuum_reconciliation_debt > 0.0:
+            if _engaged:
+                _vacuum_reconciliation_debt = max(
+                    0.0, _vacuum_reconciliation_debt - _VACUUM_DEBT_DRAIN
+                )
+            else:
+                _vacuum_reconciliation_debt = min(
+                    0.80, _vacuum_reconciliation_debt + _VACUUM_DEBT_INFLOW
+                )
 
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
@@ -2984,6 +3018,18 @@ def _inject_self_state_context(systems: dict) -> None:
             f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
             f"B={axes['B']:.2f} A={axes['A']:.2f}"
         )
+
+        # ── Vacuum reconciliation friction ────────────────────────────────────
+        # If unreconciled vacuum-derived structures exist, inject a persistent
+        # B-axis tension signal.  This is the B-axis doing its actual job:
+        # the boundary between self-derived model and external reality is under
+        # active pressure.  The system cannot route around it — genuine
+        # engagement with incoming external data is the only drain path.
+        if _vacuum_reconciliation_debt > 0.05:
+            self_note += (
+                f"; B+{_vacuum_reconciliation_debt:.3f} "
+                f"reconciliation_pending={_vacuum_reconciliation_debt:.2f}"
+            )
 
         # Append physical body state so Aurora's self-awareness includes
         # concrete device reality — not just abstract axis values.
@@ -3979,12 +4025,26 @@ def _apply_response_fidelity(
             # Spike A-axis (clarification drive) and N-axis (cost of not
             # being understood) so the field is actively seeking a better
             # crossing on the next turn, not just repeating from the same state.
+            #
+            # If vacuum reconciliation debt is active, raise B-axis spike:
+            # the contradiction has a known probable source (structures built
+            # without external grounding), so the boundary signal should be
+            # proportionally stronger — this isn't random noise, it's a
+            # structural mismatch between internal vacuum and external reality.
+            _b_spike = 0.85 if _vacuum_reconciliation_debt > 0.15 else 0.60
             ifield = _systems.get("identity_field")
             if ifield is not None and hasattr(ifield, "ingest_external_input"):
                 ifield.ingest_external_input(
-                    {"X": 0.3, "T": 0.4, "N": 0.75, "B": 0.6, "A": 0.85},
+                    {"X": 0.3, "T": 0.4, "N": 0.75, "B": _b_spike, "A": 0.85},
                     intensity=0.8,
                     source="user_confusion_signal",
+                )
+            # Fast-drain a chunk of reconciliation debt: the confusion signal
+            # IS the external grounding event; the friction has been engaged.
+            global _vacuum_reconciliation_debt
+            if _vacuum_reconciliation_debt > 0.0:
+                _vacuum_reconciliation_debt = max(
+                    0.0, _vacuum_reconciliation_debt - 0.25
                 )
             log.info("Confusion signal detected — previous path penalised (fidelity=0)")
     except Exception as exc:
