@@ -31,6 +31,22 @@ const _axisLabels = {
   'A': 'Agency',
 };
 
+const _gauntletStageOrder = [
+  'ground', 'study', 'curiosity', 'evo_chain',
+  'identity', 'voice', 'evo_burst', 'consolidate', 'simulation',
+];
+const _gauntletStageLabels = {
+  'ground':      'Ground Sensory Field',
+  'study':       'Study Cycle',
+  'curiosity':   'Curiosity Exploration',
+  'evo_chain':   'Evo Chain',
+  'identity':    'Identity Evolution',
+  'voice':       'Voice Evolution',
+  'evo_burst':   'Evolutionary Burst',
+  'consolidate': 'Consolidation',
+  'simulation':  'Simulation Burst',
+};
+
 class HubScreen extends StatefulWidget {
   const HubScreen({super.key});
   @override
@@ -46,6 +62,12 @@ class _HubScreenState extends State<HubScreen> {
   bool _loading = true;
   Timer? _timer;
 
+  // Gauntlet state
+  bool   _gauntletRunning = false;
+  String _gauntletStage   = '';
+  List<Map<String, dynamic>> _gauntletLog = [];
+  Timer? _gauntletTimer;
+
   @override
   void initState() {
     super.initState();
@@ -56,6 +78,7 @@ class _HubScreenState extends State<HubScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _gauntletTimer?.cancel();
     super.dispose();
   }
 
@@ -78,6 +101,80 @@ class _HubScreenState extends State<HubScreen> {
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _refreshGauntlet() async {
+    try {
+      final raw = await AuroraBridge.getGauntletStatus();
+      final data = jsonDecode(raw) as Map<String, dynamic>;
+      if (!mounted) return;
+      setState(() {
+        _gauntletRunning = data['running'] as bool? ?? false;
+        _gauntletStage   = data['stage']   as String? ?? '';
+        _gauntletLog     = ((data['log'] as List<dynamic>?) ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map))
+            .toList();
+      });
+      if (!_gauntletRunning) {
+        _gauntletTimer?.cancel();
+        _gauntletTimer = null;
+      }
+    } catch (_) {}
+  }
+
+  void _startGauntletPolling() {
+    _gauntletTimer?.cancel();
+    _gauntletTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => _refreshGauntlet(),
+    );
+  }
+
+  Future<void> _onStartGauntlet() async {
+    final result = await AuroraBridge.startGauntlet();
+    if (result['status'] == 'started') {
+      setState(() { _gauntletRunning = true; _gauntletStage = 'ground'; _gauntletLog = []; });
+      _startGauntletPolling();
+    } else if (result['status'] == 'already_running') {
+      _startGauntletPolling();
+    }
+    _showSnack(result['status'] == 'started' ? 'Gauntlet started' : 'Already running');
+  }
+
+  Future<void> _onStopGauntlet() async {
+    await AuroraBridge.stopGauntlet();
+    _showSnack('Gauntlet stopping after current stage…');
+  }
+
+  Future<void> _onCuriosityCycle() async {
+    _showSnack('Running curiosity cycle…');
+    final raw = await AuroraBridge.triggerCuriosityCycle(n: 5);
+    try {
+      final d = jsonDecode(raw) as Map<String, dynamic>;
+      _showSnack(d['status'] as String? ?? 'done');
+    } catch (_) {
+      _showSnack('Curiosity cycle done');
+    }
+  }
+
+  Future<void> _onEvoCycle() async {
+    _showSnack('Running evo cycle…');
+    final raw = await AuroraBridge.triggerEvoCycle(ticks: 20);
+    try {
+      final d = jsonDecode(raw) as Map<String, dynamic>;
+      _showSnack(d['status'] as String? ?? 'done');
+    } catch (_) {
+      _showSnack('Evo cycle done');
+    }
+  }
+
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg, style: const TextStyle(fontSize: 12)),
+      backgroundColor: _panel,
+      duration: const Duration(seconds: 2),
+    ));
   }
 
   // ── UI helpers ──────────────────────────────────────────────────────────────
@@ -162,6 +259,7 @@ class _HubScreenState extends State<HubScreen> {
                   _buildAxisPanel(),
                   _buildCognitivePanel(),
                   _buildEvolutionPanel(),
+                  _buildGauntletPanel(),
                   _buildRoomPanel(),
                   const SizedBox(height: 24),
                 ]),
@@ -303,8 +401,170 @@ class _HubScreenState extends State<HubScreen> {
             ),
           ),
         ],
+        const Divider(color: _border, height: 20),
+        // Quick-fire training cycle buttons
+        Row(children: [
+          Expanded(
+            child: _actionButton(
+              label: 'Curiosity Cycle',
+              icon: Icons.explore_outlined,
+              color: _cyan,
+              onTap: _onCuriosityCycle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _actionButton(
+              label: 'Evo Cycle',
+              icon: Icons.auto_awesome_outlined,
+              color: _green,
+              onTap: _onEvoCycle,
+            ),
+          ),
+        ]),
       ])),
     ]);
+  }
+
+  Widget _buildGauntletPanel() {
+    final doneIds = _gauntletLog.map((e) => e['stage_id'] as String? ?? '').toSet();
+    final total   = _gauntletStageOrder.length;
+    final done    = doneIds.length;
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _sectionTitle('GAUNTLET TRAINING', color: _amber),
+      _card(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Header row: status + start/stop
+        Row(children: [
+          _gauntletStatusChip(),
+          const Spacer(),
+          _gauntletRunning
+              ? _actionButton(
+                  label: 'Stop',
+                  icon: Icons.stop_circle_outlined,
+                  color: _red,
+                  onTap: _onStopGauntlet,
+                  compact: true,
+                )
+              : _actionButton(
+                  label: 'Start Gauntlet',
+                  icon: Icons.rocket_launch_outlined,
+                  color: _amber,
+                  onTap: _onStartGauntlet,
+                  compact: true,
+                ),
+        ]),
+        if (_gauntletRunning || doneIds.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          // Overall progress bar
+          Row(children: [
+            Text('$done / $total stages', style: const TextStyle(color: _textDim, fontSize: 11)),
+            const Spacer(),
+            Text('${(done / total * 100).toStringAsFixed(0)}%',
+              style: const TextStyle(color: _amber, fontSize: 11, fontWeight: FontWeight.w600)),
+          ]),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: done / total,
+              minHeight: 5,
+              backgroundColor: _border,
+              valueColor: const AlwaysStoppedAnimation(_amber),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        // Stage list
+        for (int i = 0; i < _gauntletStageOrder.length; i++)
+          _buildStageRow(i),
+        // About text when idle and no history
+        if (!_gauntletRunning && doneIds.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              'Runs all 9 training stages in sequence — each one builds on the last.',
+              style: const TextStyle(color: _textDim, fontSize: 11, height: 1.5),
+            ),
+          ),
+      ])),
+    ]);
+  }
+
+  Widget _gauntletStatusChip() {
+    final label = _gauntletRunning
+        ? 'Running: ${_gauntletStageLabels[_gauntletStage] ?? _gauntletStage}'
+        : 'Idle';
+    final color = _gauntletRunning ? _amber : _textDim;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.30)),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        if (_gauntletRunning)
+          Padding(
+            padding: const EdgeInsets.only(right: 5),
+            child: SizedBox(
+              width: 8, height: 8,
+              child: CircularProgressIndicator(strokeWidth: 1.5, color: _amber),
+            ),
+          ),
+        Text(label,
+          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600),
+          overflow: TextOverflow.ellipsis),
+      ]),
+    );
+  }
+
+  Widget _buildStageRow(int index) {
+    final id    = _gauntletStageOrder[index];
+    final label = _gauntletStageLabels[id] ?? id;
+    final isCurrent = _gauntletRunning && _gauntletStage == id;
+    final logEntry  = _gauntletLog.where((e) => e['stage_id'] == id).firstOrNull;
+    final isDone    = logEntry != null;
+    final result    = logEntry?['result'] as String? ?? '';
+
+    Color dotColor;
+    IconData dotIcon;
+    if (isDone)        { dotColor = _green;  dotIcon = Icons.check_circle_rounded; }
+    else if (isCurrent){ dotColor = _amber;  dotIcon = Icons.play_circle_rounded; }
+    else               { dotColor = _border; dotIcon = Icons.circle_outlined; }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Stage number
+        SizedBox(
+          width: 22,
+          child: Text('${index + 1}',
+            style: TextStyle(color: _textDim, fontSize: 10),
+            textAlign: TextAlign.right,
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Status icon
+        Icon(dotIcon, size: 14, color: dotColor),
+        const SizedBox(width: 8),
+        // Label + result
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(label, style: TextStyle(
+            color: isCurrent ? _amber : (isDone ? _text : _textDim),
+            fontSize: 12,
+            fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+          )),
+          if (isDone && result.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(result,
+                style: const TextStyle(color: _textDim, fontSize: 10, height: 1.3),
+                maxLines: 2, overflow: TextOverflow.ellipsis),
+            ),
+        ])),
+      ]),
+    );
   }
 
   Widget _buildRoomPanel() {
@@ -314,7 +574,6 @@ class _HubScreenState extends State<HubScreen> {
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _sectionTitle('AURORA\'S ROOM', color: _green),
-      // Daemon status strip
       if (daemonStatus.isNotEmpty)
         _card(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -325,7 +584,6 @@ class _HubScreenState extends State<HubScreen> {
               style: const TextStyle(color: _textDim, fontSize: 11)),
           ]),
         ),
-      // Room notes
       if (_notes.isNotEmpty) ...[
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
@@ -337,7 +595,6 @@ class _HubScreenState extends State<HubScreen> {
         ),
         for (final n in _notes.take(3)) _noteCard(n as Map<String, dynamic>),
       ],
-      // Room messages
       if (_messages.isNotEmpty) ...[
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
@@ -349,7 +606,6 @@ class _HubScreenState extends State<HubScreen> {
         ),
         for (final m in _messages.take(2)) _msgCard(m as Map<String, dynamic>),
       ],
-      // Activity log
       if (_activity.isNotEmpty) ...[
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
@@ -378,7 +634,6 @@ class _HubScreenState extends State<HubScreen> {
           ],
         )),
       ],
-      // Room command buttons
       _sectionTitle('ROOM NAVIGATION', color: _textDim),
       _card(child: Wrap(spacing: 8, runSpacing: 6, children: [
         for (final tab in ['Self', 'Awareness', 'Mind', 'Memory', 'Health',
@@ -392,6 +647,37 @@ class _HubScreenState extends State<HubScreen> {
           ),
       ])),
     ]);
+  }
+
+  // ── Shared widget helpers ───────────────────────────────────────────────────
+
+  Widget _actionButton({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+    bool compact = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 10 : 12,
+          vertical: compact ? 7 : 9,
+        ),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withOpacity(0.35)),
+        ),
+        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(label, style: TextStyle(
+            color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+        ]),
+      ),
+    );
   }
 
   Widget _noteCard(Map<String, dynamic> n) => _card(
@@ -458,12 +744,6 @@ class _HubScreenState extends State<HubScreen> {
 
   void _navRoom(String tab) {
     AuroraBridge.provideRoomCommand('{"navigate":"$tab"}');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Sent Aurora to $tab tab', style: const TextStyle(fontSize: 12)),
-        backgroundColor: _panel,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    _showSnack('Sent Aurora to $tab tab');
   }
 }

@@ -233,4 +233,26 @@ class AuroraBridge {
   /// cmd: JSON string e.g. '{"navigate":"Health"}' or '{"poedex":"define N"}'
   static Future<void> provideRoomCommand(String cmd) =>
       _channel.invokeMethod('provideRoomCommand', {'cmd': cmd});
+
+  // ── Gauntlet training pipeline ────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> startGauntlet() async {
+    final json = await _channel.invokeMethod<String>('startGauntlet') ?? '{}';
+    try {
+      // Use basic parsing — no dart:convert dependency in bridge
+      return {'status': json.contains('"started"') ? 'started' : 'error', 'raw': json};
+    } catch (_) { return {'raw': json}; }
+  }
+
+  static Future<void> stopGauntlet() =>
+      _channel.invokeMethod('stopGauntlet');
+
+  static Future<String> getGauntletStatus() async =>
+      await _channel.invokeMethod<String>('getGauntletStatus') ?? '{}';
+
+  static Future<String> triggerCuriosityCycle({int n = 5}) async =>
+      await _channel.invokeMethod<String>('triggerCuriosityCycle', {'n': n}) ?? '{}';
+
+  static Future<String> triggerEvoCycle({int ticks = 20}) async =>
+      await _channel.invokeMethod<String>('triggerEvoCycle', {'ticks': ticks}) ?? '{}';
 }

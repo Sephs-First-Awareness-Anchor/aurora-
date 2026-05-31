@@ -5405,3 +5405,293 @@ def post_room_note(content: str, note_type: str = "observation") -> None:
         p.write_text(_json.dumps(notes[-200:], indent=2), encoding="utf-8")
     except Exception as exc:
         log.warning("post_room_note: %s", exc)
+
+
+# ── Gauntlet training pipeline ────────────────────────────────────────────────
+
+_gauntlet_running: bool         = False
+_gauntlet_stop                  = threading.Event()
+_gauntlet_stage:  str           = ""
+_gauntlet_lock                  = threading.Lock()
+
+# Ordered list of (stage_id, display_label)
+# Each stage builds on the one before it:
+#   Ground  → ensures perceptual substrate is seeded
+#   Study   → builds OETS relational maps from accumulated concepts
+#   Curiosity → Aurora explores the connections freely (raises N-axis)
+#   Evo Chain → ticks the Chamber with what curiosity pressurised
+#   Identity → anchors chamber growth into identity
+#   Voice   → refines expression to match the new identity
+#   Evo Burst → full generational selection over all the new material
+#   Consolidate → distils session into L5 memory + OETS consolidation
+#   Simulation → social simulation practice before live socialization
+GAUNTLET_STAGES = [
+    ("ground",      "Ground Sensory Field"),
+    ("study",       "Study Cycle"),
+    ("curiosity",   "Curiosity Exploration"),
+    ("evo_chain",   "Evo Chain"),
+    ("identity",    "Identity Evolution"),
+    ("voice",       "Voice Evolution"),
+    ("evo_burst",   "Evolutionary Burst"),
+    ("consolidate", "Consolidation"),
+    ("simulation",  "Simulation Burst"),
+]
+
+
+def _gauntlet_emit(event_type: str, stage: str, stage_num: int,
+                   total: int, result: str = "") -> None:
+    """Push a gauntlet progress event through the AuroraService event sink."""
+    import json as _j
+    try:
+        from aurora_bridge import _systems as _sys_ref  # noqa — self ref, safe
+    except Exception:
+        _sys_ref = None
+    # Import AuroraService event sink via Kotlin bridge — try Chaquopy interop
+    try:
+        from com.chaquo.python import Python  # type: ignore
+        pass
+    except Exception:
+        pass
+    # Write to systems as a signal — the bridge polling loop will pick it up
+    if _systems is not None:
+        _systems.setdefault("_gauntlet_events", []).append({
+            "source":    "gauntlet",
+            "type":      event_type,
+            "stage":     stage,
+            "stage_num": stage_num,
+            "total":     total,
+            "result":    result,
+        })
+
+
+def _run_gauntlet_stage(stage_id: str) -> str:
+    """Run one gauntlet stage.  Returns a short result string."""
+    if _systems is None:
+        return "systems unavailable"
+    try:
+        if stage_id == "ground":
+            # Re-seed sensory crystals and geological baseline
+            sc = (
+                _systems.get("sensory_crystal")
+                or getattr(_systems.get("hardware"), "sensory_crystal", None)
+            )
+            seeded = 0
+            if sc and hasattr(sc, "seed_archetypes"):
+                sc.seed_archetypes()
+                seeded = 1
+            if _geological_baseline and hasattr(_geological_baseline, "reseed"):
+                _geological_baseline.reseed()
+            return f"crystal {'reseeded' if seeded else 'n/a'}, baseline refreshed"
+
+        elif stage_id == "study":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["corpus_study_cycle"])
+                    cr.corpus_study_cycle(_systems, verbose=False)
+                    return "OETS study cycle run"
+                except (ImportError, AttributeError):
+                    continue
+            return "study cycle skipped (corpus_runner unavailable)"
+
+        elif stage_id == "curiosity":
+            if _curiosity_session_active.is_set():
+                return "curiosity already active — skipped"
+            _run_curiosity_session(n_cycles=5, duration_s=None)
+            # Give it a moment to start, then report
+            import time as _t; _t.sleep(0.5)
+            return "5 curiosity cycles started"
+
+        elif stage_id == "evo_chain":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["evolve_chain"])
+                    with _axis_state_lock:
+                        _la = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    class _G:
+                        x_activation = _la.get("X", 0.5)
+                        t_activation = _la.get("T", 0.5)
+                        n_activation = _la.get("N", 0.5)
+                        b_activation = _la.get("B", 0.5)
+                        a_activation = _la.get("A", 0.5)
+                        class depth:
+                            name = "COMPOSITE"
+                    cr.evolve_chain(_systems, ticks=30, truth_geom=_G(), verbose=False)
+                    return "30 chamber ticks"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "identity":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["evolve_identity"])
+                    with _axis_state_lock:
+                        _la2 = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    class _G2:
+                        x_activation = _la2.get("X", 0.5)
+                        n_activation = _la2.get("N", 0.5)
+                        b_activation = _la2.get("B", 0.5)
+                        a_activation = _la2.get("A", 0.5)
+                    cr.evolve_identity(_systems, quality=0.72, geom=_G2())
+                    return "identity episode processed"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "voice":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["evolve_voice"])
+                    cr.evolve_voice(_systems, quality=0.72, matched=True)
+                    return "voice feedback applied"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "evo_burst":
+            result_json = run_evolutionary_burst(n_generations=3)
+            import json as _j
+            r = _j.loads(result_json)
+            if "error" in r:
+                return f"skipped ({r['error']})"
+            gens = len(r.get("generations", []))
+            return f"{gens} generations run"
+
+        elif stage_id == "consolidate":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["consolidate"])
+                    cr.consolidate(_systems)
+                    return "L5 + OETS consolidated"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "simulation":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["simulation_burst"])
+                    res = cr.simulation_burst(_systems, episodes=2, verbose=False)
+                    fitness = round(float((res or {}).get("avg_fitness", 0.0)), 3)
+                    return f"2 episodes, fitness={fitness}"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        return "unknown stage"
+    except Exception as exc:
+        return f"error: {exc}"
+
+
+def start_gauntlet() -> str:
+    """
+    Start the full gauntlet training pipeline in a background thread.
+    Stages run in sequence; each builds on the previous.
+    Progress is available via get_gauntlet_status().
+    Returns JSON with start confirmation.
+    """
+    global _gauntlet_running, _gauntlet_stage
+    import json as _j
+    if _gauntlet_running:
+        return _j.dumps({"status": "already_running", "stage": _gauntlet_stage})
+    if _systems is None:
+        return _j.dumps({"status": "error", "reason": "not_initialized"})
+
+    _gauntlet_stop.clear()
+    _gauntlet_running = True
+
+    def _run():
+        global _gauntlet_running, _gauntlet_stage
+        import time as _t
+        total = len(GAUNTLET_STAGES)
+        _systems["_gauntlet_log"] = []
+        try:
+            for idx, (sid, slabel) in enumerate(GAUNTLET_STAGES):
+                if _gauntlet_stop.is_set():
+                    break
+                _gauntlet_stage = sid
+                _gauntlet_emit("stage_start", sid, idx + 1, total)
+                log.info("Gauntlet stage %d/%d: %s", idx + 1, total, slabel)
+
+                result = _run_gauntlet_stage(sid)
+                _systems["_gauntlet_log"].append({
+                    "stage": sid, "label": slabel,
+                    "result": result, "ts": _t.time(),
+                })
+                _gauntlet_emit("stage_done", sid, idx + 1, total, result)
+                log.info("Gauntlet stage %s done: %s", sid, result)
+
+                # Brief breath between stages
+                _t.sleep(1.5)
+
+            _gauntlet_emit("complete", "done", total, total,
+                          f"{total} stages finished")
+        except Exception as exc:
+            log.warning("Gauntlet error: %s", exc)
+            _gauntlet_emit("error", _gauntlet_stage, 0, total, str(exc))
+        finally:
+            _gauntlet_running = False
+            _gauntlet_stage   = ""
+
+    threading.Thread(target=_run, daemon=True, name="gauntlet").start()
+    return _j.dumps({"status": "started", "total_stages": len(GAUNTLET_STAGES)})
+
+
+def stop_gauntlet() -> None:
+    """Cancel a running gauntlet after the current stage completes."""
+    _gauntlet_stop.set()
+
+
+def get_gauntlet_status() -> str:
+    """
+    Returns current gauntlet state + any pending progress events.
+    Flutter polls this every ~1 s while gauntlet is running.
+    """
+    import json as _j
+    events = []
+    if _systems is not None:
+        events = list(_systems.pop("_gauntlet_events", []) or [])
+    return _j.dumps({
+        "running":  _gauntlet_running,
+        "stage":    _gauntlet_stage,
+        "stages":   [{"id": s, "label": l} for s, l in GAUNTLET_STAGES],
+        "log":      list((_systems or {}).get("_gauntlet_log") or []),
+        "events":   events,
+    })
+
+
+def trigger_curiosity_cycle(n_cycles: int = 5) -> str:
+    """Run N curiosity cycles immediately in a background thread."""
+    import json as _j
+    if _curiosity_session_active.is_set():
+        return _j.dumps({"status": "already_active"})
+    _run_curiosity_session(n_cycles=max(1, int(n_cycles)), duration_s=None)
+    return _j.dumps({"status": "started", "cycles": n_cycles})
+
+
+def trigger_evo_cycle(ticks: int = 20) -> str:
+    """Run N EvolutionaryChamber ticks with live axis geometry."""
+    import json as _j
+    if _systems is None:
+        return _j.dumps({"status": "error"})
+    def _go():
+        for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            try:
+                cr = __import__(_try, fromlist=["evolve_chain"])
+                with _axis_state_lock:
+                    _la = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                class _G:
+                    x_activation = _la.get("X", 0.5)
+                    t_activation = _la.get("T", 0.5)
+                    n_activation = _la.get("N", 0.5)
+                    b_activation = _la.get("B", 0.5)
+                    a_activation = _la.get("A", 0.5)
+                    class depth:
+                        name = "SURFACE"
+                cr.evolve_chain(_systems, ticks=max(1, int(ticks)),
+                                truth_geom=_G(), verbose=False)
+                break
+            except (ImportError, AttributeError):
+                continue
+    threading.Thread(target=_go, daemon=True, name="manual_evo").start()
+    return _j.dumps({"status": "started", "ticks": ticks})

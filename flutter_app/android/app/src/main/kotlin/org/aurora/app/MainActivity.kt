@@ -195,6 +195,32 @@ class MainActivity : FlutterActivity() {
                         AuroraService.provideRoomCommand(cmd)
                         result.success(null)
                     }
+                    "startGauntlet" -> {
+                        AuroraService.callPythonString("start_gauntlet") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "stopGauntlet" -> {
+                        AuroraService.callPythonVoid("stop_gauntlet")
+                        result.success(null)
+                    }
+                    "getGauntletStatus" -> {
+                        AuroraService.callPythonString("get_gauntlet_status") { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "triggerCuriosityCycle" -> {
+                        val n = call.argument<Int>("n") ?: 5
+                        AuroraService.callPythonStringArg("trigger_curiosity_cycle", n.toString()) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "triggerEvoCycle" -> {
+                        val ticks = call.argument<Int>("ticks") ?: 20
+                        AuroraService.callPythonStringArg("trigger_evo_cycle", ticks.toString()) { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
                     else             -> result.notImplemented()
                 }
             }

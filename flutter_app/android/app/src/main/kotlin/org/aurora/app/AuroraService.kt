@@ -197,6 +197,36 @@ class AuroraService : Service() {
                 } catch (_: Exception) {}
             }
         }
+
+        /** Call a no-arg Python bridge function that returns a String. */
+        fun callPythonString(fn: String, callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr(fn).toString()
+                } catch (_: Exception) { "{}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
+
+        /** Call a Python bridge function with one String arg that returns a String. */
+        fun callPythonStringArg(fn: String, arg: String, callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance().getModule("aurora_bridge")
+                        .callAttr(fn, arg).toString()
+                } catch (_: Exception) { "{}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
+
+        /** Call a no-arg Python bridge function, ignore return. */
+        fun callPythonVoid(fn: String) {
+            scope?.launch {
+                try { Python.getInstance().getModule("aurora_bridge").callAttr(fn) }
+                catch (_: Exception) {}
+            }
+        }
     }
 
     // ── Hardware body sensors ─────────────────────────────────────────────────
