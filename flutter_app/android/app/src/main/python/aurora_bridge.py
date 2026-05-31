@@ -493,6 +493,14 @@ _reentry_context: dict = {}  # cleared after one turn consumption
 # turn so the signal doesn't persist beyond its relevant context window.
 _geo_ground_hold: dict = {}  # keys: geo_resistance, resonance, threshold; cleared after injection
 
+# ── Confusion signal (per-turn) ───────────────────────────────────────────────
+# Set by _apply_response_fidelity when the user's input signals the previous
+# output failed.  Consumed by _inject_self_state_context() in the SAME turn
+# so synthesis sees the clarification-drive state before generating the response.
+# ingest_external_input cannot reach the synthesis upward chain (it only reaches
+# the noncomp_field); this state must land in the observation string.
+_confusion_signal_pending: dict = {}  # keys: b_spike, vacuum_debt; cleared after injection
+
 
 # ---------------------------------------------------------------------------
 # Waveform trajectory tracker — lowest-level emergence detection
@@ -2522,9 +2530,29 @@ def handle_message(text: str) -> str:
                         )
                         _em = _waveform_trajectory.emergence_signal(_cur)
                         if _em is not None:
+                            # Keep noncomp injection for background learning pressure.
                             _ifield.ingest_external_input(
                                 _em, intensity=0.75, source="trajectory_emergence"
                             )
+                            # Also write to observation string — synthesis reads the
+                            # utterance/observation at 55% weight; noncomp only reaches
+                            # late-stage reasoning at heavily attenuated values.
+                            _em_obs = (
+                                _systems.get("_ambient_perceptual") or {}
+                            ).get("observation", "")
+                            _em_note = (
+                                f"trajectory-emergence: field diverged from predicted "
+                                f"trajectory — T={_em.get('T', 0.5):.2f} "
+                                f"N={_em.get('N', 0.5):.2f} "
+                                f"B={_em.get('B', 0.5):.2f}; "
+                                f"anomalous substrate state detected this turn"
+                            )
+                            _systems["_ambient_perceptual"] = {
+                                **(_systems.get("_ambient_perceptual") or {}),
+                                "observation": (
+                                    f"{_em_obs}; {_em_note}" if _em_obs else _em_note
+                                ),
+                            }
                             log.info(
                                 "Trajectory emergence: T=%.2f N=%.2f B=%.2f",
                                 _em["T"], _em["N"], _em["B"],
@@ -2532,10 +2560,9 @@ def handle_message(text: str) -> str:
                 except Exception:
                     pass
 
-        # Also inject the trajectory's predicted next state as gentle forward
-        # momentum. The divergence injection above fires only on anomaly;
-        # this fires every turn to keep the field moving in its established
-        # direction rather than resetting to resting state between turns.
+        # Trajectory momentum: gentle forward push at low intensity.
+        # Intentionally stays in noncomp only — it's a subtle background nudge,
+        # not a synthesis-critical signal, and doesn't warrant observation string.
         if _waveform_trajectory is not None and _waveform_trajectory.has_trajectory:
             _ifield_m = _systems.get("identity_field")
             if _ifield_m is not None:
@@ -3172,6 +3199,28 @@ def _inject_self_state_context(systems: dict) -> None:
             )
             _geo_ground_hold = {}  # consume — one turn signal only
 
+        # ── Confusion signal ──────────────────────────────────────────────────
+        # Fired this same turn when the user's input signals the previous output
+        # failed. Express as observation note so the synthesis upward chain reads
+        # the clarification-drive state at the dominant 55% utterance weight.
+        confusion_note = ""
+        global _confusion_signal_pending
+        if _confusion_signal_pending:
+            _cs = _confusion_signal_pending
+            confusion_note = (
+                f"confusion-signal: previous crossing failed — LSA path penalized, "
+                f"field seeking novel route; "
+                f"B-boundary between expressed and intended is under active stress "
+                f"(B={_cs['b_spike']:.2f}); "
+                f"clarification drive: X=0.30 T=0.40 N=0.75 B={_cs['b_spike']:.2f} A=0.85"
+            )
+            if _cs["vacuum_debt"] > 0.15:
+                confusion_note += (
+                    f"; vacuum reconciliation adds boundary friction "
+                    f"({_cs['vacuum_debt']:.2f}) — internal model vs external reality"
+                )
+            _confusion_signal_pending = {}  # consume — one turn signal only
+
         parts = [self_note]
         if geo_note:
             parts.append(geo_note)
@@ -3179,6 +3228,8 @@ def _inject_self_state_context(systems: dict) -> None:
             parts.append(reentry_note)
         if geo_hold_note:
             parts.append(geo_hold_note)
+        if confusion_note:
+            parts.append(confusion_note)
         full_note = "; ".join(parts)
 
         existing = systems.get("_ambient_perceptual") or {}
@@ -4156,6 +4207,16 @@ def _apply_response_fidelity(
                     intensity=0.8,
                     source="user_confusion_signal",
                 )
+            # Write to observation string so synthesis actually reads it.
+            # ingest_external_input only reaches the noncomp_field (20% attenuation,
+            # late-stage reasoning only) — the synthesis upward chain reads the
+            # utterance/observation at 55% weight. Both paths serve different roles:
+            # noncomp = background learning pressure; observation = synthesis input.
+            global _confusion_signal_pending
+            _confusion_signal_pending = {
+                "b_spike":     _b_spike,
+                "vacuum_debt": _vacuum_reconciliation_debt,
+            }
 
             # ── Conditional vacuum debt drain ─────────────────────────────────
             # Three-layer gate — each layer addresses a distinct failure mode:
