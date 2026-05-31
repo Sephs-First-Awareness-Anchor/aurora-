@@ -163,6 +163,40 @@ class AuroraService : Service() {
                 withContext(Dispatchers.Main) { callback(json) }
             }
         }
+
+        fun getCognitiveStats(callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("get_cognitive_stats")
+                        .toString()
+                } catch (_: Exception) { "{}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
+
+        fun getRoomState(callback: (String) -> Unit) {
+            scope?.launch {
+                val json = try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("get_room_state")
+                        .toString()
+                } catch (_: Exception) { "{}" }
+                withContext(Dispatchers.Main) { callback(json) }
+            }
+        }
+
+        fun provideRoomCommand(cmdJson: String) {
+            scope?.launch {
+                try {
+                    Python.getInstance()
+                        .getModule("aurora_bridge")
+                        .callAttr("provide_room_command", cmdJson)
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     // ── Hardware body sensors ─────────────────────────────────────────────────

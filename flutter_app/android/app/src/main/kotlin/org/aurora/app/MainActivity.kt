@@ -180,6 +180,21 @@ class MainActivity : FlutterActivity() {
                             runOnUiThread { result.success(json) }
                         }
                     }
+                    "getCognitiveStats" -> {
+                        AuroraService.getCognitiveStats { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "getRoomState" -> {
+                        AuroraService.getRoomState { json ->
+                            runOnUiThread { result.success(json) }
+                        }
+                    }
+                    "provideRoomCommand" -> {
+                        val cmd = call.argument<String>("cmd") ?: "{}"
+                        AuroraService.provideRoomCommand(cmd)
+                        result.success(null)
+                    }
                     else             -> result.notImplemented()
                 }
             }
