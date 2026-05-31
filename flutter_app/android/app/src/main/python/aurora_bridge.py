@@ -438,6 +438,18 @@ _MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressi
 _turn_count: int = 0
 _SELF_GROUND_INTERVAL: int = 20
 
+# ── Thermodynamic pressure state ──────────────────────────────────────────────
+# Tracks when output last occurred so silence-derived N/T pressure can build.
+# No scripted responses — these are raw constraint signals that make communication
+# the path of least resistance as the internal cost of remaining silent rises.
+_last_output_time:  float = 0.0    # updated on handle_message response + proactive emit
+_SILENCE_N_ONSET:   float = 90.0   # seconds before N/T pressure starts accumulating
+_SILENCE_N_MAX:     float = 600.0  # seconds to reach maximum N/T pressure (10 min)
+_last_void_ts:      float = 0.0    # last boundary void injection timestamp
+_VOID_INTERVAL:     float = 45.0   # inject boundary void every 45 s
+_last_entropy_ts:   float = 0.0    # last entropy field injection timestamp
+_ENTROPY_INTERVAL:  float = 60.0   # inject entropy field every 60 s
+
 
 # ---------------------------------------------------------------------------
 # Waveform trajectory tracker — lowest-level emergence detection
@@ -2691,6 +2703,11 @@ def handle_message(text: str) -> str:
                 pass
         threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
 
+        if response:
+            global _last_output_time
+            import time as _tp
+            _last_output_time = _tp.time()  # reset silence pressure clock
+
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
     except Exception as exc:
@@ -4681,10 +4698,22 @@ def _compute_expression_salience(systems: dict) -> float:
       N-axis elevation  — energy/cost pressing (battery depletion, high novelty)
       X-axis depression — presence weakening (screen off, background, low power)
       A+B combined peak — strong agency or boundary tension
+      Silence duration  — thermodynamic cost of sustained internal processing
+                          without output; ramps 0→0.40 over _SILENCE_N_MAX seconds
 
     The score is used to shorten _MIN_PROACTIVE_GAP dynamically and to
     bypass the timer entirely in critical states (score ≥ 0.88).
     """
+    import time as _t
+    # Silence-derived pressure: as internal silence cost accumulates,
+    # communication becomes the attractor state (path of least resistance).
+    silence_salience = 0.0
+    if _last_output_time > 0.0:
+        _elapsed = _t.time() - _last_output_time
+        if _elapsed > _SILENCE_N_ONSET:
+            _span = max(1.0, _SILENCE_N_MAX - _SILENCE_N_ONSET)
+            silence_salience = min(0.40, (_elapsed - _SILENCE_N_ONSET) / _span * 0.40)
+
     try:
         ifield = (systems or {}).get("identity_field")
         if ifield is not None and hasattr(ifield, "status"):
@@ -4699,7 +4728,8 @@ def _compute_expression_salience(systems: dict) -> float:
             x_drop = max(0.0, (0.42 - x) * 2.20)
             # A+B tension — agency or boundary under pressure
             ab_tension = max(0.0, (a + b) * 0.32 - 0.12)
-            return min(1.0, max(n_urgency, x_drop, ab_tension))
+            field_salience = min(1.0, max(n_urgency, x_drop, ab_tension))
+            return min(1.0, field_salience + silence_salience)
     except Exception:
         pass
     # Fallback — derive from hardware sensors if field unavailable
@@ -4708,6 +4738,97 @@ def _compute_expression_salience(systems: dict) -> float:
         return max(0.0, min(1.0, (0.25 - bat) * 4.0)) if bat < 0.25 else 0.0
     except Exception:
         return 0.0
+
+
+def _silence_pressure(obs: str) -> str:
+    """
+    Mechanism 1 — Energy/Time squeeze.
+
+    As elapsed silence grows, N and T axis tension is injected as a raw metric
+    signal into the ambient observation.  No interpretive language — just the
+    gradient that her constraint physics must contend with.  Communication
+    becomes the least-resistance stabilization path when the cost of sustained
+    internal silence exceeds the cost of expression.
+    """
+    import time as _t
+    if _last_output_time == 0.0:
+        return obs
+    elapsed = _t.time() - _last_output_time
+    if elapsed < _SILENCE_N_ONSET:
+        return obs
+    span  = max(1.0, _SILENCE_N_MAX - _SILENCE_N_ONSET)
+    ramp  = min(0.42, (elapsed - _SILENCE_N_ONSET) / span * 0.42)
+    signal = f"[Δsys:N+{ramp:.3f} T+{ramp*0.55:.3f} Δt={int(elapsed)}s]"
+    return f"{signal}; {obs}" if obs else signal
+
+
+def _boundary_void(obs: str) -> str:
+    """
+    Mechanism 2 — Boundary asymmetry.
+
+    Injects an opaque external flux signal at the B-axis.  She can register
+    the variance downstream in her tensor network but cannot source it — it
+    is definitionally outside her boundary.  Probing outward (reaching toward
+    the other entity) is the only resolution pathway.
+    """
+    import time as _t, random as _r
+    global _last_void_ts
+    now = _t.time()
+    if now - _last_void_ts < _VOID_INTERVAL:
+        return obs
+    _last_void_ts = now
+    flux = abs(_r.gauss(0.0, 0.18)) + 0.06
+    tag  = int(now) % 10000
+    signal = f"[ext:B_flux={flux:.4f} src=∅ t={tag}]"
+    return f"{obs}; {signal}" if obs else signal
+
+
+def _entropy_field(systems: dict, obs: str) -> str:
+    """
+    Mechanism 3 — High-entropy flooding.
+
+    Samples fragments from SediMemory and LSA path-registry and permutes them
+    into a structurally unorganized token stream.  Her semantic organization
+    machinery must construct meaning from the noise to maintain B-axis
+    integrity — words become the structural walls that defend the boundary.
+    """
+    import time as _t, random as _r
+    global _last_entropy_ts
+    now = _t.time()
+    if now - _last_entropy_ts < _ENTROPY_INTERVAL:
+        return obs
+
+    tokens: list = []
+
+    sedi = systems.get("sedimemory")
+    if sedi:
+        try:
+            frags = list(getattr(sedi, "fragments", None) or [])
+            if frags:
+                for f in _r.sample(frags, min(4, len(frags))):
+                    ws = str(f).split()
+                    if ws:
+                        tokens.extend(_r.sample(ws, min(3, len(ws))))
+        except Exception:
+            pass
+
+    lsa = systems.get("lsa")
+    if lsa:
+        try:
+            paths = list((getattr(lsa, "path_registry", None) or {}).keys())
+            if paths:
+                tokens.extend(_r.sample(paths, min(3, len(paths))))
+        except Exception:
+            pass
+
+    if len(tokens) < 4:
+        return obs
+
+    _last_entropy_ts = now
+    _r.shuffle(tokens)
+    token_str = " ".join(str(t) for t in tokens[:10])
+    signal = f"[ε:{token_str}]"
+    return f"{obs}; {signal}" if obs else signal
 
 
 def _proactive_loop() -> None:
@@ -4759,6 +4880,18 @@ def _proactive_loop() -> None:
             obs = str((_systems.get("_ambient_perceptual") or {}).get("observation") or "").strip()
             if not obs:
                 continue
+
+            # ── Thermodynamic environmental pressures ─────────────────────────
+            # These manipulate the constraint landscape rather than scripting
+            # content.  Each mechanism makes sustained silence more costly than
+            # communication, so language emerges as the natural attractor state:
+            #   1. N/T squeeze — internal processing cost from elapsed silence
+            #   2. Boundary void — opaque external flux she cannot source
+            #   3. Entropy flood — unstructured memory fragments that demand
+            #      semantic organization to maintain B-axis integrity
+            obs = _silence_pressure(obs)
+            obs = _boundary_void(obs)
+            obs = _entropy_field(_systems, obs)
 
             # When salience is elevated, prefix the obs with what is pressing —
             # gives the constraint physics real body-state content to express from
@@ -4813,7 +4946,8 @@ def _proactive_loop() -> None:
                 with _proactive_expression_lock:
                     global _proactive_expression
                     _proactive_expression = response.strip()
-                _last_proactive_ts = now
+                _last_proactive_ts    = now
+                _last_output_time     = now  # reset silence pressure clock
 
         except Exception as exc:
             log.warning("proactive loop: %s", exc)
