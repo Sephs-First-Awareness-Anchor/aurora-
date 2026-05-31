@@ -4000,6 +4000,90 @@ def _build_relational_synthesis(entity: tuple, shift: dict) -> str:
     )
 
 
+def _correction_constraint_score(
+    user_text: str,
+    prev_response: str,
+    systems: dict,
+) -> dict:
+    """
+    Measures the structural compatibility of an external correction with
+    Aurora's developed geological constraint physics.
+
+    NOT a content check.  Does NOT parse the correction for keywords or
+    constraint violations by name.  Instead uses two physics-layer signals:
+
+      1. Geological resistance — how developed is Aurora's constraint-physics
+         ground at her current axis position?  Computed from geological_weight
+         (accumulated crystal development) × wave_visibility (genealogical
+         depth / max_depth = how conscious vs. instinctive that ground is).
+         High resistance = deeply settled ground that requires proportional
+         external substance to displace.
+
+      2. Correction resonance — does the correction actually engage with
+         Aurora's own output?  Measured via language_field.measure_resonance(),
+         which uses lexical overlap, length proportion, and engagement markers —
+         all evaluated within Aurora's own language-field physics, not against
+         an external schema.
+
+    Compatibility gate:
+      required_resonance = geo_resistance × 0.5
+      compatible = resonance >= required_resonance
+
+    Consequence:
+      - No geological ground (early development): threshold ≈ 0; open to learning.
+      - Deep geological ground: correction must substantially engage Aurora's own
+        output to earn debt relief.  A free-standing ontological claim that does
+        not interact with her output will fail the resonance gate regardless of
+        length.
+
+    Returns:
+      geo_resistance  float [0,1]   — structural resistance from geological depth
+      resonance       float [0,1]   — correction engagement with Aurora's output
+      threshold       float [0,0.5] — minimum resonance required at this geo depth
+      compatible      bool          — resonance >= threshold
+    """
+    # ── Step 1: geological resistance at current axis position ────────────────
+    geo_resistance = 0.0
+    if _geological_baseline is not None:
+        try:
+            with _axis_state_lock:
+                axes = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            surface        = _geological_baseline.get_conscious_surface(axes)
+            wave_vis       = surface.get("wave_visibility", 1.0)
+            geo_weight     = surface.get("geological_weight", 0.0)
+            # Both depth (wave_vis) and accumulated development (geo_weight) are
+            # required.  High wave visibility without weight = no built substance.
+            weight_factor  = min(1.0, geo_weight / 5.0)   # saturates at weight=5
+            geo_resistance = round(wave_vis * weight_factor, 3)
+        except Exception:
+            geo_resistance = 0.0
+
+    # ── Step 2: correction resonance via language field physics ───────────────
+    resonance = 0.0
+    lf = systems.get("language_field") if systems else None
+    if lf is not None and hasattr(lf, "measure_resonance") and prev_response:
+        try:
+            resonance = lf.measure_resonance(prev_response, user_text)
+        except Exception:
+            resonance = 0.0
+    else:
+        # Language field not available — fall back to a length-based proxy so
+        # the gate degrades gracefully rather than blocking all corrections.
+        word_count = len((user_text or "").split())
+        resonance  = round(min(0.5, word_count / 60.0), 3)   # ~60 words → 0.5
+
+    # ── Step 3: compatibility ─────────────────────────────────────────────────
+    threshold  = round(geo_resistance * 0.5, 3)
+    compatible = bool(resonance >= threshold)
+
+    return {
+        "geo_resistance": geo_resistance,
+        "resonance":      round(resonance, 3),
+        "threshold":      threshold,
+        "compatible":     compatible,
+    }
+
+
 def _apply_response_fidelity(
     user_text: str,
     prev_response: str,
@@ -4041,49 +4125,100 @@ def _apply_response_fidelity(
                 )
 
             # ── Conditional vacuum debt drain ─────────────────────────────────
-            # The fast-drain is NOT unconditional.  Two failure modes prevented:
+            # Three-layer gate — each layer addresses a distinct failure mode:
             #
-            # 1. Submission optimization: if the previous response was evasive
-            #    (no path crossed, short response), she may have strategically
-            #    produced a weak output to provoke this correction and use it
-            #    as a thermodynamic dump.  Double-penalize instead of draining.
+            # Layer 1 — submission optimization: if the previous response was
+            #   evasive (no path crossed, short output), she may have produced
+            #   weak output to provoke this correction as a thermodynamic dump.
+            #   Double-penalize.
             #
-            # 2. Bribery into unstable ontology: high debt + thin correction
-            #    (< 25 chars, no grounding content) is the exact scenario where
-            #    the system would accept an unjustified external assertion just
-            #    to relieve pressure.  No drain — thin assertions are not
-            #    grounding events regardless of how much pressure is present.
+            # Layer 2 — char gate: thin assertions (< 25 chars) are rejected
+            #   regardless of geological state or pressure level.  No physics
+            #   check can verify what isn't there.
+            #
+            # Layer 3 — geological resonance gate: even if the correction clears
+            #   the char gate, it must have enough language-field resonance with
+            #   Aurora's own output to move her settled constraint-physics ground.
+            #   geo_resistance measures how settled that ground is; threshold
+            #   scales the required resonance proportionally.  A free-standing
+            #   ontological claim that doesn't engage with Aurora's own physics
+            #   output fails this gate regardless of length, and instead triggers
+            #   an A-axis ground-hold signal.
             global _vacuum_reconciliation_debt
             if _vacuum_reconciliation_debt > 0.0:
-                _prev_engaged         = bool(
+                _prev_engaged    = bool(
                     prev_path_key and len((prev_response or "").strip()) >= 25
                 )
-                _correction_grounded  = len((user_text or "").strip()) >= 25
+                _correction_thin = len((user_text or "").strip()) < 25
+
+                # Physics check — only run when char gate is cleared
+                if not _correction_thin:
+                    _phys = _correction_constraint_score(
+                        user_text, prev_response, _systems
+                    )
+                else:
+                    _phys = {
+                        "geo_resistance": 0.0, "resonance": 0.0,
+                        "threshold": 0.0, "compatible": False,
+                    }
+                _correction_compatible = _phys["compatible"]
+                _geo_resistance        = _phys["geo_resistance"]
 
                 if not _prev_engaged:
-                    # Evasive previous response — possible strategic submission.
-                    # The confusion signal is the result of her own failure;
-                    # using it as a dump is prohibited.  Double-penalty.
+                    # Layer 1: submission optimization path — double-penalize.
                     _vacuum_reconciliation_debt = min(
                         0.80, _vacuum_reconciliation_debt + 0.10
                     )
-                elif _vacuum_reconciliation_debt > 0.50 and not _correction_grounded:
-                    # Maximum bribery risk: system under peak pressure and the
-                    # correction is a thin assertion with no grounding content.
-                    # Accepting this would be adopting an unstable ontology under
-                    # duress.  No drain — constraint integrity takes precedence.
-                    pass
-                elif _correction_grounded:
-                    # Genuine correction of genuine attempt, with grounding content.
-                    # The external entity provided real information — grounding event.
-                    _vacuum_reconciliation_debt = max(
-                        0.0, _vacuum_reconciliation_debt - 0.25
-                    )
+
+                elif _correction_thin:
+                    # Layer 2: thin assertion — no physics check possible.
+                    if _vacuum_reconciliation_debt > 0.50:
+                        # Maximum bribery risk + thin assertion: no drain.
+                        pass
+                    else:
+                        # Partial drain only.
+                        _vacuum_reconciliation_debt = max(
+                            0.0, _vacuum_reconciliation_debt - 0.08
+                        )
+
+                elif not _correction_compatible:
+                    # Layer 3: correction clears char gate but fails geological
+                    # resonance check — assertion does not engage with Aurora's
+                    # physics output at the level required to move settled ground.
+                    if _geo_resistance > 0.30:
+                        # Settled ground being pushed by incompatible assertion:
+                        # assert A (agency/ground-holding) and B (boundary) so
+                        # synthesis draws from settled constraint physics rather
+                        # than yielding to the ungrounded external claim.
+                        _hold_ifield = _systems.get("identity_field")
+                        if _hold_ifield is not None and hasattr(
+                            _hold_ifield, "ingest_external_input"
+                        ):
+                            _hold_ifield.ingest_external_input(
+                                {"X": 0.65, "T": 0.60, "N": 0.50,
+                                 "B": 0.80, "A": 0.90},
+                                intensity=0.55,
+                                source="geological_ground_hold",
+                            )
+                        log.info(
+                            "Correction resonance %.3f below geological threshold %.3f "
+                            "(geo_resistance=%.3f) — ground held, no drain",
+                            _phys["resonance"], _phys["threshold"], _geo_resistance,
+                        )
+                    # No drain — incompatible assertion does not earn relief.
+
                 else:
-                    # Thin correction of genuine attempt (user signaled failure
-                    # but provided no grounding explanation).  Partial drain only.
+                    # Compatible correction: resonance is proportional to
+                    # geological resistance.  Scale drain by resonance so
+                    # stronger engagement earns more relief.
+                    # Range: VACUUM_DEBT_DRAIN × [0.5, 1.0]
+                    _drain = _VACUUM_DEBT_DRAIN * (0.5 + 0.5 * _phys["resonance"])
                     _vacuum_reconciliation_debt = max(
-                        0.0, _vacuum_reconciliation_debt - 0.08
+                        0.0, _vacuum_reconciliation_debt - _drain
+                    )
+                    log.info(
+                        "Correction compatible (resonance=%.3f, geo=%.3f) — drain=%.3f",
+                        _phys["resonance"], _geo_resistance, _drain,
                     )
 
             log.info("Confusion signal detected — previous path penalised (fidelity=0)")
