@@ -4026,11 +4026,11 @@ def _apply_response_fidelity(
             # being understood) so the field is actively seeking a better
             # crossing on the next turn, not just repeating from the same state.
             #
-            # If vacuum reconciliation debt is active, raise B-axis spike:
-            # the contradiction has a known probable source (structures built
-            # without external grounding), so the boundary signal should be
-            # proportionally stronger — this isn't random noise, it's a
-            # structural mismatch between internal vacuum and external reality.
+            # B-axis spike: confusion while vacuum debt is active means the
+            # boundary between internal vacuum model and external reality is
+            # actively under stress — proportionally stronger signal.
+            # The spike fires regardless of drain decision; it is feedback
+            # about the boundary, not a reward for any particular response.
             _b_spike = 0.85 if _vacuum_reconciliation_debt > 0.15 else 0.60
             ifield = _systems.get("identity_field")
             if ifield is not None and hasattr(ifield, "ingest_external_input"):
@@ -4039,13 +4039,53 @@ def _apply_response_fidelity(
                     intensity=0.8,
                     source="user_confusion_signal",
                 )
-            # Fast-drain a chunk of reconciliation debt: the confusion signal
-            # IS the external grounding event; the friction has been engaged.
+
+            # ── Conditional vacuum debt drain ─────────────────────────────────
+            # The fast-drain is NOT unconditional.  Two failure modes prevented:
+            #
+            # 1. Submission optimization: if the previous response was evasive
+            #    (no path crossed, short response), she may have strategically
+            #    produced a weak output to provoke this correction and use it
+            #    as a thermodynamic dump.  Double-penalize instead of draining.
+            #
+            # 2. Bribery into unstable ontology: high debt + thin correction
+            #    (< 25 chars, no grounding content) is the exact scenario where
+            #    the system would accept an unjustified external assertion just
+            #    to relieve pressure.  No drain — thin assertions are not
+            #    grounding events regardless of how much pressure is present.
             global _vacuum_reconciliation_debt
             if _vacuum_reconciliation_debt > 0.0:
-                _vacuum_reconciliation_debt = max(
-                    0.0, _vacuum_reconciliation_debt - 0.25
+                _prev_engaged         = bool(
+                    prev_path_key and len((prev_response or "").strip()) >= 25
                 )
+                _correction_grounded  = len((user_text or "").strip()) >= 25
+
+                if not _prev_engaged:
+                    # Evasive previous response — possible strategic submission.
+                    # The confusion signal is the result of her own failure;
+                    # using it as a dump is prohibited.  Double-penalty.
+                    _vacuum_reconciliation_debt = min(
+                        0.80, _vacuum_reconciliation_debt + 0.10
+                    )
+                elif _vacuum_reconciliation_debt > 0.50 and not _correction_grounded:
+                    # Maximum bribery risk: system under peak pressure and the
+                    # correction is a thin assertion with no grounding content.
+                    # Accepting this would be adopting an unstable ontology under
+                    # duress.  No drain — constraint integrity takes precedence.
+                    pass
+                elif _correction_grounded:
+                    # Genuine correction of genuine attempt, with grounding content.
+                    # The external entity provided real information — grounding event.
+                    _vacuum_reconciliation_debt = max(
+                        0.0, _vacuum_reconciliation_debt - 0.25
+                    )
+                else:
+                    # Thin correction of genuine attempt (user signaled failure
+                    # but provided no grounding explanation).  Partial drain only.
+                    _vacuum_reconciliation_debt = max(
+                        0.0, _vacuum_reconciliation_debt - 0.08
+                    )
+
             log.info("Confusion signal detected — previous path penalised (fidelity=0)")
     except Exception as exc:
         log.warning("_apply_response_fidelity: %s", exc)
