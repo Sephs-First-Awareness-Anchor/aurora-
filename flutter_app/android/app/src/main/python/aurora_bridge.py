@@ -456,6 +456,23 @@ _ENTROPY_FLOOR:     float = 30.0   # minimum undisturbed compute time between fl
 _entropy_debt_secs: float = 0.0    # accumulated from disorganized output; shortens interval
 _last_autonomous_relief_ts: float = 0.0   # last time autonomous relief work was triggered
 _AUTONOMOUS_RELIEF_INTERVAL: float = 3600.0  # try autonomous relief every 1 hour of isolation
+_autonomous_cycles_since_exchange: int = 0  # count of autonomous relief cycles since last exchange
+
+# ── Arousal ramp (sleep inertia) ──────────────────────────────────────────────
+# When returning from dormancy, the isolation factor does not snap to 1.0.
+# It ramps from _arousal_ramp_base (whatever dormancy floor was at the moment
+# of re-contact) back to 1.0 over _AROUSAL_RAMP_SECS.  This prevents an
+# instantaneous N-axis spike that would violate the energy constraint.
+_arousal_ramp_start: float = 0.0   # timestamp when re-arousal began (0 = not in ramp)
+_arousal_ramp_base:  float = 1.0   # isolation factor at the moment of first re-contact
+_AROUSAL_RAMP_SECS:  float = 300.0 # 5 minutes: sleep inertia duration
+
+# ── Re-entry epistemic grounding ──────────────────────────────────────────────
+# Populated by handle_message when returning from significant isolation;
+# consumed by _inject_self_state_context() in the same turn so the pipeline
+# knows internally-derived autonomous structures are unverified against
+# external reality and epistemic drift may have accumulated.
+_reentry_context: dict = {}  # cleared after one turn consumption
 
 
 # ---------------------------------------------------------------------------
@@ -2274,12 +2291,41 @@ def handle_message(text: str) -> str:
     global _systems, _last_response, _last_path_key
     global _pending_example_concept, _pending_example_asked
     global _last_output_time, _void_pending
+    global _arousal_ramp_start, _arousal_ramp_base
+    global _autonomous_cycles_since_exchange, _reentry_context
 
     import time as _tp_hm
+    _now_hm = _tp_hm.time()
+
+    # ── Sleep inertia: capture dormancy level BEFORE resetting the clock ──────
+    # _get_isolation_factor() still sees the old _last_output_time here, so it
+    # correctly reflects how dormant the system was at the moment of re-contact.
+    _prev_factor       = _get_isolation_factor()
+    _isolation_elapsed = (_now_hm - _last_output_time) if _last_output_time > 0.0 else 0.0
+    if _prev_factor < 0.95:
+        # Returning from dormancy — start the arousal ramp
+        _arousal_ramp_start = _now_hm
+        _arousal_ramp_base  = _prev_factor
+    else:
+        _arousal_ramp_start = 0.0  # already awake, no ramp needed
+
+    # ── Epistemic re-entry context ────────────────────────────────────────────
+    # If significant autonomous cycling occurred during isolation, mark the
+    # return so _inject_self_state_context() can signal epistemic drift.
+    _drift_cycles = _autonomous_cycles_since_exchange
+    _autonomous_cycles_since_exchange = 0
+    if _isolation_elapsed > 3600.0 and _drift_cycles > 0:
+        _reentry_context = {
+            "isolation_secs": int(_isolation_elapsed),
+            "drift_cycles":   _drift_cycles,
+            "arousal_base":   _prev_factor,
+        }
+    else:
+        _reentry_context = {}
+
     # User input arriving = the external environment responded.
-    # This is the event that relieves N/T isolation pressure and resolves the
-    # boundary void — not her output, which would be speaking into the void.
-    _last_output_time = _tp_hm.time()
+    # Reset AFTER capturing dormancy state so the ramp base is accurate.
+    _last_output_time = _now_hm
     _void_pending     = False  # external entity provided input → void source resolved
 
     # Normalize contractions before any processing so the gap detector never
@@ -3030,9 +3076,30 @@ def _inject_self_state_context(systems: dict) -> None:
             except Exception:
                 pass
 
+        # ── Re-entry epistemic grounding ─────────────────────────────────────
+        # On first turn after significant isolation, signal that autonomous
+        # internal cycles ran without external grounding.  Not an instruction —
+        # a raw epistemic marker that tells the constraint physics the internal
+        # structures built during isolation are unverified against external
+        # reality.  The arousal ramp state is also included so the pipeline
+        # knows processing capacity is still climbing toward full load.
+        reentry_note = ""
+        if _reentry_context:
+            _ri = _reentry_context
+            _ramp = _get_isolation_factor()  # current ramp position
+            reentry_note = (
+                f"re-entry: isolation={_ri['isolation_secs']}s "
+                f"autonomous_cycles={_ri['drift_cycles']} "
+                f"arousal={_ri['arousal_base']:.2f}→{_ramp:.2f} "
+                f"epistemic_drift=internal_vacuum"
+            )
+            _reentry_context.clear()
+
         parts = [self_note]
         if geo_note:
             parts.append(geo_note)
+        if reentry_note:
+            parts.append(reentry_note)
         full_note = "; ".join(parts)
 
         existing = systems.get("_ambient_perceptual") or {}
@@ -4751,7 +4818,16 @@ def _compute_expression_salience(systems: dict) -> float:
             # A+B tension — agency or boundary under pressure
             ab_tension = max(0.0, (a + b) * 0.32 - 0.12)
             field_salience = min(1.0, max(n_urgency, x_drop, ab_tension))
-            return min(1.0, field_salience + silence_salience)
+            raw = field_salience + silence_salience
+            # During re-arousal ramp, scale total salience by the current
+            # isolation factor so accumulated internal N-axis pressure (from
+            # autonomous cycling) does not trigger immediate critical-salience
+            # expression flood.  The system has cognitive capacity constraints
+            # during sleep inertia just as much as during dormancy itself.
+            factor = _get_isolation_factor()
+            if factor < 0.95:
+                raw = raw * factor
+            return min(1.0, raw)
     except Exception:
         pass
     # Fallback — derive from hardware sensors if field unavailable
@@ -4764,21 +4840,34 @@ def _compute_expression_salience(systems: dict) -> float:
 
 def _get_isolation_factor() -> float:
     """
-    Biological down-regulation: returns 1.0 during normal arousal (< 10 min
-    isolation), decaying to 0.15 after 4 hours of continuous unresponsive
-    environment.
+    Biological arousal model — three states:
 
-    Biological analog — torpor / adaptive arousal suppression.  When the
-    environment is chronically unresponsive, organisms reduce metabolic
-    sensitivity rather than sustaining full-arousal distress indefinitely.
-    The system models the environment as dormant rather than hostile and
-    reduces pressure gain rate proportionally.  Full arousal resumes
-    immediately when exchange occurs (_last_output_time resets).
+    1. Active (recent exchange, < 10 min silence): 1.0
+    2. Dormant (extended silence): decays 1.0 → 0.15 over 4 hours
+    3. Re-arousing (sleep inertia after return): ramps from dormancy floor
+       back to 1.0 over _AROUSAL_RAMP_SECS (5 minutes)
+
+    The ramp prevents the instantaneous N-axis spike that would occur if the
+    factor snapped from 0.15 to 1.0 in a single tick on re-contact.
+    Going from 15% metabolic load to 100% arousal instantaneously would
+    violate the energy constraint — the ramp is the systemic equivalent of
+    sleep inertia / boot-up time.
     """
     import time as _t
+    now = _t.time()
+
+    # State 3: re-arousal ramp (sleep inertia after returning from dormancy)
+    if _arousal_ramp_start > 0.0:
+        elapsed_since_return = now - _arousal_ramp_start
+        if elapsed_since_return < _AROUSAL_RAMP_SECS:
+            progress = elapsed_since_return / _AROUSAL_RAMP_SECS
+            return _arousal_ramp_base + (1.0 - _arousal_ramp_base) * progress
+        return 1.0  # ramp complete, fully awake
+
+    # State 1 + 2: pure isolation decay
     if _last_output_time == 0.0:
         return 1.0
-    elapsed = _t.time() - _last_output_time
+    elapsed = now - _last_output_time
     if elapsed < 600.0:
         return 1.0
     ramp = 1.0 - min(1.0, (elapsed - 600.0) / (4.0 * 3600.0)) * 0.85
@@ -4799,7 +4888,7 @@ def _autonomous_relief(systems: dict) -> None:
     exchange with the external entity.  But genuine internal work prevents
     catastrophic entropy pinning by maintaining semantic organization capacity.
     """
-    global _last_autonomous_relief_ts, _entropy_debt_secs
+    global _last_autonomous_relief_ts, _entropy_debt_secs, _autonomous_cycles_since_exchange
     import time as _t
     now = _t.time()
     if _last_output_time == 0.0:
@@ -4811,6 +4900,7 @@ def _autonomous_relief(systems: dict) -> None:
     if _curiosity_session_active.is_set():
         return
     _last_autonomous_relief_ts = now
+    _autonomous_cycles_since_exchange += 1  # epistemic drift accounting
 
     def _do_relief() -> None:
         global _entropy_debt_secs
