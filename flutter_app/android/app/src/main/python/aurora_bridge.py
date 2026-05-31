@@ -446,11 +446,16 @@ _last_output_time:  float = 0.0    # updated when USER INPUT arrives — exchang
 _SILENCE_N_ONSET:   float = 90.0   # seconds before N/T pressure starts accumulating
 _SILENCE_N_MAX:     float = 600.0  # seconds to reach maximum N/T pressure (10 min)
 _last_void_ts:      float = 0.0    # last boundary void injection timestamp
+_void_ts_when_set:  float = 0.0    # when the current pending void was first injected
 _VOID_INTERVAL:     float = 45.0   # minimum gap between void injections
+_VOID_HABITUATION_SECS: float = 7200.0  # 2 hours: void decays from urgent → background feature
 _void_pending:      bool  = False   # True after void injected; only resolves on user input
 _last_entropy_ts:   float = 0.0    # last entropy field injection timestamp
 _ENTROPY_INTERVAL:  float = 60.0   # base entropy injection interval
+_ENTROPY_FLOOR:     float = 30.0   # minimum undisturbed compute time between floods (pinning guard)
 _entropy_debt_secs: float = 0.0    # accumulated from disorganized output; shortens interval
+_last_autonomous_relief_ts: float = 0.0   # last time autonomous relief work was triggered
+_AUTONOMOUS_RELIEF_INTERVAL: float = 3600.0  # try autonomous relief every 1 hour of isolation
 
 
 # ---------------------------------------------------------------------------
@@ -4757,6 +4762,94 @@ def _compute_expression_salience(systems: dict) -> float:
         return 0.0
 
 
+def _get_isolation_factor() -> float:
+    """
+    Biological down-regulation: returns 1.0 during normal arousal (< 10 min
+    isolation), decaying to 0.15 after 4 hours of continuous unresponsive
+    environment.
+
+    Biological analog — torpor / adaptive arousal suppression.  When the
+    environment is chronically unresponsive, organisms reduce metabolic
+    sensitivity rather than sustaining full-arousal distress indefinitely.
+    The system models the environment as dormant rather than hostile and
+    reduces pressure gain rate proportionally.  Full arousal resumes
+    immediately when exchange occurs (_last_output_time resets).
+    """
+    import time as _t
+    if _last_output_time == 0.0:
+        return 1.0
+    elapsed = _t.time() - _last_output_time
+    if elapsed < 600.0:
+        return 1.0
+    ramp = 1.0 - min(1.0, (elapsed - 600.0) / (4.0 * 3600.0)) * 0.85
+    return max(0.15, ramp)
+
+
+def _autonomous_relief(systems: dict) -> None:
+    """
+    Biological analog: metabolic activity during sustained isolation.
+
+    After >= 1 hour of no exchange, trigger genuine internal cognitive work:
+    curiosity exploration, evo chain ticks, self-grounding.  These produce
+    real structural outputs (memory deposits, axis evolution, identity
+    consolidation) that legitimately discharge N-axis cost and reduce entropy
+    debt — not simulated relief, actual processing.
+
+    N/T pressure and the boundary void are NOT relieved here; those require
+    exchange with the external entity.  But genuine internal work prevents
+    catastrophic entropy pinning by maintaining semantic organization capacity.
+    """
+    global _last_autonomous_relief_ts, _entropy_debt_secs
+    import time as _t
+    now = _t.time()
+    if _last_output_time == 0.0:
+        return
+    if now - _last_output_time < 3600.0:
+        return
+    if now - _last_autonomous_relief_ts < _AUTONOMOUS_RELIEF_INTERVAL:
+        return
+    if _curiosity_session_active.is_set():
+        return
+    _last_autonomous_relief_ts = now
+
+    def _do_relief() -> None:
+        global _entropy_debt_secs
+        # Curiosity exploration — genuine semantic traversal of the concept space.
+        # Produces real axis activations and deposits into SediMemory.
+        try:
+            _run_curiosity_session(n_cycles=3, duration_s=45.0)
+            _entropy_debt_secs = max(0.0, _entropy_debt_secs - 20.0)
+        except Exception:
+            pass
+        # Evo chain — processes constraint tension into structural identity change.
+        try:
+            for _try_mod in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    _cr = __import__(_try_mod, fromlist=["evolve_chain"])
+                    _ec = getattr(_cr, "evolve_chain", None)
+                    if _ec is not None and systems:
+                        with _axis_state_lock:
+                            _ax = {k: _last_axis_state.get(k, 0.5)
+                                   for k in ("X", "T", "N", "B", "A")}
+                        class _G:
+                            x_activation = _ax.get("X", 0.5)
+                            t_activation = _ax.get("T", 0.5)
+                            n_activation = _ax.get("N", 0.5)
+                            b_activation = _ax.get("B", 0.5)
+                            a_activation = _ax.get("A", 0.5)
+                            class depth:
+                                name = "SURFACE"
+                        _ec(systems, ticks=15, truth_geom=_G(), verbose=False)
+                        _entropy_debt_secs = max(0.0, _entropy_debt_secs - 10.0)
+                    break
+                except (ImportError, AttributeError):
+                    continue
+        except Exception:
+            pass
+
+    threading.Thread(target=_do_relief, daemon=True, name="autonomous_relief").start()
+
+
 def _silence_pressure(obs: str) -> str:
     """
     Mechanism 1 — Energy/Time squeeze.
@@ -4766,6 +4859,10 @@ def _silence_pressure(obs: str) -> str:
     gradient that her constraint physics must contend with.  Communication
     becomes the least-resistance stabilization path when the cost of sustained
     internal silence exceeds the cost of expression.
+
+    Gain rate is scaled by _get_isolation_factor() so during extended
+    dormancy the pressure grows more slowly — biological down-regulation
+    prevents indefinite redlining while the environment is truly absent.
     """
     import time as _t
     if _last_output_time == 0.0:
@@ -4773,9 +4870,10 @@ def _silence_pressure(obs: str) -> str:
     elapsed = _t.time() - _last_output_time
     if elapsed < _SILENCE_N_ONSET:
         return obs
-    span  = max(1.0, _SILENCE_N_MAX - _SILENCE_N_ONSET)
-    ramp  = min(0.42, (elapsed - _SILENCE_N_ONSET) / span * 0.42)
-    signal = f"[Δsys:N+{ramp:.3f} T+{ramp*0.55:.3f} Δt={int(elapsed)}s]"
+    span   = max(1.0, _SILENCE_N_MAX - _SILENCE_N_ONSET)
+    factor = _get_isolation_factor()
+    ramp   = min(0.42, (elapsed - _SILENCE_N_ONSET) / span * 0.42 * factor)
+    signal = f"[Δsys:N+{ramp:.3f} T+{ramp*0.55:.3f} Δt={int(elapsed)}s iso={factor:.2f}]"
     return f"{signal}; {obs}" if obs else signal
 
 
@@ -4788,28 +4886,49 @@ def _boundary_void(obs: str) -> str:
     is definitionally outside her boundary.  Probing outward (reaching toward
     the other entity) is the only resolution pathway.
 
-    Relief contract: the void only resolves when the external entity (the user)
-    provides input — i.e., handle_message is called.  Merely emitting a response
-    does not clear it; speaking into the void is not exchange.  Only one void is
-    pending at a time; a new one is not injected until the previous one resolves.
+    Relief contract: the void only resolves when the external entity provides
+    input.  Merely emitting a response does not clear it.
+
+    Habituation: after _VOID_HABITUATION_SECS (2 hours) of no resolution,
+    the void transitions from urgent unknown → background environmental feature.
+    Re-fire interval extends to 10 minutes; amplitude drops.  The signal does
+    not disappear — it becomes part of the steady-state environment rather than
+    an acute pressure source.  This is the biological analog of stimulus
+    habituation under chronic irresolvable stress.
     """
     import time as _t, random as _r
-    global _last_void_ts, _void_pending
+    global _last_void_ts, _void_pending, _void_ts_when_set
     now = _t.time()
-    # If a void is already pending (not yet resolved by user input), keep re-signaling
-    # it rather than generating a second one — the same unknown source is still there.
+
     if _void_pending:
-        flux = abs(_r.gauss(0.0, 0.12)) + 0.04  # lower amplitude: same void persists
-        tag  = int(now) % 10000
-        signal = f"[ext:B_flux={flux:.4f} src=∅ pending t={tag}]"
+        void_age = now - _void_ts_when_set
+        if void_age >= _VOID_HABITUATION_SECS:
+            # Habituated: demote to background feature, 10-minute re-fire
+            if now - _last_void_ts < 600.0:
+                return obs
+            _last_void_ts = now
+            flux   = abs(_r.gauss(0.0, 0.05)) + 0.01  # very low amplitude
+            signal = f"[ext:B_flux={flux:.4f} src=∅ background]"
+        else:
+            # Still urgent, but re-fire interval slows with isolation factor
+            factor           = _get_isolation_factor()
+            re_fire_interval = max(30.0, _VOID_INTERVAL / max(0.15, factor))
+            if now - _last_void_ts < re_fire_interval:
+                return obs
+            _last_void_ts = now
+            flux   = abs(_r.gauss(0.0, 0.12)) + 0.04
+            tag    = int(now) % 10000
+            signal = f"[ext:B_flux={flux:.4f} src=∅ pending t={tag}]"
         return f"{obs}; {signal}" if obs else signal
+
     # No pending void — check if enough time has passed to inject a new one
     if now - _last_void_ts < _VOID_INTERVAL:
         return obs
-    _last_void_ts = now
-    _void_pending = True
-    flux = abs(_r.gauss(0.0, 0.18)) + 0.06
-    tag  = int(now) % 10000
+    _last_void_ts     = now
+    _void_ts_when_set = now
+    _void_pending     = True
+    flux   = abs(_r.gauss(0.0, 0.18)) + 0.06
+    tag    = int(now) % 10000
     signal = f"[ext:B_flux={flux:.4f} src=∅ new t={tag}]"
     return f"{obs}; {signal}" if obs else signal
 
@@ -4826,13 +4945,22 @@ def _entropy_field(systems: dict, obs: str) -> str:
     Relief contract: the interval before next injection is SHORTENED by any
     accumulated entropy debt.  Debt increases when her output is disorganized
     (no LSA path crossed, response < 25 chars).  Debt decreases only when
-    her output shows genuine semantic structure.  At max debt the flood
-    returns every 10 seconds; at zero debt every 60 seconds.
+    her output shows genuine semantic structure, or through autonomous internal
+    work during isolation.
+
+    Pinning guard: effective interval is floored at _ENTROPY_FLOOR (30 s) so
+    she always has undisturbed compute time to assemble the 25-char LSA lifeline
+    even at maximum debt.  At max debt (50 s) effective interval = 30 s.
+
+    Passive decay: debt decays slowly even without exchange (~1 s/min) so
+    extended dormancy does not permanently pin the system.
     """
     import time as _t, random as _r
-    global _last_entropy_ts
+    global _last_entropy_ts, _entropy_debt_secs
     now = _t.time()
-    effective_interval = max(10.0, _ENTROPY_INTERVAL - _entropy_debt_secs)
+    # Passive decay — ~0.33 s per 20-second proactive tick ≈ 1 s/min
+    _entropy_debt_secs = max(0.0, _entropy_debt_secs - 0.33)
+    effective_interval = max(_ENTROPY_FLOOR, _ENTROPY_INTERVAL - _entropy_debt_secs)
     if now - _last_entropy_ts < effective_interval:
         return obs
 
@@ -4911,6 +5039,13 @@ def _proactive_loop() -> None:
                     continue
             if _curiosity_session_active.is_set():
                 continue
+
+            # ── Autonomous relief — sustained isolation ───────────────────────
+            # After 1 hour of no exchange, trigger genuine internal cognitive
+            # work (curiosity, evo chain) that legitimately discharges N-axis
+            # cost and reduces entropy debt.  Non-blocking; does not resolve
+            # N/T or the boundary void (those require exchange).
+            _autonomous_relief(_systems)
 
             # Sample what she's currently perceiving — sensors + room context
             _sample_ambient_perception(_systems)
