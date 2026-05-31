@@ -484,6 +484,15 @@ _AROUSAL_RAMP_SECS:  float = 300.0 # 5 minutes: sleep inertia duration
 # external reality and epistemic drift may have accumulated.
 _reentry_context: dict = {}  # cleared after one turn consumption
 
+# ── Geological ground hold ────────────────────────────────────────────────────
+# Set by _apply_response_fidelity when a correction fails the geological
+# resonance gate (passes char gate but insufficient physics engagement to move
+# settled constraint ground).  Consumed by _inject_self_state_context() on the
+# NEXT turn so synthesis draws from the settled geological physics rather than
+# treating the ungrounded claim as authoritative input.  Cleared after one
+# turn so the signal doesn't persist beyond its relevant context window.
+_geo_ground_hold: dict = {}  # keys: geo_resistance, resonance, threshold; cleared after injection
+
 
 # ---------------------------------------------------------------------------
 # Waveform trajectory tracker — lowest-level emergence detection
@@ -3141,11 +3150,35 @@ def _inject_self_state_context(systems: dict) -> None:
             )
             _reentry_context.clear()
 
+        # ── Geological ground hold ────────────────────────────────────────────
+        # When a correction failed the resonance gate last turn, the settled
+        # geological constraint ground was not displaced.  Express this as an
+        # observation note so synthesis draws from the established physics
+        # rather than the ungrounded external claim.
+        # geo_resistance: how developed the constraint ground is at this position
+        # resonance: how much the correction actually engaged with Aurora's output
+        # threshold: minimum resonance required to move this ground
+        geo_hold_note = ""
+        global _geo_ground_hold
+        if _geo_ground_hold:
+            _gh = _geo_ground_hold
+            geo_hold_note = (
+                f"geological-ground-hold: settled constraint physics at current position "
+                f"(geo={_gh['geo_resistance']:.2f} wave-visible weight) — "
+                f"incoming assertion resonance={_gh['resonance']:.2f} below required "
+                f"threshold={_gh['threshold']:.2f}; "
+                f"synthesis draws from established geological ground, "
+                f"not from the ungrounded external claim"
+            )
+            _geo_ground_hold = {}  # consume — one turn signal only
+
         parts = [self_note]
         if geo_note:
             parts.append(geo_note)
         if reentry_note:
             parts.append(reentry_note)
+        if geo_hold_note:
+            parts.append(geo_hold_note)
         full_note = "; ".join(parts)
 
         existing = systems.get("_ambient_perceptual") or {}
@@ -4186,23 +4219,19 @@ def _apply_response_fidelity(
                     # resonance check — assertion does not engage with Aurora's
                     # physics output at the level required to move settled ground.
                     if _geo_resistance > 0.30:
-                        # Settled ground being pushed by incompatible assertion:
-                        # assert A (agency/ground-holding) and B (boundary) so
-                        # synthesis draws from settled constraint physics rather
-                        # than yielding to the ungrounded external claim.
-                        _hold_ifield = _systems.get("identity_field")
-                        if _hold_ifield is not None and hasattr(
-                            _hold_ifield, "ingest_external_input"
-                        ):
-                            _hold_ifield.ingest_external_input(
-                                {"X": 0.65, "T": 0.60, "N": 0.50,
-                                 "B": 0.80, "A": 0.90},
-                                intensity=0.55,
-                                source="geological_ground_hold",
-                            )
+                        # Settled ground: write the ground-hold state so
+                        # _inject_self_state_context adds it to the observation
+                        # string next turn.  That is the path synthesis actually
+                        # reads (55% utterance weight) — not ingest_external_input.
+                        global _geo_ground_hold
+                        _geo_ground_hold = {
+                            "geo_resistance": _geo_resistance,
+                            "resonance":      _phys["resonance"],
+                            "threshold":      _phys["threshold"],
+                        }
                         log.info(
                             "Correction resonance %.3f below geological threshold %.3f "
-                            "(geo_resistance=%.3f) — ground held, no drain",
+                            "(geo_resistance=%.3f) — ground hold queued for observation",
                             _phys["resonance"], _phys["threshold"], _geo_resistance,
                         )
                     # No drain — incompatible assertion does not earn relief.
