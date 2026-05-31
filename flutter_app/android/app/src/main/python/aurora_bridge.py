@@ -4182,6 +4182,7 @@ def _apply_response_fidelity(
     if not _systems:
         return
     try:
+        global _vacuum_reconciliation_debt, _confusion_signal_pending, _geo_ground_hold
         lf = _systems.get("language_field")
         if lf is None or not hasattr(lf, "reentry"):
             return
@@ -4212,7 +4213,6 @@ def _apply_response_fidelity(
             # late-stage reasoning only) — the synthesis upward chain reads the
             # utterance/observation at 55% weight. Both paths serve different roles:
             # noncomp = background learning pressure; observation = synthesis input.
-            global _confusion_signal_pending
             _confusion_signal_pending = {
                 "b_spike":     _b_spike,
                 "vacuum_debt": _vacuum_reconciliation_debt,
@@ -4238,7 +4238,6 @@ def _apply_response_fidelity(
             #   ontological claim that doesn't engage with Aurora's own physics
             #   output fails this gate regardless of length, and instead triggers
             #   an A-axis ground-hold signal.
-            global _vacuum_reconciliation_debt
             if _vacuum_reconciliation_debt > 0.0:
                 _prev_engaged    = bool(
                     prev_path_key and len((prev_response or "").strip()) >= 25
@@ -4284,7 +4283,6 @@ def _apply_response_fidelity(
                         # _inject_self_state_context adds it to the observation
                         # string next turn.  That is the path synthesis actually
                         # reads (55% utterance weight) — not ingest_external_input.
-                        global _geo_ground_hold
                         _geo_ground_hold = {
                             "geo_resistance": _geo_resistance,
                             "resonance":      _phys["resonance"],
