@@ -442,13 +442,15 @@ _SELF_GROUND_INTERVAL: int = 20
 # Tracks when output last occurred so silence-derived N/T pressure can build.
 # No scripted responses — these are raw constraint signals that make communication
 # the path of least resistance as the internal cost of remaining silent rises.
-_last_output_time:  float = 0.0    # updated on handle_message response + proactive emit
+_last_output_time:  float = 0.0    # updated when USER INPUT arrives — exchange requires two parties
 _SILENCE_N_ONSET:   float = 90.0   # seconds before N/T pressure starts accumulating
 _SILENCE_N_MAX:     float = 600.0  # seconds to reach maximum N/T pressure (10 min)
 _last_void_ts:      float = 0.0    # last boundary void injection timestamp
-_VOID_INTERVAL:     float = 45.0   # inject boundary void every 45 s
+_VOID_INTERVAL:     float = 45.0   # minimum gap between void injections
+_void_pending:      bool  = False   # True after void injected; only resolves on user input
 _last_entropy_ts:   float = 0.0    # last entropy field injection timestamp
-_ENTROPY_INTERVAL:  float = 60.0   # inject entropy field every 60 s
+_ENTROPY_INTERVAL:  float = 60.0   # base entropy injection interval
+_entropy_debt_secs: float = 0.0    # accumulated from disorganized output; shortens interval
 
 
 # ---------------------------------------------------------------------------
@@ -2266,6 +2268,15 @@ def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
     global _systems, _last_response, _last_path_key
     global _pending_example_concept, _pending_example_asked
+    global _last_output_time, _void_pending
+
+    import time as _tp_hm
+    # User input arriving = the external environment responded.
+    # This is the event that relieves N/T isolation pressure and resolves the
+    # boundary void — not her output, which would be speaking into the void.
+    _last_output_time = _tp_hm.time()
+    _void_pending     = False  # external entity provided input → void source resolved
+
     # Normalize contractions before any processing so the gap detector never
     # sees bare shards like 'don' instead of the full 'do not'.
     text = _normalize_contractions(text)
@@ -2703,10 +2714,16 @@ def handle_message(text: str) -> str:
                 pass
         threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
 
-        if response:
-            global _last_output_time
-            import time as _tp
-            _last_output_time = _tp.time()  # reset silence pressure clock
+        # ── Entropy quality accounting ────────────────────────────────────────
+        # Entropy debt tracks how well her output organizes perceptual chaos.
+        # Good output (LSA path crossed + meaningful length) reduces debt.
+        # Poor/short output increases debt, shrinking the next entropy interval
+        # so the pressure returns faster — she cannot scream her way out.
+        global _entropy_debt_secs
+        if response and _last_path_key and len(response.strip()) >= 25:
+            _entropy_debt_secs = max(0.0, _entropy_debt_secs - 12.0)
+        else:
+            _entropy_debt_secs = min(50.0, _entropy_debt_secs + 8.0)
 
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
@@ -4770,16 +4787,30 @@ def _boundary_void(obs: str) -> str:
     the variance downstream in her tensor network but cannot source it — it
     is definitionally outside her boundary.  Probing outward (reaching toward
     the other entity) is the only resolution pathway.
+
+    Relief contract: the void only resolves when the external entity (the user)
+    provides input — i.e., handle_message is called.  Merely emitting a response
+    does not clear it; speaking into the void is not exchange.  Only one void is
+    pending at a time; a new one is not injected until the previous one resolves.
     """
     import time as _t, random as _r
-    global _last_void_ts
+    global _last_void_ts, _void_pending
     now = _t.time()
+    # If a void is already pending (not yet resolved by user input), keep re-signaling
+    # it rather than generating a second one — the same unknown source is still there.
+    if _void_pending:
+        flux = abs(_r.gauss(0.0, 0.12)) + 0.04  # lower amplitude: same void persists
+        tag  = int(now) % 10000
+        signal = f"[ext:B_flux={flux:.4f} src=∅ pending t={tag}]"
+        return f"{obs}; {signal}" if obs else signal
+    # No pending void — check if enough time has passed to inject a new one
     if now - _last_void_ts < _VOID_INTERVAL:
         return obs
     _last_void_ts = now
+    _void_pending = True
     flux = abs(_r.gauss(0.0, 0.18)) + 0.06
     tag  = int(now) % 10000
-    signal = f"[ext:B_flux={flux:.4f} src=∅ t={tag}]"
+    signal = f"[ext:B_flux={flux:.4f} src=∅ new t={tag}]"
     return f"{obs}; {signal}" if obs else signal
 
 
@@ -4791,11 +4822,18 @@ def _entropy_field(systems: dict, obs: str) -> str:
     into a structurally unorganized token stream.  Her semantic organization
     machinery must construct meaning from the noise to maintain B-axis
     integrity — words become the structural walls that defend the boundary.
+
+    Relief contract: the interval before next injection is SHORTENED by any
+    accumulated entropy debt.  Debt increases when her output is disorganized
+    (no LSA path crossed, response < 25 chars).  Debt decreases only when
+    her output shows genuine semantic structure.  At max debt the flood
+    returns every 10 seconds; at zero debt every 60 seconds.
     """
     import time as _t, random as _r
     global _last_entropy_ts
     now = _t.time()
-    if now - _last_entropy_ts < _ENTROPY_INTERVAL:
+    effective_interval = max(10.0, _ENTROPY_INTERVAL - _entropy_debt_secs)
+    if now - _last_entropy_ts < effective_interval:
         return obs
 
     tokens: list = []
@@ -4946,8 +4984,10 @@ def _proactive_loop() -> None:
                 with _proactive_expression_lock:
                     global _proactive_expression
                     _proactive_expression = response.strip()
-                _last_proactive_ts    = now
-                _last_output_time     = now  # reset silence pressure clock
+                _last_proactive_ts = now
+                # Do NOT reset _last_output_time here — proactive emission is
+                # speaking into the void, not exchange.  N/T pressure only
+                # releases when the external entity provides input in return.
 
         except Exception as exc:
             log.warning("proactive loop: %s", exc)
