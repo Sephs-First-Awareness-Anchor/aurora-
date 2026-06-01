@@ -6381,7 +6381,7 @@ def start_gauntlet() -> str:
 
                 result = _run_gauntlet_stage(sid)
                 _systems["_gauntlet_log"].append({
-                    "stage": sid, "label": slabel,
+                    "stage_id": sid, "label": slabel,
                     "result": result, "ts": _t.time(),
                 })
                 _gauntlet_emit("stage_done", sid, idx + 1, total, result)
