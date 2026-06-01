@@ -37,12 +37,24 @@ _DIM_STR_TO_INT:  Dict[str, int] = {
 
 # Sensory modality → weighted axis contributions (must sum to 1.0)
 _MODALITY_AXES: Dict[str, Dict[str, float]] = {
-    "visual":    {"X": 0.45, "B": 0.30, "N": 0.10, "T": 0.10, "A": 0.05},
-    "auditory":  {"T": 0.40, "B": 0.35, "X": 0.10, "N": 0.10, "A": 0.05},
-    "language":  {"B": 0.35, "A": 0.25, "T": 0.20, "N": 0.12, "X": 0.08},
-    "internal":  {"N": 0.45, "A": 0.30, "T": 0.15, "B": 0.05, "X": 0.05},
-    "spatial":   {"X": 0.50, "B": 0.25, "T": 0.10, "N": 0.10, "A": 0.05},
-    "default":   {"X": 0.20, "T": 0.20, "N": 0.20, "B": 0.20, "A": 0.20},
+    "visual":         {"X": 0.45, "B": 0.30, "N": 0.10, "T": 0.10, "A": 0.05},
+    "auditory":       {"T": 0.40, "B": 0.35, "X": 0.10, "N": 0.10, "A": 0.05},
+    "language":       {"B": 0.35, "A": 0.25, "T": 0.20, "N": 0.12, "X": 0.08},
+    "internal":       {"N": 0.45, "A": 0.30, "T": 0.15, "B": 0.05, "X": 0.05},
+    "spatial":        {"X": 0.50, "B": 0.25, "T": 0.10, "N": 0.10, "A": 0.05},
+    # Physical body state — battery depletion and device power.
+    # N-axis dominant: low energy = high cost signal. X-axis secondary:
+    # power level directly affects presence strength.
+    "body_power":     {"N": 0.55, "X": 0.25, "T": 0.12, "B": 0.05, "A": 0.03},
+    # Screen as self-surface — own interface is presence (X) and agency (A).
+    "screen":         {"X": 0.48, "A": 0.25, "T": 0.15, "B": 0.08, "N": 0.04},
+    # Screen visual properties (brightness, motion, density) — like visual.
+    "screen_visual":  {"X": 0.45, "B": 0.30, "N": 0.10, "T": 0.10, "A": 0.05},
+    # Screen information content from other apps — like language (boundary/meaning).
+    "screen_info":    {"B": 0.35, "A": 0.25, "T": 0.20, "N": 0.12, "X": 0.08},
+    # Proprioceptive body sense — motion, acceleration, physical continuity.
+    "proprioceptive": {"T": 0.38, "X": 0.28, "N": 0.18, "A": 0.12, "B": 0.04},
+    "default":        {"X": 0.20, "T": 0.20, "N": 0.20, "B": 0.20, "A": 0.20},
 }
 
 _DATA_DIR = os.path.dirname(os.path.abspath(__file__))

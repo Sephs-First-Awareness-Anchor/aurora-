@@ -180,4 +180,79 @@ class AuroraBridge {
       'sedi_depth':  sediMatch != null ? int.tryParse(sediMatch.group(1)!) : 0,
     };
   }
+
+  // ── Hub: cognitive stats + room state ─────────────────────────────────────
+
+  /// Live cognitive metrics: LSA paths, N-cost, evo cycles, axis pressures,
+  /// understanding/coherence/grounding, SediMemory depth, crystal maturity,
+  /// chamber fossils, and training status if a session is running.
+  static Future<Map<String, dynamic>> getCognitiveStats() async {
+    final json = await _channel.invokeMethod<String>('getCognitiveStats') ?? '{}';
+    return _parseCognitiveStats(json);
+  }
+
+  static Map<String, dynamic> _parseCognitiveStats(String json) {
+    int    _i(String key) { final m = RegExp('"$key"\\s*:\\s*(\\d+)').firstMatch(json); return m != null ? (int.tryParse(m.group(1)!) ?? 0) : 0; }
+    double _d(String key) { final m = RegExp('"$key"\\s*:\\s*([0-9.]+)').firstMatch(json); return m != null ? (double.tryParse(m.group(1)!) ?? 0.0) : 0.0; }
+    bool   _b(String key) => json.contains('"$key":true');
+    return {
+      'lsa_paths':          _i('lsa_paths'),
+      'avg_n_cost':         _d('avg_n_cost'),
+      'evo_cycles':         _i('evo_cycles'),
+      'sentence_target':    _i('sentence_target'),
+      'evo_available':      _b('evo_available'),
+      'understanding_index':_d('understanding_index'),
+      'coherence_index':    _d('coherence_index'),
+      'grounding_index':    _d('grounding_index'),
+      'topic_tracking':     _d('topic_tracking'),
+      'sedimemory_depth':   _i('sedimemory_depth'),
+      'crystal_maturity':   _d('crystal_maturity'),
+      'crystal_nodes':      _i('crystal_nodes'),
+      'chamber_fossils':    _i('chamber_fossils'),
+      'noncomp_loaded':     _i('noncomp_loaded'),
+      'noncomp_diagonal_live': _i('noncomp_diagonal_live'),
+      'turn_count':         _i('turn_count'),
+      'training_active':    _b('training_active'),
+      'training_turn':      _i('training_turn'),
+      'training_total_secs':_i('training_total_secs'),
+      'training_elapsed':   _i('training_elapsed'),
+      // Axis pressures nested
+      'X': _d('X'), 'T': _d('T'), 'N': _d('N'), 'B': _d('B'), 'A': _d('A'),
+    };
+  }
+
+  /// Room state: recent notes, messages, activity log, room intentions,
+  /// daemon status from aurora_state/ JSON files.
+  static Future<Map<String, dynamic>> getRoomState() async {
+    final json = await _channel.invokeMethod<String>('getRoomState') ?? '{}';
+    // Return raw — hub screen parses the nested arrays itself
+    return {'raw': json};
+  }
+
+  /// Send a navigation or Poedex command to Aurora's room.
+  /// cmd: JSON string e.g. '{"navigate":"Health"}' or '{"poedex":"define N"}'
+  static Future<void> provideRoomCommand(String cmd) =>
+      _channel.invokeMethod('provideRoomCommand', {'cmd': cmd});
+
+  // ── Gauntlet training pipeline ────────────────────────────────────────────
+
+  static Future<Map<String, dynamic>> startGauntlet() async {
+    final json = await _channel.invokeMethod<String>('startGauntlet') ?? '{}';
+    try {
+      // Use basic parsing — no dart:convert dependency in bridge
+      return {'status': json.contains('"started"') ? 'started' : 'error', 'raw': json};
+    } catch (_) { return {'raw': json}; }
+  }
+
+  static Future<void> stopGauntlet() =>
+      _channel.invokeMethod('stopGauntlet');
+
+  static Future<String> getGauntletStatus() async =>
+      await _channel.invokeMethod<String>('getGauntletStatus') ?? '{}';
+
+  static Future<String> triggerCuriosityCycle({int n = 5}) async =>
+      await _channel.invokeMethod<String>('triggerCuriosityCycle', {'n': n}) ?? '{}';
+
+  static Future<String> triggerEvoCycle({int ticks = 20}) async =>
+      await _channel.invokeMethod<String>('triggerEvoCycle', {'ticks': ticks}) ?? '{}';
 }

@@ -819,6 +819,20 @@ class SemanticIntentCompiler:
             "signature:", "dominant_axis:", "effect_tags",
             "generation_role", "semantic_translation",
             "inheritance_breach", "persistent_pressure_root",
+            # AbilityProfile notes that must not reach speech surface
+            "preserve a coherent runtime state",
+            "npmi cross-modal", "cross-modal linking",
+            "npmi cross", "tone↔hue", "timbre↔shape",
+            # Ambient screen-observation labels that leak through sensory pulse
+            "screen and systemui", "systemui", "screen and system",
+            # Pipeline-signal mapping note from aurora.py ability profile
+            "map pipeline signals to generative tone",
+            "map pipeline signals",
+            # Hardware body-state labels that must stay in constraint physics
+            # and must not be re-emitted as literal speech
+            "self-state: dominant", "self-state:",
+            "hardware_body", "body_power", "battery_pct",
+            "screen: own interface", "screen_is_self",
         )
         if any(m in content.lower() for m in _internal_sys):
             content = rp

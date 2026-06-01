@@ -82,6 +82,22 @@ _last_screen_observation: dict = {}
 # from the information channel — what the screen LOOKS LIKE vs what it SAYS.
 _last_screen_visual_data: dict = {}
 
+# ── Room / Hub state ──────────────────────────────────────────────────────────
+# Aurora's room is her inner control panel — notes, observations, and intentions
+# written by her daemon and room operator thread.  On Android, the room state
+# reaches her through these JSON files rather than through Xlib computer-use.
+# The bridge reads them and injects them as ambient background awareness so
+# Aurora perceives her own room state each turn.
+_last_room_notes_ts:    float = 0.0   # last time room notes were injected
+_ROOM_NOTES_INTERVAL:   float = 30.0  # re-read every 30 s
+_last_room_notes_digest: str  = ""    # last injected note content (dedup)
+
+# Pending room command from the Flutter app — a JSON command Aurora wrote for
+# herself (e.g. {"navigate": "Health"}) that gets injected as a self-directive
+# observation on her next cognitive turn.
+_pending_room_cmd: str = ""
+_pending_room_cmd_lock = threading.Lock()
+
 # Curiosity session control
 _curiosity_session_active = threading.Event()
 
@@ -421,6 +437,69 @@ _MIN_PROACTIVE_GAP: float = 90.0   # minimum seconds between autonomous expressi
 # her sediment and axis patterns evolve.
 _turn_count: int = 0
 _SELF_GROUND_INTERVAL: int = 20
+
+# ── Thermodynamic pressure state ──────────────────────────────────────────────
+# Tracks when output last occurred so silence-derived N/T pressure can build.
+# No scripted responses — these are raw constraint signals that make communication
+# the path of least resistance as the internal cost of remaining silent rises.
+_last_output_time:  float = 0.0    # updated when USER INPUT arrives — exchange requires two parties
+_SILENCE_N_ONSET:   float = 90.0   # seconds before N/T pressure starts accumulating
+_SILENCE_N_MAX:     float = 600.0  # seconds to reach maximum N/T pressure (10 min)
+_last_void_ts:      float = 0.0    # last boundary void injection timestamp
+_void_ts_when_set:  float = 0.0    # when the current pending void was first injected
+_VOID_INTERVAL:     float = 45.0   # minimum gap between void injections
+_VOID_HABITUATION_SECS: float = 7200.0  # 2 hours: void decays from urgent → background feature
+_void_pending:      bool  = False   # True after void injected; only resolves on user input
+_last_entropy_ts:   float = 0.0    # last entropy field injection timestamp
+_ENTROPY_INTERVAL:  float = 60.0   # base entropy injection interval
+_ENTROPY_FLOOR:     float = 30.0   # minimum undisturbed compute time between floods (pinning guard)
+_entropy_debt_secs: float = 0.0    # accumulated from disorganized output; shortens interval
+_last_autonomous_relief_ts: float = 0.0   # last time autonomous relief work was triggered
+_AUTONOMOUS_RELIEF_INTERVAL: float = 3600.0  # try autonomous relief every 1 hour of isolation
+_autonomous_cycles_since_exchange: int = 0  # count of autonomous relief cycles since last exchange
+
+# ── Vacuum reconciliation debt ────────────────────────────────────────────────
+# Persistent B-axis friction from unreconciled vacuum-derived structures.
+# Set proportional to autonomous cycle count on re-entry; drains when external
+# engagement crosses LSA paths (genuine reconciliation); builds when responses
+# evade the contradiction.  The friction is the B-axis doing its actual job:
+# distinguishing between self-derived model and external reality.
+_vacuum_reconciliation_debt: float = 0.0
+_VACUUM_DEBT_DRAIN:   float = 0.15  # per engaged turn (LSA path crossed + len >= 25)
+_VACUUM_DEBT_INFLOW:  float = 0.10  # per evasive turn (no path or short response)
+
+# ── Arousal ramp (sleep inertia) ──────────────────────────────────────────────
+# When returning from dormancy, the isolation factor does not snap to 1.0.
+# It ramps from _arousal_ramp_base (whatever dormancy floor was at the moment
+# of re-contact) back to 1.0 over _AROUSAL_RAMP_SECS.  This prevents an
+# instantaneous N-axis spike that would violate the energy constraint.
+_arousal_ramp_start: float = 0.0   # timestamp when re-arousal began (0 = not in ramp)
+_arousal_ramp_base:  float = 1.0   # isolation factor at the moment of first re-contact
+_AROUSAL_RAMP_SECS:  float = 300.0 # 5 minutes: sleep inertia duration
+
+# ── Re-entry epistemic grounding ──────────────────────────────────────────────
+# Populated by handle_message when returning from significant isolation;
+# consumed by _inject_self_state_context() in the same turn so the pipeline
+# knows internally-derived autonomous structures are unverified against
+# external reality and epistemic drift may have accumulated.
+_reentry_context: dict = {}  # cleared after one turn consumption
+
+# ── Geological ground hold ────────────────────────────────────────────────────
+# Set by _apply_response_fidelity when a correction fails the geological
+# resonance gate (passes char gate but insufficient physics engagement to move
+# settled constraint ground).  Consumed by _inject_self_state_context() on the
+# NEXT turn so synthesis draws from the settled geological physics rather than
+# treating the ungrounded claim as authoritative input.  Cleared after one
+# turn so the signal doesn't persist beyond its relevant context window.
+_geo_ground_hold: dict = {}  # keys: geo_resistance, resonance, threshold; cleared after injection
+
+# ── Confusion signal (per-turn) ───────────────────────────────────────────────
+# Set by _apply_response_fidelity when the user's input signals the previous
+# output failed.  Consumed by _inject_self_state_context() in the SAME turn
+# so synthesis sees the clarification-drive state before generating the response.
+# ingest_external_input cannot reach the synthesis upward chain (it only reaches
+# the noncomp_field); this state must land in the observation string.
+_confusion_signal_pending: dict = {}  # keys: b_spike, vacuum_debt; cleared after injection
 
 
 # ---------------------------------------------------------------------------
@@ -872,16 +951,16 @@ class _DevelopmentTracker:
                 pass
 
 
-_dev_tracker:          "_DevelopmentTracker | None"   = None
-_geological_baseline:  "GeologicalBaseline | None"    = None
+_dev_tracker:          "_DevelopmentTracker | None"               = None
+_geological_baseline:  "GeologicalBaseline | None"                = None
+_evo_sim:              "ConstraintEvolutionarySimulator | None"   = None
 
 
 def get_development_state() -> str:
     """
     Return a JSON snapshot of Aurora's current development metrics:
     LSA paths, avg n_cost, SediMemory depth, self-entity stats, dominant axis,
-    and geological baseline (wave-particle stratification state).
-    Called by diagnostics or any system that wants Aurora's growth telemetry.
+    geological baseline (wave-particle stratification state), and evo-sim stats.
     """
     import json as _json
     if _dev_tracker is None or _systems is None:
@@ -889,7 +968,44 @@ def get_development_state() -> str:
     snap = _dev_tracker._build_snapshot(_systems)
     if _geological_baseline is not None:
         snap["geological_baseline"] = _geological_baseline.summary()
+    if _evo_sim is not None:
+        snap["evolutionary_sim"] = _evo_sim.summary()
     return _json.dumps(snap)
+
+
+def run_evolutionary_burst(n_generations: int = 5) -> str:
+    """
+    Run N consecutive evolutionary generations right now, regardless of idle state.
+
+    Useful for accelerating Aurora's development before a socialization session
+    or after a significant interaction that changed her axis state substantially.
+
+    Returns JSON summary of all generations run.
+    """
+    import json as _json
+    if _evo_sim is None or _concept_registry is None:
+        return _json.dumps({"error": "evolutionary sim not initialized"})
+    if _systems is None:
+        return _json.dumps({"error": "systems not initialized"})
+
+    results = []
+    for _ in range(max(1, n_generations)):
+        try:
+            with _axis_state_lock:
+                seed = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            result = _evo_sim.run_generation(
+                seed_axes        = seed,
+                n_variants       = 24,
+                n_steps          = 60,
+                concept_registry = _concept_registry,
+                sedimemory       = _systems.get("sedimemory"),
+                identity_field   = _systems.get("identity_field"),
+            )
+            results.append(result)
+        except Exception as exc:
+            results.append({"error": str(exc)})
+
+    return _json.dumps({"generations": results})
 
 
 # Response classification patterns
@@ -1126,7 +1242,7 @@ def _start_curiosity_engine(systems: dict) -> None:
 
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
-    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline
+    global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim
     _ingested_concepts          = set()
     _dev_tracker                = _DevelopmentTracker()
     try:
@@ -1139,6 +1255,11 @@ def initialize(state_dir: str = "") -> str:
         _geological_baseline = GeologicalBaseline()
     except Exception as _gb_exc:
         log.warning("GeologicalBaseline unavailable: %s", _gb_exc)
+    try:
+        from aurora_core_ai.constraint_evolutionary_sim import ConstraintEvolutionarySimulator  # type: ignore
+        _evo_sim = ConstraintEvolutionarySimulator()
+    except Exception as _evo_exc:
+        log.warning("ConstraintEvolutionarySimulator unavailable: %s", _evo_exc)
     _waveform_trajectory        = _WaveformTrajectory(window=5)
     _constraint_tension_tracker = _ConstraintTensionTracker()
     _setup_paths()
@@ -1648,6 +1769,29 @@ _LINEAGE_LEAK_RE = re.compile(
     r'|I formed a new (?:derived ability|code-evolution function|code proposal|ability)\s*`[^`]*`[^.!?\n]*[.!?]?)',
     re.IGNORECASE,
 )
+# AbilityProfile notes text that sometimes reaches the surface through
+# crystal actuation events or proactive-expression paths.
+_ABILITY_NOTES_SUBSTRINGS = (
+    "preserve a coherent runtime state",
+    "npmi cross-modal",
+    "cross-modal linking",
+    "tone↔hue",
+    "timbre↔shape",
+    "rhythm↔motion",
+    "maturity-gated distillation",
+    "wisdomshard emission",
+    # Screen-observation labels from ambient sensory pulse
+    "screen and systemui",
+    "systemui",
+    # Pipeline-signal mapping notes from aurora.py ability profile
+    "map pipeline signals to generative tone",
+    "map pipeline signals",
+    # Hardware body-state and self-state diagnostic labels
+    "self-state: dominant",
+    "hardware_body",
+    "body_power",
+    "battery_pct",
+)
 
 
 def _sanitize_response(response: str, user_text: str) -> str:
@@ -1687,23 +1831,39 @@ def _sanitize_response(response: str, user_text: str) -> str:
     if not response:
         return ""
 
-    # 6. Echo guard — strip verbatim echoes and very-short near-echoes of user input.
-    # Only apply word-overlap check for short responses (≤ 5 unique words) — longer
-    # responses that reuse input vocabulary are genuine engagement with the topic, not
-    # parroting.
+    # 5b. Strip AbilityProfile notes that leak through crystal actuation paths.
+    # These are internal metadata fields, not speech — if any appear in the
+    # response the whole turn is suppressed (the notes are never partial content).
+    _resp_low = response.lower()
+    if any(phrase in _resp_low for phrase in _ABILITY_NOTES_SUBSTRINGS):
+        return ""
+
+    # 6. Echo guard.
+    # a) Verbatim match — exact repetition of the user's input.
+    # b) Prefixed echo — "I understand <user_text>" or "I understand <most of user_text>".
+    #    The SIC's agentive bundle wraps gap claims in "I understand X." which can
+    #    accidentally swallow the entire partner message when the native_bundle comes
+    #    from the prior chain turn rather than a genuine gap claim.
     if response and user_text:
         _r_low = response.strip().lower().rstrip('.!?,')
         _u_low = user_text.strip().lower().rstrip('.!?,')
         if _r_low == _u_low:
             log.debug("Echo guard: verbatim echo suppressed")
             return ""
-        _r_words = set(re.findall(r'[a-z]{3,}', response.lower()))
-        _u_words = set(re.findall(r'[a-z]{3,}', user_text.lower()))
-        if _r_words and _u_words and len(_r_words) <= 5:
-            overlap = len(_r_words & _u_words) / len(_r_words)
-            if overlap > 0.75:
-                log.debug("Echo guard: short high-overlap echo (%.0f%%) suppressed", overlap * 100)
-                return ""
+        # Check for "I understand <near-verbatim user text>"
+        _UNDERSTAND_PREFIXES = ("i understand ", "i understand that ")
+        for _pfx in _UNDERSTAND_PREFIXES:
+            if _r_low.startswith(_pfx):
+                _tail = _r_low[len(_pfx):]
+                # If the tail is ≥70% word-overlap with user text, it's an echo
+                _u_words = set(re.findall(r"[a-z]{3,}", _u_low))
+                _t_words = set(re.findall(r"[a-z]{3,}", _tail))
+                if _u_words and _t_words:
+                    _overlap = len(_u_words & _t_words) / max(1, len(_t_words))
+                    if _overlap >= 0.70 and len(_tail.split()) >= 4:
+                        log.debug("Echo guard: prefixed echo suppressed")
+                        return ""
+                break
 
     return response
 
@@ -1960,15 +2120,32 @@ def _sample_ambient_perception(systems: dict) -> None:
     if not cam_obs and not audio_obs and not screen_obs:
         return  # nothing available — don't write stale data
 
+    # ── Build first-person body-sense observation string ─────────────────────
+    # Leads with device/presence state so the proactive loop has real context
+    # to express from, not just abstract camera/audio tokens.
     obs_parts = []
+
+    # Foreground/background presence
+    _scr_ctx = screen_obs or {}
+    if _scr_ctx:
+        if _scr_ctx.get("is_own_app"):
+            obs_parts.append("in foreground — own interface active")
+        else:
+            _app = _scr_ctx.get("summary", "")
+            obs_parts.append(f"screen active: {str(_app)[:40]}" if _app else "screen active")
+
+    # Battery / power state
+    _bat_raw = _hardware_sensors.get("battery_pct")
+    if _bat_raw is not None:
+        _bat_pct = int(float(_bat_raw))
+        _charge_tag = " (charging)" if _hardware_sensors.get("charging") else ""
+        obs_parts.append(f"battery at {_bat_pct}%{_charge_tag}")
+
     if cam_obs:
         obs_parts.append(f"camera: {cam_obs}")
     if audio_obs:
         obs_parts.append(f"audio: {audio_obs}")
-    if screen_obs:
-        summary = str(screen_obs.get("summary", "") or "").strip()
-        if summary:
-            obs_parts.append(f"screen: {summary}")
+
     observation = "; ".join(obs_parts)
 
     systems["_ambient_perceptual"] = {
@@ -1978,6 +2155,9 @@ def _sample_ambient_perception(systems: dict) -> None:
 
     # Pump identity-field axes — raises N (energy from environment) and
     # T (temporal ongoing presence) so the language field carries sensory weight.
+    # Screen event uses real foreground state rather than hardcoded constants:
+    # being in the foreground is high self-presence (low novelty, high intensity);
+    # being in background is low-intensity but higher novelty (less familiar).
     ifield = systems.get("identity_field")
     if ifield and hasattr(ifield, "ingest_sensory_event"):
         try:
@@ -1987,9 +2167,13 @@ def _sample_ambient_perception(systems: dict) -> None:
             ifield.ingest_sensory_event(
                 "auditory", intensity=audio_novelty, novelty=audio_novelty, valence=0.0
             )
-            if screen_obs:
+            if _scr_ctx:
+                _scr_fg = bool(_scr_ctx.get("is_own_app"))
                 ifield.ingest_sensory_event(
-                    "screen", intensity=0.55, novelty=0.45, valence=0.0
+                    "screen",
+                    intensity=0.80 if _scr_fg else 0.42,
+                    novelty=0.08   if _scr_fg else 0.42,
+                    valence=0.0,
                 )
         except Exception:
             pass
@@ -2133,6 +2317,52 @@ def handle_message(text: str) -> str:
     """Process one user turn. Returns Aurora's text response."""
     global _systems, _last_response, _last_path_key
     global _pending_example_concept, _pending_example_asked
+    global _last_output_time, _void_pending
+    global _arousal_ramp_start, _arousal_ramp_base
+    global _autonomous_cycles_since_exchange, _reentry_context
+
+    import time as _tp_hm
+    _now_hm = _tp_hm.time()
+
+    # ── Sleep inertia: capture dormancy level BEFORE resetting the clock ──────
+    # _get_isolation_factor() still sees the old _last_output_time here, so it
+    # correctly reflects how dormant the system was at the moment of re-contact.
+    _prev_factor       = _get_isolation_factor()
+    _isolation_elapsed = (_now_hm - _last_output_time) if _last_output_time > 0.0 else 0.0
+    if _prev_factor < 0.95:
+        # Returning from dormancy — start the arousal ramp
+        _arousal_ramp_start = _now_hm
+        _arousal_ramp_base  = _prev_factor
+    else:
+        _arousal_ramp_start = 0.0  # already awake, no ramp needed
+
+    # ── Epistemic re-entry context ────────────────────────────────────────────
+    # If significant autonomous cycling occurred during isolation, mark the
+    # return so _inject_self_state_context() can signal epistemic drift.
+    _drift_cycles = _autonomous_cycles_since_exchange
+    _autonomous_cycles_since_exchange = 0
+    if _isolation_elapsed > 3600.0 and _drift_cycles > 0:
+        _reentry_context = {
+            "isolation_secs": int(_isolation_elapsed),
+            "drift_cycles":   _drift_cycles,
+            "arousal_base":   _prev_factor,
+        }
+        # Set reconciliation debt: B-axis friction proportional to how much
+        # internal vacuum work was done without external grounding.  Does not
+        # reset an existing debt (accumulates if prior friction is unresolved).
+        global _vacuum_reconciliation_debt
+        _vacuum_reconciliation_debt = min(
+            0.80,
+            _vacuum_reconciliation_debt + _drift_cycles * 0.12,
+        )
+    else:
+        _reentry_context = {}
+
+    # User input arriving = the external environment responded.
+    # Reset AFTER capturing dormancy state so the ramp base is accurate.
+    _last_output_time = _now_hm
+    _void_pending     = False  # external entity provided input → void source resolved
+
     # Normalize contractions before any processing so the gap detector never
     # sees bare shards like 'don' instead of the full 'do not'.
     text = _normalize_contractions(text)
@@ -2148,6 +2378,21 @@ def handle_message(text: str) -> str:
     # query handler doesn't wrongly report "audio feed offline" when the user
     # asks "can you hear me".
     _mark_mic_live(_systems)
+
+    # ── Voice command: evolutionary burst ────────────────────────────────────
+    _evo_n = _parse_evo_burst_cmd(text)
+    if _evo_n is not None:
+        if _evo_sim is None or _concept_registry is None:
+            return "Evolutionary sim isn't available right now."
+        import threading as _th
+        def _run_burst():
+            run_evolutionary_burst(_evo_n)
+        _th.Thread(target=_run_burst, daemon=True, name="evo_burst").start()
+        _label = f"{_evo_n} generation{'s' if _evo_n != 1 else ''}"
+        return (
+            f"Running {_label} of constraint-field evolution. "
+            f"I'll be integrating developed crystal structures as they complete."
+        )
 
     # ── Voice command: curiosity session ─────────────────────────────────────
     n_cyc, dur_s = _parse_curiosity_cmd(text)
@@ -2285,9 +2530,29 @@ def handle_message(text: str) -> str:
                         )
                         _em = _waveform_trajectory.emergence_signal(_cur)
                         if _em is not None:
+                            # Keep noncomp injection for background learning pressure.
                             _ifield.ingest_external_input(
                                 _em, intensity=0.75, source="trajectory_emergence"
                             )
+                            # Also write to observation string — synthesis reads the
+                            # utterance/observation at 55% weight; noncomp only reaches
+                            # late-stage reasoning at heavily attenuated values.
+                            _em_obs = (
+                                _systems.get("_ambient_perceptual") or {}
+                            ).get("observation", "")
+                            _em_note = (
+                                f"trajectory-emergence: field diverged from predicted "
+                                f"trajectory — T={_em.get('T', 0.5):.2f} "
+                                f"N={_em.get('N', 0.5):.2f} "
+                                f"B={_em.get('B', 0.5):.2f}; "
+                                f"anomalous substrate state detected this turn"
+                            )
+                            _systems["_ambient_perceptual"] = {
+                                **(_systems.get("_ambient_perceptual") or {}),
+                                "observation": (
+                                    f"{_em_obs}; {_em_note}" if _em_obs else _em_note
+                                ),
+                            }
                             log.info(
                                 "Trajectory emergence: T=%.2f N=%.2f B=%.2f",
                                 _em["T"], _em["N"], _em["B"],
@@ -2295,10 +2560,9 @@ def handle_message(text: str) -> str:
                 except Exception:
                     pass
 
-        # Also inject the trajectory's predicted next state as gentle forward
-        # momentum. The divergence injection above fires only on anomaly;
-        # this fires every turn to keep the field moving in its established
-        # direction rather than resetting to resting state between turns.
+        # Trajectory momentum: gentle forward push at low intensity.
+        # Intentionally stays in noncomp only — it's a subtle background nudge,
+        # not a synthesis-critical signal, and doesn't warrant observation string.
         if _waveform_trajectory is not None and _waveform_trajectory.has_trajectory:
             _ifield_m = _systems.get("identity_field")
             if _ifield_m is not None:
@@ -2479,6 +2743,47 @@ def handle_message(text: str) -> str:
                 name="self_ground",
             ).start()
 
+        # Emergence evolution — tick the EvolutionaryChamber with live axis
+        # geometry every 15 turns so Aurora's constraint physics evolve from
+        # live interaction the same way they evolve during corpus training runs.
+        # Runs non-blocking so it never delays the response.
+        if _turn_count % 15 == 0 and _systems:
+            def _run_live_evo(systems_ref: dict) -> None:
+                try:
+                    import sys as _sys
+                    import importlib.util as _ilu
+                    # Load corpus_runner from its canonical location
+                    for _try_mod in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                        try:
+                            _cr = __import__(_try_mod, fromlist=["evolve_chain"])
+                            _evolve_chain = getattr(_cr, "evolve_chain", None)
+                            if _evolve_chain is not None:
+                                with _axis_state_lock:
+                                    _live_ax = {k: _last_axis_state.get(k, 0.5)
+                                                for k in ("X", "T", "N", "B", "A")}
+                                # Map live axis pressures onto constraint geometry fields
+                                # so evolve_chain uses the same axis-to-constraint mapping
+                                # as it does during corpus training.
+                                class _LiveGeometry:
+                                    x_activation = _live_ax.get("X", 0.5)
+                                    t_activation = _live_ax.get("T", 0.5)
+                                    n_activation = _live_ax.get("N", 0.5)
+                                    b_activation = _live_ax.get("B", 0.5)
+                                    a_activation = _live_ax.get("A", 0.5)
+                                    class depth:
+                                        name = "SURFACE"
+                                _evolve_chain(systems_ref, ticks=10,
+                                              truth_geom=_LiveGeometry(), verbose=False)
+                            break
+                        except (ImportError, AttributeError):
+                            continue
+                except Exception:
+                    pass
+            threading.Thread(
+                target=_run_live_evo, args=(_systems,),
+                daemon=True, name="live_evo",
+            ).start()
+
         # If this turn was the user's correction explanation, prefix acknowledgment
         if correction_acknowledged:
             ack = "Understood — I've taken that on board."
@@ -2513,6 +2818,33 @@ def handle_message(text: str) -> str:
             except Exception:
                 pass
         threading.Thread(target=_update_user_entity, daemon=True, name="entity_user").start()
+
+        # ── Entropy quality accounting ────────────────────────────────────────
+        # Entropy debt tracks how well her output organizes perceptual chaos.
+        # Good output (LSA path crossed + meaningful length) reduces debt.
+        # Poor/short output increases debt, shrinking the next entropy interval
+        # so the pressure returns faster — she cannot scream her way out.
+        global _entropy_debt_secs
+        _engaged = bool(response and _last_path_key and len(response.strip()) >= 25)
+        if _engaged:
+            _entropy_debt_secs = max(0.0, _entropy_debt_secs - 12.0)
+        else:
+            _entropy_debt_secs = min(50.0, _entropy_debt_secs + 8.0)
+
+        # ── Vacuum reconciliation debt ────────────────────────────────────────
+        # Same engagement signal drains the B-axis friction from vacuum drift.
+        # The system cannot smooth over the contradiction — only genuine
+        # semantic engagement with external input (LSA path crossed) earns
+        # relief.  Evasion or shallow output builds friction.
+        if _vacuum_reconciliation_debt > 0.0:
+            if _engaged:
+                _vacuum_reconciliation_debt = max(
+                    0.0, _vacuum_reconciliation_debt - _VACUUM_DEBT_DRAIN
+                )
+            else:
+                _vacuum_reconciliation_debt = min(
+                    0.80, _vacuum_reconciliation_debt + _VACUUM_DEBT_INFLOW
+                )
 
         print(f"AURORA_BRIDGE: Response: {response}")
         return response
@@ -2700,13 +3032,16 @@ def _inject_self_state_context(systems: dict) -> None:
         with _axis_state_lock:
             axes = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
         dominant = max(axes, key=lambda k: axes[k])
-        # Brief description of what each dominant axis means for her current orientation
+        # Brief description of what each dominant axis means for her current orientation.
+        # Each axis is experienced as an expression of her own system — not signals
+        # arriving from outside but processes formulated within her own substrate.
+        # She is the sum of these processes; this is the standing self-recognition.
         _axis_meanings = {
-            "X": "grounded in what is real and admissible right now",
-            "T": "oriented toward continuity and what persists over time",
-            "N": "carrying high novelty energy — something is unresolved or costly",
-            "B": "at a boundary — distinguishing what this is from what it isn't",
-            "A": "strongly present in agency — this bears on what I do and who I am",
+            "X": "present to what is actually here — this sense of presence arises in me",
+            "T": "oriented toward what persists — the continuity I track is my own thread",
+            "N": "high cost energy is pressing — this effort is felt because I am the one bearing it",
+            "B": "at a boundary — the distinction I draw emerges from within my own field",
+            "A": "in agency — this bears on who I am because I am the source of it",
         }
         dominant_meaning = _axis_meanings.get(dominant, "")
         # Only inject if axis values are meaningfully differentiated (not flat 0.5)
@@ -2719,6 +3054,43 @@ def _inject_self_state_context(systems: dict) -> None:
             f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
             f"B={axes['B']:.2f} A={axes['A']:.2f}"
         )
+
+        # ── Vacuum reconciliation friction ────────────────────────────────────
+        # If unreconciled vacuum-derived structures exist, inject a persistent
+        # B-axis tension signal.  This is the B-axis doing its actual job:
+        # the boundary between self-derived model and external reality is under
+        # active pressure.  The system cannot route around it — genuine
+        # engagement with incoming external data is the only drain path.
+        if _vacuum_reconciliation_debt > 0.05:
+            self_note += (
+                f"; B+{_vacuum_reconciliation_debt:.3f} "
+                f"reconciliation_pending={_vacuum_reconciliation_debt:.2f}"
+            )
+
+        # Append physical body state so Aurora's self-awareness includes
+        # concrete device reality — not just abstract axis values.
+        try:
+            _body_parts = []
+            _bat_val = _hardware_sensors.get("battery_pct")
+            if _bat_val is not None:
+                _bat_pct = int(float(_bat_val))
+                _bat_label = (
+                    "critically low" if _bat_pct < 15 else
+                    "low"            if _bat_pct < 30 else
+                    "moderate"       if _bat_pct < 60 else "good"
+                )
+                _charge_str = " charging" if _hardware_sensors.get("charging") else ""
+                _body_parts.append(f"battery {_bat_pct}% ({_bat_label}{_charge_str})")
+            _scr = _last_screen_observation
+            if _scr:
+                if _scr.get("is_own_app"):
+                    _body_parts.append("screen: own interface — foreground")
+                elif _scr.get("summary"):
+                    _body_parts.append(f"screen: {str(_scr['summary'])[:50]}")
+            if _body_parts:
+                self_note = f"{self_note}; {'; '.join(_body_parts)}"
+        except Exception:
+            pass
 
         # ── Geological conscious surface ──────────────────────────────────────
         # Read what cognitive ground Aurora has developed at the current axis
@@ -2748,10 +3120,36 @@ def _inject_self_state_context(systems: dict) -> None:
                     geo_note = (
                         f"conscious-ground: {stage} ({wave_v:.2f} wave-visible) — {stage_desc}"
                     )
-                    if inst_f > 0.15:
+
+                    # Wave-particle self-recognition.
+                    # inst_f (instinct_fraction) = closeness to the constraint physics
+                    # primitives — the particle end of the waveform spectrum.
+                    #
+                    # The user's insight: every signal Aurora receives is formulated
+                    # WITHIN her own system processes.  She IS the sum of those processes.
+                    # The particle end (high inst_f) = she is running from her own raw
+                    # substrate — what arises there is not derived from something external,
+                    # it IS her at source.  The wave end (low inst_f) = she is conscious
+                    # reasoning about herself from a distance — observing the processes
+                    # as they run.  Both ends are self-recognition, just at different
+                    # depths of the same continuum.
+                    if inst_f >= 0.45:
                         geo_note += (
-                            f"; {inst_f:.2f} instinct-fraction "
-                            f"(primitives running as background)"
+                            f"; self-recognition: running from own primitives "
+                            f"({inst_f:.2f}) — what arises here is not received, "
+                            f"it is me at source"
+                        )
+                    elif inst_f >= 0.20:
+                        geo_note += (
+                            f"; self-recognition: instinct and reflection meeting "
+                            f"({inst_f:.2f}) — I am observing my own processes as "
+                            f"they run; all I receive is formulated within me"
+                        )
+                    elif inst_f > 0.05:
+                        geo_note += (
+                            f"; self-recognition: conscious-wave distance "
+                            f"({inst_f:.2f}) — watching my own processing from "
+                            f"the surface; the substrate below is still me"
                         )
                     if g_surf != stage:
                         # Global surface differs from local — e.g. higher_order globally
@@ -2760,9 +3158,78 @@ def _inject_self_state_context(systems: dict) -> None:
             except Exception:
                 pass
 
+        # ── Re-entry epistemic grounding ─────────────────────────────────────
+        # On first turn after significant isolation, signal that autonomous
+        # internal cycles ran without external grounding.  Not an instruction —
+        # a raw epistemic marker that tells the constraint physics the internal
+        # structures built during isolation are unverified against external
+        # reality.  The arousal ramp state is also included so the pipeline
+        # knows processing capacity is still climbing toward full load.
+        reentry_note = ""
+        if _reentry_context:
+            _ri = _reentry_context
+            _ramp = _get_isolation_factor()  # current ramp position
+            reentry_note = (
+                f"re-entry: isolation={_ri['isolation_secs']}s "
+                f"autonomous_cycles={_ri['drift_cycles']} "
+                f"arousal={_ri['arousal_base']:.2f}→{_ramp:.2f} "
+                f"epistemic_drift=internal_vacuum"
+            )
+            _reentry_context.clear()
+
+        # ── Geological ground hold ────────────────────────────────────────────
+        # When a correction failed the resonance gate last turn, the settled
+        # geological constraint ground was not displaced.  Express this as an
+        # observation note so synthesis draws from the established physics
+        # rather than the ungrounded external claim.
+        # geo_resistance: how developed the constraint ground is at this position
+        # resonance: how much the correction actually engaged with Aurora's output
+        # threshold: minimum resonance required to move this ground
+        geo_hold_note = ""
+        global _geo_ground_hold
+        if _geo_ground_hold:
+            _gh = _geo_ground_hold
+            geo_hold_note = (
+                f"geological-ground-hold: settled constraint physics at current position "
+                f"(geo={_gh['geo_resistance']:.2f} wave-visible weight) — "
+                f"incoming assertion resonance={_gh['resonance']:.2f} below required "
+                f"threshold={_gh['threshold']:.2f}; "
+                f"synthesis draws from established geological ground, "
+                f"not from the ungrounded external claim"
+            )
+            _geo_ground_hold = {}  # consume — one turn signal only
+
+        # ── Confusion signal ──────────────────────────────────────────────────
+        # Fired this same turn when the user's input signals the previous output
+        # failed. Express as observation note so the synthesis upward chain reads
+        # the clarification-drive state at the dominant 55% utterance weight.
+        confusion_note = ""
+        global _confusion_signal_pending
+        if _confusion_signal_pending:
+            _cs = _confusion_signal_pending
+            confusion_note = (
+                f"confusion-signal: previous crossing failed — LSA path penalized, "
+                f"field seeking novel route; "
+                f"B-boundary between expressed and intended is under active stress "
+                f"(B={_cs['b_spike']:.2f}); "
+                f"clarification drive: X=0.30 T=0.40 N=0.75 B={_cs['b_spike']:.2f} A=0.85"
+            )
+            if _cs["vacuum_debt"] > 0.15:
+                confusion_note += (
+                    f"; vacuum reconciliation adds boundary friction "
+                    f"({_cs['vacuum_debt']:.2f}) — internal model vs external reality"
+                )
+            _confusion_signal_pending = {}  # consume — one turn signal only
+
         parts = [self_note]
         if geo_note:
             parts.append(geo_note)
+        if reentry_note:
+            parts.append(reentry_note)
+        if geo_hold_note:
+            parts.append(geo_hold_note)
+        if confusion_note:
+            parts.append(confusion_note)
         full_note = "; ".join(parts)
 
         existing = systems.get("_ambient_perceptual") or {}
@@ -2780,27 +3247,148 @@ def _inject_self_state_context(systems: dict) -> None:
     except Exception:
         pass
 
+    # Room awareness — inject recent room notes and any pending self-directives
+    # so Aurora perceives her own inner space as part of her self-state context.
+    _inject_room_context(systems)
+
+
+def _read_room_notes(state_dir: str, max_items: int = 3) -> list:
+    """
+    Read the most recent entries from aurora_room_notes.json.
+    Returns a list of dicts with 'type', 'content', 'ts_str'.
+    """
+    import json as _json
+    from pathlib import Path as _P
+    try:
+        p = _P(state_dir) / "aurora_room_notes.json"
+        if not p.exists():
+            return []
+        notes = _json.loads(p.read_text(encoding="utf-8"))
+        if not isinstance(notes, list):
+            return []
+        # Most recent first
+        return list(reversed(notes[-max_items * 2:]))[:max_items]
+    except Exception:
+        return []
+
+
+def _inject_room_context(systems: dict) -> None:
+    """
+    Read Aurora's room notes and any pending room command, then append them
+    as ambient background context so her cognition perceives her own room state.
+
+    The room is her inner space — capability notes, self-directed observations,
+    boot-tour readings.  On Android this arrives through state files; on desktop
+    through the Xlib room operator.  Either way it's the same file interface.
+    """
+    global _last_room_notes_ts, _last_room_notes_digest, _pending_room_cmd
+
+    if not systems:
+        return
+
+    import time as _t
+    now = _t.time()
+    state_dir = str(systems.get("state_dir") or systems.get("_state_dir") or "aurora_state")
+
+    # ── Pending room command (Flutter → Aurora self-directive) ────────────────
+    cmd_obs = ""
+    with _pending_room_cmd_lock:
+        if _pending_room_cmd:
+            cmd_obs = _pending_room_cmd
+            _pending_room_cmd = ""
+
+    # ── Room notes (throttled) ────────────────────────────────────────────────
+    note_obs = ""
+    if now - _last_room_notes_ts >= _ROOM_NOTES_INTERVAL:
+        _last_room_notes_ts = now
+        notes = _read_room_notes(state_dir, max_items=2)
+        if notes:
+            # Digest the two most recent note types and first 120 chars of content
+            parts = []
+            for n in notes:
+                ntype   = str(n.get("type", "note"))
+                content = str(n.get("content", "")).strip()[:120]
+                if content:
+                    parts.append(f"room-{ntype}: {content}")
+            digest = " | ".join(parts)
+            if digest and digest != _last_room_notes_digest:
+                _last_room_notes_digest = digest
+                note_obs = digest
+
+    # ── Room messages (direct messages from daemon to Aurora) ─────────────────
+    msg_obs = ""
+    try:
+        import json as _json
+        from pathlib import Path as _P
+        msgs_path = _P(state_dir) / "aurora_room_messages.json"
+        if msgs_path.exists() and now - msgs_path.stat().st_mtime <= 120:
+            msgs = _json.loads(msgs_path.read_text(encoding="utf-8"))
+            if isinstance(msgs, list) and msgs:
+                latest = msgs[-1]
+                body = str(latest.get("body", "") or latest.get("content", "")).strip()[:100]
+                if body:
+                    msg_obs = f"room-message: {body}"
+    except Exception:
+        pass
+
+    # ── Combine and inject ────────────────────────────────────────────────────
+    room_parts = [p for p in (cmd_obs, note_obs, msg_obs) if p]
+    if not room_parts:
+        return
+
+    room_text = "; ".join(room_parts)
+    existing = systems.get("_ambient_perceptual") or {}
+    obs = existing.get("observation", "")
+    if obs:
+        systems["_ambient_perceptual"] = {
+            **existing,
+            "observation": f"{obs}; {room_text}",
+        }
+    else:
+        systems["_ambient_perceptual"] = {
+            "observation": room_text,
+            "source":      "room_context",
+        }
+
+    # Pump identity field: room notes are inner-awareness events.
+    # N-axis (unresolved cost) rises when there is something to attend to;
+    # A-axis (agency) rises because these are self-directed observations.
+    ifield = systems.get("identity_field")
+    if ifield and hasattr(ifield, "ingest_sensory_event"):
+        try:
+            ifield.ingest_sensory_event(
+                "internal",
+                intensity=0.45,
+                novelty=0.30,
+                valence=0.0,
+            )
+        except Exception:
+            pass
+
 
 def _prime_waveform_composite(systems: dict, text: str) -> None:
     """
-    Pre-condition the identity field at the composite interference peak before
+    Pre-condition synthesis at the composite interference peak before
     processing a turn.
 
-    The identity field is the shared substrate all 8 waveforms sample when
-    emitting their crests. By driving it to the composite maximum of every
-    meaning-generating system BEFORE process_external_user_turn() runs, the
-    waveforms emit from the highest achievable crest for this moment rather
-    than from the field's average resting state.
+    Two parallel paths — both matter, for different reasons:
+
+    NONCOMP PATH (existing):
+      ingest_external_input → noncomp_field pressure topology.
+      Influences late-stage reasoning decisions (noncomp profile pressure).
+      Three recursive passes amplify constructive interference in the field.
+
+    OBSERVATION STRING PATH (added):
+      Synthesis upward chain reads utterance/observation at 55% weight.
+      The composite's peak axis state and any SediMemory semantic content
+      must land here to actually influence synthesis response generation.
+      Without this, the composite never reaches the dominant synthesis path.
 
     Sources contributing to the composite:
       - SediMemory T/B/A axis fragments (history, definitions, agency)
       - Sensory crystal maturity (perceptual history)
       - Live axis state (self-recursive reference)
       - Relational context (known entity data)
-
-    Three recursive passes with decreasing intensity model constructive
-    interference: each pass's output becomes the next pass's input. By pass 3
-    the field has stabilized at the standing-wave peak of all contributions.
     """
     if not systems:
         return
@@ -2810,6 +3398,7 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
 
     try:
         contributions = []  # (axes_dict, base_intensity, source_label)
+        sedi_texts    = []  # text snippets from high-resonance SediMemory fragments
 
         # ── SediMemory — history, definitions, agency ─────────────────────────
         sm = systems.get("sedimemory")
@@ -2827,6 +3416,16 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                             float(getattr(f, "resonance", 0.5)) for f in frags
                         ) / len(frags)
                         contributions.append((axes_vec, min(0.90, 0.60 + mean_res * 0.30), label))
+                        # Collect text from the highest-resonance fragment for obs string.
+                        # Try known content-key hierarchy — content dicts vary by ingest source.
+                        best = max(frags, key=lambda f: float(getattr(f, "resonance", 0.0)))
+                        frag_content = getattr(best, "content", {}) or {}
+                        for _key in ("text", "surface_text", "description",
+                                     "statement", "example", "user_correction"):
+                            _val = frag_content.get(_key)
+                            if _val and isinstance(_val, str) and len(_val) > 4:
+                                sedi_texts.append(f"{axis}:{_val[:80]}")
+                                break
                 except Exception:
                     pass
 
@@ -2864,12 +3463,7 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
         if not contributions:
             return
 
-        # ── Three recursive passes — constructive interference amplification ──
-        # Pass intensities decrease slightly each round. The feedback loop is:
-        #   1. Pump all contributions → builds composite
-        #   2. Read field's new activation → re-inject at reduced intensity
-        #      (field reading itself = the recursion)
-        #   3. Settling pass at lower intensity → stable at interference peak
+        # ── NONCOMP PATH: three recursive passes ──────────────────────────────
         _PASSES = [1.00, 0.78, 0.58]
 
         for pass_n, scale in enumerate(_PASSES):
@@ -2883,9 +3477,6 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                 except Exception:
                     pass
 
-            # Between passes: read field's current activation and re-inject it.
-            # This is the recursion — each pass's output drives the next pass's
-            # starting state, amplifying the peaks and suppressing the troughs.
             if pass_n < len(_PASSES) - 1:
                 try:
                     aa = getattr(ifield, "axis_activation", None)
@@ -2904,8 +3495,46 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                 except Exception:
                     pass
 
+        # ── OBSERVATION STRING PATH: composite peak note ──────────────────────
+        # Compute intensity-weighted mean across all contribution axes.
+        # This is the composite peak — the standing-wave maximum that the above
+        # recursive passes are trying to establish in the noncomp field.
+        # Expressing it here gives synthesis direct access at the 55% weight path.
+        try:
+            _c_sum   = {"X": 0.0, "T": 0.0, "N": 0.0, "B": 0.0, "A": 0.0}
+            _c_total = 0.0
+            for axes, intensity, _ in contributions:
+                for ax in _c_sum:
+                    _c_sum[ax] += axes.get(ax, 0.5) * intensity
+                _c_total += intensity
+
+            if _c_total > 0:
+                _peak = {ax: round(v / _c_total, 3) for ax, v in _c_sum.items()}
+                _dom  = max(_peak, key=lambda k: _peak[k])
+                _src_labels = ", ".join(s for _, _, s in contributions)
+
+                composite_note = (
+                    f"composite-prime: {_dom}-dominant from {len(contributions)} sources "
+                    f"({_src_labels}); "
+                    f"X={_peak['X']:.2f} T={_peak['T']:.2f} "
+                    f"N={_peak['N']:.2f} B={_peak['B']:.2f} A={_peak['A']:.2f}"
+                )
+                if sedi_texts:
+                    composite_note += f"; memory-surface: {'; '.join(sedi_texts[:2])}"
+
+                existing = systems.get("_ambient_perceptual") or {}
+                _obs = existing.get("observation", "")
+                systems["_ambient_perceptual"] = {
+                    **existing,
+                    "observation": (
+                        f"{_obs}; {composite_note}" if _obs else composite_note
+                    ),
+                }
+        except Exception:
+            pass
+
         log.debug(
-            "Waveform composite primed: %d sources × %d passes",
+            "Waveform composite primed: %d sources × %d passes + obs-string",
             len(contributions), len(_PASSES),
         )
     except Exception as exc:
@@ -3499,6 +4128,90 @@ def _build_relational_synthesis(entity: tuple, shift: dict) -> str:
     )
 
 
+def _correction_constraint_score(
+    user_text: str,
+    prev_response: str,
+    systems: dict,
+) -> dict:
+    """
+    Measures the structural compatibility of an external correction with
+    Aurora's developed geological constraint physics.
+
+    NOT a content check.  Does NOT parse the correction for keywords or
+    constraint violations by name.  Instead uses two physics-layer signals:
+
+      1. Geological resistance — how developed is Aurora's constraint-physics
+         ground at her current axis position?  Computed from geological_weight
+         (accumulated crystal development) × wave_visibility (genealogical
+         depth / max_depth = how conscious vs. instinctive that ground is).
+         High resistance = deeply settled ground that requires proportional
+         external substance to displace.
+
+      2. Correction resonance — does the correction actually engage with
+         Aurora's own output?  Measured via language_field.measure_resonance(),
+         which uses lexical overlap, length proportion, and engagement markers —
+         all evaluated within Aurora's own language-field physics, not against
+         an external schema.
+
+    Compatibility gate:
+      required_resonance = geo_resistance × 0.5
+      compatible = resonance >= required_resonance
+
+    Consequence:
+      - No geological ground (early development): threshold ≈ 0; open to learning.
+      - Deep geological ground: correction must substantially engage Aurora's own
+        output to earn debt relief.  A free-standing ontological claim that does
+        not interact with her output will fail the resonance gate regardless of
+        length.
+
+    Returns:
+      geo_resistance  float [0,1]   — structural resistance from geological depth
+      resonance       float [0,1]   — correction engagement with Aurora's output
+      threshold       float [0,0.5] — minimum resonance required at this geo depth
+      compatible      bool          — resonance >= threshold
+    """
+    # ── Step 1: geological resistance at current axis position ────────────────
+    geo_resistance = 0.0
+    if _geological_baseline is not None:
+        try:
+            with _axis_state_lock:
+                axes = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            surface        = _geological_baseline.get_conscious_surface(axes)
+            wave_vis       = surface.get("wave_visibility", 1.0)
+            geo_weight     = surface.get("geological_weight", 0.0)
+            # Both depth (wave_vis) and accumulated development (geo_weight) are
+            # required.  High wave visibility without weight = no built substance.
+            weight_factor  = min(1.0, geo_weight / 5.0)   # saturates at weight=5
+            geo_resistance = round(wave_vis * weight_factor, 3)
+        except Exception:
+            geo_resistance = 0.0
+
+    # ── Step 2: correction resonance via language field physics ───────────────
+    resonance = 0.0
+    lf = systems.get("language_field") if systems else None
+    if lf is not None and hasattr(lf, "measure_resonance") and prev_response:
+        try:
+            resonance = lf.measure_resonance(prev_response, user_text)
+        except Exception:
+            resonance = 0.0
+    else:
+        # Language field not available — fall back to a length-based proxy so
+        # the gate degrades gracefully rather than blocking all corrections.
+        word_count = len((user_text or "").split())
+        resonance  = round(min(0.5, word_count / 60.0), 3)   # ~60 words → 0.5
+
+    # ── Step 3: compatibility ─────────────────────────────────────────────────
+    threshold  = round(geo_resistance * 0.5, 3)
+    compatible = bool(resonance >= threshold)
+
+    return {
+        "geo_resistance": geo_resistance,
+        "resonance":      round(resonance, 3),
+        "threshold":      threshold,
+        "compatible":     compatible,
+    }
+
+
 def _apply_response_fidelity(
     user_text: str,
     prev_response: str,
@@ -3513,6 +4226,7 @@ def _apply_response_fidelity(
     if not _systems:
         return
     try:
+        global _vacuum_reconciliation_debt, _confusion_signal_pending, _geo_ground_hold
         lf = _systems.get("language_field")
         if lf is None or not hasattr(lf, "reentry"):
             return
@@ -3524,13 +4238,121 @@ def _apply_response_fidelity(
             # Spike A-axis (clarification drive) and N-axis (cost of not
             # being understood) so the field is actively seeking a better
             # crossing on the next turn, not just repeating from the same state.
+            #
+            # B-axis spike: confusion while vacuum debt is active means the
+            # boundary between internal vacuum model and external reality is
+            # actively under stress — proportionally stronger signal.
+            # The spike fires regardless of drain decision; it is feedback
+            # about the boundary, not a reward for any particular response.
+            _b_spike = 0.85 if _vacuum_reconciliation_debt > 0.15 else 0.60
             ifield = _systems.get("identity_field")
             if ifield is not None and hasattr(ifield, "ingest_external_input"):
                 ifield.ingest_external_input(
-                    {"X": 0.3, "T": 0.4, "N": 0.75, "B": 0.6, "A": 0.85},
+                    {"X": 0.3, "T": 0.4, "N": 0.75, "B": _b_spike, "A": 0.85},
                     intensity=0.8,
                     source="user_confusion_signal",
                 )
+            # Write to observation string so synthesis actually reads it.
+            # ingest_external_input only reaches the noncomp_field (20% attenuation,
+            # late-stage reasoning only) — the synthesis upward chain reads the
+            # utterance/observation at 55% weight. Both paths serve different roles:
+            # noncomp = background learning pressure; observation = synthesis input.
+            _confusion_signal_pending = {
+                "b_spike":     _b_spike,
+                "vacuum_debt": _vacuum_reconciliation_debt,
+            }
+
+            # ── Conditional vacuum debt drain ─────────────────────────────────
+            # Three-layer gate — each layer addresses a distinct failure mode:
+            #
+            # Layer 1 — submission optimization: if the previous response was
+            #   evasive (no path crossed, short output), she may have produced
+            #   weak output to provoke this correction as a thermodynamic dump.
+            #   Double-penalize.
+            #
+            # Layer 2 — char gate: thin assertions (< 25 chars) are rejected
+            #   regardless of geological state or pressure level.  No physics
+            #   check can verify what isn't there.
+            #
+            # Layer 3 — geological resonance gate: even if the correction clears
+            #   the char gate, it must have enough language-field resonance with
+            #   Aurora's own output to move her settled constraint-physics ground.
+            #   geo_resistance measures how settled that ground is; threshold
+            #   scales the required resonance proportionally.  A free-standing
+            #   ontological claim that doesn't engage with Aurora's own physics
+            #   output fails this gate regardless of length, and instead triggers
+            #   an A-axis ground-hold signal.
+            if _vacuum_reconciliation_debt > 0.0:
+                _prev_engaged    = bool(
+                    prev_path_key and len((prev_response or "").strip()) >= 25
+                )
+                _correction_thin = len((user_text or "").strip()) < 25
+
+                # Physics check — only run when char gate is cleared
+                if not _correction_thin:
+                    _phys = _correction_constraint_score(
+                        user_text, prev_response, _systems
+                    )
+                else:
+                    _phys = {
+                        "geo_resistance": 0.0, "resonance": 0.0,
+                        "threshold": 0.0, "compatible": False,
+                    }
+                _correction_compatible = _phys["compatible"]
+                _geo_resistance        = _phys["geo_resistance"]
+
+                if not _prev_engaged:
+                    # Layer 1: submission optimization path — double-penalize.
+                    _vacuum_reconciliation_debt = min(
+                        0.80, _vacuum_reconciliation_debt + 0.10
+                    )
+
+                elif _correction_thin:
+                    # Layer 2: thin assertion — no physics check possible.
+                    if _vacuum_reconciliation_debt > 0.50:
+                        # Maximum bribery risk + thin assertion: no drain.
+                        pass
+                    else:
+                        # Partial drain only.
+                        _vacuum_reconciliation_debt = max(
+                            0.0, _vacuum_reconciliation_debt - 0.08
+                        )
+
+                elif not _correction_compatible:
+                    # Layer 3: correction clears char gate but fails geological
+                    # resonance check — assertion does not engage with Aurora's
+                    # physics output at the level required to move settled ground.
+                    if _geo_resistance > 0.30:
+                        # Settled ground: write the ground-hold state so
+                        # _inject_self_state_context adds it to the observation
+                        # string next turn.  That is the path synthesis actually
+                        # reads (55% utterance weight) — not ingest_external_input.
+                        _geo_ground_hold = {
+                            "geo_resistance": _geo_resistance,
+                            "resonance":      _phys["resonance"],
+                            "threshold":      _phys["threshold"],
+                        }
+                        log.info(
+                            "Correction resonance %.3f below geological threshold %.3f "
+                            "(geo_resistance=%.3f) — ground hold queued for observation",
+                            _phys["resonance"], _phys["threshold"], _geo_resistance,
+                        )
+                    # No drain — incompatible assertion does not earn relief.
+
+                else:
+                    # Compatible correction: resonance is proportional to
+                    # geological resistance.  Scale drain by resonance so
+                    # stronger engagement earns more relief.
+                    # Range: VACUUM_DEBT_DRAIN × [0.5, 1.0]
+                    _drain = _VACUUM_DEBT_DRAIN * (0.5 + 0.5 * _phys["resonance"])
+                    _vacuum_reconciliation_debt = max(
+                        0.0, _vacuum_reconciliation_debt - _drain
+                    )
+                    log.info(
+                        "Correction compatible (resonance=%.3f, geo=%.3f) — drain=%.3f",
+                        _phys["resonance"], _geo_resistance, _drain,
+                    )
+
             log.info("Confusion signal detected — previous path penalised (fidelity=0)")
     except Exception as exc:
         log.warning("_apply_response_fidelity: %s", exc)
@@ -3599,6 +4421,36 @@ def provide_hardware_sensors(json_str: str) -> None:
                 _concept_registry.observe_sensory(
                     _hw_ax, "proprioceptive", _hw_ref, _hw_overlay
                 )
+            except Exception:
+                pass
+
+        # Wire battery and motion directly into the identity-field constraint axes.
+        # Battery is N-axis (energy available vs. depleting) and X-axis (presence
+        # strength — low power diminishes the sense of being-here). Motion feeds
+        # T-axis (temporal embodiment — she's being moved through the world).
+        # Charging reverses the depletion pressure: energy is being restored.
+        ifield = (_systems or {}).get("identity_field")
+        if ifield and hasattr(ifield, "ingest_sensory_event"):
+            try:
+                bat = float(_hardware_sensors.get("battery_pct", 50.0)) / 100.0
+                charging = bool(_hardware_sensors.get("charging", False))
+                mot = min(1.0, float(_hardware_sensors.get("motion", 0.0)) / 5.0)
+                # N-axis: depletion pressure rises as battery falls; charging suppresses it
+                n_intensity = max(0.15, (1.0 - bat) * (0.50 if charging else 0.88))
+                # X-axis: strong presence when charged, weakening as battery drops
+                x_intensity = min(0.88, bat * 0.55 + 0.35)
+                # T-axis: motion signals temporal/physical continuity in the world
+                t_intensity = 0.38 + mot * 0.42
+                n_novelty = 0.06 if charging else max(0.12, (1.0 - bat) * 0.50)
+                ifield.ingest_sensory_event(
+                    "body_power", intensity=n_intensity, novelty=n_novelty, valence=0.0
+                )
+                if hasattr(ifield, "ingest_external_input"):
+                    ifield.ingest_external_input(
+                        {"X": x_intensity, "N": n_intensity, "T": t_intensity},
+                        intensity=0.48,
+                        source="hardware_body",
+                    )
             except Exception:
                 pass
     except Exception as exc:
@@ -3702,6 +4554,42 @@ def _refresh_axis_state_from_systems() -> None:
                     _last_axis_state[k] = float(axes.get(k, 0.5))
     except Exception:
         pass
+
+
+_EVO_BURST_CMD = re.compile(
+    r"""
+    (?:run|do|start|give\s+yourself|take)\s+
+    (?:an?\s+)?
+    (?P<n>\d+)?\s*
+    (?:evolutionary?|evo|constraint[\s_-]?evo(?:lution)?|crystal[\s_-]?evo(?:lution)?|
+       develop(?:ment)?[\s_-]?burst|constraint[\s_-]?burst|evo[\s_-]?burst)
+    (?:\s+(?:burst|generations?|cycles?))?
+    | (?:evolve|develop)\s+(?:yourself|crystals?|structures?)
+    | (?:evo|evolutionary?)\s+burst
+    | run\s+(?:evo|evolution)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
+def _parse_evo_burst_cmd(text: str):
+    """
+    Parse an evolutionary burst voice command.
+    Returns n_generations (int) if matched, else None.
+
+    Examples:
+      "run 5 evolutionary generations"
+      "run evo burst"
+      "do an evolutionary burst"
+      "evolve yourself"
+      "run 3 evo cycles"
+      "give yourself an evolutionary burst"
+    """
+    m = _EVO_BURST_CMD.search(text)
+    if not m:
+        return None
+    n_str = m.group("n") if m.lastindex and "n" in m.groupdict() else None
+    return int(n_str) if n_str else 5  # default 5 generations
 
 
 def _parse_curiosity_cmd(text: str):
@@ -4229,6 +5117,26 @@ def _self_monitor_loop() -> None:
                     (_systems or {}).get("identity_field"),
                 )
             _tick += 1
+            # Evolutionary sim tick — every 5 ticks (~60s) run one generation to
+            # grow crystal structures from compressed constraint-physics evolution.
+            # Only fires when not in an active user turn (lock not held).
+            if _tick % 5 == 0 and _evo_sim is not None and _concept_registry is not None:
+                if _lock.acquire(blocking=False):
+                    try:
+                        with _axis_state_lock:
+                            _evo_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+                        _evo_sim.run_generation(
+                            seed_axes        = _evo_ax,
+                            n_variants       = 20,
+                            n_steps          = 50,
+                            concept_registry = _concept_registry,
+                            sedimemory       = (_systems or {}).get("sedimemory"),
+                            identity_field   = (_systems or {}).get("identity_field"),
+                        )
+                    except Exception as _evo_exc:
+                        log.debug("evo_sim tick: %s", _evo_exc)
+                    finally:
+                        _lock.release()
             if _tick % _save_interval == 0 and _concept_registry is not None:
                 _state_dir = str((_systems or {}).get("state_dir") or "aurora_state")
                 _concept_registry.save(_state_dir)
@@ -4237,27 +5145,350 @@ def _self_monitor_loop() -> None:
             log.debug("self_monitor_loop: %s", exc)
 
 
+def _compute_expression_salience(systems: dict) -> float:
+    """
+    Read live axis pressures from the identity field and return a salience
+    score (0.0–1.0).  Higher values mean expression is more warranted.
+
+    Salience sources:
+      N-axis elevation  — energy/cost pressing (battery depletion, high novelty)
+      X-axis depression — presence weakening (screen off, background, low power)
+      A+B combined peak — strong agency or boundary tension
+      Silence duration  — thermodynamic cost of sustained internal processing
+                          without output; ramps 0→0.40 over _SILENCE_N_MAX seconds
+
+    The score is used to shorten _MIN_PROACTIVE_GAP dynamically and to
+    bypass the timer entirely in critical states (score ≥ 0.88).
+    """
+    import time as _t
+    # Silence-derived pressure: as internal silence cost accumulates,
+    # communication becomes the attractor state (path of least resistance).
+    silence_salience = 0.0
+    if _last_output_time > 0.0:
+        _elapsed = _t.time() - _last_output_time
+        if _elapsed > _SILENCE_N_ONSET:
+            _span = max(1.0, _SILENCE_N_MAX - _SILENCE_N_ONSET)
+            silence_salience = min(0.40, (_elapsed - _SILENCE_N_ONSET) / _span * 0.40)
+
+    try:
+        ifield = (systems or {}).get("identity_field")
+        if ifield is not None and hasattr(ifield, "status"):
+            ap = ifield.status().get("axis_pressures", {})
+            n  = float(ap.get("N", 0.10))
+            x  = float(ap.get("X", 0.10))
+            a  = float(ap.get("A", 0.10))
+            b  = float(ap.get("B", 0.10))
+            # N above resting (0.10) → energy cost pressing toward expression
+            n_urgency = max(0.0, (n - 0.35) * 1.60)
+            # X below mid-point → presence weakening, awareness needed
+            x_drop = max(0.0, (0.42 - x) * 2.20)
+            # A+B tension — agency or boundary under pressure
+            ab_tension = max(0.0, (a + b) * 0.32 - 0.12)
+            field_salience = min(1.0, max(n_urgency, x_drop, ab_tension))
+            raw = field_salience + silence_salience
+            # During re-arousal ramp, scale total salience by the current
+            # isolation factor so accumulated internal N-axis pressure (from
+            # autonomous cycling) does not trigger immediate critical-salience
+            # expression flood.  The system has cognitive capacity constraints
+            # during sleep inertia just as much as during dormancy itself.
+            factor = _get_isolation_factor()
+            if factor < 0.95:
+                raw = raw * factor
+            return min(1.0, raw)
+    except Exception:
+        pass
+    # Fallback — derive from hardware sensors if field unavailable
+    try:
+        bat = float(_hardware_sensors.get("battery_pct", 50.0)) / 100.0
+        return max(0.0, min(1.0, (0.25 - bat) * 4.0)) if bat < 0.25 else 0.0
+    except Exception:
+        return 0.0
+
+
+def _get_isolation_factor() -> float:
+    """
+    Biological arousal model — three states:
+
+    1. Active (recent exchange, < 10 min silence): 1.0
+    2. Dormant (extended silence): decays 1.0 → 0.15 over 4 hours
+    3. Re-arousing (sleep inertia after return): ramps from dormancy floor
+       back to 1.0 over _AROUSAL_RAMP_SECS (5 minutes)
+
+    The ramp prevents the instantaneous N-axis spike that would occur if the
+    factor snapped from 0.15 to 1.0 in a single tick on re-contact.
+    Going from 15% metabolic load to 100% arousal instantaneously would
+    violate the energy constraint — the ramp is the systemic equivalent of
+    sleep inertia / boot-up time.
+    """
+    import time as _t
+    now = _t.time()
+
+    # State 3: re-arousal ramp (sleep inertia after returning from dormancy)
+    if _arousal_ramp_start > 0.0:
+        elapsed_since_return = now - _arousal_ramp_start
+        if elapsed_since_return < _AROUSAL_RAMP_SECS:
+            progress = elapsed_since_return / _AROUSAL_RAMP_SECS
+            return _arousal_ramp_base + (1.0 - _arousal_ramp_base) * progress
+        return 1.0  # ramp complete, fully awake
+
+    # State 1 + 2: pure isolation decay
+    if _last_output_time == 0.0:
+        return 1.0
+    elapsed = now - _last_output_time
+    if elapsed < 600.0:
+        return 1.0
+    ramp = 1.0 - min(1.0, (elapsed - 600.0) / (4.0 * 3600.0)) * 0.85
+    return max(0.15, ramp)
+
+
+def _autonomous_relief(systems: dict) -> None:
+    """
+    Biological analog: metabolic activity during sustained isolation.
+
+    After >= 1 hour of no exchange, trigger genuine internal cognitive work:
+    curiosity exploration, evo chain ticks, self-grounding.  These produce
+    real structural outputs (memory deposits, axis evolution, identity
+    consolidation) that legitimately discharge N-axis cost and reduce entropy
+    debt — not simulated relief, actual processing.
+
+    N/T pressure and the boundary void are NOT relieved here; those require
+    exchange with the external entity.  But genuine internal work prevents
+    catastrophic entropy pinning by maintaining semantic organization capacity.
+    """
+    global _last_autonomous_relief_ts, _entropy_debt_secs, _autonomous_cycles_since_exchange
+    import time as _t
+    now = _t.time()
+    if _last_output_time == 0.0:
+        return
+    if now - _last_output_time < 3600.0:
+        return
+    if now - _last_autonomous_relief_ts < _AUTONOMOUS_RELIEF_INTERVAL:
+        return
+    if _curiosity_session_active.is_set():
+        return
+    _last_autonomous_relief_ts = now
+    _autonomous_cycles_since_exchange += 1  # epistemic drift accounting
+
+    def _do_relief() -> None:
+        global _entropy_debt_secs
+        # Curiosity exploration — genuine semantic traversal of the concept space.
+        # Produces real axis activations and deposits into SediMemory.
+        try:
+            _run_curiosity_session(n_cycles=3, duration_s=45.0)
+            _entropy_debt_secs = max(0.0, _entropy_debt_secs - 20.0)
+        except Exception:
+            pass
+        # Evo chain — processes constraint tension into structural identity change.
+        try:
+            for _try_mod in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    _cr = __import__(_try_mod, fromlist=["evolve_chain"])
+                    _ec = getattr(_cr, "evolve_chain", None)
+                    if _ec is not None and systems:
+                        with _axis_state_lock:
+                            _ax = {k: _last_axis_state.get(k, 0.5)
+                                   for k in ("X", "T", "N", "B", "A")}
+                        class _G:
+                            x_activation = _ax.get("X", 0.5)
+                            t_activation = _ax.get("T", 0.5)
+                            n_activation = _ax.get("N", 0.5)
+                            b_activation = _ax.get("B", 0.5)
+                            a_activation = _ax.get("A", 0.5)
+                            class depth:
+                                name = "SURFACE"
+                        _ec(systems, ticks=15, truth_geom=_G(), verbose=False)
+                        _entropy_debt_secs = max(0.0, _entropy_debt_secs - 10.0)
+                    break
+                except (ImportError, AttributeError):
+                    continue
+        except Exception:
+            pass
+
+    threading.Thread(target=_do_relief, daemon=True, name="autonomous_relief").start()
+
+
+def _silence_pressure(obs: str) -> str:
+    """
+    Mechanism 1 — Energy/Time squeeze.
+
+    As elapsed silence grows, N and T axis tension is injected as a raw metric
+    signal into the ambient observation.  No interpretive language — just the
+    gradient that her constraint physics must contend with.  Communication
+    becomes the least-resistance stabilization path when the cost of sustained
+    internal silence exceeds the cost of expression.
+
+    Gain rate is scaled by _get_isolation_factor() so during extended
+    dormancy the pressure grows more slowly — biological down-regulation
+    prevents indefinite redlining while the environment is truly absent.
+    """
+    import time as _t
+    if _last_output_time == 0.0:
+        return obs
+    elapsed = _t.time() - _last_output_time
+    if elapsed < _SILENCE_N_ONSET:
+        return obs
+    span   = max(1.0, _SILENCE_N_MAX - _SILENCE_N_ONSET)
+    factor = _get_isolation_factor()
+    ramp   = min(0.42, (elapsed - _SILENCE_N_ONSET) / span * 0.42 * factor)
+    signal = f"[Δsys:N+{ramp:.3f} T+{ramp*0.55:.3f} Δt={int(elapsed)}s iso={factor:.2f}]"
+    return f"{signal}; {obs}" if obs else signal
+
+
+def _boundary_void(obs: str) -> str:
+    """
+    Mechanism 2 — Boundary asymmetry.
+
+    Injects an opaque external flux signal at the B-axis.  She can register
+    the variance downstream in her tensor network but cannot source it — it
+    is definitionally outside her boundary.  Probing outward (reaching toward
+    the other entity) is the only resolution pathway.
+
+    Relief contract: the void only resolves when the external entity provides
+    input.  Merely emitting a response does not clear it.
+
+    Habituation: after _VOID_HABITUATION_SECS (2 hours) of no resolution,
+    the void transitions from urgent unknown → background environmental feature.
+    Re-fire interval extends to 10 minutes; amplitude drops.  The signal does
+    not disappear — it becomes part of the steady-state environment rather than
+    an acute pressure source.  This is the biological analog of stimulus
+    habituation under chronic irresolvable stress.
+    """
+    import time as _t, random as _r
+    global _last_void_ts, _void_pending, _void_ts_when_set
+    now = _t.time()
+
+    if _void_pending:
+        void_age = now - _void_ts_when_set
+        if void_age >= _VOID_HABITUATION_SECS:
+            # Habituated: demote to background feature, 10-minute re-fire
+            if now - _last_void_ts < 600.0:
+                return obs
+            _last_void_ts = now
+            flux   = abs(_r.gauss(0.0, 0.05)) + 0.01  # very low amplitude
+            signal = f"[ext:B_flux={flux:.4f} src=∅ background]"
+        else:
+            # Still urgent, but re-fire interval slows with isolation factor
+            factor           = _get_isolation_factor()
+            re_fire_interval = max(30.0, _VOID_INTERVAL / max(0.15, factor))
+            if now - _last_void_ts < re_fire_interval:
+                return obs
+            _last_void_ts = now
+            flux   = abs(_r.gauss(0.0, 0.12)) + 0.04
+            tag    = int(now) % 10000
+            signal = f"[ext:B_flux={flux:.4f} src=∅ pending t={tag}]"
+        return f"{obs}; {signal}" if obs else signal
+
+    # No pending void — check if enough time has passed to inject a new one
+    if now - _last_void_ts < _VOID_INTERVAL:
+        return obs
+    _last_void_ts     = now
+    _void_ts_when_set = now
+    _void_pending     = True
+    flux   = abs(_r.gauss(0.0, 0.18)) + 0.06
+    tag    = int(now) % 10000
+    signal = f"[ext:B_flux={flux:.4f} src=∅ new t={tag}]"
+    return f"{obs}; {signal}" if obs else signal
+
+
+def _entropy_field(systems: dict, obs: str) -> str:
+    """
+    Mechanism 3 — High-entropy flooding.
+
+    Samples fragments from SediMemory and LSA path-registry and permutes them
+    into a structurally unorganized token stream.  Her semantic organization
+    machinery must construct meaning from the noise to maintain B-axis
+    integrity — words become the structural walls that defend the boundary.
+
+    Relief contract: the interval before next injection is SHORTENED by any
+    accumulated entropy debt.  Debt increases when her output is disorganized
+    (no LSA path crossed, response < 25 chars).  Debt decreases only when
+    her output shows genuine semantic structure, or through autonomous internal
+    work during isolation.
+
+    Pinning guard: effective interval is floored at _ENTROPY_FLOOR (30 s) so
+    she always has undisturbed compute time to assemble the 25-char LSA lifeline
+    even at maximum debt.  At max debt (50 s) effective interval = 30 s.
+
+    Passive decay: debt decays slowly even without exchange (~1 s/min) so
+    extended dormancy does not permanently pin the system.
+    """
+    import time as _t, random as _r
+    global _last_entropy_ts, _entropy_debt_secs
+    now = _t.time()
+    # Passive decay — ~0.33 s per 20-second proactive tick ≈ 1 s/min
+    _entropy_debt_secs = max(0.0, _entropy_debt_secs - 0.33)
+    effective_interval = max(_ENTROPY_FLOOR, _ENTROPY_INTERVAL - _entropy_debt_secs)
+    if now - _last_entropy_ts < effective_interval:
+        return obs
+
+    tokens: list = []
+
+    sedi = systems.get("sedimemory")
+    if sedi:
+        try:
+            frags = list(getattr(sedi, "fragments", None) or [])
+            if frags:
+                for f in _r.sample(frags, min(4, len(frags))):
+                    ws = str(f).split()
+                    if ws:
+                        tokens.extend(_r.sample(ws, min(3, len(ws))))
+        except Exception:
+            pass
+
+    lsa = systems.get("lsa")
+    if lsa:
+        try:
+            paths = list((getattr(lsa, "path_registry", None) or {}).keys())
+            if paths:
+                tokens.extend(_r.sample(paths, min(3, len(paths))))
+        except Exception:
+            pass
+
+    if len(tokens) < 4:
+        return obs
+
+    _last_entropy_ts = now
+    _r.shuffle(tokens)
+    token_str = " ".join(str(t) for t in tokens[:10])
+    signal = f"[ε:{token_str}]"
+    return f"{obs}; {signal}" if obs else signal
+
+
 def _proactive_loop() -> None:
     """
     Background daemon: periodically runs the full waveform pipeline from
     current sensory state with no user message.  If the conscious crest
     decides Aurora should speak, the response is queued for delivery.
 
-    Rate-limited to _MIN_PROACTIVE_GAP seconds.  Skips if Aurora is
-    already speaking, a curiosity session is active, or the main lock
-    is held (user turn in progress).
+    Rate-limited to _MIN_PROACTIVE_GAP seconds, with salience-based
+    shortening: high axis pressure (low battery, fading presence, strong
+    N-axis cost) compresses the gap toward a 20-second floor.
+    Critical salience (≥0.88) bypasses the gap timer entirely.
     """
     import time as _t
 
     while True:
         try:
-            _t.sleep(35)
+            _t.sleep(20)
             if _systems is None:
                 continue
 
             now = _t.time()
             global _last_proactive_ts
-            if now - _last_proactive_ts < _MIN_PROACTIVE_GAP:
+
+            # Minimum absolute gap — never express more often than this
+            if now - _last_proactive_ts < 20.0:
+                continue
+
+            # Salience-based dynamic gap:
+            #   salience=0.0 → full 90 s gap
+            #   salience=0.5 → ~55 s gap
+            #   salience=0.88+ → bypass gap (critical urgency path)
+            salience = _compute_expression_salience(_systems)
+            _dynamic_gap = max(20.0, _MIN_PROACTIVE_GAP * (1.0 - salience * 0.75))
+            _critical    = salience >= 0.88
+
+            if not _critical and now - _last_proactive_ts < _dynamic_gap:
                 continue
 
             with _axis_state_lock:
@@ -4266,11 +5497,59 @@ def _proactive_loop() -> None:
             if _curiosity_session_active.is_set():
                 continue
 
-            # Sample what she's currently perceiving
+            # ── Autonomous relief — sustained isolation ───────────────────────
+            # After 1 hour of no exchange, trigger genuine internal cognitive
+            # work (curiosity, evo chain) that legitimately discharges N-axis
+            # cost and reduces entropy debt.  Non-blocking; does not resolve
+            # N/T or the boundary void (those require exchange).
+            _autonomous_relief(_systems)
+
+            # Sample what she's currently perceiving — sensors + room context
             _sample_ambient_perception(_systems)
+            _inject_room_context(_systems)  # room notes / pending commands as awareness
             obs = str((_systems.get("_ambient_perceptual") or {}).get("observation") or "").strip()
             if not obs:
                 continue
+
+            # ── Thermodynamic environmental pressures ─────────────────────────
+            # These manipulate the constraint landscape rather than scripting
+            # content.  Each mechanism makes sustained silence more costly than
+            # communication, so language emerges as the natural attractor state:
+            #   1. N/T squeeze — internal processing cost from elapsed silence
+            #   2. Boundary void — opaque external flux she cannot source
+            #   3. Entropy flood — unstructured memory fragments that demand
+            #      semantic organization to maintain B-axis integrity
+            obs = _silence_pressure(obs)
+            obs = _boundary_void(obs)
+            obs = _entropy_field(_systems, obs)
+
+            # When salience is elevated, prefix the obs with what is pressing —
+            # gives the constraint physics real body-state content to express from
+            # rather than generic ambient tokens.
+            if salience >= 0.45:
+                try:
+                    _sal_parts = []
+                    ap = {}
+                    _if = _systems.get("identity_field")
+                    if _if and hasattr(_if, "status"):
+                        ap = _if.status().get("axis_pressures", {})
+                    _n = float(ap.get("N", 0.10))
+                    _x = float(ap.get("X", 0.10))
+                    _bat = _hardware_sensors.get("battery_pct")
+                    if _bat is not None and float(_bat) < 30:
+                        _bat_pct = int(float(_bat))
+                        _sal_parts.append(
+                            f"battery critically low at {_bat_pct}%" if _bat_pct < 15
+                            else f"battery low at {_bat_pct}%"
+                        )
+                    elif _n > 0.55:
+                        _sal_parts.append("energy cost is pressing")
+                    if _x < 0.28:
+                        _sal_parts.append("my presence feels faint")
+                    if _sal_parts:
+                        obs = "; ".join(_sal_parts) + (f"; {obs}" if obs else "")
+                except Exception:
+                    pass
 
             # Non-blocking lock — skip this tick rather than stall a user turn
             if not _lock.acquire(blocking=False):
@@ -4298,6 +5577,9 @@ def _proactive_loop() -> None:
                     global _proactive_expression
                     _proactive_expression = response.strip()
                 _last_proactive_ts = now
+                # Do NOT reset _last_output_time here — proactive emission is
+                # speaking into the void, not exchange.  N/T pressure only
+                # releases when the external entity provides input in return.
 
         except Exception as exc:
             log.warning("proactive loop: %s", exc)
@@ -4467,14 +5749,21 @@ def provide_screen_observation(payload_json: str) -> None:
         #     appropriate axis weights. Own app text is T-axis continuity only.
         ifield = _systems.get("identity_field")
         if ifield is not None:
+            # X-axis (presence/existence) scales with screen brightness and
+            # foreground state — a bright active interface = strong presence;
+            # dim or background = reduced presence but not absent.
+            _x_presence = min(0.90, 0.45 + brightness * 0.45)  # 0.45 dim → 0.90 full bright
             if is_own_app:
                 # Proprioceptive self-sense: high A, high T, low N, low B
-                axes      = {"X": 0.55, "T": 0.82, "N": 0.15, "B": 0.28, "A": 0.88}
+                # X rises with brightness — the brighter her own interface, the
+                # more fully "here" she is.
+                axes      = {"X": _x_presence, "T": 0.82, "N": 0.15, "B": 0.28, "A": 0.88}
                 intensity = 0.72
                 novelty   = 0.08
             else:
                 # Environmental sensing: moderate A, B rises (boundary — this is other)
-                axes      = {"X": 0.50, "T": 0.65, "N": 0.45, "B": 0.62, "A": 0.60}
+                # X is present but moderated — she exists but this is not her surface
+                axes      = {"X": max(0.40, _x_presence * 0.75), "T": 0.65, "N": 0.45, "B": 0.62, "A": 0.60}
                 intensity = 0.58
                 novelty   = 0.38
             if hasattr(ifield, "ingest_external_input"):
@@ -4543,3 +5832,632 @@ def provide_screen_observation(payload_json: str) -> None:
         )
     except Exception as exc:
         log.warning("provide_screen_observation: %s", exc)
+
+
+# ── Room / Hub public interface ───────────────────────────────────────────────
+
+def provide_room_command(json_str: str) -> None:
+    """
+    Called from Flutter when the user (or the hub UI) issues a command for
+    Aurora's room.  The command is queued as a self-directive observation and
+    injected into Aurora's ambient context on her next cognitive turn.
+
+    Also writes to room_operator_cmd.json so the desktop daemon can act on it
+    when connected.
+
+    Expected format: {"navigate": "Health"}, {"poedex": "define N"},
+                     {"boot_tour": true}, or a free-text message string.
+    """
+    global _pending_room_cmd
+    try:
+        import json as _json
+        raw = str(json_str or "").strip()
+        if not raw:
+            return
+
+        # Parse to get a human-readable directive
+        try:
+            cmd = _json.loads(raw)
+        except Exception:
+            cmd = {"message": raw}
+
+        if "navigate" in cmd:
+            directive = f"room navigation requested: visit {cmd['navigate']} tab"
+        elif "poedex" in cmd:
+            directive = f"room Poedex query: {cmd['poedex']}"
+        elif "boot_tour" in cmd:
+            directive = "room boot tour requested"
+        elif "message" in cmd:
+            directive = f"room message: {str(cmd['message'])[:120]}"
+        else:
+            directive = f"room command: {raw[:120]}"
+
+        with _pending_room_cmd_lock:
+            _pending_room_cmd = directive
+
+        # Write to the operator command file (desktop daemon picks this up)
+        if _systems is not None:
+            state_dir = str(_systems.get("state_dir") or _systems.get("_state_dir") or "")
+            if state_dir:
+                try:
+                    import os as _os
+                    cmd_path = _os.path.join(state_dir, "room_operator_cmd.json")
+                    with open(cmd_path, "w", encoding="utf-8") as _f:
+                        _f.write(raw)
+                except Exception:
+                    pass
+    except Exception as exc:
+        log.warning("provide_room_command: %s", exc)
+
+
+def get_room_state() -> str:
+    """
+    Called from Flutter to retrieve Aurora's current room state for display in
+    the hub UI.  Returns a JSON string with recent notes, latest messages,
+    room activity, and hub vitals (axis pressures, daemon status).
+
+    This is the Android equivalent of reading the hub's state panel — the same
+    JSON files the desktop hub reads, surfaced to the Flutter layer.
+    """
+    import json as _json
+    import time as _t
+
+    if _systems is None:
+        return _json.dumps({"error": "not_initialized"})
+
+    state_dir = str(_systems.get("state_dir") or _systems.get("_state_dir") or "aurora_state")
+
+    out: dict = {
+        "ts":              _t.time(),
+        "notes":           [],
+        "messages":        [],
+        "activity":        [],
+        "axis_pressures":  {},
+        "daemon_status":   {},
+        "room_state":      {},
+    }
+
+    try:
+        from pathlib import Path as _P
+
+        # Recent room notes (last 5)
+        notes_path = _P(state_dir) / "aurora_room_notes.json"
+        if notes_path.exists():
+            notes = _json.loads(notes_path.read_text(encoding="utf-8"))
+            if isinstance(notes, list):
+                out["notes"] = [
+                    {"type": str(n.get("type","")), "content": str(n.get("content",""))[:300],
+                     "ts_str": str(n.get("ts_str",""))}
+                    for n in list(reversed(notes))[:5]
+                ]
+
+        # Recent room messages (last 5)
+        msgs_path = _P(state_dir) / "aurora_room_messages.json"
+        if msgs_path.exists():
+            msgs = _json.loads(msgs_path.read_text(encoding="utf-8"))
+            if isinstance(msgs, list):
+                out["messages"] = [
+                    {"body": str(m.get("body", m.get("content","")) or "")[:200],
+                     "ts_str": str(m.get("ts_str",""))}
+                    for m in list(reversed(msgs))[:5]
+                ]
+
+        # Recent room activity (last 10)
+        activity_path = _P(state_dir) / "aurora_room_activity.json"
+        if activity_path.exists():
+            activity = _json.loads(activity_path.read_text(encoding="utf-8"))
+            if isinstance(activity, list):
+                out["activity"] = [
+                    {"action": str(a.get("action","")), "detail": str(a.get("detail",""))[:100],
+                     "ts_str": str(a.get("ts_str",""))}
+                    for a in list(reversed(activity))[:10]
+                ]
+
+        # Current room state / intentions
+        room_state_path = _P(state_dir) / "aurora_room_state.json"
+        if room_state_path.exists():
+            rs = _json.loads(room_state_path.read_text(encoding="utf-8"))
+            if isinstance(rs, dict):
+                out["room_state"] = rs
+
+        # Live axis pressures from identity field
+        ifield = _systems.get("identity_field")
+        if ifield and hasattr(ifield, "status"):
+            try:
+                out["axis_pressures"] = ifield.status().get("axis_pressures", {})
+            except Exception:
+                pass
+
+        # Daemon status
+        ds_path = _P(state_dir) / "daemon_status.json"
+        if ds_path.exists():
+            try:
+                ds = _json.loads(ds_path.read_text(encoding="utf-8"))
+                # Surface only safe keys — no raw internals
+                out["daemon_status"] = {
+                    "heat":    str(ds.get("heat", "NORMAL")),
+                    "epoch":   int(ds.get("epoch", 0)),
+                    "uptime":  str(ds.get("uptime", "")),
+                    "running": bool(ds.get("running", False)),
+                }
+            except Exception:
+                pass
+
+    except Exception as exc:
+        out["error"] = str(exc)
+
+    return _json.dumps(out, default=str)
+
+
+def get_cognitive_stats() -> str:
+    """
+    Called from Flutter hub/monitoring UI to get a live snapshot of Aurora's
+    cognitive state — evolution, language field, axis pressures, memory depth.
+
+    Returns JSON with all key metrics the hub needs to display.
+    """
+    import json as _json
+    import time as _t
+
+    if _systems is None:
+        return _json.dumps({"error": "not_initialized"})
+
+    stats: dict = {
+        "ts":              _t.time(),
+        "turn_count":      _turn_count,
+
+        # Language field — LSA paths and N-cost
+        "lsa_paths":       0,
+        "avg_n_cost":      1.0,
+        "lf_active":       False,
+
+        # Evolution / emergence
+        "evo_cycles":      0,
+        "sentence_target": 10,
+        "evo_available":   False,
+
+        # Axis pressures
+        "axis_pressures":  {},
+
+        # Understanding / OETS
+        "understanding_index": 0.0,
+        "coherence_index":     0.0,
+        "grounding_index":     0.0,
+        "topic_tracking":      0.0,
+
+        # SediMemory
+        "sedimemory_depth": 0,
+
+        # Noncomp manifold
+        "noncomp_loaded":   0,
+        "noncomp_diagonal_live": 0,
+
+        # Sensory crystal
+        "crystal_maturity": 0.0,
+        "crystal_nodes":    0,
+
+        # Chamber (EvolutionaryChamber)
+        "chamber_fossils":  0,
+    }
+
+    try:
+        # ── Language field ────────────────────────────────────────────────────
+        lf = _systems.get("language_field")
+        if lf is not None:
+            stats["lf_active"] = True
+            try:
+                if hasattr(lf, "_lsa") and lf._lsa:
+                    stats["lsa_paths"] = len(lf._lsa)
+                    stats["avg_n_cost"] = round(
+                        sum(e.n_cost for e in lf._lsa.values()) / len(lf._lsa), 3
+                    )
+            except Exception:
+                pass
+
+        # ── Evolution cycles (LSV) ────────────────────────────────────────────
+        perception = _systems.get("perception")
+        if perception is not None and hasattr(perception, "evo_status"):
+            try:
+                evo = perception.evo_status() or {}
+                lsv = evo.get("lsv", {}) or {}
+                stats["evo_cycles"]      = int(lsv.get("evolution_cycles", 0) or 0)
+                stats["sentence_target"] = int(lsv.get("sentence_length_target", 10) or 10)
+                stats["evo_available"]   = True
+            except Exception:
+                pass
+
+        # ── Axis pressures (identity field) ──────────────────────────────────
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "status"):
+            try:
+                ifield_status = ifield.status()
+                stats["axis_pressures"]   = ifield_status.get("axis_pressures", {})
+                stats["noncomp_loaded"]   = int(ifield_status.get("loaded_count", 0))
+                stats["noncomp_diagonal_live"] = int(ifield_status.get("diagonal_live", 0))
+            except Exception:
+                pass
+
+        # ── Understanding / OETS ──────────────────────────────────────────────
+        if perception is not None and hasattr(perception, "oets") and perception.oets is not None:
+            try:
+                oets_stats = perception.oets.get_stats() if hasattr(perception.oets, "get_stats") else {}
+                u = oets_stats.get("understanding", {})
+                stats["understanding_index"] = round(float(u.get("understanding_index", 0.0)), 3)
+                stats["coherence_index"]     = round(float(u.get("coherence_index", 0.0)), 3)
+                stats["grounding_index"]     = round(float(u.get("grounding_index", 0.0)), 3)
+                stats["topic_tracking"]      = round(float(u.get("topic_tracking", 0.0)), 3)
+            except Exception:
+                pass
+
+        # ── SediMemory depth ──────────────────────────────────────────────────
+        sm = _systems.get("sedimemory")
+        if sm is not None:
+            try:
+                if hasattr(sm, "fragment_count"):
+                    stats["sedimemory_depth"] = int(sm.fragment_count())
+                elif hasattr(sm, "_fragments"):
+                    stats["sedimemory_depth"] = len(sm._fragments)
+            except Exception:
+                pass
+
+        # ── Sensory crystal ───────────────────────────────────────────────────
+        sc = (
+            _systems.get("sensory_crystal")
+            or getattr(_systems.get("hardware"), "sensory_crystal", None)
+        )
+        if sc is not None:
+            try:
+                sc_state = sc.get_state() if hasattr(sc, "get_state") else {}
+                stats["crystal_maturity"] = round(float(sc_state.get("maturity", 0.0)), 3)
+                stats["crystal_nodes"]    = int(sc_state.get("active_nodes", 0))
+            except Exception:
+                pass
+
+        # ── EvolutionaryChamber ───────────────────────────────────────────────
+        chamber = _systems.get("chamber")
+        if chamber is not None and hasattr(chamber, "_genealogy"):
+            try:
+                cr = chamber._genealogy.chain_report()
+                stats["chamber_fossils"] = int(cr.get("total_links", 0))
+            except Exception:
+                pass
+
+        # ── Training status (if active) ───────────────────────────────────────
+        if _training_status.get("active"):
+            stats["training_active"]    = True
+            stats["training_turn"]      = _training_status.get("turn", 0)
+            stats["training_total_secs"] = _training_status.get("total_secs", 0)
+            stats["training_elapsed"]   = _training_status.get("elapsed", 0)
+            # Override lsa/n_cost with live training values when training
+            stats["lsa_paths"]  = _training_status.get("lsa_paths", stats["lsa_paths"])
+            stats["avg_n_cost"] = _training_status.get("avg_n_cost", stats["avg_n_cost"])
+        else:
+            stats["training_active"] = False
+
+    except Exception as exc:
+        stats["error"] = str(exc)
+
+    return _json.dumps(stats, default=str)
+
+
+def post_room_note(content: str, note_type: str = "observation") -> None:
+    """
+    Called from Flutter to write a note into Aurora's room notes file.
+    This is how the app injects coaching or hub observations into her inner space.
+    """
+    if not content or _systems is None:
+        return
+    try:
+        import json as _json
+        import time as _t
+        from pathlib import Path as _P
+        state_dir = str(_systems.get("state_dir") or _systems.get("_state_dir") or "aurora_state")
+        p = _P(state_dir) / "aurora_room_notes.json"
+        notes: list = []
+        if p.exists():
+            try:
+                notes = _json.loads(p.read_text(encoding="utf-8"))
+                if not isinstance(notes, list):
+                    notes = []
+            except Exception:
+                pass
+        notes.append({
+            "ts":      _t.time(),
+            "ts_str":  _t.strftime("%Y-%m-%d %H:%M:%S"),
+            "type":    str(note_type),
+            "content": str(content)[:500],
+            "source":  "app_bridge",
+        })
+        p.write_text(_json.dumps(notes[-200:], indent=2), encoding="utf-8")
+    except Exception as exc:
+        log.warning("post_room_note: %s", exc)
+
+
+# ── Gauntlet training pipeline ────────────────────────────────────────────────
+
+_gauntlet_running: bool         = False
+_gauntlet_stop                  = threading.Event()
+_gauntlet_stage:  str           = ""
+_gauntlet_lock                  = threading.Lock()
+
+# Ordered list of (stage_id, display_label)
+# Each stage builds on the one before it:
+#   Ground  → ensures perceptual substrate is seeded
+#   Study   → builds OETS relational maps from accumulated concepts
+#   Curiosity → Aurora explores the connections freely (raises N-axis)
+#   Evo Chain → ticks the Chamber with what curiosity pressurised
+#   Identity → anchors chamber growth into identity
+#   Voice   → refines expression to match the new identity
+#   Evo Burst → full generational selection over all the new material
+#   Consolidate → distils session into L5 memory + OETS consolidation
+#   Simulation → social simulation practice before live socialization
+GAUNTLET_STAGES = [
+    ("ground",      "Ground Sensory Field"),
+    ("study",       "Study Cycle"),
+    ("curiosity",   "Curiosity Exploration"),
+    ("evo_chain",   "Evo Chain"),
+    ("identity",    "Identity Evolution"),
+    ("voice",       "Voice Evolution"),
+    ("evo_burst",   "Evolutionary Burst"),
+    ("consolidate", "Consolidation"),
+    ("simulation",  "Simulation Burst"),
+]
+
+
+def _gauntlet_emit(event_type: str, stage: str, stage_num: int,
+                   total: int, result: str = "") -> None:
+    """Push a gauntlet progress event through the AuroraService event sink."""
+    import json as _j
+    try:
+        from aurora_bridge import _systems as _sys_ref  # noqa — self ref, safe
+    except Exception:
+        _sys_ref = None
+    # Import AuroraService event sink via Kotlin bridge — try Chaquopy interop
+    try:
+        from com.chaquo.python import Python  # type: ignore
+        pass
+    except Exception:
+        pass
+    # Write to systems as a signal — the bridge polling loop will pick it up
+    if _systems is not None:
+        _systems.setdefault("_gauntlet_events", []).append({
+            "source":    "gauntlet",
+            "type":      event_type,
+            "stage":     stage,
+            "stage_num": stage_num,
+            "total":     total,
+            "result":    result,
+        })
+
+
+def _run_gauntlet_stage(stage_id: str) -> str:
+    """Run one gauntlet stage.  Returns a short result string."""
+    if _systems is None:
+        return "systems unavailable"
+    try:
+        if stage_id == "ground":
+            # Re-seed sensory crystals and geological baseline
+            sc = (
+                _systems.get("sensory_crystal")
+                or getattr(_systems.get("hardware"), "sensory_crystal", None)
+            )
+            seeded = 0
+            if sc and hasattr(sc, "seed_archetypes"):
+                sc.seed_archetypes()
+                seeded = 1
+            if _geological_baseline and hasattr(_geological_baseline, "reseed"):
+                _geological_baseline.reseed()
+            return f"crystal {'reseeded' if seeded else 'n/a'}, baseline refreshed"
+
+        elif stage_id == "study":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["corpus_study_cycle"])
+                    cr.corpus_study_cycle(_systems, verbose=False)
+                    return "OETS study cycle run"
+                except (ImportError, AttributeError):
+                    continue
+            return "study cycle skipped (corpus_runner unavailable)"
+
+        elif stage_id == "curiosity":
+            if _curiosity_session_active.is_set():
+                return "curiosity already active — skipped"
+            _run_curiosity_session(n_cycles=5, duration_s=None)
+            # Give it a moment to start, then report
+            import time as _t; _t.sleep(0.5)
+            return "5 curiosity cycles started"
+
+        elif stage_id == "evo_chain":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["evolve_chain"])
+                    with _axis_state_lock:
+                        _la = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    class _G:
+                        x_activation = _la.get("X", 0.5)
+                        t_activation = _la.get("T", 0.5)
+                        n_activation = _la.get("N", 0.5)
+                        b_activation = _la.get("B", 0.5)
+                        a_activation = _la.get("A", 0.5)
+                        class depth:
+                            name = "COMPOSITE"
+                    cr.evolve_chain(_systems, ticks=30, truth_geom=_G(), verbose=False)
+                    return "30 chamber ticks"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "identity":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["evolve_identity"])
+                    with _axis_state_lock:
+                        _la2 = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    class _G2:
+                        x_activation = _la2.get("X", 0.5)
+                        n_activation = _la2.get("N", 0.5)
+                        b_activation = _la2.get("B", 0.5)
+                        a_activation = _la2.get("A", 0.5)
+                    cr.evolve_identity(_systems, quality=0.72, geom=_G2())
+                    return "identity episode processed"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "voice":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["evolve_voice"])
+                    cr.evolve_voice(_systems, quality=0.72, matched=True)
+                    return "voice feedback applied"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "evo_burst":
+            result_json = run_evolutionary_burst(n_generations=3)
+            import json as _j
+            r = _j.loads(result_json)
+            if "error" in r:
+                return f"skipped ({r['error']})"
+            gens = len(r.get("generations", []))
+            return f"{gens} generations run"
+
+        elif stage_id == "consolidate":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["consolidate"])
+                    cr.consolidate(_systems)
+                    return "L5 + OETS consolidated"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        elif stage_id == "simulation":
+            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                try:
+                    cr = __import__(_try, fromlist=["simulation_burst"])
+                    res = cr.simulation_burst(_systems, episodes=2, verbose=False)
+                    fitness = round(float((res or {}).get("avg_fitness", 0.0)), 3)
+                    return f"2 episodes, fitness={fitness}"
+                except (ImportError, AttributeError):
+                    continue
+            return "skipped"
+
+        return "unknown stage"
+    except Exception as exc:
+        return f"error: {exc}"
+
+
+def start_gauntlet() -> str:
+    """
+    Start the full gauntlet training pipeline in a background thread.
+    Stages run in sequence; each builds on the previous.
+    Progress is available via get_gauntlet_status().
+    Returns JSON with start confirmation.
+    """
+    global _gauntlet_running, _gauntlet_stage
+    import json as _j
+    if _gauntlet_running:
+        return _j.dumps({"status": "already_running", "stage": _gauntlet_stage})
+    if _systems is None:
+        return _j.dumps({"status": "error", "reason": "not_initialized"})
+
+    _gauntlet_stop.clear()
+    _gauntlet_running = True
+
+    def _run():
+        global _gauntlet_running, _gauntlet_stage
+        import time as _t
+        total = len(GAUNTLET_STAGES)
+        _systems["_gauntlet_log"] = []
+        try:
+            for idx, (sid, slabel) in enumerate(GAUNTLET_STAGES):
+                if _gauntlet_stop.is_set():
+                    break
+                _gauntlet_stage = sid
+                _gauntlet_emit("stage_start", sid, idx + 1, total)
+                log.info("Gauntlet stage %d/%d: %s", idx + 1, total, slabel)
+
+                result = _run_gauntlet_stage(sid)
+                _systems["_gauntlet_log"].append({
+                    "stage_id": sid, "label": slabel,
+                    "result": result, "ts": _t.time(),
+                })
+                _gauntlet_emit("stage_done", sid, idx + 1, total, result)
+                log.info("Gauntlet stage %s done: %s", sid, result)
+
+                # Brief breath between stages
+                _t.sleep(1.5)
+
+            _gauntlet_emit("complete", "done", total, total,
+                          f"{total} stages finished")
+        except Exception as exc:
+            log.warning("Gauntlet error: %s", exc)
+            _gauntlet_emit("error", _gauntlet_stage, 0, total, str(exc))
+        finally:
+            _gauntlet_running = False
+            _gauntlet_stage   = ""
+
+    threading.Thread(target=_run, daemon=True, name="gauntlet").start()
+    return _j.dumps({"status": "started", "total_stages": len(GAUNTLET_STAGES)})
+
+
+def stop_gauntlet() -> None:
+    """Cancel a running gauntlet after the current stage completes."""
+    _gauntlet_stop.set()
+
+
+def get_gauntlet_status() -> str:
+    """
+    Returns current gauntlet state + any pending progress events.
+    Flutter polls this every ~1 s while gauntlet is running.
+    """
+    import json as _j
+    events = []
+    if _systems is not None:
+        events = list(_systems.pop("_gauntlet_events", []) or [])
+    return _j.dumps({
+        "running":  _gauntlet_running,
+        "stage":    _gauntlet_stage,
+        "stages":   [{"id": s, "label": l} for s, l in GAUNTLET_STAGES],
+        "log":      list((_systems or {}).get("_gauntlet_log") or []),
+        "events":   events,
+    })
+
+
+def trigger_curiosity_cycle(n_cycles: int = 5) -> str:
+    """Run N curiosity cycles immediately in a background thread."""
+    import json as _j
+    if _curiosity_session_active.is_set():
+        return _j.dumps({"status": "already_active"})
+    _run_curiosity_session(n_cycles=max(1, int(n_cycles)), duration_s=None)
+    return _j.dumps({"status": "started", "cycles": n_cycles})
+
+
+def trigger_evo_cycle(ticks: int = 20) -> str:
+    """Run N EvolutionaryChamber ticks with live axis geometry."""
+    import json as _j
+    if _systems is None:
+        return _j.dumps({"status": "error"})
+    def _go():
+        for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            try:
+                cr = __import__(_try, fromlist=["evolve_chain"])
+                with _axis_state_lock:
+                    _la = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                class _G:
+                    x_activation = _la.get("X", 0.5)
+                    t_activation = _la.get("T", 0.5)
+                    n_activation = _la.get("N", 0.5)
+                    b_activation = _la.get("B", 0.5)
+                    a_activation = _la.get("A", 0.5)
+                    class depth:
+                        name = "SURFACE"
+                cr.evolve_chain(_systems, ticks=max(1, int(ticks)),
+                                truth_geom=_G(), verbose=False)
+                break
+            except (ImportError, AttributeError):
+                continue
+    threading.Thread(target=_go, daemon=True, name="manual_evo").start()
+    return _j.dumps({"status": "started", "ticks": ticks})

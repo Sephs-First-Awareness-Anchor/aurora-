@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
+import 'screens/hub_screen.dart';
 import 'screens/socialize_screen.dart';
 
 void main() {
@@ -37,6 +38,7 @@ class _AppShellState extends State<_AppShell> {
 
   static const _screens = [
     HomeScreen(),
+    HubScreen(),
     SocializeScreen(),
   ];
 
@@ -55,6 +57,11 @@ class _AppShellState extends State<_AppShell> {
             icon: Icon(Icons.chat_bubble_outline_rounded),
             selectedIcon: Icon(Icons.chat_bubble_rounded, color: Color(0xFFA020F0)),
             label: 'Aurora',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.hub_outlined),
+            selectedIcon: Icon(Icons.hub_rounded, color: Color(0xFFA020F0)),
+            label: 'Hub',
           ),
           NavigationDestination(
             icon: Icon(Icons.people_outline_rounded),

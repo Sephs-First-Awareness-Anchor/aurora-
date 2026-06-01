@@ -156,7 +156,11 @@ def boot_aurora(state_dir: str = "aurora_state",
         simulation=simulation,
     )
 
-    snapshot = aurora.load_state()
+    # Read straight from the persistence layer; the gateway's load_state() is
+    # wrapped by the evolved-surface reflection layer and can return a metadata
+    # dict instead of a real AuroraStateSnapshot.
+    _persist = getattr(aurora, 'persistence', None)
+    snapshot = _persist.load() if (_persist is not None and hasattr(_persist, 'load')) else aurora.load_state()
     if verbose:
         if snapshot:
             print(f"  [STATE] Restored (gen={snapshot.generation}, "

@@ -362,7 +362,13 @@ def _ensure_seeded_sensory_crystal_state(state_dir: str, *, verbose: bool = Fals
     if not _sensory_crystal_needs_seeding(state_dir):
         return False
 
-    script_path = Path(__file__).resolve().parent / "seed_sensory_crystals.py"
+    # seed_sensory_crystals.py lives at the repo root, which may be aurora.py's
+    # own directory (Chaquopy srcDir) or one level up (aurora_core_ai/ layout).
+    # Probe both so the bootstrap subprocess finds the real script.
+    _here = Path(__file__).resolve().parent
+    script_path = _here / "seed_sensory_crystals.py"
+    if not script_path.exists() and (_here.parent / "seed_sensory_crystals.py").exists():
+        script_path = _here.parent / "seed_sensory_crystals.py"
     env = os.environ.copy()
     env["AURORA_SENSORY_STATE_DIR"] = str(Path(state_dir).resolve())
 
@@ -11989,6 +11995,10 @@ _WEAK_RESPONSE_TOPICS = {
     "know", "understand", "mean", "means", "asking", "saying",
     "actually", "anything", "something", "nothing", "any",
     "aurora", "play", "call", "pandora",
+    # location / temporal / state words that cannot anchor a response
+    "here", "there", "change", "still", "being", "present", "now",
+    "anymore", "things", "going", "happening", "exist", "exists",
+    "there", "real", "true", "same", "different", "that", "this",
 }
 
 
@@ -14630,7 +14640,16 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
     systems["_last_noncomp_input"] = {}
     systems["_last_noncomp_output"] = {}
 
-    repo_root = Path(__file__).resolve().parent
+    # The semantics file + manifold directory live at the repo root.  aurora.py
+    # may sit at the repo root (Chaquopy srcDir) or one level down (aurora_core_ai/),
+    # so probe both candidate roots and use whichever actually holds the data
+    # rather than assuming aurora.py's own directory is the root.
+    _here = Path(__file__).resolve().parent
+    repo_root = _here
+    for _cand in (_here, _here.parent):
+        if (_cand / "aurora_full_noncomp_rich_semantics.json").exists():
+            repo_root = _cand
+            break
     semantics_path = repo_root / "aurora_full_noncomp_rich_semantics.json"
     manifold_dir = repo_root / "aurora_manifold_directory"
     systems["noncomp_semantics_path"] = str(semantics_path)
@@ -19821,8 +19840,15 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         try:
             _fb_parsed = state.parsed or {}
             _fb_topic = str(_fb_parsed.get("topic", "") or _fb_parsed.get("search_query", "") or "").strip()
+            # Reject single-word weak topics
             if _is_weak_response_topic(_fb_topic):
                 _fb_topic = ""
+            # Also reject multi-word phrases where every word is weak
+            # (e.g. "something here" → all weak → not a usable anchor)
+            if _fb_topic:
+                _topic_words = re.findall(r"[a-zA-Z]{3,}", _fb_topic)
+                if _topic_words and all(_is_weak_response_topic(w.lower()) for w in _topic_words):
+                    _fb_topic = ""
             if not _fb_topic:
                 for _cand in list(_fb_parsed.get("topic_words", []) or []):
                     _cand_s = str(_cand or "").strip()
@@ -19831,10 +19857,51 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                         break
         except Exception:
             pass
-        _fb_data = [_fb_topic] if _fb_topic else []
-        _fb_data.append("context; continuity; needed")
+        # Build a gap-state claim from available content.
+        # Claims are phrased as noun clauses ("what X means here") so they read
+        # naturally when the SIC wraps them in "I understand X." via _bundle_direct_line.
+        if _fb_topic:
+            _gap_claim = "what " + _fb_topic + " means here"
+        else:
+            _uw = [w.lower() for w in re.findall(r"[a-zA-Z]{4,}", str(user_text or ""))
+                   if w.lower() not in {"that", "this", "with", "what", "from",
+                                        "have", "does", "here", "there", "than",
+                                        "some", "more", "less", "come", "been",
+                                        "will", "your", "just", "when", "also"}
+                   and not _is_weak_response_topic(w.lower())]
+            if _uw:
+                _gap_claim = "what " + _uw[0] + " points to"
+            else:
+                # Derive gap claim from the dominant active axis so each turn's
+                # gap claim reflects Aurora's current constraint orientation
+                # rather than repeating the same generic phrase.
+                _dom_ax = "X"
+                try:
+                    _ap = {k: float((systems.get("identity_field") or {})
+                                    if isinstance(systems.get("identity_field"), dict)
+                                    else (getattr(systems.get("identity_field"), "_axis_p", {}) or {}))
+                               .get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[k], 0.10)
+                           for k in ("X", "T", "N", "B", "A")}
+                    _dom_ax = max(_ap, key=lambda k: _ap[k])
+                except Exception:
+                    pass
+                # Five axis-oriented questions about the entity present —
+                # genuine curiosity about who is here, not abstract physics.
+                # X = existence/presence → who is here
+                # T = temporal/continuity → when they have been
+                # N = cost/direction → where they are going
+                # B = distinction/boundary → what they want
+                # A = agency/source → why they have come
+                _AXIS_GAP_CLAIMS = {
+                    "X": "who is here",
+                    "T": "when they have been",
+                    "N": "where they are going",
+                    "B": "what they want",
+                    "A": "why they have come",
+                }
+                _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "who is here")
         state.response_content = _render_runtime_intent(
-            systems, "; ".join(_fb_data),
+            systems, _gap_claim,
             emotion_tone="curious", certainty=0.58,
             supporting_concepts=[_fb_topic] if _fb_topic else [],
         )
@@ -23753,8 +23820,8 @@ def boot_aurora(
         if verbose:
             _istat = _ifield.status()
             print(f"  [IDENTITY] NoncompField live — "
-                  f"{_istat['total_noncomps']} noncomps / "
-                  f"{_istat['total_slots']:,} slots")
+                  f"{_istat.get('loaded_count', 0)} noncomps loaded / "
+                  f"{_istat.get('diagonal_live', 0)} diagonals active")
         # Composite crystal layer — the five tensor expressions that make emergent
         # functions inevitable rather than coded (AURORA_COGNITIVE_PHYSICS.md §5).
         # Crystal level: Composite Crystal (between Base primitives and Higher-Order).
@@ -24252,14 +24319,32 @@ def boot_aurora(
 
     # Try to restore saved state (standard L8 snapshot)
     if verbose: print()
-    snapshot = aurora.load_state()
+    # Read the snapshot straight from the persistence layer.  The gateway's
+    # load_state() is wrapped by the evolved-surface reflection layer, which
+    # can turn a real AuroraStateSnapshot (or a clean None) into a metadata
+    # dict — that breaks the `if snapshot:` check below and silently prevents
+    # her learned state from rehydrating.  persistence.load() is not wrapped,
+    # so it always returns a real AuroraStateSnapshot or None.
+    _persist = getattr(aurora, 'persistence', None)
+    if _persist is not None and hasattr(_persist, 'load'):
+        snapshot = _persist.load()
+    else:
+        snapshot = aurora.load_state()
     if snapshot:
         _restore_runtime_from_snapshot(systems, snapshot, verbose=verbose)
         if verbose:
-            print(f"  [STATE] Restored from snapshot (gen={snapshot.generation}, "
-                  f"epochs={snapshot.simulation_epochs})")
-            if snapshot.what_aurora_learned:
-                print(f"  [STATE] She remembers {len(snapshot.what_aurora_learned)} learnings")
+            # snapshot is normally an AuroraStateSnapshot object, but
+            # persistence.load() can hand back a raw dict on some paths;
+            # read either form so the diagnostic never aborts boot.
+            def _snap(field, default=None):
+                if isinstance(snapshot, dict):
+                    return snapshot.get(field, default)
+                return getattr(snapshot, field, default)
+            print(f"  [STATE] Restored from snapshot (gen={_snap('generation', 0)}, "
+                  f"epochs={_snap('simulation_epochs', 0)})")
+            _learned = _snap('what_aurora_learned')
+            if _learned:
+                print(f"  [STATE] She remembers {len(_learned)} learnings")
     else:
         if verbose:
             print("  [STATE] Fresh boot  no prior state found")
