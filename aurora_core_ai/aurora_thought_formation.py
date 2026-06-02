@@ -1284,8 +1284,17 @@ class ThoughtBraid(WarpCapable):
 
         # Coverage check outside the braid lock — reads from systems which may
         # hold its own locks; keeping these separate avoids lock-ordering deadlock.
-        # Operates in 10D I-state space (positive + negative poles per constraint).
+        # Operates in 15D space (10D I-state + 5D recursion levels).
         if _run_coverage_check:
+            # Late-bind genealogy from systems if not yet wired — biases future
+            # WARP derivations toward the fossil record of proven constraint pairings.
+            if not getattr(self, "_warp_genealogy", None):
+                geno = (
+                    systems.get("genealogy")
+                    or systems.get("constraint_genealogy")
+                )
+                if geno is not None:
+                    self.set_warp_genealogy(geno)
             _istates = WarpStreamEntry._read_istates(systems)
             self.check_and_extend(_istates, source="braid_tick", tick=_tick_snap)
 

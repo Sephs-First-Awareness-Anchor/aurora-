@@ -654,6 +654,15 @@ class WarpCapable:
         self._gap_counter:    Dict[str, int] = {}   # gap_sig → consecutive count
         self._last_gap:       Optional[CoverageGap] = None
 
+    def set_warp_genealogy(self, genealogy: Any) -> None:
+        """
+        Late-bind a ConstraintGenealogyLogger so future WARP derivations
+        search the fossil record before fresh synthesis. Call this once the
+        genealogy is available in systems (it won't be at construction time).
+        """
+        if hasattr(self, "_warp_genealogy"):
+            self._warp_genealogy = genealogy
+
     # ── abstract interface (override in concrete level) ───────────────────────
 
     def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:

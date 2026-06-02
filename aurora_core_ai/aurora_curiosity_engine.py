@@ -386,6 +386,72 @@ class CuriosityEngine:
             prev.urgency = min(1.0, prev.urgency + 0.15)
             return prev
 
+        # --- WARP awareness: promoted structural components become curiosity targets ---
+        # When WARP has derived and promoted a new structural component, it signals
+        # that the system has found phenomenal territory that existing structures
+        # couldn't cover. Curiosity investigates: what does this territory contain?
+        # Is it genuinely distinct, or can it be mapped onto existing structures?
+        try:
+            braid = self.systems.get("braid") or self.systems.get("thought_braid")
+            if braid and hasattr(braid, "_warp_promoted") and braid._warp_promoted:
+                comp = next(iter(braid._warp_promoted.values()))
+                comp_name = str(getattr(comp, "name", None) or comp.component_id)
+                profile = getattr(comp, "axis_profile", {})
+                # Which axis is dominant in this warp component?
+                _AX_ISTATES = {
+                    "X": ("I_IS", "I_ISNT"), "T": ("I_CAN", "I_CANNOT"),
+                    "N": ("I_DO", "I_DONOT"), "B": ("I_SAW", "I_SOUGHT"),
+                    "A": ("I_DID", "I_DIDNT"),
+                }
+                dom_ax = max(
+                    _AX_ISTATES.keys(),
+                    key=lambda ax: max(profile.get(i, 0.0) for i in _AX_ISTATES[ax]),
+                )
+                return CuriosityObject(
+                    subject=f"warp-derived region: {comp_name}",
+                    origin_axis=dom_ax,
+                    curiosity_type=_map_axis_to_curiosity_type(dom_ax),
+                    urgency=0.72,
+                    hypothesis=(
+                        f"My structural system found a {comp_name} region not covered by "
+                        f"existing patterns. I should investigate whether this region contains "
+                        f"genuine new phenomenology or resolves onto known structures."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
+        # --- WARP anomaly candidates become curiosity targets ---
+        # An anomaly candidate (coverage < 0.35 across all existing components,
+        # occurred >= 12 times) may represent a genuinely new constraint dimension.
+        # Curiosity must investigate before structural action can be taken.
+        try:
+            braid = self.systems.get("braid") or self.systems.get("thought_braid")
+            if braid and hasattr(braid, "_warp_generator"):
+                candidates = [
+                    r for r in braid._warp_generator.anomaly_summary()
+                    if r.get("candidate") and r.get("occurrences", 0) >= 12
+                ]
+                if candidates:
+                    rec = candidates[0]
+                    return CuriosityObject(
+                        subject=f"potential 6th-constraint signal (id={rec['id']})",
+                        origin_axis="X",  # existence — does something exist that I can't represent?
+                        curiosity_type="conceptual",
+                        urgency=0.85,  # highest urgency — this could be genuinely new
+                        hypothesis=(
+                            f"I have observed {rec['occurrences']} instances of a phenomenon "
+                            f"that cannot be represented through any known combination of "
+                            f"constraint magnitude, polarity, recursion, phase, or stream "
+                            f"orientation (residual {rec['residual']:.2f}). "
+                            f"I need to investigate whether this is noise or a genuine gap."
+                        ),
+                        tick=tick,
+                    )
+        except Exception:
+            pass
+
         # --- Crystal gap report — highest priority new curiosity source ---
         # The sensory crystal knows exactly which concepts are underfed and
         # which modality is missing. This is the primary driver of gap-seeking
