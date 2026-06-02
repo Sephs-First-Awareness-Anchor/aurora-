@@ -53,6 +53,8 @@ from aurora_warp_protocol import (
     WarpComponent,
     CoverageGap,
     AxisCoverageChecker,
+    axes_to_istates,
+    _ALL_ISTATES,
 )
 
 
@@ -1048,34 +1050,75 @@ class WarpStreamEntry:
         return round(min(1.0, mean_dev), 4)
 
     def _activation(self, systems: Dict[str, Any]) -> float:
-        """Cosine similarity of current axis state vs this stream's profile."""
+        """Cosine similarity of current 10D I-state vs this stream's I-state profile."""
         import math as _math
-        axes = self._read_axes(systems)
-        profile = self.component.axis_profile
-        _ALL = ("X", "T", "N", "B", "A")
-        dot = sum(axes.get(ax, 0.5) * profile.get(ax, 0.0) for ax in _ALL)
-        mag_p = _math.sqrt(sum(profile.get(ax, 0.0) ** 2 for ax in _ALL))
-        mag_a = _math.sqrt(sum(axes.get(ax, 0.5) ** 2 for ax in _ALL))
-        if mag_p < 1e-9 or mag_a < 1e-9:
+        istate_vec = self._read_istates(systems)
+        profile = self.component.axis_profile  # already 10D from WarpGenerator
+        dot   = sum(istate_vec.get(ist, 0.0) * profile.get(ist, 0.0) for ist in _ALL_ISTATES)
+        mag_p = _math.sqrt(sum(profile.get(ist, 0.0) ** 2 for ist in _ALL_ISTATES))
+        mag_v = _math.sqrt(sum(istate_vec.get(ist, 0.0) ** 2 for ist in _ALL_ISTATES))
+        if mag_p < 1e-9 or mag_v < 1e-9:
             return 0.0
-        return round(dot / (mag_p * mag_a), 4)
+        return round(dot / (mag_p * mag_v), 4)
+
+    @staticmethod
+    def _read_istates(systems: Dict[str, Any]) -> Dict[str, float]:
+        """
+        Extract current 10D I-state vector from live systems.
+        Reads axis magnitudes + IVM polarity, combines via axes_to_istates().
+        Multiple fallback paths; defaults to neutral 0.25 per I-state.
+        """
+        _AXES = ("X", "T", "N", "B", "A")
+        axis_weights: Dict[str, float] = {ax: 0.5 for ax in _AXES}
+        ivm_polarity: Dict[str, float] = {ax: 0.0 for ax in _AXES}
+
+        # Axis magnitudes
+        ax_state = systems.get("_axis_state")
+        if ax_state and isinstance(ax_state, dict):
+            for ax in _AXES:
+                if ax in ax_state:
+                    axis_weights[ax] = float(ax_state[ax])
+        else:
+            try:
+                dim = systems.get("dimensional")
+                if dim and hasattr(dim, "_current_pressure_vec"):
+                    pv = dim._current_pressure_vec()
+                    if pv:
+                        for ax in _AXES:
+                            axis_weights[ax] = float(getattr(pv, ax, 0.5))
+            except Exception:
+                pass
+
+        # IVM polarity — signed [-1, +1] — tells us positive vs negative I-state weight
+        try:
+            lattice = systems.get("lattice")
+            if lattice and hasattr(lattice, "compute_global_polarity"):
+                pol = lattice.compute_global_polarity()
+                if pol and isinstance(pol, dict):
+                    for ax in _AXES:
+                        if ax in pol:
+                            ivm_polarity[ax] = float(pol[ax])
+        except Exception:
+            pass
+
+        return axes_to_istates(axis_weights, ivm_polarity)
 
     @staticmethod
     def _read_axes(systems: Dict[str, Any]) -> Dict[str, float]:
-        """Extract current constraint axis state from systems, multiple fallback paths."""
-        _ALL = ("X", "T", "N", "B", "A")
+        """Legacy 5D fallback — use _read_istates() for coverage checking."""
+        _AXES = ("X", "T", "N", "B", "A")
         ax = systems.get("_axis_state")
         if ax and isinstance(ax, dict):
-            return {k: float(v) for k, v in ax.items() if k in _ALL}
+            return {k: float(v) for k, v in ax.items() if k in _AXES}
         try:
             dim = systems.get("dimensional")
             if dim and hasattr(dim, "_current_pressure_vec"):
                 pv = dim._current_pressure_vec()
                 if pv:
-                    return {a: float(getattr(pv, a, 0.5)) for a in _ALL}
+                    return {a: float(getattr(pv, a, 0.5)) for a in _AXES}
         except Exception:
             pass
-        return {ax: 0.5 for ax in _ALL}
+        return {ax: 0.5 for ax in _AXES}
 
 
 class ThoughtBraid(WarpCapable):
@@ -1101,14 +1144,48 @@ class ThoughtBraid(WarpCapable):
 
     _STREAM_DEPTH = 8  # rolling window depth per stream
 
-    # Axis profiles for the four core streams — what region of 5D space each covers.
-    # These are the reference vectors against which incoming data is compared.
-    # A new WARP stream forms when data arrives that none of these covers at >= 0.82.
+    # I-state profiles for the four core streams — what region of 10D I-state
+    # space each covers. Both positive and negative poles are represented.
+    # The negatives are where pressure lives — a stream covering I_CAN does NOT
+    # cover I_CANNOT. A WARP stream forms when data arrives at an I-state
+    # coordinate none of the four covers at cosine >= 0.82.
+    #
+    # memory:     oriented toward what EXISTS (I_IS) and CAN be recalled (I_CAN)
+    # sensory:    oriented toward what is SEEN/bounded (I_SAW) and what it COSTS (I_DO)
+    #             also handles boundary-not-found pressure (I_SOUGHT)
+    # predictive: oriented toward what CAN continue (I_CAN) and what DID happen (I_DID)
+    #             also handles CAN'T-continue and DIDN'T-happen pressures
+    # emotion:    oriented toward ALL of N and A with full polarity coverage —
+    #             approach (I_DO, I_DID) AND avoidance/pressure (I_DONOT, I_DIDNT)
     _CORE_STREAM_PROFILES: Dict[str, Dict[str, float]] = {
-        "memory":     {"X": 0.80, "T": 0.70, "N": 0.20, "B": 0.20, "A": 0.10},
-        "sensory":    {"X": 0.30, "T": 0.20, "N": 0.70, "B": 0.80, "A": 0.20},
-        "predictive": {"X": 0.20, "T": 0.70, "N": 0.30, "B": 0.20, "A": 0.80},
-        "emotion":    {"X": 0.10, "T": 0.20, "N": 0.80, "B": 0.30, "A": 0.80},
+        "memory": {
+            "I_IS":    0.80, "I_ISNT":   0.15,
+            "I_CAN":   0.70, "I_CANNOT": 0.10,
+            "I_DO":    0.20, "I_DONOT":  0.10,
+            "I_SAW":   0.20, "I_SOUGHT": 0.05,
+            "I_DID":   0.10, "I_DIDNT":  0.05,
+        },
+        "sensory": {
+            "I_IS":    0.30, "I_ISNT":   0.15,
+            "I_CAN":   0.20, "I_CANNOT": 0.10,
+            "I_DO":    0.70, "I_DONOT":  0.20,
+            "I_SAW":   0.80, "I_SOUGHT": 0.45,  # sensory registers both found and unfound
+            "I_DID":   0.20, "I_DIDNT":  0.10,
+        },
+        "predictive": {
+            "I_IS":    0.20, "I_ISNT":   0.10,
+            "I_CAN":   0.70, "I_CANNOT": 0.50,  # predictive feels temporal blockage too
+            "I_DO":    0.30, "I_DONOT":  0.15,
+            "I_SAW":   0.20, "I_SOUGHT": 0.10,
+            "I_DID":   0.80, "I_DIDNT":  0.50,  # what didn't happen informs prediction
+        },
+        "emotion": {
+            "I_IS":    0.10, "I_ISNT":   0.10,
+            "I_CAN":   0.20, "I_CANNOT": 0.20,
+            "I_DO":    0.80, "I_DONOT":  0.75,  # emotion covers the full N polarity
+            "I_SAW":   0.30, "I_SOUGHT": 0.30,
+            "I_DID":   0.80, "I_DIDNT":  0.75,  # emotion covers the full A polarity
+        },
     }
 
     # Coverage check runs every N ticks to avoid per-tick overhead
@@ -1152,9 +1229,10 @@ class ThoughtBraid(WarpCapable):
 
         # Coverage check outside the braid lock — reads from systems which may
         # hold its own locks; keeping these separate avoids lock-ordering deadlock.
+        # Operates in 10D I-state space (positive + negative poles per constraint).
         if _run_coverage_check:
-            _axes = WarpStreamEntry._read_axes(systems)
-            self.check_and_extend(_axes, source="braid_tick", tick=_tick_snap)
+            _istates = WarpStreamEntry._read_istates(systems)
+            self.check_and_extend(_istates, source="braid_tick", tick=_tick_snap)
 
     def tap(self) -> ThoughtStreamSlice:
         """

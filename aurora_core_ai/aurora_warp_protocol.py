@@ -5,23 +5,28 @@ Universal structural adaptation mechanism for Aurora's cognitive stack.
 
 DOCTRINE:
     Every system level in Aurora holds a set of components, each oriented
-    toward a region of 5D constraint space (X, T, N, B, A). When incoming
-    data carries an axis profile that no existing component resonates with,
-    that level has a coverage gap. WARP closes it by deriving a new component
-    from the closest existing ones — not from nothing, but from what is already
-    there, combined in a configuration that wasn't needed until now.
+    toward a region of the I-state space. The I-state space is 10-dimensional:
+    each of the 5 constraints has a positive I-state and a negative I-state.
+    The negatives are where pressure lives — they are not the absence of the
+    positive but an active orthogonal force.
 
-    Every new component is always a derivative combination of the 5 constraints.
-    The possibility of a 6th constraint forming exists but requires sustained,
-    high-confidence anomaly evidence before any structural action is taken.
+        X: I_IS  (existence present)   / I_ISNT   (existence denied — pressure)
+        T: I_CAN (continuity possible) / I_CANNOT  (continuity blocked — pressure)
+        N: I_DO  (energy expressed)    / I_DONOT   (energy withheld — pressure)
+        B: I_SAW (boundary found)      / I_SOUGHT  (boundary unfound — pressure)
+        A: I_DID (agency enacted)      / I_DIDNT   (agency failed — pressure)
 
-    Coverage is measured as cosine similarity in 5D constraint space.
-    A gap exists when best cosine < COVERAGE_THRESHOLD.
-    A 6th-axis anomaly is flagged when best cosine < ANOMALY_THRESHOLD.
+    Coverage is measured as cosine similarity in this 10D I-state space.
+    A stream covering I_CAN does NOT cover I_CANNOT. A component must be
+    explicitly oriented toward a negative I-state to provide coverage there.
 
-    New components run in trial alongside existing ones. If they score above
-    PROMOTION_SCORE across TRIAL_TICKS evaluations, they are promoted.
-    Otherwise they dissolve without trace.
+    When incoming data carries an I-state profile that no existing component
+    resonates with, WARP derives a new component from what already exists —
+    not from nothing, but from the closest known I-state configurations,
+    combined in a proportion that wasn't needed until now.
+
+    The possibility of a 6th constraint (an 11th/12th I-state pair) exists
+    but requires sustained anomaly evidence before any structural action.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
@@ -34,17 +39,113 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-# ─── Constants ────────────────────────────────────────────────────────────────
+# ─── I-State Space ────────────────────────────────────────────────────────────
 
+# The 10 I-state beings — the actual operational units of the coverage space.
+# Positive I-states = affirmative constraint expression.
+# Negative I-states = constraint pressure (denial, blockage, withdrawal).
+_ALL_ISTATES: Tuple[str, ...] = (
+    "I_IS",    "I_ISNT",
+    "I_CAN",   "I_CANNOT",
+    "I_DO",    "I_DONOT",
+    "I_SAW",   "I_SOUGHT",
+    "I_DID",   "I_DIDNT",
+)
+
+# Which axis each I-state belongs to
+_ISTATE_TO_AXIS: Dict[str, str] = {
+    "I_IS":    "X", "I_ISNT":   "X",
+    "I_CAN":   "T", "I_CANNOT": "T",
+    "I_DO":    "N", "I_DONOT":  "N",
+    "I_SAW":   "B", "I_SOUGHT": "B",
+    "I_DID":   "A", "I_DIDNT":  "A",
+}
+
+# +1 = positive I-state, -1 = negative I-state (pressure)
+_ISTATE_POLARITY: Dict[str, int] = {
+    "I_IS":    +1, "I_ISNT":   -1,
+    "I_CAN":   +1, "I_CANNOT": -1,
+    "I_DO":    +1, "I_DONOT":  -1,
+    "I_SAW":   +1, "I_SOUGHT": -1,
+    "I_DID":   +1, "I_DIDNT":  -1,
+}
+
+# Human-readable names for gap naming and synthesis
+_ISTATE_NAMES: Dict[str, str] = {
+    "I_IS":    "existence",
+    "I_ISNT":  "absence",
+    "I_CAN":   "continuity",
+    "I_CANNOT":"blockage",
+    "I_DO":    "energy",
+    "I_DONOT": "withdrawal",
+    "I_SAW":   "boundary",
+    "I_SOUGHT":"seeking",
+    "I_DID":   "agency",
+    "I_DIDNT": "failure",
+}
+
+# Backward-compatible 5-axis tuple (used internally for some conversions)
 _ALL_AXES: Tuple[str, ...] = ("X", "T", "N", "B", "A")
 
-_AXIS_NAMES: Dict[str, str] = {
-    "X": "existence",
-    "T": "temporal",
-    "N": "energy",
-    "B": "boundary",
-    "A": "agency",
-}
+
+def axes_to_istates(
+    axis_weights: Dict[str, float],
+    ivm_polarity: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
+    """
+    Convert 5D axis weights + IVM polarity to 10D I-state vector.
+
+    axis_weights: {X, T, N, B, A} magnitudes [0, 1]
+    ivm_polarity: {X, T, N, B, A} signed polarity [-1, +1] from IVM lattice
+                  global polarity (cos(phase)). If None, assumes neutral (0.0).
+
+    For each axis:
+        positive_weight = magnitude × (1 + polarity) / 2
+        negative_weight = magnitude × (1 - polarity) / 2
+
+    When polarity is 0 (neutral), positive and negative share the magnitude
+    equally. When polarity is +1 (fully positive), all weight goes to the
+    positive I-state. When polarity is -1 (fully negative/pressure), all
+    weight goes to the negative I-state.
+    """
+    pol = ivm_polarity or {}
+    _pairs = [
+        ("I_IS",  "I_ISNT",   "X"),
+        ("I_CAN", "I_CANNOT", "T"),
+        ("I_DO",  "I_DONOT",  "N"),
+        ("I_SAW", "I_SOUGHT", "B"),
+        ("I_DID", "I_DIDNT",  "A"),
+    ]
+    result: Dict[str, float] = {}
+    for pos, neg, ax in _pairs:
+        magnitude = float(axis_weights.get(ax, 0.5))
+        polarity  = float(pol.get(ax, 0.0))          # [-1, +1]
+        pos_w = magnitude * (1.0 + polarity) / 2.0
+        neg_w = magnitude * (1.0 - polarity) / 2.0
+        result[pos] = round(min(1.0, max(0.0, pos_w)), 3)
+        result[neg] = round(min(1.0, max(0.0, neg_w)), 3)
+    return result
+
+
+def istates_to_axes(istate_weights: Dict[str, float]) -> Dict[str, float]:
+    """
+    Collapse 10D I-state vector back to 5D axis magnitudes.
+    magnitude[ax] = max(positive_istate, negative_istate) for that axis.
+    Used when a legacy 5D interface is needed.
+    """
+    result: Dict[str, float] = {}
+    for pos, neg, ax in [
+        ("I_IS", "I_ISNT", "X"),
+        ("I_CAN", "I_CANNOT", "T"),
+        ("I_DO", "I_DONOT", "N"),
+        ("I_SAW", "I_SOUGHT", "B"),
+        ("I_DID", "I_DIDNT", "A"),
+    ]:
+        result[ax] = round(max(
+            istate_weights.get(pos, 0.0),
+            istate_weights.get(neg, 0.0),
+        ), 3)
+    return result
 
 # Cosine similarity threshold — below this means no component covers the data
 COVERAGE_THRESHOLD: float = 0.82
@@ -140,48 +241,69 @@ class ConstraintAnomalyRecord:
 
 class AxisCoverageChecker:
     """
-    Checks whether a set of axis-profiled components covers an incoming profile.
+    Checks whether a set of I-state-profiled components covers an incoming profile.
 
-    Coverage is cosine similarity in 5D constraint space. If the best cosine
-    across all components is below COVERAGE_THRESHOLD, a CoverageGap is returned.
+    Coverage is cosine similarity in 10D I-state space (positive + negative
+    poles of each constraint). If the best cosine across all components is
+    below COVERAGE_THRESHOLD, a CoverageGap is returned.
+
+    Profiles should be dicts keyed by I-state strings (I_IS, I_ISNT, etc.).
+    Legacy 5D axis profiles are accepted and auto-converted assuming neutral
+    polarity (equal weight to positive and negative I-states).
     """
 
     def __init__(self, components: Dict[str, Dict[str, float]]) -> None:
-        # {component_id: {axis: weight}}
-        self._components: Dict[str, Dict[str, float]] = dict(components)
+        # {component_id: {istate: weight}}  — normalised to 10D on entry
+        self._components: Dict[str, Dict[str, float]] = {
+            cid: self._ensure_10d(profile)
+            for cid, profile in components.items()
+        }
 
-    def update(self, component_id: str, axis_profile: Dict[str, float]) -> None:
-        self._components[component_id] = dict(axis_profile)
+    def update(self, component_id: str, profile: Dict[str, float]) -> None:
+        self._components[component_id] = self._ensure_10d(profile)
 
     def remove(self, component_id: str) -> None:
         self._components.pop(component_id, None)
 
     @staticmethod
+    def _ensure_10d(profile: Dict[str, float]) -> Dict[str, float]:
+        """If profile uses 5-axis keys, expand to 10D with neutral polarity."""
+        if any(k in _ALL_ISTATES for k in profile):
+            return dict(profile)
+        # legacy 5D — expand assuming neutral polarity
+        return axes_to_istates(profile, ivm_polarity=None)
+
+    @staticmethod
     def cosine(a: Dict[str, float], b: Dict[str, float]) -> float:
-        """Cosine similarity between two axis weight vectors."""
-        axes = _ALL_AXES
-        dot = sum(a.get(ax, 0.0) * b.get(ax, 0.0) for ax in axes)
-        mag_a = math.sqrt(sum(a.get(ax, 0.0) ** 2 for ax in axes))
-        mag_b = math.sqrt(sum(b.get(ax, 0.0) ** 2 for ax in axes))
+        """Cosine similarity in 10D I-state space."""
+        dims = _ALL_ISTATES
+        dot   = sum(a.get(d, 0.0) * b.get(d, 0.0) for d in dims)
+        mag_a = math.sqrt(sum(a.get(d, 0.0) ** 2 for d in dims))
+        mag_b = math.sqrt(sum(b.get(d, 0.0) ** 2 for d in dims))
         if mag_a < 1e-9 or mag_b < 1e-9:
             return 0.0
         return dot / (mag_a * mag_b)
 
     def check(
         self,
-        data_axes: Dict[str, float],
+        data_profile: Dict[str, float],
         source: str = "",
         tick: int = 0,
     ) -> Optional[CoverageGap]:
         """
-        Returns CoverageGap if no existing component resonates with data_axes.
+        Returns CoverageGap if no existing component resonates with data_profile.
         Returns None if coverage is sufficient (best cosine >= COVERAGE_THRESHOLD).
+
+        data_profile should be 10D (I-state keys). Legacy 5D axis profiles are
+        auto-converted assuming neutral polarity before comparison.
         """
-        if not self._components or not data_axes:
+        if not self._components or not data_profile:
             return None
 
+        data_10d = self._ensure_10d(data_profile)
+
         scores: Dict[str, float] = {
-            cid: self.cosine(profile, data_axes)
+            cid: self.cosine(profile, data_10d)
             for cid, profile in self._components.items()
         }
 
@@ -196,7 +318,7 @@ class AxisCoverageChecker:
         closest_profiles = [self._components[cid] for cid in closest_ids]
 
         return CoverageGap(
-            axis_profile=dict(data_axes),
+            axis_profile=data_10d,          # always stored as 10D
             best_coverage=round(best_score, 4),
             closest_ids=closest_ids,
             closest_profiles=closest_profiles,
@@ -257,15 +379,15 @@ class WarpGenerator:
 
     def _derive_profile(self, gap: CoverageGap) -> Dict[str, float]:
         """
-        Blend gap profile with closest parent profiles.
+        Blend gap profile with closest parent profiles in 10D I-state space.
         Gap contributes _GAP_WEIGHT; parents share _PARENT_WEIGHT weighted
         by their cosine proximity to the gap.
         """
-        result = {ax: 0.0 for ax in _ALL_AXES}
+        result = {ist: 0.0 for ist in _ALL_ISTATES}
 
-        # Gap contribution
-        for ax in _ALL_AXES:
-            result[ax] += gap.axis_profile.get(ax, 0.0) * _GAP_WEIGHT
+        # Gap contribution (already 10D)
+        for ist in _ALL_ISTATES:
+            result[ist] += gap.axis_profile.get(ist, 0.0) * _GAP_WEIGHT
 
         # Parent contribution
         if gap.closest_profiles:
@@ -276,31 +398,36 @@ class WarpGenerator:
             total_w = sum(weights)
             for profile, w in zip(gap.closest_profiles, weights):
                 norm_w = (w / total_w) * _PARENT_WEIGHT
-                for ax in _ALL_AXES:
-                    result[ax] += profile.get(ax, 0.0) * norm_w
+                for ist in _ALL_ISTATES:
+                    result[ist] += profile.get(ist, 0.0) * norm_w
 
-        return {ax: round(min(1.0, max(0.0, v)), 3) for ax, v in result.items()}
+        return {ist: round(min(1.0, max(0.0, v)), 3) for ist, v in result.items()}
 
     def _synthesize_name(self, profile: Dict[str, float]) -> str:
-        """Name the component from its dominant axes."""
+        """
+        Name the component from its dominant I-states in 10D space.
+        Negative I-states get equal naming rights — a component oriented
+        toward I_CANNOT pressure is named accordingly, not hidden.
+        """
         dominant = sorted(
-            [(ax, profile[ax]) for ax in _ALL_AXES if profile.get(ax, 0.0) >= _DOMINANCE_FLOOR],
+            [(ist, profile[ist]) for ist in _ALL_ISTATES
+             if profile.get(ist, 0.0) >= _DOMINANCE_FLOOR],
             key=lambda t: t[1],
             reverse=True,
         )
-        parts = [_AXIS_NAMES[ax] for ax, _ in dominant[:2]]
+        parts = [_ISTATE_NAMES[ist] for ist, _ in dominant[:2]]
         return "_".join(parts) if parts else "derived"
 
     def _make_id(self, level: str, profile: Dict[str, float]) -> str:
-        sig = ":".join(f"{ax}{profile.get(ax, 0.0):.2f}" for ax in _ALL_AXES)
+        sig = ":".join(f"{ist}{profile.get(ist, 0.0):.2f}" for ist in _ALL_ISTATES)
         return f"warp_{level}_{hashlib.md5(sig.encode()).hexdigest()[:8]}"
 
     def _record_anomaly(self, gap: CoverageGap) -> None:
-        """Log a potential 6th-constraint signal without acting on it."""
+        """Log a potential beyond-5-constraint signal without acting on it."""
         sig = ":".join(
-            f"{ax}{gap.axis_profile.get(ax, 0.0):.1f}"
-            for ax in _ALL_AXES
-            if gap.axis_profile.get(ax, 0.0) > 0.3
+            f"{ist}{gap.axis_profile.get(ist, 0.0):.1f}"
+            for ist in _ALL_ISTATES
+            if gap.axis_profile.get(ist, 0.0) > 0.3
         )
         key = hashlib.md5(sig.encode()).hexdigest()[:10]
         if key in self._anomaly_log:
@@ -534,8 +661,8 @@ class WarpCapable:
 
     @staticmethod
     def _gap_signature(gap: CoverageGap) -> str:
-        """Stable string key for comparing gaps across ticks."""
+        """Stable string key for comparing gaps across ticks. Operates in 10D I-state space."""
         dominant = tuple(
-            ax for ax in _ALL_AXES if gap.axis_profile.get(ax, 0.0) > _DOMINANCE_FLOOR
+            ist for ist in _ALL_ISTATES if gap.axis_profile.get(ist, 0.0) > _DOMINANCE_FLOOR
         )
         return ":".join(dominant)
