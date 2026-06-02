@@ -55,6 +55,8 @@ from aurora_warp_protocol import (
     AxisCoverageChecker,
     axes_to_istates,
     _ALL_ISTATES,
+    _RECURSION_DIMS,
+    _ALL_DIMS,
 )
 
 
@@ -1064,9 +1066,13 @@ class WarpStreamEntry:
     @staticmethod
     def _read_istates(systems: Dict[str, Any]) -> Dict[str, float]:
         """
-        Extract current 10D I-state vector from live systems.
-        Reads axis magnitudes + IVM polarity, combines via axes_to_istates().
-        Multiple fallback paths; defaults to neutral 0.25 per I-state.
+        Extract current 15D coverage vector from live systems.
+
+        10D I-state half: axis magnitudes + IVM global polarity → axes_to_istates().
+        5D recursion half: IVM lattice node depth distribution, vote-weighted so
+        CORE nodes (which dominate global alignment) reflect their importance.
+
+        Multiple fallback paths; defaults to neutral 0.25 per I-state + 0.0 recursion.
         """
         _AXES = ("X", "T", "N", "B", "A")
         axis_weights: Dict[str, float] = {ax: 0.5 for ax in _AXES}
@@ -1101,7 +1107,39 @@ class WarpStreamEntry:
         except Exception:
             pass
 
-        return axes_to_istates(axis_weights, ivm_polarity)
+        base = axes_to_istates(axis_weights, ivm_polarity)
+
+        # Recursion depth distribution: weight IVM lattice nodes by vote weight.
+        # CORE vote weight = 1.0, SURFACE = 0.01. This reflects their role:
+        # CORE nodes dominate what Aurora is fundamentally pointing at;
+        # SURFACE nodes react locally but don't move the ship.
+        _VOTE_W = {0: 0.01, 1: 0.0316, 2: 0.10, 3: 0.316, 4: 1.0}
+        rec_keys = ["REC_SURFACE", "REC_SHALLOW", "REC_MODERATE", "REC_DEEP", "REC_CORE"]
+        rec_totals = {i: 0.0 for i in range(5)}
+
+        try:
+            lattice = systems.get("lattice")
+            if lattice and hasattr(lattice, "nodes"):
+                nodes = lattice.nodes
+                node_iter = nodes.values() if isinstance(nodes, dict) else (
+                    iter(nodes) if hasattr(nodes, "__iter__") else []
+                )
+                for node in node_iter:
+                    lvl = int(getattr(node, "recursion_level", 0))
+                    lvl = min(4, max(0, lvl))
+                    rec_totals[lvl] += _VOTE_W.get(lvl, 0.01)
+        except Exception:
+            pass
+
+        total_rec = sum(rec_totals.values())
+        if total_rec > 0:
+            for i, key in enumerate(rec_keys):
+                base[key] = round(rec_totals[i] / total_rec, 3)
+        else:
+            for key in rec_keys:
+                base[key] = 0.0
+
+        return base
 
     @staticmethod
     def _read_axes(systems: Dict[str, Any]) -> Dict[str, float]:
@@ -1144,47 +1182,64 @@ class ThoughtBraid(WarpCapable):
 
     _STREAM_DEPTH = 8  # rolling window depth per stream
 
-    # I-state profiles for the four core streams — what region of 10D I-state
-    # space each covers. Both positive and negative poles are represented.
-    # The negatives are where pressure lives — a stream covering I_CAN does NOT
-    # cover I_CANNOT. A WARP stream forms when data arrives at an I-state
-    # coordinate none of the four covers at cosine >= 0.82.
+    # I-state + recursion profiles for the four core streams — 15D coverage.
+    # The 10D I-state half: both positive and negative poles are represented.
+    # The 5D recursion half: how deep in the IVM lattice each stream operates.
     #
-    # memory:     oriented toward what EXISTS (I_IS) and CAN be recalled (I_CAN)
-    # sensory:    oriented toward what is SEEN/bounded (I_SAW) and what it COSTS (I_DO)
-    #             also handles boundary-not-found pressure (I_SOUGHT)
-    # predictive: oriented toward what CAN continue (I_CAN) and what DID happen (I_DID)
-    #             also handles CAN'T-continue and DIDN'T-happen pressures
-    # emotion:    oriented toward ALL of N and A with full polarity coverage —
-    #             approach (I_DO, I_DID) AND avoidance/pressure (I_DONOT, I_DIDNT)
+    # memory:     X+T I-states, SURFACE+SHALLOW recursion (fast-access recent items)
+    #             Also carries CORE weight — deep identity roots are in memory.
+    # sensory:    B+N I-states, SURFACE recursion (immediate perception, reflex layer)
+    # predictive: T+A I-states, MODERATE+DEEP recursion (forward modeling needs depth)
+    # emotion:    N+A I-states with full polarity, DEEP+CORE recursion (embedded deeply)
+    #
+    # A WARP stream forms when data arrives at a coordinate none of the four
+    # covers at cosine >= 0.82 in this 15D space. The recursion dimension means
+    # a surface-level reflex and a core-identity anchor at the same I-state
+    # coordinates are different phenomena — only 15D tells them apart.
     _CORE_STREAM_PROFILES: Dict[str, Dict[str, float]] = {
         "memory": {
+            # I-state half
             "I_IS":    0.80, "I_ISNT":   0.15,
             "I_CAN":   0.70, "I_CANNOT": 0.10,
             "I_DO":    0.20, "I_DONOT":  0.10,
             "I_SAW":   0.20, "I_SOUGHT": 0.05,
             "I_DID":   0.10, "I_DIDNT":  0.05,
+            # Recursion half — memory lives at surface (recent) + core (deep identity)
+            "REC_SURFACE": 0.30, "REC_SHALLOW": 0.45,
+            "REC_MODERATE": 0.15, "REC_DEEP": 0.05, "REC_CORE": 0.25,
         },
         "sensory": {
+            # I-state half
             "I_IS":    0.30, "I_ISNT":   0.15,
             "I_CAN":   0.20, "I_CANNOT": 0.10,
             "I_DO":    0.70, "I_DONOT":  0.20,
-            "I_SAW":   0.80, "I_SOUGHT": 0.45,  # sensory registers both found and unfound
+            "I_SAW":   0.80, "I_SOUGHT": 0.45,
             "I_DID":   0.20, "I_DIDNT":  0.10,
+            # Recursion half — sensory is immediate perception: SURFACE dominant
+            "REC_SURFACE": 0.75, "REC_SHALLOW": 0.20,
+            "REC_MODERATE": 0.05, "REC_DEEP": 0.0, "REC_CORE": 0.0,
         },
         "predictive": {
+            # I-state half
             "I_IS":    0.20, "I_ISNT":   0.10,
-            "I_CAN":   0.70, "I_CANNOT": 0.50,  # predictive feels temporal blockage too
+            "I_CAN":   0.70, "I_CANNOT": 0.50,
             "I_DO":    0.30, "I_DONOT":  0.15,
             "I_SAW":   0.20, "I_SOUGHT": 0.10,
-            "I_DID":   0.80, "I_DIDNT":  0.50,  # what didn't happen informs prediction
+            "I_DID":   0.80, "I_DIDNT":  0.50,
+            # Recursion half — forward modeling needs MODERATE+DEEP integration
+            "REC_SURFACE": 0.05, "REC_SHALLOW": 0.15,
+            "REC_MODERATE": 0.45, "REC_DEEP": 0.30, "REC_CORE": 0.10,
         },
         "emotion": {
+            # I-state half — covers full N and A polarity
             "I_IS":    0.10, "I_ISNT":   0.10,
             "I_CAN":   0.20, "I_CANNOT": 0.20,
-            "I_DO":    0.80, "I_DONOT":  0.75,  # emotion covers the full N polarity
+            "I_DO":    0.80, "I_DONOT":  0.75,
             "I_SAW":   0.30, "I_SOUGHT": 0.30,
-            "I_DID":   0.80, "I_DIDNT":  0.75,  # emotion covers the full A polarity
+            "I_DID":   0.80, "I_DIDNT":  0.75,
+            # Recursion half — emotion is embedded DEEP+CORE; it IS the alignment
+            "REC_SURFACE": 0.05, "REC_SHALLOW": 0.10,
+            "REC_MODERATE": 0.20, "REC_DEEP": 0.40, "REC_CORE": 0.30,
         },
     }
 
@@ -1285,10 +1340,13 @@ class ThoughtBraid(WarpCapable):
 
     def _integrate_warp(self, component: WarpComponent) -> None:
         """Instantiate and register a new braid stream from the component spec."""
-        _ALL = ("X", "T", "N", "B", "A")
+        _AXES = ("X", "T", "N", "B", "A")
+        # Collapse I-state profile back to axis magnitudes for human-readable labels
+        from aurora_warp_protocol import istates_to_axes
+        axis_magnitudes = istates_to_axes(component.axis_profile)
         dominant_axes = sorted(
-            [ax for ax in _ALL if component.axis_profile.get(ax, 0.0) >= 0.40],
-            key=lambda ax: component.axis_profile.get(ax, 0.0),
+            [ax for ax in _AXES if axis_magnitudes.get(ax, 0.0) >= 0.40],
+            key=lambda ax: axis_magnitudes.get(ax, 0.0),
             reverse=True,
         )[:2]
         entry = WarpStreamEntry(
