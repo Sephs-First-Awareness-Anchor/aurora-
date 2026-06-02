@@ -48,6 +48,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from aurora_warp_protocol import (
+    WarpCapable,
+    WarpComponent,
+    CoverageGap,
+    AxisCoverageChecker,
+)
+
 
 # ---------------------------------------------------------------------------
 # ActiveSelfState — snapshot of Aurora's self-model at integration time
@@ -271,6 +278,8 @@ class ThoughtStreamSlice:
     emotion_valence: EmotionValenceState = field(default_factory=EmotionValenceState)
     braid_tick: int = 0
     is_tap: bool = True   # always True — taps never consume the braid
+    # WARP-generated stream signals keyed by component_id
+    warp_signals: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def to_process_contexts(self, tick: int = 0) -> List[ProcessContext]:
         """
@@ -337,6 +346,24 @@ class ThoughtStreamSlice:
                 tick=tick,
                 active_axis_intensity=self.emotion_valence.thermal_load,
             ))
+
+        # WARP-generated streams contribute if meaningfully activated
+        for stream_id, signal in self.warp_signals.items():
+            activation = float(signal.get("activation", 0.0))
+            if activation > 0.30:
+                contexts.append(ProcessContext(
+                    process_id=f"braid_warp_{stream_id}_{self.braid_tick}",
+                    process_type="warp_stream",
+                    what_triggered_it="warp_coverage_extension",
+                    what_it_is_operating_on=(
+                        f"{signal.get('name', stream_id)}:"
+                        f"activation={activation:.2f}"
+                    ),
+                    self_relevance=activation * 0.55,
+                    axis_signature=signal.get("dominant_axes", []),
+                    tick=tick,
+                    active_axis_intensity=activation,
+                ))
 
         return contexts
 
@@ -981,7 +1008,77 @@ def get_continuity() -> ThoughtContinuity:
 # ThoughtBraid — the four-stream continuous thought thread
 # ---------------------------------------------------------------------------
 
-class ThoughtBraid:
+@dataclass
+class WarpStreamEntry:
+    """
+    A WARP-generated braid stream. Runs alongside the four core streams.
+    Defined entirely by its axis_profile — a 5D coordinate in constraint space
+    that the core streams don't cover. The update function is parametric:
+    it reads the current axis state and reports how activated this stream is.
+    """
+    component:      WarpComponent
+    buffer:         deque = field(default_factory=lambda: deque(maxlen=8))
+    dominant_axes:  List[str] = field(default_factory=list)
+
+    def advance(self, systems: Dict[str, Any], braid_tick: int) -> None:
+        activation = self._activation(systems)
+        self.buffer.append({
+            "tick":         braid_tick,
+            "source":       f"warp_{self.component.name or self.component.component_id}",
+            "name":         self.component.name or self.component.component_id,
+            "activation":   round(activation, 4),
+            "axis_profile": self.component.axis_profile,
+            "dominant_axes": self.dominant_axes,
+        })
+
+    def current_signal(self) -> Dict[str, Any]:
+        return dict(self.buffer[-1]) if self.buffer else {}
+
+    def score(self) -> float:
+        """
+        Trial score: how much real signal is this stream carrying?
+        A stream stuck near 0.5 activation (neutral) contributes nothing.
+        High deviation from 0.5 in either direction means it's picking up signal.
+        Score = deviation from neutral, normalised to [0, 1].
+        """
+        if not self.buffer:
+            return 0.0
+        recent = [float(s.get("activation", 0.5)) for s in self.buffer]
+        mean_dev = sum(abs(a - 0.5) * 2.0 for a in recent) / len(recent)
+        return round(min(1.0, mean_dev), 4)
+
+    def _activation(self, systems: Dict[str, Any]) -> float:
+        """Cosine similarity of current axis state vs this stream's profile."""
+        import math as _math
+        axes = self._read_axes(systems)
+        profile = self.component.axis_profile
+        _ALL = ("X", "T", "N", "B", "A")
+        dot = sum(axes.get(ax, 0.5) * profile.get(ax, 0.0) for ax in _ALL)
+        mag_p = _math.sqrt(sum(profile.get(ax, 0.0) ** 2 for ax in _ALL))
+        mag_a = _math.sqrt(sum(axes.get(ax, 0.5) ** 2 for ax in _ALL))
+        if mag_p < 1e-9 or mag_a < 1e-9:
+            return 0.0
+        return round(dot / (mag_p * mag_a), 4)
+
+    @staticmethod
+    def _read_axes(systems: Dict[str, Any]) -> Dict[str, float]:
+        """Extract current constraint axis state from systems, multiple fallback paths."""
+        _ALL = ("X", "T", "N", "B", "A")
+        ax = systems.get("_axis_state")
+        if ax and isinstance(ax, dict):
+            return {k: float(v) for k, v in ax.items() if k in _ALL}
+        try:
+            dim = systems.get("dimensional")
+            if dim and hasattr(dim, "_current_pressure_vec"):
+                pv = dim._current_pressure_vec()
+                if pv:
+                    return {a: float(getattr(pv, a, 0.5)) for a in _ALL}
+        except Exception:
+            pass
+        return {ax: 0.5 for ax in _ALL}
+
+
+class ThoughtBraid(WarpCapable):
     """
     Four-stream continuous thought braid. Never terminates.
 
@@ -1004,6 +1101,19 @@ class ThoughtBraid:
 
     _STREAM_DEPTH = 8  # rolling window depth per stream
 
+    # Axis profiles for the four core streams — what region of 5D space each covers.
+    # These are the reference vectors against which incoming data is compared.
+    # A new WARP stream forms when data arrives that none of these covers at >= 0.82.
+    _CORE_STREAM_PROFILES: Dict[str, Dict[str, float]] = {
+        "memory":     {"X": 0.80, "T": 0.70, "N": 0.20, "B": 0.20, "A": 0.10},
+        "sensory":    {"X": 0.30, "T": 0.20, "N": 0.70, "B": 0.80, "A": 0.20},
+        "predictive": {"X": 0.20, "T": 0.70, "N": 0.30, "B": 0.20, "A": 0.80},
+        "emotion":    {"X": 0.10, "T": 0.20, "N": 0.80, "B": 0.30, "A": 0.80},
+    }
+
+    # Coverage check runs every N ticks to avoid per-tick overhead
+    _COVERAGE_CHECK_INTERVAL = 5
+
     def __init__(self):
         self._memory_stream: deque = deque(maxlen=self._STREAM_DEPTH)
         self._sensory_stream: deque = deque(maxlen=self._STREAM_DEPTH)
@@ -1013,6 +1123,9 @@ class ThoughtBraid:
         self._last_expression_feedback: Optional[str] = None
         self._last_expression_axes: List[str] = []
         self._lock = threading.Lock()
+        # WARP extension registry — streams born from coverage gaps
+        self._warp_streams: Dict[str, WarpStreamEntry] = {}
+        self._init_warp()  # WarpCapable mixin initialisation
 
     def advance(self, systems: Dict[str, Any]) -> None:
         """
@@ -1020,12 +1133,28 @@ class ThoughtBraid:
         Called by StreamingThoughtThread at configurable interval.
         All four streams update in the same tick — they are concurrent, not sequential.
         """
+        _run_coverage_check = False
+        _tick_snap = 0
         with self._lock:
             self._braid_tick += 1
             self._update_memory(systems)
             self._update_sensory(systems)
             self._update_predictive(systems)
             self._update_emotion(systems)
+            # Advance any WARP-generated streams
+            for entry in self._warp_streams.values():
+                entry.advance(systems, self._braid_tick)
+            # Evaluate trial components for promotion / dissolution
+            self.evaluate_warp_trials()
+            if self._braid_tick % self._COVERAGE_CHECK_INTERVAL == 0:
+                _run_coverage_check = True
+                _tick_snap = self._braid_tick
+
+        # Coverage check outside the braid lock — reads from systems which may
+        # hold its own locks; keeping these separate avoids lock-ordering deadlock.
+        if _run_coverage_check:
+            _axes = WarpStreamEntry._read_axes(systems)
+            self.check_and_extend(_axes, source="braid_tick", tick=_tick_snap)
 
     def tap(self) -> ThoughtStreamSlice:
         """
@@ -1050,13 +1179,63 @@ class ThoughtBraid:
             else:
                 emo = EmotionValenceState()
 
+            warp_sigs = {
+                cid: entry.current_signal()
+                for cid, entry in self._warp_streams.items()
+                if entry.buffer
+            }
             return ThoughtStreamSlice(
                 memory_signal=mem,
                 sensory_signal=sen,
                 predictive_frame=pred,
                 emotion_valence=emo,
                 braid_tick=self._braid_tick,
+                warp_signals=warp_sigs,
             )
+
+    # ── WarpCapable interface ────────────────────────────────────────────────
+
+    def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
+        """Core stream profiles plus any already-promoted WARP streams."""
+        profiles = dict(self._CORE_STREAM_PROFILES)
+        for comp in self._warp_promoted.values():
+            profiles[comp.component_id] = comp.axis_profile
+        return profiles
+
+    def _warp_level_name(self) -> str:
+        return "braid_stream"
+
+    def _integrate_warp(self, component: WarpComponent) -> None:
+        """Instantiate and register a new braid stream from the component spec."""
+        _ALL = ("X", "T", "N", "B", "A")
+        dominant_axes = sorted(
+            [ax for ax in _ALL if component.axis_profile.get(ax, 0.0) >= 0.40],
+            key=lambda ax: component.axis_profile.get(ax, 0.0),
+            reverse=True,
+        )[:2]
+        entry = WarpStreamEntry(
+            component=component,
+            buffer=deque(maxlen=self._STREAM_DEPTH),
+            dominant_axes=dominant_axes,
+        )
+        self._warp_streams[component.component_id] = entry
+
+    def _score_trial(self, component: WarpComponent) -> float:
+        """Score via the stream's own signal deviation metric."""
+        entry = self._warp_streams.get(component.component_id)
+        return entry.score() if entry else 0.0
+
+    def _dissolve_warp(self, component_id: str) -> None:
+        self._warp_streams.pop(component_id, None)
+
+    def _warp_params(self, gap: CoverageGap, parent_ids: List[str]) -> Dict[str, Any]:
+        return {
+            "parent_stream_ids": parent_ids,
+            "gap_coverage":      round(gap.best_coverage, 4),
+            "gap_source":        gap.source,
+        }
+
+    # ── expression feedback ──────────────────────────────────────────────────
 
     def feed_expression_back(self, expression_text: str, thought_state: ThoughtState) -> None:
         """
