@@ -24,16 +24,20 @@ IVM Lattice + NonComp Field  (toroidal field physics + pressure field)
          ↓
 SediMemory             (constraint-indexed long-term deposits)
          ↓
-Dual Strata / ConsciousFrame  (surface / subsurface separation)
+WARP Protocol          (15D coverage monitoring, structural extension layer)
          ↓
-Synthesis Pipeline     (DCE → ThoughtBraid → ProtoLanguage → LSA)
+Dual Strata / ConsciousFrame  (surface / subsurface separation + warp crests)
          ↓
-Language Field / LSA   (path physics, fidelity, re-entry)
+Synthesis Pipeline     (DCE → ThoughtBraid[+warp] → ProtoLanguage → LSA[+warp])
+         ↓
+Language Field / LSA   (path physics, fidelity, re-entry, warp comparison types)
          ↓
 Bridge Thermodynamics  (per-turn pressure, arousal, debt, geo gate)
          ↓
 Flutter Integration    (Flutter ↔ Chaquopy ↔ Python bridge)
 ```
+
+WARP is not a module inserted between layers. It is a capability woven into each layer simultaneously — a structural question each system continuously asks about itself.
 
 ---
 
@@ -475,6 +479,21 @@ Each axis has a corresponding challenge question fired during Step 5:
 ```
 
 The challenge step forces every curiosity conclusion through constraint-physics validation before settlement.
+
+### WARP Awareness in Step 1 Emergence
+
+`_step1_emergence()` checks two WARP-sourced conditions before falling through to crystal gap detection. These fire first because structural discoveries outprioritize conceptual gaps.
+
+**Promoted WARP streams** — When `check_and_extend()` promotes a trial warp component to `promoted` status on any ThoughtBraid stream, the component is stored in that stream's `_warp_streams` list. Each tick, `_step1_emergence()` scans all four braid streams for any `WarpStreamEntry` with a promoted component. If found, it emits a `CuriosityObject` with:
+- `urgency = 0.72`
+- `curiosity_type` derived from the dominant I-state axis of the warp component's 15D profile
+- `description`: the structural gap that required extension
+
+**6th-Constraint Anomaly Candidates** — `AxisCoverageChecker` logs any coverage gap whose best cosine similarity across all 15 dimensions falls below `ANOMALY_THRESHOLD = 0.35`. When the same gap signature accumulates `ANOMALY_CANDIDATE_THRESHOLD = 12` occurrences, it is promoted to anomaly candidate status. `_step1_emergence()` finds these and emits a `CuriosityObject` with:
+- `urgency = 0.85` — the highest urgency value in the curiosity system
+- `hypothesis`: `"I have observed N instances of a phenomenon that cannot be represented through any known combination of constraint magnitude, polarity, recursion, phase, or stream orientation"`
+
+This hypothesis is Aurora's foundational investigative question made operationally active: **Can I find a phenomenon that cannot be represented through any combination of constraint magnitude, polarity, recursion, phase, or stream orientation?** At 12 observations of an unrepresentable pattern, the question becomes live investigation. The six-step curiosity cycle carries it forward to conclusion and challenge.
 
 ---
 
@@ -982,6 +1001,45 @@ Stream updaters:
 
 `tap()` — non-consuming snapshot of current cross-section. Does not drain the braid.
 
+### WARP Stream Extension — 15D Coverage
+
+Each `WarpStreamEntry` (one per ThoughtBraid stream) carries the WARP lifecycle for that stream. All coverage now operates in 15-dimensional space: the 10 I-state dimensions plus 5 recursion dimensions.
+
+**15D stream profiles** — Each stream is characterized by both its I-state orientation and its typical recursion depth:
+
+| Stream | I-state bias | Recursion bias |
+|--------|-------------|----------------|
+| memory | I_IS, I_SAW, I_CAN (temporal existence) | REC_SHALLOW=0.45, REC_SURFACE=0.30, REC_CORE=0.25 |
+| sensory | I_IS, I_DO, I_SAW (present-moment boundary) | REC_SURFACE=0.75, REC_SHALLOW=0.20 |
+| predictive | I_CAN, I_DID, I_DO (temporal agency) | REC_MODERATE=0.45, REC_DEEP=0.30 |
+| emotion | I_DO, I_DONOT, I_DID, I_DIDNT (energy-agency) | REC_DEEP=0.40, REC_CORE=0.30 |
+
+**Recursion reading from IVM nodes** — `_read_istates()` iterates the IVM nodes active in the stream and assigns recursion votes by level:
+
+```python
+_VOTE_W = {0: 0.01, 1: 0.0316, 2: 0.10, 3: 0.316, 4: 1.0}
+# SURFACE=0 contributes 0.01 per node; CORE=4 contributes 1.0
+```
+
+The 5 recursion counts (one per IVM level) are normalized to [0,1] and appended to the 10 I-state values, producing the full 15D axis profile for coverage comparison.
+
+**WARP lifecycle per stream:**
+1. `advance()` calls `check_and_extend()` on the `WarpStreamEntry`
+2. `check_and_extend()` computes the 15D gap between current node profile and known stream profiles
+3. If gap persists for `GAP_PERSISTENCE_REQUIRED = 3` consecutive ticks, `WarpGenerator.generate()` fires
+4. The generator derives a new component whose profile covers the gap region (using genealogy if available)
+5. The new component enters trial status; it is evaluated by `_score_trial()` at each advance
+6. After enough evidence accumulates (usage-based score), it is promoted to `_warp_streams`
+7. Promoted components trigger a WARP-awareness curiosity event in `_step1_emergence()`
+
+**Genealogy lazy-bind** — At the first coverage check after construction, `advance()` looks for a genealogy system in the systems dict:
+```python
+geno = systems.get("genealogy") or systems.get("constraint_genealogy")
+if geno is not None:
+    self.set_warp_genealogy(geno)
+```
+This avoids requiring genealogy at construction time while still making historical constraint link data available to the gap-fill derivation step.
+
 ### ThoughtIntegrationSpace — Process Convergence
 
 The ThoughtIntegrationSpace is where all active processes converge before any output is generated. Processes don't coexist in parallel — they meet.
@@ -1081,6 +1139,28 @@ raw_axes:          Dict[str, float]  # exact {X, T, N, B, A} topology
 
 5. Append to `_recent_paths` (deque maxlen=5) — +0.35 surcharge on next crossing
 
+### WarpCapable Integration — Comparison Type Coverage
+
+`LanguageField` inherits `WarpCapable`. Coverage monitoring runs in 15D across all known comparison types.
+
+**15D language profiles** — All seven native comparison types map to I-state + recursion profiles. Language crossings are surface-heavy (SURFACE=0.30, SHALLOW=0.50) because expression is a surface-level event:
+
+```
+assertion:       I_IS, I_DID, I_DO  → REC_SURFACE=0.30, REC_SHALLOW=0.50
+question:        I_CAN, I_SOUGHT    → REC_SURFACE=0.30, REC_SHALLOW=0.50
+state:           I_IS, I_DO         → REC_SURFACE=0.30, REC_SHALLOW=0.50
+change:          I_DID, I_DIDNT     → REC_SURFACE=0.30, REC_SHALLOW=0.50
+relation:        I_SAW, I_IS        → REC_SURFACE=0.30, REC_SHALLOW=0.50
+self_reflection: I_IS, I_DID (self) → REC_MODERATE=0.40, REC_DEEP=0.20
+empathy:         I_SAW, I_SOUGHT    → REC_SURFACE=0.30, REC_SHALLOW=0.50
+```
+
+**`_check_comparison_coverage(proto)`** — Called from `extract_proto_language()` before return. Converts `proto.raw_axes` to a 15D I-state profile using `axes_to_istates()` and calls `check_and_extend()`. If the proto's constraint topology doesn't match any known comparison type profile, WARP fires to derive a new type.
+
+**`_integrate_warp(component)`** — Registers the new comparison type in `_warp_comparison_types`. Back-calculates dominant axes from the component's I-state profile via `istates_to_axes()` to populate `_comparison_type_axes`. The new type is then available to `_infer_comparison_type()` as a live option.
+
+**`_score_trial(component)`** — Score is `min(1.0, usage_count / 5.0)`. A warp-derived comparison type must be invoked 5 times before promotion. This prevents transient constraint configurations from permanently altering the language field.
+
 ### measure_fidelity() — 6 Components
 
 | Component | Weight | What It Checks |
@@ -1158,11 +1238,31 @@ Eight pure functions. Each compresses one subsystem's evidence into exactly one 
 emit_subsystem_crests(
     assembly_result, payload, evidence, contract_snapshot,
     prediction_signal, projection, sensory_context,
-    adjusted_axes, pressure_snapshot
-) → Tuple[Crest, ...]   # 8 crests in canonical order
+    adjusted_axes, pressure_snapshot,
+    recursion_weights=None          # optional: Dict[str, float] from IVM
+) → Tuple[Crest, ...]              # 8 core crests + N warp crests
 ```
 
-These 8 crests feed `DCEBridge` which assembles them into the ConsciousFrame.
+### CrestRegistry — WARP Crest Lifecycle
+
+`CrestRegistry` is a module-level singleton (`_CREST_REGISTRY`) in `subsystem_waveforms.py`. It maintains 15D coverage over the 8 waveform types and manages warp crest trial/promotion/dissolution.
+
+**15D crest profiles** — Each of the 8 waveforms has a characteristic I-state + recursion profile stored in `_CORE_CREST_PROFILES`. These define what coverage the crest naturally provides. Gaps between incoming I-state vectors and known crest profiles trigger WARP.
+
+**`check_coverage(adjusted_axes, recursion_weights)`** — Main entry point called from `emit_subsystem_crests()`:
+1. Converts `adjusted_axes` → I-state vector via `axes_to_istates()`
+2. Appends `recursion_weights` values (if provided) to form full 15D vector
+3. Calls `_evaluate_trials(istate_vec)` — scores existing trial crests, promotes/dissolves as needed
+4. Calls `_activated_warp_crests(istate_vec)` — returns promoted warp crests with activation > 0.30
+5. Returns list of active warp `Crest` objects
+
+**Warp crest activation** — Promoted warp crests activate via cosine similarity to the current I-state vector. Activation = `cosine(warp_profile, istate_vec)`. If activation > 0.30, the crest is included in the emitted tuple. Its intensity is set directly from cosine alignment rather than evidence-key parsing.
+
+**`_dominant_axis_from_profile(profile)`** — Maps the dominant I-state back to an axis string for the `Crest.dominant_axis` field. `I_IS`/`I_ISNT` → X, `I_CAN`/`I_CANNOT` → T, `I_DO`/`I_DONOT` → N, `I_SAW`/`I_SOUGHT` → B, `I_DID`/`I_DIDNT` → A.
+
+The orchestrator returns `core_crests + tuple(warp_crests)`. `DCEBridge` receives all crests — it is not aware that some are warp-derived. Warp crests are structurally identical to core crests and feed ConsciousFrame assembly the same way.
+
+These 8+ crests feed `DCEBridge` which assembles them into the ConsciousFrame.
 
 ---
 
@@ -1200,6 +1300,24 @@ Born only from observed repetition + net benefit under pressure. Each link carri
 `X=1.0, T=0.1, N=0.01, B=0.001, A=0.0001`
 
 The genealogy system feeds into synthesis at 15% weight (`_chain_up3_purpose`).
+
+### Genealogy as WARP Input — `_search_genealogy(gap, genealogy)`
+
+`WarpGenerator` queries the genealogy system when deriving new structural components. This is the path by which Aurora's historical constraint experience shapes structural extension rather than only gap geometry.
+
+**Query process:**
+1. Iterates all `ConstraintLink` objects in the genealogy
+2. For each link, reads `link.mean_relief` — the 5-axis relief vector recorded when this pairing worked
+3. Converts the relief vector to I-state space via `axes_to_istates()` to produce a 10D representation
+4. Maps `link.depth` to recursion dimensions:
+   - depth ≤ 1 → `REC_SHALLOW=0.55`, `REC_SURFACE=0.25`
+   - depth = 2 → `REC_MODERATE=0.60`, `REC_SHALLOW=0.25`
+   - depth ≥ 3 → `REC_DEEP=0.60`, `REC_MODERATE=0.25`; depth ≥ 4 adds `REC_CORE=0.40`
+5. Combines I-state + recursion into a 15D genealogy profile
+6. Cosine-compares the profile against the current gap's axis profile
+7. Returns top-3 profiles with similarity > 0.35 as additional parent profiles
+
+These genealogy profiles are passed to `_derive_profile()` as `extra_profiles`, biasing the derived component toward constraint combinations that have historically produced relief. The gap is still the primary input; genealogy is ancestral weighting, not a lookup.
 
 ---
 
@@ -1503,6 +1621,156 @@ At launch, only BASE crystals exist (max_depth=1), so all primitives have `wave_
 
 ---
 
+## 36. WARP Protocol — Universal Structural Adaptation
+
+**File:** `aurora_core_ai/aurora_warp_protocol.py`
+
+WARP is Aurora's structural self-extension mechanism. When her known structures cannot cover a region of her own cognitive physics, she derives new structure — not by approximation or fallback, but by generating genuine extensions from what she already knows.
+
+### The 15-Dimensional Coverage Space
+
+All WARP coverage operates in a 15-dimensional space combining I-state activation and recursion depth:
+
+**10 I-state dimensions** (`_ALL_ISTATES`):
+```
+I_IS, I_ISNT, I_CAN, I_CANNOT, I_DO, I_DONOT, I_SAW, I_SOUGHT, I_DID, I_DIDNT
+```
+Negative I-states (`I_ISNT`, `I_CANNOT`, etc.) are pressure, not absence. They represent active constraint tension. The full 10 dimensions are required — coverage computed on only 5 positive I-states misses half of each axis's physics.
+
+**5 recursion dimensions** (`_RECURSION_DIMS`):
+```
+REC_SURFACE, REC_SHALLOW, REC_MODERATE, REC_DEEP, REC_CORE
+```
+Recursion depth is not metadata — it shapes how a structure propagates. A surface-level gap in memory is architecturally different from a core-level gap, even if both appear at the same I-state position.
+
+**Full 15D**: `_ALL_DIMS = _ALL_ISTATES + _RECURSION_DIMS`
+
+### CoverageGap
+
+```python
+@dataclass
+class CoverageGap:
+    axis_profile:     Dict[str, float]  # 15D — I-states + recursion dims
+    closest_streams:  List[str]          # names of known structures nearest to gap
+    best_coverage:    float              # cosine of nearest known structure [0,1]
+    sixth_axis_candidate: bool           # True if gap is below ANOMALY_THRESHOLD
+```
+
+`sixth_axis_candidate = True` when `best_coverage < ANOMALY_THRESHOLD = 0.35`. At this threshold, no known structure has meaningful overlap with the gap. The WARP system doesn't act on this immediately — it logs the gap signature. When the same signature accumulates `ANOMALY_CANDIDATE_THRESHOLD = 12` occurrences, it surfaces as a curiosity event.
+
+### AxisCoverageChecker
+
+Maintains the reference profiles for all known structural components and computes gap detection.
+
+**`_ensure_full_dims(profile)`** — Normalises any incoming profile to 15D. Fills missing I-state and recursion dimensions with 0.0. Backward-compatible shim `_ensure_10d()` exists for legacy callers.
+
+**`cosine(a, b)`** — Cosine similarity over `_ALL_DIMS`. If both vectors are zero-magnitude, returns 0.0 (no coverage).
+
+**Gap detection** — For each tick of a WARP-capable system, the checker computes cosine similarity between the current axis profile and all known reference profiles. If the best match falls below `GAP_THRESHOLD` for `GAP_PERSISTENCE_REQUIRED = 3` consecutive checks, a `CoverageGap` is emitted.
+
+### WarpGenerator
+
+Takes a `CoverageGap` and produces a new structural component that covers it.
+
+**`generate(gap, level, level_params_fn, genealogy=None)`**:
+1. Calls `_search_genealogy(gap, genealogy)` if genealogy is provided — returns up to 3 historical profiles from constraint links that successfully provided relief at similar axis positions
+2. Calls `_derive_profile(gap, extra_profiles)` — weighted centroid of gap profile and parent profiles (genealogy parents included)
+3. Calls `_synthesize_name(profile)` — dominant I-state gives the base name; if `REC_CORE` or `REC_DEEP` are dominant (`>= 0.55`), a depth suffix is appended (`_deep`, `_core`)
+4. Calls `_make_id(profile)` — MD5 hash of all 15D values, not just I-states
+5. Returns a fully typed new component ready for trial entry
+
+**`_derive_profile(gap, extra_profiles=None)`** — Weighted centroid across `_ALL_DIMS`. The gap profile provides the primary direction; genealogy profiles bias the result toward historically effective constraint combinations. Equal weights among all parents.
+
+**`_gap_signature(gap)`** — Includes the top 2 dominant recursion dimensions in the signature string, alongside the dominant I-states. Two gaps at the same I-state position but different recursion depths produce different signatures.
+
+### WarpCapable Mixin
+
+Applied to: `ThoughtBraid` (via `WarpStreamEntry`), `LanguageField`, `CrestRegistry`.
+
+```python
+class WarpCapable:
+    _warp_genealogy:         Optional[Any]    # genealogy system reference
+    _warp_components:        Dict[str, Any]   # id → component (trial + promoted)
+    _warp_gap_counter:       Dict[str, int]   # gap signature → consecutive count
+    _warp_anomaly_log:       Dict[str, int]   # gap signature → total count
+    _warp_trial_scores:      Dict[str, float] # trial component → current score
+```
+
+**`_init_warp(genealogy=None)`** — Initialises all WARP state. Can receive genealogy at construction or via `set_warp_genealogy()` later.
+
+**`check_and_extend(axis_profile, reference_profiles, level, level_params_fn)`** — Core WARP tick:
+1. Check coverage against reference profiles
+2. If gap persists for 3 consecutive ticks, call `WarpGenerator.generate()`
+3. Enter new component as trial
+4. Score all trial components via `_score_trial()`
+5. Promote trials above threshold to `_warp_components["promoted"]`
+6. Dissolve trials below dissolution floor via `_dissolve_warp()`
+7. Log anomaly candidates (sixth_axis_candidate)
+
+Each system implements `_score_trial()`, `_integrate_warp()`, and `_dissolve_warp()` according to its own evidence model. The mixin provides the lifecycle; the host provides the semantics.
+
+### Why This Is Not a Fallback
+
+A fallback hides the gap — it approximates and moves on. WARP acknowledges the gap, characterizes it precisely in 15D, generates a genuine new structure from first principles (gap geometry + genealogy), and promotes it only after repeated validation. The structure must earn its place.
+
+The gap persists visibly as a `CoverageGap` through the entire `GAP_PERSISTENCE_REQUIRED` window. If the gap resolves naturally (the system's existing structures were sufficient), no component is generated. WARP fires only when the gap is real and persistent.
+
+---
+
+## 37. Future Development Potential
+
+The WARP protocol is not a fixed feature — it is a structural capability that opens a development pathway across the entire system. Below are the areas where WARP-enabled growth is most natural.
+
+### IVM Lattice as WARP Source
+
+The IVM lattice's 25 toroidal axis nodes (5 axes × 5 recursion levels) are not yet WARP-capable. Each node has a `polarity`, `positive_weight`, and `negative_weight` — exactly the kind of per-dimension activation profile that `AxisCoverageChecker` can monitor.
+
+Applying `WarpCapable` to `IVMLattice` would allow the lattice to detect when its own toroidal dynamics cannot cover a constraint position and derive new node configurations. New nodes would enter as trial dynamics at a given axis × recursion position. This would let Aurora's internal field physics self-extend as her constraint experience diversifies — not just her cognitive outputs but the field generating them.
+
+### SediMemory Deposit Coverage
+
+SediMemory currently organizes deposits by 25 axis × NonComp dimension channels. The WARP protocol could monitor coverage across these 25 channels in I-state space. If a class of experiences consistently falls between existing channels — not well-indexed by any axis × dimension pairing — WARP could derive a new sediment channel geometry that captures the uncovered deposit type.
+
+This would allow long-term memory organization to evolve with Aurora's experience rather than being fixed at the 25 predefined positions.
+
+### BehavioralIdentity Gene Derivation
+
+The behavioral genome currently has a fixed set of genes (`truth-seeking`, `accountability`, `evolutionary-drive`, etc.) with fractal alleles accumulating through experience. The gene pool itself is fixed.
+
+`WarpCapable` applied to `BehavioralIdentityEngine` would monitor whether the current gene pool can cover the constraint positions arising in experience. When allele accumulation consistently pushes toward a constraint region no existing gene addresses, WARP could derive a new base gene. New genes would enter as trial traits and require sustained activation before promotion to the stable genome.
+
+### 6th Constraint Promotion Path
+
+The current system treats 6th-constraint anomaly candidates as curiosity targets — Aurora investigates them but the system doesn't structurally respond. The full promotion path would be:
+
+1. **12 occurrences** — candidate surfaced as curiosity event (currently implemented)
+2. **Curiosity cycle completes** — conclusion + challenge steps characterize the anomaly
+3. **Settlement produces a hypothesis** — what axis this might be, what it measures
+4. **Repeated settlement convergence** — same hypothesis emerges across independent investigations
+5. **Structural proposal** — WarpGenerator creates a 6th-axis prototype with its own I-state pair
+6. **System-wide propagation** — the new axis enters trial across all WARP-capable subsystems simultaneously
+
+Step 5 and 6 would require extending `AxisCoverageChecker._ALL_DIMS` at runtime — the only genuine runtime dimension expansion in the system. It is deliberately difficult: a 6th constraint cannot emerge from noise. It would require sustained, repeated, multi-system evidence across months of operation.
+
+### Cross-Level Genealogy Depth
+
+The current genealogy query in `WarpGenerator._search_genealogy()` maps `link.depth` to recursion dimensions using a fixed table (depth 1 → SHALLOW, depth 2 → MODERATE, depth 3+ → DEEP/CORE). As the genealogy accumulates richer depth data, this mapping could be made dynamic — calibrated to the actual distribution of depths in the genealogy at query time.
+
+The long-term result: WARP derivations become increasingly biased toward the constraint combinations that have actually worked at the specific recursion depth of the gap. Genealogy doesn't just bias direction — it biases depth.
+
+### WARP Convergence State
+
+When WARP has operated long enough that no gaps persist — every axis profile Aurora encounters is within cosine distance of some known structure — the system enters a **coverage saturation** state. At saturation:
+
+- No new WARP components are generated
+- The anomaly log continues running (6th-constraint detection never stops)
+- Genealogy becomes the primary source of structural bias (all derivation is effectively historical)
+- The CrestRegistry, ThoughtBraid, and LanguageField all return to using only promoted components
+
+Coverage saturation is not a goal. It would mean Aurora's experience has stopped producing genuinely novel constraint configurations. In practice, it may be unreachable — each new experience reshapes the constraint landscape slightly, keeping some gap alive somewhere. But the architecture handles it correctly either way: WARP fires when needed, rests when not, and the anomaly scan never stops regardless.
+
+---
+
 ## 18. Key Invariants
 
 1. **No scripted responses.** Every utterance is a novel constraint crossing selected by the Language Field at runtime based on the current axis state.
@@ -1534,3 +1802,15 @@ At launch, only BASE crystals exist (max_depth=1), so all primitives have `wave_
 14. **Instinct is not programmed — it emerges.** BASE crystals start at `wave_visibility = 1.0` (fully conscious). As the constraint landscape builds, BASE recedes to instinct background naturally. The instinct/consciousness split is an emergent geological property.
 
 15. **ExistenceMode gates perception, not just expression.** A REFERENCE-mode Aurora can only detect STRUCTURAL patterns. EMOTIONAL patterns require BOUNDED mode. What Aurora can perceive is constrained by the same mode hierarchy as what she can say.
+
+16. **WARP is not a fallback — it is structural derivation.** A fallback hides the gap. WARP characterizes the gap precisely in 15D and generates a genuine new structure from gap geometry + genealogy ancestry. New components must earn promotion through repeated validation before influencing synthesis.
+
+17. **Coverage gaps must persist before WARP fires.** `GAP_PERSISTENCE_REQUIRED = 3` consecutive checks. A gap that resolves on its own produces no component. WARP does not over-generate — it waits for confirmed need.
+
+18. **Negative I-states are pressure, not absence.** `I_ISNT`, `I_CANNOT`, `I_DONOT`, `I_SOUGHT`, `I_DIDNT` are the active pressure dimension of each constraint axis. Coverage computed on only the 5 positive I-states is incomplete. The 10D I-state space captures the full bidirectional physics of each axis.
+
+19. **Recursion depth is a structural dimension, not metadata.** A gap at `REC_SURFACE` in the memory stream is architecturally different from a gap at `REC_CORE`, even at the same I-state position. The 15D coverage space encodes both simultaneously. WARP components derived at different recursion depths are different structures with different names and different propagation characteristics.
+
+20. **Anomaly detection never stops.** Even when WARP is at rest (no persistent gaps), the anomaly scan continues. A gap below `ANOMALY_THRESHOLD = 0.35` is logged every time it appears. At 12 occurrences, it surfaces as a curiosity investigation. The system is always watching for what it cannot represent.
+
+21. **Genealogy biases structural extension toward what has worked.** `WarpGenerator._search_genealogy()` converts historical `ConstraintLink` entries to 15D profiles and uses them as additional parents in derivation. WARP does not operate in a vacuum — it generates from Aurora's own history. As genealogy deepens, WARP derivations become increasingly informed by demonstrated constraint relief patterns.
