@@ -3117,7 +3117,7 @@ class DreamTrainer:
                 print(
                     f"    Epoch {idx+1}/{epochs}  "
                     f"fitness={result.get('avg_fitness', 0.0):.3f}  "
-                    f"shards={result.get('total_shards', 0)}"
+                    f"shards={result.get('learner_shards', result.get('total_shards', 0))}"
                 )
 
         try:
