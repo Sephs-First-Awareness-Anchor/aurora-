@@ -348,9 +348,9 @@
         "sedimemory_recall",
         "learned_hint"
       ],
-      "sightings": 30,
+      "sightings": 35,
       "first_seen": 1780467910.9633048,
-      "last_seen": 1780479420.2693095
+      "last_seen": 1780497771.5568683
     },
     {
       "text": "what work means here",
@@ -485,9 +485,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 25,
+      "sightings": 30,
       "first_seen": 1780470361.7512817,
-      "last_seen": 1780490075.7743611
+      "last_seen": 1780498710.4540114
     },
     {
       "text": "factual_general something something",
@@ -531,9 +531,9 @@
         "generative",
         "constraint_fallback"
       ],
-      "sightings": 83,
+      "sightings": 88,
       "first_seen": 1780470388.2815766,
-      "last_seen": 1780493864.353495
+      "last_seen": 1780494781.003696
     },
     {
       "text": "statement beautiful something beautiful",
@@ -621,9 +621,9 @@
         "sedimemory_recall",
         "learned_hint"
       ],
-      "sightings": 32,
+      "sightings": 37,
       "first_seen": 1780470762.5956523,
-      "last_seen": 1780493819.2058039
+      "last_seen": 1780496923.8915122
     },
     {
       "text": "statement integrate integrate two perspectives disagree without collapsing Integrate",
@@ -644,9 +644,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 83,
+      "sightings": 106,
       "first_seen": 1780470812.811416,
-      "last_seen": 1780494310.9949374
+      "last_seen": 1780505329.3512607
     },
     {
       "text": "statement claims two claims conflict reconcile without pretending Two Reconcile",
@@ -666,9 +666,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 17,
+      "sightings": 21,
       "first_seen": 1780470817.1715522,
-      "last_seen": 1780486331.416072
+      "last_seen": 1780505333.3955393
     },
     {
       "text": "statement answer answer explicit uncertainty confidence include confidence Include",
@@ -690,9 +690,9 @@
         "constraint_fallback",
         "generative"
       ],
-      "sightings": 100,
+      "sightings": 119,
       "first_seen": 1780470824.2359493,
-      "last_seen": 1780494394.0018673
+      "last_seen": 1780500434.8135428
     },
     {
       "text": "statement reframe reframe idea beginner expert Reframe",
@@ -713,9 +713,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 50,
+      "sightings": 59,
       "first_seen": 1780470831.6733227,
-      "last_seen": 1780492364.8521316
+      "last_seen": 1780500180.0585535
     },
     {
       "text": "statement respond respond care enough depth without overstepping Respond",
@@ -736,9 +736,9 @@
         "constraint_fallback",
         "generative"
       ],
-      "sightings": 23,
+      "sightings": 32,
       "first_seen": 1780470838.4949453,
-      "last_seen": 1780493413.2097836
+      "last_seen": 1780499171.6309745
     },
     {
       "text": "factual_general story story",
@@ -990,18 +990,20 @@
         "semantic_frame"
       ],
       "topic_words": [
-        "said"
+        "said",
+        "someone"
       ],
       "tags": [
         "concept",
         "generative",
         "semantic_frame",
         "claim",
-        "learned_hint"
+        "learned_hint",
+        "sedimemory_recall"
       ],
-      "sightings": 8,
+      "sightings": 11,
       "first_seen": 1780473270.210619,
-      "last_seen": 1780494120.4948466
+      "last_seen": 1780496607.530103
     },
     {
       "text": "clarification said said said here keep continuity build Earlier",
@@ -1230,16 +1232,18 @@
       ],
       "topic_words": [
         "carry",
-        "said"
+        "said",
+        "talk"
       ],
       "tags": [
         "semantic_frame",
         "claim",
-        "learned_hint"
+        "learned_hint",
+        "sedimemory_recall"
       ],
-      "sightings": 2,
+      "sightings": 5,
       "first_seen": 1780490623.8745005,
-      "last_seen": 1780493950.9625583
+      "last_seen": 1780495824.6534128
     },
     {
       "text": "statement said said statement said said carry thread Earlier",
@@ -1258,9 +1262,9 @@
         "native_projection",
         "learned_hint"
       ],
-      "sightings": 2,
+      "sightings": 4,
       "first_seen": 1780490649.8760126,
-      "last_seen": 1780494035.2377512
+      "last_seen": 1780495926.0517669
     },
     {
       "text": "statement said said said keep continuity build thread Earlier",
@@ -1279,9 +1283,9 @@
         "native_projection",
         "learned_hint"
       ],
-      "sightings": 2,
+      "sightings": 4,
       "first_seen": 1780490676.0327551,
-      "last_seen": 1780494120.5127394
+      "last_seen": 1780496024.479421
     }
   ]
 }

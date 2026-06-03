@@ -1,38 +1,38 @@
 {
-  "original": "comfort comfortable cross-trust carving finalize something vertical containerized with the edits",
-  "candidate": "comfort comfortable cross-trust carving finalize something vertical containerized with the edits.",
-  "selected": "comfort comfortable cross-trust carving finalize something vertical containerized with the edits.",
-  "accepted": true,
-  "reason": "accepted_deterministic",
-  "original_score": 0.81,
-  "candidate_score": 0.86,
-  "original_pressure": 0.3997,
-  "candidate_pressure": 0.3297,
-  "pressure_relief": 0.07,
-  "safe": true,
+  "original": "Something persistable lubricated of the lessen. I slowing, so I errored probabilistically.",
+  "candidate": "",
+  "selected": "Something persistable lubricated of the lessen. I slowing, so I errored probabilistically.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.86,
+  "candidate_score": 0.0,
+  "original_pressure": 0.3505,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.6495,
+  "safe": false,
   "metadata": {
-    "prompt_excerpt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+    "prompt_excerpt": "Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle.",
     "input_interpretation": {
-      "raw_prompt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+      "raw_prompt": "Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle.",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "answer",
-        "while",
-        "being",
-        "explicit",
-        "uncertainty",
-        "confidence",
-        "include",
-        "confidence"
+        "integrate",
+        "perspectives",
+        "disagree",
+        "without",
+        "collapsing",
+        "either",
+        "reconcile",
+        "opposing"
       ],
       "entities": [
-        "Answer",
-        "Include"
+        "Integrate",
+        "Now"
       ]
     },
     "tone": "gentle",
-    "source": "deterministic",
-    "timestamp": 1780494385.5774858,
+    "source": "no_pattern_matched",
+    "timestamp": 1780505335.2086906,
     "min_relief_used": 0.035
   }
 }
