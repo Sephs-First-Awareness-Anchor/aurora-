@@ -3246,14 +3246,84 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1780467863.938508
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:207318390f44",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780470048.8433635
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:464cc0b34d25",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780470240.0362432
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:4a01ffb0ff3f",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780470342.304495
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:c140b32728f3",
+      "dominant_axis": "X",
+      "file": "aurora_expression_perception.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_expression_perception",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780470904.4502206
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:8120adaccd8b",
+      "dominant_axis": "X",
+      "file": "aurora_expression_perception.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_expression_perception",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780471116.2293127
     }
   ],
   "initialized": true,
-  "last_run_at": 1780467863.9406788,
+  "last_run_at": 1780471116.232399,
   "manifest": {
     "aurora.py": {
-      "mtime_ns": 1780467848515543821,
-      "size": 1393017
+      "mtime_ns": 1780470323307950700,
+      "size": 1394306
     },
     "aurora_behavioral_identity.py": {
       "mtime_ns": 1778751706113129529,
@@ -3296,8 +3366,8 @@
       "size": 167902
     },
     "aurora_expression_perception.py": {
-      "mtime_ns": 1780019266289066830,
-      "size": 442844
+      "mtime_ns": 1780471103787997094,
+      "size": 445939
     },
     "aurora_grammar_engine.py": {
       "mtime_ns": 1779296989964566589,
