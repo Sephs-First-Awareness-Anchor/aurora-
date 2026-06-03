@@ -902,6 +902,11 @@ class RetainedLearningBank:
         clean = re.sub(r'\s+', ' ', str(text or '').strip())
         if len(clean.split()) < 3:
             return False
+        # Reject raw manifold diagnostics and constraint-code artifacts
+        if (clean.startswith("125-layer manifold:")
+                or ("basis=" in clean and "target=" in clean)
+                or re.search(r'\b[XTNBA]\s+[XTNBA]:[A-Z_]+\b', clean)):
+            return False
         if self._is_generic_strategy_learning(clean):
             return False
         key = self._key(clean)
@@ -2949,11 +2954,19 @@ class DreamTrainer:
         merged: List[str] = []
         seen = set()
         for item in hints + retained:
-            key = re.sub(r'\s+', ' ', str(item or '').strip().lower())
+            raw = str(item or '').strip()
+            # Filter raw manifold diagnostic strings — internal state readouts
+            # must not surface as response content hints.
+            if (raw.startswith("125-layer manifold:")
+                    or ("basis=" in raw and "target=" in raw)
+                    or raw.startswith("[CODE]")
+                    or raw.startswith("[PRESSURE]")):
+                continue
+            key = re.sub(r'\s+', ' ', raw.lower())
             if not key or key in seen:
                 continue
             seen.add(key)
-            merged.append(str(item))
+            merged.append(raw)
         return merged[:4]
 
     # ----------------------------------------------------------------
@@ -3013,6 +3026,120 @@ class DreamTrainer:
             return getattr(perception, "oets", None)
         except Exception:
             return None
+
+    def run_introspective_simulation(
+        self,
+        systems: Dict[str, Any],
+        epochs: int = 20,
+        episodes_per_epoch: int = 8,
+        turns_per_episode: int = 5,
+        verbose: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        Run accelerated introspective dialogue simulation.
+
+        Seeds the session with specs that activate X/A/B constraint axes —
+        the axes that correspond to self-awareness:
+          X (existence)  → perspective_integration, contradiction_handling,
+                           uncertainty_signaling
+          A (agency)     → framing_selection, adaptive_strategy_selection
+          B (boundary)   → boundary_calibration, emotional_calibration
+
+        Blends with live top fail-point dimensions so the run compounds on
+        real performance gaps. Does not script responses or topics — it sets
+        the constraint-axis CONDITIONS that let the generative system develop
+        introspective capacity on its own.
+        """
+        simulation = systems.get("simulation")
+        if simulation is None:
+            return {"success": False, "reason": "simulation_unavailable"}
+        session = getattr(simulation, "session", None)
+        if session is None:
+            return {"success": False, "reason": "session_unavailable"}
+
+        # X/A/B axis dimensions at high severity — introspective capacity targets
+        introspective_dims: List[Tuple[str, float]] = [
+            ("perspective_integration",   0.85),
+            ("contradiction_handling",    0.80),
+            ("uncertainty_signaling",     0.75),
+            ("framing_selection",         0.80),
+            ("boundary_calibration",      0.70),
+            ("semantic_precision",        0.78),
+            ("implied_intent_inference",  0.72),
+        ]
+
+        # Blend in live top fail dims (up to 3) so real gaps compound
+        top_fails = self.ledger.get_top_fails(n=3)
+        live_dim_names = {d for d, _ in introspective_dims}
+        combined_dims = list(introspective_dims)
+        for dim, score in top_fails:
+            if dim not in live_dim_names:
+                combined_dims.append((dim, score))
+
+        effectiveness = self.obs_log.effectiveness_by_dim()
+        specs = self.planner.generate_specs(
+            combined_dims[:5],
+            n_specs=5,
+            effectiveness=effectiveness,
+            ledger=self.ledger,
+        )
+
+        # Override constraint_axes: activate X+A+B on every spec
+        for spec in specs:
+            spec["constraint_axes"] = {"X": 0.9, "A": 0.8, "B": 0.7}
+
+        # Relational probe specs drive the dual-view / self-as-object scenarios
+        probe_specs = self._build_relational_probe_specs(combined_dims[:3], limit=2)
+        for spec in probe_specs:
+            spec["constraint_axes"] = {"X": 0.9, "A": 0.8, "B": 0.7}
+        specs.extend(probe_specs)
+
+        queued = 0
+        try:
+            queued = session.queue_avatar_specs(specs)
+        except Exception as exc:
+            if verbose:
+                print(f"  [INTROSPECT] Spec queue failed: {exc}")
+
+        dilation = getattr(getattr(session, "governor", None), "current_dilation", 1.0)
+        if verbose:
+            print(f"  [INTROSPECT] Queued {queued} introspective specs")
+            print(
+                f"  [INTROSPECT] Running {epochs} epochs × "
+                f"{episodes_per_epoch} episodes × {turns_per_episode} turns  "
+                f"@ {dilation:.0f}x dilation"
+            )
+            print(f"  [INTROSPECT] Axes targeted: X(existence) A(agency) B(boundary)")
+            print(f"  [INTROSPECT] Dims: {', '.join(d for d, _ in combined_dims[:5])}")
+
+        def _on_epoch(idx: int, result: Dict[str, Any]) -> None:
+            if verbose:
+                print(
+                    f"    Epoch {idx+1}/{epochs}  "
+                    f"fitness={result.get('avg_fitness', 0.0):.3f}  "
+                    f"shards={result.get('total_shards', 0)}"
+                )
+
+        try:
+            run_result = simulation.run_speed_run(
+                epochs=epochs,
+                episodes_per_epoch=episodes_per_epoch,
+                turns_per_episode=turns_per_episode,
+                on_epoch=_on_epoch,
+            )
+        except Exception as exc:
+            return {"success": False, "reason": f"speed_run_failed: {exc}"}
+
+        # Bridge any new learnings to OETS immediately
+        try:
+            self._bridge_learnings_to_oets(systems)
+        except Exception:
+            pass
+
+        run_result["success"] = True
+        run_result["specs_queued"] = queued
+        run_result["dims_targeted"] = [d for d, _ in combined_dims[:5]]
+        return run_result
 
     def save(self) -> None:
         self.ledger.save()

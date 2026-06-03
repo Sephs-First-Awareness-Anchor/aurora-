@@ -3337,8 +3337,6 @@ class WorkingMemory:
             understood.get("dimension", ""),
             understood.get("topic", ""),
             noncomp_input.get("anchor", ""),
-            noncomp_state.get("dominant_target", ""),
-            noncomp_state.get("basis_channel", ""),
         ):
             label = str(candidate or "").strip()
             if label and label.lower() not in {item.lower() for item in native_terms}:
@@ -18899,7 +18897,10 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
         if learner and hasattr(learner, "get_confident_shards"):
             for shard in list(learner.get_confident_shards() or [])[:3]:
                 if hasattr(shard, "content"):
-                    state.learned_hints.append(str(shard.content)[:80])
+                    _sc = str(shard.content or "").strip()
+                    if not (_sc.startswith("125-layer manifold:")
+                            or ("basis=" in _sc and "target=" in _sc)):
+                        state.learned_hints.append(_sc[:80])
     except Exception:
         pass
 
@@ -19155,7 +19156,15 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     or "allows me to" in _hint_lower
                     or "helps me" in _hint_lower
                 )
-                if not _is_meta and len(_top_hint.split()) >= 6:
+                # Reject raw manifold diagnostic strings — they are internal
+                # state readouts, not response content.
+                _is_diagnostic = (
+                    _top_hint.startswith("125-layer manifold:")
+                    or ("basis=" in _top_hint and "target=" in _top_hint)
+                    or _top_hint.startswith("[CODE]")
+                    or _top_hint.startswith("[PRESSURE]")
+                )
+                if not _is_meta and not _is_diagnostic and len(_top_hint.split()) >= 6:
                     state.response_content = _top_hint
                     state.response_tone = "attentive"
                     state.response_confidence = 0.52
@@ -23957,7 +23966,7 @@ def boot_aurora(
     # Layer 7: Simulation Engine
     if verbose: print("  [L7] Simulation Engine...", end=" ", flush=True)
     from aurora_simulation_engine import SimulationEngine
-    simulation = SimulationEngine(contract, perception, identity)
+    simulation = SimulationEngine(contract, perception, identity, state_dir=state_dir)
     systems['simulation'] = simulation
     _register_layer(systems, 'L7', 'Simulation Engine', 'simulation', simulation, {
         'state': 'get_system_state',
@@ -27984,6 +27993,7 @@ def chat(systems: Dict[str, Any]):
     print("  |    /dual       -- Toggle dual-response mode     |")
     print("  |    /search     -- Toggle web lookup on Qs       |")
     print("  |    /study N    -- Run N study cycles            |")
+    print("  |    /introspect N-- Introspective sim (N epochs) |")
     print("  |    /understand -- Understanding report          |")
     print("  |    /whoami     -- Aurora's identity             |")
     print("  |    /memory     -- Conversation memory           |")
@@ -28619,6 +28629,25 @@ def chat(systems: Dict[str, Any]):
             elif cmd == '/study':
                 n = int(cmd_parts[1]) if len(cmd_parts) > 1 else 3
                 study(systems, cycles=n)
+                continue
+            elif cmd == '/introspect':
+                _epochs = int(cmd_parts[1]) if len(cmd_parts) > 1 else 20
+                _dream_trainer = systems.get('dream_trainer')
+                if _dream_trainer is None:
+                    print("  [INTROSPECT] Dream trainer not available.\n")
+                else:
+                    print(f"\n  [INTROSPECT] Starting introspective simulation ({_epochs} epochs)...")
+                    _ir = _dream_trainer.run_introspective_simulation(
+                        systems, epochs=_epochs, verbose=True
+                    )
+                    if _ir.get('success'):
+                        _ep = _ir.get('epoch_history', [])
+                        _best = max((_e.get('avg_fitness', 0) for _e in _ep), default=0)
+                        print(f"\n  [INTROSPECT] Complete. Best fitness: {_best:.3f}")
+                        print(f"               Dims trained: {', '.join(_ir.get('dims_targeted', []))}")
+                    else:
+                        print(f"  [INTROSPECT] Failed: {_ir.get('reason', 'unknown')}")
+                    print()
                 continue
             elif cmd == '/understand':
                 show_understanding(systems)
