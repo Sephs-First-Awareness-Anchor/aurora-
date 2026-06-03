@@ -1,30 +1,30 @@
 {
-  "original": "gemini stacktrace something equipped patterndistiller something transparent printing from the lunch",
-  "candidate": "gemini stacktrace something equipped patterndistiller something transparent printing from the lunch.",
-  "selected": "gemini stacktrace something equipped patterndistiller something transparent printing from the lunch.",
+  "original": "something unproductive uncomfortable particles the arena occasionally foreshadowing believed resolutions bing cheaply feeling excluded feeling cheats practically surgeon upgrade something crystal-compatible paragraphs",
+  "candidate": "something unproductive uncomfortable particles the arena occasionally foreshadowing believed resolutions bing cheaply feeling excluded cheats practically surgeon upgrade something crystal-compatible paragraphs.",
+  "selected": "something unproductive uncomfortable particles the arena occasionally foreshadowing believed resolutions bing cheaply feeling excluded cheats practically surgeon upgrade something crystal-compatible paragraphs.",
   "accepted": true,
   "reason": "accepted_deterministic",
   "original_score": 0.69,
   "candidate_score": 0.74,
-  "original_pressure": 0.4647,
-  "candidate_pressure": 0.3947,
-  "pressure_relief": 0.07,
+  "original_pressure": 0.4529,
+  "candidate_pressure": 0.3811,
+  "pressure_relief": 0.0718,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "Hello!",
+    "prompt_excerpt": "What does it mean to exist?",
     "input_interpretation": {
-      "raw_prompt": "Hello!",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "What does it mean to exist?",
+      "intent_hint": "question",
       "topic_terms": [
-        "hello"
+        "does",
+        "mean",
+        "exist"
       ],
-      "entities": [
-        "Hello"
-      ]
+      "entities": []
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780479188.2854981,
+    "timestamp": 1780480213.8064563,
     "min_relief_used": 0.035
   }
 }
