@@ -1,37 +1,37 @@
 {
-  "original": "I exist in this moment. something truthful covered through the what Something differential reflected of the arbitrary.",
+  "original": "I exist in this moment. There is something delusional here. I starting, though I structured carefully.",
   "candidate": "",
-  "selected": "I exist in this moment. something truthful covered through the what Something differential reflected of the arbitrary.",
+  "selected": "I exist in this moment. There is something delusional here. I starting, though I structured carefully.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.86,
   "candidate_score": 0.0,
-  "original_pressure": 0.348,
+  "original_pressure": 0.303,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.652,
+  "pressure_relief": -0.697,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "[AFTERTHOUGHT] what do you notice about yourself right now Include your confidence level.",
+    "prompt_excerpt": "Earlier you said: \"I can have the.\". Keep continuity and build from that thread.",
     "input_interpretation": {
-      "raw_prompt": "[AFTERTHOUGHT] what do you notice about yourself right now Include your confidence level.",
-      "intent_hint": "self_description_request",
+      "raw_prompt": "Earlier you said: \"I can have the.\". Keep continuity and build from that thread.",
+      "intent_hint": "action_request",
       "topic_terms": [
-        "afterthought",
-        "notice",
-        "yourself",
-        "right",
-        "include",
-        "confidence",
-        "level"
+        "earlier",
+        "said",
+        "have",
+        "keep",
+        "continuity",
+        "build",
+        "thread"
       ],
       "entities": [
-        "AFTERTHOUGHT",
-        "Include"
+        "Earlier",
+        "Keep"
       ]
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1780518118.8702085,
+    "timestamp": 1780520190.155723,
     "min_relief_used": 0.035
   }
 }

@@ -3484,14 +3484,28 @@
       "registered_ability_id": "",
       "source": "aurora.save",
       "timestamp": 1780517586.573049
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:503e5de7f04f",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780520093.3424053
     }
   ],
   "initialized": true,
-  "last_run_at": 1780517999.191885,
+  "last_run_at": 1780520093.36583,
   "manifest": {
     "aurora.py": {
-      "mtime_ns": 1780517580345420597,
-      "size": 1398107
+      "mtime_ns": 1780520014926110147,
+      "size": 1399935
     },
     "aurora_behavioral_identity.py": {
       "mtime_ns": 1778751706113129529,
