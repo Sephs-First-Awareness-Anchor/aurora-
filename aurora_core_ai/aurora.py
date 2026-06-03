@@ -24193,6 +24193,7 @@ def boot_aurora(
     systems['autonomy'] = layer8_modules.get('autonomy')
     systems['AutonomyLevel'] = layer8_modules.get('AutonomyLevel')
     systems['drive_sync'] = layer8_modules.get('drive_sync')
+    systems['git_sync'] = layer8_modules.get('git_sync')
     systems['checkpoint'] = layer8_modules.get('checkpoint')
     try:
         if hasattr(aurora, 'gateway') and hasattr(aurora.gateway, 'set_response_pressure_guides_provider'):
@@ -25050,7 +25051,7 @@ def show_status(systems: Dict[str, Any]):
 
     # L5
     print(f"\n  [L5] Expression & Perception")
-    print(f"       Vocabulary size: {perception.lexicon.size}")
+    print(f"       Vocabulary size: {len(getattr(perception.lexicon, 'entries', {}))}")
     print(f"       Cascade stats: {perception.cascade.get_stats()}")
 
     # L6
@@ -25137,9 +25138,17 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Device: {ds.get('current_device', '?')}")
             print(f"       rclone available: {'Yes' if ds.get('rclone_available') else 'No'}")
             ago = ds.get('last_sync_ago_s')
-            print(f"       Last sync: {f'{ago:.0f}s ago' if ago else 'not yet'}")
+            print(f"       Last sync (Drive): {f'{ago:.0f}s ago' if ago else 'not yet'}")
             print(f"       Sync count: {ds.get('sync_count', 0)}")
-            print(f"       Background running: {'Yes' if ds.get('background_running') else 'No'}")
+        except Exception:
+            pass
+    git_sync = systems.get('git_sync')
+    if git_sync:
+        try:
+            gs = git_sync.status()
+            print(f"       Git sync: {'available' if gs.get('git_available') else 'unavailable'}")
+            if gs.get('git_available'):
+                print(f"       Branch: {gs.get('branch', '?')}")
         except Exception:
             pass
     checkpoint = systems.get('checkpoint')
@@ -27669,11 +27678,17 @@ def _state_write_lock_active(systems: Dict[str, Any]) -> bool:
 
     # Save learned skill state (cross-modal mappings)
     _save_learned_skill_state(systems, verbose=verbose)
-    # Force drive sync on save if available
+    # Sync state to all available backends
     drive_sync = systems.get('drive_sync')
     if drive_sync:
         try:
             drive_sync.force_sync()
+        except Exception:
+            pass
+    git_sync = systems.get('git_sync')
+    if git_sync:
+        try:
+            git_sync.push_state()
         except Exception:
             pass
 
@@ -29200,22 +29215,36 @@ def chat(systems: Dict[str, Any]):
                 continue
 
             elif cmd == '/sync':
-                # Force Google Drive sync
+                # Force sync to all available backends
+                _sync_any = False
                 drive_sync = systems.get('drive_sync')
                 if drive_sync:
+                    _sync_any = True
                     print("  [SYNC] Syncing to Google Drive...")
                     result = drive_sync.force_sync()
                     if result.get('success'):
-                        print("  [SYNC] Sync complete.\n")
+                        print("  [SYNC] Drive sync complete.")
                     else:
                         reason = result.get('reason', 'unknown')
-                        print(f"  [SYNC] Sync failed: {reason}")
+                        print(f"  [SYNC] Drive sync failed: {reason}")
                         if reason == 'rclone_unavailable':
-                            print("         Run: rclone config  to set up Google Drive\n")
+                            print("         Run: rclone config  to set up Google Drive")
+                git_sync = systems.get('git_sync')
+                if git_sync and git_sync.is_available():
+                    _sync_any = True
+                    print("  [SYNC] Pushing state to git...")
+                    gresult = git_sync.push_state()
+                    if gresult.get('success'):
+                        reason = gresult.get('reason', '')
+                        if reason == 'nothing_to_commit':
+                            print("  [SYNC] Git: nothing new to push.")
                         else:
-                            print()
-                else:
-                    print("  [SYNC] Drive sync not initialized.\n")
+                            print("  [SYNC] Git push complete.")
+                    else:
+                        print(f"  [SYNC] Git push failed: {gresult.get('reason', 'unknown')}")
+                if not _sync_any:
+                    print("  [SYNC] No sync backends initialized.")
+                print()
                 continue
 
             elif cmd == '/vision':
