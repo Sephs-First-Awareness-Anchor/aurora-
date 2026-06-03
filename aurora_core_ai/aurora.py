@@ -1371,9 +1371,7 @@ class WorkingMemory:
                 understood=native["understood"],
             )
             native_summary = str(
-                native["noncomp_state"].get("semantic_translation", "")
-                or native["noncomp_state"].get("manifold_translation", "")
-                or native["understood"].get("summary", "")
+                native["understood"].get("summary", "")
                 or native["native_text"]
                 or ""
             ).strip()
@@ -3178,9 +3176,7 @@ class WorkingMemory:
         native = self._native_turn_payload(raw, understood)
         native_topic = self._normalize_mention(native["understood"].get('topic', ''))
         native_translation = str(
-            native["noncomp_state"].get("semantic_translation", "")
-            or native["noncomp_state"].get("manifold_translation", "")
-            or native["understood"].get("summary", "")
+            native["understood"].get("summary", "")
             or native["native_text"]
             or ""
         ).strip()
@@ -3341,11 +3337,6 @@ class WorkingMemory:
             understood.get("dimension", ""),
             understood.get("topic", ""),
             noncomp_input.get("anchor", ""),
-            noncomp_state.get("dominant_target", ""),
-            noncomp_state.get("basis_channel", ""),
-            noncomp_state.get("semantic_translation", ""),
-            noncomp_state.get("manifold_translation", ""),
-            noncomp_manifold.get("translation", ""),
         ):
             label = str(candidate or "").strip()
             if label and label.lower() not in {item.lower() for item in native_terms}:
@@ -18243,6 +18234,34 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
     except Exception:
         pass
 
+    # ── Waveform pre-injection — field shaped BEFORE comprehension runs ────────
+    # The constraint aggregate derived from user text is injected into the
+    # NoncompField NOW so that the field's axis pressures reflect this turn's
+    # input when the constraint emitter runs.  Previously this injection only
+    # happened post-response (updating the field for the NEXT turn).
+    try:
+        _wf_ifield = systems.get('identity_field')
+        _wf_pump   = systems.get('pressure_pump')
+        _wf_dim    = systems.get('dimensional')
+        if _wf_pump is not None and _wf_ifield is not None and _wf_dim is not None:
+            _wf_agg = (_wf_dim.get_constraint_aggregate()
+                       if hasattr(_wf_dim, 'get_constraint_aggregate') else None)
+            if _wf_agg:
+                from aurora_waveform_pressure import WaveformPressurePump as _WFPump
+                _wf_dist = _WFPump.from_axis_state(
+                    _wf_agg,
+                    source="user_input_precomp",
+                    intensity=0.65,
+                    coupling_mode="full",
+                )
+                _wf_pump.inject(
+                    _wf_dist,
+                    _wf_ifield,
+                    qao=systems.get('quasiarch_observer'),
+                )
+    except Exception:
+        pass
+
     # ── Sensory context injection ──
     # Pull live screen-observer scene and sensory-crystal state into pipeline_state
     # so all upward and downward chain stages can shape responses around what Aurora
@@ -18906,7 +18925,10 @@ def _chain_up5_understanding(user_text: str, systems: dict, state: Any, *, turn_
         if learner and hasattr(learner, "get_confident_shards"):
             for shard in list(learner.get_confident_shards() or [])[:3]:
                 if hasattr(shard, "content"):
-                    state.learned_hints.append(str(shard.content)[:80])
+                    _sc = str(shard.content or "").strip()
+                    if not (_sc.startswith("125-layer manifold:")
+                            or ("basis=" in _sc and "target=" in _sc)):
+                        state.learned_hints.append(_sc[:80])
     except Exception:
         pass
 
@@ -19162,7 +19184,15 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     or "allows me to" in _hint_lower
                     or "helps me" in _hint_lower
                 )
-                if not _is_meta and len(_top_hint.split()) >= 6:
+                # Reject raw manifold diagnostic strings — they are internal
+                # state readouts, not response content.
+                _is_diagnostic = (
+                    _top_hint.startswith("125-layer manifold:")
+                    or ("basis=" in _top_hint and "target=" in _top_hint)
+                    or _top_hint.startswith("[CODE]")
+                    or _top_hint.startswith("[PRESSURE]")
+                )
+                if not _is_meta and not _is_diagnostic and len(_top_hint.split()) >= 6:
                     state.response_content = _top_hint
                     state.response_tone = "attentive"
                     state.response_confidence = 0.52
@@ -20774,9 +20804,18 @@ def _run_reasoning_pipeline(
             if _ce is not None:
                 from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
                 _p = getattr(state, "parsed", {}) or {}
+                _ut_low = str(user_text or "").lower()
+                _self_ref = any(tok in _ut_low for tok in
+                                (" you ", " you'", "do you", "are you",
+                                 "your ", "yourself", "how you"))
                 _if = _IF(
                     text=str(user_text or ""),
                     is_directed=True,
+                    is_question=_ut_low.endswith("?") or any(
+                        _ut_low.startswith(q) for q in
+                        ("how ", "what ", "when ", "why ", "where ", "do you",
+                         "are you", "can you", "did you")),
+                    is_self_referential=_self_ref,
                     topic_concept=str(_p.get("topic", "") or "").strip() or None,
                 )
                 _ec = EmissionContextBuilder().build(systems, input_frame=_if)
@@ -23840,6 +23879,17 @@ def boot_aurora(
         if verbose:
             print(f"  [IDENTITY] NoncompField unavailable: {_ifield_e}")
 
+    # Register waveform pressure pump — required so ThoughtBraid._loop() and
+    # per-turn waveform injection actually fire.  Without this, pressure_pump
+    # is None everywhere and all waveform propagation silently no-ops.
+    try:
+        from aurora_waveform_pressure import get_pump as _get_wf_pump
+        systems['pressure_pump'] = _get_wf_pump()
+        if verbose:
+            print("  [WAVEFORM] Pressure pump registered")
+    except Exception:
+        systems['pressure_pump'] = None
+
     # Layer 4: Consciousness Engine
     if verbose: print("  [L4] Consciousness Engine...", end=" ", flush=True)
     from aurora_consciousness_engine import ConsciousnessEngine
@@ -23964,7 +24014,7 @@ def boot_aurora(
     # Layer 7: Simulation Engine
     if verbose: print("  [L7] Simulation Engine...", end=" ", flush=True)
     from aurora_simulation_engine import SimulationEngine
-    simulation = SimulationEngine(contract, perception, identity)
+    simulation = SimulationEngine(contract, perception, identity, state_dir=state_dir)
     systems['simulation'] = simulation
     _register_layer(systems, 'L7', 'Simulation Engine', 'simulation', simulation, {
         'state': 'get_system_state',
@@ -24193,6 +24243,7 @@ def boot_aurora(
     systems['autonomy'] = layer8_modules.get('autonomy')
     systems['AutonomyLevel'] = layer8_modules.get('AutonomyLevel')
     systems['drive_sync'] = layer8_modules.get('drive_sync')
+    systems['git_sync'] = layer8_modules.get('git_sync')
     systems['checkpoint'] = layer8_modules.get('checkpoint')
     try:
         if hasattr(aurora, 'gateway') and hasattr(aurora.gateway, 'set_response_pressure_guides_provider'):
@@ -25050,8 +25101,14 @@ def show_status(systems: Dict[str, Any]):
 
     # L5
     print(f"\n  [L5] Expression & Perception")
-    print(f"       Vocabulary size: {perception.lexicon.size}")
-    print(f"       Cascade stats: {perception.cascade.get_stats()}")
+    print(f"       Vocabulary size: {len(getattr(perception.lexicon, 'entries', {}))}")
+    _casc = perception.cascade
+    if hasattr(_casc, 'get_stats'):
+        print(f"       Cascade stats: {_casc.get_stats()}")
+    else:
+        print(f"       Cascade: shards={len(getattr(_casc, 'shards', {}))}, "
+              f"seeds={len(getattr(_casc, 'seeds', {}))}, "
+              f"relics={len(getattr(_casc, 'relics', {}))}")
 
     # L6
     print(f"\n  [L6] Behavioral Identity")
@@ -25137,9 +25194,17 @@ def show_status(systems: Dict[str, Any]):
             print(f"       Device: {ds.get('current_device', '?')}")
             print(f"       rclone available: {'Yes' if ds.get('rclone_available') else 'No'}")
             ago = ds.get('last_sync_ago_s')
-            print(f"       Last sync: {f'{ago:.0f}s ago' if ago else 'not yet'}")
+            print(f"       Last sync (Drive): {f'{ago:.0f}s ago' if ago else 'not yet'}")
             print(f"       Sync count: {ds.get('sync_count', 0)}")
-            print(f"       Background running: {'Yes' if ds.get('background_running') else 'No'}")
+        except Exception:
+            pass
+    git_sync = systems.get('git_sync')
+    if git_sync:
+        try:
+            gs = git_sync.status()
+            print(f"       Git sync: {'available' if gs.get('git_available') else 'unavailable'}")
+            if gs.get('git_available'):
+                print(f"       Branch: {gs.get('branch', '?')}")
         except Exception:
             pass
     checkpoint = systems.get('checkpoint')
@@ -27669,11 +27734,17 @@ def _state_write_lock_active(systems: Dict[str, Any]) -> bool:
 
     # Save learned skill state (cross-modal mappings)
     _save_learned_skill_state(systems, verbose=verbose)
-    # Force drive sync on save if available
+    # Sync state to all available backends
     drive_sync = systems.get('drive_sync')
     if drive_sync:
         try:
             drive_sync.force_sync()
+        except Exception:
+            pass
+    git_sync = systems.get('git_sync')
+    if git_sync:
+        try:
+            git_sync.push_state()
         except Exception:
             pass
 
@@ -27970,6 +28041,7 @@ def chat(systems: Dict[str, Any]):
     print("  |    /dual       -- Toggle dual-response mode     |")
     print("  |    /search     -- Toggle web lookup on Qs       |")
     print("  |    /study N    -- Run N study cycles            |")
+    print("  |    /introspect N-- Introspective sim (N epochs) |")
     print("  |    /understand -- Understanding report          |")
     print("  |    /whoami     -- Aurora's identity             |")
     print("  |    /memory     -- Conversation memory           |")
@@ -28392,6 +28464,64 @@ def chat(systems: Dict[str, Any]):
                 show_diagnostics = not show_diagnostics
                 print(f"  [PIPELINE] Response diagnostics = {show_diagnostics}\n")
                 continue
+            elif cmd == '/qao':
+                _qao = systems.get("quasiarch_observer")
+                if _qao is None:
+                    print("  [QAO] QuasiArch observer not available.\n")
+                else:
+                    _evts = list(getattr(_qao, "recent_events", []) or [])[-12:]
+                    if not _evts:
+                        print("  [QAO] No events recorded yet.\n")
+                    else:
+                        print(f"\n  QUASIARCH OBSERVER -- last {len(_evts)} events")
+                        print("  " + "-" * 60)
+                        import datetime as _dtq
+                        for _ei, _ev in enumerate(_evts, 1):
+                            _prov = _ev.get("provenance", "")
+                            _ts   = _ev.get("ts" if _prov == "WAVEFORM" else "timestamp", 0)
+                            try:
+                                _tss = _dtq.datetime.fromtimestamp(_ts).strftime("%H:%M:%S")
+                            except Exception:
+                                _tss = "--:--:--"
+                            if _prov == "WAVEFORM":
+                                _src  = _ev.get("source", "?")
+                                _dax  = _ev.get("dominant_axis", "?")
+                                _inty = _ev.get("intensity", 0.0)
+                                _trc  = _ev.get("trace") or []
+                                _coup = [t for t in _trc if t.get("step") == "coupling"]
+                                print(f"\n  [{_ei}] {_tss}  [WAVEFORM] src={_src}")
+                                print(f"       dominant_axis: {_dax}  intensity={_inty:.2f}")
+                                if _coup:
+                                    _cpairs = " ".join(
+                                        f"{t['from']}→{t['to']}({t.get('amplitude',0):.2f})"
+                                        for t in _coup[:4]
+                                    )
+                                    print(f"       coupling     : {_cpairs}")
+                            else:
+                                _issue = _ev.get("issue_category", _ev.get("issue", "?"))
+                                _intv  = _ev.get("intervention", "?")
+                                _eff   = _ev.get("observed_effect", "?")
+                                _tier  = _ev.get("logic_tier", "?")
+                                _cnt   = _ev.get("count", "?")
+                                print(f"\n  [{_ei}] {_tss}  issue={_issue}  (x{_cnt})")
+                                print(f"       tier        : {_tier}")
+                                print(f"       intervention: {_intv}")
+                                print(f"       effect      : {_eff}")
+                                _ctx = dict(_ev.get("constraint_context") or {})
+                                if _ctx:
+                                    _ctx_bits = [f"{k}={str(v)[:40]}" for k, v in list(_ctx.items())[:4]]
+                                    print(f"       ctx         : {' | '.join(_ctx_bits)}")
+                                _sp = dict(_ev.get("system_pressure") or {})
+                                if _sp:
+                                    _sp_num = {k: v for k, v in _sp.items() if isinstance(v, (int, float))}
+                                    if _sp_num:
+                                        try:
+                                            _top = sorted(_sp_num.items(), key=lambda x: -float(x[1]))[:4]
+                                            print(f"       pressure    : {' '.join(f'{k}={v:.3f}' for k,v in _top)}")
+                                        except Exception:
+                                            pass
+                        print()
+                continue
             elif cmd == '/learned':
                 learned = aurora.gateway.simulation.session.learner.what_have_i_learned()
                 if learned:
@@ -28605,6 +28735,27 @@ def chat(systems: Dict[str, Any]):
             elif cmd == '/study':
                 n = int(cmd_parts[1]) if len(cmd_parts) > 1 else 3
                 study(systems, cycles=n)
+                continue
+            elif cmd == '/introspect':
+                _epochs = int(cmd_parts[1]) if len(cmd_parts) > 1 else 20
+                _dream_trainer = systems.get('dream_trainer')
+                if _dream_trainer is None:
+                    print("  [INTROSPECT] Dream trainer not available.\n")
+                else:
+                    print(f"\n  [INTROSPECT] Starting introspective simulation ({_epochs} epochs)...")
+                    _ir = _dream_trainer.run_introspective_simulation(
+                        systems, epochs=_epochs, verbose=True
+                    )
+                    if _ir.get('success'):
+                        _best = _ir.get('best_avg_fitness',
+                                        max((_e.get('avg_fitness', 0)
+                                             for _e in _ir.get('history', [])), default=0))
+                        _shards = (_ir.get('final_stats') or {}).get('session', {}).get('understanding_shards', 0)
+                        print(f"\n  [INTROSPECT] Complete. Best fitness: {_best:.3f}  Shards: {_shards}")
+                        print(f"               Dims trained: {', '.join(_ir.get('dims_targeted', []))}")
+                    else:
+                        print(f"  [INTROSPECT] Failed: {_ir.get('reason', 'unknown')}")
+                    print()
                 continue
             elif cmd == '/understand':
                 show_understanding(systems)
@@ -29200,22 +29351,36 @@ def chat(systems: Dict[str, Any]):
                 continue
 
             elif cmd == '/sync':
-                # Force Google Drive sync
+                # Force sync to all available backends
+                _sync_any = False
                 drive_sync = systems.get('drive_sync')
                 if drive_sync:
+                    _sync_any = True
                     print("  [SYNC] Syncing to Google Drive...")
                     result = drive_sync.force_sync()
                     if result.get('success'):
-                        print("  [SYNC] Sync complete.\n")
+                        print("  [SYNC] Drive sync complete.")
                     else:
                         reason = result.get('reason', 'unknown')
-                        print(f"  [SYNC] Sync failed: {reason}")
+                        print(f"  [SYNC] Drive sync failed: {reason}")
                         if reason == 'rclone_unavailable':
-                            print("         Run: rclone config  to set up Google Drive\n")
+                            print("         Run: rclone config  to set up Google Drive")
+                git_sync = systems.get('git_sync')
+                if git_sync and git_sync.is_available():
+                    _sync_any = True
+                    print("  [SYNC] Pushing state to git...")
+                    gresult = git_sync.push_state()
+                    if gresult.get('success'):
+                        reason = gresult.get('reason', '')
+                        if reason == 'nothing_to_commit':
+                            print("  [SYNC] Git: nothing new to push.")
                         else:
-                            print()
-                else:
-                    print("  [SYNC] Drive sync not initialized.\n")
+                            print("  [SYNC] Git push complete.")
+                    else:
+                        print(f"  [SYNC] Git push failed: {gresult.get('reason', 'unknown')}")
+                if not _sync_any:
+                    print("  [SYNC] No sync backends initialized.")
+                print()
                 continue
 
             elif cmd == '/vision':
@@ -29340,6 +29505,13 @@ def chat(systems: Dict[str, Any]):
                     f"vocab={getattr(perception.lexicon, 'size', len(getattr(perception.lexicon, 'entries', {})))} "
                     f"gen={identity.dna.generation}]"
                 )
+                _qao_diag = systems.get("quasiarch_observer")
+                _qao_evts = list(getattr(_qao_diag, "recent_events", []) or [])[-6:]
+                if _qao_evts:
+                    print("          [QAO interventions this turn:]")
+                    for _qev in _qao_evts:
+                        _qi = _qev.get("issue_category", _qev.get("issue", "?"))
+                        print(f"            {_qi} → {_qev.get('intervention','?')} ({_qev.get('observed_effect','?')})")
             if r['offered_lookup']:
                 print("          (If you'd like, I can look that up and dig deeper.)")
             print()

@@ -386,6 +386,72 @@ class CuriosityEngine:
             prev.urgency = min(1.0, prev.urgency + 0.15)
             return prev
 
+        # --- WARP awareness: promoted structural components become curiosity targets ---
+        # When WARP has derived and promoted a new structural component, it signals
+        # that the system has found phenomenal territory that existing structures
+        # couldn't cover. Curiosity investigates: what does this territory contain?
+        # Is it genuinely distinct, or can it be mapped onto existing structures?
+        try:
+            braid = self.systems.get("braid") or self.systems.get("thought_braid")
+            if braid and hasattr(braid, "_warp_promoted") and braid._warp_promoted:
+                comp = next(iter(braid._warp_promoted.values()))
+                comp_name = str(getattr(comp, "name", None) or comp.component_id)
+                profile = getattr(comp, "axis_profile", {})
+                # Which axis is dominant in this warp component?
+                _AX_ISTATES = {
+                    "X": ("I_IS", "I_ISNT"), "T": ("I_CAN", "I_CANNOT"),
+                    "N": ("I_DO", "I_DONOT"), "B": ("I_SAW", "I_SOUGHT"),
+                    "A": ("I_DID", "I_DIDNT"),
+                }
+                dom_ax = max(
+                    _AX_ISTATES.keys(),
+                    key=lambda ax: max(profile.get(i, 0.0) for i in _AX_ISTATES[ax]),
+                )
+                return CuriosityObject(
+                    subject=f"warp-derived region: {comp_name}",
+                    origin_axis=dom_ax,
+                    curiosity_type=_map_axis_to_curiosity_type(dom_ax),
+                    urgency=0.72,
+                    hypothesis=(
+                        f"My structural system found a {comp_name} region not covered by "
+                        f"existing patterns. I should investigate whether this region contains "
+                        f"genuine new phenomenology or resolves onto known structures."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
+        # --- WARP anomaly candidates become curiosity targets ---
+        # An anomaly candidate (coverage < 0.35 across all existing components,
+        # occurred >= 12 times) may represent a genuinely new constraint dimension.
+        # Curiosity must investigate before structural action can be taken.
+        try:
+            braid = self.systems.get("braid") or self.systems.get("thought_braid")
+            if braid and hasattr(braid, "_warp_generator"):
+                candidates = [
+                    r for r in braid._warp_generator.anomaly_summary()
+                    if r.get("candidate") and r.get("occurrences", 0) >= 12
+                ]
+                if candidates:
+                    rec = candidates[0]
+                    return CuriosityObject(
+                        subject=f"potential 6th-constraint signal (id={rec['id']})",
+                        origin_axis="X",  # existence — does something exist that I can't represent?
+                        curiosity_type="conceptual",
+                        urgency=0.85,  # highest urgency — this could be genuinely new
+                        hypothesis=(
+                            f"I have observed {rec['occurrences']} instances of a phenomenon "
+                            f"that cannot be represented through any known combination of "
+                            f"constraint magnitude, polarity, recursion, phase, or stream "
+                            f"orientation (residual {rec['residual']:.2f}). "
+                            f"I need to investigate whether this is noise or a genuine gap."
+                        ),
+                        tick=tick,
+                    )
+        except Exception:
+            pass
+
         # --- Crystal gap report — highest priority new curiosity source ---
         # The sensory crystal knows exactly which concepts are underfed and
         # which modality is missing. This is the primary driver of gap-seeking
@@ -445,23 +511,51 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── Waveform manifold pressure self-selection ─────────────────────────
+        # Read the constraint manifold's live pressure state. High-pressure axes
+        # in the NoncompField signal regions where constraint physics are active —
+        # curiosity is drawn to these by resonance, not explicit routing.
+        # This is the pull/resonance side of curiosity emergence.
+        _manifold_axis = None
+        _manifold_urgency_boost = 0.0
+        try:
+            ifield = self.systems.get("identity_field")
+            if ifield is not None and hasattr(ifield, "axis_pressure"):
+                _AXIS_INT = {0: "X", 1: "T", 2: "N", 3: "B", 4: "A"}
+                _mp = {_AXIS_INT[i]: ifield.axis_pressure(i) for i in range(5)}
+                _high_ax = max(_mp, key=_mp.get)
+                _high_p  = _mp[_high_ax]
+                # Only self-select if meaningfully above resting pressure (0.10)
+                if _high_p > 0.25:
+                    _manifold_axis = _high_ax
+                    _manifold_urgency_boost = min(0.30, (_high_p - 0.10) * 1.20)
+                    # Override origin_axis toward what the manifold is expressing
+                    origin_axis = _manifold_axis
+        except Exception:
+            pass
+
         # Form new CuriosityObject from current state
         if unresolved_tensions:
             subject = unresolved_tensions[0]
             curiosity_type = "self"
-            urgency = 0.65
+            urgency = min(1.0, 0.65 + _manifold_urgency_boost)
         elif promoted:
             subject = str(promoted[0])
             curiosity_type = "conceptual"
-            urgency = 0.5
+            urgency = min(1.0, 0.50 + _manifold_urgency_boost)
         elif thought and thought.unified_interpretation:
             subject = thought.unified_interpretation[:80]
             curiosity_type = _map_axis_to_curiosity_type(origin_axis)
-            urgency = float(thought.confidence) * 0.6
+            urgency = min(1.0, float(thought.confidence) * 0.6 + _manifold_urgency_boost)
+        elif _manifold_axis is not None and _manifold_urgency_boost > 0.10:
+            # Manifold pressure alone is enough to generate curiosity — the waveform
+            # substrate is under active constraint physics without a surface event.
+            subject = f"{_manifold_axis}-axis constraint activity"
+            curiosity_type = _map_axis_to_curiosity_type(_manifold_axis)
+            urgency = min(1.0, 0.40 + _manifold_urgency_boost)
         else:
             return None  # Nothing to be curious about right now
 
-        # Aurora's hypothesis — best guess before investigation
         hypothesis = f"I suspect this relates to my {origin_axis}-axis pressure state."
 
         return CuriosityObject(

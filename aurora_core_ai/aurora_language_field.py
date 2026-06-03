@@ -27,12 +27,25 @@ import hashlib
 import json
 import math
 import os
+import sys
 import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
 _STATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "aurora_state")
 _LSA_PATH  = os.path.join(_STATE_DIR, "lexical_semantic_archive.json")
+
+# WarpCapable — late-bound to avoid import-time circular deps
+_WARP_CORE = os.path.dirname(os.path.abspath(__file__))
+if _WARP_CORE not in sys.path:
+    sys.path.insert(0, _WARP_CORE)
+
+try:
+    from aurora_warp_protocol import WarpCapable, WarpComponent, CoverageGap, axes_to_istates
+    _WARP_AVAILABLE = True
+except Exception:
+    WarpCapable = object  # type: ignore[misc,assignment]
+    _WARP_AVAILABLE = False
 
 # Two-factor gate constants
 _N_COST_FLOOR   = 0.08   # lowest N-cost a path can reach
@@ -127,12 +140,23 @@ class LSAEntry:
 # Language Sub-Emergent Field
 # ---------------------------------------------------------------------------
 
-class LanguageField:
+class LanguageField(WarpCapable):
     """
     The Language Sub-Emergent Field within Identity.
 
     Singleton — access via get_language_field().
+
+    WarpCapable extension: the seven comparison types in _COMPARISON_TYPE_AXES
+    define the structural components of how Aurora compares meaning across the
+    B-axis boundary. When an incoming ProtoLanguage carries a raw_axes profile
+    that doesn't resonate with any known comparison type at cosine >= 0.82,
+    WARP derives a new comparison type from the closest known ones. It is then
+    used in future ignite() calls and gains its own LSA path space.
     """
+
+    # Warp comparison types discovered at runtime — separate from the
+    # compiled _COMPARISON_TYPE_AXES dict to avoid mutating a module constant
+    _warp_comparison_types: Dict[str, List[str]] = {}  # type_name → axis_list
 
     def __init__(self, identity_field, tensor_layer=None):
         self._ifield  = identity_field
@@ -146,7 +170,15 @@ class LanguageField:
         # forcing the field toward novel or metaphor crossings instead of
         # repeating the same structural route every turn.
         self._recent_paths: collections.deque = collections.deque(maxlen=5)
+        self._warp_usage_counts: Dict[str, int] = {}   # component_id → usage count
+        self._cpm: Optional[Any] = None               # CPMSession — wired in post-boot
         self._load_lsa()
+        if _WARP_AVAILABLE:
+            self._init_warp()
+
+    def set_cpm(self, cpm: Any) -> None:
+        """Wire in the CPMSession after boot so crossing cost reflects crystal depth."""
+        self._cpm = cpm
 
     # ── Persistence ──────────────────────────────────────────────────────────
 
@@ -164,6 +196,100 @@ class LanguageField:
             os.makedirs(os.path.dirname(_LSA_PATH), exist_ok=True)
             with open(_LSA_PATH, "w") as f:
                 json.dump({k: v.to_dict() for k, v in self._lsa.items()}, f, indent=2)
+        except Exception:
+            pass
+
+    # ── WarpCapable interface ─────────────────────────────────────────────────
+
+    def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
+        """
+        Return 15D I-state profiles for all known comparison types.
+        Each comparison type maps to a set of dominant axes; we convert those
+        to an I-state profile and add surface-level recursion (language operates
+        near the SURFACE/SHALLOW boundary — it crosses the B-axis into form).
+        """
+        if not _WARP_AVAILABLE:
+            return {}
+        profiles: Dict[str, Dict[str, float]] = {}
+        all_types = {**_COMPARISON_TYPE_AXES, **LanguageField._warp_comparison_types}
+        for ct, axes in all_types.items():
+            axis_weights = {ax: (0.80 if ax in axes else 0.10) for ax in "XTNBA"}
+            istate_profile = axes_to_istates(axis_weights, ivm_polarity=None)
+            # Language crosses the B-axis boundary → operates near SHALLOW/SURFACE
+            istate_profile["REC_SURFACE"]  = 0.30
+            istate_profile["REC_SHALLOW"]  = 0.50
+            istate_profile["REC_MODERATE"] = 0.15
+            istate_profile["REC_DEEP"]     = 0.05
+            istate_profile["REC_CORE"]     = 0.00
+            profiles[ct] = istate_profile
+        # Include promoted warp comparison types
+        for comp in getattr(self, "_warp_promoted", {}).values():
+            profiles[comp.component_id] = comp.axis_profile
+        return profiles
+
+    def _warp_level_name(self) -> str:
+        return "comparison_type"
+
+    def _integrate_warp(self, component: WarpComponent) -> None:
+        """
+        Register a new WARP-derived comparison type. Its dominant axes are
+        back-calculated from the I-state profile for use in future ignite() calls.
+        """
+        if not _WARP_AVAILABLE:
+            return
+        from aurora_warp_protocol import istates_to_axes
+        axis_magnitudes = istates_to_axes(component.axis_profile)
+        dominant_axes = sorted(
+            [ax for ax in "XTNBA" if axis_magnitudes.get(ax, 0.0) >= 0.40],
+            key=lambda ax: axis_magnitudes.get(ax, 0.0),
+            reverse=True,
+        )[:3]
+        type_name = component.name or component.component_id
+        LanguageField._warp_comparison_types[type_name] = dominant_axes
+        self._warp_usage_counts[component.component_id] = 0
+
+    def _score_trial(self, component: WarpComponent) -> float:
+        """
+        Score = normalised usage count since integration.
+        A comparison type that is never selected for any proto-language contributes
+        nothing. One that gets selected regularly earns its place.
+        """
+        usage = self._warp_usage_counts.get(component.component_id, 0)
+        return round(min(1.0, usage / 5.0), 4)
+
+    def _dissolve_warp(self, component_id: str) -> None:
+        type_name = next(
+            (c.name for c in {**getattr(self, "_warp_trials", {}),
+                               **getattr(self, "_warp_promoted", {})}.values()
+             if c.component_id == component_id),
+            component_id,
+        )
+        LanguageField._warp_comparison_types.pop(type_name, None)
+        self._warp_usage_counts.pop(component_id, None)
+
+    def _warp_params(self, gap: CoverageGap, parent_ids: List[str]) -> Dict[str, Any]:
+        return {
+            "parent_types": parent_ids,
+            "gap_coverage": round(gap.best_coverage, 4),
+        }
+
+    def _check_comparison_coverage(self, proto: "ProtoLanguage") -> None:
+        """
+        After resolving a ProtoLanguage, check whether its raw_axes profile is
+        covered by the known comparison types. If not, WARP derives a new type.
+        Called at the end of ignite() — does not affect the current proto.
+        """
+        if not _WARP_AVAILABLE:
+            return
+        try:
+            istate_profile = axes_to_istates(proto.raw_axes, ivm_polarity=None)
+            istate_profile["REC_SURFACE"]  = 0.30
+            istate_profile["REC_SHALLOW"]  = 0.50
+            istate_profile["REC_MODERATE"] = 0.15
+            istate_profile["REC_DEEP"]     = 0.05
+            istate_profile["REC_CORE"]     = 0.00
+            self.check_and_extend(istate_profile, source="language_ignite", tick=0)
+            self.evaluate_warp_trials()
         except Exception:
             pass
 
@@ -368,6 +494,9 @@ class LanguageField:
             source=source,
         )
         self._last_proto = proto
+        # WARP coverage check — runs outside the main extraction path so it
+        # never delays or corrupts the proto that's about to be used.
+        self._check_comparison_coverage(proto)
         return proto
 
     def _infer_comparison_type(
@@ -402,6 +531,12 @@ class LanguageField:
         # X + T, low drive → state description
         if "X" in dominant and "T" in dominant and a < 0.35:
             return "state"
+        # Check WARP-derived comparison types by dominant axis match
+        if _WARP_AVAILABLE and LanguageField._warp_comparison_types:
+            dominant_set = set(dominant)
+            for wtype, waxes in LanguageField._warp_comparison_types.items():
+                if set(waxes) & dominant_set == set(waxes):
+                    return wtype
         return "assertion"
 
     # ── Lexical-Semantic Archive: Two-Factor Gate ─────────────────────────────
@@ -453,31 +588,60 @@ class LanguageField:
             effective_gate = min(_B_GATE_CAP, entry.b_gate + recency_surcharge)
 
             if b_match >= effective_gate:
-                # Both factors satisfied — unlock the path
+                # Both factors satisfied — unlock the path.
+                # CPM crystal stage modulates N-cost: well-developed constraint
+                # physics at the current head position makes crossing cheaper.
                 return {
-                    "path_key":   pkey,
-                    "n_cost":     entry.n_cost,
-                    "b_gate":     entry.b_gate,
-                    "b_match":    b_match,
-                    "is_novel":   False,
+                    "path_key":    pkey,
+                    "n_cost":      self._cpm_n_cost(entry.n_cost),
+                    "b_gate":      entry.b_gate,
+                    "b_match":     b_match,
+                    "is_novel":    False,
                     "is_metaphor": False,
-                    "use_count":  entry.use_count,
+                    "use_count":   entry.use_count,
                 }
             # B-gate rejects (possibly due to recency). Seek metaphor proxy.
             proxy = self._find_metaphor_proxy(proto, exclude=pkey)
             if proxy:
                 return {**proxy, "is_metaphor": True, "is_novel": False}
 
-        # Novel crossing — high N-cost, wide B-gate
+        # Novel crossing — high N-cost, wide B-gate.
+        # CPM still modulates: unmapped territory is more expensive.
         return {
-            "path_key":   pkey,
-            "n_cost":     1.0,
-            "b_gate":     _B_GATE_START,
-            "b_match":    1.0,
-            "is_novel":   True,
+            "path_key":    pkey,
+            "n_cost":      self._cpm_n_cost(1.0),
+            "b_gate":      _B_GATE_START,
+            "b_match":     1.0,
+            "is_novel":    True,
             "is_metaphor": False,
-            "use_count":  0,
+            "use_count":   0,
         }
+
+    def _cpm_n_cost(self, base_cost: float) -> float:
+        """
+        Modulate N-cost by CPM crystal stage at the current head address.
+
+        quasi         → 15% cheaper  (deep understanding at this constraint position)
+        higher_order  → 8%  cheaper
+        base/composite→ unchanged
+        unmapped (None) → 10% more expensive (novel territory)
+
+        Adjustment is intentionally small — the LSA path physics dominates.
+        CPM provides a secondary bias toward fluency where physics is settled.
+        """
+        if self._cpm is None:
+            return base_cost
+        try:
+            stage = self._cpm.head.crystal_stage()
+            if stage == 'quasi':
+                return max(_N_COST_FLOOR, base_cost * 0.85)
+            if stage == 'higher_order':
+                return max(_N_COST_FLOOR, base_cost * 0.92)
+            if stage is None:
+                return min(1.0, base_cost * 1.10)
+        except Exception:
+            pass
+        return base_cost
 
     def _find_metaphor_proxy(
         self,

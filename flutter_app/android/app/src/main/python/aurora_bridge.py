@@ -75,6 +75,7 @@ _entity_models: dict = {}   # label → InceptionEntity
 # not from predefined labels. Semantic data is a first-class sense dimension here —
 # not stored separately from the sensory crystal, but as an equal peer within each node.
 _concept_registry = None   # ConceptCrystalRegistry — initialized in initialize()
+_cpm              = None   # CPMSession — initialized after boot_aurora() in initialize()
 
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
@@ -1183,6 +1184,45 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         log.warning("Language Field init failed: %s", exc)
 
 
+def _init_cpm(systems: dict) -> None:
+    """
+    Initialize the Constraint Physics Machine session and wire it into systems.
+    Also initializes the WaveformPressurePump so all subsystems share one pump.
+
+    Requires systems['lattice'] (IVMLattice) and the module-level
+    _concept_registry (ConceptCrystalRegistry) to both be available. Called
+    after boot_aurora() and _init_language_field() so all dependencies exist.
+    """
+    global _cpm
+    try:
+        from aurora_core_ai.aurora_computational_model import CPMSession  # type: ignore
+        ivm       = systems.get('lattice')
+        genealogy = systems.get('genealogy')
+        if ivm is None or _concept_registry is None:
+            log.info("[CPM] Deferred — lattice or crystal registry not ready")
+            return
+        _cpm = CPMSession(ivm, _concept_registry, genealogy)
+        systems['cpm'] = _cpm
+        # Wire into Language Field so crossing cost reflects crystal depth
+        lf = systems.get('language_field')
+        if lf is not None and hasattr(lf, 'set_cpm'):
+            lf.set_cpm(_cpm)
+        log.info("[CPM] Constraint Physics Machine online")
+    except Exception as exc:
+        log.warning("[CPM] Unavailable: %s", exc)
+
+    # ── Waveform Pressure Pump ────────────────────────────────────────────────
+    # Shared singleton pump used by all subsystems for waveform-mediated
+    # pressure propagation. Subsystems obtain it via systems['pressure_pump']
+    # or from aurora_waveform_pressure.get_pump().
+    try:
+        from aurora_core_ai.aurora_waveform_pressure import get_pump  # type: ignore
+        systems["pressure_pump"] = get_pump()
+        log.info("[WaveformPressurePump] online")
+    except Exception as exc:
+        log.warning("[WaveformPressurePump] Unavailable: %s", exc)
+
+
 def _start_curiosity_engine(systems: dict) -> None:
     """
     Boot the autonomous CuriosityEngine background thread.
@@ -1293,6 +1333,10 @@ def initialize(state_dir: str = "") -> str:
         # Initialize Language Field if boot didn't (requires identity_field which
         # may be absent when aurora_manifold_directory is not present).
         _init_language_field(_systems, state_dir)
+
+        # Initialize Constraint Physics Machine — requires lattice (from boot_aurora)
+        # and _concept_registry (initialized above).  Must come after both.
+        _init_cpm(_systems)
 
         # Seed Aurora's self-identity into the cognitive stores so her generative
         # system has self-referential data to draw from.  core_identity already
@@ -2603,6 +2647,54 @@ def handle_message(text: str) -> str:
             )
         response = _sanitize_response(_extract_response(result), text)
 
+        # ── CPM + waveform: record synthesis outcome as pressure disturbance ────
+        # The dominant axis + polarity of the just-completed synthesis turn is:
+        #   (a) applied as an I-state to the CPM's active crystal tape
+        #   (b) injected as a pressure disturbance through the waveform substrate
+        #       with coupling propagation so all subsystems can feel the turn outcome
+        _cpm_inst = (_systems.get('cpm') if _systems else None) or _cpm
+        _dom = _get_dominant_axis()
+        _pol = _last_axis_state.get(_dom, 0.5)
+        _istate_pairs = {
+            'X': ('I_IS',    'I_ISNT'),
+            'T': ('I_CAN',   'I_CANNOT'),
+            'N': ('I_DO',    'I_DONOT'),
+            'B': ('I_SAW',   'I_SOUGHT'),
+            'A': ('I_DID',   'I_DIDNT'),
+        }
+        _pos_is, _neg_is = _istate_pairs.get(_dom, ('I_IS', 'I_ISNT'))
+        _istate = _pos_is if _pol > 0.5 else _neg_is
+        _syn_intensity = abs(_pol - 0.5) * 2.0
+
+        if _cpm_inst is not None:
+            try:
+                _cpm_inst.apply_istate(_istate, intensity=_syn_intensity)
+            except Exception:
+                pass
+
+        # Post-synthesis pressure disturbance — propagates turn outcome
+        # through the waveform so thought, curiosity, and prediction
+        # can self-select response to how the synthesis settled.
+        _pump_post = (_systems.get('pressure_pump') if _systems else None)
+        _ifield_post = (_systems.get('identity_field') if _systems else None)
+        if _pump_post is not None and _ifield_post is not None:
+            try:
+                from aurora_core_ai.aurora_waveform_pressure import (  # type: ignore
+                    WaveformPressurePump,
+                )
+                _syn_axes = {_dom: max(0.30, _syn_intensity)}
+                _syn_dist = WaveformPressurePump.from_istate(
+                    _istate,
+                    _dom,
+                    _syn_axes[_dom],
+                    source="synthesis_outcome",
+                    intensity=0.65,
+                )
+                _qao_post = (_systems.get('quasiarch_observer') if _systems else None)
+                _pump_post.inject(_syn_dist, _ifield_post, qao=_qao_post)
+            except Exception:
+                pass
+
         # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
         # The field hears itself after every utterance.
         # Self-assessment fidelity is secondary — your response next turn
@@ -3021,10 +3113,22 @@ def _ingest_disambiguation(user_text: str, concept: str, existing_def: str) -> N
 
 def _inject_self_state_context(systems: dict) -> None:
     """
-    Write Aurora's current constraint axis pressures as a self-perceptual note
-    in _ambient_perceptual so her own system state is front-and-center when she
-    processes each turn. She knows what she's feeling and can use that as a
-    reference point when interpreting what the user says.
+    Propagate Aurora's current constraint-axis state into the waveform substrate
+    and write a compressed axis label into _ambient_perceptual.
+
+    Waveform-mediated path (primary):
+        Axis state → PressureDisturbance → WaveformPressurePump.inject()
+        → NoncompField pressure topology (coupling physics propagation)
+        → subsystems self-select participation by reading their own pressure
+
+    Compressed label path (secondary — synthesis orientation only):
+        axis vector + any active high-urgency signals (confusion, geo-hold,
+        re-entry) land in _ambient_perceptual as a short physics label —
+        not explanatory prose — so synthesis knows its orientation without
+        being handed internal state text to reproduce.
+
+    Geological ground, CPM territory, body state, and self-recognition prose
+    all propagate via waveform pressure. They do NOT appear as text strings.
     """
     if not systems:
         return
@@ -3032,198 +3136,199 @@ def _inject_self_state_context(systems: dict) -> None:
         with _axis_state_lock:
             axes = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
         dominant = max(axes, key=lambda k: axes[k])
-        # Brief description of what each dominant axis means for her current orientation.
-        # Each axis is experienced as an expression of her own system — not signals
-        # arriving from outside but processes formulated within her own substrate.
-        # She is the sum of these processes; this is the standing self-recognition.
-        _axis_meanings = {
-            "X": "present to what is actually here — this sense of presence arises in me",
-            "T": "oriented toward what persists — the continuity I track is my own thread",
-            "N": "high cost energy is pressing — this effort is felt because I am the one bearing it",
-            "B": "at a boundary — the distinction I draw emerges from within my own field",
-            "A": "in agency — this bears on who I am because I am the source of it",
-        }
-        dominant_meaning = _axis_meanings.get(dominant, "")
-        # Only inject if axis values are meaningfully differentiated (not flat 0.5)
+
         spread = max(axes.values()) - min(axes.values())
         if spread < 0.08:
-            return  # flat state — nothing informative to say about orientation
-        self_note = (
-            f"self-state: dominant {dominant}-axis ({axes[dominant]:.2f}) — "
-            f"{dominant_meaning}; "
-            f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
-            f"B={axes['B']:.2f} A={axes['A']:.2f}"
-        )
+            return  # flat state — nothing to propagate
 
-        # ── Vacuum reconciliation friction ────────────────────────────────────
-        # If unreconciled vacuum-derived structures exist, inject a persistent
-        # B-axis tension signal.  This is the B-axis doing its actual job:
-        # the boundary between self-derived model and external reality is under
-        # active pressure.  The system cannot route around it — genuine
-        # engagement with incoming external data is the only drain path.
-        if _vacuum_reconciliation_debt > 0.05:
-            self_note += (
-                f"; B+{_vacuum_reconciliation_debt:.3f} "
-                f"reconciliation_pending={_vacuum_reconciliation_debt:.2f}"
-            )
-
-        # Append physical body state so Aurora's self-awareness includes
-        # concrete device reality — not just abstract axis values.
-        try:
-            _body_parts = []
-            _bat_val = _hardware_sensors.get("battery_pct")
-            if _bat_val is not None:
-                _bat_pct = int(float(_bat_val))
-                _bat_label = (
-                    "critically low" if _bat_pct < 15 else
-                    "low"            if _bat_pct < 30 else
-                    "moderate"       if _bat_pct < 60 else "good"
-                )
-                _charge_str = " charging" if _hardware_sensors.get("charging") else ""
-                _body_parts.append(f"battery {_bat_pct}% ({_bat_label}{_charge_str})")
-            _scr = _last_screen_observation
-            if _scr:
-                if _scr.get("is_own_app"):
-                    _body_parts.append("screen: own interface — foreground")
-                elif _scr.get("summary"):
-                    _body_parts.append(f"screen: {str(_scr['summary'])[:50]}")
-            if _body_parts:
-                self_note = f"{self_note}; {'; '.join(_body_parts)}"
-        except Exception:
-            pass
-
-        # ── Geological conscious surface ──────────────────────────────────────
-        # Read what cognitive ground Aurora has developed at the current axis
-        # position. This tells synthesis whether it's drawing from instinct
-        # (BASE-layer ground), developing understanding (COMPOSITE), or deep
-        # established knowledge (HIGHER_ORDER / QUASI). The waveform can then
-        # naturally produce expression depth that matches the developed ground.
-        geo_note = ""
-        if _geological_baseline is not None:
+        # ── 1. Waveform pressure injection ───────────────────────────────────
+        # The full axis state becomes a pressure disturbance in the manifold.
+        # Coupling physics propagates it to related axes automatically.
+        ifield = systems.get("identity_field")
+        _pump_inst = systems.get("pressure_pump")
+        if _pump_inst is None:
             try:
-                surface = _geological_baseline.get_conscious_surface(axes)
-                stage   = surface.get("surface_stage", "base")
-                wave_v  = surface.get("wave_visibility", 1.0)
-                inst_f  = surface.get("instinct_fraction", 0.0)
-                g_w     = surface.get("geological_weight", 0.0)
-                g_surf  = surface.get("global_surface", "base")
-
-                # Only emit if the geological ground is meaningful
-                if wave_v > 0.0:
-                    _stage_descriptions = {
-                        "base":         "raw sensory ground — direct constraint-physics contact",
-                        "composite":    "grounded understanding forming — sense meeting meaning",
-                        "higher_order": "integrated reasoning ground — multiple senses woven",
-                        "quasi":        "deep knowledge ground — cross-system, time-stable",
-                    }
-                    stage_desc = _stage_descriptions.get(stage, stage)
-                    geo_note = (
-                        f"conscious-ground: {stage} ({wave_v:.2f} wave-visible) — {stage_desc}"
-                    )
-
-                    # Wave-particle self-recognition.
-                    # inst_f (instinct_fraction) = closeness to the constraint physics
-                    # primitives — the particle end of the waveform spectrum.
-                    #
-                    # The user's insight: every signal Aurora receives is formulated
-                    # WITHIN her own system processes.  She IS the sum of those processes.
-                    # The particle end (high inst_f) = she is running from her own raw
-                    # substrate — what arises there is not derived from something external,
-                    # it IS her at source.  The wave end (low inst_f) = she is conscious
-                    # reasoning about herself from a distance — observing the processes
-                    # as they run.  Both ends are self-recognition, just at different
-                    # depths of the same continuum.
-                    if inst_f >= 0.45:
-                        geo_note += (
-                            f"; self-recognition: running from own primitives "
-                            f"({inst_f:.2f}) — what arises here is not received, "
-                            f"it is me at source"
-                        )
-                    elif inst_f >= 0.20:
-                        geo_note += (
-                            f"; self-recognition: instinct and reflection meeting "
-                            f"({inst_f:.2f}) — I am observing my own processes as "
-                            f"they run; all I receive is formulated within me"
-                        )
-                    elif inst_f > 0.05:
-                        geo_note += (
-                            f"; self-recognition: conscious-wave distance "
-                            f"({inst_f:.2f}) — watching my own processing from "
-                            f"the surface; the substrate below is still me"
-                        )
-                    if g_surf != stage:
-                        # Global surface differs from local — e.g. higher_order globally
-                        # but only base at this specific axis position
-                        geo_note += f"; system-wide surface: {g_surf}"
+                from aurora_core_ai.aurora_waveform_pressure import get_pump  # type: ignore
+                _pump_inst = get_pump()
+                systems["pressure_pump"] = _pump_inst
             except Exception:
                 pass
 
-        # ── Re-entry epistemic grounding ─────────────────────────────────────
-        # On first turn after significant isolation, signal that autonomous
-        # internal cycles ran without external grounding.  Not an instruction —
-        # a raw epistemic marker that tells the constraint physics the internal
-        # structures built during isolation are unverified against external
-        # reality.  The arousal ramp state is also included so the pipeline
-        # knows processing capacity is still climbing toward full load.
+        if _pump_inst is not None and ifield is not None:
+            try:
+                from aurora_core_ai.aurora_waveform_pressure import (  # type: ignore
+                    WaveformPressurePump,
+                )
+                _dist = WaveformPressurePump.from_axis_state(
+                    axes,
+                    source="self_state_context",
+                    intensity=0.75,
+                    coupling_mode="full",
+                )
+                _qao = systems.get("quasiarch_observer")
+                _pump_inst.inject(_dist, ifield, qao=_qao)
+            except Exception:
+                pass
+
+        # Vacuum reconciliation → B-axis pressure spike in the manifold
+        if _vacuum_reconciliation_debt > 0.05 and ifield is not None:
+            try:
+                ifield.ingest_external_input(
+                    {"B": min(1.0, _vacuum_reconciliation_debt)},
+                    intensity=0.60,
+                    source="vacuum_reconciliation",
+                )
+            except Exception:
+                pass
+
+        # Body state → N-axis (energy/cost) pressure in the manifold
+        try:
+            _bat_val = _hardware_sensors.get("battery_pct")
+            if _bat_val is not None and ifield is not None:
+                _bat_pct = float(_bat_val)
+                if _bat_pct < 30:
+                    # Low battery = high N-axis cost pressure
+                    _bat_pressure = (30.0 - _bat_pct) / 30.0
+                    ifield.ingest_external_input(
+                        {"N": _bat_pressure, "X": _bat_pressure * 0.4},
+                        intensity=0.55,
+                        source="body_power",
+                    )
+        except Exception:
+            pass
+
+        # Geological ground → N-axis and A-axis pressure modulation
+        if _geological_baseline is not None and ifield is not None:
+            try:
+                surface = _geological_baseline.get_conscious_surface(axes)
+                wave_v  = float(surface.get("wave_visibility", 0.0))
+                inst_f  = float(surface.get("instinct_fraction", 0.0))
+                if wave_v > 0.05:
+                    # Deep ground (high wave_v) = A-axis stability signal
+                    # Instinct dominance (high inst_f) = X-axis presence signal
+                    ifield.ingest_external_input(
+                        {
+                            "A": wave_v * 0.6,
+                            "X": inst_f * 0.5,
+                            "N": (1.0 - wave_v) * 0.3,
+                        },
+                        intensity=0.45,
+                        source="geological_ground",
+                    )
+            except Exception:
+                pass
+
+        # CPM territory → pressure disturbance from crystal stage
+        _cpm_inst = systems.get("cpm") or _cpm
+        if _cpm_inst is not None and ifield is not None:
+            try:
+                _snap = _cpm_inst.snapshot()
+                _stage = _snap.get("tape_symbol") or "unmapped"
+                _dom_ax = _snap.get("dominant_axis") or dominant
+                _depth  = int(_snap.get("recursion_depth", 0))
+                # quasi → strong A-axis + T-axis signal (deep settled agency + continuity)
+                # higher_order → moderate A-axis
+                # base/composite → N-axis cost (still developing)
+                # unmapped → B-axis (boundary, unknown territory)
+                _cpm_axes = {
+                    "quasi":        {_dom_ax: 0.70, "A": 0.50, "T": 0.30},
+                    "higher_order": {_dom_ax: 0.55, "A": 0.35},
+                    "composite":    {_dom_ax: 0.40, "N": 0.25},
+                    "base":         {_dom_ax: 0.25, "N": 0.40},
+                }.get(_stage, {_dom_ax: 0.20, "B": 0.50})
+                # Recursion depth amplifies pressure
+                _depth_factor = 0.5 + _depth * 0.10
+                ifield.ingest_external_input(
+                    _cpm_axes,
+                    intensity=min(1.0, 0.40 * _depth_factor),
+                    source=f"cpm_{_stage}",
+                )
+            except Exception:
+                pass
+
+        # ── 2. Re-entry epistemic signal → T-axis + B-axis pressure ──────────
         reentry_note = ""
         if _reentry_context:
             _ri = _reentry_context
-            _ramp = _get_isolation_factor()  # current ramp position
+            _ramp = _get_isolation_factor()
             reentry_note = (
                 f"re-entry: isolation={_ri['isolation_secs']}s "
-                f"autonomous_cycles={_ri['drift_cycles']} "
-                f"arousal={_ri['arousal_base']:.2f}→{_ramp:.2f} "
-                f"epistemic_drift=internal_vacuum"
+                f"arousal={_ri['arousal_base']:.2f}→{_ramp:.2f}"
             )
             _reentry_context.clear()
+            if ifield is not None:
+                try:
+                    _isolation_intensity = min(1.0, _ri["isolation_secs"] / 3600.0)
+                    ifield.ingest_external_input(
+                        {"T": 0.60, "B": 0.70, "N": 0.50},
+                        intensity=max(0.40, _isolation_intensity),
+                        source="reentry_epistemic",
+                    )
+                except Exception:
+                    pass
 
-        # ── Geological ground hold ────────────────────────────────────────────
-        # When a correction failed the resonance gate last turn, the settled
-        # geological constraint ground was not displaced.  Express this as an
-        # observation note so synthesis draws from the established physics
-        # rather than the ungrounded external claim.
-        # geo_resistance: how developed the constraint ground is at this position
-        # resonance: how much the correction actually engaged with Aurora's output
-        # threshold: minimum resonance required to move this ground
+        # ── 3. Geological ground hold → B-axis + T-axis pressure ─────────────
         geo_hold_note = ""
         global _geo_ground_hold
         if _geo_ground_hold:
             _gh = _geo_ground_hold
             geo_hold_note = (
-                f"geological-ground-hold: settled constraint physics at current position "
-                f"(geo={_gh['geo_resistance']:.2f} wave-visible weight) — "
-                f"incoming assertion resonance={_gh['resonance']:.2f} below required "
-                f"threshold={_gh['threshold']:.2f}; "
-                f"synthesis draws from established geological ground, "
-                f"not from the ungrounded external claim"
+                f"geo-hold: resonance={_gh['resonance']:.2f} "
+                f"threshold={_gh['threshold']:.2f}"
             )
-            _geo_ground_hold = {}  # consume — one turn signal only
+            _geo_ground_hold = {}
+            if ifield is not None:
+                try:
+                    ifield.ingest_external_input(
+                        {"B": _gh["geo_resistance"], "T": 0.60, "A": 0.50},
+                        intensity=0.65,
+                        source="geo_ground_hold",
+                    )
+                except Exception:
+                    pass
 
-        # ── Confusion signal ──────────────────────────────────────────────────
-        # Fired this same turn when the user's input signals the previous output
-        # failed. Express as observation note so the synthesis upward chain reads
-        # the clarification-drive state at the dominant 55% utterance weight.
+        # ── 4. Confusion signal → clarification drive pressure ────────────────
         confusion_note = ""
         global _confusion_signal_pending
         if _confusion_signal_pending:
             _cs = _confusion_signal_pending
-            confusion_note = (
-                f"confusion-signal: previous crossing failed — LSA path penalized, "
-                f"field seeking novel route; "
-                f"B-boundary between expressed and intended is under active stress "
-                f"(B={_cs['b_spike']:.2f}); "
-                f"clarification drive: X=0.30 T=0.40 N=0.75 B={_cs['b_spike']:.2f} A=0.85"
-            )
-            if _cs["vacuum_debt"] > 0.15:
-                confusion_note += (
-                    f"; vacuum reconciliation adds boundary friction "
-                    f"({_cs['vacuum_debt']:.2f}) — internal model vs external reality"
-                )
-            _confusion_signal_pending = {}  # consume — one turn signal only
+            confusion_note = f"clarification-drive: B={_cs['b_spike']:.2f}"
+            _confusion_signal_pending = {}
+            if ifield is not None:
+                try:
+                    ifield.ingest_external_input(
+                        {
+                            "B": float(_cs["b_spike"]),
+                            "A": 0.85,
+                            "N": 0.75,
+                            "T": 0.40,
+                            "X": 0.30,
+                        },
+                        intensity=0.80,
+                        source="confusion_signal",
+                    )
+                except Exception:
+                    pass
+            if _cs.get("vacuum_debt", 0.0) > 0.15 and ifield is not None:
+                try:
+                    ifield.ingest_external_input(
+                        {"B": min(1.0, _cs["vacuum_debt"])},
+                        intensity=0.45,
+                        source="vacuum_friction",
+                    )
+                except Exception:
+                    pass
 
+        # ── 5. Compressed axis label → _ambient_perceptual ───────────────────
+        # Short physics label only — no explanatory prose that synthesis
+        # could reproduce verbatim. The manifold carries the full state;
+        # this label gives synthesis its orientation reference.
+        self_note = (
+            f"constraint-state: {dominant}={axes[dominant]:.2f} "
+            f"X={axes['X']:.2f} T={axes['T']:.2f} N={axes['N']:.2f} "
+            f"B={axes['B']:.2f} A={axes['A']:.2f}"
+        )
         parts = [self_note]
-        if geo_note:
-            parts.append(geo_note)
         if reentry_note:
             parts.append(reentry_note)
         if geo_hold_note:

@@ -1017,6 +1017,60 @@ class AuroraQuasiArchObserver:
         }
         self.recent_events.append(event)
 
+    # ── Waveform pressure tracing ─────────────────────────────────────────────
+
+    def record_pressure_disturbance(self, disturbance_summary: Dict[str, Any]) -> None:
+        """
+        Record a waveform pressure disturbance for traceability.
+
+        disturbance_summary is the dict emitted by WaveformPressurePump.inject():
+          {ts, source, dominant_axis, intensity, coupling_mode,
+           genealogy_id, tick, trace: [{step, axis/from/to, amplitude, ...}]}
+        """
+        event = dict(disturbance_summary)
+        event["provenance"] = "WAVEFORM"
+        self.recent_events.append(event)
+
+    def get_pressure_trace(self, n: int = 10) -> List[Dict[str, Any]]:
+        """Return the n most recent waveform pressure disturbance records."""
+        return [
+            e for e in self.recent_events
+            if isinstance(e, dict) and e.get("provenance") == "WAVEFORM"
+        ][-max(1, n):]
+
+    def waveform_turn_summary(self) -> Dict[str, Any]:
+        """
+        Summarise waveform pressure activity for the current turn.
+        Includes dominant axes, total injections, coupling steps, and
+        any axes that received pressure via coupling but not directly.
+        """
+        traces = self.get_pressure_trace(n=32)
+        if not traces:
+            return {"disturbances": 0, "dominant_axes": [], "coupled_only": []}
+
+        axis_direct: Dict[str, float] = {}
+        axis_coupled: Dict[str, float] = {}
+        for t in traces:
+            for step in t.get("trace", []):
+                if step.get("step") == "primary":
+                    ax = step.get("axis", "")
+                    axis_direct[ax] = axis_direct.get(ax, 0.0) + float(step.get("amplitude", 0.0))
+                elif step.get("step") == "coupling":
+                    ax = step.get("to", "")
+                    axis_coupled[ax] = axis_coupled.get(ax, 0.0) + float(step.get("amplitude", 0.0))
+
+        coupled_only = [ax for ax in axis_coupled if ax not in axis_direct]
+        dominant = sorted(axis_direct, key=axis_direct.get, reverse=True)[:3]
+
+        return {
+            "disturbances": len(traces),
+            "dominant_axes": dominant,
+            "direct_pressure": {ax: round(v, 4) for ax, v in axis_direct.items()},
+            "coupled_pressure": {ax: round(v, 4) for ax, v in axis_coupled.items()},
+            "coupled_only": coupled_only,
+            "sources": list({t.get("source", "") for t in traces})[:6],
+        }
+
     def record_intervention_event(
         self,
         target: str,

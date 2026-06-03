@@ -1959,9 +1959,18 @@ class SimulationSession:
             result = self.run_episode(turns_per_episode, personality, mode)
             epoch_results.append(result)
 
-        # Consolidate L5 if available
+        # Consolidate L5 if available.
+        # During speed-run, skip the expensive per-epoch OETS and promotion
+        # passes — run them every 5 epochs so structure still deepens but
+        # the O(n) scans don't dominate wall-clock time.
         if self.perception:
-            self.perception.consolidate(mode)
+            _milestone = (self._speed_run_active and self.current_epoch % 5 == 0)
+            _skip_heavy = self._speed_run_active and not _milestone
+            self.perception.consolidate(
+                mode,
+                skip_oets=_skip_heavy,
+                skip_promotions=_skip_heavy,
+            )
 
         avg_fitness = sum(r.avg_fitness for r in epoch_results) / len(epoch_results)
         total_understanding = sum(len(r.understanding_gained) for r in epoch_results)
@@ -2298,6 +2307,12 @@ class SimulationEngine:
             f"target: {sr_cfg.get('target_slot')}"
         )
 
+        # Disable per-turn OETS updates during speed-run — the O(n) relation
+        # scan on 20k+ edges per turn dominates wall-clock time.
+        # Epoch-level consolidation every 5 epochs is sufficient.
+        if self.session.perception:
+            self.session.perception._sim_speed_run = True
+
         history: List[Dict[str, Any]] = []
         best_fitness: float = 0.0
         best_epoch: int = 0
@@ -2346,6 +2361,10 @@ class SimulationEngine:
             else:
                 _consec_diverge = 0
 
+        # Re-enable per-turn OETS updates for normal conversation
+        if self.session.perception:
+            self.session.perception._sim_speed_run = False
+
         final_stats = self.get_stats()
         return {
             'speed_run_complete': True,
@@ -2384,7 +2403,8 @@ class SimulationEngine:
 
     def _constraint_axes(self) -> Dict[str, float]:
         session_stats = dict(self.session.get_stats() or {})
-        learner_shards = float(session_stats.get("learner_shards", 0) or 0)
+        learner_shards = float(session_stats.get("understanding_shards",
+                              session_stats.get("learner_shards", 0)) or 0)
         current_epoch = float(getattr(self.session, "current_epoch", 0) or 0)
         divergence = max(0.0, min(1.0, float(getattr(self.session.divergence, "current_divergence", 0.0) or 0.0)))
         return {

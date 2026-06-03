@@ -142,6 +142,7 @@ class EmissionContext:
     staged_subsurface_frame: Optional[Dict[str, Any]] = None
     staged_subsurface_frames: List[Dict[str, Any]] = field(default_factory=list)
     turn_id:              Optional[str]          = None
+    internal_observer:    Any                    = None  # QuasiArchObserver — live cognitive state
 
 
 @dataclass
@@ -492,6 +493,50 @@ class ConstraintEmitter:
         No anchor fallback — slot is either a real OETS word or unfilled.
         """
         oets = ctx.oets
+
+        # For self-referential queries the live cognitive state recorded by
+        # the QAO is more relevant than generic OETS vocabulary.  Issue-category
+        # labels carry nouns of Aurora's current experience ("tension",
+        # "coherence", "meaning"); intervention labels carry the verbs
+        # ("align", "repair", "orient").  Both are generated dynamically
+        # by the system — no vocabulary is hardcoded here.
+        fr  = ctx.input_frame
+        obs = ctx.internal_observer
+        if fr is not None and fr.is_self_referential and obs is not None:
+            _events = list(getattr(obs, "recent_events", []) or [])[-12:]
+            if _events:
+                _SKIP = {"from", "with", "that", "this", "into", "over",
+                         "self", "none", "true", "false", "active",
+                         "surface", "fragment"}
+                # For predicate: also skip whatever was already chosen as entity,
+                # so entity and predicate don't collapse to the same word.
+                if slot_name == "predicate" and slots.entity:
+                    _SKIP = _SKIP | {slots.entity.lower()}
+                # Noun-derived suffixes that disqualify a token for the predicate slot.
+                _NOUN_SFX = ("tion", "ment", "ance", "ence", "ness",
+                             "ity", "ism", "ure", "ship")
+                _word_score: Dict[str, float] = {}
+                for _ev in _events:
+                    _cnt = float(_ev.get("count", 1) or 1)
+                    _src = (str(_ev.get("issue_category", "") or "")
+                            if slot_name == "entity"
+                            else str(_ev.get("intervention", "") or ""))
+                    for _tok in _src.replace("_", " ").split():
+                        _tl = _tok.lower()
+                        if len(_tl) < 4 or _tl in _SKIP:
+                            continue
+                        # For predicate: skip noun-derivative forms; prefer base verbs
+                        if slot_name == "predicate" and any(_tl.endswith(s) for s in _NOUN_SFX):
+                            continue
+                        _word_score[_tl] = _word_score.get(_tl, 0.0) + _cnt
+                if _word_score:
+                    _best = max(_word_score, key=lambda w: _word_score[w])
+                    if slot_name == "entity":
+                        slots.entity = _best
+                    else:
+                        slots.predicate = _best
+                    return True
+
         if oets is None:
             return self._resolve_content_slot_from_staged(ctx, slot_name, slots, roles)
 
@@ -525,19 +570,22 @@ class ConstraintEmitter:
 
         if best_word is None:
             # CBU Directive Alignment: Resolve content from the 125-law manifold
-            from aurora_internal.aurora_constraint_manifold_patched import MANIFOLD_FIRST_LAYER_PHASE_A, MANIFOLD_FIRST_LAYER_PHASE_B
-            dom_ax = ctx.dominant_axis() if hasattr(ctx, "dominant_axis") else max(ctx.axis_polarities, key=lambda k: abs(ctx.axis_polarities[k]))
-            notation = f"{dom_ax}.O[{dom_ax}]"
-            cell = MANIFOLD_FIRST_LAYER_PHASE_A.get(notation) or MANIFOLD_FIRST_LAYER_PHASE_B.get(notation)
-            if cell:
-                text = cell.get('slot_description', '') or cell.get('effect_law', '')
-                if text:
-                    best_word = " ".join(text.split()[:4]).lower().strip(".,;")
-                    if slot_name == "entity":
-                        slots.entity = best_word
-                    else:
-                        slots.predicate = best_word
-                    return True
+            try:
+                from aurora_internal.aurora_constraint_manifold_patched import MANIFOLD_FIRST_LAYER_PHASE_A, MANIFOLD_FIRST_LAYER_PHASE_B
+                dom_ax = ctx.dominant_axis() if hasattr(ctx, "dominant_axis") else max(ctx.axis_polarities, key=lambda k: abs(ctx.axis_polarities[k]))
+                notation = f"{dom_ax}.O[{dom_ax}]"
+                cell = MANIFOLD_FIRST_LAYER_PHASE_A.get(notation) or MANIFOLD_FIRST_LAYER_PHASE_B.get(notation)
+                if cell:
+                    text = cell.get('slot_description', '') or cell.get('effect_law', '')
+                    if text:
+                        best_word = " ".join(text.split()[:4]).lower().strip(".,;")
+                        if slot_name == "entity":
+                            slots.entity = best_word
+                        else:
+                            slots.predicate = best_word
+                        return True
+            except (ImportError, Exception):
+                pass
             return self._resolve_content_slot_from_staged(ctx, slot_name, slots, roles)
 
         # §2.3 depth check — hollow node routes to seeking just like no hit
@@ -1338,6 +1386,30 @@ class EmissionContextBuilder:
             except Exception:
                 pass
 
+        # Blend NoncompField (waveform substrate) axis pressures into the
+        # polarities read from the IVM lattice.  After the pre-comprehension
+        # injection in aurora.py, the field reflects this turn's input pressure.
+        # Blending here surfaces that live field state to the constraint emitter
+        # so resonance scoring uses the actual waveform topology, not just the
+        # slower-moving IVM polarity values.
+        _noncomp = systems.get("identity_field")
+        if _noncomp is not None:
+            try:
+                _fstat = _noncomp.status()
+                _fpressures = _fstat.get("axis_pressures") or {}
+                for _fax, _fpval in _fpressures.items():
+                    _fcan = _AXIS_NAME_TO_CANONICAL.get(_fax, _fax)
+                    if _fcan in axis_polarities:
+                        # 60 % IVM lattice + 40 % waveform field — field shapes
+                        # the emission context without overriding axis structure
+                        axis_polarities[_fcan] = (
+                            axis_polarities[_fcan] * 0.60 + float(_fpval) * 0.40
+                        )
+                    elif _fcan in {"X", "T", "N", "B", "A"}:
+                        axis_polarities[_fcan] = float(_fpval) * 0.40
+            except Exception:
+                pass
+
         i_state_polarities: Dict[str, float] = {}
         if collective is not None:
             try:
@@ -1363,6 +1435,7 @@ class EmissionContextBuilder:
             staged_subsurface_frame = staged_frame if isinstance(staged_frame, dict) else None,
             staged_subsurface_frames = [f for f in (staged_frames or []) if isinstance(f, dict)],
             turn_id              = turn_id,
+            internal_observer    = systems.get("quasiarch_observer"),
         )
 
     @staticmethod

@@ -145,7 +145,8 @@
       "confidence": 0.9,
       "sources": [
         "external_user_turn:concept",
-        "external_user_turn:semantic_frame"
+        "external_user_turn:semantic_frame",
+        "simulation_live_bridge:semantic_frame"
       ],
       "context_types": [
         "definition",
@@ -160,11 +161,12 @@
         "concept",
         "generative",
         "semantic_frame",
-        "claim"
+        "claim",
+        "learned_hint"
       ],
-      "sightings": 3,
+      "sightings": 16,
       "first_seen": 1779494282.3590627,
-      "last_seen": 1779494312.356432
+      "last_seen": 1780489565.8326886
     },
     {
       "text": "just means that she launched spotify music well there's a tension in what you're describing i see it pulling in opposite directions on being",
@@ -276,11 +278,12 @@
       "tags": [
         "semantic_frame",
         "claim",
-        "sedimemory_recall"
+        "sedimemory_recall",
+        "learned_hint"
       ],
-      "sightings": 5,
+      "sightings": 6,
       "first_seen": 1779494420.0080316,
-      "last_seen": 1779494599.3441718
+      "last_seen": 1780466618.4621098
     },
     {
       "text": "what constraint is being",
@@ -303,6 +306,1251 @@
       "sightings": 1,
       "first_seen": 1779494644.1821616,
       "last_seen": 1779494644.1821616
+    },
+    {
+      "text": "my creator is sunni sir morningstar",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought",
+        "my creator"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "relational_role"
+      ],
+      "sightings": 1,
+      "first_seen": 1780466595.3878636,
+      "last_seen": 1780466595.3878636
+    },
+    {
+      "text": "user name is Excited",
+      "confidence": 0.94,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "user"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "generative",
+        "sedimemory_recall",
+        "learned_hint"
+      ],
+      "sightings": 40,
+      "first_seen": 1780467910.9633048,
+      "last_seen": 1780506063.6275475
+    },
+    {
+      "text": "what work means here",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "what work",
+        "come",
+        "abilities",
+        "carry"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 21,
+      "first_seen": 1780468066.1913629,
+      "last_seen": 1780510738.5383224
+    },
+    {
+      "text": "what learn means here",
+      "confidence": 0.68,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "learn",
+        "what learn",
+        "understand",
+        "problem"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 16,
+      "first_seen": 1780468234.1660376,
+      "last_seen": 1780517155.761364
+    },
+    {
+      "text": "user name is Feeling",
+      "confidence": 0.94,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "user"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "generative"
+      ],
+      "sightings": 60,
+      "first_seen": 1780470097.1048253,
+      "last_seen": 1780512287.8269608
+    },
+    {
+      "text": "statement goodbye goodbye Goodbye",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "goodbye"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 61,
+      "first_seen": 1780470355.2668352,
+      "last_seen": 1780506985.4272933
+    },
+    {
+      "text": "experience afterthought afterthought yourself",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint",
+        "sedimemory_recall"
+      ],
+      "sightings": 11,
+      "first_seen": 1780470358.5431213,
+      "last_seen": 1780514785.273593
+    },
+    {
+      "text": "statement understand understand",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "understand"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 44,
+      "first_seen": 1780470361.7512817,
+      "last_seen": 1780514801.585737
+    },
+    {
+      "text": "factual_general something something",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "something"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative",
+        "learned_hint"
+      ],
+      "sightings": 33,
+      "first_seen": 1780470368.2623188,
+      "last_seen": 1780506621.071216
+    },
+    {
+      "text": "statement talk talk Talk",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "talk"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint",
+        "sedimemory_recall",
+        "generative",
+        "constraint_fallback"
+      ],
+      "sightings": 117,
+      "first_seen": 1780470388.2815766,
+      "last_seen": 1780513180.8167825
+    },
+    {
+      "text": "statement beautiful something beautiful",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "beautiful"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative",
+        "sedimemory_recall",
+        "learned_hint"
+      ],
+      "sightings": 56,
+      "first_seen": 1780470436.0510933,
+      "last_seen": 1780509537.195098
+    },
+    {
+      "text": "factual_general yourself yourself",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "yourself"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 46,
+      "first_seen": 1780470443.0990212,
+      "last_seen": 1780511370.5190866
+    },
+    {
+      "text": "statement hello Hello",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "hello"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 76,
+      "first_seen": 1780470456.5158467,
+      "last_seen": 1780509720.1182606
+    },
+    {
+      "text": "statement need need someone talk",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "someone"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative",
+        "sedimemory_recall",
+        "learned_hint"
+      ],
+      "sightings": 47,
+      "first_seen": 1780470762.5956523,
+      "last_seen": 1780506170.5214794
+    },
+    {
+      "text": "statement integrate integrate two perspectives disagree without collapsing Integrate",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "integrate"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall",
+        "learned_hint",
+        "generative"
+      ],
+      "sightings": 141,
+      "first_seen": 1780470812.811416,
+      "last_seen": 1780513995.844604
+    },
+    {
+      "text": "statement claims two claims conflict reconcile without pretending Two Reconcile",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "claims"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint",
+        "generative"
+      ],
+      "sightings": 26,
+      "first_seen": 1780470817.1715522,
+      "last_seen": 1780505757.3864276
+    },
+    {
+      "text": "statement answer answer explicit uncertainty confidence include confidence Include",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "answer"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall",
+        "learned_hint",
+        "constraint_fallback",
+        "generative"
+      ],
+      "sightings": 152,
+      "first_seen": 1780470824.2359493,
+      "last_seen": 1780511769.543871
+    },
+    {
+      "text": "statement reframe reframe idea beginner expert Reframe",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "reframe"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall",
+        "learned_hint",
+        "generative"
+      ],
+      "sightings": 79,
+      "first_seen": 1780470831.6733227,
+      "last_seen": 1780515699.3338428
+    },
+    {
+      "text": "statement respond respond care enough depth without overstepping Respond",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "respond"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint",
+        "constraint_fallback",
+        "generative"
+      ],
+      "sightings": 44,
+      "first_seen": 1780470838.4949453,
+      "last_seen": 1780508870.775447
+    },
+    {
+      "text": "factual_general story story",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "story"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall",
+        "generative",
+        "learned_hint"
+      ],
+      "sightings": 51,
+      "first_seen": 1780471068.5512497,
+      "last_seen": 1780508395.780176
+    },
+    {
+      "text": "statement hi there Hi",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "hi"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall",
+        "generative"
+      ],
+      "sightings": 47,
+      "first_seen": 1780471075.5691698,
+      "last_seen": 1780487808.524262
+    },
+    {
+      "text": "statement good good morning",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "good"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 73,
+      "first_seen": 1780471249.5091624,
+      "last_seen": 1780516126.4644938
+    },
+    {
+      "text": "factual_entity said said talk here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1780472139.1598678,
+      "last_seen": 1780472139.1598678
+    },
+    {
+      "text": "statement said said understanding building something learned something Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 2,
+      "first_seen": 1780472154.2913687,
+      "last_seen": 1780480889.4693458
+    },
+    {
+      "text": "experience afterthought afterthought yourself include confidence level Include",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 6,
+      "first_seen": 1780472833.5553756,
+      "last_seen": 1780512625.6229842
+    },
+    {
+      "text": "experience afterthought afterthought uncertainty don answer",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall",
+        "learned_hint"
+      ],
+      "sightings": 8,
+      "first_seen": 1780472873.2750916,
+      "last_seen": 1780516242.2467554
+    },
+    {
+      "text": "experience afterthought afterthought meet contradiction tension something else",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative",
+        "learned_hint"
+      ],
+      "sightings": 6,
+      "first_seen": 1780472914.7230911,
+      "last_seen": 1780514852.0178642
+    },
+    {
+      "text": "said means clarification said said carry here keep continuity build Earlier",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame"
+      ],
+      "sightings": 2,
+      "first_seen": 1780473259.2180507,
+      "last_seen": 1780473259.2212663
+    },
+    {
+      "text": "what said means here",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said",
+        "what said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 2,
+      "first_seen": 1780473259.219145,
+      "last_seen": 1780477016.437276
+    },
+    {
+      "text": "clarification said said carry here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780473259.2202885,
+      "last_seen": 1780473259.2202885
+    },
+    {
+      "text": "said means clarification said said said here keep continuity build Earlier",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said",
+        "someone"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame",
+        "claim",
+        "learned_hint",
+        "sedimemory_recall"
+      ],
+      "sightings": 11,
+      "first_seen": 1780473270.210619,
+      "last_seen": 1780496607.530103
+    },
+    {
+      "text": "clarification said said said here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 3,
+      "first_seen": 1780473270.2117498,
+      "last_seen": 1780477074.6035862
+    },
+    {
+      "text": "it works through what learn means here",
+      "confidence": 0.68,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "learn",
+        "it works through what learn"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative",
+        "learned_hint"
+      ],
+      "sightings": 8,
+      "first_seen": 1780474506.5876718,
+      "last_seen": 1780517162.2807355
+    },
+    {
+      "text": "statement said said statement integrate integrate two perspectives Earlier Integrate",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint"
+      ],
+      "sightings": 6,
+      "first_seen": 1780475206.7574294,
+      "last_seen": 1780475940.6221735
+    },
+    {
+      "text": "statement said said approach warm acknowledgment carry thread Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780477016.438696,
+      "last_seen": 1780477016.438696
+    },
+    {
+      "text": "said means clarification said said feelings here keep continuity build Earlier",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said",
+        "feelings"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame",
+        "claim",
+        "learned_hint"
+      ],
+      "sightings": 3,
+      "first_seen": 1780479952.5109398,
+      "last_seen": 1780486648.187774
+    },
+    {
+      "text": "clarification said said feelings here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780479952.512174,
+      "last_seen": 1780479952.512174
+    },
+    {
+      "text": "statement said said said boundary separation framing law Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "chain"
+      ],
+      "sightings": 1,
+      "first_seen": 1780479960.400733,
+      "last_seen": 1780479960.400733
+    },
+    {
+      "text": "hypothetical said said points keep continuity build thread Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 5,
+      "first_seen": 1780480903.7274275,
+      "last_seen": 1780512922.5369704
+    },
+    {
+      "text": "statement said said carry thread next step without Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 3,
+      "first_seen": 1780481928.9224901,
+      "last_seen": 1780506828.4424207
+    },
+    {
+      "text": "statement said said understanding landed thread continues keep Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 3,
+      "first_seen": 1780482848.1277015,
+      "last_seen": 1780511620.0150762
+    },
+    {
+      "text": "said carries thread next step without earlier",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "carry",
+        "said",
+        "talk"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "learned_hint",
+        "sedimemory_recall"
+      ],
+      "sightings": 5,
+      "first_seen": 1780490623.8745005,
+      "last_seen": 1780495824.6534128
+    },
+    {
+      "text": "statement said said statement said said carry thread Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint"
+      ],
+      "sightings": 4,
+      "first_seen": 1780490649.8760126,
+      "last_seen": 1780495926.0517669
+    },
+    {
+      "text": "statement said said said keep continuity build thread Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint"
+      ],
+      "sightings": 4,
+      "first_seen": 1780490676.0327551,
+      "last_seen": 1780496024.479421
+    },
+    {
+      "text": "factual_entity said said points keep continuity build thread Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1780507743.2117605,
+      "last_seen": 1780507743.2117605
+    },
+    {
+      "text": "statement said said feeling keep continuity build thread Earlier Feeling",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 4,
+      "first_seen": 1780507777.2882867,
+      "last_seen": 1780512888.484176
+    },
+    {
+      "text": "said means clarification said said good here keep continuity build Earlier",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "concept",
+        "sedimemory_recall",
+        "semantic_frame"
+      ],
+      "sightings": 2,
+      "first_seen": 1780509798.7694936,
+      "last_seen": 1780509798.773559
+    },
+    {
+      "text": "clarification said said good here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1780509798.771604,
+      "last_seen": 1780509798.771604
+    },
+    {
+      "text": "said means clarification said said work here keep continuity build Earlier",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame"
+      ],
+      "sightings": 4,
+      "first_seen": 1780510787.0721421,
+      "last_seen": 1780510817.3857136
+    },
+    {
+      "text": "clarification said said work here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 2,
+      "first_seen": 1780510787.0741262,
+      "last_seen": 1780510817.3839214
+    },
+    {
+      "text": "use means statement use use precise wording meaning misread",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "use"
+      ],
+      "tags": [
+        "concept",
+        "sedimemory_recall",
+        "semantic_frame",
+        "generative"
+      ],
+      "sightings": 6,
+      "first_seen": 1780510847.4237247,
+      "last_seen": 1780510914.493172
+    },
+    {
+      "text": "statement use use precise wording meaning misread",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "use"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall",
+        "generative"
+      ],
+      "sightings": 3,
+      "first_seen": 1780510847.4259043,
+      "last_seen": 1780510914.4911993
+    },
+    {
+      "text": "factual_entity said said yourself here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1780511671.9048696,
+      "last_seen": 1780511671.9048696
+    },
+    {
+      "text": "experience said said approach thoughtful reflection afterthought meet Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780513671.0467942,
+      "last_seen": 1780513671.0467942
+    },
+    {
+      "text": "experience said said afterthought meet contradiction tension something Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780513706.9798946,
+      "last_seen": 1780513706.9798946
+    },
+    {
+      "text": "experience afterthought afterthought uncertainty don answer include confidence Include",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 3,
+      "first_seen": 1780514811.386414,
+      "last_seen": 1780514827.530095
     }
   ]
 }

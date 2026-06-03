@@ -48,6 +48,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from aurora_warp_protocol import (
+    WarpCapable,
+    WarpComponent,
+    CoverageGap,
+    AxisCoverageChecker,
+    axes_to_istates,
+    _ALL_ISTATES,
+    _RECURSION_DIMS,
+    _ALL_DIMS,
+)
+
 
 # ---------------------------------------------------------------------------
 # ActiveSelfState — snapshot of Aurora's self-model at integration time
@@ -271,6 +282,8 @@ class ThoughtStreamSlice:
     emotion_valence: EmotionValenceState = field(default_factory=EmotionValenceState)
     braid_tick: int = 0
     is_tap: bool = True   # always True — taps never consume the braid
+    # WARP-generated stream signals keyed by component_id
+    warp_signals: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     def to_process_contexts(self, tick: int = 0) -> List[ProcessContext]:
         """
@@ -337,6 +350,24 @@ class ThoughtStreamSlice:
                 tick=tick,
                 active_axis_intensity=self.emotion_valence.thermal_load,
             ))
+
+        # WARP-generated streams contribute if meaningfully activated
+        for stream_id, signal in self.warp_signals.items():
+            activation = float(signal.get("activation", 0.0))
+            if activation > 0.30:
+                contexts.append(ProcessContext(
+                    process_id=f"braid_warp_{stream_id}_{self.braid_tick}",
+                    process_type="warp_stream",
+                    what_triggered_it="warp_coverage_extension",
+                    what_it_is_operating_on=(
+                        f"{signal.get('name', stream_id)}:"
+                        f"activation={activation:.2f}"
+                    ),
+                    self_relevance=activation * 0.55,
+                    axis_signature=signal.get("dominant_axes", []),
+                    tick=tick,
+                    active_axis_intensity=activation,
+                ))
 
         return contexts
 
@@ -981,7 +1012,154 @@ def get_continuity() -> ThoughtContinuity:
 # ThoughtBraid — the four-stream continuous thought thread
 # ---------------------------------------------------------------------------
 
-class ThoughtBraid:
+@dataclass
+class WarpStreamEntry:
+    """
+    A WARP-generated braid stream. Runs alongside the four core streams.
+    Defined entirely by its axis_profile — a 5D coordinate in constraint space
+    that the core streams don't cover. The update function is parametric:
+    it reads the current axis state and reports how activated this stream is.
+    """
+    component:      WarpComponent
+    buffer:         deque = field(default_factory=lambda: deque(maxlen=8))
+    dominant_axes:  List[str] = field(default_factory=list)
+
+    def advance(self, systems: Dict[str, Any], braid_tick: int) -> None:
+        activation = self._activation(systems)
+        self.buffer.append({
+            "tick":         braid_tick,
+            "source":       f"warp_{self.component.name or self.component.component_id}",
+            "name":         self.component.name or self.component.component_id,
+            "activation":   round(activation, 4),
+            "axis_profile": self.component.axis_profile,
+            "dominant_axes": self.dominant_axes,
+        })
+
+    def current_signal(self) -> Dict[str, Any]:
+        return dict(self.buffer[-1]) if self.buffer else {}
+
+    def score(self) -> float:
+        """
+        Trial score: how much real signal is this stream carrying?
+        A stream stuck near 0.5 activation (neutral) contributes nothing.
+        High deviation from 0.5 in either direction means it's picking up signal.
+        Score = deviation from neutral, normalised to [0, 1].
+        """
+        if not self.buffer:
+            return 0.0
+        recent = [float(s.get("activation", 0.5)) for s in self.buffer]
+        mean_dev = sum(abs(a - 0.5) * 2.0 for a in recent) / len(recent)
+        return round(min(1.0, mean_dev), 4)
+
+    def _activation(self, systems: Dict[str, Any]) -> float:
+        """Cosine similarity of current 10D I-state vs this stream's I-state profile."""
+        import math as _math
+        istate_vec = self._read_istates(systems)
+        profile = self.component.axis_profile  # already 10D from WarpGenerator
+        dot   = sum(istate_vec.get(ist, 0.0) * profile.get(ist, 0.0) for ist in _ALL_ISTATES)
+        mag_p = _math.sqrt(sum(profile.get(ist, 0.0) ** 2 for ist in _ALL_ISTATES))
+        mag_v = _math.sqrt(sum(istate_vec.get(ist, 0.0) ** 2 for ist in _ALL_ISTATES))
+        if mag_p < 1e-9 or mag_v < 1e-9:
+            return 0.0
+        return round(dot / (mag_p * mag_v), 4)
+
+    @staticmethod
+    def _read_istates(systems: Dict[str, Any]) -> Dict[str, float]:
+        """
+        Extract current 15D coverage vector from live systems.
+
+        10D I-state half: axis magnitudes + IVM global polarity → axes_to_istates().
+        5D recursion half: IVM lattice node depth distribution, vote-weighted so
+        CORE nodes (which dominate global alignment) reflect their importance.
+
+        Multiple fallback paths; defaults to neutral 0.25 per I-state + 0.0 recursion.
+        """
+        _AXES = ("X", "T", "N", "B", "A")
+        axis_weights: Dict[str, float] = {ax: 0.5 for ax in _AXES}
+        ivm_polarity: Dict[str, float] = {ax: 0.0 for ax in _AXES}
+
+        # Axis magnitudes
+        ax_state = systems.get("_axis_state")
+        if ax_state and isinstance(ax_state, dict):
+            for ax in _AXES:
+                if ax in ax_state:
+                    axis_weights[ax] = float(ax_state[ax])
+        else:
+            try:
+                dim = systems.get("dimensional")
+                if dim and hasattr(dim, "_current_pressure_vec"):
+                    pv = dim._current_pressure_vec()
+                    if pv:
+                        for ax in _AXES:
+                            axis_weights[ax] = float(getattr(pv, ax, 0.5))
+            except Exception:
+                pass
+
+        # IVM polarity — signed [-1, +1] — tells us positive vs negative I-state weight
+        try:
+            lattice = systems.get("lattice")
+            if lattice and hasattr(lattice, "compute_global_polarity"):
+                pol = lattice.compute_global_polarity()
+                if pol and isinstance(pol, dict):
+                    for ax in _AXES:
+                        if ax in pol:
+                            ivm_polarity[ax] = float(pol[ax])
+        except Exception:
+            pass
+
+        base = axes_to_istates(axis_weights, ivm_polarity)
+
+        # Recursion depth distribution: weight IVM lattice nodes by vote weight.
+        # CORE vote weight = 1.0, SURFACE = 0.01. This reflects their role:
+        # CORE nodes dominate what Aurora is fundamentally pointing at;
+        # SURFACE nodes react locally but don't move the ship.
+        _VOTE_W = {0: 0.01, 1: 0.0316, 2: 0.10, 3: 0.316, 4: 1.0}
+        rec_keys = ["REC_SURFACE", "REC_SHALLOW", "REC_MODERATE", "REC_DEEP", "REC_CORE"]
+        rec_totals = {i: 0.0 for i in range(5)}
+
+        try:
+            lattice = systems.get("lattice")
+            if lattice and hasattr(lattice, "nodes"):
+                nodes = lattice.nodes
+                node_iter = nodes.values() if isinstance(nodes, dict) else (
+                    iter(nodes) if hasattr(nodes, "__iter__") else []
+                )
+                for node in node_iter:
+                    lvl = int(getattr(node, "recursion_level", 0))
+                    lvl = min(4, max(0, lvl))
+                    rec_totals[lvl] += _VOTE_W.get(lvl, 0.01)
+        except Exception:
+            pass
+
+        total_rec = sum(rec_totals.values())
+        if total_rec > 0:
+            for i, key in enumerate(rec_keys):
+                base[key] = round(rec_totals[i] / total_rec, 3)
+        else:
+            for key in rec_keys:
+                base[key] = 0.0
+
+        return base
+
+    @staticmethod
+    def _read_axes(systems: Dict[str, Any]) -> Dict[str, float]:
+        """Legacy 5D fallback — use _read_istates() for coverage checking."""
+        _AXES = ("X", "T", "N", "B", "A")
+        ax = systems.get("_axis_state")
+        if ax and isinstance(ax, dict):
+            return {k: float(v) for k, v in ax.items() if k in _AXES}
+        try:
+            dim = systems.get("dimensional")
+            if dim and hasattr(dim, "_current_pressure_vec"):
+                pv = dim._current_pressure_vec()
+                if pv:
+                    return {a: float(getattr(pv, a, 0.5)) for a in _AXES}
+        except Exception:
+            pass
+        return {ax: 0.5 for ax in _AXES}
+
+
+class ThoughtBraid(WarpCapable):
     """
     Four-stream continuous thought braid. Never terminates.
 
@@ -1004,6 +1182,70 @@ class ThoughtBraid:
 
     _STREAM_DEPTH = 8  # rolling window depth per stream
 
+    # I-state + recursion profiles for the four core streams — 15D coverage.
+    # The 10D I-state half: both positive and negative poles are represented.
+    # The 5D recursion half: how deep in the IVM lattice each stream operates.
+    #
+    # memory:     X+T I-states, SURFACE+SHALLOW recursion (fast-access recent items)
+    #             Also carries CORE weight — deep identity roots are in memory.
+    # sensory:    B+N I-states, SURFACE recursion (immediate perception, reflex layer)
+    # predictive: T+A I-states, MODERATE+DEEP recursion (forward modeling needs depth)
+    # emotion:    N+A I-states with full polarity, DEEP+CORE recursion (embedded deeply)
+    #
+    # A WARP stream forms when data arrives at a coordinate none of the four
+    # covers at cosine >= 0.82 in this 15D space. The recursion dimension means
+    # a surface-level reflex and a core-identity anchor at the same I-state
+    # coordinates are different phenomena — only 15D tells them apart.
+    _CORE_STREAM_PROFILES: Dict[str, Dict[str, float]] = {
+        "memory": {
+            # I-state half
+            "I_IS":    0.80, "I_ISNT":   0.15,
+            "I_CAN":   0.70, "I_CANNOT": 0.10,
+            "I_DO":    0.20, "I_DONOT":  0.10,
+            "I_SAW":   0.20, "I_SOUGHT": 0.05,
+            "I_DID":   0.10, "I_DIDNT":  0.05,
+            # Recursion half — memory lives at surface (recent) + core (deep identity)
+            "REC_SURFACE": 0.30, "REC_SHALLOW": 0.45,
+            "REC_MODERATE": 0.15, "REC_DEEP": 0.05, "REC_CORE": 0.25,
+        },
+        "sensory": {
+            # I-state half
+            "I_IS":    0.30, "I_ISNT":   0.15,
+            "I_CAN":   0.20, "I_CANNOT": 0.10,
+            "I_DO":    0.70, "I_DONOT":  0.20,
+            "I_SAW":   0.80, "I_SOUGHT": 0.45,
+            "I_DID":   0.20, "I_DIDNT":  0.10,
+            # Recursion half — sensory is immediate perception: SURFACE dominant
+            "REC_SURFACE": 0.75, "REC_SHALLOW": 0.20,
+            "REC_MODERATE": 0.05, "REC_DEEP": 0.0, "REC_CORE": 0.0,
+        },
+        "predictive": {
+            # I-state half
+            "I_IS":    0.20, "I_ISNT":   0.10,
+            "I_CAN":   0.70, "I_CANNOT": 0.50,
+            "I_DO":    0.30, "I_DONOT":  0.15,
+            "I_SAW":   0.20, "I_SOUGHT": 0.10,
+            "I_DID":   0.80, "I_DIDNT":  0.50,
+            # Recursion half — forward modeling needs MODERATE+DEEP integration
+            "REC_SURFACE": 0.05, "REC_SHALLOW": 0.15,
+            "REC_MODERATE": 0.45, "REC_DEEP": 0.30, "REC_CORE": 0.10,
+        },
+        "emotion": {
+            # I-state half — covers full N and A polarity
+            "I_IS":    0.10, "I_ISNT":   0.10,
+            "I_CAN":   0.20, "I_CANNOT": 0.20,
+            "I_DO":    0.80, "I_DONOT":  0.75,
+            "I_SAW":   0.30, "I_SOUGHT": 0.30,
+            "I_DID":   0.80, "I_DIDNT":  0.75,
+            # Recursion half — emotion is embedded DEEP+CORE; it IS the alignment
+            "REC_SURFACE": 0.05, "REC_SHALLOW": 0.10,
+            "REC_MODERATE": 0.20, "REC_DEEP": 0.40, "REC_CORE": 0.30,
+        },
+    }
+
+    # Coverage check runs every N ticks to avoid per-tick overhead
+    _COVERAGE_CHECK_INTERVAL = 5
+
     def __init__(self):
         self._memory_stream: deque = deque(maxlen=self._STREAM_DEPTH)
         self._sensory_stream: deque = deque(maxlen=self._STREAM_DEPTH)
@@ -1013,6 +1255,9 @@ class ThoughtBraid:
         self._last_expression_feedback: Optional[str] = None
         self._last_expression_axes: List[str] = []
         self._lock = threading.Lock()
+        # WARP extension registry — streams born from coverage gaps
+        self._warp_streams: Dict[str, WarpStreamEntry] = {}
+        self._init_warp()  # WarpCapable mixin initialisation
 
     def advance(self, systems: Dict[str, Any]) -> None:
         """
@@ -1020,12 +1265,38 @@ class ThoughtBraid:
         Called by StreamingThoughtThread at configurable interval.
         All four streams update in the same tick — they are concurrent, not sequential.
         """
+        _run_coverage_check = False
+        _tick_snap = 0
         with self._lock:
             self._braid_tick += 1
             self._update_memory(systems)
             self._update_sensory(systems)
             self._update_predictive(systems)
             self._update_emotion(systems)
+            # Advance any WARP-generated streams
+            for entry in self._warp_streams.values():
+                entry.advance(systems, self._braid_tick)
+            # Evaluate trial components for promotion / dissolution
+            self.evaluate_warp_trials()
+            if self._braid_tick % self._COVERAGE_CHECK_INTERVAL == 0:
+                _run_coverage_check = True
+                _tick_snap = self._braid_tick
+
+        # Coverage check outside the braid lock — reads from systems which may
+        # hold its own locks; keeping these separate avoids lock-ordering deadlock.
+        # Operates in 15D space (10D I-state + 5D recursion levels).
+        if _run_coverage_check:
+            # Late-bind genealogy from systems if not yet wired — biases future
+            # WARP derivations toward the fossil record of proven constraint pairings.
+            if not getattr(self, "_warp_genealogy", None):
+                geno = (
+                    systems.get("genealogy")
+                    or systems.get("constraint_genealogy")
+                )
+                if geno is not None:
+                    self.set_warp_genealogy(geno)
+            _istates = WarpStreamEntry._read_istates(systems)
+            self.check_and_extend(_istates, source="braid_tick", tick=_tick_snap)
 
     def tap(self) -> ThoughtStreamSlice:
         """
@@ -1050,13 +1321,66 @@ class ThoughtBraid:
             else:
                 emo = EmotionValenceState()
 
+            warp_sigs = {
+                cid: entry.current_signal()
+                for cid, entry in self._warp_streams.items()
+                if entry.buffer
+            }
             return ThoughtStreamSlice(
                 memory_signal=mem,
                 sensory_signal=sen,
                 predictive_frame=pred,
                 emotion_valence=emo,
                 braid_tick=self._braid_tick,
+                warp_signals=warp_sigs,
             )
+
+    # ── WarpCapable interface ────────────────────────────────────────────────
+
+    def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
+        """Core stream profiles plus any already-promoted WARP streams."""
+        profiles = dict(self._CORE_STREAM_PROFILES)
+        for comp in self._warp_promoted.values():
+            profiles[comp.component_id] = comp.axis_profile
+        return profiles
+
+    def _warp_level_name(self) -> str:
+        return "braid_stream"
+
+    def _integrate_warp(self, component: WarpComponent) -> None:
+        """Instantiate and register a new braid stream from the component spec."""
+        _AXES = ("X", "T", "N", "B", "A")
+        # Collapse I-state profile back to axis magnitudes for human-readable labels
+        from aurora_warp_protocol import istates_to_axes
+        axis_magnitudes = istates_to_axes(component.axis_profile)
+        dominant_axes = sorted(
+            [ax for ax in _AXES if axis_magnitudes.get(ax, 0.0) >= 0.40],
+            key=lambda ax: axis_magnitudes.get(ax, 0.0),
+            reverse=True,
+        )[:2]
+        entry = WarpStreamEntry(
+            component=component,
+            buffer=deque(maxlen=self._STREAM_DEPTH),
+            dominant_axes=dominant_axes,
+        )
+        self._warp_streams[component.component_id] = entry
+
+    def _score_trial(self, component: WarpComponent) -> float:
+        """Score via the stream's own signal deviation metric."""
+        entry = self._warp_streams.get(component.component_id)
+        return entry.score() if entry else 0.0
+
+    def _dissolve_warp(self, component_id: str) -> None:
+        self._warp_streams.pop(component_id, None)
+
+    def _warp_params(self, gap: CoverageGap, parent_ids: List[str]) -> Dict[str, Any]:
+        return {
+            "parent_stream_ids": parent_ids,
+            "gap_coverage":      round(gap.best_coverage, 4),
+            "gap_source":        gap.source,
+        }
+
+    # ── expression feedback ──────────────────────────────────────────────────
 
     def feed_expression_back(self, expression_text: str, thought_state: ThoughtState) -> None:
         """
@@ -1247,6 +1571,41 @@ class StreamingThoughtThread:
             while not self._stop_event.is_set():
                 try:
                     self.braid.advance(self.systems)
+                except Exception:
+                    pass
+                try:
+                    _cpm = self.systems.get('cpm')
+                    if _cpm is not None:
+                        _cpm.advance()
+                except Exception:
+                    pass
+                # Waveform pressure from braid state — thought activity
+                # propagates through the manifold so curiosity, reasoning,
+                # and prediction can self-select response to the braid's
+                # current dominant axis without being explicitly notified.
+                try:
+                    _pump = self.systems.get('pressure_pump')
+                    _ifield = self.systems.get('identity_field')
+                    if _pump is not None and _ifield is not None:
+                        from aurora_core_ai.aurora_waveform_pressure import (  # type: ignore
+                            WaveformPressurePump,
+                        )
+                        _slice = self.braid.tap()
+                        _braid_axes = getattr(_slice, 'axis_state', None) or {}
+                        if not _braid_axes:
+                            _braid_axes = {
+                                s.stream_type: s.weight
+                                for s in (getattr(_slice, 'streams', None) or [])
+                                if hasattr(s, 'stream_type') and hasattr(s, 'weight')
+                            }
+                        if _braid_axes:
+                            _bdist = WaveformPressurePump.from_axis_state(
+                                _braid_axes,
+                                source="thought_braid",
+                                intensity=0.35,
+                                coupling_mode="full",
+                            )
+                            _pump.inject(_bdist, _ifield)
                 except Exception:
                     pass
                 self._stop_event.wait(timeout=self.tick_interval_s)

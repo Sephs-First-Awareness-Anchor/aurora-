@@ -1,28 +1,37 @@
 {
-  "original": "hey aurora",
-  "candidate": "hey aurora.",
-  "selected": "hey aurora.",
-  "accepted": true,
-  "reason": "accepted_deterministic",
-  "original_score": 0.69,
-  "candidate_score": 0.74,
-  "original_pressure": 0.552,
-  "candidate_pressure": 0.482,
-  "pressure_relief": 0.07,
-  "safe": true,
+  "original": "I exist in this moment. There is something delusional here. I starting, though I structured carefully.",
+  "candidate": "",
+  "selected": "I exist in this moment. There is something delusional here. I starting, though I structured carefully.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.86,
+  "candidate_score": 0.0,
+  "original_pressure": 0.303,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.697,
+  "safe": false,
   "metadata": {
-    "prompt_excerpt": "hey aurora",
+    "prompt_excerpt": "Earlier you said: \"I can have the.\". Keep continuity and build from that thread.",
     "input_interpretation": {
-      "raw_prompt": "hey aurora",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "Earlier you said: \"I can have the.\". Keep continuity and build from that thread.",
+      "intent_hint": "action_request",
       "topic_terms": [
-        "aurora"
+        "earlier",
+        "said",
+        "have",
+        "keep",
+        "continuity",
+        "build",
+        "thread"
       ],
-      "entities": []
+      "entities": [
+        "Earlier",
+        "Keep"
+      ]
     },
-    "tone": "attentive",
-    "source": "deterministic",
-    "timestamp": 1779061800.98276,
+    "tone": "gentle",
+    "source": "no_pattern_matched",
+    "timestamp": 1780520190.155723,
     "min_relief_used": 0.035
   }
 }

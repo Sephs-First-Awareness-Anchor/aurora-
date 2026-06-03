@@ -264,8 +264,12 @@ class LexicalMemory:
 
     def __init__(self):
         self.entries: Dict[str, LexicalEntry] = {}
+        self._role_index: Dict[str, List[str]] = {}
         self._seed_core()
-        self.load()
+        self._rebuild_role_index()
+        n = self.load()
+        if n > 0:
+            self._rebuild_role_index()
 
     def _seed_core(self):
         """Seed vocabulary with words for all grammatical roles."""
@@ -302,6 +306,13 @@ class LexicalMemory:
         for word, meaning, role, valence, ncid in seeds:
             self.entries[word] = LexicalEntry(word, meaning, role, valence, noncomp_id=ncid)
 
+    def _rebuild_role_index(self):
+        """Rebuild the role→words O(1) index from current entries."""
+        idx: Dict[str, List[str]] = {}
+        for word, entry in self.entries.items():
+            idx.setdefault(entry.role, []).append(word)
+        self._role_index = idx
+
     def find_by_noncomp(self, noncomp_id: str, valence_target: float = 0.0) -> List["LexicalEntry"]:
         """Find words mapped to a specific Non-Comp, sorted by valence proximity."""
         matches = [e for e in self.entries.values() if e.noncomp_id == noncomp_id]
@@ -315,6 +326,8 @@ class LexicalMemory:
         if word not in self.entries:
             entry = LexicalEntry(word, meaning, role, valence, lineage=lineage)
             self.entries[word] = entry
+            if hasattr(self, '_role_index'):
+                self._role_index.setdefault(role, []).append(word)
         return self.entries[word]
 
     def record_usage(self, word: str, context: str = ""):
@@ -322,6 +335,9 @@ class LexicalMemory:
             self.entries[word].use(context)
 
     def find_by_role(self, role: str) -> List["LexicalEntry"]:
+        if hasattr(self, '_role_index'):
+            words = self._role_index.get(role, [])
+            return [self.entries[w] for w in words if w in self.entries]
         return [e for e in self.entries.values() if e.role == role]
 
     def find_by_valence(self, min_val: float, max_val: float) -> List["LexicalEntry"]:
@@ -403,11 +419,35 @@ class ConsciousnessPoint:
         b = other.as_tuple()
         return math.sqrt(sum((x - y)**2 for x, y in zip(a, b)))
 
+    def magnitude(self) -> float:
+        return math.sqrt(sum(v * v for v in self.as_tuple()))
+
+
+# Emotion → constraint-axis projection weights (X/T/N/B/A)
+_EMOTION_AXIS_MAP: Dict[str, Dict[str, float]] = {
+    "joy":          {"X": 0.4, "T": 0.3, "N": 0.9, "B": 0.2, "A": 0.4},
+    "curiosity":    {"X": 0.5, "T": 0.6, "N": 0.5, "B": 0.2, "A": 0.6},
+    "trust":        {"X": 0.8, "T": 0.2, "N": 0.4, "B": 0.5, "A": 0.3},
+    "anticipation": {"X": 0.3, "T": 0.8, "N": 0.5, "B": 0.3, "A": 0.6},
+    "fear":         {"X": 0.5, "T": 0.4, "N": 0.3, "B": 0.8, "A": 0.1},
+    "anger":        {"X": 0.2, "T": 0.3, "N": 0.6, "B": 0.3, "A": 0.9},
+    "sadness":      {"X": 0.4, "T": 0.3, "N": 0.7, "B": 0.4, "A": 0.1},
+    "disgust":      {"X": 0.3, "T": 0.2, "N": 0.4, "B": 0.7, "A": 0.4},
+    "surprise":     {"X": 0.5, "T": 0.8, "N": 0.3, "B": 0.2, "A": 0.4},
+    "neutral":      {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5},
+    "confusion":    {"X": 0.3, "T": 0.4, "N": 0.3, "B": 0.3, "A": 0.2},
+    "determination":{"X": 0.4, "T": 0.5, "N": 0.7, "B": 0.3, "A": 0.9},
+}
+
 class ManifoldEngine:
     """5D consciousness geometry engine (X, T, N, B, A)."""
     def __init__(self):
         self.state = ConsciousnessPoint()
         self.history: List[ConsciousnessPoint] = []
+
+    @property
+    def current_cp(self) -> ConsciousnessPoint:
+        return self.state
 
     def map_input(self, data: Dict[str, Any]) -> ConsciousnessPoint:
         # Simple mapping for now
@@ -418,6 +458,37 @@ class ManifoldEngine:
             B=data.get('B', 0.5),
             A=data.get('A', 0.5)
         )
+
+    def map_to_cp(self, shard: "EmotionShard", synthesis=None,
+                  mode: "ExistenceMode" = None) -> Optional[ConsciousnessPoint]:
+        """Project an EmotionShard into 5-axis (X/T/N/B/A) constraint space."""
+        if shard is None:
+            return None
+        base = dict(_EMOTION_AXIS_MAP.get(shard.primary_emotion,
+                                          _EMOTION_AXIS_MAP["neutral"]))
+        # Blend secondary emotions
+        for emo, w in shard.secondary_emotions.items():
+            sec = _EMOTION_AXIS_MAP.get(emo, _EMOTION_AXIS_MAP["neutral"])
+            for ax in base:
+                base[ax] = base[ax] * (1.0 - 0.3 * w) + sec[ax] * 0.3 * w
+        scale = _clamp(shard.intensity, 0.1, 1.0)
+        cp = ConsciousnessPoint(
+            X=_clamp(base["X"] * scale),
+            T=_clamp(base["T"] * scale),
+            N=_clamp(base["N"] * scale),
+            B=_clamp(base["B"] * scale),
+            A=_clamp(base["A"] * scale),
+        )
+        self.update_state(cp)
+        return cp
+
+    def novelty_at(self, cp: Optional[ConsciousnessPoint]) -> float:
+        """Score how far cp is from recent history (0=familiar, 1=novel)."""
+        if cp is None or not self.history:
+            return 0.5
+        recent = self.history[-20:]
+        avg_dist = sum(cp.distance_to(h) for h in recent) / len(recent)
+        return _clamp(avg_dist / math.sqrt(5.0))
 
     def update_state(self, point: ConsciousnessPoint):
         self.history.append(self.state)
@@ -742,6 +813,14 @@ class ImpressionCascade:
         self.total_energy_processed += 1
         return shard
 
+    def _seed_shard_similarity(self, seed: "ImpressionSeed", shard: "EmotionShard") -> float:
+        """Score how well a shard fits an existing seed (0-1). Emotion match + valence proximity."""
+        emotion_match = 1.0 if seed.dominant_emotion == shard.primary_emotion else (
+            shard.secondary_emotions.get(seed.dominant_emotion, 0.0)
+        )
+        valence_proximity = 1.0 - min(abs(seed.centroid_valence - shard.valence), 2.0) / 2.0
+        return _clamp(0.6 * emotion_match + 0.4 * valence_proximity, 0.0, 1.0)
+
     def shard_to_seed(self, shard: EmotionShard,
                       mode: ExistenceMode) -> Optional[ImpressionSeed]:
         """Cluster a shard into an existing seed or create a new one. Requires PERSISTENT+."""
@@ -832,6 +911,8 @@ class ImpressionCascade:
         if word not in self.entries:
             entry = LexicalEntry(word, meaning, role, valence, lineage=lineage)
             self.entries[word] = entry
+            if hasattr(self, '_role_index'):
+                self._role_index.setdefault(role, []).append(word)
         return self.entries[word]
 
     def record_usage(self, word: str, context: str = ""):
@@ -839,6 +920,9 @@ class ImpressionCascade:
             self.entries[word].use(context)
 
     def find_by_role(self, role: str) -> List["LexicalEntry"]:
+        if hasattr(self, '_role_index'):
+            words = self._role_index.get(role, [])
+            return [self.entries[w] for w in words if w in self.entries]
         return [e for e in self.entries.values() if e.role == role]
 
     def find_by_valence(self, min_val: float, max_val: float) -> List["LexicalEntry"]:
@@ -1756,12 +1840,8 @@ class SentenceComposer:
                 slot_key = f"{slot_code}_{slot_idx}"
                 slot_idx += 1
 
-                # Look up semantic category from the web's category index
-                word_category = None
-                for cat, members in self._oets.web._semantic_categories.items():
-                    if clean in members:
-                        word_category = cat
-                        break
+                # Look up semantic category via inverted index (O(1))
+                word_category = self._oets.web._word_to_category.get(clean)
                 if word_category:
                     constraints[slot_key] = word_category
 
@@ -1902,7 +1982,7 @@ class SentenceComposer:
         survivors = mature[:self.MAX_TEMPLATES_PER_TONE - len(immature)]
         self.pool[tone] = survivors + immature
 
-    def run_generation(self):
+    def run_generation(self, skip_promotions: bool = False):
         """
         Run one evolutionary generation across all tones.
         Includes scaffolding promotion when OETS depth allows.
@@ -1939,8 +2019,8 @@ class SentenceComposer:
                                     parent.get('cluster_references', [])),
                             })
 
-        # Evaluate template promotions via OETS
-        if self._has_oets:
+        # Evaluate template promotions via OETS — skip during speed-run
+        if self._has_oets and not skip_promotions:
             self._evaluate_promotions()
 
     def _evaluate_promotions(self):
@@ -2345,6 +2425,17 @@ class SentenceComposer:
                 if len(w) >= 4 and w not in _SLOT_NOISE
                 and infer_word_role(w) in ('verb', 'noun', 'adjective', 'adverb')
             }
+
+            # Cap candidates to prevent O(n_vocab) weight iteration on large lexicons.
+            # Prioritise context-relevant words first, then top-usage words.
+            _MAX_SLOT_CANDIDATES = 300
+            if len(candidates) > _MAX_SLOT_CANDIDATES:
+                ctx_cands = [e for e in candidates if e.word in context_set]
+                non_ctx = [e for e in candidates if e.word not in context_set]
+                non_ctx.sort(key=lambda e: e.usage_count, reverse=True)
+                n_non_ctx = max(0, _MAX_SLOT_CANDIDATES - len(ctx_cands))
+                candidates = ctx_cands + non_ctx[:n_non_ctx]
+
             # Get current axis activations (if available on self)
             axis_act = getattr(self, '_axis_activation', {}) or {}
             b_pressure = axis_act.get('B', 0.0)
@@ -2353,10 +2444,10 @@ class SentenceComposer:
             for e in candidates:
                 # Base weight from usage and coherence
                 w = max(0.1, 1.0 + e.usage_count * 0.1 * coherence)
-                
-                # Context boost: reduced to influence rather than dominate
+
+                # Context boost: strong pull toward claim-relevant words
                 if e.word in context_set:
-                    w *= 3.0
+                    w *= 20.0
                 
                 # Valence boost
                 if vmin <= e.emotional_valence <= vmax:
@@ -2407,11 +2498,19 @@ class SentenceComposer:
 
                 if candidates:
                     context_set = set(self._context_keywords)
+                    # Cap candidates to avoid O(n_category) iteration on large lexicons
+                    _MAX_SLOT_CANDIDATES = 300
+                    if len(candidates) > _MAX_SLOT_CANDIDATES:
+                        ctx_cands = [e for e in candidates if e.word in context_set]
+                        non_ctx = [e for e in candidates if e.word not in context_set]
+                        non_ctx.sort(key=lambda e: e.usage_count, reverse=True)
+                        n_non_ctx = max(0, _MAX_SLOT_CANDIDATES - len(ctx_cands))
+                        candidates = ctx_cands + non_ctx[:n_non_ctx]
                     weights = []
                     for e in candidates:
                         w = max(0.1, 1.0 + e.usage_count * 0.1 * coherence)
                         if e.word in context_set:
-                            w *= 10.0
+                            w *= 20.0
                         if vmin <= e.emotional_valence <= vmax:
                             w *= 1.5
                         # Deeper concepts preferred
@@ -3082,8 +3181,10 @@ class ExpressionPerceptionEngine:
         if text and len(text.split()) >= 3:
             self.composer.absorb(text, tone)
 
-        # OETS: Feed interaction to ontological web for structured understanding
-        if self.oets:
+        # OETS: Feed interaction to ontological web for structured understanding.
+        # Skip during simulation speed-run — per-turn updates on 19k+ relations
+        # are the primary wall-clock bottleneck; epoch consolidation is sufficient.
+        if self.oets and not getattr(self, '_sim_speed_run', False):
             self.oets.process_interaction(
                 text, tone=tone,
                 i_state=interaction.get('i_state', 'i_is')
@@ -3095,13 +3196,16 @@ class ExpressionPerceptionEngine:
     # CONSOLIDATION & MAINTENANCE
     # ====================================================================
 
-    def consolidate(self, min_mode: ExistenceMode = ExistenceMode.AGENTIC):
+    def consolidate(self, min_mode: ExistenceMode = ExistenceMode.AGENTIC,
+                    skip_oets: bool = False,
+                    skip_promotions: bool = False):
         """Run consolidation: generation cycle, seed--relic promotion, template evolution."""
         # Expression generation cycle
         self.ecology.run_generation()
 
         # Template evolution - cull weak templates, mutate strong ones
-        self.composer.run_generation()
+        # skip_promotions=True during speed-run: avoids O(n_templates) OETS scan each epoch
+        self.composer.run_generation(skip_promotions=skip_promotions)
 
         # Promote seeds to relics if enough have accumulated
         if min_mode.value >= ExistenceMode.BOUNDED.value:
@@ -3112,8 +3216,9 @@ class ExpressionPerceptionEngine:
                     batch = seed_ids[i:i+3]
                     self.cascade.seeds_to_relic(batch, min_mode)
 
-        # OETS: Consolidate ontological web  -- deepen understanding
-        if self.oets:
+        # OETS: Consolidate ontological web -- deepen understanding
+        # skip_oets=True during speed-run to avoid O(n) cost every epoch
+        if self.oets and not skip_oets:
             self.oets.consolidate()
 
     def get_stats(self) -> Dict[str, Any]:

@@ -1528,9 +1528,30 @@ def build_layer8_associative_modules(
         'autonomy': None,
         'AutonomyLevel': None,
         'drive_sync': None,
+        'git_sync': None,
         'device_info': {},
         'checkpoint': None,
     }
+
+    # Git state sync runs first — ensures all devices load the same state
+    if verbose: print("  [L8+] Git State Sync...", end=" ", flush=True)
+    try:
+        git_sync = GitStateSync(state_dir=state_dir)
+        git_boot = git_sync.boot()
+        modules['git_sync'] = git_sync
+        if verbose:
+            if not git_sync.is_available():
+                print("  (not a git repo)")
+            elif git_boot.get("success") and git_boot.get("reason") == "pulled":
+                print(f"  (pulled {git_boot.get('pulled_files', 0)} state file(s))")
+            elif git_boot.get("reason") == "already_up_to_date":
+                print("  (up to date)")
+            elif not git_boot.get("success"):
+                print(f"  (sync skipped: {git_boot.get('reason', 'unknown')})")
+            else:
+                print("  [OK]")
+    except Exception as e:
+        if verbose: print(f"[SKIP] {e}")
 
     if verbose: print("  [L8+] Autonomy Engine...", end=" ", flush=True)
     try:
@@ -2372,6 +2393,200 @@ class DriveSync:
                                        self._thread.is_alive()),
                 "all_devices":        self.device.all_devices(),
             }
+
+
+# ============================================================================
+# SECTION 3b: GIT STATE SYNC
+# ============================================================================
+
+class GitStateSync:
+    """
+    Git-backed cross-device state sync — works on every device with git.
+
+    Boot:  fetch + fast-forward merge → all devices start from same state
+    Push:  stage aurora_state/ changes, commit with hostname+timestamp, push
+
+    Complements DriveSync: when rclone isn't configured this is the primary
+    mechanism ensuring consistent state across Android, desktop, and cloud.
+    """
+
+    def __init__(self, state_dir: str = "aurora_state",
+                 remote: str = "origin", branch: str = ""):
+        self.state_dir = state_dir
+        self.remote    = remote
+        self.branch    = branch
+        self._repo_root: Optional[str] = None
+        self._available: Optional[bool] = None
+        self._current_branch: str = ""
+
+    def _find_repo_root(self) -> Optional[str]:
+        if self._repo_root is not None:
+            return self._repo_root
+        cwd = (os.path.abspath(self.state_dir)
+               if os.path.isdir(self.state_dir) else os.getcwd())
+        try:
+            r = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                               capture_output=True, text=True, timeout=10, cwd=cwd)
+            if r.returncode == 0:
+                self._repo_root = r.stdout.strip()
+                return self._repo_root
+        except Exception:
+            pass
+        return None
+
+    def _get_current_branch(self, repo_root: str) -> str:
+        try:
+            r = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                               capture_output=True, text=True, timeout=10, cwd=repo_root)
+            if r.returncode == 0:
+                return r.stdout.strip()
+        except Exception:
+            pass
+        return ""
+
+    def is_available(self) -> bool:
+        if self._available is not None:
+            return self._available
+        self._available = self._find_repo_root() is not None
+        return self._available
+
+    def boot(self) -> Dict:
+        """Pull latest state from remote on boot."""
+        root = self._find_repo_root()
+        if root is None:
+            return {"performed": False, "reason": "not_a_git_repo"}
+
+        branch = self.branch or self._get_current_branch(root)
+        if not branch or branch == "HEAD":
+            return {"performed": False, "reason": "detached_head"}
+        self._current_branch = branch
+
+        try:
+            fetch_r = subprocess.run(
+                ["git", "fetch", self.remote, branch, "--quiet"],
+                capture_output=True, text=True, timeout=30, cwd=root)
+            if fetch_r.returncode != 0:
+                return {"performed": False,
+                        "reason": f"fetch_failed: {fetch_r.stderr[:200]}"}
+        except Exception as e:
+            return {"performed": False, "reason": f"fetch_error: {e}"}
+
+        try:
+            behind_r = subprocess.run(
+                ["git", "rev-list", "--count",
+                 f"HEAD..{self.remote}/{branch}"],
+                capture_output=True, text=True, timeout=10, cwd=root)
+            behind = int(behind_r.stdout.strip() or "0")
+        except Exception:
+            behind = 0
+
+        if behind == 0:
+            return {"performed": True, "success": True,
+                    "reason": "already_up_to_date", "pulled_files": 0}
+
+        try:
+            pull_r = subprocess.run(
+                ["git", "merge", "--ff-only",
+                 f"{self.remote}/{branch}"],
+                capture_output=True, text=True, timeout=30, cwd=root)
+            if pull_r.returncode == 0:
+                files_r = subprocess.run(
+                    ["git", "diff", "--name-only", "HEAD@{1}", "HEAD",
+                     "--", self.state_dir],
+                    capture_output=True, text=True, timeout=10, cwd=root)
+                nfiles = len([l for l in files_r.stdout.splitlines() if l.strip()])
+                logger.info(f"[GitStateSync] Pulled {nfiles} state file(s) from {branch}")
+                return {"performed": True, "success": True,
+                        "reason": "pulled", "pulled_files": nfiles,
+                        "behind": behind}
+            else:
+                logger.debug(f"[GitStateSync] ff-only merge failed (local diverged): "
+                             f"{pull_r.stderr[:200]}")
+                return {"performed": True, "success": False,
+                        "reason": f"ff_failed: {pull_r.stderr[:200]}"}
+        except Exception as e:
+            return {"performed": True, "success": False,
+                    "reason": f"merge_error: {e}"}
+
+    def push_state(self, message: str = "") -> Dict:
+        """Stage aurora_state/ changes and push."""
+        root = self._find_repo_root()
+        if root is None:
+            return {"performed": False, "reason": "not_a_git_repo"}
+
+        branch = self._current_branch or self._get_current_branch(root)
+        if not branch or branch == "HEAD":
+            return {"performed": False, "reason": "detached_head"}
+
+        try:
+            status_r = subprocess.run(
+                ["git", "status", "--porcelain", "--", self.state_dir],
+                capture_output=True, text=True, timeout=10, cwd=root)
+            if not status_r.stdout.strip():
+                return {"performed": True, "success": True,
+                        "reason": "nothing_to_commit", "committed": False}
+        except Exception as e:
+            return {"performed": False, "reason": f"status_error: {e}"}
+
+        try:
+            add_r = subprocess.run(
+                ["git", "add", "--", self.state_dir],
+                capture_output=True, text=True, timeout=15, cwd=root)
+            if add_r.returncode != 0:
+                return {"performed": True, "success": False,
+                        "reason": f"add_failed: {add_r.stderr[:200]}"}
+        except Exception as e:
+            return {"performed": True, "success": False,
+                    "reason": f"add_error: {e}"}
+
+        hostname = socket.gethostname()
+        ts = int(time.time())
+        msg = message or f"state: {hostname} {ts}"
+        git_env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "Aurora",
+            "GIT_AUTHOR_EMAIL": "aurora@local",
+            "GIT_COMMITTER_NAME": "Aurora",
+            "GIT_COMMITTER_EMAIL": "aurora@local",
+        }
+        try:
+            commit_r = subprocess.run(
+                ["git", "-c", "commit.gpgsign=false",
+                 "commit", "-m", msg],
+                capture_output=True, text=True, timeout=15,
+                cwd=root, env=git_env)
+            if commit_r.returncode != 0:
+                return {"performed": True, "success": False,
+                        "reason": f"commit_failed: {commit_r.stderr[:200]}",
+                        "committed": False}
+        except Exception as e:
+            return {"performed": True, "success": False,
+                    "reason": f"commit_error: {e}", "committed": False}
+
+        try:
+            push_r = subprocess.run(
+                ["git", "push", self.remote, branch, "--quiet"],
+                capture_output=True, text=True, timeout=60, cwd=root)
+            success = push_r.returncode == 0
+            if success:
+                logger.info(f"[GitStateSync] Pushed state to {branch}")
+            else:
+                logger.debug(f"[GitStateSync] Push failed: {push_r.stderr[:200]}")
+            return {"performed": True, "success": success, "committed": True,
+                    "reason": "pushed" if success else
+                    f"push_failed: {push_r.stderr[:200]}"}
+        except Exception as e:
+            return {"performed": True, "success": False, "committed": True,
+                    "reason": f"push_error: {e}"}
+
+    def status(self) -> Dict:
+        root = self._find_repo_root()
+        return {
+            "git_available": self.is_available(),
+            "repo_root": root,
+            "branch": self._current_branch,
+            "remote": self.remote,
+        }
 
 
 #!/usr/bin/env python3
@@ -3616,7 +3831,7 @@ class AutonomyEngine:
                 # Mock tool call injection
                 pass
 
-    def _gather_context(self) -> Dict[str, Any]:
+    def _in_quiet_window(self) -> bool:
         """Return True if current hour is inside the quiet window."""
         if not self.boundaries.quiet_window_enabled:
             return False
