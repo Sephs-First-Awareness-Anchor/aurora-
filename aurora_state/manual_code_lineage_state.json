@@ -3428,14 +3428,70 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1780486296.506249
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f4289787ce1a",
+      "dominant_axis": "X",
+      "file": "aurora_expression_perception.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_expression_perception",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780514760.8937907
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f530ffe47064",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780516093.4502265
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f9e79742c090",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780516226.2427127
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:e0d03b150760",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.save",
+      "timestamp": 1780517586.573049
     }
   ],
   "initialized": true,
-  "last_run_at": 1780505720.652483,
+  "last_run_at": 1780517999.191885,
   "manifest": {
     "aurora.py": {
-      "mtime_ns": 1780472598644085952,
-      "size": 1394514
+      "mtime_ns": 1780517580345420597,
+      "size": 1398107
     },
     "aurora_behavioral_identity.py": {
       "mtime_ns": 1778751706113129529,
@@ -3478,8 +3534,8 @@
       "size": 167902
     },
     "aurora_expression_perception.py": {
-      "mtime_ns": 1780486241252903942,
-      "size": 446382
+      "mtime_ns": 1780514748289485373,
+      "size": 448574
     },
     "aurora_grammar_engine.py": {
       "mtime_ns": 1779296989964566589,

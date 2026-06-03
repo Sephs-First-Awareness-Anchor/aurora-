@@ -1,15 +1,15 @@
 {
-  "original": "feeling human-facing comfort record bulldoze endlessly no-comfort loves you falls permanently dangerously rational something partial entering non-carriers the sloppy",
-  "candidate": "feeling human-facing comfort record bulldoze endlessly no-comfort loves you falls permanently dangerously rational something partial entering non-carriers the sloppy.",
-  "selected": "feeling human-facing comfort record bulldoze endlessly no-comfort loves you falls permanently dangerously rational something partial entering non-carriers the sloppy.",
-  "accepted": true,
-  "reason": "accepted_deterministic",
-  "original_score": 0.81,
-  "candidate_score": 0.86,
-  "original_pressure": 0.3949,
-  "candidate_pressure": 0.3249,
-  "pressure_relief": 0.07,
-  "safe": true,
+  "original": "I exist in this moment. something truthful covered through the what Something differential reflected of the arbitrary.",
+  "candidate": "",
+  "selected": "I exist in this moment. something truthful covered through the what Something differential reflected of the arbitrary.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.86,
+  "candidate_score": 0.0,
+  "original_pressure": 0.348,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.652,
+  "safe": false,
   "metadata": {
     "prompt_excerpt": "[AFTERTHOUGHT] what do you notice about yourself right now Include your confidence level.",
     "input_interpretation": {
@@ -30,8 +30,8 @@
       ]
     },
     "tone": "gentle",
-    "source": "deterministic",
-    "timestamp": 1780512612.9417675,
+    "source": "no_pattern_matched",
+    "timestamp": 1780518118.8702085,
     "min_relief_used": 0.035
   }
 }

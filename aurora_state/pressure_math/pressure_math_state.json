@@ -1,40 +1,17 @@
 {
-  "captures": 30,
+  "captures": 40,
   "flip_count": 0,
   "regime_start_idx": 0,
   "snapshots": [
     {
-      "timestamp": 1780486335.386376,
-      "coherence_delta": -0.8119999999999999,
-      "alignment_delta": 0.0,
-      "stagnation": 0.0,
-      "novelty": 1.0,
-      "vitality_pressure": 0.24359999999999998,
-      "der_presence": 1.0,
-      "der_total_energy": 18.170730800000005,
-      "dmm_vitality": 1.0,
-      "collective_balance": 1.0,
-      "total_links": 0,
-      "link_promotion_rate": 0.0,
-      "dominant_axis_distribution": {},
-      "coupling_validation_rate": 0.0,
-      "code_stagnation_gain": 0.0,
-      "code_acceptance_rate": 0.0,
-      "code_deepest_generation": 0,
-      "operator_gradients": {},
-      "dream_episode_fitness": 0.5191378554778555,
-      "dream_leverage_count": 71,
-      "dream_persistent_weaknesses": 2
-    },
-    {
-      "timestamp": 1780487334.7113175,
-      "coherence_delta": -0.18800000000000003,
+      "timestamp": 1780505772.383349,
+      "coherence_delta": -1.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 99.35987720000004,
+      "der_total_energy": 19.186089800000005,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -45,19 +22,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.7190416666666667,
-      "dream_leverage_count": 75,
-      "dream_persistent_weaknesses": 6
+      "dream_episode_fitness": 0.5655783634992458,
+      "dream_leverage_count": 150,
+      "dream_persistent_weaknesses": 3
     },
     {
-      "timestamp": 1780488407.7018387,
+      "timestamp": 1780506770.806451,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 149.01848219999997,
+      "der_total_energy": 108.63641649999984,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -68,19 +45,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.5829038461538462,
-      "dream_leverage_count": 79,
-      "dream_persistent_weaknesses": 10
+      "dream_episode_fitness": 0.6612692307692308,
+      "dream_leverage_count": 155,
+      "dream_persistent_weaknesses": 8
     },
     {
-      "timestamp": 1780489337.3059106,
+      "timestamp": 1780507776.6047688,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 178.4170147999995,
+      "der_total_energy": 158.05723689999996,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -91,19 +68,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.5896346153846153,
-      "dream_leverage_count": 82,
-      "dream_persistent_weaknesses": 13
+      "dream_episode_fitness": 0.5457644230769231,
+      "dream_leverage_count": 159,
+      "dream_persistent_weaknesses": 12
     },
     {
-      "timestamp": 1780490254.504674,
+      "timestamp": 1780508758.5435236,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 202.2213890999994,
+      "der_total_energy": 192.67755630000008,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -114,19 +91,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.5896346153846153,
-      "dream_leverage_count": 89,
-      "dream_persistent_weaknesses": 20
+      "dream_episode_fitness": 0.6689615384615385,
+      "dream_leverage_count": 163,
+      "dream_persistent_weaknesses": 16
     },
     {
-      "timestamp": 1780491139.6900012,
+      "timestamp": 1780509689.648985,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 223.04678519999942,
+      "der_total_energy": 216.9157539000002,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -137,19 +114,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.6087538461538462,
-      "dream_leverage_count": 93,
+      "dream_episode_fitness": 0.4030961538461538,
+      "dream_leverage_count": 171,
       "dream_persistent_weaknesses": 24
     },
     {
-      "timestamp": 1780492164.812181,
+      "timestamp": 1780510740.035969,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 241.3753307999994,
+      "der_total_energy": 240.00442020000062,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -160,19 +137,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.6279846153846154,
-      "dream_leverage_count": 97,
-      "dream_persistent_weaknesses": 28
+      "dream_episode_fitness": 0.6340256410256411,
+      "dream_leverage_count": 176,
+      "dream_persistent_weaknesses": 29
     },
     {
-      "timestamp": 1780493203.913644,
+      "timestamp": 1780511623.8748379,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 258.72166059999915,
+      "der_total_energy": 256.43904300000065,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -183,19 +160,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.6357884615384615,
-      "dream_leverage_count": 102,
-      "dream_persistent_weaknesses": 33
+      "dream_episode_fitness": 0.6636788461538462,
+      "dream_leverage_count": 179,
+      "dream_persistent_weaknesses": 32
     },
     {
-      "timestamp": 1780494214.8343801,
+      "timestamp": 1780512617.0292697,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 272.8957497999993,
+      "der_total_energy": 273.37294790000084,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -206,19 +183,19 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.542866452991453,
-      "dream_leverage_count": 106,
+      "dream_episode_fitness": 0.4487692307692308,
+      "dream_leverage_count": 184,
       "dream_persistent_weaknesses": 37
     },
     {
-      "timestamp": 1780495181.800124,
+      "timestamp": 1780513391.0887132,
       "coherence_delta": 0.0,
       "alignment_delta": 0.0,
       "stagnation": 0.0,
       "novelty": 1.0,
       "vitality_pressure": 0.3,
       "der_presence": 1.0,
-      "der_total_energy": 285.0887750999992,
+      "der_total_energy": 283.3918909000011,
       "dmm_vitality": 1.0,
       "collective_balance": 1.0,
       "total_links": 0,
@@ -229,24 +206,47 @@
       "code_acceptance_rate": 0.0,
       "code_deepest_generation": 0,
       "operator_gradients": {},
-      "dream_episode_fitness": 0.650051282051282,
-      "dream_leverage_count": 115,
-      "dream_persistent_weaknesses": 46
+      "dream_episode_fitness": 0.5872307692307692,
+      "dream_leverage_count": 188,
+      "dream_persistent_weaknesses": 41
+    },
+    {
+      "timestamp": 1780514228.7082784,
+      "coherence_delta": 0.0,
+      "alignment_delta": 0.0,
+      "stagnation": 0.0,
+      "novelty": 1.0,
+      "vitality_pressure": 0.3,
+      "der_presence": 1.0,
+      "der_total_energy": 288.02947210000116,
+      "dmm_vitality": 1.0,
+      "collective_balance": 1.0,
+      "total_links": 0,
+      "link_promotion_rate": 0.0,
+      "dominant_axis_distribution": {},
+      "coupling_validation_rate": 0.0,
+      "code_stagnation_gain": 0.0,
+      "code_acceptance_rate": 0.0,
+      "code_deepest_generation": 0,
+      "operator_gradients": {},
+      "dream_episode_fitness": 0.17535600263963022,
+      "dream_leverage_count": 197,
+      "dream_persistent_weaknesses": 50
     }
   ],
   "metrics": [
     {
-      "timestamp": 1780486335.3866606,
+      "timestamp": 1780505772.383691,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.43333333333333335,
-        "N": 0.22113820533333337,
+        "N": 0.2279072653333334,
         "B": 0.43333333333333335,
         "A": 0.43333333333333335
       },
       "active_pressure_interactions": 0,
       "complexity_ratio": 0.0,
-      "divergence": 0.22554167830249192,
+      "divergence": 0.22181223403616282,
       "divergence_trend": 0.0,
       "flip_proximity": 0.0,
       "regime_age": 1,
@@ -262,17 +262,17 @@
       "pressure_velocity": 0.0
     },
     {
-      "timestamp": 1780487334.7120123,
+      "timestamp": 1780506770.807247,
       "gradient_health": {
         "X": 0.43333333333333335,
-        "T": 0.43333333333333335,
+        "T": 0.16666666666666666,
         "N": 0.43333333333333335,
         "B": 0.43333333333333335,
         "A": 0.43333333333333335
       },
       "active_pressure_interactions": 0,
       "complexity_ratio": 0.0,
-      "divergence": 0.1522222222222222,
+      "divergence": 0.25888888888888895,
       "divergence_trend": 0.0,
       "flip_proximity": 0.0,
       "regime_age": 2,
@@ -288,7 +288,7 @@
       "pressure_velocity": 0.0
     },
     {
-      "timestamp": 1780488407.702842,
+      "timestamp": 1780507776.6057851,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -314,7 +314,7 @@
       "pressure_velocity": 0.0
     },
     {
-      "timestamp": 1780489337.307083,
+      "timestamp": 1780508758.5444336,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -340,7 +340,7 @@
       "pressure_velocity": 0.0
     },
     {
-      "timestamp": 1780490254.50541,
+      "timestamp": 1780509689.6503427,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -366,7 +366,7 @@
       "pressure_velocity": 0.0
     },
     {
-      "timestamp": 1780491139.6906893,
+      "timestamp": 1780510740.0369112,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -377,22 +377,22 @@
       "active_pressure_interactions": 0,
       "complexity_ratio": 0.0,
       "divergence": 0.25888888888888895,
-      "divergence_trend": 0.04667129241768794,
-      "flip_proximity": 0.13891201764399505,
+      "divergence_trend": 0.012358884950908727,
+      "flip_proximity": 0.14512775808787687,
       "regime_age": 6,
       "stagnation_axes": {
         "X": 0.5666666666666663,
         "T": 0.0,
-        "N": 0.09210865092245087,
+        "N": 0.10835956393551426,
         "B": 0.5666666666666663,
         "A": 0.5666666666666663
       },
-      "overall_stagnation": 0.35842173018449,
+      "overall_stagnation": 0.36167191278710265,
       "evolutionary_velocity": 0.0,
-      "pressure_velocity": 0.03334721058639703
+      "pressure_velocity": 0.037076654852726126
     },
     {
-      "timestamp": 1780492164.8131766,
+      "timestamp": 1780511623.8757205,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -403,22 +403,22 @@
       "active_pressure_interactions": 0,
       "complexity_ratio": 0.0,
       "divergence": 0.25888888888888895,
-      "divergence_trend": 0.04667129241768794,
-      "flip_proximity": 0.26111111111111124,
+      "divergence_trend": 0.012358884950908727,
+      "flip_proximity": 0.08333333333333333,
       "regime_age": 7,
       "stagnation_axes": {
         "X": 0.5666666666666663,
-        "T": 0.0,
-        "N": 0.1259424635103132,
+        "T": 0.004884807888962655,
+        "N": 0.14086534610942614,
         "B": 0.5666666666666663,
         "A": 0.5666666666666663
       },
-      "overall_stagnation": 0.36518849270206244,
+      "overall_stagnation": 0.3691500307996775,
       "evolutionary_velocity": 0.0,
-      "pressure_velocity": 0.4650883968511567
+      "pressure_velocity": 0.36167191278710265
     },
     {
-      "timestamp": 1780493203.915052,
+      "timestamp": 1780512617.0307472,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -429,22 +429,22 @@
       "active_pressure_interactions": 0,
       "complexity_ratio": 0.0,
       "divergence": 0.25888888888888895,
-      "divergence_trend": 0.04667129241768794,
+      "divergence_trend": 0.012358884950908727,
       "flip_proximity": 0.08333333333333333,
       "regime_age": 8,
       "stagnation_axes": {
         "X": 0.5666666666666659,
-        "T": 0.0,
-        "N": 0.15370553895594108,
+        "T": 0.05317045434051551,
+        "N": 0.16757419374303148,
         "B": 0.5666666666666659,
         "A": 0.5666666666666659
       },
-      "overall_stagnation": 0.37074110779118774,
+      "overall_stagnation": 0.38414892961670893,
       "evolutionary_velocity": 0.0,
-      "pressure_velocity": 0.36518849270206244
+      "pressure_velocity": 0.3691500307996775
     },
     {
-      "timestamp": 1780494214.8357892,
+      "timestamp": 1780513391.0899656,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -455,22 +455,22 @@
       "active_pressure_interactions": 0,
       "complexity_ratio": 0.0,
       "divergence": 0.25888888888888895,
-      "divergence_trend": 0.04667129241768794,
+      "divergence_trend": 0.012358884950908727,
       "flip_proximity": 0.08333333333333333,
       "regime_age": 9,
       "stagnation_axes": {
         "X": 0.5666666666666659,
-        "T": 0.0,
-        "N": 0.17690771161604188,
+        "T": 0.09446631704944251,
+        "N": 0.18991593525412823,
         "B": 0.5666666666666659,
         "A": 0.5666666666666659
       },
-      "overall_stagnation": 0.3753815423232079,
+      "overall_stagnation": 0.3968764504607137,
       "evolutionary_velocity": 0.0,
-      "pressure_velocity": 0.37074110779118774
+      "pressure_velocity": 0.38414892961670893
     },
     {
-      "timestamp": 1780495181.8010235,
+      "timestamp": 1780514228.7096496,
       "gradient_health": {
         "X": 0.43333333333333335,
         "T": 0.16666666666666666,
@@ -481,19 +481,19 @@
       "active_pressure_interactions": 0,
       "complexity_ratio": 0.0,
       "divergence": 0.25888888888888895,
-      "divergence_trend": 0.04667129241768794,
+      "divergence_trend": 0.012358884950908727,
       "flip_proximity": 0.08333333333333333,
       "regime_age": 10,
       "stagnation_axes": {
         "X": 0.5666666666666659,
-        "T": 0.0,
-        "N": 0.19663093166738096,
+        "T": 0.13015782049939828,
+        "N": 0.20892069448110762,
         "B": 0.5666666666666659,
         "A": 0.5666666666666659
       },
-      "overall_stagnation": 0.37932618633347576,
+      "overall_stagnation": 0.4078157029961007,
       "evolutionary_velocity": 0.0,
-      "pressure_velocity": 0.3753815423232079
+      "pressure_velocity": 0.3968764504607137
     }
   ]
 }

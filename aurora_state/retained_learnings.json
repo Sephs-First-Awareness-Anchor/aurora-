@@ -379,7 +379,7 @@
     },
     {
       "text": "what learn means here",
-      "confidence": 0.66,
+      "confidence": 0.68,
       "sources": [
         "simulation_live_bridge:semantic_frame"
       ],
@@ -398,9 +398,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 14,
+      "sightings": 16,
       "first_seen": 1780468234.1660376,
-      "last_seen": 1780506226.4875982
+      "last_seen": 1780517155.761364
     },
     {
       "text": "user name is Feeling",
@@ -464,9 +464,9 @@
         "learned_hint",
         "sedimemory_recall"
       ],
-      "sightings": 4,
+      "sightings": 11,
       "first_seen": 1780470358.5431213,
-      "last_seen": 1780470771.8774853
+      "last_seen": 1780514785.273593
     },
     {
       "text": "statement understand understand",
@@ -486,9 +486,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 40,
+      "sightings": 44,
       "first_seen": 1780470361.7512817,
-      "last_seen": 1780505936.87126
+      "last_seen": 1780514801.585737
     },
     {
       "text": "factual_general something something",
@@ -532,9 +532,9 @@
         "generative",
         "constraint_fallback"
       ],
-      "sightings": 113,
+      "sightings": 117,
       "first_seen": 1780470388.2815766,
-      "last_seen": 1780509066.741801
+      "last_seen": 1780513180.8167825
     },
     {
       "text": "statement beautiful something beautiful",
@@ -646,9 +646,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 138,
+      "sightings": 141,
       "first_seen": 1780470812.811416,
-      "last_seen": 1780511862.4186344
+      "last_seen": 1780513995.844604
     },
     {
       "text": "statement claims two claims conflict reconcile without pretending Two Reconcile",
@@ -715,9 +715,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 76,
+      "sightings": 79,
       "first_seen": 1780470831.6733227,
-      "last_seen": 1780505880.8462305
+      "last_seen": 1780515699.3338428
     },
     {
       "text": "statement respond respond care enough depth without overstepping Respond",
@@ -805,9 +805,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 70,
+      "sightings": 73,
       "first_seen": 1780471249.5091624,
-      "last_seen": 1780509201.5513258
+      "last_seen": 1780516126.4644938
     },
     {
       "text": "factual_entity said said talk here keep continuity build Earlier",
@@ -868,9 +868,9 @@
         "native_projection",
         "sedimemory_recall"
       ],
-      "sightings": 5,
+      "sightings": 6,
       "first_seen": 1780472833.5553756,
-      "last_seen": 1780512552.7156916
+      "last_seen": 1780512625.6229842
     },
     {
       "text": "experience afterthought afterthought uncertainty don answer",
@@ -887,11 +887,12 @@
       "tags": [
         "semantic_frame",
         "native_projection",
-        "sedimemory_recall"
+        "sedimemory_recall",
+        "learned_hint"
       ],
-      "sightings": 3,
+      "sightings": 8,
       "first_seen": 1780472873.2750916,
-      "last_seen": 1780472891.5747948
+      "last_seen": 1780516242.2467554
     },
     {
       "text": "experience afterthought afterthought meet contradiction tension something else",
@@ -908,11 +909,12 @@
       "tags": [
         "semantic_frame",
         "native_projection",
-        "generative"
+        "generative",
+        "learned_hint"
       ],
-      "sightings": 2,
+      "sightings": 6,
       "first_seen": 1780472914.7230911,
-      "last_seen": 1780472924.4386485
+      "last_seen": 1780514852.0178642
     },
     {
       "text": "said means clarification said said carry here keep continuity build Earlier",
@@ -1044,11 +1046,12 @@
       "tags": [
         "semantic_frame",
         "claim",
-        "generative"
+        "generative",
+        "learned_hint"
       ],
-      "sightings": 6,
+      "sightings": 8,
       "first_seen": 1780474506.5876718,
-      "last_seen": 1780506233.4610713
+      "last_seen": 1780517162.2807355
     },
     {
       "text": "statement said said statement integrate integrate two perspectives Earlier Integrate",
@@ -1177,9 +1180,9 @@
         "native_projection",
         "generative"
       ],
-      "sightings": 4,
+      "sightings": 5,
       "first_seen": 1780480903.7274275,
-      "last_seen": 1780506818.0481625
+      "last_seen": 1780512922.5369704
     },
     {
       "text": "statement said said carry thread next step without Earlier",
@@ -1327,9 +1330,9 @@
         "native_projection",
         "sedimemory_recall"
       ],
-      "sightings": 3,
+      "sightings": 4,
       "first_seen": 1780507777.2882867,
-      "last_seen": 1780510210.0318096
+      "last_seen": 1780512888.484176
     },
     {
       "text": "said means clarification said said good here keep continuity build Earlier",
@@ -1485,6 +1488,69 @@
       "sightings": 1,
       "first_seen": 1780511671.9048696,
       "last_seen": 1780511671.9048696
+    },
+    {
+      "text": "experience said said approach thoughtful reflection afterthought meet Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780513671.0467942,
+      "last_seen": 1780513671.0467942
+    },
+    {
+      "text": "experience said said afterthought meet contradiction tension something Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780513706.9798946,
+      "last_seen": 1780513706.9798946
+    },
+    {
+      "text": "experience afterthought afterthought uncertainty don answer include confidence Include",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 3,
+      "first_seen": 1780514811.386414,
+      "last_seen": 1780514827.530095
     }
   ]
 }
