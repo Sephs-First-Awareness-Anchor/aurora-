@@ -1386,6 +1386,30 @@ class EmissionContextBuilder:
             except Exception:
                 pass
 
+        # Blend NoncompField (waveform substrate) axis pressures into the
+        # polarities read from the IVM lattice.  After the pre-comprehension
+        # injection in aurora.py, the field reflects this turn's input pressure.
+        # Blending here surfaces that live field state to the constraint emitter
+        # so resonance scoring uses the actual waveform topology, not just the
+        # slower-moving IVM polarity values.
+        _noncomp = systems.get("identity_field")
+        if _noncomp is not None:
+            try:
+                _fstat = _noncomp.status()
+                _fpressures = _fstat.get("axis_pressures") or {}
+                for _fax, _fpval in _fpressures.items():
+                    _fcan = _AXIS_NAME_TO_CANONICAL.get(_fax, _fax)
+                    if _fcan in axis_polarities:
+                        # 60 % IVM lattice + 40 % waveform field — field shapes
+                        # the emission context without overriding axis structure
+                        axis_polarities[_fcan] = (
+                            axis_polarities[_fcan] * 0.60 + float(_fpval) * 0.40
+                        )
+                    elif _fcan in {"X", "T", "N", "B", "A"}:
+                        axis_polarities[_fcan] = float(_fpval) * 0.40
+            except Exception:
+                pass
+
         i_state_polarities: Dict[str, float] = {}
         if collective is not None:
             try:

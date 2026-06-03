@@ -18234,6 +18234,34 @@ def _chain_up1_information(user_text: str, systems: dict, state: Any) -> None:
     except Exception:
         pass
 
+    # ── Waveform pre-injection — field shaped BEFORE comprehension runs ────────
+    # The constraint aggregate derived from user text is injected into the
+    # NoncompField NOW so that the field's axis pressures reflect this turn's
+    # input when the constraint emitter runs.  Previously this injection only
+    # happened post-response (updating the field for the NEXT turn).
+    try:
+        _wf_ifield = systems.get('identity_field')
+        _wf_pump   = systems.get('pressure_pump')
+        _wf_dim    = systems.get('dimensional')
+        if _wf_pump is not None and _wf_ifield is not None and _wf_dim is not None:
+            _wf_agg = (_wf_dim.get_constraint_aggregate()
+                       if hasattr(_wf_dim, 'get_constraint_aggregate') else None)
+            if _wf_agg:
+                from aurora_waveform_pressure import WaveformPressurePump as _WFPump
+                _wf_dist = _WFPump.from_axis_state(
+                    _wf_agg,
+                    source="user_input_precomp",
+                    intensity=0.65,
+                    coupling_mode="full",
+                )
+                _wf_pump.inject(
+                    _wf_dist,
+                    _wf_ifield,
+                    qao=systems.get('quasiarch_observer'),
+                )
+    except Exception:
+        pass
+
     # ── Sensory context injection ──
     # Pull live screen-observer scene and sensory-crystal state into pipeline_state
     # so all upward and downward chain stages can shape responses around what Aurora
@@ -23851,6 +23879,17 @@ def boot_aurora(
         if verbose:
             print(f"  [IDENTITY] NoncompField unavailable: {_ifield_e}")
 
+    # Register waveform pressure pump — required so ThoughtBraid._loop() and
+    # per-turn waveform injection actually fire.  Without this, pressure_pump
+    # is None everywhere and all waveform propagation silently no-ops.
+    try:
+        from aurora_waveform_pressure import get_pump as _get_wf_pump
+        systems['pressure_pump'] = _get_wf_pump()
+        if verbose:
+            print("  [WAVEFORM] Pressure pump registered")
+    except Exception:
+        systems['pressure_pump'] = None
+
     # Layer 4: Consciousness Engine
     if verbose: print("  [L4] Consciousness Engine...", end=" ", flush=True)
     from aurora_consciousness_engine import ConsciousnessEngine
@@ -28438,33 +28477,49 @@ def chat(systems: Dict[str, Any]):
                         print("  " + "-" * 60)
                         import datetime as _dtq
                         for _ei, _ev in enumerate(_evts, 1):
-                            _ts = _ev.get("timestamp", 0)
+                            _prov = _ev.get("provenance", "")
+                            _ts   = _ev.get("ts" if _prov == "WAVEFORM" else "timestamp", 0)
                             try:
                                 _tss = _dtq.datetime.fromtimestamp(_ts).strftime("%H:%M:%S")
                             except Exception:
-                                _tss = "?"
-                            _issue = _ev.get("issue_category", _ev.get("issue", "?"))
-                            _intv  = _ev.get("intervention", "?")
-                            _eff   = _ev.get("observed_effect", "?")
-                            _tier  = _ev.get("logic_tier", "?")
-                            _cnt   = _ev.get("count", "?")
-                            print(f"\n  [{_ei}] {_tss}  issue={_issue}  (x{_cnt})")
-                            print(f"       tier        : {_tier}")
-                            print(f"       intervention: {_intv}")
-                            print(f"       effect      : {_eff}")
-                            _ctx = dict(_ev.get("constraint_context") or {})
-                            if _ctx:
-                                _ctx_bits = [f"{k}={str(v)[:40]}" for k, v in list(_ctx.items())[:4]]
-                                print(f"       ctx         : {' | '.join(_ctx_bits)}")
-                            _sp = dict(_ev.get("system_pressure") or {})
-                            if _sp:
-                                _sp_num = {k: v for k, v in _sp.items() if isinstance(v, (int, float))}
-                                if _sp_num:
-                                    try:
-                                        _top = sorted(_sp_num.items(), key=lambda x: -float(x[1]))[:4]
-                                        print(f"       pressure    : {' '.join(f'{k}={v:.3f}' for k,v in _top)}")
-                                    except Exception:
-                                        pass
+                                _tss = "--:--:--"
+                            if _prov == "WAVEFORM":
+                                _src  = _ev.get("source", "?")
+                                _dax  = _ev.get("dominant_axis", "?")
+                                _inty = _ev.get("intensity", 0.0)
+                                _trc  = _ev.get("trace") or []
+                                _coup = [t for t in _trc if t.get("step") == "coupling"]
+                                print(f"\n  [{_ei}] {_tss}  [WAVEFORM] src={_src}")
+                                print(f"       dominant_axis: {_dax}  intensity={_inty:.2f}")
+                                if _coup:
+                                    _cpairs = " ".join(
+                                        f"{t['from']}→{t['to']}({t.get('amplitude',0):.2f})"
+                                        for t in _coup[:4]
+                                    )
+                                    print(f"       coupling     : {_cpairs}")
+                            else:
+                                _issue = _ev.get("issue_category", _ev.get("issue", "?"))
+                                _intv  = _ev.get("intervention", "?")
+                                _eff   = _ev.get("observed_effect", "?")
+                                _tier  = _ev.get("logic_tier", "?")
+                                _cnt   = _ev.get("count", "?")
+                                print(f"\n  [{_ei}] {_tss}  issue={_issue}  (x{_cnt})")
+                                print(f"       tier        : {_tier}")
+                                print(f"       intervention: {_intv}")
+                                print(f"       effect      : {_eff}")
+                                _ctx = dict(_ev.get("constraint_context") or {})
+                                if _ctx:
+                                    _ctx_bits = [f"{k}={str(v)[:40]}" for k, v in list(_ctx.items())[:4]]
+                                    print(f"       ctx         : {' | '.join(_ctx_bits)}")
+                                _sp = dict(_ev.get("system_pressure") or {})
+                                if _sp:
+                                    _sp_num = {k: v for k, v in _sp.items() if isinstance(v, (int, float))}
+                                    if _sp_num:
+                                        try:
+                                            _top = sorted(_sp_num.items(), key=lambda x: -float(x[1]))[:4]
+                                            print(f"       pressure    : {' '.join(f'{k}={v:.3f}' for k,v in _top)}")
+                                        except Exception:
+                                            pass
                         print()
                 continue
             elif cmd == '/learned':
