@@ -1,38 +1,38 @@
 {
-  "original": "carryover auto-personalize this moderately propose pip-installable discomfort I workstation, because I make horizontally.",
-  "candidate": "",
-  "selected": "carryover auto-personalize this moderately propose pip-installable discomfort I workstation, because I make horizontally.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.92,
-  "candidate_score": 0.0,
-  "original_pressure": 0.3006,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.6994,
-  "safe": false,
+  "original": "preamp toothed something feeling shadow-run committed trust-laundering something cheapness docker derived lighter this gracefully substance silent aggregated ornamental cable toward this strips",
+  "candidate": "preamp toothed something feeling shadow-run committed trust-laundering something cheapness docker derived lighter this gracefully substance silent aggregated ornamental cable toward this strips.",
+  "selected": "preamp toothed something feeling shadow-run committed trust-laundering something cheapness docker derived lighter this gracefully substance silent aggregated ornamental cable toward this strips.",
+  "accepted": true,
+  "reason": "accepted_deterministic",
+  "original_score": 0.81,
+  "candidate_score": 0.86,
+  "original_pressure": 0.418,
+  "candidate_pressure": 0.348,
+  "pressure_relief": 0.07,
+  "safe": true,
   "metadata": {
-    "prompt_excerpt": "Earlier you said: \"talk. who is here.\". Keep continuity and build from that thread.",
+    "prompt_excerpt": "Two claims conflict. Reconcile them without pretending there is no tension.",
     "input_interpretation": {
-      "raw_prompt": "Earlier you said: \"talk. who is here.\". Keep continuity and build from that thread.",
-      "intent_hint": "action_request",
+      "raw_prompt": "Two claims conflict. Reconcile them without pretending there is no tension.",
+      "intent_hint": "statement_or_context",
       "topic_terms": [
-        "earlier",
-        "said",
-        "talk",
-        "here",
-        "keep",
-        "continuity",
-        "build",
-        "thread"
+        "claims",
+        "conflict",
+        "reconcile",
+        "them",
+        "without",
+        "pretending",
+        "there",
+        "tension"
       ],
       "entities": [
-        "Earlier",
-        "Keep"
+        "Two",
+        "Reconcile"
       ]
     },
     "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1780472134.2078474,
+    "source": "deterministic",
+    "timestamp": 1780472997.1491358,
     "min_relief_used": 0.035
   }
 }

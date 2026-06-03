@@ -436,9 +436,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 13,
+      "sightings": 17,
       "first_seen": 1780470355.2668352,
-      "last_seen": 1780471834.8796885
+      "last_seen": 1780473000.3903513
     },
     {
       "text": "experience afterthought afterthought yourself",
@@ -635,9 +635,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 8,
+      "sightings": 11,
       "first_seen": 1780470812.811416,
-      "last_seen": 1780471183.0472965
+      "last_seen": 1780472985.3220754
     },
     {
       "text": "statement claims two claims conflict reconcile without pretending Two Reconcile",
@@ -654,11 +654,12 @@
       "tags": [
         "semantic_frame",
         "native_projection",
-        "learned_hint"
+        "learned_hint",
+        "generative"
       ],
-      "sightings": 5,
+      "sightings": 6,
       "first_seen": 1780470817.1715522,
-      "last_seen": 1780471144.983014
+      "last_seen": 1780473001.456325
     },
     {
       "text": "statement answer answer explicit uncertainty confidence include confidence Include",
@@ -834,6 +835,69 @@
       "sightings": 1,
       "first_seen": 1780472154.2913687,
       "last_seen": 1780472154.2913687
+    },
+    {
+      "text": "experience afterthought afterthought yourself include confidence level Include",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 3,
+      "first_seen": 1780472833.5553756,
+      "last_seen": 1780472851.5117784
+    },
+    {
+      "text": "experience afterthought afterthought uncertainty don answer",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 3,
+      "first_seen": 1780472873.2750916,
+      "last_seen": 1780472891.5747948
+    },
+    {
+      "text": "experience afterthought afterthought meet contradiction tension something else",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 2,
+      "first_seen": 1780472914.7230911,
+      "last_seen": 1780472924.4386485
     }
   ]
 }

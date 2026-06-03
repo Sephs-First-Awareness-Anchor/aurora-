@@ -1,49 +1,40 @@
 {
   "total": 500,
-  "accepted": 161,
-  "acceptance_rate": 0.322,
-  "avg_pressure_relief": -0.4099,
+  "accepted": 250,
+  "acceptance_rate": 0.5,
+  "avg_pressure_relief": -0.2989,
   "top_reasons": [
     [
-      "no_candidate",
-      314
+      "accepted_deterministic",
+      250
     ],
     [
-      "accepted_deterministic",
-      161
+      "no_candidate",
+      236
     ],
     [
       "candidate_did_not_relieve_pressure",
       14
-    ],
-    [
-      "candidate_failed_preservation",
-      11
     ]
   ],
   "source_summary": {
-    "unavailable": {
-      "count": 146,
+    "no_pattern_matched": {
+      "count": 205,
       "acceptance_rate": 0.0,
-      "avg_pressure_relief": -0.6708
+      "avg_pressure_relief": -0.7182
     },
     "deterministic": {
-      "count": 176,
-      "acceptance_rate": 0.9148,
-      "avg_pressure_relief": 0.0738
+      "count": 264,
+      "acceptance_rate": 0.947,
+      "avg_pressure_relief": 0.0712
     },
-    "no_change": {
-      "count": 10,
+    "unavailable": {
+      "count": 31,
       "acceptance_rate": 0.0,
-      "avg_pressure_relief": 0.0
-    },
-    "no_pattern_matched": {
-      "count": 168,
-      "acceptance_rate": 0.0,
-      "avg_pressure_relief": -0.7145
+      "avg_pressure_relief": -0.6779
     }
   },
   "suggested_min_relief": 0.035,
   "suggested_mode": "normal",
-  "analyzed_at": 1780471128.4515295
+  "analyzed_at": 1780472944.737376
 }
