@@ -2384,7 +2384,8 @@ class SimulationEngine:
 
     def _constraint_axes(self) -> Dict[str, float]:
         session_stats = dict(self.session.get_stats() or {})
-        learner_shards = float(session_stats.get("learner_shards", 0) or 0)
+        learner_shards = float(session_stats.get("understanding_shards",
+                              session_stats.get("learner_shards", 0)) or 0)
         current_epoch = float(getattr(self.session, "current_epoch", 0) or 0)
         divergence = max(0.0, min(1.0, float(getattr(self.session.divergence, "current_divergence", 0.0) or 0.0)))
         return {

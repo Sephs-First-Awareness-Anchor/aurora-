@@ -28641,9 +28641,11 @@ def chat(systems: Dict[str, Any]):
                         systems, epochs=_epochs, verbose=True
                     )
                     if _ir.get('success'):
-                        _ep = _ir.get('epoch_history', [])
-                        _best = max((_e.get('avg_fitness', 0) for _e in _ep), default=0)
-                        print(f"\n  [INTROSPECT] Complete. Best fitness: {_best:.3f}")
+                        _best = _ir.get('best_avg_fitness',
+                                        max((_e.get('avg_fitness', 0)
+                                             for _e in _ir.get('history', [])), default=0))
+                        _shards = (_ir.get('final_stats') or {}).get('session', {}).get('understanding_shards', 0)
+                        print(f"\n  [INTROSPECT] Complete. Best fitness: {_best:.3f}  Shards: {_shards}")
                         print(f"               Dims trained: {', '.join(_ir.get('dims_targeted', []))}")
                     else:
                         print(f"  [INTROSPECT] Failed: {_ir.get('reason', 'unknown')}")
