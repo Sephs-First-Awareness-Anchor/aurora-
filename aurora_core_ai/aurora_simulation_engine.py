@@ -1959,9 +1959,16 @@ class SimulationSession:
             result = self.run_episode(turns_per_episode, personality, mode)
             epoch_results.append(result)
 
-        # Consolidate L5 if available
+        # Consolidate L5 if available.
+        # During speed-run, skip the expensive OETS pass every epoch — do it
+        # every 5 epochs so pressure gradients still propagate but the O(n)
+        # taxonomy scan doesn't dominate wall-clock time.
         if self.perception:
-            self.perception.consolidate(mode)
+            _skip_oets = (
+                self._speed_run_active
+                and self.current_epoch % 5 != 0
+            )
+            self.perception.consolidate(mode, skip_oets=_skip_oets)
 
         avg_fitness = sum(r.avg_fitness for r in epoch_results) / len(epoch_results)
         total_understanding = sum(len(r.understanding_gained) for r in epoch_results)

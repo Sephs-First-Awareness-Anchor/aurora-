@@ -3158,7 +3158,8 @@ class ExpressionPerceptionEngine:
     # CONSOLIDATION & MAINTENANCE
     # ====================================================================
 
-    def consolidate(self, min_mode: ExistenceMode = ExistenceMode.AGENTIC):
+    def consolidate(self, min_mode: ExistenceMode = ExistenceMode.AGENTIC,
+                    skip_oets: bool = False):
         """Run consolidation: generation cycle, seed--relic promotion, template evolution."""
         # Expression generation cycle
         self.ecology.run_generation()
@@ -3175,8 +3176,9 @@ class ExpressionPerceptionEngine:
                     batch = seed_ids[i:i+3]
                     self.cascade.seeds_to_relic(batch, min_mode)
 
-        # OETS: Consolidate ontological web  -- deepen understanding
-        if self.oets:
+        # OETS: Consolidate ontological web -- deepen understanding
+        # skip_oets=True during speed-run to avoid O(n) cost every epoch
+        if self.oets and not skip_oets:
             self.oets.consolidate()
 
     def get_stats(self) -> Dict[str, Any]:
