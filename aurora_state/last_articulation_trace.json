@@ -1,28 +1,26 @@
 {
-  "original": "feeling feeling feeling custom chunking numerically among swimming something discomfort documented elevation compromised something accountable two-bodied",
-  "candidate": "feeling feeling custom chunking numerically among swimming something discomfort documented elevation compromised something accountable two-bodied.",
-  "selected": "feeling feeling custom chunking numerically among swimming something discomfort documented elevation compromised something accountable two-bodied.",
+  "original": "something obedient retraining about the pats something pasting floating mathemat the outlet simulatable build-backend carlissa dangle bing socially",
+  "candidate": "something obedient retraining about the pats something pasting floating mathemat the outlet simulatable build-backend carlissa dangle bing socially.",
+  "selected": "something obedient retraining about the pats something pasting floating mathemat the outlet simulatable build-backend carlissa dangle bing socially.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.53,
-  "candidate_score": 0.58,
-  "original_pressure": 0.6311,
-  "candidate_pressure": 0.5578,
-  "pressure_relief": 0.0733,
+  "original_score": 0.81,
+  "candidate_score": 0.86,
+  "original_pressure": 0.3112,
+  "candidate_pressure": 0.2412,
+  "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "What is consciousness?",
+    "prompt_excerpt": "What can you do?",
     "input_interpretation": {
-      "raw_prompt": "What is consciousness?",
+      "raw_prompt": "What can you do?",
       "intent_hint": "question",
-      "topic_terms": [
-        "consciousness"
-      ],
+      "topic_terms": [],
       "entities": []
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780473356.0806215,
+    "timestamp": 1780478540.6174407,
     "min_relief_used": 0.035
   }
 }
