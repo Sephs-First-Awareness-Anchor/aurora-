@@ -2304,23 +2304,74 @@
         "Lower acceptance threshold for uncertainty_signaling by 0.090"
       ],
       "timestamp": 1780482913.8227022
+    },
+    {
+      "directive_id": "spd_fe3fcb0f0979",
+      "source_episode_ids": [
+        "episode_54272804f949"
+      ],
+      "target_domains": [
+        "consciousness",
+        "simulation"
+      ],
+      "mutation_bias": {
+        "B_exploration": 0.5
+      },
+      "promotion_bias": {
+        "perspective_integration": 1.18
+      },
+      "cost_shaping": {
+        "perspective_integration": 0.8500000000000001
+      },
+      "threshold_shaping": {
+        "perspective_integration": -0.08999999999999998
+      },
+      "tolerance_shaping": {
+        "perspective_integration": 1.2999999999999998
+      },
+      "confidence": 0.6265104089658045,
+      "rationale": [
+        "Bias B-axis mutation exploration by 0.50 (deficit depth: 0.30)",
+        "Ease promotion burden for perspective_integration structures by 1.18x",
+        "Reduce cost for perspective_integration structures to 0.85x",
+        "Lower acceptance threshold for perspective_integration by 0.090"
+      ],
+      "timestamp": 1780486331.5830817
+    },
+    {
+      "directive_id": "spd_477a3ccbfc02",
+      "source_episode_ids": [
+        "episode_54272804f949"
+      ],
+      "target_domains": [
+        "expression"
+      ],
+      "mutation_bias": {
+        "N_exploration": 0.5
+      },
+      "promotion_bias": {
+        "uncertainty_signaling": 1.17
+      },
+      "cost_shaping": {
+        "uncertainty_signaling": 0.8500000000000001
+      },
+      "threshold_shaping": {
+        "uncertainty_signaling": -0.08999999999999998
+      },
+      "tolerance_shaping": {
+        "uncertainty_signaling": 1.2999999999999998
+      },
+      "confidence": 0.6205104089658044,
+      "rationale": [
+        "Bias N-axis mutation exploration by 0.50 (deficit depth: 0.30)",
+        "Ease promotion burden for uncertainty_signaling structures by 1.17x",
+        "Reduce cost for uncertainty_signaling structures to 0.85x",
+        "Lower acceptance threshold for uncertainty_signaling by 0.090"
+      ],
+      "timestamp": 1780486331.583106
     }
   ],
   "history": [
-    {
-      "directive_id": "spd_33b19f878e3a",
-      "leverage_dim": "uncertainty_signaling",
-      "leverage_score": 0.6199999999999999,
-      "confidence": 0.7039639515846744,
-      "timestamp": 1778070293.3761504
-    },
-    {
-      "directive_id": "spd_679d56f09acc",
-      "leverage_dim": "perspective_integration",
-      "leverage_score": 0.35999999999999993,
-      "confidence": 0.6259639515846744,
-      "timestamp": 1778070293.3766258
-    },
     {
       "directive_id": "spd_c9d2ed59d4ad",
       "leverage_dim": "perspective_integration",
@@ -3006,6 +3057,20 @@
       "leverage_score": 0.33999999999999997,
       "confidence": 0.6205104089658044,
       "timestamp": 1780482913.8227022
+    },
+    {
+      "directive_id": "spd_fe3fcb0f0979",
+      "leverage_dim": "perspective_integration",
+      "leverage_score": 0.35999999999999993,
+      "confidence": 0.6265104089658045,
+      "timestamp": 1780486331.5830817
+    },
+    {
+      "directive_id": "spd_477a3ccbfc02",
+      "leverage_dim": "uncertainty_signaling",
+      "leverage_score": 0.33999999999999997,
+      "confidence": 0.6205104089658044,
+      "timestamp": 1780486331.583106
     }
   ]
 }

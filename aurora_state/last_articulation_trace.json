@@ -1,31 +1,38 @@
 {
-  "original": "I exist in this moment. fear relaxed something bootable warns paradoxes forwards level textlawset meijer recursively",
-  "candidate": "I exist in this moment. fear relaxed something bootable warns paradoxes forwards level textlawset meijer recursively.",
-  "selected": "I exist in this moment. fear relaxed something bootable warns paradoxes forwards level textlawset meijer recursively.",
-  "accepted": true,
-  "reason": "accepted_deterministic",
+  "original": "permissiveness imperative until t-con writing unusually Something quadrant build within the scenarios.",
+  "candidate": "",
+  "selected": "permissiveness imperative until t-con writing unusually Something quadrant build within the scenarios.",
+  "accepted": false,
+  "reason": "no_candidate",
   "original_score": 0.86,
-  "candidate_score": 0.86,
-  "original_pressure": 0.373,
-  "candidate_pressure": 0.313,
-  "pressure_relief": 0.06,
-  "safe": true,
+  "candidate_score": 0.0,
+  "original_pressure": 0.3297,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.6703,
+  "safe": false,
   "metadata": {
-    "prompt_excerpt": "Help me understand this.",
+    "prompt_excerpt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
     "input_interpretation": {
-      "raw_prompt": "Help me understand this.",
+      "raw_prompt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "help",
-        "understand"
+        "answer",
+        "while",
+        "being",
+        "explicit",
+        "uncertainty",
+        "confidence",
+        "include",
+        "confidence"
       ],
       "entities": [
-        "Help"
+        "Answer",
+        "Include"
       ]
     },
     "tone": "gentle",
-    "source": "deterministic",
-    "timestamp": 1780483182.3242974,
+    "source": "no_pattern_matched",
+    "timestamp": 1780486342.3308394,
     "min_relief_used": 0.035
   }
 }
