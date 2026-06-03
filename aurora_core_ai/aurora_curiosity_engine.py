@@ -511,23 +511,51 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── Waveform manifold pressure self-selection ─────────────────────────
+        # Read the constraint manifold's live pressure state. High-pressure axes
+        # in the NoncompField signal regions where constraint physics are active —
+        # curiosity is drawn to these by resonance, not explicit routing.
+        # This is the pull/resonance side of curiosity emergence.
+        _manifold_axis = None
+        _manifold_urgency_boost = 0.0
+        try:
+            ifield = self.systems.get("identity_field")
+            if ifield is not None and hasattr(ifield, "axis_pressure"):
+                _AXIS_INT = {0: "X", 1: "T", 2: "N", 3: "B", 4: "A"}
+                _mp = {_AXIS_INT[i]: ifield.axis_pressure(i) for i in range(5)}
+                _high_ax = max(_mp, key=_mp.get)
+                _high_p  = _mp[_high_ax]
+                # Only self-select if meaningfully above resting pressure (0.10)
+                if _high_p > 0.25:
+                    _manifold_axis = _high_ax
+                    _manifold_urgency_boost = min(0.30, (_high_p - 0.10) * 1.20)
+                    # Override origin_axis toward what the manifold is expressing
+                    origin_axis = _manifold_axis
+        except Exception:
+            pass
+
         # Form new CuriosityObject from current state
         if unresolved_tensions:
             subject = unresolved_tensions[0]
             curiosity_type = "self"
-            urgency = 0.65
+            urgency = min(1.0, 0.65 + _manifold_urgency_boost)
         elif promoted:
             subject = str(promoted[0])
             curiosity_type = "conceptual"
-            urgency = 0.5
+            urgency = min(1.0, 0.50 + _manifold_urgency_boost)
         elif thought and thought.unified_interpretation:
             subject = thought.unified_interpretation[:80]
             curiosity_type = _map_axis_to_curiosity_type(origin_axis)
-            urgency = float(thought.confidence) * 0.6
+            urgency = min(1.0, float(thought.confidence) * 0.6 + _manifold_urgency_boost)
+        elif _manifold_axis is not None and _manifold_urgency_boost > 0.10:
+            # Manifold pressure alone is enough to generate curiosity — the waveform
+            # substrate is under active constraint physics without a surface event.
+            subject = f"{_manifold_axis}-axis constraint activity"
+            curiosity_type = _map_axis_to_curiosity_type(_manifold_axis)
+            urgency = min(1.0, 0.40 + _manifold_urgency_boost)
         else:
             return None  # Nothing to be curious about right now
 
-        # Aurora's hypothesis — best guess before investigation
         hypothesis = f"I suspect this relates to my {origin_axis}-axis pressure state."
 
         return CuriosityObject(

@@ -1579,6 +1579,35 @@ class StreamingThoughtThread:
                         _cpm.advance()
                 except Exception:
                     pass
+                # Waveform pressure from braid state — thought activity
+                # propagates through the manifold so curiosity, reasoning,
+                # and prediction can self-select response to the braid's
+                # current dominant axis without being explicitly notified.
+                try:
+                    _pump = self.systems.get('pressure_pump')
+                    _ifield = self.systems.get('identity_field')
+                    if _pump is not None and _ifield is not None:
+                        from aurora_core_ai.aurora_waveform_pressure import (  # type: ignore
+                            WaveformPressurePump,
+                        )
+                        _slice = self.braid.tap()
+                        _braid_axes = getattr(_slice, 'axis_state', None) or {}
+                        if not _braid_axes:
+                            _braid_axes = {
+                                s.stream_type: s.weight
+                                for s in (getattr(_slice, 'streams', None) or [])
+                                if hasattr(s, 'stream_type') and hasattr(s, 'weight')
+                            }
+                        if _braid_axes:
+                            _bdist = WaveformPressurePump.from_axis_state(
+                                _braid_axes,
+                                source="thought_braid",
+                                intensity=0.35,
+                                coupling_mode="full",
+                            )
+                            _pump.inject(_bdist, _ifield)
+                except Exception:
+                    pass
                 self._stop_event.wait(timeout=self.tick_interval_s)
 
         self._thread = threading.Thread(
