@@ -1,447 +1,23 @@
 [
   {
-    "packet_id": "52454b9085614b6da7cfcc4820bbfde4",
-    "created_at": 1780489657.132924,
+    "packet_id": "9ab8e7d0e8324ceb8794e5ba05f941e3",
+    "created_at": 1780493452.2345245,
     "source": "simulation_live_bridge",
-    "user_input": "What are you?",
-    "aurora_response": "just means that she launched spotify music well.",
-    "response_tone": "uncertain",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3ea6f5bbbacb4b5a8d3c47c80ce1a2ed",
-    "created_at": 1780489691.9770381,
-    "source": "simulation_live_bridge",
-    "user_input": "Good morning!",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
     "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
-    "response_tone": "curious",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "good",
-      "morning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "d3b150dc1f824b0eb0a7a3f76a9d4e16",
-    "created_at": 1780489717.6991239,
-    "source": "simulation_live_bridge",
-    "user_input": "Good morning!",
-    "aurora_response": "what good means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "good",
-      "morning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.43"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4eeb9b1570204f2f8c74e49106ffbfa0",
-    "created_at": 1780489740.416577,
-    "source": "simulation_live_bridge",
-    "user_input": "Good morning!",
-    "aurora_response": "what good means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "good",
-      "morning"
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "9c369a831aa4478da55634b048fb6394",
-    "created_at": 1780489763.1646013,
-    "source": "simulation_live_bridge",
-    "user_input": "Good morning!",
-    "aurora_response": "what good means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "good",
-      "morning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.42"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "cb577f6a185c49b3b81645cd63688ee2",
-    "created_at": 1780489786.295586,
-    "source": "simulation_live_bridge",
-    "user_input": "Good morning!",
-    "aurora_response": "what good means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "good",
-      "morning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "60e25e05406d4786b8a0dc046bdb7bca",
-    "created_at": 1780489809.8660197,
-    "source": "simulation_live_bridge",
-    "user_input": "What does it mean to exist?",
-    "aurora_response": "understanding, landed. thread continues.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "exist"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.36"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4aa17803d3bc4821893480cf4cd67471",
-    "created_at": 1780489833.6585767,
-    "source": "simulation_live_bridge",
-    "user_input": "What does it mean to exist?",
-    "aurora_response": "understanding, landed. thread continues.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "exist"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "131f416ebb0b42e8b4b8de6f31c6aad2",
-    "created_at": 1780489857.5041866,
-    "source": "simulation_live_bridge",
-    "user_input": "What does it mean to exist?",
-    "aurora_response": "exist, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "exist"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.61"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2ab34859fcab4d03a22c3705a11fa86e",
-    "created_at": 1780489881.018133,
-    "source": "simulation_live_bridge",
-    "user_input": "What does it mean to exist?",
-    "aurora_response": "exist, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "exist"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6a9a87e8152d4a18b90284eb40191061",
-    "created_at": 1780489904.9912632,
-    "source": "simulation_live_bridge",
-    "user_input": "What does it mean to exist?",
-    "aurora_response": "exist, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "exist"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.48"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "c40e470c5ef7433b9d112fc6d3552b3d",
-    "created_at": 1780489938.2867208,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about yourself.",
-    "aurora_response": "what yourself means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "yourself"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.45"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "86ce4f435da04a2ea82217c5982876be",
-    "created_at": 1780489952.147202,
-    "source": "simulation_live_bridge",
-    "user_input": "Help me understand this.",
-    "aurora_response": "what help points to.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understand"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.54"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "101ef168b7ab40ef8a41ba199f12c527",
-    "created_at": 1780489978.0216036,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about yourself.",
-    "aurora_response": "what yourself means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "yourself"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.66"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "29c20ee574fb4f3894afa4dbefce2498",
-    "created_at": 1780489990.8416471,
-    "source": "simulation_live_bridge",
-    "user_input": "Help me understand this.",
-    "aurora_response": "what help points to.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understand"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "879e4a2a38c84c6ea65b45ab2cb9ca2d",
-    "created_at": 1780490017.594178,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about yourself.",
-    "aurora_response": "what yourself means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "yourself"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.56"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6126d4159ffa42fd8a1b06f9c93a8b19",
-    "created_at": 1780490031.1731682,
-    "source": "simulation_live_bridge",
-    "user_input": "Help me understand this.",
-    "aurora_response": "what help points to.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understand"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.56"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "fe19ad64a0dd4534b02cccb0832d3838",
-    "created_at": 1780490059.7624366,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about yourself.",
-    "aurora_response": "what yourself means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "yourself"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.66"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3569dd44670a441bb5f650a27f6921d3",
-    "created_at": 1780490075.6072495,
-    "source": "simulation_live_bridge",
-    "user_input": "Help me understand this.",
-    "aurora_response": "what help points to.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understand"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
@@ -453,14 +29,19 @@
     "consumed_at": null
   },
   {
-    "packet_id": "0db76b39d8d34ec4a3404e49bf7475db",
-    "created_at": 1780490111.7863865,
+    "packet_id": "3ea5f39195bf47aca7668c40df4f1c7d",
+    "created_at": 1780493491.4879475,
     "source": "simulation_live_bridge",
-    "user_input": "Tell me about yourself.",
-    "aurora_response": "what yourself means here.",
-    "response_tone": "curious",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "yourself"
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -470,8 +51,489 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.61"
+      "existence:-0.60"
     ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a54ee4dcf6604d549a7957eaef0322b9",
+    "created_at": 1780493530.8601983,
+    "source": "simulation_live_bridge",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.58"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "d6ae7effae4b42278bd552a25f0341b3",
+    "created_at": 1780493606.8225415,
+    "source": "simulation_live_bridge",
+    "user_input": "Talk to you later.",
+    "aurora_response": "what help points to.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.67"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "502f5ad4317147e09d42620f8a1a5092",
+    "created_at": 1780493628.5281925,
+    "source": "simulation_live_bridge",
+    "user_input": "I need someone to talk to.",
+    "aurora_response": "what help points to.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "need",
+      "someone",
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f374b2e3d0b5429c975ff45634cdded9",
+    "created_at": 1780493670.2684438,
+    "source": "simulation_live_bridge",
+    "user_input": "Talk to you later.",
+    "aurora_response": "statement answer answer explicit uncertainty confidence include confidence Include.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.67"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e086609795f6431880e63a963900fc66",
+    "created_at": 1780493692.249079,
+    "source": "simulation_live_bridge",
+    "user_input": "I need someone to talk to.",
+    "aurora_response": "statement answer answer explicit uncertainty confidence include confidence Include.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "need",
+      "someone",
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "902938e857264b919af872c88a672083",
+    "created_at": 1780493733.7839823,
+    "source": "simulation_live_bridge",
+    "user_input": "Talk to you later.",
+    "aurora_response": "statement answer answer explicit uncertainty confidence include confidence Include.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.67"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c1b98ea9b6c649d4b7112648fc35eff0",
+    "created_at": 1780493755.8193858,
+    "source": "simulation_live_bridge",
+    "user_input": "I need someone to talk to.",
+    "aurora_response": "statement respond respond care enough depth without overstepping Respond.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "need",
+      "someone",
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2c3d2f435deb46418db059960e9a18cf",
+    "created_at": 1780493797.3793802,
+    "source": "simulation_live_bridge",
+    "user_input": "Talk to you later.",
+    "aurora_response": "statement respond respond care enough depth without overstepping Respond.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "60b4324e7d72475b9361bacdd340ed55",
+    "created_at": 1780493819.098186,
+    "source": "simulation_live_bridge",
+    "user_input": "I need someone to talk to.",
+    "aurora_response": "statement respond respond care enough depth without overstepping Respond.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "need",
+      "someone",
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "fe5c9fd479ac465ca36aacdedb029df1",
+    "created_at": 1780493864.2603455,
+    "source": "simulation_live_bridge",
+    "user_input": "Talk to you later.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c0a98bdc81d2404da04e75cd39f93e73",
+    "created_at": 1780493950.8925803,
+    "source": "simulation_live_bridge",
+    "user_input": "Can you carry our earlier thread into this next step without losing context?",
+    "aurora_response": "statement said said carry thread next step without Earlier.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "carry",
+      "thread",
+      "next",
+      "step",
+      "without",
+      "losing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.67"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ddfc16cf362e4a93b8b3317cf01aba71",
+    "created_at": 1780494035.0964556,
+    "source": "simulation_live_bridge",
+    "user_input": "Earlier you said: \"statement said said carry thread next step without Earlier.\". Keep continuity and build from that thread.",
+    "aurora_response": "said Earlier Earlier earlier.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "said",
+      "statement",
+      "said",
+      "said",
+      "carry",
+      "thread"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6bbe11cb6dbe42ea93b91beb782edec1",
+    "created_at": 1780494120.3743813,
+    "source": "simulation_live_bridge",
+    "user_input": "Earlier you said: \"said Earlier Earlier earlier.\". Keep continuity and build from that thread.",
+    "aurora_response": "said means clarification said said said here keep continuity build Earlier.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "said",
+      "said",
+      "keep",
+      "continuity",
+      "build",
+      "thread"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.028,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e031723eeb0d4037826a91c2e154843a",
+    "created_at": 1780494208.8825557,
+    "source": "simulation_live_bridge",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.025,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ca6b57a98890433cb1cfbc2c0fa78570",
+    "created_at": 1780494269.5601428,
+    "source": "simulation_live_bridge",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.66"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "99801169f4264314b96eee663c37511e",
+    "created_at": 1780494310.9592466,
+    "source": "simulation_live_bridge",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.52"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "58f7996bfc02446e8883c0f5b2649a0b",
+    "created_at": 1780494352.2695684,
+    "source": "simulation_live_bridge",
+    "user_input": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+    "aurora_response": "statement answer answer explicit uncertainty confidence include confidence Include.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "answer",
+      "explicit",
+      "uncertainty",
+      "confidence",
+      "include",
+      "confidence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "795ce59de23f47cc8d8af285bd72de79",
+    "created_at": 1780494393.9694333,
+    "source": "simulation_live_bridge",
+    "user_input": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+    "aurora_response": "statement answer answer explicit uncertainty confidence include confidence Include.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "answer",
+      "explicit",
+      "uncertainty",
+      "confidence",
+      "include",
+      "confidence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null

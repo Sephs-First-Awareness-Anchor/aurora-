@@ -418,9 +418,9 @@
         "speaker_identity",
         "generative"
       ],
-      "sightings": 22,
+      "sightings": 26,
       "first_seen": 1780470097.1048253,
-      "last_seen": 1780483479.5297215
+      "last_seen": 1780490970.7405007
     },
     {
       "text": "statement goodbye goodbye Goodbye",
@@ -531,9 +531,9 @@
         "generative",
         "constraint_fallback"
       ],
-      "sightings": 68,
+      "sightings": 83,
       "first_seen": 1780470388.2815766,
-      "last_seen": 1780489082.9972126
+      "last_seen": 1780493864.353495
     },
     {
       "text": "statement beautiful something beautiful",
@@ -598,9 +598,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 61,
+      "sightings": 66,
       "first_seen": 1780470456.5158467,
-      "last_seen": 1780488228.3295794
+      "last_seen": 1780492786.8223047
     },
     {
       "text": "statement need need someone talk",
@@ -621,9 +621,9 @@
         "sedimemory_recall",
         "learned_hint"
       ],
-      "sightings": 28,
+      "sightings": 32,
       "first_seen": 1780470762.5956523,
-      "last_seen": 1780483507.457061
+      "last_seen": 1780493819.2058039
     },
     {
       "text": "statement integrate integrate two perspectives disagree without collapsing Integrate",
@@ -644,9 +644,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 65,
+      "sightings": 83,
       "first_seen": 1780470812.811416,
-      "last_seen": 1780489477.3585472
+      "last_seen": 1780494310.9949374
     },
     {
       "text": "statement claims two claims conflict reconcile without pretending Two Reconcile",
@@ -690,9 +690,9 @@
         "constraint_fallback",
         "generative"
       ],
-      "sightings": 83,
+      "sightings": 100,
       "first_seen": 1780470824.2359493,
-      "last_seen": 1780489415.0267217
+      "last_seen": 1780494394.0018673
     },
     {
       "text": "statement reframe reframe idea beginner expert Reframe",
@@ -713,9 +713,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 41,
+      "sightings": 50,
       "first_seen": 1780470831.6733227,
-      "last_seen": 1780489542.9758575
+      "last_seen": 1780492364.8521316
     },
     {
       "text": "statement respond respond care enough depth without overstepping Respond",
@@ -736,9 +736,9 @@
         "constraint_fallback",
         "generative"
       ],
-      "sightings": 20,
+      "sightings": 23,
       "first_seen": 1780470838.4949453,
-      "last_seen": 1780486373.3182886
+      "last_seen": 1780493413.2097836
     },
     {
       "text": "factual_general story story",
@@ -995,11 +995,13 @@
       "tags": [
         "concept",
         "generative",
-        "semantic_frame"
+        "semantic_frame",
+        "claim",
+        "learned_hint"
       ],
-      "sightings": 6,
+      "sightings": 8,
       "first_seen": 1780473270.210619,
-      "last_seen": 1780477074.6048439
+      "last_seen": 1780494120.4948466
     },
     {
       "text": "clarification said said said here keep continuity build Earlier",
@@ -1216,6 +1218,70 @@
       "sightings": 1,
       "first_seen": 1780482848.1277015,
       "last_seen": 1780482848.1277015
+    },
+    {
+      "text": "said carries thread next step without earlier",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "carry",
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "learned_hint"
+      ],
+      "sightings": 2,
+      "first_seen": 1780490623.8745005,
+      "last_seen": 1780493950.9625583
+    },
+    {
+      "text": "statement said said statement said said carry thread Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint"
+      ],
+      "sightings": 2,
+      "first_seen": 1780490649.8760126,
+      "last_seen": 1780494035.2377512
+    },
+    {
+      "text": "statement said said said keep continuity build thread Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "learned_hint"
+      ],
+      "sightings": 2,
+      "first_seen": 1780490676.0327551,
+      "last_seen": 1780494120.5127394
     }
   ]
 }

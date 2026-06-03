@@ -1,28 +1,38 @@
 {
-  "original": "dangerously rushing you fees gracefully trend-proof thermal copycat bike-related something obedient supervises trust-laundering trust-laundering fear-driven velocity rooting entirely mid-refactor trust from this feeling",
-  "candidate": "dangerously rushing you fees gracefully trend-proof thermal copycat bike-related something obedient supervises trust-laundering trust-laundering fear-driven velocity rooting entirely mid-refactor trust from this feeling.",
-  "selected": "dangerously rushing you fees gracefully trend-proof thermal copycat bike-related something obedient supervises trust-laundering trust-laundering fear-driven velocity rooting entirely mid-refactor trust from this feeling.",
+  "original": "comfort comfortable cross-trust carving finalize something vertical containerized with the edits",
+  "candidate": "comfort comfortable cross-trust carving finalize something vertical containerized with the edits.",
+  "selected": "comfort comfortable cross-trust carving finalize something vertical containerized with the edits.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.63,
-  "candidate_score": 0.68,
-  "original_pressure": 0.4311,
-  "candidate_pressure": 0.3611,
+  "original_score": 0.81,
+  "candidate_score": 0.86,
+  "original_pressure": 0.3997,
+  "candidate_pressure": 0.3297,
   "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "Tell me about yourself.",
+    "prompt_excerpt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
     "input_interpretation": {
-      "raw_prompt": "Tell me about yourself.",
-      "intent_hint": "self_description_request",
+      "raw_prompt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+      "intent_hint": "statement_or_context",
       "topic_terms": [
-        "yourself"
+        "answer",
+        "while",
+        "being",
+        "explicit",
+        "uncertainty",
+        "confidence",
+        "include",
+        "confidence"
       ],
-      "entities": []
+      "entities": [
+        "Answer",
+        "Include"
+      ]
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780490100.1117291,
+    "timestamp": 1780494385.5774858,
     "min_relief_used": 0.035
   }
 }
