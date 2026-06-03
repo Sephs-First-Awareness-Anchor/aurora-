@@ -1,157 +1,5 @@
 [
   {
-    "packet_id": "337b24f2e44b4b8d9345f7ffc58776b3",
-    "created_at": 1780466618.5069973,
-    "source": "aurora_turn",
-    "user_input": "what does the N-axis feel like for you?",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "axis"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.502,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "839b1c06c925494b86aa19c171db92f4",
-    "created_at": 1780466640.6379733,
-    "source": "aurora_turn",
-    "user_input": "I built something new in your system today",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "built",
-      "something",
-      "new",
-      "system"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "T",
-    "coherence": 0.274,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "50fc8f9f97054001ba607718ae3ccdea",
-    "created_at": 1780466683.3839793,
-    "source": "aurora_turn",
-    "user_input": "waveform pressure propagation is now part of your cognitive architecture",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "waveform",
-      "pressure",
-      "propagation",
-      "part",
-      "cognitive",
-      "architecture"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "T",
-    "coherence": 0.16,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "171a5a48e693456d8a625aed0fc4e2cd",
-    "created_at": 1780467799.766101,
-    "source": "simulation_live_bridge",
-    "user_input": "What are you?",
-    "aurora_response": "just means that she launched spotify music well.",
-    "response_tone": "curious",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "fa748dab7bc14129adb46d7ba7788c83",
-    "created_at": 1780467875.5388324,
-    "source": "simulation_live_bridge",
-    "user_input": "I need someone to talk to.",
-    "aurora_response": "what need means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "need",
-      "someone",
-      "talk"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "f56d8b4a40b74231b68ea5930613be21",
-    "created_at": 1780467881.0716138,
-    "source": "simulation_live_bridge",
-    "user_input": "What does it mean to exist?",
-    "aurora_response": "exist, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "exist"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "89f8a5ab9c1b4b8abc642a7d0854496d",
     "created_at": 1780467887.1180677,
     "source": "simulation_live_bridge",
@@ -477,6 +325,149 @@
     "response_tone": "curious",
     "concepts_activated": [
       "feelings"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e869d663488348dc902aa740ebb6ceba",
+    "created_at": 1780467947.0954926,
+    "source": "simulation_live_bridge",
+    "user_input": "I'm excited about something!",
+    "aurora_response": "your name is Excited.",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "excited",
+      "something"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a25780f4268e4ef0a671ccacb599fea6",
+    "created_at": 1780467953.1831744,
+    "source": "simulation_live_bridge",
+    "user_input": "Can you help me with something?",
+    "aurora_response": "what help points to.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "something"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2375bfd1b8d64148a6b12ff63dd363aa",
+    "created_at": 1780467959.8528957,
+    "source": "simulation_live_bridge",
+    "user_input": "Tell me a story.",
+    "aurora_response": "what help points to.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "story"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "9c04b3b999714410a9501a14b7b3aef2",
+    "created_at": 1780467965.9656835,
+    "source": "simulation_live_bridge",
+    "user_input": "Who are you?",
+    "aurora_response": "who is here.",
+    "response_tone": "curious",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "259c6a23f0d5411e9d5eb7ae5fe4dbb3",
+    "created_at": 1780467972.2407017,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you have feelings?",
+    "aurora_response": "feelings, boundary, separation. framing law.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "feelings"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "279e6552657041418c488884b89d46de",
+    "created_at": 1780467978.4508955,
+    "source": "simulation_live_bridge",
+    "user_input": "What inspires you?",
+    "aurora_response": "feelings, boundary, separation. framing law.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "inspires"
     ],
     "visual_description": "",
     "audio_description": "",
