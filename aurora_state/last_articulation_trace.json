@@ -1,35 +1,30 @@
 {
-  "original": "I am here. I run this reply, like salvageable rollback.",
-  "candidate": "",
-  "selected": "I am here. I run this reply, like salvageable rollback.",
-  "accepted": false,
-  "reason": "no_candidate",
+  "original": "I am here. enact marked this visually dedup exponential fear-driven",
+  "candidate": "I am here. enact marked this visually dedup exponential fear-driven.",
+  "selected": "I am here. enact marked this visually dedup exponential fear-driven.",
+  "accepted": true,
+  "reason": "accepted_deterministic",
   "original_score": 0.92,
-  "candidate_score": 0.0,
-  "original_pressure": 0.2589,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.7411,
-  "safe": false,
+  "candidate_score": 0.92,
+  "original_pressure": 0.316,
+  "candidate_pressure": 0.256,
+  "pressure_relief": 0.06,
+  "safe": true,
   "metadata": {
-    "prompt_excerpt": "Integrate two perspectives that disagree without collapsing either one.",
+    "prompt_excerpt": "Hello!",
     "input_interpretation": {
-      "raw_prompt": "Integrate two perspectives that disagree without collapsing either one.",
+      "raw_prompt": "Hello!",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "integrate",
-        "perspectives",
-        "disagree",
-        "without",
-        "collapsing",
-        "either"
+        "hello"
       ],
       "entities": [
-        "Integrate"
+        "Hello"
       ]
     },
     "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1780505723.642419,
+    "source": "deterministic",
+    "timestamp": 1780509523.594669,
     "min_relief_used": 0.035
   }
 }
