@@ -2021,1196 +2021,6 @@
       {
         "adopted": false,
         "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.974716,
-        "improvement": -0.009375,
-        "shape": "B7+X7+T6",
-        "tick": 7283,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.965341,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.974716,
-        "improvement": 0.010035,
-        "shape": "B7+X7+T6",
-        "tick": 7283,
-        "trial_params": {
-          "dup_redist": 0.5800000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.984751,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.974716,
-        "improvement": -0.01566,
-        "shape": "B7+X7+T6",
-        "tick": 7283,
-        "trial_params": {
-          "dup_redist": 0.52,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.959056,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.921241,
-        "improvement": 0.002,
-        "shape": "T5+B1+N1+X1",
-        "tick": 7328,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.923241,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.921241,
-        "improvement": -0.0165,
-        "shape": "T5+B1+N1+X1",
-        "tick": 7328,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.904741,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.921241,
-        "improvement": 0.0,
-        "shape": "T5+B1+N1+X1",
-        "tick": 7328,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.921241,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.921241,
-        "improvement": -0.009375,
-        "shape": "T5+B1+N1+X1",
-        "tick": 7328,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.911866,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.921241,
-        "improvement": 0.002,
-        "shape": "T5+B1+N1+X1",
-        "tick": 7328,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.923241,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.921241,
-        "improvement": -0.015525,
-        "shape": "T5+B1+N1+X1",
-        "tick": 7328,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.905716,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.998241,
-        "improvement": 0.0,
-        "shape": "A1+B1+X1",
-        "tick": 7368,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.998241,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.998241,
-        "improvement": -0.016667,
-        "shape": "A1+B1+X1",
-        "tick": 7368,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.981575,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.998241,
-        "improvement": 0.0,
-        "shape": "A1+B1+X1",
-        "tick": 7368,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.998241,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.998241,
-        "improvement": -0.009375,
-        "shape": "A1+B1+X1",
-        "tick": 7368,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.988866,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.998241,
-        "improvement": 0.0,
-        "shape": "A1+B1+X1",
-        "tick": 7368,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.998241,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.998241,
-        "improvement": -0.015625,
-        "shape": "A1+B1+X1",
-        "tick": 7368,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.982616,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7408,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.0165,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7408,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.9065,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.0,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7408,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.923,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.009375,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7408,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.913625,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7408,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.015525,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7408,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.907475,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7485,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.0165,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7485,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.9065,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.0,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7485,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.923,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.009375,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7485,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.913625,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7485,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.015525,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7485,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.907475,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7525,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.0165,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7525,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.9065,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.0,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7525,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.923,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.009375,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7525,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.913625,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7525,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.015525,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7525,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.907475,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7569,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.0165,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7569,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.9065,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.0,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7569,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.923,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.009375,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7569,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.913625,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7569,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.015525,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7569,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.907475,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.575,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 7689,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.575,
-        "improvement": -0.009333,
-        "shape": "A4+T1+X1",
-        "tick": 7689,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.565667,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.575,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 7689,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.575,
-        "improvement": -0.009375,
-        "shape": "A4+T1+X1",
-        "tick": 7689,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.565625,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.575,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 7689,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.575,
-        "improvement": -0.008025,
-        "shape": "A4+T1+X1",
-        "tick": 7689,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.566975,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.991117,
-        "improvement": 0.0,
-        "shape": "B7+T7+X7",
-        "tick": 7739,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.991117,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.991117,
-        "improvement": -0.016667,
-        "shape": "B7+T7+X7",
-        "tick": 7739,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.974451,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.991117,
-        "improvement": 0.0,
-        "shape": "B7+T7+X7",
-        "tick": 7739,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.991117,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.991117,
-        "improvement": -0.009375,
-        "shape": "B7+T7+X7",
-        "tick": 7739,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.981742,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.991117,
-        "improvement": 0.0,
-        "shape": "B7+T7+X7",
-        "tick": 7739,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.991117,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.991117,
-        "improvement": -0.015625,
-        "shape": "B7+T7+X7",
-        "tick": 7739,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.975492,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+T1+X1",
-        "tick": 7779,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.0165,
-        "shape": "A5+B1+T1+X1",
-        "tick": 7779,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.9065,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.0,
-        "shape": "A5+B1+T1+X1",
-        "tick": 7779,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.923,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.009375,
-        "shape": "A5+B1+T1+X1",
-        "tick": 7779,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.913625,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+T1+X1",
-        "tick": 7779,
-        "trial_params": {
-          "dup_redist": 0.6300000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": -0.015525,
-        "shape": "A5+B1+T1+X1",
-        "tick": 7779,
-        "trial_params": {
-          "dup_redist": 0.5700000000000001,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.907475,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": true,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.016667,
-        "shape": "A4+T1+X1",
-        "tick": 7520,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.018333,
-        "shape": "A4+T1+X1",
-        "tick": 7520,
-        "trial_params": {
-          "dup_redist": 0.45,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.54,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 7520,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.558333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.009375,
-        "shape": "A4+T1+X1",
-        "tick": 7520,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.548958,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.011,
-        "shape": "A4+T1+X1",
-        "tick": 7520,
-        "trial_params": {
-          "dup_redist": 0.53,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.569333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.016625,
-        "shape": "A4+T1+X1",
-        "tick": 7520,
-        "trial_params": {
-          "dup_redist": 0.47,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.541708,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": true,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.961474,
-        "improvement": 0.015,
-        "shape": "A1+N1+T1+X1",
-        "tick": 7560,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.976474,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.961474,
-        "improvement": -0.015,
-        "shape": "A1+N1+T1+X1",
-        "tick": 7560,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.946474,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.961474,
-        "improvement": 0.0,
-        "shape": "A1+N1+T1+X1",
-        "tick": 7560,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.961474,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.961474,
-        "improvement": -0.009375,
-        "shape": "A1+N1+T1+X1",
-        "tick": 7560,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.952099,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.961474,
-        "improvement": 0.009,
-        "shape": "A1+N1+T1+X1",
-        "tick": 7560,
-        "trial_params": {
-          "dup_redist": 0.5800000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.970474,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.961474,
-        "improvement": -0.014625,
-        "shape": "A1+N1+T1+X1",
-        "tick": 7560,
-        "trial_params": {
-          "dup_redist": 0.52,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.946849,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.923,
-        "improvement": 0.002,
-        "shape": "A5+B1+N1+T1",
-        "tick": 7600,
-        "trial_params": {
-          "dup_redist": 0.6500000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.925,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
           "dup_redist": 0.6000000000000001,
           "scope_alpha": 0.8
         },
@@ -6493,6 +5303,1476 @@
         "temporal_overhead_penalty": 0.0,
         "tick": 72,
         "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_514e9adbe9",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:d996d34d2fc76e",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 0,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_53e7d3a48b",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:6cd9f1480ee9e3",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 1,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_53759692e7",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:9fa8adc79cf5ce",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 0,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_4a8f1e561a",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:e2cc4727cb90c0",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 1,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_69cca5f7c0",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a6ff734522c230",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 2,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_08aa33d3f6",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:39c3b3b94a7926",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 3,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_b5873bb0df",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2539764a9765e3",
+        "operator_key": "dream_surface_dispatch_ciousnessengine_tick",
+        "score": 0.961366,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 6,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_ea193405dc",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:1a881302b32721",
+        "operator_key": "dream_surface_dispatch_d_constraintpressure",
+        "score": 0.87434,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 9,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_3c70d66006",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:3958e625f08c21",
+        "operator_key": "dream_surface_dispatch_ntime_chainsimbridge",
+        "score": 0.860228,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 12,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_fa0adb8505",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:c70c37659f421d",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 13,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_36249c8ecd",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:1e337b6758d727",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 14,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_76829b1194",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2702f97d0e8196",
+        "operator_key": "dream_surface_dispatch_rocessingsystem_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 17,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_df60182efc",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:64ed0db907cef4",
+        "operator_key": "dream_surface_dispatch_d_energydistribution",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 20,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_20befe1508",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a4e439893a0aff",
+        "operator_key": "dream_surface_dispatch_im_epoch_fakeepisode",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 23,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_675cafb46d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:b695495c8d5834",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 24,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_71639bf0d1",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:80ab8398c2df42",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 25,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_381a8d9e13",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:e3b1bd1ac618ce",
+        "operator_key": "dream_surface_dispatch_ensionalsystems_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 28,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_98d510e17a",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:441e61796d6c7b",
+        "operator_key": "dream_surface_dispatch_sts_decay_constraint",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 31,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_be4c37e608",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:c9aea0187e8600",
+        "operator_key": "dream_surface_dispatch_ngine_stabilitystate",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 34,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_77f1d39017",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:443ba321be0914",
+        "operator_key": "dream_surface_dispatch_roject_critical_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 37,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_c2f3581465",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:d18f02105a5dec",
+        "operator_key": "dream_surface_dispatch_enealogy_pressurevec",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 40,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_3a562a7995",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:4ba2fdf023cefd",
+        "operator_key": "dream_surface_dispatch_timedilationgovernor",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 43,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_5538267aad",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:d6eaadd95fc86e",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 44,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_39a0c741c3",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:6eef8b889215cf",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 45,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_d45222ea68",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:df1257bf036259",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 46,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_64c6b16669",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:b24c6c52630c38",
+        "operator_key": "dream_surface_dispatch_signal_urgency_ticks",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 49,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_0425b38969",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:650d6a1c17eb5b",
+        "operator_key": "dream_surface_dispatch_nealogy_reliefrecord",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 52,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_3c3853e584",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:aad06602fd0af9",
+        "operator_key": "dream_surface_dispatch_e_ingest_interaction",
+        "score": 0.921821,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 55,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_1da43e7a56",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:1dd8d4619ef19c",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 56,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_10b320ee12",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:018007c65acbfe",
+        "operator_key": "dream_surface_dispatch_arychamber_run_chain",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 59,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_9144add85f",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:aff2766fe9eeee",
+        "operator_key": "dream_surface_dispatch_stry_constraintstate",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 62,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_7ef7b8a4c7",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:942011f90f4d86",
+        "operator_key": "dream_surface_dispatch__actionabilitymapper",
+        "score": 0.899239,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 65,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_7d55c02a63",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2c31ce459ed465",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 66,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_9bc99bdc1b",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:f3915e7926293a",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 67,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_141a9c324c",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:d13668b0e7f280",
+        "operator_key": "dream_surface_dispatch_utionarychamber_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 70,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_7af8d00028",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:5106a94dbfc337",
+        "operator_key": "dream_surface_dispatch_stemconstraintstates",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 73,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_8a54162253",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:18164b5fc063c0",
+        "operator_key": "dream_surface_dispatch__chamber_actiontrace",
+        "score": 0.851256,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 76,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_9c8e142c85",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:6abcd615abc8da",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 77,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_b974928019",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:cadf14568bbcdd",
+        "operator_key": "dream_surface_dispatch_cord_ticks_remaining",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 80,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_e88770dad7",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:3b9505b1115238",
+        "operator_key": "dream_surface_dispatch_constraint_aggregate",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 83,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_0c88dead6f",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:70781a6e175bfd",
+        "operator_key": "dream_surface_dispatch_ne_avatarpersonality",
+        "score": 0.899239,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 86,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_27ebb53f2b",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2fb07777c0d2cd",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 87,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_f4907cc466",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:8f399a50455bde",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 88,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_53d023cf1f",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:81ded7b42e8c41",
+        "operator_key": "dream_surface_dispatch_ciousnessengine_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 91,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_48b2e6b89b",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:003374e9eaa202",
+        "operator_key": "dream_surface_dispatch_d_constraintpressure",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 94,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_e71cc618fb",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:5e522c9785a1b8",
+        "operator_key": "dream_surface_dispatch_ntime_chainsimbridge",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 97,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_01bd6b4294",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:06a5df75a0b15c",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 98,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_daf7b92d79",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:f447e859bbe272",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 99,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_b9559c5366",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:1fee025e84317d",
+        "operator_key": "dream_surface_dispatch_rocessingsystem_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 102,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_8050e2bcba",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a57e03510fc7ca",
+        "operator_key": "dream_surface_dispatch_d_energydistribution",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 105,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_15d78d795d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:4f967575128d43",
+        "operator_key": "dream_surface_dispatch_im_epoch_fakeepisode",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 108,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_808fb42c20",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:7d1b8741a61395",
+        "operator_key": "dream_surface_dispatch_ensionalsystems_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 111,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_9bc3347119",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:e3dfff9fa2b7b3",
+        "operator_key": "dream_surface_dispatch_sts_decay_constraint",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 114,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_5b01e60af4",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:720ea8b5898d6d",
+        "operator_key": "dream_surface_dispatch_ngine_stabilitystate",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 117,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_24ae888c9e",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:213493f8483423",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 118,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_79b332ed50",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:bdf918a0bada3c",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 119,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_448f68626d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:d05e98d2e01716",
+        "operator_key": "dream_surface_dispatch_roject_critical_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 122,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_ed576a31c3",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:1ecf2dc5631177",
+        "operator_key": "dream_surface_dispatch_enealogy_pressurevec",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 125,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_0c3d440f92",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:643711824374d3",
+        "operator_key": "dream_surface_dispatch_timedilationgovernor",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 128,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_491a09cd1e",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a2267f95415526",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 129,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_30fd1ed39d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:920281bd5b09ad",
+        "operator_key": "dream_surface_dispatch_signal_urgency_ticks",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 132,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_be2b449e92",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2030573a880703",
+        "operator_key": "dream_surface_dispatch_nealogy_reliefrecord",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 135,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_b318b4458e",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2868efdda8b837",
+        "operator_key": "dream_surface_dispatch_e_ingest_interaction",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 138,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_2584723971",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:5688b01bf59937",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 139,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_ce05f50b7d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:8d2945e815aee6",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 140,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_93e7f71dc9",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:5b9164ad75a5c5",
+        "operator_key": "dream_surface_dispatch_arychamber_run_chain",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 143,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_16c1952ffa",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a12ae61162e70b",
+        "operator_key": "dream_surface_dispatch_stry_constraintstate",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 146,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_c29905b9bc",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:0e9d14ebd3808a",
+        "operator_key": "dream_surface_dispatch__actionabilitymapper",
+        "score": 0.851256,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 149,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_4cd99ec669",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:51facbece0ace3",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 150,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_4e78a010af",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:24ba2ef0e4a55f",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 151,
+        "trigger_mode": "code_evolution"
       }
     ]
   },
@@ -6599,7 +6879,7 @@
     "(X^7*T^6*B^7)x(T^1)": 52
   },
   "persistent_pressure_root": "A^1*N^1*T^1",
-  "persistent_pressure_root_ema": 4.58303783330626e-11,
+  "persistent_pressure_root_ema": 5.0297358287730937e-08,
   "roots": {
     "0": {
       "breeding_score_ema": 0.0,

@@ -3218,14 +3218,42 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1780466349.4593074
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:3b57414e85f6",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780467781.2876863
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:7326fbb1176a",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1780467863.938508
     }
   ],
   "initialized": true,
-  "last_run_at": 1780466383.3958402,
+  "last_run_at": 1780467863.9406788,
   "manifest": {
     "aurora.py": {
-      "mtime_ns": 1780156742310694547,
-      "size": 1391491
+      "mtime_ns": 1780467848515543821,
+      "size": 1393017
     },
     "aurora_behavioral_identity.py": {
       "mtime_ns": 1778751706113129529,
