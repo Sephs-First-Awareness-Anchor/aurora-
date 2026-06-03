@@ -164,9 +164,9 @@
         "claim",
         "learned_hint"
       ],
-      "sightings": 4,
+      "sightings": 6,
       "first_seen": 1779494282.3590627,
-      "last_seen": 1780467799.7766385
+      "last_seen": 1780468240.8635533
     },
     {
       "text": "just means that she launched spotify music well there's a tension in what you're describing i see it pulling in opposite directions on being",
@@ -340,16 +340,20 @@
       ],
       "topic_words": [
         "someone",
-        "hi"
+        "hi",
+        "good",
+        "talk"
       ],
       "tags": [
         "semantic_frame",
         "native_projection",
-        "generative"
+        "generative",
+        "sedimemory_recall",
+        "learned_hint"
       ],
-      "sightings": 2,
+      "sightings": 10,
       "first_seen": 1780467875.5443103,
-      "last_seen": 1780467928.886716
+      "last_seen": 1780468295.382925
     },
     {
       "text": "125-layer manifold: target=X, basis=X:OPERATOR, top=X:Information@0.508 | X:Existence_Polarity@0.035 | X:Existence_Magnitude@0.035 | X:Existence_Cost@0.035 | X:Existence_Contrast@0.035",
@@ -362,17 +366,19 @@
       ],
       "topic_words": [
         "yourself",
-        "story"
+        "story",
+        "something"
       ],
       "tags": [
         "semantic_frame",
         "native_projection",
         "generative",
-        "sedimemory_recall"
+        "sedimemory_recall",
+        "learned_hint"
       ],
-      "sightings": 2,
+      "sightings": 7,
       "first_seen": 1780467887.1206715,
-      "last_seen": 1780467959.8554199
+      "last_seen": 1780468170.1168933
     },
     {
       "text": "125-layer manifold: target=B, basis=B:OPERATOR, top=B:Meaning@0.484 | X:Distinction_as_Presence@0.035 | T:Distinction_in_Sequence@0.035 | N:Boundary_Pressure@0.035 | B:Admission_Gate@0.035",
@@ -412,9 +418,9 @@
         "speaker_identity",
         "generative"
       ],
-      "sightings": 2,
+      "sightings": 3,
       "first_seen": 1780467910.9633048,
-      "last_seen": 1780467947.097068
+      "last_seen": 1780468247.663162
     },
     {
       "text": "125-layer manifold: target=B, basis=B:MAGNITUDE, top=B:Boundary_Magnitude@0.436 | B:Meaning@0.093 | B:Boundary_Polarity@0.031 | B:Boundary_Cost@0.031 | B:Boundary_Contrast@0.031",
@@ -454,9 +460,54 @@
         "native_projection",
         "sedimemory_recall"
       ],
-      "sightings": 1,
+      "sightings": 5,
       "first_seen": 1780467935.0345793,
-      "last_seen": 1780467935.0345793
+      "last_seen": 1780468193.8591352
+    },
+    {
+      "text": "what work means here",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "what work",
+        "come"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative",
+        "sedimemory_recall"
+      ],
+      "sightings": 4,
+      "first_seen": 1780468066.1913629,
+      "last_seen": 1780468288.4402583
+    },
+    {
+      "text": "what learn means here",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "learn",
+        "what learn"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780468234.1660376,
+      "last_seen": 1780468234.1660376
     }
   ]
 }
