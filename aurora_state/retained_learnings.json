@@ -276,11 +276,12 @@
       "tags": [
         "semantic_frame",
         "claim",
-        "sedimemory_recall"
+        "sedimemory_recall",
+        "learned_hint"
       ],
-      "sightings": 5,
+      "sightings": 6,
       "first_seen": 1779494420.0080316,
-      "last_seen": 1779494599.3441718
+      "last_seen": 1780466618.4621098
     },
     {
       "text": "what constraint is being",
@@ -303,6 +304,28 @@
       "sightings": 1,
       "first_seen": 1779494644.1821616,
       "last_seen": 1779494644.1821616
+    },
+    {
+      "text": "my creator is sunni sir morningstar",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought",
+        "my creator"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "relational_role"
+      ],
+      "sightings": 1,
+      "first_seen": 1780466595.3878636,
+      "last_seen": 1780466595.3878636
     }
   ]
 }

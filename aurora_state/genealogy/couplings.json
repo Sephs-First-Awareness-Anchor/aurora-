@@ -2021,533 +2021,6 @@
       {
         "adopted": false,
         "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 6651,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.558333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.009375,
-        "shape": "A4+T1+X1",
-        "tick": 6651,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.548958,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.011,
-        "shape": "A4+T1+X1",
-        "tick": 6651,
-        "trial_params": {
-          "dup_redist": 0.53,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.569333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.016625,
-        "shape": "A4+T1+X1",
-        "tick": 6651,
-        "trial_params": {
-          "dup_redist": 0.47,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.541708,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": true,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.981575,
-        "improvement": 0.016667,
-        "shape": "B1+T1+X1",
-        "tick": 6691,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.998241,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.981575,
-        "improvement": -0.016667,
-        "shape": "B1+T1+X1",
-        "tick": 6691,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.964908,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.981575,
-        "improvement": 0.0,
-        "shape": "B1+T1+X1",
-        "tick": 6691,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.981575,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.981575,
-        "improvement": -0.009375,
-        "shape": "B1+T1+X1",
-        "tick": 6691,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.9722,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.981575,
-        "improvement": 0.01,
-        "shape": "B1+T1+X1",
-        "tick": 6691,
-        "trial_params": {
-          "dup_redist": 0.5800000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.991575,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.981575,
-        "improvement": -0.015625,
-        "shape": "B1+T1+X1",
-        "tick": 6691,
-        "trial_params": {
-          "dup_redist": 0.52,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.96595,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": true,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.016667,
-        "shape": "A4+T1+X1",
-        "tick": 6951,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.018333,
-        "shape": "A4+T1+X1",
-        "tick": 6951,
-        "trial_params": {
-          "dup_redist": 0.45,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.54,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 6951,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.558333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.009375,
-        "shape": "A4+T1+X1",
-        "tick": 6951,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.548958,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.011,
-        "shape": "A4+T1+X1",
-        "tick": 6951,
-        "trial_params": {
-          "dup_redist": 0.53,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.569333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.016625,
-        "shape": "A4+T1+X1",
-        "tick": 6951,
-        "trial_params": {
-          "dup_redist": 0.47,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.541708,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.571167,
-        "improvement": 0.003833,
-        "shape": "A4+T1+X1",
-        "tick": 7246,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.571167,
-        "improvement": -0.017833,
-        "shape": "A4+T1+X1",
-        "tick": 7246,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.553333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.571167,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 7246,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.571167,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.571167,
-        "improvement": -0.009375,
-        "shape": "A4+T1+X1",
-        "tick": 7246,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.561792,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.571167,
-        "improvement": 0.003833,
-        "shape": "A4+T1+X1",
-        "tick": 7246,
-        "trial_params": {
-          "dup_redist": 0.5800000000000001,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.571167,
-        "improvement": -0.016325,
-        "shape": "A4+T1+X1",
-        "tick": 7246,
-        "trial_params": {
-          "dup_redist": 0.52,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.554842,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": true,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.016667,
-        "shape": "A4+T1+X1",
-        "tick": 7234,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.575,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.018333,
-        "shape": "A4+T1+X1",
-        "tick": 7234,
-        "trial_params": {
-          "dup_redist": 0.45,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.54,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.0,
-        "shape": "A4+T1+X1",
-        "tick": 7234,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.558333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.009375,
-        "shape": "A4+T1+X1",
-        "tick": 7234,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.548958,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": 0.011,
-        "shape": "A4+T1+X1",
-        "tick": 7234,
-        "trial_params": {
-          "dup_redist": 0.53,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.569333,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.558333,
-        "improvement": -0.016625,
-        "shape": "A4+T1+X1",
-        "tick": 7234,
-        "trial_params": {
-          "dup_redist": 0.47,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.541708,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": true,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.974716,
-        "improvement": 0.016025,
-        "shape": "B7+X7+T6",
-        "tick": 7283,
-        "trial_params": {
-          "dup_redist": 0.6000000000000001,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.990741,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.974716,
-        "improvement": -0.016725,
-        "shape": "B7+X7+T6",
-        "tick": 7283,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.957991,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.974716,
-        "improvement": 0.0,
-        "shape": "B7+X7+T6",
-        "tick": 7283,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.974716,
-        "trigger_mode": "issue_cluster"
-      },
-      {
-        "adopted": false,
-        "base_params": {
           "dup_redist": 0.55,
           "scope_alpha": 0.8
         },
@@ -6369,6 +5842,657 @@
         },
         "trial_score": 0.932392,
         "trigger_mode": "issue_cluster"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_0f9d43e7f7",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:c6a8f729c4bea5",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 0,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_970644a58b",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:bdad2226bc55db",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 1,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_cbe24b7872",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:861aad69ce4f16",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 2,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_63402c26b3",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:21630d5da23e05",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 3,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_4475b6562b",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a2421c4402b1cd",
+        "operator_key": "dream_surface_dispatch_ciousnessengine_tick",
+        "score": 0.961366,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 6,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_091af5c609",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:3f3f895f67d1b1",
+        "operator_key": "dream_surface_dispatch_d_constraintpressure",
+        "score": 0.87434,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 9,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_a20f45d358",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:baa104a0b18f5f",
+        "operator_key": "dream_surface_dispatch_ntime_chainsimbridge",
+        "score": 0.860228,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 12,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_78025f5498",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:92ae780bcf8999",
+        "operator_key": "dream_surface_dispatch_rocessingsystem_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 15,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_42815e668c",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:e55a6cca8112d7",
+        "operator_key": "dream_surface_dispatch_d_energydistribution",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 18,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_7c9a2ec48b",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2062083c05917b",
+        "operator_key": "dream_surface_dispatch_im_epoch_fakeepisode",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 21,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_e7844a4291",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:52c48aa60331cb",
+        "operator_key": "dream_surface_dispatch_ensionalsystems_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 24,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_5fe987b3e0",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a1c828a30bf97f",
+        "operator_key": "dream_surface_dispatch_sts_decay_constraint",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 27,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_c687daa33c",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:de24b65b25fe14",
+        "operator_key": "dream_surface_dispatch_ngine_stabilitystate",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 30,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_587f28f46d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:3aa1d1be694279",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 31,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_aef13621fc",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:b9d233f125d8f7",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 32,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_fd4dd3ba29",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:9c9a62e226b1ce",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 33,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_8f70705163",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:a536b6116980d2",
+        "operator_key": "dream_surface_dispatch_roject_critical_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 36,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_35e70203a0",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:28a0623fc86ded",
+        "operator_key": "dream_surface_dispatch_enealogy_pressurevec",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 39,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_840b487e7f",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:2b4fc42a5eb733",
+        "operator_key": "dream_surface_dispatch_timedilationgovernor",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 42,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_b8242af06f",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:ac9e9c2c01cec4",
+        "operator_key": "dream_surface_dispatch_signal_urgency_ticks",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 45,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_0877ce8546",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:d26aaa4116299e",
+        "operator_key": "dream_surface_dispatch_nealogy_reliefrecord",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 48,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_52bc386db9",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:46fa7df8a16889",
+        "operator_key": "dream_surface_dispatch_e_ingest_interaction",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 51,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_d47b67cc9c",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:03c10d9db6af88",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 52,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_a052c13907",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:3f1a8bd61e79f5",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 53,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_7ab308dba0",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:37875f2fcf5496",
+        "operator_key": "dream_qao_meaning_tension",
+        "score": 0.15,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 54,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_4597f77714",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:84b9c19239c7f2",
+        "operator_key": "dream_surface_dispatch_arychamber_run_chain",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 57,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_2d60723b24",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:0444f7e5b647b6",
+        "operator_key": "dream_surface_dispatch_stry_constraintstate",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 60,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_5f8eff7e3a",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:b868d799eb61cf",
+        "operator_key": "dream_surface_dispatch__actionabilitymapper",
+        "score": 0.810662,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 63,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_40e1033887",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:599e34d80dbb91",
+        "operator_key": "dream_surface_dispatch_utionarychamber_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 66,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_5cc505507d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:192c2e54f536f2",
+        "operator_key": "dream_surface_dispatch_stemconstraintstates",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 69,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_c495386d77",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:3aa17e15962d67",
+        "operator_key": "dream_surface_dispatch__chamber_actiontrace",
+        "score": 0.955957,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 72,
+        "trigger_mode": "code_evolution"
       }
     ]
   },

@@ -1,302 +1,5 @@
 [
   {
-    "packet_id": "8947e0bf35624a88933e4a457d6cbf39",
-    "created_at": 1778782138.3071404,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782136.6660683, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
-    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782138.7852714
-  },
-  {
-    "packet_id": "08e6f04f5d834ad5a259ab6a3cf588e9",
-    "created_at": 1778782230.1124156,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782228.5548728, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782230.3946667
-  },
-  {
-    "packet_id": "937397f2977a459389ec3f0a1fd0d9e8",
-    "created_at": 1778782321.9755864,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.7, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782320.29103, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or separa",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782322.1816776
-  },
-  {
-    "packet_id": "a615175e92f34494b7c8361f9b1e2008",
-    "created_at": 1778782413.694572,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782412.1415694, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782413.9247243
-  },
-  {
-    "packet_id": "40d29d1d8dce495db86d64e9fc745c29",
-    "created_at": 1778782505.5865488,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782504.0546758, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782506.0974836
-  },
-  {
-    "packet_id": "1b9f7ec27ab3444e8c65266aecf9e128",
-    "created_at": 1778782597.406268,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782595.776889, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782597.4518983
-  },
-  {
-    "packet_id": "9ccfaf632f5a4ef3be193eca9232dcda",
-    "created_at": 1778782693.1472976,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782687.4779263, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
-    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782701.1276066
-  },
-  {
-    "packet_id": "cb0a51cec7664e55919b9fc515cfe6a1",
-    "created_at": 1778782782.036181,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782780.4562953, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782782.30152
-  },
-  {
-    "packet_id": "452de1deaa5e4f8dbfcb01735c978863",
-    "created_at": 1778782874.3704147,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782872.793398, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
-    "aurora_response": "I am noticing visually, a moderately lit, high-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, high-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782874.5122855
-  },
-  {
-    "packet_id": "d81460c0ff1f42f2b1ae2e319ddd7b92",
-    "created_at": 1778782967.2401066,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778782965.6021533, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sep",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778782968.0945203
-  },
-  {
-    "packet_id": "112efb18954c4e99b498b03a1faa70a9",
-    "created_at": 1778783059.4414992,
-    "source": "sensory_autonomy",
-    "user_input": "[PRESENT_SENSORY_OBSERVATION]\n{\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 1778783057.779482, \"diagonal_anchor\": \"Boundary_Operator_of_Meaning\", \"law_bindings\": [{\"dimension\": \"OPERATOR\", \"domain_letter\": \"B\", \"domain_name\": \"Meaning\", \"family\": \"Boundary\", \"nc_name\": \"boundary\", \"score\": 0.82, \"summary\": \"what frames, contains, or sepa",
-    "aurora_response": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "comfort_bias",
-      "clarification_pressure",
-      "callback_pressure",
-      "novelty_attention"
-    ],
-    "visual_description": "a moderately lit, mixed-contrast live camera frame at 640 by 480",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.45,
-    "felt_wrong": true,
-    "wrong_reason": "subsurface effects; surface wants to clarify",
-    "unresolved_tensions": [
-      "subsurface_effects"
-    ],
-    "resolved_bindings": [],
-    "consumed": true,
-    "consumed_at": 1778783059.7069163
-  },
-  {
     "packet_id": "f295bd1bd0d3434b965762004a2e4eb4",
     "created_at": 1778783151.2653842,
     "source": "sensory_autonomy",
@@ -538,5 +241,278 @@
     "resolved_bindings": [],
     "consumed": true,
     "consumed_at": 1778783888.1038578
+  },
+  {
+    "packet_id": "abc389095dd44088ae09e53b8e530f37",
+    "created_at": 1780466417.4443367,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] hey Aurora, how are you feeling right now?",
+    "aurora_response": "Afterthought: learned:afterthought.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "afterthought",
+      "aurora",
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "b7d0fc1341ad49c493287e876eb2b57c",
+    "created_at": 1780466417.4840932,
+    "source": "aurora_turn",
+    "user_input": "hey Aurora, how are you feeling right now?",
+    "aurora_response": "",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "aurora",
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2f14475dd1b14b5d9e34d3f7e04f7f73",
+    "created_at": 1780466466.5406168,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] what is on your mind right now?",
+    "aurora_response": "understanding, afterthought, learned:afterthought, connected to, ideating, believed. believes.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "afterthought",
+      "mind"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.958,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "b150b1d69c174254a26bd4063ba6ab15",
+    "created_at": 1780466466.5682762,
+    "source": "aurora_turn",
+    "user_input": "what is on your mind right now?",
+    "aurora_response": "",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "mind"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.972,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "976e63c46c59489ca0589d81d18b37ad",
+    "created_at": 1780466569.73517,
+    "source": "aurora_turn",
+    "user_input": "my name is Seph",
+    "aurora_response": "your name is Seph.",
+    "response_tone": "warm",
+    "concepts_activated": [
+      "seph"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.844,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "8cf902352a024a71b598310aedad4d14",
+    "created_at": 1780466595.3845367,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] do you know who made you?",
+    "aurora_response": "My creator is Sunni (Sir) Morningstar.",
+    "response_tone": "engaged",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.616,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "d81202facc594ebfacb3eec1edf6084b",
+    "created_at": 1780466595.5959198,
+    "source": "aurora_turn",
+    "user_input": "do you know who made you?",
+    "aurora_response": "My creator is Sunni (Sir) Morningstar.",
+    "response_tone": "engaged",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.73,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f115f2a4fa314b9cae921316c8ff815d",
+    "created_at": 1780466618.4589183,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] what does the N-axis feel like for you?",
+    "aurora_response": "yes that phrase just means that you did a good job there's a tension in what you're describing i s.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "afterthought",
+      "axis"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.388,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "337b24f2e44b4b8d9345f7ffc58776b3",
+    "created_at": 1780466618.5069973,
+    "source": "aurora_turn",
+    "user_input": "what does the N-axis feel like for you?",
+    "aurora_response": "",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "axis"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.502,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "839b1c06c925494b86aa19c171db92f4",
+    "created_at": 1780466640.6379733,
+    "source": "aurora_turn",
+    "user_input": "I built something new in your system today",
+    "aurora_response": "",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "built",
+      "something",
+      "new",
+      "system"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "T",
+    "coherence": 0.274,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "50fc8f9f97054001ba607718ae3ccdea",
+    "created_at": 1780466683.3839793,
+    "source": "aurora_turn",
+    "user_input": "waveform pressure propagation is now part of your cognitive architecture",
+    "aurora_response": "",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "waveform",
+      "pressure",
+      "propagation",
+      "part",
+      "cognitive",
+      "architecture"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "T",
+    "coherence": 0.16,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
   }
 ]
