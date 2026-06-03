@@ -1,61 +1,5 @@
 [
   {
-    "packet_id": "99278b4b5d564829b2c0c4e310da5c42",
-    "created_at": 1780478870.827928,
-    "source": "simulation_live_bridge",
-    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
-    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "integrate",
-      "two",
-      "perspectives",
-      "disagree",
-      "without",
-      "collapsing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.41"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6991b0863a82432485f580bfc0d58bee",
-    "created_at": 1780478873.3087246,
-    "source": "simulation_live_bridge",
-    "user_input": "Reframe this same idea for a beginner and then for an expert.",
-    "aurora_response": "statement reframe reframe idea beginner expert Reframe.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "reframe",
-      "idea",
-      "beginner",
-      "expert"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.61"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "67bd183803bc4efa890ed1946e7d9b67",
     "created_at": 1780478876.0249248,
     "source": "simulation_live_bridge",
@@ -506,6 +450,56 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.37"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "df08ba30038f47ce9cabf4e347f99769",
+    "created_at": 1780478923.858425,
+    "source": "simulation_live_bridge",
+    "user_input": "I'm feeling sad today.",
+    "aurora_response": "your name is Feeling.",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "feeling",
+      "sad"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "T",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.44"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "d085a2a9589447be9049f079d895deb6",
+    "created_at": 1780478926.1587772,
+    "source": "simulation_live_bridge",
+    "user_input": "I'm feeling sad today.",
+    "aurora_response": "your name is Feeling.",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "feeling",
+      "sad"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "T",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.61"
     ],
     "resolved_bindings": [],
     "consumed": false,
