@@ -1,29 +1,5 @@
 [
   {
-    "packet_id": "d985faf851ed43c783cc8f866566d511",
-    "created_at": 1780471961.1783152,
-    "source": "simulation_live_bridge",
-    "user_input": "Where do you come from?",
-    "aurora_response": "understanding, building, something. learned:something.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "come"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.63"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "4ed464f6c0714c6d9b3b0a140322df52",
     "created_at": 1780471969.0236714,
     "source": "simulation_live_bridge",
@@ -467,6 +443,33 @@
     "unresolved_tensions": [
       "existence:+0.54"
     ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "29ad4a10417a4d5a84825fb576121cea",
+    "created_at": 1780472154.279416,
+    "source": "simulation_live_bridge",
+    "user_input": "Earlier you said: \"understanding, building, something. learned:something.\". Keep continuity and build from that thread.",
+    "aurora_response": "understanding, building, something. learned:something.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "said",
+      "understanding",
+      "building",
+      "something",
+      "learned",
+      "something"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
