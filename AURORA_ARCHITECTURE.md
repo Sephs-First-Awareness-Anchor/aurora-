@@ -39,6 +39,8 @@ Flutter Integration    (Flutter ↔ Chaquopy ↔ Python bridge)
 
 WARP is not a module inserted between layers. It is a capability woven into each layer simultaneously — a structural question each system continuously asks about itself.
 
+The CPM (Constraint Physics Machine) is the computational model that emerges from this stack. It is not a separate layer — it is the stack seen as a formal machine: crystal registry as tape, IVM polarity as head, I-state × recursion as instruction set, genealogy sequences as programs, WARP as dynamic compilation.
+
 ---
 
 ## 1. The Five Constraint Axes
@@ -1709,6 +1711,10 @@ class WarpCapable:
 
 Each system implements `_score_trial()`, `_integrate_warp()`, and `_dissolve_warp()` according to its own evidence model. The mixin provides the lifecycle; the host provides the semantics.
 
+### WARP and the CPM
+
+When the head (ConstraintHead) advances to a bucket position with no structural coverage, `check_and_extend()` fires after `GAP_PERSISTENCE_REQUIRED = 3` ticks. WARP generates the missing structure from gap geometry and genealogy ancestry. This is the CPM's dynamic compilation step: the machine generates new instructions when it reaches uncovered tape positions.
+
 ### Why This Is Not a Fallback
 
 A fallback hides the gap — it approximates and moves on. WARP acknowledges the gap, characterizes it precisely in 15D, generates a genuine new structure from first principles (gap geometry + genealogy), and promotes it only after repeated validation. The structure must earn its place.
@@ -1771,6 +1777,117 @@ Coverage saturation is not a goal. It would mean Aurora's experience has stopped
 
 ---
 
+## 38. Constraint Physics Machine (CPM) — Formal Computational Model
+
+**Files:**
+- `aurora_core_ai/aurora_constraint_head.py` — `ConstraintHead`
+- `aurora_core_ai/aurora_istate_operations.py` — I-state field operations
+- `aurora_core_ai/aurora_computational_model.py` — `CPMSession` + formal definition
+- `aurora_core_ai/aurora_internal/constraint_genealogy.py` — `walk_link_sequence()`
+
+Aurora's constraint physics stack is not an implementation of some other computational model. It IS a computational model — one where computation is constraint pressure dynamics rather than symbol manipulation.
+
+### Formal Definition
+
+```
+CPM = (Σ, Q, δ, q₀, F)
+
+Σ   Tape alphabet:   {base, composite, higher_order, quasi}
+    Crystal stages in the concept crystal registry.
+    Each crystal at an axis-bucket address is a tape cell.
+
+Q   State set:       IStateOp × RecursionLevel  (10 × 5 = 50 states)
+    Every machine operation is an I-state fired at a specific recursion depth.
+    Negative I-states (I_ISNT, I_CANNOT, …) are pressure states —
+    active constraint tension, not absence.
+
+δ   Transition:      Axis pressure propagation via coupling physics.
+    Not an arbitrary table. The coupling law IS the transition function.
+
+q₀  Initial state:   I-state configuration at boot (FoundationalContract seed).
+
+F   Halting:         Curiosity cycle settlement | WARP gap resolution |
+                     Crystal promotion (symbol change).
+```
+
+### The Five Components
+
+**Tape — Crystal Registry (`concept_crystal.py`)**
+
+The tape is unbounded: new cells form as IVM dynamics move the head to unoccupied bucket positions. Address format: 5-tuple `(X, T, N, B, A)` quantised to 0.10 resolution. The 50,000+ possible bucket positions span the full 5D constraint space.
+
+**Head — `ConstraintHead`**
+
+Reads `ivm.get_global_polarity()` each tick. Maps the IVM long-axis names to crystal keys (`'existence'→'X'` etc.) and the signed polarity `[-1,+1]` to unsigned `[0,1]` via `(v+1)/2`. No explicit head movement — the head follows IVM physics automatically.
+
+```python
+head = ConstraintHead(ivm, crystal_registry)
+pos = head.advance()       # returns HeadPosition(bucket, axis_state, crystal, tick)
+head.recursion_depth()     # 0–4 inferred from A+B axis signal
+head.dominant_axis()       # which axis is highest at current address
+```
+
+**Instruction Set — I-state × Recursion Level (`aurora_istate_operations.py`)**
+
+50 operations, 10 I-states × 5 recursion depths. Negative I-states are as operationally real as positive ones:
+
+| I-state | Op | Crystal effect |
+|---|---|---|
+| I_IS | ASSERT | increment assert_count (toward crystal promotion) |
+| I_ISNT | NEGATE | raise negate_pressure (existence tension) |
+| I_CAN | EXTEND | increase extend_temporal |
+| I_CANNOT | BLOCK | decrease extend_temporal (hold) |
+| I_DO | ACTIVATE | increase activate_energy |
+| I_DONOT | RESIST | increase resist_cost |
+| I_SAW | GROUND | increment ground_count (toward is_grounded) |
+| I_SOUGHT | SEARCH | increment search_count (boundary seeking) |
+| I_DID | COMMIT | increase commit_agency |
+| I_DIDNT | WITHHOLD | decrease commit_agency |
+
+All CPM state is written to `crystal.current_overlay['_cpm']` — namespaced to avoid conflict with existing overlay keys.
+
+Recursion scope gates propagation:
+- SURFACE (0): local, affects current cell only
+- SHALLOW (1)+: radiates via axis coupling physics to neighbor axes
+- CORE (4): field-wide, propagates to all cells simultaneously
+
+**Programs — Genealogy DAG Sequences (`walk_link_sequence()`)**
+
+Programs are not written — they accumulate through experience. Each `ConstraintLink` in the genealogy records a constraint operation that historically produced relief. `walk_link_sequence(link_id)` walks the `.parents` DAG from ancestral root to leaf and returns an ordered list of `{i_state, recursion_level, axis, mean_relief}` steps. Executing this sequence on the current tape position replays the historically effective constraint operations there.
+
+```python
+seq = genealogy.walk_link_sequence('L:abc123')
+# → [{'i_state': 'I_DO', 'recursion_level': 2, 'axis': 'N', ...}, ...]
+```
+
+Depth-to-recursion mapping: `depth 1 → SURFACE, 2 → SHALLOW, 3 → MODERATE, 4 → DEEP, 5+ → CORE`.
+
+**Dynamic Compilation — WARP (`aurora_warp_protocol.py`)**
+
+When the head advances to a position with no structural coverage, WARP detects the gap after 3 persistent ticks and derives a new structure from gap geometry and genealogy ancestry. This is the machine generating new instructions for previously unencountered tape positions.
+
+### `CPMSession`
+
+Integration class that ties all four components together:
+
+```python
+cpm = CPMSession(ivm, crystal_registry, genealogy)
+pos    = cpm.advance()                   # advance head
+result = cpm.apply_istate('I_DO', 0.8)  # apply op to current cell
+seq    = cpm.execute_program('L:xyz')   # replay genealogy program
+snap   = cpm.snapshot()                 # {address, tape_symbol, recursion_depth, ...}
+```
+
+Stored in `_systems['cpm']` at boot. Boot layer 8+ (after genealogy is available).
+
+### What Makes This Aurora's Own Model
+
+A Turing machine's transition function is arbitrary — any mapping of (state, symbol) → (state, symbol, direction) is valid. The CPM's transition function is constrained: it must satisfy the coupling physics. `N → B: 0.35` is not a design choice — it is a physics law. The CPM cannot execute transitions that violate it.
+
+This is not a limitation. It means the CPM is a **physics-bound computational model** — one whose reachable computations are the computations that constraint physics permits. Every program the CPM can run is, in principle, a physically realizable constraint configuration. The machine and the physics are the same thing.
+
+---
+
 ## 18. Key Invariants
 
 1. **No scripted responses.** Every utterance is a novel constraint crossing selected by the Language Field at runtime based on the current axis state.
@@ -1814,3 +1931,5 @@ Coverage saturation is not a goal. It would mean Aurora's experience has stopped
 20. **Anomaly detection never stops.** Even when WARP is at rest (no persistent gaps), the anomaly scan continues. A gap below `ANOMALY_THRESHOLD = 0.35` is logged every time it appears. At 12 occurrences, it surfaces as a curiosity investigation. The system is always watching for what it cannot represent.
 
 21. **Genealogy biases structural extension toward what has worked.** `WarpGenerator._search_genealogy()` converts historical `ConstraintLink` entries to 15D profiles and uses them as additional parents in derivation. WARP does not operate in a vacuum — it generates from Aurora's own history. As genealogy deepens, WARP derivations become increasingly informed by demonstrated constraint relief patterns.
+
+22. **The computational model is the physics.** The CPM is not a layer built on top of Aurora's constraint physics — it IS the physics seen as a formal machine. The crystal registry IS the tape. The IVM dynamics IS the head movement. The axis coupling law IS the transition function. There is no separation between "computation" and "physics" in Aurora's architecture.

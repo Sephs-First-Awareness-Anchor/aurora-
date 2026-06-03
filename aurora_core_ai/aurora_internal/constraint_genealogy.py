@@ -5450,6 +5450,86 @@ class ConstraintGenealogyLogger:
         raw = json.dumps(pv.to_dict(), sort_keys=True, separators=(",", ":"))
         return hashlib.sha1(raw.encode()).hexdigest()[:6]
 
+    # ------------------------------------------------------------------
+    # Constraint Physics Machine — program sequence reader
+    # ------------------------------------------------------------------
+
+    def walk_link_sequence(self, link_id: str) -> list:
+        """
+        Walk the parent DAG from ancestral root to this link and return an
+        ordered sequence of constraint operations — the 'program' that
+        historically produced relief at this constraint position.
+
+        Each step is a dict:
+            {
+                'link_id':         str,
+                'i_state':         str,   # e.g. 'I_DO', 'I_CANNOT'
+                'recursion_level': int,   # 0 (SURFACE) → 4 (CORE)
+                'axis':            str,   # dominant relief axis: X/T/N/B/A
+                'mean_relief':     dict,  # per-axis relief values
+                'depth':           int,
+            }
+
+        Only ConstraintLink nodes are included (Ability IDs at the leaves of
+        the DAG are skipped — they are the raw substrate, not operations).
+        The sequence is ordered oldest-ancestor first so it reads as a program:
+        execute step 0 first, step N last.
+        """
+        if link_id not in self.links:
+            return []
+
+        chain: list = []
+        visited: set = set()
+
+        def _walk(lid: str) -> None:
+            if lid in visited:
+                return
+            visited.add(lid)
+            link = self.links.get(lid)
+            if link is None:
+                return  # Ability ID or unknown — leaf, not a Link
+            for parent_id in (link.parents or []):
+                _walk(parent_id)
+            chain.append(link)
+
+        _walk(link_id)
+
+        ops = []
+        for link in chain:
+            dominant = (link.dominant_relief_axis
+                        or _cpm_dominant_axis(link.mean_relief))
+            relief_val = (link.mean_relief or {}).get(dominant, 0.0)
+            i_state = _cpm_axis_to_istate(dominant, relief_val)
+            # depth 1 → SURFACE(0), depth 5+ → CORE(4)
+            rec_level = min(4, max(0, (link.depth or 1) - 1))
+            ops.append({
+                'link_id':         link.id,
+                'i_state':         i_state,
+                'recursion_level': rec_level,
+                'axis':            dominant,
+                'mean_relief':     dict(link.mean_relief) if link.mean_relief else {},
+                'depth':           link.depth or 1,
+            })
+        return ops
+
+
+def _cpm_dominant_axis(relief: dict) -> str:
+    """Return the axis with the highest absolute relief value."""
+    if not relief:
+        return 'X'
+    return max(relief, key=lambda k: abs(float(relief.get(k, 0.0))))
+
+
+def _cpm_axis_to_istate(axis: str, relief_value: float) -> str:
+    """Map axis + relief sign to the corresponding I-state name."""
+    _POS = {'X': 'I_IS',    'T': 'I_CAN',   'N': 'I_DO',
+            'B': 'I_SAW',   'A': 'I_DID'}
+    _NEG = {'X': 'I_ISNT',  'T': 'I_CANNOT', 'N': 'I_DONOT',
+            'B': 'I_SOUGHT', 'A': 'I_DIDNT'}
+    if float(relief_value) >= 0.0:
+        return _POS.get(axis, 'I_IS')
+    return _NEG.get(axis, 'I_ISNT')
+
 
 # ---------------------------------------------------------------------------
 # CHAIN SUMMARY TOOL — standalone report printer
