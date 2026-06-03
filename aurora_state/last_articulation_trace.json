@@ -1,26 +1,29 @@
 {
-  "original": "something obedient retraining about the pats something pasting floating mathemat the outlet simulatable build-backend carlissa dangle bing socially",
-  "candidate": "something obedient retraining about the pats something pasting floating mathemat the outlet simulatable build-backend carlissa dangle bing socially.",
-  "selected": "something obedient retraining about the pats something pasting floating mathemat the outlet simulatable build-backend carlissa dangle bing socially.",
+  "original": "I shadow-run you -- concurrently so generalizable. something enable viewing downloading the trust-laundering",
+  "candidate": "I shadow-run you -- concurrently so generalizable. something enable viewing downloading the trust-laundering.",
+  "selected": "I shadow-run you -- concurrently so generalizable. something enable viewing downloading the trust-laundering.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.81,
+  "original_score": 0.86,
   "candidate_score": 0.86,
-  "original_pressure": 0.3112,
-  "candidate_pressure": 0.2412,
-  "pressure_relief": 0.07,
+  "original_pressure": 0.373,
+  "candidate_pressure": 0.313,
+  "pressure_relief": 0.06,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "What can you do?",
+    "prompt_excerpt": "I'm feeling sad today.",
     "input_interpretation": {
-      "raw_prompt": "What can you do?",
-      "intent_hint": "question",
-      "topic_terms": [],
+      "raw_prompt": "I'm feeling sad today.",
+      "intent_hint": "statement_or_context",
+      "topic_terms": [
+        "feeling",
+        "today"
+      ],
       "entities": []
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780478540.6174407,
+    "timestamp": 1780478921.10679,
     "min_relief_used": 0.035
   }
 }
