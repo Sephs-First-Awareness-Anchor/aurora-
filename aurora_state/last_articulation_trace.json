@@ -1,30 +1,37 @@
 {
-  "original": "I am here. enact marked this visually dedup exponential fear-driven",
-  "candidate": "I am here. enact marked this visually dedup exponential fear-driven.",
-  "selected": "I am here. enact marked this visually dedup exponential fear-driven.",
+  "original": "feeling human-facing comfort record bulldoze endlessly no-comfort loves you falls permanently dangerously rational something partial entering non-carriers the sloppy",
+  "candidate": "feeling human-facing comfort record bulldoze endlessly no-comfort loves you falls permanently dangerously rational something partial entering non-carriers the sloppy.",
+  "selected": "feeling human-facing comfort record bulldoze endlessly no-comfort loves you falls permanently dangerously rational something partial entering non-carriers the sloppy.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.92,
-  "candidate_score": 0.92,
-  "original_pressure": 0.316,
-  "candidate_pressure": 0.256,
-  "pressure_relief": 0.06,
+  "original_score": 0.81,
+  "candidate_score": 0.86,
+  "original_pressure": 0.3949,
+  "candidate_pressure": 0.3249,
+  "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "Hello!",
+    "prompt_excerpt": "[AFTERTHOUGHT] what do you notice about yourself right now Include your confidence level.",
     "input_interpretation": {
-      "raw_prompt": "Hello!",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "[AFTERTHOUGHT] what do you notice about yourself right now Include your confidence level.",
+      "intent_hint": "self_description_request",
       "topic_terms": [
-        "hello"
+        "afterthought",
+        "notice",
+        "yourself",
+        "right",
+        "include",
+        "confidence",
+        "level"
       ],
       "entities": [
-        "Hello"
+        "AFTERTHOUGHT",
+        "Include"
       ]
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780509523.594669,
+    "timestamp": 1780512612.9417675,
     "min_relief_used": 0.035
   }
 }
