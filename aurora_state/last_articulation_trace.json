@@ -1,29 +1,30 @@
 {
-  "original": "I will overengineering the per-variable broken. tractor regulate resting the mismatch-dependent progresses",
-  "candidate": "I will overengineering the per-variable broken. tractor regulate resting the mismatch-dependent progresses.",
-  "selected": "I will overengineering the per-variable broken. tractor regulate resting the mismatch-dependent progresses.",
+  "original": "gemini stacktrace something equipped patterndistiller something transparent printing from the lunch",
+  "candidate": "gemini stacktrace something equipped patterndistiller something transparent printing from the lunch.",
+  "selected": "gemini stacktrace something equipped patterndistiller something transparent printing from the lunch.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.92,
-  "candidate_score": 0.92,
-  "original_pressure": 0.3222,
-  "candidate_pressure": 0.2622,
-  "pressure_relief": 0.06,
+  "original_score": 0.69,
+  "candidate_score": 0.74,
+  "original_pressure": 0.4647,
+  "candidate_pressure": 0.3947,
+  "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "I'm feeling sad today.",
+    "prompt_excerpt": "Hello!",
     "input_interpretation": {
-      "raw_prompt": "I'm feeling sad today.",
+      "raw_prompt": "Hello!",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "feeling",
-        "today"
+        "hello"
       ],
-      "entities": []
+      "entities": [
+        "Hello"
+      ]
     },
-    "tone": "determined",
+    "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780478925.714221,
+    "timestamp": 1780479188.2854981,
     "min_relief_used": 0.035
   }
 }
