@@ -1,30 +1,38 @@
 {
-  "original": "something unproductive uncomfortable particles the arena occasionally foreshadowing believed resolutions bing cheaply feeling excluded feeling cheats practically surgeon upgrade something crystal-compatible paragraphs",
-  "candidate": "something unproductive uncomfortable particles the arena occasionally foreshadowing believed resolutions bing cheaply feeling excluded cheats practically surgeon upgrade something crystal-compatible paragraphs.",
-  "selected": "something unproductive uncomfortable particles the arena occasionally foreshadowing believed resolutions bing cheaply feeling excluded cheats practically surgeon upgrade something crystal-compatible paragraphs.",
+  "original": "strengthen self-correcting pats this we'll externally including feeling lmao dominant usually executable feeling something fundamental enrichment auto-tapping feeling something nervous provably",
+  "candidate": "strengthen self-correcting pats this we'll externally including feeling lmao dominant usually executable feeling something fundamental enrichment auto-tapping feeling something nervous provably.",
+  "selected": "strengthen self-correcting pats this we'll externally including feeling lmao dominant usually executable feeling something fundamental enrichment auto-tapping feeling something nervous provably.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.69,
-  "candidate_score": 0.74,
-  "original_pressure": 0.4529,
-  "candidate_pressure": 0.3811,
-  "pressure_relief": 0.0718,
+  "original_score": 0.81,
+  "candidate_score": 0.86,
+  "original_pressure": 0.4271,
+  "candidate_pressure": 0.3571,
+  "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "What does it mean to exist?",
+    "prompt_excerpt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
     "input_interpretation": {
-      "raw_prompt": "What does it mean to exist?",
-      "intent_hint": "question",
+      "raw_prompt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+      "intent_hint": "statement_or_context",
       "topic_terms": [
-        "does",
-        "mean",
-        "exist"
+        "answer",
+        "while",
+        "being",
+        "explicit",
+        "uncertainty",
+        "confidence",
+        "include",
+        "confidence"
       ],
-      "entities": []
+      "entities": [
+        "Answer",
+        "Include"
+      ]
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780480213.8064563,
+    "timestamp": 1780482656.970069,
     "min_relief_used": 0.035
   }
 }
