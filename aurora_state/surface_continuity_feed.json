@@ -1,79 +1,5 @@
 [
   {
-    "packet_id": "27ca4c82791b412f97cac22759207df8",
-    "created_at": 1780499281.593303,
-    "source": "simulation_live_bridge",
-    "user_input": "Integrate two perspectives that disagree without collapsing either one.",
-    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "integrate",
-      "two",
-      "perspectives",
-      "disagree",
-      "without",
-      "collapsing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2e133a79a34044ef89749e3d8347469c",
-    "created_at": 1780499372.8598547,
-    "source": "simulation_live_bridge",
-    "user_input": "Who are you?",
-    "aurora_response": "Who. who is here.",
-    "response_tone": "curious",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.57"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "512b453a3a284ae4a797e191ede7f94c",
-    "created_at": 1780499484.056459,
-    "source": "simulation_live_bridge",
-    "user_input": "Who are you?",
-    "aurora_response": "Who. who is here.",
-    "response_tone": "curious",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "1f7a54eddba04966b345c221601298ac",
     "created_at": 1780499568.6498172,
     "source": "simulation_live_bridge",
@@ -531,6 +457,93 @@
     "recent_speech": "",
     "dominant_axis": "N",
     "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "0dd95d57d3d74e11ae6a5931587a8fe4",
+    "created_at": 1780505337.4393246,
+    "source": "simulation_live_bridge",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "T",
+    "coherence": 0.972,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "d96f884a10994b69a9424b5e805e296d",
+    "created_at": 1780505341.3710098,
+    "source": "simulation_live_bridge",
+    "user_input": "Two claims conflict. Reconcile them without pretending there is no tension. Now reconcile this with an opposing angle.",
+    "aurora_response": "statement claims two claims conflict reconcile without pretending Two Reconcile.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "two",
+      "claims",
+      "conflict",
+      "reconcile",
+      "without",
+      "pretending"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.972,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a0683ba47c9743809c096cb0dad764b9",
+    "created_at": 1780505345.1871858,
+    "source": "simulation_live_bridge",
+    "user_input": "Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle.",
+    "aurora_response": "statement integrate integrate two perspectives disagree without collapsing Integrate.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "T",
+    "coherence": 0.858,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [

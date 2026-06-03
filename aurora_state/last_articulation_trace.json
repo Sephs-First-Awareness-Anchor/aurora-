@@ -1,38 +1,39 @@
 {
-  "original": "Something persistable lubricated of the lessen. I slowing, so I errored probabilistically.",
+  "original": "something falsifiable constructed of the gemini I increased you -- logistically though equivalent.",
   "candidate": "",
-  "selected": "Something persistable lubricated of the lessen. I slowing, so I errored probabilistically.",
+  "selected": "something falsifiable constructed of the gemini I increased you -- logistically though equivalent.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.86,
   "candidate_score": 0.0,
-  "original_pressure": 0.3505,
+  "original_pressure": 0.313,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.6495,
+  "pressure_relief": -0.687,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle.",
+    "prompt_excerpt": "Two claims conflict. Reconcile them without pretending there is no tension. Now reconcile this with an opposing angle.",
     "input_interpretation": {
-      "raw_prompt": "Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle.",
+      "raw_prompt": "Two claims conflict. Reconcile them without pretending there is no tension. Now reconcile this with an opposing angle.",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "integrate",
-        "perspectives",
-        "disagree",
-        "without",
-        "collapsing",
-        "either",
+        "claims",
+        "conflict",
         "reconcile",
-        "opposing"
+        "them",
+        "without",
+        "pretending",
+        "there",
+        "tension"
       ],
       "entities": [
-        "Integrate",
+        "Two",
+        "Reconcile",
         "Now"
       ]
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1780505335.2086906,
+    "timestamp": 1780505339.5046985,
     "min_relief_used": 0.035
   }
 }
