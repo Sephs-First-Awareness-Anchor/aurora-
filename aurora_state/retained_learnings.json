@@ -436,9 +436,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 17,
+      "sightings": 22,
       "first_seen": 1780470355.2668352,
-      "last_seen": 1780473000.3903513
+      "last_seen": 1780473346.4735854
     },
     {
       "text": "experience afterthought afterthought yourself",
@@ -635,9 +635,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 11,
+      "sightings": 14,
       "first_seen": 1780470812.811416,
-      "last_seen": 1780472985.3220754
+      "last_seen": 1780473236.795462
     },
     {
       "text": "statement claims two claims conflict reconcile without pretending Two Reconcile",
@@ -657,9 +657,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 6,
+      "sightings": 8,
       "first_seen": 1780470817.1715522,
-      "last_seen": 1780473001.456325
+      "last_seen": 1780473047.4189072
     },
     {
       "text": "statement answer answer explicit uncertainty confidence include confidence Include",
@@ -681,9 +681,9 @@
         "constraint_fallback",
         "generative"
       ],
-      "sightings": 11,
+      "sightings": 17,
       "first_seen": 1780470824.2359493,
-      "last_seen": 1780471176.762927
+      "last_seen": 1780473205.1295197
     },
     {
       "text": "statement reframe reframe idea beginner expert Reframe",
@@ -704,9 +704,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 8,
+      "sightings": 11,
       "first_seen": 1780470831.6733227,
-      "last_seen": 1780471191.4414353
+      "last_seen": 1780473121.4546034
     },
     {
       "text": "statement respond respond care enough depth without overstepping Respond",
@@ -724,11 +724,12 @@
         "semantic_frame",
         "native_projection",
         "learned_hint",
-        "constraint_fallback"
+        "constraint_fallback",
+        "generative"
       ],
-      "sightings": 5,
+      "sightings": 8,
       "first_seen": 1780470838.4949453,
-      "last_seen": 1780471168.2713053
+      "last_seen": 1780473171.7631214
     },
     {
       "text": "factual_general story story",
@@ -898,6 +899,116 @@
       "sightings": 2,
       "first_seen": 1780472914.7230911,
       "last_seen": 1780472924.4386485
+    },
+    {
+      "text": "said means clarification said said carry here keep continuity build Earlier",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame"
+      ],
+      "sightings": 2,
+      "first_seen": 1780473259.2180507,
+      "last_seen": 1780473259.2212663
+    },
+    {
+      "text": "what said means here",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said",
+        "what said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780473259.219145,
+      "last_seen": 1780473259.219145
+    },
+    {
+      "text": "clarification said said carry here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780473259.2202885,
+      "last_seen": 1780473259.2202885
+    },
+    {
+      "text": "said means clarification said said said here keep continuity build Earlier",
+      "confidence": 0.9,
+      "sources": [
+        "simulation_live_bridge:concept",
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "definition",
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "concept",
+        "generative",
+        "semantic_frame"
+      ],
+      "sightings": 2,
+      "first_seen": 1780473270.210619,
+      "last_seen": 1780473270.2130153
+    },
+    {
+      "text": "clarification said said said here keep continuity build Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1780473270.2117498,
+      "last_seen": 1780473270.2117498
     }
   ]
 }

@@ -1,38 +1,28 @@
 {
-  "original": "preamp toothed something feeling shadow-run committed trust-laundering something cheapness docker derived lighter this gracefully substance silent aggregated ornamental cable toward this strips",
-  "candidate": "preamp toothed something feeling shadow-run committed trust-laundering something cheapness docker derived lighter this gracefully substance silent aggregated ornamental cable toward this strips.",
-  "selected": "preamp toothed something feeling shadow-run committed trust-laundering something cheapness docker derived lighter this gracefully substance silent aggregated ornamental cable toward this strips.",
+  "original": "feeling feeling feeling custom chunking numerically among swimming something discomfort documented elevation compromised something accountable two-bodied",
+  "candidate": "feeling feeling custom chunking numerically among swimming something discomfort documented elevation compromised something accountable two-bodied.",
+  "selected": "feeling feeling custom chunking numerically among swimming something discomfort documented elevation compromised something accountable two-bodied.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.81,
-  "candidate_score": 0.86,
-  "original_pressure": 0.418,
-  "candidate_pressure": 0.348,
-  "pressure_relief": 0.07,
+  "original_score": 0.53,
+  "candidate_score": 0.58,
+  "original_pressure": 0.6311,
+  "candidate_pressure": 0.5578,
+  "pressure_relief": 0.0733,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "Two claims conflict. Reconcile them without pretending there is no tension.",
+    "prompt_excerpt": "What is consciousness?",
     "input_interpretation": {
-      "raw_prompt": "Two claims conflict. Reconcile them without pretending there is no tension.",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "What is consciousness?",
+      "intent_hint": "question",
       "topic_terms": [
-        "claims",
-        "conflict",
-        "reconcile",
-        "them",
-        "without",
-        "pretending",
-        "there",
-        "tension"
+        "consciousness"
       ],
-      "entities": [
-        "Two",
-        "Reconcile"
-      ]
+      "entities": []
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780472997.1491358,
+    "timestamp": 1780473356.0806215,
     "min_relief_used": 0.035
   }
 }
