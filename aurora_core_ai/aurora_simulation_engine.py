@@ -2305,6 +2305,12 @@ class SimulationEngine:
             f"target: {sr_cfg.get('target_slot')}"
         )
 
+        # Disable per-turn OETS updates during speed-run — the O(n) relation
+        # scan on 20k+ edges per turn dominates wall-clock time.
+        # Epoch-level consolidation every 5 epochs is sufficient.
+        if self.session.perception:
+            self.session.perception._sim_speed_run = True
+
         history: List[Dict[str, Any]] = []
         best_fitness: float = 0.0
         best_epoch: int = 0
@@ -2352,6 +2358,10 @@ class SimulationEngine:
                     break
             else:
                 _consec_diverge = 0
+
+        # Re-enable per-turn OETS updates for normal conversation
+        if self.session.perception:
+            self.session.perception._sim_speed_run = False
 
         final_stats = self.get_stats()
         return {

@@ -3145,8 +3145,10 @@ class ExpressionPerceptionEngine:
         if text and len(text.split()) >= 3:
             self.composer.absorb(text, tone)
 
-        # OETS: Feed interaction to ontological web for structured understanding
-        if self.oets:
+        # OETS: Feed interaction to ontological web for structured understanding.
+        # Skip during simulation speed-run — per-turn updates on 19k+ relations
+        # are the primary wall-clock bottleneck; epoch consolidation is sufficient.
+        if self.oets and not getattr(self, '_sim_speed_run', False):
             self.oets.process_interaction(
                 text, tone=tone,
                 i_state=interaction.get('i_state', 'i_is')
