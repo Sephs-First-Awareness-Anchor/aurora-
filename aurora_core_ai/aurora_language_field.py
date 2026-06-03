@@ -171,9 +171,14 @@ class LanguageField(WarpCapable):
         # repeating the same structural route every turn.
         self._recent_paths: collections.deque = collections.deque(maxlen=5)
         self._warp_usage_counts: Dict[str, int] = {}   # component_id → usage count
+        self._cpm: Optional[Any] = None               # CPMSession — wired in post-boot
         self._load_lsa()
         if _WARP_AVAILABLE:
             self._init_warp()
+
+    def set_cpm(self, cpm: Any) -> None:
+        """Wire in the CPMSession after boot so crossing cost reflects crystal depth."""
+        self._cpm = cpm
 
     # ── Persistence ──────────────────────────────────────────────────────────
 
@@ -583,31 +588,60 @@ class LanguageField(WarpCapable):
             effective_gate = min(_B_GATE_CAP, entry.b_gate + recency_surcharge)
 
             if b_match >= effective_gate:
-                # Both factors satisfied — unlock the path
+                # Both factors satisfied — unlock the path.
+                # CPM crystal stage modulates N-cost: well-developed constraint
+                # physics at the current head position makes crossing cheaper.
                 return {
-                    "path_key":   pkey,
-                    "n_cost":     entry.n_cost,
-                    "b_gate":     entry.b_gate,
-                    "b_match":    b_match,
-                    "is_novel":   False,
+                    "path_key":    pkey,
+                    "n_cost":      self._cpm_n_cost(entry.n_cost),
+                    "b_gate":      entry.b_gate,
+                    "b_match":     b_match,
+                    "is_novel":    False,
                     "is_metaphor": False,
-                    "use_count":  entry.use_count,
+                    "use_count":   entry.use_count,
                 }
             # B-gate rejects (possibly due to recency). Seek metaphor proxy.
             proxy = self._find_metaphor_proxy(proto, exclude=pkey)
             if proxy:
                 return {**proxy, "is_metaphor": True, "is_novel": False}
 
-        # Novel crossing — high N-cost, wide B-gate
+        # Novel crossing — high N-cost, wide B-gate.
+        # CPM still modulates: unmapped territory is more expensive.
         return {
-            "path_key":   pkey,
-            "n_cost":     1.0,
-            "b_gate":     _B_GATE_START,
-            "b_match":    1.0,
-            "is_novel":   True,
+            "path_key":    pkey,
+            "n_cost":      self._cpm_n_cost(1.0),
+            "b_gate":      _B_GATE_START,
+            "b_match":     1.0,
+            "is_novel":    True,
             "is_metaphor": False,
-            "use_count":  0,
+            "use_count":   0,
         }
+
+    def _cpm_n_cost(self, base_cost: float) -> float:
+        """
+        Modulate N-cost by CPM crystal stage at the current head address.
+
+        quasi         → 15% cheaper  (deep understanding at this constraint position)
+        higher_order  → 8%  cheaper
+        base/composite→ unchanged
+        unmapped (None) → 10% more expensive (novel territory)
+
+        Adjustment is intentionally small — the LSA path physics dominates.
+        CPM provides a secondary bias toward fluency where physics is settled.
+        """
+        if self._cpm is None:
+            return base_cost
+        try:
+            stage = self._cpm.head.crystal_stage()
+            if stage == 'quasi':
+                return max(_N_COST_FLOOR, base_cost * 0.85)
+            if stage == 'higher_order':
+                return max(_N_COST_FLOOR, base_cost * 0.92)
+            if stage is None:
+                return min(1.0, base_cost * 1.10)
+        except Exception:
+            pass
+        return base_cost
 
     def _find_metaphor_proxy(
         self,

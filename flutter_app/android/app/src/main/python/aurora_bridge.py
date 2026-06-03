@@ -75,6 +75,7 @@ _entity_models: dict = {}   # label → InceptionEntity
 # not from predefined labels. Semantic data is a first-class sense dimension here —
 # not stored separately from the sensory crystal, but as an equal peer within each node.
 _concept_registry = None   # ConceptCrystalRegistry — initialized in initialize()
+_cpm              = None   # CPMSession — initialized after boot_aurora() in initialize()
 
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
@@ -1183,6 +1184,33 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         log.warning("Language Field init failed: %s", exc)
 
 
+def _init_cpm(systems: dict) -> None:
+    """
+    Initialize the Constraint Physics Machine session and wire it into systems.
+
+    Requires systems['lattice'] (IVMLattice) and the module-level
+    _concept_registry (ConceptCrystalRegistry) to both be available. Called
+    after boot_aurora() and _init_language_field() so all dependencies exist.
+    """
+    global _cpm
+    try:
+        from aurora_core_ai.aurora_computational_model import CPMSession  # type: ignore
+        ivm       = systems.get('lattice')
+        genealogy = systems.get('genealogy')
+        if ivm is None or _concept_registry is None:
+            log.info("[CPM] Deferred — lattice or crystal registry not ready")
+            return
+        _cpm = CPMSession(ivm, _concept_registry, genealogy)
+        systems['cpm'] = _cpm
+        # Wire into Language Field so crossing cost reflects crystal depth
+        lf = systems.get('language_field')
+        if lf is not None and hasattr(lf, 'set_cpm'):
+            lf.set_cpm(_cpm)
+        log.info("[CPM] Constraint Physics Machine online")
+    except Exception as exc:
+        log.warning("[CPM] Unavailable: %s", exc)
+
+
 def _start_curiosity_engine(systems: dict) -> None:
     """
     Boot the autonomous CuriosityEngine background thread.
@@ -1293,6 +1321,10 @@ def initialize(state_dir: str = "") -> str:
         # Initialize Language Field if boot didn't (requires identity_field which
         # may be absent when aurora_manifold_directory is not present).
         _init_language_field(_systems, state_dir)
+
+        # Initialize Constraint Physics Machine — requires lattice (from boot_aurora)
+        # and _concept_registry (initialized above).  Must come after both.
+        _init_cpm(_systems)
 
         # Seed Aurora's self-identity into the cognitive stores so her generative
         # system has self-referential data to draw from.  core_identity already
@@ -2603,6 +2635,29 @@ def handle_message(text: str) -> str:
             )
         response = _sanitize_response(_extract_response(result), text)
 
+        # ── CPM: record synthesis I-state on active crystal ───────────────────
+        # The dominant axis + polarity of the just-completed synthesis turn is
+        # applied as an I-state operation to the crystal at the head's current
+        # address. This writes the computational history of what each constraint
+        # position has been used for into the crystal tape.
+        _cpm_inst = (_systems.get('cpm') if _systems else None) or _cpm
+        if _cpm_inst is not None:
+            try:
+                _dom = _get_dominant_axis()
+                _pol = _last_axis_state.get(_dom, 0.5)
+                _istate_pairs = {
+                    'X': ('I_IS',    'I_ISNT'),
+                    'T': ('I_CAN',   'I_CANNOT'),
+                    'N': ('I_DO',    'I_DONOT'),
+                    'B': ('I_SAW',   'I_SOUGHT'),
+                    'A': ('I_DID',   'I_DIDNT'),
+                }
+                _pos_is, _neg_is = _istate_pairs.get(_dom, ('I_IS', 'I_ISNT'))
+                _istate = _pos_is if _pol > 0.5 else _neg_is
+                _cpm_inst.apply_istate(_istate, intensity=abs(_pol - 0.5) * 2.0)
+            except Exception:
+                pass
+
         # ── Step 3: Re-entry loop (mandatory §13) ────────────────────────────
         # The field hears itself after every utterance.
         # Self-assessment fidelity is secondary — your response next turn
@@ -3221,7 +3276,32 @@ def _inject_self_state_context(systems: dict) -> None:
                 )
             _confusion_signal_pending = {}  # consume — one turn signal only
 
+        # ── Computational territory (CPM) ────────────────────────────────────
+        # Reports the crystal stage and recursion depth at the current IVM axis
+        # position so synthesis knows whether it is operating from well-developed
+        # constraint physics (quasi) or is on unmapped tape.
+        cpm_note = ""
+        _cpm_inst = systems.get('cpm') or _cpm
+        if _cpm_inst is not None:
+            try:
+                _snap = _cpm_inst.snapshot()
+                _stage   = _snap.get('tape_symbol') or 'unmapped'
+                _depth   = _snap.get('recursion_depth', 0)
+                _dnames  = {0: 'SURFACE', 1: 'SHALLOW', 2: 'MODERATE',
+                            3: 'DEEP', 4: 'CORE'}
+                _charted = 'charted' if _snap.get('at_known_crystal') else 'uncharted'
+                _dom     = _snap.get('dominant_axis') or 'unknown'
+                cpm_note = (
+                    f"computational-territory: {_stage}-crystal; "
+                    f"recursion={_dnames.get(_depth, str(_depth))}; "
+                    f"{_charted}; {_dom}-dominant"
+                )
+            except Exception:
+                pass
+
         parts = [self_note]
+        if cpm_note:
+            parts.append(cpm_note)
         if geo_note:
             parts.append(geo_note)
         if reentry_note:

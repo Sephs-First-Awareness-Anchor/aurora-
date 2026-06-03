@@ -1573,6 +1573,12 @@ class StreamingThoughtThread:
                     self.braid.advance(self.systems)
                 except Exception:
                     pass
+                try:
+                    _cpm = self.systems.get('cpm')
+                    if _cpm is not None:
+                        _cpm.advance()
+                except Exception:
+                    pass
                 self._stop_event.wait(timeout=self.tick_interval_s)
 
         self._thread = threading.Thread(

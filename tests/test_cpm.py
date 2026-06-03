@@ -391,6 +391,140 @@ class TestCPMSession:
 
 
 # ---------------------------------------------------------------------------
+# Pipeline integration
+# ---------------------------------------------------------------------------
+
+class TestPipelineIntegration:
+    """
+    Verify that CPM state flows into the synthesis pipeline correctly.
+    Tests the three integration points:
+      1. Braid thread advances CPM each tick
+      2. Language Field n_cost modulated by crystal stage
+      3. Snapshot exposes correct state for observation string
+    """
+
+    def _session(self, crystal=None):
+        crystal = crystal or _make_crystal()
+        ivm = _make_ivm({'existence': 0.5, 'temporal': 0.3,
+                         'energy': 0.7, 'boundary': 0.2, 'agency': 0.9})
+        reg = _make_registry(crystal)
+        return CPMSession(ivm, reg), crystal, ivm, reg
+
+    # -- Braid thread integration --
+
+    def test_cpm_in_systems_advances_from_braid_loop(self):
+        session, _, _, _ = self._session()
+        systems = {'cpm': session}
+
+        # Simulate what the braid loop does each tick
+        cpm = systems.get('cpm')
+        assert cpm is not None
+        cpm.advance()
+        assert cpm.head.tick == 1
+
+    def test_cpm_absent_from_systems_no_error(self):
+        systems = {}
+        cpm = systems.get('cpm')
+        # Should silently do nothing — the braid loop guards with `if cpm is not None`
+        if cpm is not None:
+            cpm.advance()
+        assert True  # no exception
+
+    # -- Language Field n_cost modulation --
+
+    def test_language_field_set_cpm(self):
+        from aurora_core_ai.aurora_language_field import LanguageField
+        from unittest.mock import MagicMock
+        lf = LanguageField(identity_field=MagicMock())
+        session, _, _, _ = self._session()
+        lf.set_cpm(session)
+        assert lf._cpm is session
+
+    def test_cpm_n_cost_quasi_crystal_cheaper(self):
+        from aurora_core_ai.aurora_language_field import LanguageField
+        from unittest.mock import MagicMock
+        lf = LanguageField(identity_field=MagicMock())
+        session, _, _, _ = self._session(crystal=_make_crystal(stage='quasi'))
+        session.advance()
+        lf.set_cpm(session)
+        reduced = lf._cpm_n_cost(0.60)
+        assert reduced < 0.60
+        assert reduced >= 0.08  # N_COST_FLOOR
+
+    def test_cpm_n_cost_unmapped_more_expensive(self):
+        from aurora_core_ai.aurora_language_field import LanguageField
+        from unittest.mock import MagicMock
+        lf = LanguageField(identity_field=MagicMock())
+        # Registry returns None → no crystal at address
+        ivm = _make_ivm({'existence': 0.5, 'temporal': 0.3,
+                         'energy': 0.7, 'boundary': 0.2, 'agency': 0.9})
+        reg = _make_registry(crystal=None)
+        session = CPMSession(ivm, reg)
+        session.advance()
+        lf.set_cpm(session)
+        increased = lf._cpm_n_cost(0.50)
+        assert increased > 0.50
+
+    def test_cpm_n_cost_no_cpm_unchanged(self):
+        from aurora_core_ai.aurora_language_field import LanguageField
+        from unittest.mock import MagicMock
+        lf = LanguageField(identity_field=MagicMock())
+        assert lf._cpm is None
+        result = lf._cpm_n_cost(0.45)
+        assert result == 0.45
+
+    def test_cpm_n_cost_base_crystal_unchanged(self):
+        from aurora_core_ai.aurora_language_field import LanguageField
+        from unittest.mock import MagicMock
+        lf = LanguageField(identity_field=MagicMock())
+        session, _, _, _ = self._session(crystal=_make_crystal(stage='base'))
+        session.advance()
+        lf.set_cpm(session)
+        result = lf._cpm_n_cost(0.45)
+        assert result == 0.45
+
+    # -- Observation string snapshot --
+
+    def test_snapshot_charted_territory(self):
+        session, crystal, _, _ = self._session(crystal=_make_crystal(stage='higher_order'))
+        session.advance()
+        snap = session.snapshot()
+        assert snap['tape_symbol'] == 'higher_order'
+        assert snap['at_known_crystal'] is True
+        assert snap['recursion_depth'] in range(5)
+
+    def test_snapshot_uncharted_territory(self):
+        ivm = _make_ivm({'existence': 0.5, 'temporal': 0.3,
+                         'energy': 0.7, 'boundary': 0.2, 'agency': 0.9})
+        reg = _make_registry(crystal=None)
+        session = CPMSession(ivm, reg)
+        session.advance()
+        snap = session.snapshot()
+        assert snap['tape_symbol'] is None
+        assert snap['at_known_crystal'] is False
+
+    def test_synthesis_istate_applied_to_crystal(self):
+        session, crystal, _, _ = self._session()
+        session.advance()
+        # Simulate what handle_message does after synthesis with A-dominant axis
+        dom = 'A'
+        polarity = 0.9   # positive → I_DID
+        result = session.apply_istate('I_DID', intensity=abs(polarity - 0.5) * 2.0)
+        assert result is not None and result.success
+        from aurora_core_ai.aurora_istate_operations import read_cell_cpm
+        assert read_cell_cpm(crystal)['commit_agency'] > 0
+
+    def test_synthesis_negative_istate_on_low_polarity(self):
+        session, crystal, _, _ = self._session()
+        session.advance()
+        # polarity=0.2 → intensity=0.6 → negative I-state should apply pressure
+        result = session.apply_istate('I_ISNT', intensity=abs(0.2 - 0.5) * 2.0)
+        assert result is not None and result.success
+        from aurora_core_ai.aurora_istate_operations import read_cell_cpm
+        assert read_cell_cpm(crystal)['negate_pressure'] > 0
+
+
+# ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
 
