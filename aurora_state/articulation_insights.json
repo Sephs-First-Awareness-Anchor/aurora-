@@ -2,7 +2,7 @@
   "total": 500,
   "accepted": 406,
   "acceptance_rate": 0.812,
-  "avg_pressure_relief": -0.0568,
+  "avg_pressure_relief": -0.0571,
   "top_reasons": [
     [
       "accepted_deterministic",
@@ -21,15 +21,15 @@
     "deterministic": {
       "count": 414,
       "acceptance_rate": 0.9807,
-      "avg_pressure_relief": 0.0783
+      "avg_pressure_relief": 0.078
     },
     "no_pattern_matched": {
       "count": 86,
       "acceptance_rate": 0.0,
-      "avg_pressure_relief": -0.7073
+      "avg_pressure_relief": -0.7072
     }
   },
   "suggested_min_relief": 0.035,
   "suggested_mode": "normal",
-  "analyzed_at": 1780482438.2613022
+  "analyzed_at": 1780482898.7644374
 }

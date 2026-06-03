@@ -485,9 +485,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 12,
+      "sightings": 15,
       "first_seen": 1780470361.7512817,
-      "last_seen": 1780474806.479232
+      "last_seen": 1780483183.6803913
     },
     {
       "text": "factual_general something something",
@@ -507,9 +507,9 @@
         "generative",
         "learned_hint"
       ],
-      "sightings": 23,
+      "sightings": 28,
       "first_seen": 1780470368.2623188,
-      "last_seen": 1780479515.5548055
+      "last_seen": 1780483023.9094303
     },
     {
       "text": "statement talk talk Talk",
@@ -531,9 +531,9 @@
         "generative",
         "constraint_fallback"
       ],
-      "sightings": 28,
+      "sightings": 33,
       "first_seen": 1780470388.2815766,
-      "last_seen": 1780479322.3430696
+      "last_seen": 1780483170.224061
     },
     {
       "text": "statement beautiful something beautiful",
@@ -576,9 +576,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 22,
+      "sightings": 27,
       "first_seen": 1780470443.0990212,
-      "last_seen": 1780479763.2279344
+      "last_seen": 1780483123.7381032
     },
     {
       "text": "statement hello Hello",
@@ -644,9 +644,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 44,
+      "sightings": 50,
       "first_seen": 1780470812.811416,
-      "last_seen": 1780481993.9811623
+      "last_seen": 1780482960.526253
     },
     {
       "text": "statement claims two claims conflict reconcile without pretending Two Reconcile",
@@ -666,9 +666,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 11,
+      "sightings": 14,
       "first_seen": 1780470817.1715522,
-      "last_seen": 1780478823.4552252
+      "last_seen": 1780482913.7678328
     },
     {
       "text": "statement answer answer explicit uncertainty confidence include confidence Include",
@@ -690,9 +690,9 @@
         "constraint_fallback",
         "generative"
       ],
-      "sightings": 54,
+      "sightings": 65,
       "first_seen": 1780470824.2359493,
-      "last_seen": 1780482669.060126
+      "last_seen": 1780482972.6919122
     },
     {
       "text": "statement reframe reframe idea beginner expert Reframe",
@@ -713,9 +713,9 @@
         "learned_hint",
         "generative"
       ],
-      "sightings": 23,
+      "sightings": 29,
       "first_seen": 1780470831.6733227,
-      "last_seen": 1780478878.8242233
+      "last_seen": 1780482943.0534186
     },
     {
       "text": "statement respond respond care enough depth without overstepping Respond",
@@ -736,9 +736,9 @@
         "constraint_fallback",
         "generative"
       ],
-      "sightings": 14,
+      "sightings": 17,
       "first_seen": 1780470838.4949453,
-      "last_seen": 1780478853.5370212
+      "last_seen": 1780482950.995863
     },
     {
       "text": "factual_general story story",
@@ -756,11 +756,12 @@
         "semantic_frame",
         "native_projection",
         "sedimemory_recall",
-        "generative"
+        "generative",
+        "learned_hint"
       ],
-      "sightings": 21,
+      "sightings": 26,
       "first_seen": 1780471068.5512497,
-      "last_seen": 1780481632.7331097
+      "last_seen": 1780483141.006399
     },
     {
       "text": "statement hi there Hi",
@@ -802,9 +803,9 @@
         "generative",
         "sedimemory_recall"
       ],
-      "sightings": 25,
+      "sightings": 30,
       "first_seen": 1780471249.5091624,
-      "last_seen": 1780480014.5298066
+      "last_seen": 1780483056.6746964
     },
     {
       "text": "factual_entity said said talk here keep continuity build Earlier",
@@ -1191,6 +1192,27 @@
       "sightings": 1,
       "first_seen": 1780481928.9224901,
       "last_seen": 1780481928.9224901
+    },
+    {
+      "text": "statement said said understanding landed thread continues keep Earlier",
+      "confidence": 0.82,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "said"
+      ],
+      "tags": [
+        "semantic_frame",
+        "native_projection",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1780482848.1277015,
+      "last_seen": 1780482848.1277015
     }
   ]
 }

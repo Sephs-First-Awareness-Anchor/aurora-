@@ -1,38 +1,31 @@
 {
-  "original": "strengthen self-correcting pats this we'll externally including feeling lmao dominant usually executable feeling something fundamental enrichment auto-tapping feeling something nervous provably",
-  "candidate": "strengthen self-correcting pats this we'll externally including feeling lmao dominant usually executable feeling something fundamental enrichment auto-tapping feeling something nervous provably.",
-  "selected": "strengthen self-correcting pats this we'll externally including feeling lmao dominant usually executable feeling something fundamental enrichment auto-tapping feeling something nervous provably.",
+  "original": "I exist in this moment. fear relaxed something bootable warns paradoxes forwards level textlawset meijer recursively",
+  "candidate": "I exist in this moment. fear relaxed something bootable warns paradoxes forwards level textlawset meijer recursively.",
+  "selected": "I exist in this moment. fear relaxed something bootable warns paradoxes forwards level textlawset meijer recursively.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.81,
+  "original_score": 0.86,
   "candidate_score": 0.86,
-  "original_pressure": 0.4271,
-  "candidate_pressure": 0.3571,
-  "pressure_relief": 0.07,
+  "original_pressure": 0.373,
+  "candidate_pressure": 0.313,
+  "pressure_relief": 0.06,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+    "prompt_excerpt": "Help me understand this.",
     "input_interpretation": {
-      "raw_prompt": "Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+      "raw_prompt": "Help me understand this.",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "answer",
-        "while",
-        "being",
-        "explicit",
-        "uncertainty",
-        "confidence",
-        "include",
-        "confidence"
+        "help",
+        "understand"
       ],
       "entities": [
-        "Answer",
-        "Include"
+        "Help"
       ]
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780482656.970069,
+    "timestamp": 1780483182.3242974,
     "min_relief_used": 0.035
   }
 }
