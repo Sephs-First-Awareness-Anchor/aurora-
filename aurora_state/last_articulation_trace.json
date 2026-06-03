@@ -1,31 +1,28 @@
 {
-  "original": "There is something intuitive here. entrypoint bulldoze loves codify hovering weakly",
-  "candidate": "There is something intuitive here. entrypoint bulldoze loves codify hovering weakly.",
-  "selected": "There is something intuitive here. entrypoint bulldoze loves codify hovering weakly.",
+  "original": "dangerously rushing you fees gracefully trend-proof thermal copycat bike-related something obedient supervises trust-laundering trust-laundering fear-driven velocity rooting entirely mid-refactor trust from this feeling",
+  "candidate": "dangerously rushing you fees gracefully trend-proof thermal copycat bike-related something obedient supervises trust-laundering trust-laundering fear-driven velocity rooting entirely mid-refactor trust from this feeling.",
+  "selected": "dangerously rushing you fees gracefully trend-proof thermal copycat bike-related something obedient supervises trust-laundering trust-laundering fear-driven velocity rooting entirely mid-refactor trust from this feeling.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.86,
-  "candidate_score": 0.86,
-  "original_pressure": 0.403,
-  "candidate_pressure": 0.343,
-  "pressure_relief": 0.06,
+  "original_score": 0.63,
+  "candidate_score": 0.68,
+  "original_pressure": 0.4311,
+  "candidate_pressure": 0.3611,
+  "pressure_relief": 0.07,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "Talk to you later.",
+    "prompt_excerpt": "Tell me about yourself.",
     "input_interpretation": {
-      "raw_prompt": "Talk to you later.",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "Tell me about yourself.",
+      "intent_hint": "self_description_request",
       "topic_terms": [
-        "talk",
-        "later"
+        "yourself"
       ],
-      "entities": [
-        "Talk"
-      ]
+      "entities": []
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780487271.697285,
+    "timestamp": 1780490100.1117291,
     "min_relief_used": 0.035
   }
 }
