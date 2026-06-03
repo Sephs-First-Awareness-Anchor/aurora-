@@ -1371,9 +1371,7 @@ class WorkingMemory:
                 understood=native["understood"],
             )
             native_summary = str(
-                native["noncomp_state"].get("semantic_translation", "")
-                or native["noncomp_state"].get("manifold_translation", "")
-                or native["understood"].get("summary", "")
+                native["understood"].get("summary", "")
                 or native["native_text"]
                 or ""
             ).strip()
@@ -3178,9 +3176,7 @@ class WorkingMemory:
         native = self._native_turn_payload(raw, understood)
         native_topic = self._normalize_mention(native["understood"].get('topic', ''))
         native_translation = str(
-            native["noncomp_state"].get("semantic_translation", "")
-            or native["noncomp_state"].get("manifold_translation", "")
-            or native["understood"].get("summary", "")
+            native["understood"].get("summary", "")
             or native["native_text"]
             or ""
         ).strip()
@@ -3343,9 +3339,6 @@ class WorkingMemory:
             noncomp_input.get("anchor", ""),
             noncomp_state.get("dominant_target", ""),
             noncomp_state.get("basis_channel", ""),
-            noncomp_state.get("semantic_translation", ""),
-            noncomp_state.get("manifold_translation", ""),
-            noncomp_manifold.get("translation", ""),
         ):
             label = str(candidate or "").strip()
             if label and label.lower() not in {item.lower() for item in native_terms}:
