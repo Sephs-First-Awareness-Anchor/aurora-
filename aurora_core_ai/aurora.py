@@ -25052,7 +25052,13 @@ def show_status(systems: Dict[str, Any]):
     # L5
     print(f"\n  [L5] Expression & Perception")
     print(f"       Vocabulary size: {len(getattr(perception.lexicon, 'entries', {}))}")
-    print(f"       Cascade stats: {perception.cascade.get_stats()}")
+    _casc = perception.cascade
+    if hasattr(_casc, 'get_stats'):
+        print(f"       Cascade stats: {_casc.get_stats()}")
+    else:
+        print(f"       Cascade: shards={len(getattr(_casc, 'shards', {}))}, "
+              f"seeds={len(getattr(_casc, 'seeds', {}))}, "
+              f"relics={len(getattr(_casc, 'relics', {}))}")
 
     # L6
     print(f"\n  [L6] Behavioral Identity")
