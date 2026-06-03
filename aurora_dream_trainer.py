@@ -909,6 +909,12 @@ class RetainedLearningBank:
             return False
         if self._is_generic_strategy_learning(clean):
             return False
+        # Reject SentenceComposer slot-fill artifacts — adjacent repeated words
+        # (e.g. "statement answer answer explicit uncertainty") are a structural
+        # fingerprint of unfilled template slots, not genuine surface speech.
+        _tok = clean.lower().split()
+        if len(_tok) >= 2 and any(_tok[i] == _tok[i + 1] for i in range(len(_tok) - 1)):
+            return False
         key = self._key(clean)
         if not key:
             return False
@@ -2961,6 +2967,10 @@ class DreamTrainer:
                     or ("basis=" in raw and "target=" in raw)
                     or raw.startswith("[CODE]")
                     or raw.startswith("[PRESSURE]")):
+                continue
+            # Reject SentenceComposer slot-fill artifacts already in retention
+            _rt = raw.lower().split()
+            if len(_rt) >= 2 and any(_rt[i] == _rt[i + 1] for i in range(len(_rt) - 1)):
                 continue
             key = re.sub(r'\s+', ' ', raw.lower())
             if not key or key in seen:

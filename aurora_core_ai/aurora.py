@@ -20776,9 +20776,18 @@ def _run_reasoning_pipeline(
             if _ce is not None:
                 from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
                 _p = getattr(state, "parsed", {}) or {}
+                _ut_low = str(user_text or "").lower()
+                _self_ref = any(tok in _ut_low for tok in
+                                (" you ", " you'", "do you", "are you",
+                                 "your ", "yourself", "how you"))
                 _if = _IF(
                     text=str(user_text or ""),
                     is_directed=True,
+                    is_question=_ut_low.endswith("?") or any(
+                        _ut_low.startswith(q) for q in
+                        ("how ", "what ", "when ", "why ", "where ", "do you",
+                         "are you", "can you", "did you")),
+                    is_self_referential=_self_ref,
                     topic_concept=str(_p.get("topic", "") or "").strip() or None,
                 )
                 _ec = EmissionContextBuilder().build(systems, input_frame=_if)
@@ -28416,6 +28425,48 @@ def chat(systems: Dict[str, Any]):
                 show_diagnostics = not show_diagnostics
                 print(f"  [PIPELINE] Response diagnostics = {show_diagnostics}\n")
                 continue
+            elif cmd == '/qao':
+                _qao = systems.get("quasiarch_observer")
+                if _qao is None:
+                    print("  [QAO] QuasiArch observer not available.\n")
+                else:
+                    _evts = list(getattr(_qao, "recent_events", []) or [])[-12:]
+                    if not _evts:
+                        print("  [QAO] No events recorded yet.\n")
+                    else:
+                        print(f"\n  QUASIARCH OBSERVER -- last {len(_evts)} events")
+                        print("  " + "-" * 60)
+                        import datetime as _dtq
+                        for _ei, _ev in enumerate(_evts, 1):
+                            _ts = _ev.get("timestamp", 0)
+                            try:
+                                _tss = _dtq.datetime.fromtimestamp(_ts).strftime("%H:%M:%S")
+                            except Exception:
+                                _tss = "?"
+                            _issue = _ev.get("issue_category", _ev.get("issue", "?"))
+                            _intv  = _ev.get("intervention", "?")
+                            _eff   = _ev.get("observed_effect", "?")
+                            _tier  = _ev.get("logic_tier", "?")
+                            _cnt   = _ev.get("count", "?")
+                            print(f"\n  [{_ei}] {_tss}  issue={_issue}  (x{_cnt})")
+                            print(f"       tier        : {_tier}")
+                            print(f"       intervention: {_intv}")
+                            print(f"       effect      : {_eff}")
+                            _ctx = dict(_ev.get("constraint_context") or {})
+                            if _ctx:
+                                _ctx_bits = [f"{k}={str(v)[:40]}" for k, v in list(_ctx.items())[:4]]
+                                print(f"       ctx         : {' | '.join(_ctx_bits)}")
+                            _sp = dict(_ev.get("system_pressure") or {})
+                            if _sp:
+                                _sp_num = {k: v for k, v in _sp.items() if isinstance(v, (int, float))}
+                                if _sp_num:
+                                    try:
+                                        _top = sorted(_sp_num.items(), key=lambda x: -float(x[1]))[:4]
+                                        print(f"       pressure    : {' '.join(f'{k}={v:.3f}' for k,v in _top)}")
+                                    except Exception:
+                                        pass
+                        print()
+                continue
             elif cmd == '/learned':
                 learned = aurora.gateway.simulation.session.learner.what_have_i_learned()
                 if learned:
@@ -29399,6 +29450,13 @@ def chat(systems: Dict[str, Any]):
                     f"vocab={getattr(perception.lexicon, 'size', len(getattr(perception.lexicon, 'entries', {})))} "
                     f"gen={identity.dna.generation}]"
                 )
+                _qao_diag = systems.get("quasiarch_observer")
+                _qao_evts = list(getattr(_qao_diag, "recent_events", []) or [])[-6:]
+                if _qao_evts:
+                    print("          [QAO interventions this turn:]")
+                    for _qev in _qao_evts:
+                        _qi = _qev.get("issue_category", _qev.get("issue", "?"))
+                        print(f"            {_qi} → {_qev.get('intervention','?')} ({_qev.get('observed_effect','?')})")
             if r['offered_lookup']:
                 print("          (If you'd like, I can look that up and dig deeper.)")
             print()

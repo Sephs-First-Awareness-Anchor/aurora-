@@ -264,8 +264,12 @@ class LexicalMemory:
 
     def __init__(self):
         self.entries: Dict[str, LexicalEntry] = {}
+        self._role_index: Dict[str, List[str]] = {}
         self._seed_core()
-        self.load()
+        self._rebuild_role_index()
+        n = self.load()
+        if n > 0:
+            self._rebuild_role_index()
 
     def _seed_core(self):
         """Seed vocabulary with words for all grammatical roles."""
@@ -302,6 +306,13 @@ class LexicalMemory:
         for word, meaning, role, valence, ncid in seeds:
             self.entries[word] = LexicalEntry(word, meaning, role, valence, noncomp_id=ncid)
 
+    def _rebuild_role_index(self):
+        """Rebuild the role→words O(1) index from current entries."""
+        idx: Dict[str, List[str]] = {}
+        for word, entry in self.entries.items():
+            idx.setdefault(entry.role, []).append(word)
+        self._role_index = idx
+
     def find_by_noncomp(self, noncomp_id: str, valence_target: float = 0.0) -> List["LexicalEntry"]:
         """Find words mapped to a specific Non-Comp, sorted by valence proximity."""
         matches = [e for e in self.entries.values() if e.noncomp_id == noncomp_id]
@@ -315,6 +326,8 @@ class LexicalMemory:
         if word not in self.entries:
             entry = LexicalEntry(word, meaning, role, valence, lineage=lineage)
             self.entries[word] = entry
+            if hasattr(self, '_role_index'):
+                self._role_index.setdefault(role, []).append(word)
         return self.entries[word]
 
     def record_usage(self, word: str, context: str = ""):
@@ -322,6 +335,9 @@ class LexicalMemory:
             self.entries[word].use(context)
 
     def find_by_role(self, role: str) -> List["LexicalEntry"]:
+        if hasattr(self, '_role_index'):
+            words = self._role_index.get(role, [])
+            return [self.entries[w] for w in words if w in self.entries]
         return [e for e in self.entries.values() if e.role == role]
 
     def find_by_valence(self, min_val: float, max_val: float) -> List["LexicalEntry"]:
@@ -895,6 +911,8 @@ class ImpressionCascade:
         if word not in self.entries:
             entry = LexicalEntry(word, meaning, role, valence, lineage=lineage)
             self.entries[word] = entry
+            if hasattr(self, '_role_index'):
+                self._role_index.setdefault(role, []).append(word)
         return self.entries[word]
 
     def record_usage(self, word: str, context: str = ""):
@@ -902,6 +920,9 @@ class ImpressionCascade:
             self.entries[word].use(context)
 
     def find_by_role(self, role: str) -> List["LexicalEntry"]:
+        if hasattr(self, '_role_index'):
+            words = self._role_index.get(role, [])
+            return [self.entries[w] for w in words if w in self.entries]
         return [e for e in self.entries.values() if e.role == role]
 
     def find_by_valence(self, min_val: float, max_val: float) -> List["LexicalEntry"]:
@@ -2404,6 +2425,17 @@ class SentenceComposer:
                 if len(w) >= 4 and w not in _SLOT_NOISE
                 and infer_word_role(w) in ('verb', 'noun', 'adjective', 'adverb')
             }
+
+            # Cap candidates to prevent O(n_vocab) weight iteration on large lexicons.
+            # Prioritise context-relevant words first, then top-usage words.
+            _MAX_SLOT_CANDIDATES = 300
+            if len(candidates) > _MAX_SLOT_CANDIDATES:
+                ctx_cands = [e for e in candidates if e.word in context_set]
+                non_ctx = [e for e in candidates if e.word not in context_set]
+                non_ctx.sort(key=lambda e: e.usage_count, reverse=True)
+                n_non_ctx = max(0, _MAX_SLOT_CANDIDATES - len(ctx_cands))
+                candidates = ctx_cands + non_ctx[:n_non_ctx]
+
             # Get current axis activations (if available on self)
             axis_act = getattr(self, '_axis_activation', {}) or {}
             b_pressure = axis_act.get('B', 0.0)
@@ -2412,10 +2444,10 @@ class SentenceComposer:
             for e in candidates:
                 # Base weight from usage and coherence
                 w = max(0.1, 1.0 + e.usage_count * 0.1 * coherence)
-                
-                # Context boost: reduced to influence rather than dominate
+
+                # Context boost: strong pull toward claim-relevant words
                 if e.word in context_set:
-                    w *= 3.0
+                    w *= 20.0
                 
                 # Valence boost
                 if vmin <= e.emotional_valence <= vmax:
@@ -2466,11 +2498,19 @@ class SentenceComposer:
 
                 if candidates:
                     context_set = set(self._context_keywords)
+                    # Cap candidates to avoid O(n_category) iteration on large lexicons
+                    _MAX_SLOT_CANDIDATES = 300
+                    if len(candidates) > _MAX_SLOT_CANDIDATES:
+                        ctx_cands = [e for e in candidates if e.word in context_set]
+                        non_ctx = [e for e in candidates if e.word not in context_set]
+                        non_ctx.sort(key=lambda e: e.usage_count, reverse=True)
+                        n_non_ctx = max(0, _MAX_SLOT_CANDIDATES - len(ctx_cands))
+                        candidates = ctx_cands + non_ctx[:n_non_ctx]
                     weights = []
                     for e in candidates:
                         w = max(0.1, 1.0 + e.usage_count * 0.1 * coherence)
                         if e.word in context_set:
-                            w *= 10.0
+                            w *= 20.0
                         if vmin <= e.emotional_valence <= vmax:
                             w *= 1.5
                         # Deeper concepts preferred
