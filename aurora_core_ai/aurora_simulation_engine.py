@@ -1960,15 +1960,17 @@ class SimulationSession:
             epoch_results.append(result)
 
         # Consolidate L5 if available.
-        # During speed-run, skip the expensive OETS pass every epoch — do it
-        # every 5 epochs so pressure gradients still propagate but the O(n)
-        # taxonomy scan doesn't dominate wall-clock time.
+        # During speed-run, skip the expensive per-epoch OETS and promotion
+        # passes — run them every 5 epochs so structure still deepens but
+        # the O(n) scans don't dominate wall-clock time.
         if self.perception:
-            _skip_oets = (
-                self._speed_run_active
-                and self.current_epoch % 5 != 0
+            _milestone = (self._speed_run_active and self.current_epoch % 5 == 0)
+            _skip_heavy = self._speed_run_active and not _milestone
+            self.perception.consolidate(
+                mode,
+                skip_oets=_skip_heavy,
+                skip_promotions=_skip_heavy,
             )
-            self.perception.consolidate(mode, skip_oets=_skip_oets)
 
         avg_fitness = sum(r.avg_fitness for r in epoch_results) / len(epoch_results)
         total_understanding = sum(len(r.understanding_gained) for r in epoch_results)

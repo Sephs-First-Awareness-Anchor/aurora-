@@ -1819,12 +1819,8 @@ class SentenceComposer:
                 slot_key = f"{slot_code}_{slot_idx}"
                 slot_idx += 1
 
-                # Look up semantic category from the web's category index
-                word_category = None
-                for cat, members in self._oets.web._semantic_categories.items():
-                    if clean in members:
-                        word_category = cat
-                        break
+                # Look up semantic category via inverted index (O(1))
+                word_category = self._oets.web._word_to_category.get(clean)
                 if word_category:
                     constraints[slot_key] = word_category
 
@@ -1965,7 +1961,7 @@ class SentenceComposer:
         survivors = mature[:self.MAX_TEMPLATES_PER_TONE - len(immature)]
         self.pool[tone] = survivors + immature
 
-    def run_generation(self):
+    def run_generation(self, skip_promotions: bool = False):
         """
         Run one evolutionary generation across all tones.
         Includes scaffolding promotion when OETS depth allows.
@@ -2002,8 +1998,8 @@ class SentenceComposer:
                                     parent.get('cluster_references', [])),
                             })
 
-        # Evaluate template promotions via OETS
-        if self._has_oets:
+        # Evaluate template promotions via OETS — skip during speed-run
+        if self._has_oets and not skip_promotions:
             self._evaluate_promotions()
 
     def _evaluate_promotions(self):
@@ -3161,13 +3157,15 @@ class ExpressionPerceptionEngine:
     # ====================================================================
 
     def consolidate(self, min_mode: ExistenceMode = ExistenceMode.AGENTIC,
-                    skip_oets: bool = False):
+                    skip_oets: bool = False,
+                    skip_promotions: bool = False):
         """Run consolidation: generation cycle, seed--relic promotion, template evolution."""
         # Expression generation cycle
         self.ecology.run_generation()
 
         # Template evolution - cull weak templates, mutate strong ones
-        self.composer.run_generation()
+        # skip_promotions=True during speed-run: avoids O(n_templates) OETS scan each epoch
+        self.composer.run_generation(skip_promotions=skip_promotions)
 
         # Promote seeds to relics if enough have accumulated
         if min_mode.value >= ExistenceMode.BOUNDED.value:

@@ -563,6 +563,8 @@ class OntologicalWeb:
 
         # Semantic categories — learned groupings of words by meaning domain
         self._semantic_categories: Dict[str, Set[str]] = defaultdict(set)
+        # Inverted index: word → primary category (O(1) lookup for _analyze_pattern_depth)
+        self._word_to_category: Dict[str, str] = {}
 
         # Growth metrics
         self.total_relations_created = 0
@@ -595,6 +597,7 @@ class OntologicalWeb:
             category = self._infer_category(word, role, meaning)
             if category:
                 self._semantic_categories[category].add(word)
+                self._word_to_category[word] = category
 
         # Enforce capacity
         if len(self.nodes) > self.MAX_NODES:
@@ -775,13 +778,20 @@ class OntologicalWeb:
         """Manually assign a word to a semantic category."""
         if word in self.nodes:
             self._semantic_categories[category].add(word)
+            self._word_to_category.setdefault(word, category)
 
     def get_categories_for(self, word: str) -> Set[str]:
         """Get all categories a word belongs to."""
+        primary = self._word_to_category.get(word)
+        if primary:
+            return {primary}
+        # Fallback: scan (for words added before index existed)
         cats = set()
         for cat, words in self._semantic_categories.items():
             if word in words:
                 cats.add(cat)
+                self._word_to_category[word] = cat  # backfill
+                break
         return cats
 
     # ================================================================
@@ -910,6 +920,7 @@ class OntologicalWeb:
 
         # Remove from indexes
         self._nodes_by_role[node.role].discard(word)
+        self._word_to_category.pop(word, None)
         for cat, words in self._semantic_categories.items():
             words.discard(word)
         for cid in node.cluster_ids:
