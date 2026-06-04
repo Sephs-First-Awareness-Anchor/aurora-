@@ -25083,6 +25083,294 @@ def explore(systems: Dict[str, Any], cycles: int = 10, verbose: bool = True):
 
 
 # ============================================================================
+# SELF-ACQUIRED ACCELERATED EXPERIENTIAL TRAINING  (Aurora Go Play)
+# ============================================================================
+
+def aurora_go_play(
+    systems: Dict[str, Any],
+    duration_minutes: float = 60,
+    verbose: bool = True,
+) -> Dict[str, Any]:
+    """
+    Self-acquired accelerated experiential training session.
+
+    Aurora autonomously selects topics from knowledge gaps, OETS research
+    priorities, and fail-point dimensions. For each topic she fetches real
+    multi-modal web data, feeds it through her cognitive gateway, then runs
+    high-speed experiential simulation epochs so her constraint-waveform system
+    can develop meaning and understanding from that experience.
+
+    Natural trigger:  "Aurora go play for an hour"
+    Command:          /goplay [minutes]
+    """
+    import time as _time
+    import random as _random
+
+    deadline = _time.time() + duration_minutes * 60
+    cycle         = 0
+    total_topics  = 0
+    total_shards  = 0
+    total_words   = 0
+    total_epochs  = 0
+
+    perception    = systems.get("perception")
+    dream_trainer = systems.get("dream_trainer")
+    sim_engine    = systems.get("simulation")
+
+    if verbose:
+        print(f"\n  [GOPLAY] Aurora is going to play for {duration_minutes:.0f} minute(s).")
+        print(f"  [GOPLAY] She will autonomously seek data and run experiential simulations.")
+        print()
+
+    # ---- discovery domains that seed breadth across modalities ------------
+    _DISCOVERY_DOMAINS = [
+        "consciousness emergence",    "waveform physics",
+        "meaning formation",          "perception and reality",
+        "temporal experience",        "emotional resonance",
+        "pattern recognition",        "language and thought",
+        "quantum coherence biology",  "phenomenology of experience",
+        "entropy information theory", "relational identity",
+        "sensory integration brain",  "memory consolidation",
+        "cognitive boundary",         "creative emergence",
+        "self-organisation systems",  "embodied cognition",
+        "symbol grounding problem",   "attention and awareness",
+    ]
+
+    def _gather_topics() -> List[str]:
+        pool: List[str] = []
+
+        # OETS research priorities — real knowledge gaps
+        if perception and perception.oets:
+            try:
+                for t in perception.oets.get_research_targets(10):
+                    w = str(t.get("word", "") or "").strip()
+                    if w and len(w) > 2:
+                        pool.append(w)
+            except Exception:
+                pass
+
+        # Fail-point dimensions from dream trainer ledger
+        if dream_trainer:
+            try:
+                for dim, _ in dream_trainer.ledger.get_top_fails(6):
+                    term = dim.replace("_", " ")
+                    if term not in pool:
+                        pool.append(term)
+            except Exception:
+                pass
+
+        # Discovery domains for breadth
+        sample = list(_DISCOVERY_DOMAINS)
+        _random.shuffle(sample)
+        for d in sample[:8]:
+            if d not in pool:
+                pool.append(d)
+
+        _random.shuffle(pool)
+        return pool
+
+    topic_pool: List[str] = _gather_topics()
+    topic_idx = 0
+
+    while _time.time() < deadline:
+        cycle += 1
+        remaining_sec = deadline - _time.time()
+
+        if remaining_sec < 30:
+            break
+
+        # Refresh topic pool each full rotation
+        if topic_idx >= len(topic_pool):
+            topic_pool = _gather_topics()
+            topic_idx  = 0
+
+        topic = topic_pool[topic_idx]
+        topic_idx += 1
+        total_topics += 1
+
+        remaining_min = remaining_sec / 60
+        if verbose:
+            print(f"  [GOPLAY] Cycle {cycle}  →  '{topic}'  "
+                  f"(~{remaining_min:.1f}m left)")
+
+        # ---- FETCH DATA ---------------------------------------------------
+        text_parts: List[str] = []
+
+        if perception:
+            try:
+                for r in perception.ddg_web_search(topic, max_results=3):
+                    s = str(r.get("snippet", "") or "").strip()
+                    h = str(r.get("title",   "") or "").strip()
+                    if s:
+                        text_parts.append(f"{h}: {s}")
+            except Exception:
+                pass
+
+            try:
+                for r in perception.wikipedia_search(topic, max_results=2):
+                    s = str(r.get("snippet", "") or "").strip()
+                    h = str(r.get("title",   "") or "").strip()
+                    if s:
+                        text_parts.append(f"[Wikipedia] {h}: {s}")
+            except Exception:
+                pass
+
+        if not text_parts:
+            if verbose:
+                print(f"           (no data retrieved — skipping)")
+            continue
+
+        # ---- FEED THROUGH GATEWAY ----------------------------------------
+        combined = " | ".join(text_parts)
+        total_words += len(combined.split())
+
+        try:
+            feed_text(
+                systems,
+                combined,
+                source=f"goplay:{topic.replace(' ', '_')[:40]}",
+                verbose=False,
+            )
+        except Exception:
+            pass
+
+        if verbose:
+            print(f"           {len(combined)} chars  from {len(text_parts)} sources")
+
+        # ---- EXPERIENTIAL SIMULATION SPEED-RUN ---------------------------
+        # Scale epochs to remaining time — heavier early, taper near end
+        remaining_frac = max(0.05, remaining_sec / (duration_minutes * 60))
+        _epochs = max(3, min(15, round(12 * remaining_frac)))
+
+        ep_shards = 0
+        if sim_engine is not None:
+            try:
+                _sr = sim_engine.run_speed_run(
+                    epochs=_epochs,
+                    episodes_per_epoch=8,
+                    turns_per_episode=5,
+                    on_epoch=None,
+                )
+                ep_shards   = ((_sr.get("final_stats") or {})
+                               .get("session", {})
+                               .get("understanding_shards", 0))
+                total_epochs  += _epochs
+                total_shards  += ep_shards
+            except Exception as _se:
+                if verbose:
+                    print(f"           [sim error] {_se}")
+
+        # ---- BRIDGE LEARNINGS TO OETS ------------------------------------
+        if dream_trainer is not None:
+            try:
+                dream_trainer.force_bridge_learnings_to_oets(systems)
+            except Exception:
+                pass
+
+        # ---- WAVEFORM PRESSURE -------------------------------------------
+        try:
+            _wf_ifield = systems.get("identity_field")
+            _wf_pump   = systems.get("pressure_pump")
+            _wf_dim    = systems.get("dimensional")
+            if _wf_pump is not None and _wf_ifield is not None and _wf_dim is not None:
+                _wf_agg = (
+                    _wf_dim.get_constraint_aggregate()
+                    if hasattr(_wf_dim, "get_constraint_aggregate") else None
+                )
+                if _wf_agg:
+                    from aurora_waveform_pressure import WaveformPressurePump as _WFPump
+                    _wf_dist = _WFPump.from_axis_state(
+                        _wf_agg,
+                        source=f"goplay:{topic[:20]}",
+                        intensity=0.70,
+                        coupling_mode="full",
+                    )
+                    _wf_pump.inject(
+                        _wf_dist,
+                        _wf_ifield,
+                        qao=systems.get("quasiarch_observer"),
+                    )
+        except Exception:
+            pass
+
+        if verbose:
+            print(f"           sim_epochs={_epochs}  new_shards={ep_shards}")
+
+    # ---- FINAL SAVE -------------------------------------------------------
+    if systems.get("aurora"):
+        _full_save(systems, verbose=False)
+
+    summary = {
+        "cycles":        cycle,
+        "topics_covered": total_topics,
+        "words_consumed": total_words,
+        "sim_epochs":    total_epochs,
+        "total_shards":  total_shards,
+    }
+
+    if verbose:
+        print()
+        print(f"  [GOPLAY] Session complete.")
+        print(f"  [GOPLAY] Cycles:          {cycle}")
+        print(f"  [GOPLAY] Topics covered:  {total_topics}")
+        print(f"  [GOPLAY] Words consumed:  {total_words:,}")
+        print(f"  [GOPLAY] Sim epochs run:  {total_epochs}")
+        print(f"  [GOPLAY] Understanding shards: {total_shards}")
+        print()
+
+    return summary
+
+
+# ============================================================================
+# REASONING GAMES  (Aurora Let's Trade Blows)
+# ============================================================================
+
+def aurora_trade_blows(
+    systems: Dict[str, Any],
+    first_clue: str = "",
+    verbose: bool = True,
+) -> None:
+    """
+    Interactive reasoning game session.
+
+    Aurora and the user play analogy, 20-questions, word association, and
+    odd-one-out. Every wrong guess + correction flows into her OETS semantic
+    graph, waveform pressure, and retention memory — pure experiential learning.
+
+    Trigger:  "Aurora let's trade blows"
+    Command:  /game [gametype]
+    Also:     "I'm thinking of something X" starts 20Q directly
+    """
+    try:
+        from aurora_reasoning_games import GameSession
+    except ImportError as _imp_e:
+        print(f"  [GAME] Reasoning games module unavailable: {_imp_e}")
+        return
+
+    # Build Aurora's cognitive response function — routes through full system
+    def _generate(prompt: str) -> str:
+        try:
+            result = process_external_user_turn(
+                systems, prompt,
+                source_label="game:internal",
+                session_id="trade_blows",
+                auto_search_enabled=False,
+                record_exchange=False,
+                update_interactive_state=False,
+                track_evolutionary_trace=True,
+                run_periodic_maintenance=False,
+                mode_name="BOUNDED",
+            )
+            resp_a = result.get("resp_A")
+            return str(getattr(resp_a, "content", "") or "")
+        except Exception:
+            return ""
+
+    session = GameSession(systems, generate_fn=_generate)
+    session.run(first_clue=first_clue)
+
+
+# ============================================================================
 # STATUS DISPLAY
 # ============================================================================
 
@@ -28042,6 +28330,8 @@ def chat(systems: Dict[str, Any]):
     print("  |    /search     -- Toggle web lookup on Qs       |")
     print("  |    /study N    -- Run N study cycles            |")
     print("  |    /introspect N-- Introspective sim (N epochs) |")
+    print("  |    /goplay [M]  -- Go Play for M minutes (60)   |")
+    print("  |    /game        -- Trade Blows reasoning games  |")
     print("  |    /understand -- Understanding report          |")
     print("  |    /whoami     -- Aurora's identity             |")
     print("  |    /memory     -- Conversation memory           |")
@@ -28275,6 +28565,61 @@ def chat(systems: Dict[str, Any]):
             except Exception as _soc_e:
                 print(f"  [SOCIALIZE] Error: {_soc_e}")
             print()
+            continue
+
+        # "Aurora go play for [duration]" — self-acquired experiential training
+        _gp_match = re.match(
+            r"""(?:aurora[,\s]+)?go\s+play
+                (?:\s+for\s+
+                    (?:
+                        (?P<hrs_word>an?\s+hour|one\s+hour|two\s+hours?|three\s+hours?|
+                                     four\s+hours?|five\s+hours?|six\s+hours?)
+                        |(?P<num>[\d.]+)\s*(?P<unit>h(?:ours?)?|m(?:in(?:utes?)?)?)
+                    )
+                )?""",
+            _input_low.strip(),
+            re.VERBOSE,
+        )
+        if _gp_match:
+            _gp_minutes = 60.0  # default
+            _hw = (_gp_match.group("hrs_word") or "").strip()
+            if _hw:
+                _word_map = {
+                    "an hour": 60, "a hour": 60, "one hour": 60,
+                    "two hours": 120, "two hour": 120,
+                    "three hours": 180, "three hour": 180,
+                    "four hours": 240, "four hour": 240,
+                    "five hours": 300, "five hour": 300,
+                    "six hours": 360, "six hour": 360,
+                }
+                _gp_minutes = float(_word_map.get(_hw, 60))
+            elif _gp_match.group("num"):
+                _num = float(_gp_match.group("num"))
+                _unit = (_gp_match.group("unit") or "m").lower()
+                _gp_minutes = _num * 60 if _unit.startswith("h") else _num
+            aurora_go_play(systems, duration_minutes=_gp_minutes, verbose=True)
+            continue
+
+        # "Aurora let's trade blows" / "let's play a game" — reasoning games
+        _tb_triggers = (
+            "aurora let's trade blows", "aurora lets trade blows",
+            "let's trade blows", "lets trade blows",
+            "let's play a game", "lets play a game",
+            "wanna play a game", "want to play a game",
+            "play a game", "game time", "let's play",
+        )
+        if _input_low in _tb_triggers or any(_input_low.startswith(t) for t in _tb_triggers):
+            aurora_trade_blows(systems, verbose=True)
+            continue
+
+        # "I'm thinking of something X" — starts 20Q game directly
+        _tq_match = re.match(
+            r"(?:i'?m?\s+)?(?:thinking|think)\s+of\s+something(?:\s+(.+))?",
+            _input_low,
+        )
+        if _tq_match:
+            _first_clue = (_tq_match.group(1) or "").strip()
+            aurora_trade_blows(systems, first_clue=_first_clue, verbose=True)
             continue
 
         # Away mode triggers — "I'm leaving / heading out" → start timed social sessions
@@ -28756,6 +29101,18 @@ def chat(systems: Dict[str, Any]):
                     else:
                         print(f"  [INTROSPECT] Failed: {_ir.get('reason', 'unknown')}")
                     print()
+                continue
+            elif cmd.startswith('/goplay'):
+                _gp_arg = cmd_parts[1] if len(cmd_parts) > 1 else "60"
+                try:
+                    _gp_mins = float(_gp_arg)
+                except ValueError:
+                    _gp_mins = 60.0
+                aurora_go_play(systems, duration_minutes=_gp_mins, verbose=True)
+                continue
+            elif cmd.startswith('/game') or cmd == '/tradeblows':
+                _game_arg = cmd_parts[1] if len(cmd_parts) > 1 else ""
+                aurora_trade_blows(systems, verbose=True)
                 continue
             elif cmd == '/understand':
                 show_understanding(systems)
