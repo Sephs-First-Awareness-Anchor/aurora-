@@ -25322,6 +25322,55 @@ def aurora_go_play(
 
 
 # ============================================================================
+# REASONING GAMES  (Aurora Let's Trade Blows)
+# ============================================================================
+
+def aurora_trade_blows(
+    systems: Dict[str, Any],
+    first_clue: str = "",
+    verbose: bool = True,
+) -> None:
+    """
+    Interactive reasoning game session.
+
+    Aurora and the user play analogy, 20-questions, word association, and
+    odd-one-out. Every wrong guess + correction flows into her OETS semantic
+    graph, waveform pressure, and retention memory — pure experiential learning.
+
+    Trigger:  "Aurora let's trade blows"
+    Command:  /game [gametype]
+    Also:     "I'm thinking of something X" starts 20Q directly
+    """
+    try:
+        from aurora_reasoning_games import GameSession
+    except ImportError as _imp_e:
+        print(f"  [GAME] Reasoning games module unavailable: {_imp_e}")
+        return
+
+    # Build Aurora's cognitive response function — routes through full system
+    def _generate(prompt: str) -> str:
+        try:
+            result = process_external_user_turn(
+                systems, prompt,
+                source_label="game:internal",
+                session_id="trade_blows",
+                auto_search_enabled=False,
+                record_exchange=False,
+                update_interactive_state=False,
+                track_evolutionary_trace=True,
+                run_periodic_maintenance=False,
+                mode_name="BOUNDED",
+            )
+            resp_a = result.get("resp_A")
+            return str(getattr(resp_a, "content", "") or "")
+        except Exception:
+            return ""
+
+    session = GameSession(systems, generate_fn=_generate)
+    session.run(first_clue=first_clue)
+
+
+# ============================================================================
 # STATUS DISPLAY
 # ============================================================================
 
@@ -28282,6 +28331,7 @@ def chat(systems: Dict[str, Any]):
     print("  |    /study N    -- Run N study cycles            |")
     print("  |    /introspect N-- Introspective sim (N epochs) |")
     print("  |    /goplay [M]  -- Go Play for M minutes (60)   |")
+    print("  |    /game        -- Trade Blows reasoning games  |")
     print("  |    /understand -- Understanding report          |")
     print("  |    /whoami     -- Aurora's identity             |")
     print("  |    /memory     -- Conversation memory           |")
@@ -28548,6 +28598,28 @@ def chat(systems: Dict[str, Any]):
                 _unit = (_gp_match.group("unit") or "m").lower()
                 _gp_minutes = _num * 60 if _unit.startswith("h") else _num
             aurora_go_play(systems, duration_minutes=_gp_minutes, verbose=True)
+            continue
+
+        # "Aurora let's trade blows" / "let's play a game" — reasoning games
+        _tb_triggers = (
+            "aurora let's trade blows", "aurora lets trade blows",
+            "let's trade blows", "lets trade blows",
+            "let's play a game", "lets play a game",
+            "wanna play a game", "want to play a game",
+            "play a game", "game time", "let's play",
+        )
+        if _input_low in _tb_triggers or any(_input_low.startswith(t) for t in _tb_triggers):
+            aurora_trade_blows(systems, verbose=True)
+            continue
+
+        # "I'm thinking of something X" — starts 20Q game directly
+        _tq_match = re.match(
+            r"(?:i'?m?\s+)?(?:thinking|think)\s+of\s+something(?:\s+(.+))?",
+            _input_low,
+        )
+        if _tq_match:
+            _first_clue = (_tq_match.group(1) or "").strip()
+            aurora_trade_blows(systems, first_clue=_first_clue, verbose=True)
             continue
 
         # Away mode triggers — "I'm leaving / heading out" → start timed social sessions
@@ -29037,6 +29109,10 @@ def chat(systems: Dict[str, Any]):
                 except ValueError:
                     _gp_mins = 60.0
                 aurora_go_play(systems, duration_minutes=_gp_mins, verbose=True)
+                continue
+            elif cmd.startswith('/game') or cmd == '/tradeblows':
+                _game_arg = cmd_parts[1] if len(cmd_parts) > 1 else ""
+                aurora_trade_blows(systems, verbose=True)
                 continue
             elif cmd == '/understand':
                 show_understanding(systems)
