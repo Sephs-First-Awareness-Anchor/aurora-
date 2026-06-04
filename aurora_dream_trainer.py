@@ -915,6 +915,19 @@ class RetainedLearningBank:
         _tok = clean.lower().split()
         if len(_tok) >= 2 and any(_tok[i] == _tok[i + 1] for i in range(len(_tok) - 1)):
             return False
+        # Reject OETS study-cycle cognitive traces — "I understand what X means
+        # here / I understand who is here" — these are internal processing
+        # artifacts that should never be stored as retained surface speech.
+        import re as _ret_re
+        _cl = clean.lower().strip()
+        if _ret_re.match(
+            r"i understand (?:what|who|where|when|how)\s+\w+\s+(?:means?|is|are|here)\b",
+            _cl,
+        ):
+            return False
+        # Reject "I'll want the [concept]." constraint shape artifacts
+        if _ret_re.match(r"i'?ll want the \w+", _cl):
+            return False
         key = self._key(clean)
         if not key:
             return False
@@ -2971,6 +2984,11 @@ class DreamTrainer:
             # Reject SentenceComposer slot-fill artifacts already in retention
             _rt = raw.lower().split()
             if len(_rt) >= 2 and any(_rt[i] == _rt[i + 1] for i in range(len(_rt) - 1)):
+                continue
+            # Reject OETS study-cycle traces and constraint artifacts
+            _rl = raw.lower().strip()
+            if (re.match(r"i understand (?:what|who|where|when|how)\s+\w+\s+(?:means?|is|are|here)", _rl)
+                    or re.match(r"i'?ll want the \w+", _rl)):
                 continue
             key = re.sub(r'\s+', ' ', raw.lower())
             if not key or key in seen:
