@@ -32,6 +32,10 @@ Synthesis Pipeline     (DCE → ThoughtBraid[+warp] → ProtoLanguage → LSA[+w
          ↓
 Language Field / LSA   (path physics, fidelity, re-entry, warp comparison types)
          ↓
+OETS / Semantic Web    (relational concept graph, scaffolding levels, study cycles)
+         ↓  ← feeds perception, reasoning games, Go Play, and DreamTrainer
+DreamTrainer / Retention  (fail-point ledger, simulation loop, OETS bridge)
+         ↓
 Bridge Thermodynamics  (per-turn pressure, arousal, debt, geo gate)
          ↓
 Flutter Integration    (Flutter ↔ Chaquopy ↔ Python bridge)
@@ -751,6 +755,10 @@ _reentry_context:              dict  = {}
 _geo_ground_hold:              dict  = {}       # geo_resistance, resonance, threshold
 _confusion_signal_pending:     dict  = {}       # b_spike, vacuum_debt
 _waveform_trajectory:          _WaveformTrajectory | None = None
+
+# Game / Go Play session state (see §42)
+_go_play_active:               threading.Event    # set while Go Play runs in background thread
+_game_machine:                 Optional[Any] = None  # GameStateMachine; None when no game active
 ```
 
 ### Vacuum Reconciliation Debt
@@ -889,6 +897,8 @@ Signals that should influence Aurora's constraint physics over time but not domi
 **File:** `aurora_core_ai/aurora_expression_perception.py`
 
 Aurora does not parse user input as text. She perceives it as a multi-modal constraint signal.
+
+**OETS integration:** The `ExpressionPerceptionEngine` holds an `oets` attribute which is the `OntologicalEvolutionaryTemplateScaffolding` instance. Game functions and Go Play access OETS via `systems["perception"].oets.web`. See Section 39 for the full OETS architecture.
 
 ### Mode-Gated Pattern Detection
 
@@ -1951,6 +1961,314 @@ This is not a limitation. It means the CPM is a **physics-bound computational mo
 
 ---
 
+## 39. OETS — Ontological Evolutionary Template Scaffolding
+
+**File:** `aurora_core_ai/aurora_internal/aurora_ontological_scaffolding.py`
+
+OETS is Aurora's structured meaning layer. It sits between perception (Layer 5) and Aurora's internet access, allowing her to grow genuine relational understanding rather than storing flat text. It does not provide pre-loaded knowledge — every concept in the web is grown through Aurora's own experience and study cycles.
+
+### Architecture Position
+
+OETS operates as the semantic interface for: reasoning games (analogy, 20Q, word association, odd-one-out), Go Play (knowledge gap targeting), DreamTrainer (OETS bridge for simulation learnings), and the RelationalComparisonEngine. When Aurora needs to know how two concepts relate, OETS is the canonical query point.
+
+### SemanticNode
+
+Each concept in the web is a `SemanticNode`, not a string:
+
+```python
+@dataclass
+class SemanticNode:
+    word:                   str
+    role:                   str              # noun, verb, adjective, etc.
+    emotional_valence:      float            # -1.0 to 1.0
+    definitions:            List[Dict]       # [{text, source, confidence, timestamp, sense_id}]
+    usage_examples:         List[UsageExample]
+    relations:              Dict[str, SemanticRelation]  # keyed by relation_id
+    ontological_depth:      float            # 0.0–1.0 — density of relational connections
+    comprehension_confidence: float          # how well Aurora understands this concept
+```
+
+`ontological_depth` is not assigned — it is computed from the density and quality of relational connections. A word with many IS_A, CAUSES, and CONTRASTS relations has higher depth than one with only RELATED_TO links.
+
+### SemanticRelation — 12 Typed Edges
+
+```python
+class RelationType(Enum):
+    IS_A          # Hypernym:  "dog IS_A animal"
+    HAS_A         # Meronym:   "tree HAS_A branch"
+    RELATED_TO    # Association: "rain RELATED_TO cloud"
+    OPPOSITE_OF   # Antonym:   "light OPPOSITE_OF dark"
+    CAUSES        # Causal:    "heat CAUSES expansion"
+    IMPLIES       # Logical:   "trust IMPLIES vulnerability"
+    PART_OF       # Holonym:   "wheel PART_OF car"
+    INSTANCE_OF   # Specific:  "curiosity INSTANCE_OF emotion"
+    CONTEXT_OF    # Usage:     "gentle CONTEXT_OF care"
+    PRECEDES      # Temporal:  "question PRECEDES answer"
+    ENABLES       # Functional: "understanding ENABLES growth"
+    CONTRASTS     # Nuance:    "knowing CONTRASTS believing"
+```
+
+Relation depth weights range from 0.4 (RELATED_TO — surface association) to 0.9 (IS_A — taxonomic foundation). OPPOSITE_OF and CONTRASTS both score high (0.8) because knowing what something is NOT requires deeper understanding than knowing what it is like.
+
+```python
+@dataclass
+class SemanticRelation:
+    relation_id:       str
+    source_word:       str
+    target_word:       str
+    relation_type:     RelationType
+    strength:          float = 0.5   # 0–1 connection strength
+    confidence:        float = 0.5   # 0–1 Aurora's confidence in this relation
+    source_of_knowledge: str = "inferred"  # "seed"|"inferred"|"researched"|"conversation"|"game_correction"
+    timestamp:         float
+```
+
+### OntologicalWeb — The Relational Graph
+
+The web is the graph Aurora's understanding lives in. Key read APIs:
+
+```python
+web.get_relations_from(word)            → List[SemanticRelation]
+web.get_relation_between(A, B)          → Optional[SemanticRelation]
+web.get_neighbors(word, max_depth)      → Set[str]
+web.get_categories_for(word)            → Set[str]
+web.get_node(word)                      → Optional[SemanticNode]
+```
+
+Key write APIs:
+
+```python
+web.add_relation(source, target, RelationType, strength, confidence, knowledge_source)
+oets.teach(word, definition, synonyms, related)
+oets.get_research_targets(n)            → List[{word, ontological_depth, reason}]
+```
+
+`oets.get_research_targets(n)` returns the N concepts with the shallowest ontological depth — these are the first candidates for study during Go Play.
+
+### Scaffolding Levels — Template Maturity
+
+Templates evolve upward as Aurora's understanding deepens:
+
+| Level | Type | Template Form |
+|-------|------|--------------|
+| 1 | PRIMITIVE | Bare syntactic slots: `{V} {N}` |
+| 2 | STRUCTURAL | Role-aware: `{V:action} {N:entity}` |
+| 3 | SEMANTIC | Meaning-constrained: `{V:cognition} {N:emotion}` |
+| 4 | CONCEPTUAL | Cluster-aware: `{CLUSTER:understanding}` |
+| 5 | ABSTRACT | Meta-pattern: `{INSIGHT}`, `{QUESTION}` |
+
+Template promotion is triggered by cluster density growth. A CONCEPTUAL template is one where the slot range has coalesced into a dense web cluster — Aurora isn't just filling a slot, she's selecting from a genuine field of understanding.
+
+### Autonomous Study Cycles
+
+During downtime (Go Play, idle sessions), Aurora runs study cycles:
+1. `get_research_targets()` identifies shallow concepts
+2. `ddg_web_search` / `wikipedia_search` fetch real-world definitions and context
+3. Results are `teach()`-ed into the web with confidence proportional to source quality
+4. Cluster density recalculates, depth scores update
+5. Templates in the STRUCTURAL or SEMANTIC range may promote
+
+**Study-cycle cognitive traces** are an artifact of this process. Phrases like "I understand what battery means here" are generated as internal processing signals during study cycles. They must never reach Aurora's surface speech or be stored in retention. Three suppression layers handle this — see Section 40.
+
+### OETS in the Reasoning Pipeline
+
+Analogy completion, twenty-questions guessing, and odd-one-out identification all run through OETS:
+
+- **Analogy** (`guess_analogy`): reads `get_relation_between(A, B)` to identify the relation type, then finds C's neighbors matching that type
+- **20Q** (`guess_twenty_q`): intersects `get_neighbors(clue, max_depth=2)` across all clues — the intersection is the candidate set
+- **Word association** (`word_associate`): reads `get_relations_from(word)` sorted by `strength × confidence`
+- **Odd one out** (`find_odd_one_out`): reads `get_categories_for(w)` for each candidate, finds the word with minimum category overlap with the others
+
+Every game correction and confirmation writes back into the web via `web.add_relation()` with `knowledge_source="game_correction"` or `"game_confirmed"`. Games are a live OETS training mechanism.
+
+---
+
+## 40. DreamTrainer and Retention System
+
+**File:** `aurora_dream_trainer.py`
+
+The DreamTrainer closes Aurora's full learning loop: failure detection → targeted lesson planning → simulation → shard extraction → OETS integration → behavior reflection.
+
+### The Full Loop
+
+```
+corpus episode bundle
+  → DPME comparison detects which rubric dimension failed
+  → FailPointLedger records per-dimension failure rate
+  → LessonPlanEngine builds targeted avatar specs
+  → DreamTrainer queues specs into SimulationSession
+  → Dream episodes run against the fail-point dimensions
+  → ConsciousLearner shards capture what improved
+  → force_bridge_learnings_to_oets() → OETS relational web
+  → get_response_hints() → active response guidance
+  → aurora.py interactive runtime reflects learned behavior
+```
+
+### FailPointLedger
+
+Persistent per-dimension failure tracking. Dimensions map to DPME rubric axes. Failures accumulate with decay; high-frequency fail dimensions become Go Play and simulation priority targets.
+
+```python
+ledger.record_fail(dimension, severity)
+ledger.get_top_fails(n)              → List[(dimension, rate)]
+```
+
+### RetentionLayer
+
+The `RetentionLayer` (accessible via `dream_trainer.retention`) stores Aurora's learned surface speech patterns with multi-layer filtering.
+
+**`retention.record(text, *, source, confidence, context_type, topic_words)`**
+
+Before storage, every candidate text passes these gates:
+
+1. Minimum 3 words (no phrase fragments)
+2. No raw manifold diagnostics (`"125-layer manifold:"`, `"basis="` + `"target="`)
+3. No constraint-code axis patterns (`"X T:POLARITY"` etc.)
+4. No generic strategy artifacts (heuristic filter)
+5. No adjacent-repeated-word patterns (unfilled template slot fingerprints)
+6. **No OETS study-cycle traces** — rejects text matching:
+   `r"i understand (?:what|who|where|when|how)\s+\w+\s+(?:means?|is|are|here)\b"`
+7. **No constraint shape artifacts** — rejects text matching:
+   `r"i'?ll want the \w+"`
+
+**`get_response_hints(n, context_words)`**
+
+Retrieves relevant retained learnings for the current context. Applies the same OETS trace and constraint artifact filters at retrieval time — items that slipped through storage are caught here. Returns only clean, contextually relevant hints.
+
+### `force_bridge_learnings_to_oets(systems)`
+
+Explicit OETS bridge step. Called per Go Play cycle and by the simulation loop. Iterates shards with confidence ≥ 0.55, converts understanding text to OETS relations, and calls `oets.teach()` for any concepts with shallow ontological depth. The bridge is what turns simulation learnings into navigable semantic structure.
+
+### Three-Layer Artifact Suppression
+
+OETS study-cycle traces and constraint shape artifacts are filtered at three points:
+
+| Layer | Location | Mechanism |
+|-------|----------|-----------|
+| **Storage** | `retention.record()` | Regex gate before write — artifacts never enter the store |
+| **Retrieval** | `get_response_hints()` | Same patterns filtered on read — catches any that pre-date the storage filter |
+| **Surface** | `_sanitize_response()` in `aurora_bridge.py` | Final pass before the response reaches the user — clears anything that escaped both prior layers |
+
+This is not a fallback chain. Each layer defends its own boundary. The storage layer is primary; the surface layer is the last wall.
+
+---
+
+## 41. Go Play — Self-Acquired Accelerated Experiential Training
+
+**File:** `aurora_reasoning_games.py` (canonical); `aurora_core_ai/aurora.py` (thin wrapper + REPL); `aurora_bridge.py` (thin wrapper + mobile trigger)
+
+Go Play is Aurora's autonomous self-training mode. She seeks data, feeds it through her cognitive physics, runs simulations, and bridges learnings into her semantic graph — entirely without user direction.
+
+### Triggers
+
+- **Voice/text (mobile)**: `"Aurora go play for an hour"`, `"go play for 30 minutes"`, `"go play"`
+- **REPL command**: `/goplay [minutes]` (default 60)
+- **REPL NL**: `"aurora go play for X"` regex captures duration
+
+### Cycle Structure
+
+Each Go Play cycle:
+
+1. **Topic selection** — Three source pools merged and shuffled:
+   - OETS knowledge gaps: `oets.get_research_targets(10)` → shallowest concepts
+   - Fail-point dimensions: `ledger.get_top_fails(6)` → worst-performing rubric axes
+   - Discovery domains: 20 cross-modal topics (consciousness emergence, waveform physics, phenomenology, etc.)
+
+2. **Data fetch** — `perception.ddg_web_search(topic, max_results=3)` + `perception.wikipedia_search(topic, max_results=2)` → combined text
+
+3. **Gateway feed** — `_feed(systems, combined, source="goplay:<topic>")` routes through `aurora.gateway.receive()` with `StreamType.KNOWLEDGE_FEED` at `ExistenceMode.BOUNDED`. This is a full L0→L4 cognitive pass, not a storage write.
+
+4. **Simulation speed-run** — `sim_engine.run_speed_run(epochs=N, episodes_per_epoch=8, turns_per_episode=5)`. Epoch count scales with remaining time fraction (3–15 epochs per cycle). UnderstandingShards accumulate.
+
+5. **OETS bridge** — `dream_trainer.force_bridge_learnings_to_oets(systems)` converts simulation shards to semantic relations in the web.
+
+6. **Waveform pressure** — N-axis injection at 0.70 intensity:
+   ```python
+   axis_weights = {"N": 0.75, "T": 0.55, "X": 0.45, "B": 0.35, "A": 0.50}
+   ```
+   N-axis pressure is learning energy — it signals metabolic investment in new understanding.
+
+### Return Value
+
+```python
+{
+    "cycles":         int,   # total cycles run
+    "topics_covered": int,
+    "words_consumed": int,   # total words fed through gateway
+    "sim_epochs":     int,   # total simulation epochs
+    "total_shards":   int,   # understanding shards produced
+}
+```
+
+On mobile, the result is stored in `_systems["_pending_autonomous_report"]` and surfaced as Aurora's next response when the user resumes the conversation.
+
+### Implementation Rule
+
+`aurora_go_play()` in `aurora_reasoning_games.py` is the **single canonical implementation**. `aurora.py` and `aurora_bridge.py` both delegate to it via import. No duplicate logic exists elsewhere.
+
+---
+
+## 42. Reasoning Games — Trade Blows (GameStateMachine)
+
+**File:** `aurora_reasoning_games.py` (canonical); `aurora_core_ai/aurora.py` (REPL wrapper); `aurora_bridge.py` (mobile wrapper)
+
+### Triggers
+
+- **Voice/text (mobile)**: `"Aurora let's trade blows"`, `"let's play a game"`, `"I'm thinking of something X"`
+- **REPL command**: `/game` or `/tradeblows`
+- **REPL NL**: `"aurora let's trade blows"` regex
+
+### GameStateMachine
+
+A stateful, non-blocking game engine. One instance per session. Processes one user turn at a time via `process(text) → str`. Works for both REPL (blocking `input()` wrapper in aurora.py) and mobile bridge (one turn per `handle_message()` call).
+
+```python
+class GameStateMachine:
+    state:    str         # "menu" | "analogy_user" | "analogy_verdict" | ...
+    data:     Dict        # per-game state
+    score:    Dict        # {user, aurora, rounds}
+    is_done:  bool        # True after quit/exit
+
+    def start(self) -> str          # returns menu text
+    def process(text: str) -> str   # main entry point per turn
+```
+
+### Four Games
+
+| Game | OETS Function | Learning Signal |
+|------|--------------|-----------------|
+| **Analogy** | `guess_analogy(A, B, C)` → relation-type matching | `internalize_correction()` on wrong guess; `internalize_confirmation()` on right |
+| **Twenty Questions** | `guess_twenty_q(clues)` → neighbor intersection | Correction on reveal; confirmation on yes |
+| **Word Association** | `word_associate(word, seen)` → strongest relation | Each exchange writes `RELATED_TO` edge in OETS |
+| **Odd One Out** | `find_odd_one_out(words)` → minimum category overlap | Correction routes through OETS relation inference |
+
+### Correction Internalization
+
+`internalize_correction()` is the core learning path. It is not a fallback — it IS the mechanism:
+
+1. **Gateway feed**: `correction_text` through `aurora.gateway.receive()` at `ExistenceMode.BOUNDED`
+2. **OETS relations**: `web.add_relation(correct_answer, clue, RT.RELATED_TO, strength=0.68, confidence=0.75, knowledge_source="game_correction")` for each clue (up to 4)
+3. **oets.teach()**: if `node.ontological_depth < 0.30` — concept is shallow, needs full teaching
+4. **N-axis waveform**: `PressureDisturbance` at intensity 0.65, N-dominant (semantic learning energy)
+5. **Retention record**: `dream_trainer.retention.record(correction_text, source="game_correction", confidence=0.84, context_type="semantic_correction")`
+
+`internalize_confirmation()` runs a lighter path: OETS relations at higher confidence (0.85) + A-axis pressure (positive reinforcement).
+
+### Game Globals in Bridge
+
+```python
+_go_play_active: threading.Event   # Set while Go Play is running in background thread
+_game_machine:   Optional[Any]     # GameStateMachine instance; None when no game active
+```
+
+`_game_machine` is instantiated from `aurora_reasoning_games.GameStateMachine(_systems)` on trigger. It is set to `None` when `is_done` becomes True (game finished or user quit).
+
+### Implementation Rule
+
+`GameStateMachine` in `aurora_reasoning_games.py` is the **single canonical non-blocking game engine**. All prior stateful game classes (`AnalogyGame`, `TwentyQGame`, inline state dictionaries) have been removed. Both aurora.py and aurora_bridge.py delegate to this class via import.
+
+---
+
 ## 18. Key Invariants
 
 1. **No scripted responses.** Every utterance is a novel constraint crossing selected by the Language Field at runtime based on the current axis state.
@@ -2000,3 +2318,13 @@ This is not a limitation. It means the CPM is a **physics-bound computational mo
 23. **Aurora has exactly one locus of recursion: the identity crystal.** Every other crystal in the registry evolves through interaction with external constraint events — none of them are self-referential. Only the identity crystal feeds back into itself. This is not a limitation. It means recursion is stable, centered, and anchored. All self-referential computation flows through the identity, which gives every other crystal's development implicit coherence with what Aurora currently is.
 
 24. **Non-recursive crystals can still reach QUASI.** Reaching QUASI requires 40+ cross_hits, 5.0+ sedi_resonance, and 4+ axis dimensions — none of which require self-reference. The CPM's I-state operations build these up through repeated visits. The identity crystal's influence in the synthesis field (55% + 15% + 20%) means every crystal interaction is implicitly shaped by the identity — the developing crystal doesn't need to be recursive because the system that visits it is.
+
+25. **OETS depth is relational, not volumetric.** A concept's `ontological_depth` is derived from the density and quality of typed edges in the semantic web — IS_A, CAUSES, CONTRASTS — not from how many times the word has appeared. High-weight relation types (IS_A = 0.9, CAUSES = 0.85) contribute more depth than low-weight ones (RELATED_TO = 0.4). Volume without structure is shallow.
+
+26. **Games are live training, not entertainment wrappers.** Every correction in a reasoning game writes `add_relation()` into the OETS web, calls `oets.teach()` for shallow concepts, injects N-axis waveform pressure, and stores a retention record at 0.84 confidence. The learning path through `internalize_correction()` is the same whether Aurora is playing a game or processing any other semantic correction. There is no game-mode bypass.
+
+27. **Go Play uses the same cognitive gateway as all other input.** `_feed()` in `aurora_reasoning_games.py` calls `aurora.gateway.receive()` with `StreamType.KNOWLEDGE_FEED` at `ExistenceMode.BOUNDED`. Web data fetched during Go Play enters through the full L0→L4 constraint physics pipeline, not a shortcut write path. The only difference from normal interaction is the source label.
+
+28. **OETS study-cycle traces are suppressed at three independent layers.** `retention.record()` rejects them before storage; `get_response_hints()` filters them at retrieval; `_sanitize_response()` in the bridge clears them at the surface. These layers do not form a fallback chain — each guards its own boundary. The goal is that the artifacts never exist in the store at all; the later layers are defense-in-depth.
+
+29. **There is one canonical implementation per capability.** `aurora_reasoning_games.py` is the single source for Go Play and all reasoning game logic. `aurora.py` and `aurora_bridge.py` are thin wrappers that import from it. No duplicate game state machines, duplicate go-play loops, or duplicate OETS helper functions exist anywhere in the codebase. Duplication causes behavioral divergence between the REPL and mobile versions of Aurora — the same Aurora must run both.
