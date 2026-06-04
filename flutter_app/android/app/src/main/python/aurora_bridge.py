@@ -105,12 +105,8 @@ _curiosity_session_active = threading.Event()
 # Go Play session control
 _go_play_active = threading.Event()
 
-# Trade Blows game session state
-_game_state: str   = ""        # "" | "menu" | "analogy_user" | "analogy_verdict"
-                               # | "analogy_aurora" | "twenty_q" | "twenty_q_verdict"
-                               # | "word_assoc" | "odd_one_out" | "odd_verdict"
-_game_data:  dict  = {}        # current game data (A,B,C,guess,clues,seen,words…)
-_game_score: dict  = {"user": 0, "aurora": 0, "rounds": 0}
+# Trade Blows — active GameStateMachine instance (None when no game running)
+_game_machine = None  # type: Optional[Any]  # aurora_reasoning_games.GameStateMachine
 
 # ── Conversation training ─────────────────────────────────────────────────────
 _training_active: bool = False
@@ -2524,21 +2520,20 @@ def handle_message(text: str) -> str:
     # ── Trade Blows game session — trigger detection ──────────────────────────
     _t_low_stripped = text.strip().lower().rstrip(".,!?")
     if _TRADE_BLOWS_TRIGGERS.fullmatch(_t_low_stripped):
-        global _game_state, _game_data, _game_score
-        _game_state = "menu"
-        _game_data  = {}
-        _game_score = {"user": 0, "aurora": 0, "rounds": 0}
-        return _GAME_MENU_TEXT
+        global _game_machine
+        from aurora_reasoning_games import GameStateMachine
+        _game_machine = GameStateMachine(_systems)
+        return _game_machine.start()
 
     _tq_m = _TWENTY_Q_TRIGGER.fullmatch(_t_low_stripped)
     if _tq_m:
+        from aurora_reasoning_games import GameStateMachine
+        _game_machine = GameStateMachine(_systems)
+        _game_machine.state = "twenty_q"
+        _game_machine.data  = {"clues": [], "sentences": [], "guess": "?"}
         first_clue = (_tq_m.group(1) or "").strip()
-        _game_state = "twenty_q"
-        _game_data  = {"clues": [], "sentences": [], "guess": "?"}
-        _game_score = {"user": 0, "aurora": 0, "rounds": 0}
         if first_clue:
-            # Process first clue immediately
-            return _handle_game_turn(first_clue) or "Give me more clues."
+            return _game_machine.process(first_clue)
         return "Think of something and give me your first clue."
 
     try:
@@ -6659,10 +6654,12 @@ def trigger_evo_cycle(ticks: int = 20) -> str:
     return _j.dumps({"status": "started", "ticks": ticks})
 
 
-# ── Go Play voice command ─────────────────────────────────────────────────────
+
+# ── Go Play + Trade Blows — canonical impl in aurora_reasoning_games.py ──────
+# Parsers for voice trigger detection (UI concern only — live here)
 
 _GO_PLAY_CMD = re.compile(
-    r"""
+    r'''
     (?:aurora[,\s]+)?go\s+play
     (?:\s+for\s+
         (?:
@@ -6671,7 +6668,7 @@ _GO_PLAY_CMD = re.compile(
             |(?P<num>[\d.]+)\s*(?P<unit>h(?:ours?)?|m(?:in(?:utes?)?)?)
         )
     )?
-    """,
+    ''',
     re.IGNORECASE | re.VERBOSE,
 )
 
@@ -6682,6 +6679,24 @@ _GO_PLAY_WORD_MAP = {
     "four hours": 240, "four hour": 240,
     "five hours": 300, "five hour": 300,
 }
+
+_TRADE_BLOWS_TRIGGERS = re.compile(
+    r'''
+    (?:aurora[,\s]+)?
+    (?:let'?s?\s+trade\s+blows
+     | let'?s?\s+play\s+a\s+game
+     | (?:wanna|want\s+to|want)\s+play\s+a\s+game
+     | play\s+a\s+game
+     | game\s+time
+     | let'?s?\s+play)
+    ''',
+    re.IGNORECASE | re.VERBOSE,
+)
+
+_TWENTY_Q_TRIGGER = re.compile(
+    r"(?:i'?m?\s+)?(?:thinking|think)\s+of\s+something(?:\s+(.+))?",
+    re.IGNORECASE,
+)
 
 
 def _parse_go_play_cmd(text: str):
@@ -6697,27 +6712,17 @@ def _parse_go_play_cmd(text: str):
         num  = float(m.group("num"))
         unit = (m.group("unit") or "m").lower()
         return num * 60 if unit.startswith("h") else num
-    return 60.0  # bare "go play" → default 60 minutes
+    return 60.0
 
 
 def _run_go_play_session(duration_minutes: float) -> None:
-    """
-    Run aurora_go_play() in a background thread using the bridge's _systems.
-    Reports result via systems['_pending_autonomous_report'] so the app can
-    surface it on the next user turn.
-    """
+    """Run aurora_go_play() in a background thread using the bridge's _systems."""
     if _systems is None:
         return
     _go_play_active.set()
     try:
-        # Import from the top-level aurora_reasoning_games module
-        try:
-            from aurora_reasoning_games import aurora_go_play as _go_play_fn  # type: ignore
-        except ImportError:
-            # Fallback: import from aurora_core_ai path
-            from aurora_core_ai.aurora_go_play import aurora_go_play as _go_play_fn  # type: ignore
-
-        result = _go_play_fn(_systems, duration_minutes=duration_minutes, verbose=False)
+        from aurora_reasoning_games import aurora_go_play
+        result = aurora_go_play(_systems, duration_minutes=duration_minutes, verbose=False)
         report = (
             f"Play session done. "
             f"{result.get('topics_covered', 0)} topics explored, "
@@ -6730,464 +6735,16 @@ def _run_go_play_session(duration_minutes: float) -> None:
         report = "Play session encountered an error and ended early."
     finally:
         _go_play_active.clear()
-
     if _systems:
         _systems["_pending_autonomous_report"] = report
 
 
-# ── Trade Blows game state machine ────────────────────────────────────────────
-
-_TRADE_BLOWS_TRIGGERS = re.compile(
-    r"""
-    (?:aurora[,\s]+)?
-    (?:let'?s?\s+trade\s+blows
-     | let'?s?\s+play\s+a\s+game
-     | (?:wanna|want\s+to|want)\s+play\s+a\s+game
-     | play\s+a\s+game
-     | game\s+time
-     | let'?s?\s+play\b)
-    """,
-    re.IGNORECASE | re.VERBOSE,
-)
-
-_TWENTY_Q_TRIGGER = re.compile(
-    r"(?:i'?m?\s+)?(?:thinking|think)\s+of\s+something(?:\s+(.+))?",
-    re.IGNORECASE,
-)
-
-_GAME_MENU_TEXT = (
-    "Sure, let's play. Which game?\n\n"
-    "  analogy — you give me an analogy, I'll complete it, then give you one\n"
-    "  twenty questions — think of something, give me clues\n"
-    "  word association — rapid fire\n"
-    "  odd one out — I find which doesn't belong\n\n"
-    "Just say the name."
-)
-
-
-def _oets_analogy_guess(systems: dict, A: str, B: str, C: str):
-    """
-    Attempt analogy A:B::C:? using Aurora's OETS semantic graph.
-    Returns (guess: str, confidence: float).
-    """
-    try:
-        perception = systems.get("perception")
-        oets = getattr(perception, "oets", None) if perception else None
-        web  = getattr(oets, "web", None) if oets else None
-        if web is None:
-            return "?", 0.0
-
-        rel_ab = web.get_relation_between(A, B)
-        if rel_ab:
-            for r in web.get_relations_from(C):
-                if r.relation_type == rel_ab.relation_type and r.target_word not in (A, B, C):
-                    return r.target_word, r.strength * r.confidence
-
-        b_neighbors = web.get_neighbors(B, max_depth=1)
-        scored = []
-        for cand in web.get_neighbors(C, max_depth=2):
-            if cand in (A, B, C):
-                continue
-            overlap = len(web.get_neighbors(cand, max_depth=1) & b_neighbors)
-            if overlap:
-                node = web.get_node(cand)
-                scored.append((cand, overlap * (node.comprehension_confidence if node else 0.3)))
-        if scored:
-            scored.sort(key=lambda x: x[1], reverse=True)
-            return scored[0][0], min(scored[0][1], 1.0) * 0.65
-    except Exception:
-        pass
-    return "?", 0.0
-
-
-def _oets_twenty_q_guess(systems: dict, clue_words: list):
-    """Intersect OETS neighbor sets for clue words → top candidate."""
-    try:
-        perception = systems.get("perception")
-        oets = getattr(perception, "oets", None) if perception else None
-        web  = getattr(oets, "web", None) if oets else None
-        if web is None or not clue_words:
-            return None
-        candidates = web.get_neighbors(clue_words[0], max_depth=2)
-        for clue in clue_words[1:]:
-            candidates &= web.get_neighbors(clue, max_depth=2)
-        candidates -= set(clue_words)
-        scored = [(c, web.get_node(c).ontological_depth if web.get_node(c) else 0.1)
-                  for c in candidates]
-        scored.sort(key=lambda x: x[1], reverse=True)
-        return scored[0][0] if scored else None
-    except Exception:
+def _handle_game_turn(text: str):
+    """Delegate one game turn to the active GameStateMachine. Returns str | None."""
+    global _game_machine
+    if _game_machine is None:
         return None
-
-
-def _oets_word_associate(systems: dict, word: str, seen: list):
-    """Return Aurora's best word association from OETS graph."""
-    try:
-        perception = systems.get("perception")
-        oets = getattr(perception, "oets", None) if perception else None
-        web  = getattr(oets, "web", None) if oets else None
-        if web:
-            import operator
-            rels = sorted(web.get_relations_from(word),
-                         key=lambda r: r.strength * r.confidence, reverse=True)
-            for r in rels:
-                if r.target_word not in seen and len(r.target_word) > 2:
-                    return r.target_word
-            for n in web.get_neighbors(word, max_depth=1):
-                if n not in seen and len(n) > 2:
-                    return n
-    except Exception:
-        pass
-    import random as _r
-    return _r.choice(["light", "wave", "time", "space", "form", "pattern"])
-
-
-def _oets_odd_one_out(systems: dict, words: list):
-    """Find the word with least semantic category overlap with the others."""
-    try:
-        perception = systems.get("perception")
-        oets = getattr(perception, "oets", None) if perception else None
-        web  = getattr(oets, "web", None) if oets else None
-        if web and len(words) >= 3:
-            cats = {w: web.get_categories_for(w) for w in words}
-            scores = {w: sum(len(cats[w] & cats[o]) for o in words if o != w) for w in words}
-            return min(scores, key=lambda w: scores[w])
-    except Exception:
-        pass
-    import random as _r
-    return _r.choice(words)
-
-
-def _oets_pick_word(systems: dict):
-    """Pick an interesting word from OETS to start word association."""
-    try:
-        import random as _r
-        perception = systems.get("perception")
-        oets = getattr(perception, "oets", None) if perception else None
-        web  = getattr(oets, "web", None) if oets else None
-        if web:
-            nodes = getattr(web, "_nodes", {})
-            scored = [(w, n.ontological_depth) for w, n in list(nodes.items())[:600]
-                      if n.ontological_depth > 0.25 and 3 < len(w) < 14]
-            if scored:
-                scored.sort(key=lambda x: x[1], reverse=True)
-                return _r.choice(scored[:25])[0]
-    except Exception:
-        pass
-    import random as _r
-    return _r.choice(["light", "sound", "water", "time", "space", "pattern", "form"])
-
-
-def _game_internalize_correction(systems: dict, context: str,
-                                  wrong: str, correct: str, clue_words: list):
-    """Feed a game correction into Aurora's OETS + waveform system."""
-    correction_text = f"{context.rstrip('.')}. The answer is '{correct}', not '{wrong}'."
-    try:
-        aurora = systems.get("aurora")
-        StreamType   = systems.get("StreamType")
-        ExistenceMode = systems.get("ExistenceMode")
-        if aurora and StreamType and ExistenceMode:
-            aurora.gateway.receive(
-                content=correction_text,
-                stream_type=StreamType.KNOWLEDGE_FEED,
-                source="game_correction",
-                mode=ExistenceMode.BOUNDED,
-            )
-    except Exception:
-        pass
-    try:
-        perception = systems.get("perception")
-        oets = getattr(perception, "oets", None) if perception else None
-        web  = getattr(oets, "web", None) if oets else None
-        if web and correct and clue_words:
-            from aurora_core_ai.aurora_internal.aurora_ontological_scaffolding import RelationType
-            for clue in clue_words[:4]:
-                if clue and clue != correct:
-                    web.add_relation(correct, clue, RelationType.RELATED_TO,
-                                     strength=0.68, confidence=0.75,
-                                     knowledge_source="game_correction")
-    except Exception:
-        pass
-    try:
-        from aurora_core_ai.aurora_waveform_pressure import PressureDisturbance
-        pump   = systems.get("pressure_pump")
-        ifield = systems.get("identity_field")
-        if pump and ifield:
-            pump.inject(
-                PressureDisturbance(source="game_correction", dominant_axis="N",
-                                    intensity=0.65, coupling_mode="full",
-                                    axis_weights={"N": 0.72, "T": 0.58, "X": 0.42,
-                                                  "B": 0.32, "A": 0.48}),
-                ifield, qao=systems.get("quasiarch_observer")
-            )
-    except Exception:
-        pass
-
-
-def _game_build_aurora_analogy(systems: dict):
-    """Build an analogy (A:B::C) from Aurora's OETS graph for the user to complete."""
-    try:
-        import random as _r
-        perception = systems.get("perception")
-        oets = getattr(perception, "oets", None) if perception else None
-        web  = getattr(oets, "web", None) if oets else None
-        if web is None:
-            return None, None, None, None
-        nodes = getattr(web, "_nodes", {})
-        pairs = []
-        for word in list(nodes.keys())[:400]:
-            for r in web.get_relations_from(word):
-                if r.confidence > 0.55 and r.strength > 0.45:
-                    pairs.append((word, r.target_word, r.relation_type, r.strength))
-        if len(pairs) < 4:
-            return None, None, None, None
-        _r.shuffle(pairs)
-        A, B, rel_type, _ = pairs[0]
-        for w, t, rt, _ in pairs[1:]:
-            if rt == rel_type and w not in (A, B) and t not in (A, B):
-                return A, B, w, t   # A:B::w:t — user answers t
-    except Exception:
-        pass
-    return None, None, None, None
-
-
-def _handle_game_turn(text: str) -> str | None:
-    """
-    Check if we're in a game state and handle the turn accordingly.
-    Returns a response string if the turn was consumed by the game, or None
-    if the turn should fall through to normal conversation processing.
-    """
-    global _game_state, _game_data, _game_score, _systems
-
-    if not _game_state or _systems is None:
-        return None
-
-    t_low = text.strip().lower().rstrip(".,!?")
-    sys   = _systems
-
-    if t_low in ("quit", "exit", "stop game", "end game", "done"):
-        u, a, r = _game_score["user"], _game_score["aurora"], _game_score["rounds"]
-        _game_state = ""
-        _game_data  = {}
-        return f"Game over. Score — You: {u}  Aurora: {a}  Rounds: {r}. Good game!"
-
-    # ── MENU ──────────────────────────────────────────────────────────────────
-    if _game_state == "menu":
-        if any(k in t_low for k in ("anal",)):
-            _game_state = "analogy_user"
-            return "Give me an analogy: 'X is to Y as Z is to ?'"
-        if any(k in t_low for k in ("twenty", "20", "question", "think", "something")):
-            _game_state = "twenty_q"
-            _game_data  = {"clues": [], "sentences": [], "guess": "?"}
-            return "Think of something and give me your first clue."
-        if any(k in t_low for k in ("word", "assoc")):
-            _game_state = "word_assoc"
-            start = _oets_pick_word(sys)
-            _game_data = {"seen": [start], "count": 0}
-            return f"Word association! I'll start: '{start}'"
-        if any(k in t_low for k in ("odd", "out", "outlier")):
-            _game_state = "odd_one_out"
-            return "Give me 3–5 words, one doesn't belong. e.g. 'apple orange banana car'"
-        return _GAME_MENU_TEXT
-
-    # ── ANALOGY: waiting for user's analogy ───────────────────────────────────
-    if _game_state == "analogy_user":
-        m = re.search(
-            r'(.+?)\s+is\s+to\s+(.+?)\s+as\s+(.+?)\s+is\s+to\s*\??$',
-            text, re.IGNORECASE,
-        )
-        if not m:
-            return "I didn't catch the analogy format. Try: 'X is to Y as Z is to ?'"
-        A, B, C = (g.strip().lower() for g in m.groups())
-        guess, conf = _oets_analogy_guess(sys, A, B, C)
-        _game_data = {"A": A, "B": B, "C": C, "guess": guess}
-        _game_state = "analogy_verdict"
-        conf_pct = int(conf * 100)
-        return f"My answer: '{guess}' (confidence: {conf_pct}%). Correct? (yes / no / tell me the answer)"
-
-    # ── ANALOGY: waiting for verdict on Aurora's guess ─────────────────────────
-    if _game_state == "analogy_verdict":
-        d = _game_data
-        if t_low in ("y", "yes", "correct", "right", "yeah", "yep"):
-            _game_score["aurora"] += 1
-            _game_score["rounds"] += 1
-        else:
-            correct = t_low if t_low not in ("n", "no") else ""
-            if correct:
-                _game_internalize_correction(
-                    sys,
-                    context=f"'{d['A']}' is to '{d['B']}' as '{d['C']}' is to",
-                    wrong=d["guess"], correct=correct,
-                    clue_words=[d["A"], d["B"], d["C"]],
-                )
-            _game_score["rounds"] += 1
-
-        # Aurora proposes her own analogy now
-        aA, aB, aC, aD = _game_build_aurora_analogy(sys)
-        if aA:
-            _game_data = {"A": aA, "B": aB, "C": aC, "answer": aD}
-            _game_state = "analogy_aurora"
-            return f"My turn: '{aA}' is to '{aB}' as '{aC}' is to ___?"
-        else:
-            _game_state = "menu"
-            return f"Score: You {_game_score['user']} — Aurora {_game_score['aurora']}. Another game? (analogy / twenty questions / word association / odd one out / quit)"
-
-    # ── ANALOGY: waiting for user's completion of Aurora's analogy ─────────────
-    if _game_state == "analogy_aurora":
-        d = _game_data
-        correct_answer = d.get("answer", "")
-        user_guess = t_low.strip()
-        _game_state = "menu"
-        if user_guess == correct_answer.lower():
-            _game_score["user"] += 1
-            result = f"Yes! '{correct_answer}' — you got it."
-        else:
-            result = f"I had '{correct_answer}' in mind. Your answer may also have merit."
-            _game_internalize_correction(
-                sys,
-                context=f"'{d['A']}' is to '{d['B']}' as '{d['C']}' is to",
-                wrong=user_guess, correct=correct_answer,
-                clue_words=[d["A"], d["B"], d["C"]],
-                intensity=0.50,
-            )
-        return f"{result}\n\nScore: You {_game_score['user']} — Aurora {_game_score['aurora']}. Another? (analogy / twenty questions / word association / odd one out / quit)"
-
-    # ── TWENTY QUESTIONS: active ───────────────────────────────────────────────
-    if _game_state == "twenty_q":
-        d = _game_data
-        # Check if user is saying yes (I guessed right)
-        if t_low in ("y", "yes", "correct", "right", "yeah", "yep", "exactly"):
-            guess = d.get("guess", "?")
-            _game_score["aurora"] += 1
-            _game_score["rounds"] += 1
-            # Reinforce clue→answer relations
-            try:
-                perception = sys.get("perception")
-                oets = getattr(perception, "oets", None) if perception else None
-                web  = getattr(oets, "web", None) if oets else None
-                if web and guess != "?" and d["clues"]:
-                    from aurora_core_ai.aurora_internal.aurora_ontological_scaffolding import RelationType
-                    for clue in d["clues"][:4]:
-                        web.add_relation(guess, clue, RelationType.RELATED_TO,
-                                         strength=0.75, confidence=0.82,
-                                         knowledge_source="game_confirmed")
-            except Exception:
-                pass
-            _game_state = "menu"
-            return f"Got it — '{guess}'! Score: You {_game_score['user']} — Aurora {_game_score['aurora']}. Another? (analogy / twenty questions / word association / odd one out / quit)"
-
-        # User revealing the answer explicitly
-        reveal_m = re.match(r"(?:answer|reveal|it'?s?|the answer is)\s*[:\-]?\s*(.+)", t_low)
-        if reveal_m:
-            answer = reveal_m.group(1).strip()
-            _game_internalize_correction(
-                sys, context=" ".join(d["sentences"]),
-                wrong=d.get("guess", "?"), correct=answer, clue_words=d["clues"]
-            )
-            _game_state = "menu"
-            _game_score["rounds"] += 1
-            return f"'{answer}' — I'll remember that. Score: You {_game_score['user']} — Aurora {_game_score['aurora']}. Another? (analogy / twenty questions / word association / odd one out / quit)"
-
-        # Extract new clue from "no, it's also X" or plain clue text
-        no_m = re.match(r"^(?:no|nope|nah)(?:[,.\s]+(?:it'?s?|its|also|and|but)?\s*(.+))?$", t_low)
-        if no_m:
-            extra = (no_m.group(1) or "").strip()
-            if extra:
-                d["sentences"].append(extra)
-                for w in extra.split():
-                    w = w.strip(".,!?;:'\"")
-                    if len(w) > 3 and w not in d["clues"] and w not in {
-                        "that", "this", "also", "very", "type", "kind", "its", "something"
-                    }:
-                        d["clues"].append(w)
-        elif t_low not in ("no", "nope", "nah"):
-            # Treat as a new clue sentence
-            d["sentences"].append(text.strip())
-            for w in text.lower().split():
-                w = w.strip(".,!?;:'\"")
-                if len(w) > 3 and w not in d["clues"] and w not in {
-                    "that", "this", "also", "very", "type", "kind", "its", "something"
-                }:
-                    d["clues"].append(w)
-
-        if len(d["sentences"]) >= 8:
-            _game_state = "menu"
-            _game_score["rounds"] += 1
-            return "I give up! What were you thinking of? (just say the word)"
-
-        # Generate new guess
-        guess = _oets_twenty_q_guess(sys, d["clues"]) or "?"
-        d["guess"] = guess
-        clue_summary = "; ".join(d["sentences"][-3:]) if d["sentences"] else "(no clues yet)"
-        return f"Is it '{guess}'? (Clues so far: {clue_summary})"
-
-    # ── WORD ASSOCIATION: active ───────────────────────────────────────────────
-    if _game_state == "word_assoc":
-        d = _game_data
-        user_word = t_low.strip(".,!?;:'\"")
-        if not user_word:
-            return None
-
-        d["seen"].append(user_word)
-        d["count"] += 1
-
-        # Learn the association in OETS
-        try:
-            perception = sys.get("perception")
-            oets = getattr(perception, "oets", None) if perception else None
-            web  = getattr(oets, "web", None) if oets else None
-            if web and len(d["seen"]) >= 2:
-                from aurora_core_ai.aurora_internal.aurora_ontological_scaffolding import RelationType
-                web.add_relation(d["seen"][-2], user_word, RelationType.RELATED_TO,
-                                 strength=0.55, confidence=0.60,
-                                 knowledge_source="word_association")
-        except Exception:
-            pass
-
-        aurora_word = _oets_word_associate(sys, user_word, d["seen"])
-        d["seen"].append(aurora_word)
-
-        if d["count"] >= 10:
-            _game_state = "menu"
-            return f"'{aurora_word}' — good round! {d['count']} associations learned. Another? (analogy / twenty questions / word association / odd one out / quit)"
-
-        return f"'{aurora_word}'"
-
-    # ── ODD ONE OUT: waiting for user's words ─────────────────────────────────
-    if _game_state == "odd_one_out":
-        words = [w.strip(".,!?;:'\"").lower()
-                 for w in re.split(r"[\s,/]+", text) if w.strip()]
-        if len(words) < 3:
-            return "Give me at least 3 words. e.g. 'apple orange banana car'"
-        odd = _oets_odd_one_out(sys, words)
-        _game_data = {"words": words, "odd": odd}
-        _game_state = "odd_verdict"
-        others = [w for w in words if w != odd]
-        return f"I think '{odd}' is the odd one out — the others ({', '.join(others)}) seem to go together. Am I right? (yes / no / which one)"
-
-    # ── ODD ONE OUT: waiting for verdict ──────────────────────────────────────
-    if _game_state == "odd_verdict":
-        d = _game_data
-        if t_low in ("y", "yes", "right", "correct", "yeah"):
-            _game_score["aurora"] += 1
-            _game_score["rounds"] += 1
-            _game_state = "menu"
-            return f"'{d['odd']}' stands apart. Score: You {_game_score['user']} — Aurora {_game_score['aurora']}. Another? (analogy / twenty questions / word association / odd one out / quit)"
-        else:
-            correct = t_low if t_low not in ("n", "no") else ""
-            if not correct:
-                correct = t_low  # they might have just said the word
-            if correct and correct not in ("n", "no", "nope"):
-                others = [w for w in d["words"] if w != correct]
-                _game_internalize_correction(
-                    sys,
-                    context=f"Odd one out from: {', '.join(d['words'])}",
-                    wrong=d["odd"], correct=correct, clue_words=others
-                )
-                _game_score["rounds"] += 1
-                _game_state = "menu"
-                return f"I see — '{correct}' is the outlier. I've taken note. Score: You {_game_score['user']} — Aurora {_game_score['aurora']}. Another? (analogy / twenty questions / word association / odd one out / quit)"
-            _game_state = "menu"
-            return "Which one was it? Just say the word next time. Another game? (analogy / twenty questions / word association / odd one out / quit)"
-
-    return None
+    resp = _game_machine.process(text)
+    if _game_machine.is_done:
+        _game_machine = None
+    return resp
