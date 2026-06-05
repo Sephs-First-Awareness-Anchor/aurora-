@@ -1244,10 +1244,10 @@ def _start_curiosity_engine(systems: dict) -> None:
             CuriosityEngine,
             start_curiosity_background,
         )
-        from aurora_core_ai.aurora_self_grounding import (  # type: ignore
+        from aurora_self_grounding import (  # type: ignore
             SelfGroundingFallback, get_tension_monitor,
         )
-        from aurora_core_ai.aurora_tool_mind import ToolChoiceObserver  # type: ignore
+        from aurora_tool_mind import ToolChoiceObserver  # type: ignore
 
         dim = systems.get("dimensional")
         pressure_src = getattr(dim, "pressure_vec", None) if dim else None
