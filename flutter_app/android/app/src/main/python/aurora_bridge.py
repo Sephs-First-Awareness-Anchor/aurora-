@@ -6516,6 +6516,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                         _la2 = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
                     class _G2:
                         x_activation = _la2.get("X", 0.5)
+                        t_activation = _la2.get("T", 0.5)
                         n_activation = _la2.get("N", 0.5)
                         b_activation = _la2.get("B", 0.5)
                         a_activation = _la2.get("A", 0.5)
