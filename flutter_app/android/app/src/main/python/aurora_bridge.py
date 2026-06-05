@@ -58,6 +58,12 @@ _axis_state_lock = threading.Lock()
 # Aurora perceives these as her own physical substrate: battery = energy, motion = movement, etc.
 _hardware_sensors: dict = {}
 
+# Real-time audio observation pushed by provide_audio_observation() from Kotlin.
+# Mirrors _last_camera_observation: populated in real time, read by
+# _sample_ambient_perception() so ambient audio reaches synthesis without
+# needing the ambient_audio_latest.json polling path.
+_last_audio_observation: dict = {}
+
 # Simulated self-model — Aurora's live self-representation via InceptionEntity.
 # Background process feeds axis + hardware state as experiences into this entity,
 # giving her a continuously-updated mirror of herself she can observe without
@@ -2201,21 +2207,58 @@ def _sample_ambient_perception(systems: dict) -> None:
         except Exception:
             pass
 
-    # ── Audio — prefer the always-on ambient snapshot JSON ───────────────────
+    # ── Audio — real-time callback path, then JSON file fallback ────────────
+    # Primary: provide_audio_observation() called from Kotlin (real-time).
+    # Fallback: ambient_audio_latest.json written by a background daemon.
+    _audio_source: dict = {}
     try:
-        import json as _json
-        from pathlib import Path as _P
-        _state = systems.get("state_dir") or "aurora_state"
-        _f = _P(_state) / "ambient_audio_latest.json"
-        if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
-            _d = _json.loads(_f.read_text())
-            _raw_audio = _d
-            _act  = str(_d.get("activity", "ambient"))
-            _rms  = float(_d.get("rms_db", -60.0))
-            audio_obs     = f"{_act}, {_rms:.0f} dB"
-            audio_novelty = 0.50 if _act in ("speech", "music") else 0.10
+        if _last_audio_observation:
+            _audio_source = dict(_last_audio_observation)
+        else:
+            import json as _json
+            from pathlib import Path as _P
+            _state = systems.get("state_dir") or "aurora_state"
+            _f = _P(_state) / "ambient_audio_latest.json"
+            if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
+                _audio_source = _json.loads(_f.read_text())
     except Exception:
         pass
+
+    if _audio_source:
+        try:
+            _act  = str(_audio_source.get("activity",
+                        _audio_source.get("category", "ambient")))
+            _rms  = float(_audio_source.get("rms_db",
+                          _audio_source.get("rms_db_level", -60.0)))
+            audio_obs     = f"{_act}, {_rms:.0f} dB"
+            audio_novelty = 0.50 if _act in ("speech", "music", "singing") else 0.10
+
+            # Normalize to the keys audio_dict_to_crystal_20d() expects.
+            # The raw dict uses activity/rms_db; the crystal function expects
+            # category/rms/volume and a features sub-dict.
+            _rms_norm = max(0.0, min(1.0, (_rms + 60.0) / 40.0))
+            _raw_audio = {
+                "category": _act,
+                "rms":      _rms_norm,
+                "volume":   _rms_norm,
+                "features": {
+                    "rms": _rms_norm,
+                    "zcr": 0.35 if _act in ("speech", "singing") else 0.08,
+                    "harmonicity": (
+                        0.80 if _act == "music"
+                        else 0.72 if _act == "singing"
+                        else 0.45 if _act == "speech"
+                        else 0.10
+                    ),
+                },
+            }
+            # Carry over any rich feature fields the source dict already has
+            for _fk in ("pitch", "centroid", "bandwidth", "onset_density",
+                        "spectral_flux", "chroma"):
+                if _fk in _audio_source:
+                    _raw_audio["features"][_fk] = _audio_source[_fk]
+        except Exception:
+            pass
 
     # ── Feed sensory crystal with actual vectors ──────────────────────────────
     # Camera/audio → primary visual and auditory channels.
@@ -2251,6 +2294,31 @@ def _sample_ambient_perception(systems: dict) -> None:
         _bat_pct = int(float(_bat_raw))
         _charge_tag = " (charging)" if _hardware_sensors.get("charging") else ""
         obs_parts.append(f"battery at {_bat_pct}%{_charge_tag}")
+
+    # Device motion — accelerometer magnitude tells her if she (the device) is
+    # moving, being carried, sitting still.  Relevant to proprioceptive grounding.
+    _mot_raw = _hardware_sensors.get("motion")
+    if _mot_raw is not None:
+        _mot = float(_mot_raw)
+        if _mot > 3.0:
+            obs_parts.append("device moving")
+        elif _mot > 0.8:
+            obs_parts.append("device shifting")
+        # else: still — don't append, reduces noise when stationary
+
+    # Ambient light — lux from the light sensor.  Grounds time-of-day and
+    # environment type (outdoors/indoors/dark) into her perceptual field.
+    _lux_raw = _hardware_sensors.get("light_lux")
+    if _lux_raw is not None:
+        _lux = float(_lux_raw)
+        _light_desc = (
+            "very bright" if _lux > 5000
+            else "bright"    if _lux > 1000
+            else "moderate light" if _lux > 100
+            else "dim"       if _lux > 10
+            else "dark"
+        )
+        obs_parts.append(f"light: {_light_desc}")
 
     if cam_obs:
         obs_parts.append(f"camera: {cam_obs}")
@@ -6037,6 +6105,34 @@ def provide_camera_frame(jpeg_bytes) -> None:
         }
     except Exception as exc:
         log.warning("provide_camera_frame: %s", exc)
+
+
+def provide_audio_observation(
+    activity: str,
+    rms_db: float,
+    confidence: float = 0.6,
+    **extra,
+) -> None:
+    """
+    Called from Kotlin when the audio analysis pipeline classifies ambient sound.
+    Mirrors provide_camera_frame() — real-time push so audio reaches synthesis
+    without waiting for the ambient_audio_latest.json polling cycle.
+
+    activity: "speech" | "music" | "singing" | "noise" | "silence" | "ambient"
+    rms_db:   loudness in dBFS (typically -60 to 0)
+    confidence: classifier confidence 0–1
+    extra:    optional rich features — pitch, centroid, chroma, onset_density, etc.
+    """
+    global _last_audio_observation
+    try:
+        _last_audio_observation = {
+            "activity":   str(activity),
+            "rms_db":     float(rms_db),
+            "confidence": float(confidence),
+            **{k: v for k, v in extra.items()},
+        }
+    except Exception as exc:
+        log.warning("provide_audio_observation: %s", exc)
 
 
 def provide_screen_observation(payload_json: str) -> None:
