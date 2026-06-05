@@ -1862,17 +1862,19 @@ def _sanitize_response(response: str, user_text: str) -> str:
     """
     Strip pipeline leaks from Aurora's generated response.
 
-    1. De-duplicate repeated phrase prefixes ("I understand I understand" → "I understand").
-    2. If the user asked "can you hear me" and the response claims audio is offline,
-       replace with the correct answer — the user's voice WAS heard via STT.
-    3. Remove bare "audio/camera feed offline" sentences that leaked from the
-       sensory-grounding handler when the ambient background monitor isn't running.
-    4. Strip internal language templates that escaped the surface boundary.
-    5. Strip internal lineage/journal state that passes the articulation check but isn't speech.
-    6. Echo guard — suppress verbatim or near-verbatim reflections of user input.
-    7. Strip OETS study-cycle cognitive traces ("I understand what X means here").
-    8. Strip constraint artifacts ("I'll want the [concept].").
-    9. Suppress "I understand" responses whose topic has no relation to user input.
+    1.  De-duplicate repeated phrase prefixes.
+    2.  If user asked "can you hear me" and response claims audio offline, correct it.
+    3.  Remove stray offline-feed sentences.
+    4.  Strip internal language templates that escaped the surface boundary.
+    5.  Strip internal lineage/journal state.
+    6.  Echo guard — suppress verbatim or near-verbatim reflections of user input.
+    7.  Strip OETS study-cycle cognitive traces ("I understand what X means here").
+    8.  Strip constraint artifacts ("I'll want the [concept].").
+    9.  Suppress "I understand" responses whose topic has no relation to user input.
+    10. Strip constraint-vocabulary "I understand" artifacts (energy/cost/axis traces).
+    11. Suppress responses containing self-state observation string tokens.
+    12. Strip internal mode announcements ("Quiet mode on", "I'll keep watching").
+    13. Suppress broken negative I-state grammar ("I can no [verb]").
     """
     if not response:
         return response
@@ -5742,6 +5744,16 @@ def _proactive_loop() -> None:
                 except Exception:
                     pass
 
+            # Write the fully-enriched observation string back into the ambient
+            # perceptual store so synthesis reads it as internal context (55%
+            # weight).  Do NOT pass it as the explicit user-input text —
+            # doing so causes synthesis to echo the observation string back as
+            # a response ("I understand energy cost is pressing…").  Synthesis
+            # should generate from Aurora's internal constraint state, with the
+            # observation string available only as physics context.
+            if _systems.get("_ambient_perceptual") is not None:
+                _systems["_ambient_perceptual"]["observation"] = obs
+
             # Non-blocking lock — skip this tick rather than stall a user turn
             if not _lock.acquire(blocking=False):
                 continue
@@ -5749,7 +5761,7 @@ def _proactive_loop() -> None:
                 import aurora as _aurora  # type: ignore
                 result = _aurora.process_external_user_turn(
                     _systems,
-                    obs,
+                    "",   # empty — synthesis generates from internal state, not observation echo
                     source_label="aurora_sensory_pulse",
                     session_id="mobile",
                     auto_search_enabled=False,

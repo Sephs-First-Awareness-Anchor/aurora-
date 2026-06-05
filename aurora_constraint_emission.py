@@ -1138,6 +1138,27 @@ class ConstraintEmitter:
         det_entity = f"{slots.determiner} {slots.entity}".strip()
         predicate = slots.predicate
 
+        # X-axis existence negation ("no") combined with a positive capability
+        # modal produces ungrammatical "I can no [verb]". Convert to the
+        # contracted negative modal and clear the separate negation slot.
+        if negation == "no" and modal in {"can", "could", "will", "would", "should", "may"}:
+            _neg_modal_map = {
+                "can": "can't", "could": "couldn't",
+                "will": "won't", "would": "wouldn't",
+                "should": "shouldn't", "may": "can't",
+            }
+            modal = _neg_modal_map.get(modal, modal)
+            negation = ""
+
+        # If predicate is present and "no" negation remains (no modal case),
+        # convert to "not" so the surface reads "I not [verb]" → gets further
+        # handled by aux-needed logic rather than producing "I no [verb]".
+        if negation == "no" and predicate and not modal:
+            negation = "not"
+
+        # Negation appended only if not already embedded in contracted modal
+        # (line below also guards "can't", "don't", "won't")
+
         # Slot compatibility: an I-state capability signal can set the surface
         # agent to "I can", while content resolution may independently select a
         # copula such as "is".  Modals require a base verb, and identity copulas

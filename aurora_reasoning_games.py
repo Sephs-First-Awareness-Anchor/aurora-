@@ -412,7 +412,8 @@ class GameStateMachine:
         t = text.strip()
         t_low = t.lower().rstrip(".,!?")
 
-        if t_low in ("quit", "exit", "stop game", "end game", "done", "bye"):
+        if (t_low in ("quit", "exit", "stop game", "end game", "done", "bye")
+                or re.search(r'\bquit\b|\bend\s+(?:the\s+)?game\b|\bstop\s+(?:the\s+)?game\b', t_low)):
             self.is_done = True
             u, a, r = self.score["user"], self.score["aurora"], self.score["rounds"]
             return f"Game over. Score — You: {u}  Aurora: {a}  Rounds: {r}. Good game!"
@@ -604,8 +605,15 @@ class GameStateMachine:
             self.state = "menu"
             return f"I give up! What were you thinking of? (tell me so I can learn)"
 
-        guess = guess_twenty_q(self.systems, d["clues"]) or "?"
-        d["guess"] = guess
+        guess = guess_twenty_q(self.systems, d["clues"])
+        d["guess"] = guess or "?"
+
+        # When OETS has no semantic footing yet, ask for more clues instead of guessing "?"
+        if not guess:
+            n_clues = len(d["clues"])
+            if n_clues < 2:
+                return "I'm not making a connection yet — give me another clue."
+            return f"I have {n_clues} clue{'s' if n_clues != 1 else ''} but nothing's clicking. Keep going?"
 
         # Show cognitive reasoning alongside if generate_fn available
         reasoning = ""
@@ -662,13 +670,27 @@ class GameStateMachine:
 
     # ── Odd one out ───────────────────────────────────────────────────────────
 
+    # Common words that are list connectors, not items
+    _ODD_STOPWORDS = frozenset({"and", "or", "but", "the", "a", "an", "also", "plus"})
+
+    def _parse_odd_words(self, t: str) -> List[str]:
+        """Parse item list from user input, handling compound names like 'Taco Bell'."""
+        # Prefer comma/semicolon separation — preserves compound names ("Taco Bell, Walmart")
+        if "," in t or ";" in t:
+            raw = re.split(r"[,;]+", t)
+        else:
+            # Split on " and " / " or " as logical separators
+            raw = re.split(r"\s+(?:and|or)\s+", t, flags=re.IGNORECASE)
+            if len(raw) < 3:
+                # Last resort: whitespace — filter stopwords to reduce noise
+                raw = re.split(r"\s+", t)
+        words = [w.strip(".,!?;:'\" ").lower() for w in raw]
+        return [w for w in words if w and w not in self._ODD_STOPWORDS]
+
     def _state_odd_one_out(self, t: str, t_low: str) -> str:
-        words = [
-            w.strip(".,!?;:'\"").lower()
-            for w in re.split(r"[\s,/]+", t) if w.strip()
-        ]
+        words = self._parse_odd_words(t)
         if len(words) < 3:
-            return "Give me at least 3 words."
+            return "Give me at least 3 items — separate them with commas if any are two words (e.g. 'Taco Bell, Walmart, McDonald's')."
         odd    = find_odd_one_out(self.systems, words)
         others = [w for w in words if w != odd]
         self.data  = {"words": words, "odd": odd}
@@ -679,6 +701,25 @@ class GameStateMachine:
             f"Am I right? (yes / no / tell me which one)"
         )
 
+    def _extract_odd_item(self, text: str, candidates: List[str]) -> str:
+        """Pull just the item name from phrases like 'Walmart's the odd one out'."""
+        t_low = text.lower()
+        # Check if any candidate appears verbatim in the text first
+        for w in candidates:
+            if w in t_low.split() or t_low == w:
+                return w
+        # Strip common verdict phrase wrappers
+        clean = re.sub(
+            r"\s+(?:is|was|'s)\s+the\s+odd\s+one(?:\s+out)?.*$"
+            r"|^(?:it'?s?\s+|that'?s?\s+|its?\s+|the\s+odd\s+one\s+(?:out\s+)?is\s+)",
+            "", t_low, flags=re.IGNORECASE,
+        ).strip().rstrip(".,!?'\"")
+        # If the cleaned result is close to a candidate, use the candidate
+        for w in candidates:
+            if w in clean or clean in w:
+                return w
+        return clean
+
     def _state_odd_verdict(self, t: str, t_low: str) -> str:
         d = self.data
         self.score["rounds"] += 1
@@ -687,7 +728,7 @@ class GameStateMachine:
             self.score["aurora"] += 1
             return f"'{d['odd']}' stands apart. {self._next_prompt()}"
 
-        correct = t.strip().lower() if t_low not in ("n", "no", "nope") else ""
+        correct = self._extract_odd_item(t.strip(), d["words"]) if t_low not in ("n", "no", "nope") else ""
         if correct:
             others = [w for w in d["words"] if w != correct]
             internalize_correction(
@@ -714,7 +755,8 @@ class GameStateMachine:
         t = text.strip()
         t_low = t.lower().rstrip(".,!?")
 
-        if t_low in ("quit", "exit", "stop game", "end game", "done", "bye"):
+        if (t_low in ("quit", "exit", "stop game", "end game", "done", "bye")
+                or re.search(r'\bquit\b|\bend\s+(?:the\s+)?game\b|\bstop\s+(?:the\s+)?game\b', t_low)):
             self.is_done = True
             u, a, r = self.score["user"], self.score["aurora"], self.score["rounds"]
             return f"Game over. Score — You: {u}  Aurora: {a}  Rounds: {r}. Good game!"
