@@ -1258,6 +1258,26 @@ class SkillMemory:
                 break
         return out
 
+    def reinforce_match(self, task_text: str, axis_context: Optional[dict] = None) -> None:
+        """
+        Positive-use feedback: bump sightings on skills that match the current
+        task. Called when a skill hint actually surfaces in synthesis — the skill
+        proved relevant, so its recall weight should rise.
+        """
+        if not self._skills:
+            return
+        toks = self._tokens(task_text, limit=12)
+        if not toks:
+            return
+        for sk in self._skills:
+            sk_toks = set(sk.get("trigger_tokens") or self._tokens(sk.get("trigger", ""), limit=10))
+            if not sk_toks:
+                continue
+            overlap = len(toks & sk_toks) / max(len(toks), 1)
+            if overlap >= 0.40:
+                sk["sightings"] = sk.get("sightings", 1) + 1
+                sk["last_reinforced_ts"] = time.time()
+
     def has_skill(self, task_text: str) -> bool:
         return bool(self.get_skill_hints(task_text, limit=1))
 

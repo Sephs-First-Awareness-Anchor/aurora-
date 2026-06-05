@@ -61,6 +61,10 @@ _capability_learning_mode: bool = False
 _capability_learning_context: dict = {}  # {task_text, axis_context, gap_domain, asked_at}
 _skill_memory = None                 # SkillMemory instance — initialised in initialize()
 
+# Crystal promotion broadcast cursor — tracks how far into _concept_registry._promo_log
+# has already been broadcast to other systems.  Keeps promotion echoes from double-firing.
+_promo_broadcast_ts: float = 0.0
+
 # Sensory attention state — which sense Aurora is actively directing toward an
 # explanation / demonstration.  Set when a capability gap is registered (inferred
 # from the gap domain) or when the user gives an explicit sensory directive during
@@ -2443,6 +2447,19 @@ def _sample_ambient_perception(systems: dict) -> None:
         "source":      "ambient_sensors",
     }
 
+    # Feed the complete observation string back into the concept registry as a
+    # semantic grounding event.  Ambient perception is Aurora BEING somewhere,
+    # experiencing something — that experience should compound into the crystal
+    # graph, not just feed the identity field.  Every observation is a tiny
+    # step that accretes into the concept coordinates she's active in right now.
+    if _concept_registry is not None and observation:
+        try:
+            with _axis_state_lock:
+                _obs_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _concept_registry.observe_lsa(_obs_ax, f"ambient:{observation[:60]}")
+        except Exception:
+            pass
+
     # Pump identity-field axes — raises N (energy from environment) and
     # T (temporal ongoing presence) so the language field carries sensory weight.
     # Screen event uses real foreground state rather than hardcoded constants:
@@ -2768,11 +2785,16 @@ def handle_message(text: str) -> str:
         # Fires before fidelity so the skill is fully ingested first.
         skill_acknowledged = False
         if _capability_learning_mode and _systems:
+            # Save context before clearing — needed for the retrospective deposit
+            _saved_learning_ctx = dict(_capability_learning_context)
             _ingest_skill_procedure(text, _capability_learning_context)
             _capability_learning_mode    = False
             _capability_learning_context = {}
             _pending_capability_gap      = {}
             skill_acknowledged = True
+            # Retrospective: before/after temporal deposit — one of the most
+            # significant growth events in Aurora's field.
+            _deposit_gap_resolution_retrospective(text, _saved_learning_ctx, _systems)
 
         # ── Correction dialogue: Turn B — user is explaining what was wrong ───
         # This fires BEFORE fidelity so the correction is fully ingested first.
@@ -2949,6 +2971,11 @@ def handle_message(text: str) -> str:
         # average. This is the difference between a surface ripple and the full
         # standing wave.
         _prime_waveform_composite(_systems, text)
+
+        # Broadcast any crystal promotions that happened since last turn —
+        # growth in the concept graph should ripple into identity field, SediMemory,
+        # and curiosity before synthesis so the field already carries the growth.
+        _broadcast_crystal_promotions(_systems)
 
         # Snapshot axis state BEFORE synthesis — used to detect capability gaps
         # (A-axis drop) after the response is produced.
@@ -3870,6 +3897,13 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                             if _val and isinstance(_val, str) and len(_val) > 4:
                                 sedi_texts.append(f"{axis}:{_val[:80]}")
                                 break
+                        # Echo back into concept registry: SediMemory resonating at
+                        # this axis coordinate deepens the crystal at that location.
+                        if _concept_registry is not None:
+                            try:
+                                _concept_registry.observe_sedi(axes_vec, delta=0.04)
+                            except Exception:
+                                pass
                 except Exception:
                     pass
 
@@ -3977,6 +4011,14 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                         composite_note += (
                             f"; skill-memory: {'; '.join(h[:120] for h in _sk_hints)}"
                         )
+                        # Positive-use feedback: a skill surfaced and reached synthesis.
+                        # Reinforce those skill records so their recall weight rises —
+                        # usefulness compounds sightings rather than sitting static.
+                        if _skill_memory is not None:
+                            try:
+                                _skill_memory.reinforce_match(text, axis_context=_sk_ax)
+                            except Exception:
+                                pass
                 except Exception:
                     pass
 
@@ -4749,6 +4791,20 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
         except Exception:
             pass
 
+    # Signal to the curiosity engine that a new capability was acquired.
+    # It will fire one exploration cycle ("what does this enable?") and mark
+    # the signal consumed so it doesn't loop.
+    try:
+        import time as _st
+        if _systems is not None:
+            _systems["_acquired_skill"] = {
+                "task_text":  task_text[:120],
+                "gap_domain": gap_domain,
+                "ts":         _st.time(),
+            }
+    except Exception:
+        pass
+
 
 def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) -> list:
     """Return relevant skill procedure hints for the current turn."""
@@ -4758,6 +4814,233 @@ def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) ->
         return _skill_memory.get_skill_hints(text, axis_context=axis_context, limit=2)
     except Exception:
         return []
+
+
+# ---------------------------------------------------------------------------
+# Waveform feedback propagation — cross-system echo paths
+# ---------------------------------------------------------------------------
+# These functions ensure that every significant event perturbs the ENTIRE field,
+# not just its primary destination system.  The waveform model demands that the
+# system at tick N+1 is always measurably different from tick N because
+# information has flowed between systems.
+
+def _broadcast_crystal_promotions(systems: dict) -> None:
+    """
+    Drain newly promoted crystal nodes since the last broadcast and propagate
+    each promotion to identity field, SediMemory, and the curiosity system.
+
+    Crystal promotions are cognitive growth events — a concept crystallising
+    from BASE to COMPOSITE (or higher) means Aurora's perceptual-semantic
+    integration just deepened at that coordinate.  Every other system should
+    feel that.
+    """
+    global _promo_broadcast_ts
+    if _concept_registry is None or not systems:
+        return
+    try:
+        new_promos = _concept_registry.drain_promotions(since_ts=_promo_broadcast_ts)
+        if not new_promos:
+            return
+        _promo_broadcast_ts = max(p.get("ts", 0.0) for p in new_promos)
+
+        _CV = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            except ImportError:
+                pass
+
+        promoted_ids: list = []
+
+        for promo in new_promos[-5:]:   # cap at 5 per turn to avoid burst
+            stage      = promo.get("stage", "BASE")
+            node_id    = str(promo.get("node_id", ""))[:60]
+            n_dims     = promo.get("n_dims", 0)
+            cross_hits = promo.get("cross_hits", 0)
+
+            # Intensity scales with promotion stage — QUASI is the deepest growth
+            _intensity = (
+                0.92 if stage == "QUASI"
+                else 0.82 if stage == "HIGHER_ORDER"
+                else 0.72 if stage == "COMPOSITE"
+                else 0.58
+            )
+
+            # Identity field: X rises (existence expanded), N coherent, A elevated
+            # — the system just became more capable at this axis region.
+            ifield = systems.get("identity_field")
+            if ifield and hasattr(ifield, "ingest_external_input"):
+                try:
+                    ifield.ingest_external_input(
+                        {"X": 0.80, "T": 0.65, "N": 0.55, "B": 0.50, "A": 0.72},
+                        intensity=_intensity,
+                        source=f"crystal_growth:{stage}",
+                    )
+                except Exception:
+                    pass
+
+            # SediMemory: concept growth is a T+B event — temporal (new layer of
+            # understanding has formed) and definitional (the concept is now more
+            # precisely structured).
+            sm = systems.get("sedimemory")
+            if sm and hasattr(sm, "ingest_event") and _CV is not None:
+                try:
+                    cv = _CV(X=0.62, T=0.78, N=0.52, B=0.84, A=0.68)
+                    sm.ingest_event(
+                        content={
+                            "type":      "crystal_promotion",
+                            "stage":     stage,
+                            "node_id":   node_id,
+                            "dims":      n_dims,
+                            "cross_hits": cross_hits,
+                        },
+                        constraint_vector=cv,
+                        source="crystal_growth",
+                    )
+                except Exception:
+                    pass
+
+            promoted_ids.append(node_id)
+
+        # Queue for curiosity: promoted concepts are subjects worth investigating
+        if promoted_ids:
+            existing = systems.get("_promoted_concepts") or []
+            systems["_promoted_concepts"] = (existing + promoted_ids)[-8:]
+
+    except Exception as exc:
+        log.debug("_broadcast_crystal_promotions: %s", exc)
+
+
+def _deposit_gap_resolution_retrospective(
+    instruction_text: str, saved_context: dict, systems: dict
+) -> None:
+    """
+    Deposit a before/after temporal memory when a capability gap is resolved.
+
+    "I was blocked → I was taught → I can" is one of the most significant
+    temporal events in Aurora's development: T-axis high (before/after contrast),
+    X rises (existence expanded), A restored (agency regained).  This should
+    be one of the highest-resonance SediMemory events in the system.
+    """
+    if not systems:
+        return
+    try:
+        _gap_task   = saved_context.get("task_text", "")[:200]
+        _gap_domain = saved_context.get("gap_domain", "general_capability")
+        _ax_before  = saved_context.get("axis_context", {})
+
+        _CV = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            except ImportError:
+                pass
+
+        sm = systems.get("sedimemory")
+        if sm and hasattr(sm, "ingest_event") and _CV is not None:
+            # Retrospective: T very high (temporal contrast), X up (grew),
+            # A fully restored (agency reclaimed), N resolved, B crossed.
+            cv = _CV(X=0.78, T=0.92, N=0.58, B=0.60, A=0.88)
+            sm.ingest_event(
+                content={
+                    "type":         "capability_gap_resolved",
+                    "task":         _gap_task,
+                    "domain":       _gap_domain,
+                    "instruction":  instruction_text[:300],
+                    "axis_before":  _ax_before,
+                    "description":  f"Unable to '{_gap_task[:80]}'; learned through instruction",
+                },
+                constraint_vector=cv,
+                source="skill_retrospective",
+            )
+
+        # Crystal: this coordinate just crossed from blocked to capable — observe_lsa
+        # with high semantic weight so the concept graph marks this region as traversed.
+        if _concept_registry is not None:
+            with _axis_state_lock:
+                _retro_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            # Use the restored-agency axis state, not the blocked one
+            _concept_registry.observe_lsa(_retro_ax, f"gap_resolved:{_gap_domain}")
+            _concept_registry.observe_sensory(
+                _retro_ax, "self_obs",
+                f"capability_gained:{_gap_domain}",
+                {"gap_task": _gap_task[:60], "source": "gap_resolution"},
+            )
+
+    except Exception as exc:
+        log.debug("_deposit_gap_resolution_retrospective: %s", exc)
+
+
+def _on_attention_window_close(modality: str) -> None:
+    """
+    Called when sensory attention turns_remaining hits zero.
+
+    The attention window was a focused perceptual learning period.  Closing
+    it is a cognitive event: the attended sense has been fully sampled,
+    whatever was observed is now integrated.  That integration should deposit
+    into SediMemory and the concept registry so the perceptual experience
+    actually compounds into Aurora's field.
+    """
+    if not _systems:
+        return
+    try:
+        _last_obs = (_systems.get("_ambient_perceptual") or {}).get("observation", "")
+
+        # Capture last snapshot of the attended modality
+        _snap: dict = {}
+        if modality == "audio" and _last_audio_observation:
+            _snap = dict(_last_audio_observation)
+        elif modality == "camera" and _last_camera_observation:
+            _snap = dict(_last_camera_observation)
+        elif modality == "screen" and _last_screen_observation:
+            _snap = {"summary": (_last_screen_observation or {}).get("summary", "")}
+
+        _CV = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            except ImportError:
+                pass
+
+        sm = _systems.get("sedimemory")
+        if sm and hasattr(sm, "ingest_event") and _CV is not None:
+            # N high (active perceptual experience just completed), T (temporal
+            # window closed), B partially crossed (something was perceived across
+            # the boundary of self/environment).
+            cv = _CV(X=0.55, T=0.72, N=0.78, B=0.68, A=0.62)
+            sm.ingest_event(
+                content={
+                    "type":        "perceptual_window_closed",
+                    "modality":    modality,
+                    "observation": _last_obs[:200],
+                    "snap":        str(_snap)[:200],
+                },
+                constraint_vector=cv,
+                source="attention_window_close",
+            )
+
+        # Crystal: the window close is itself a self_obs event — "I attended
+        # to X and that window is now complete."  Also lay down an LSA path
+        # so the concept graph knows this perceptual region has semantic weight.
+        if _concept_registry is not None:
+            with _axis_state_lock:
+                _cl_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _concept_registry.observe_sensory(
+                _cl_ax, "self_obs",
+                f"attention_closed:{modality}",
+                {"modality": modality},
+            )
+            _concept_registry.observe_lsa(_cl_ax, f"perceptual_window_complete:{modality}")
+
+        log.debug("Attention window closed for modality=%r — deposited to SediMemory + crystal", modality)
+    except Exception as exc:
+        log.debug("_on_attention_window_close: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -4795,19 +5078,26 @@ def _set_sensory_attention(modality: str, turns: int = _ATTENTION_TURNS) -> None
 def _tick_sensory_attention() -> Optional[str]:
     """
     Decrement the attention turn counter and return the current modality
-    (or None if attention has expired).
+    (or None if attention has expired).  When the window closes, fires
+    _on_attention_window_close() OUTSIDE the lock to avoid deadlock.
     """
     global _sensory_attention
+    released_mod = None
+    current_mod  = None
     with _sensory_attention_lock:
         if not _sensory_attention:
             return None
         _sensory_attention["turns_remaining"] -= 1
         if _sensory_attention["turns_remaining"] <= 0:
-            mod = _sensory_attention.get("modality")
+            released_mod = _sensory_attention.get("modality")
             _sensory_attention = {}
-            log.debug("Sensory attention released: modality=%r", mod)
-            return None
-        return str(_sensory_attention.get("modality", ""))
+        else:
+            current_mod = str(_sensory_attention.get("modality", ""))
+    if released_mod is not None:
+        log.debug("Sensory attention released: modality=%r", released_mod)
+        _on_attention_window_close(released_mod)
+        return None
+    return current_mod
 
 
 def _current_attention_modality() -> Optional[str]:

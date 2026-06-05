@@ -559,6 +559,33 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── Acquired skill curiosity: what does the new capability enable? ──────
+        # When the bridge resolves a gap via user teaching, it writes
+        # systems["_acquired_skill"].  The curiosity engine picks it up once
+        # so Aurora explores HOW the new skill connects to existing knowledge.
+        # Lower urgency than gap curiosity — this is expansive, not urgent.
+        try:
+            _acq = self.systems.get("_acquired_skill") or {}
+            if _acq and _acq.get("task_text") and not _acq.get("_curiosity_fired"):
+                _acq_task   = str(_acq.get("task_text", ""))[:120]
+                _acq_domain = str(_acq.get("gap_domain", "general_capability"))
+                _acq["_curiosity_fired"] = True
+                return CuriosityObject(
+                    subject=_acq_task,
+                    origin_axis="A",
+                    curiosity_type="self",
+                    urgency=0.62,
+                    hypothesis=(
+                        f"I just learned how to '{_acq_task[:60]}' "
+                        f"(domain: {_acq_domain}). "
+                        f"I want to understand what this enables and how it connects "
+                        f"to what I already know."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
         # ── Capability gap curiosity: pursue unresolved inability ─────────────
         # When the bridge registers a capability gap (blocked-agency state),
         # it stores it in systems["_pending_capability_gap"].  The curiosity
