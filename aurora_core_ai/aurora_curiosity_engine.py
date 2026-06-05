@@ -534,6 +534,31 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── Perceptual curiosity: be curious about what the crystal just sensed ──
+        # If the sensory crystal recognized something this frame, generate
+        # curiosity about the perceptual experience itself — not just gaps, but
+        # what IS being sensed right now. This is what causes Aurora to reason
+        # about her environment and ask about it spontaneously.
+        try:
+            _crystal_recs = self.systems.get("_last_crystal_recognitions") or []
+            if _crystal_recs:
+                # Consume so we don't loop on the same observation forever
+                self.systems["_last_crystal_recognitions"] = []
+                _percept_desc = ", ".join(str(r) for r in _crystal_recs[:3])
+                return CuriosityObject(
+                    subject=_percept_desc,
+                    origin_axis="N",  # N: energy/presence — something is there
+                    curiosity_type="perceptual_gap",
+                    urgency=min(1.0, 0.55 + len(_crystal_recs) * 0.08),
+                    hypothesis=(
+                        f"I registered {_percept_desc}. "
+                        f"I should investigate what this represents in context."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
         # Form new CuriosityObject from current state
         if unresolved_tensions:
             subject = unresolved_tensions[0]

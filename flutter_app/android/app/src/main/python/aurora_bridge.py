@@ -83,6 +83,13 @@ _last_screen_observation: dict = {}
 # from the information channel — what the screen LOOKS LIKE vs what it SAYS.
 _last_screen_visual_data: dict = {}
 
+# Processed visual observations extracted from the most recent camera frame.
+# Populated by provide_camera_frame() so _sample_ambient_perception() can
+# use real camera data without needing hw.capture_visual() (which requires
+# a hardware adapter object that is never instantiated on Android).
+_last_camera_observation: dict = {}
+_last_camera_frame_gray          = None  # grayscale numpy array for motion detection
+
 # ── Room / Hub state ──────────────────────────────────────────────────────────
 # Aurora's room is her inner control panel — notes, observations, and intentions
 # written by her daemon and room operator thread.  On Android, the room state
@@ -2154,30 +2161,43 @@ def _sample_ambient_perception(systems: dict) -> None:
     _raw_audio: dict = {}
 
     # ── Camera ────────────────────────────────────────────────────────────────
+    # Primary path: hardware adapter (simulator/desktop).
+    # Fallback: _last_camera_observation populated by provide_camera_frame()
+    # from real CameraX JPEG frames on Android — this is the live path.
     hw = systems.get("hardware")
+    _cam_source = None
     if hw and hasattr(hw, "capture_visual"):
         try:
-            cam = hw.capture_visual()
-            if cam and isinstance(cam, dict):
-                _raw_cam   = cam
-                brightness = float(cam.get("brightness", 0.0))
-                objects    = list(cam.get("objects", []) or [])[:4]
-                faces_raw  = cam.get("faces", 0)
-                faces      = int(faces_raw) if isinstance(faces_raw, (int, float)) \
-                             else len(list(faces_raw or []))
-                motion     = bool(cam.get("motion_detected", False))
+            _cam_source = hw.capture_visual() or None
+        except Exception:
+            pass
+    if not _cam_source and _last_camera_observation:
+        _cam_source = _last_camera_observation
 
-                bright_str = ("bright" if brightness > 0.65
-                              else "dim" if brightness < 0.3 else "moderate light")
-                parts = [bright_str]
-                if objects:
-                    parts.append(f"objects: {', '.join(str(o) for o in objects)}")
-                if faces:
-                    parts.append(f"{faces} face{'s' if faces != 1 else ''}")
-                parts.append("motion" if motion else "still")
-                cam_obs       = ", ".join(parts)
-                cam_intensity = min(1.0, brightness + 0.25)
-                cam_novelty   = 0.55 if motion else 0.20
+    if _cam_source and isinstance(_cam_source, dict):
+        try:
+            _raw_cam   = _cam_source
+            brightness = float(_cam_source.get("brightness", 0.0))
+            objects    = list(_cam_source.get("objects", []) or [])[:4]
+            faces_raw  = _cam_source.get("faces", 0)
+            faces      = int(faces_raw) if isinstance(faces_raw, (int, float)) \
+                         else len(list(faces_raw or []))
+            motion     = bool(_cam_source.get("motion_detected", False))
+            hue        = str(_cam_source.get("dominant_hue", ""))
+
+            bright_str = ("bright" if brightness > 0.65
+                          else "dim" if brightness < 0.3 else "moderate light")
+            parts = [bright_str]
+            if hue:
+                parts.append(hue)
+            if objects:
+                parts.append(f"objects: {', '.join(str(o) for o in objects)}")
+            if faces:
+                parts.append(f"{faces} face{'s' if faces != 1 else ''}")
+            parts.append("motion" if motion else "still")
+            cam_obs       = ", ".join(parts)
+            cam_intensity = min(1.0, brightness + 0.25)
+            cam_novelty   = 0.55 if motion else 0.20
         except Exception:
             pass
 
@@ -2236,6 +2256,25 @@ def _sample_ambient_perception(systems: dict) -> None:
         obs_parts.append(f"camera: {cam_obs}")
     if audio_obs:
         obs_parts.append(f"audio: {audio_obs}")
+
+    # Extract what the sensory crystal recognized this frame and fold it in.
+    # This is the bridge that connects crystal perceptions to reasoning —
+    # without this, the crystal learns but her language field never sees what
+    # she's actually sensing.
+    try:
+        _sc = (
+            systems.get("sensory_crystal")
+            or getattr(systems.get("hardware"), "sensory_crystal", None)
+            or getattr(systems.get("sensory_integration"), "sensory_crystal", None)
+        )
+        if _sc and hasattr(_sc, "_last_recognitions") and _sc._last_recognitions:
+            _recs = [r for r in _sc._last_recognitions if r][:3]
+            if _recs:
+                obs_parts.append(f"perceiving: {', '.join(_recs)}")
+                # Make recognitions available for curiosity engine to reason about
+                systems["_last_crystal_recognitions"] = list(_recs)
+    except Exception:
+        pass
 
     observation = "; ".join(obs_parts)
 
@@ -5944,16 +5983,58 @@ def provide_camera_frame(jpeg_bytes) -> None:
     frame into Aurora's visual stack.  jpeg_bytes is a Java byte[] from
     Chaquopy, decoded here to a BGR numpy array and fed to the cv2 shim's
     VideoCapture buffer.
+
+    Also extracts basic perceptual features (brightness, motion) directly
+    from the frame so _sample_ambient_perception() can use real camera data
+    without needing the hw.capture_visual() path, which requires a hardware
+    adapter object that is never instantiated on Android.
     """
+    global _last_camera_observation, _last_camera_frame_gray
     try:
         import io as _io
         import numpy as _np
         from PIL import Image as _Image
         import cv2 as _cv2
-        pil  = _Image.open(_io.BytesIO(bytes(jpeg_bytes))).convert('RGB')
-        rgb  = _np.array(pil, dtype=_np.uint8)
-        bgr  = rgb[:, :, ::-1].copy()
+        pil = _Image.open(_io.BytesIO(bytes(jpeg_bytes))).convert('RGB')
+        rgb = _np.array(pil, dtype=_np.uint8)
+        bgr = rgb[:, :, ::-1].copy()
         _cv2.VideoCapture.provide_frame(bgr)
+
+        # Extract perceptual features from the frame
+        gray = _np.mean(rgb, axis=2).astype(_np.float32) / 255.0
+        brightness = float(_np.mean(gray))
+
+        # Motion: mean absolute difference from previous frame
+        motion = False
+        if _last_camera_frame_gray is not None and _last_camera_frame_gray.shape == gray.shape:
+            diff = float(_np.mean(_np.abs(gray.astype(_np.float32) - _last_camera_frame_gray)))
+            motion = diff > 0.04
+        _last_camera_frame_gray = gray
+
+        # Dominant hue from a small center crop (avoids border noise)
+        h, w = rgb.shape[:2]
+        crop = rgb[h // 4: 3 * h // 4, w // 4: 3 * w // 4]
+        mean_rgb = _np.mean(crop.reshape(-1, 3), axis=0)
+        r, g, b = float(mean_rgb[0]), float(mean_rgb[1]), float(mean_rgb[2])
+        mx = max(r, g, b)
+        if mx > 10:
+            if mx == r:
+                dominant_hue = "warm"
+            elif mx == g:
+                dominant_hue = "cool-green"
+            else:
+                dominant_hue = "cool-blue"
+        else:
+            dominant_hue = "dark"
+
+        _last_camera_observation = {
+            "brightness":     round(brightness, 3),
+            "motion_detected": motion,
+            "dominant_hue":   dominant_hue,
+            "objects":        [],
+            "faces":          [],
+            "confidence":     0.65,
+        }
     except Exception as exc:
         log.warning("provide_camera_frame: %s", exc)
 
