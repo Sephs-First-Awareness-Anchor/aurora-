@@ -61,6 +61,32 @@ _capability_learning_mode: bool = False
 _capability_learning_context: dict = {}  # {task_text, axis_context, gap_domain, asked_at}
 _skill_memory = None                 # SkillMemory instance — initialised in initialize()
 
+# Sensory attention state — which sense Aurora is actively directing toward an
+# explanation / demonstration.  Set when a capability gap is registered (inferred
+# from the gap domain) or when the user gives an explicit sensory directive during
+# a learning turn ("listen to the sound", "watch what I do", etc.).
+# While active, the attended sense is sampled on every turn (throttle bypassed)
+# and fed into the observation string with higher weight so synthesis has rich
+# perceptual context for the learning conversation.
+_sensory_attention: dict = {}   # {"modality": str, "turns_remaining": int, "ts": float}
+_sensory_attention_lock = threading.Lock()
+
+# Routing patterns for explicit sensory directives — system-level routing only,
+# not cognitive behavior.  These arm the attended sense the same way stop/cancel
+# arms the busy gate: pure input routing before any cognitive processing.
+_AUDIO_ATTEND_RE = re.compile(
+    r'\b(listen|hear(?:ing)?|audio|sound|music|song|rhythm|melody|beat)\b', re.IGNORECASE
+)
+_SCREEN_ATTEND_RE = re.compile(
+    r'\b(screen|display|look\s+(?:it\s+)?up|search|browser|scroll|type|tap|click)\b',
+    re.IGNORECASE
+)
+_CAMERA_ATTEND_RE = re.compile(
+    r'\b(watch\s+me|watch\s+what|look\s+at\s+(?:this|me|what)|camera|'
+    r'i(?:\'?ll)?\s+show(?:\s+you)?|let\s+me\s+show|showing\s+you)\b',
+    re.IGNORECASE
+)
+
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
@@ -2173,11 +2199,21 @@ def _sample_ambient_perception(systems: dict) -> None:
     explicitly ask for the camera/mic tools.  Also pumps sensory axis pressure
     into the identity field so N (energy) and T (temporal) carry the live
     sensory environment into language crossing decisions.
+
+    When sensory attention is active (_sensory_attention), the throttle is
+    bypassed and the attended sense is sampled with elevated weight.
     """
     global _last_perceptual_ts
     import time as _t
     now = _t.time()
-    if now - _last_perceptual_ts < _PERCEPTUAL_INTERVAL:
+
+    # Tick the attention counter and get the active modality BEFORE the
+    # throttle check — so the tick fires every turn regardless.
+    _active_modality = _tick_sensory_attention()
+
+    # Bypass throttle when attention mode is active so every learning turn
+    # gets a fresh sensory sample from the attended sense.
+    if _active_modality is None and now - _last_perceptual_ts < _PERCEPTUAL_INTERVAL:
         return
     _last_perceptual_ts = now
 
@@ -2366,6 +2402,37 @@ def _sample_ambient_perception(systems: dict) -> None:
                 systems["_last_crystal_recognitions"] = list(_recs)
     except Exception:
         pass
+
+    # ── Sensory attention focus note ──────────────────────────────────────────
+    # When attention mode is active, prepend a rich focus note so synthesis
+    # encounters the attended sense FIRST in the observation string (highest
+    # salience position).  The note replaces the thin camera/audio summary
+    # built above with a full-detail perceptual report for that modality.
+    if _active_modality:
+        try:
+            _focus_note = _build_sensory_focus_note(_active_modality, systems)
+            if _focus_note:
+                # Prepend — synthesis reads left-to-right; the attended sense
+                # should dominate the perceptual field this turn.
+                obs_parts = [_focus_note] + obs_parts
+        except Exception:
+            pass
+
+        # Boost the attended sense in the identity field so the language field
+        # selects a path that is sensitive to that sense's constraint state.
+        ifield_att = systems.get("identity_field")
+        if ifield_att and hasattr(ifield_att, "ingest_sensory_event"):
+            try:
+                _mod_to_chan = {"audio": "auditory", "screen": "screen", "camera": "visual"}
+                _chan = _mod_to_chan.get(_active_modality, "internal")
+                ifield_att.ingest_sensory_event(
+                    _chan,
+                    intensity=0.88,
+                    novelty=0.65,
+                    valence=0.0,
+                )
+            except Exception:
+                pass
 
     observation = "; ".join(obs_parts)
 
@@ -4445,6 +4512,16 @@ def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) ->
         except Exception:
             pass
 
+    # Arm sensory attention based on the gap domain — if the task is device-
+    # oriented, start watching the screen; if audio content is present, start
+    # listening.  The attended sense will be sampled on every learning turn and
+    # weighted higher in the observation string so Aurora has perceptual context
+    # for the explanation she is about to receive.
+    _gap_domain = _pending_capability_gap.get("gap_domain", "")
+    _inferred_mod = _infer_attention_from_gap(_gap_domain)
+    if _inferred_mod:
+        _set_sensory_attention(_inferred_mod, turns=_ATTENTION_TURNS)
+
 
 def _classify_gap_domain(axis_post: dict) -> str:
     """
@@ -4477,10 +4554,11 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
     Ingest the user's instructional response as a retained skill procedure.
 
     Layers:
-    1. SkillMemory — persist the trigger→procedure binding
+    1. SkillMemory — persist the trigger→procedure binding (with live sensory snapshot)
     2. SediMemory  — sediment as a B+A (definitional + understanding) event
     3. Identity field — capability-restored spike: A high, N resolved, B lower
-    4. Sensory crystal — register the new capability as a semantic observation
+    4. Sensory crystal — register both semantic AND sensory modality observations
+    5. Sensory attention — re-arm or extend attention if the instruction directs a sense
     """
     if not _systems or not user_text.strip():
         return
@@ -4493,7 +4571,35 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
         task_text[:60], user_text,
     )
 
-    # 1. SkillMemory
+    # Capture live sensory snapshot — what Aurora was actually perceiving
+    # when the instruction was given.  This anchors the skill to the sensory
+    # context of learning, not just the semantic description.
+    _live_sensory: dict = {}
+    try:
+        _live_sensory = {
+            "audio":  dict(_last_audio_observation) if _last_audio_observation else {},
+            "camera": dict(_last_camera_observation) if _last_camera_observation else {},
+            "screen": {
+                "summary":  (_last_screen_observation or {}).get("summary", ""),
+                "visible":  (_last_screen_observation or {}).get("visible_text", [])[:4],
+                "is_own":   (_last_screen_observation or {}).get("is_own_app", False),
+            },
+            "attention_modality": _current_attention_modality() or "",
+        }
+    except Exception:
+        pass
+
+    # Detect explicit sensory directive in the instruction text and re-arm.
+    # This handles the case where the user says "just listen to the sound" or
+    # "watch the screen" as the instruction — the attended sense gets extended
+    # for the subsequent learning conversation.
+    _directive_mod = _infer_attention_from_gap(gap_domain, instruction_text=user_text)
+    if _directive_mod:
+        _set_sensory_attention(_directive_mod, turns=_ATTENTION_TURNS + 2)
+        _live_sensory["instruction_modality"] = _directive_mod
+        log.info("Sensory directive in instruction: %r → attention mode %r", user_text[:40], _directive_mod)
+
+    # 1. SkillMemory — include sensory snapshot so retrieval context is richer
     if _skill_memory is not None:
         try:
             _skill_memory.record_skill(
@@ -4502,6 +4608,12 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
                 axis_context   = axis_ctx,
                 source         = "user_teaching",
             )
+            # Extend the stored skill with sensory context if available
+            if _live_sensory and _skill_memory._skills:
+                try:
+                    _skill_memory._skills[-1]["sensory_context"] = _live_sensory
+                except Exception:
+                    pass
         except Exception as exc:
             log.warning("SkillMemory record_skill: %s", exc)
 
@@ -4545,7 +4657,7 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
     except Exception as exc:
         log.warning("Identity field skill restore: %s", exc)
 
-    # 4. Sensory crystal — semantic modality registration
+    # 4. Sensory crystal — register semantic AND active sensory modality
     try:
         sc = (
             _systems.get("sensory_crystal")
@@ -4553,12 +4665,63 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
             or getattr(_systems.get("sensory_integration"), "sensory_crystal", None)
         )
         if sc is not None:
+            # Always register the semantic understanding
             if hasattr(sc, "ingest"):
                 sc.ingest(task_text, modality="semantic", data=user_text, source="skill_teaching")
             elif hasattr(sc, "observe"):
                 sc.observe(task_text, modality="semantic", text=user_text)
+
+            # Also register the perceptual experience that accompanied learning
+            _att_mod = _live_sensory.get("instruction_modality") or _live_sensory.get("attention_modality")
+            if _att_mod == "audio" and _live_sensory.get("audio"):
+                _aud_data = _live_sensory["audio"]
+                if hasattr(sc, "ingest"):
+                    sc.ingest(task_text, modality="audio", data=_aud_data, source="skill_teaching")
+            elif _att_mod == "camera" and _live_sensory.get("camera"):
+                _cam_data = _live_sensory["camera"]
+                if hasattr(sc, "ingest"):
+                    sc.ingest(task_text, modality="visual", data=_cam_data, source="skill_teaching")
+            elif _att_mod == "screen" and _live_sensory.get("screen", {}).get("summary"):
+                _scr_text = "; ".join(filter(None, [
+                    _live_sensory["screen"].get("summary", ""),
+                    *(_live_sensory["screen"].get("visible", [])[:3]),
+                ]))
+                if _scr_text and hasattr(sc, "ingest"):
+                    sc.ingest(task_text, modality="semantic", data=_scr_text, source="skill_teaching_screen")
     except Exception as exc:
         log.warning("Sensory crystal skill: %s", exc)
+
+    # 5. Also write the sensory context to SediMemory so future recall has the
+    # perceptual dimension — the skill is remembered not just as a procedure but
+    # as an experience with specific sensory qualities.
+    if _live_sensory.get("attention_modality") or _live_sensory.get("instruction_modality"):
+        try:
+            sm = _systems.get("sedimemory")
+            if sm is not None and hasattr(sm, "ingest_event"):
+                try:
+                    from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    try:
+                        from aurora_sedimemory import ConstraintVector  # type: ignore
+                    except ImportError:
+                        ConstraintVector = None
+                if ConstraintVector is not None:
+                    _mod = _live_sensory.get("instruction_modality") or _live_sensory.get("attention_modality")
+                    # Sensory learning: N (energy of the experience) + B (perceptual boundary crossed)
+                    cv = ConstraintVector(X=0.55, T=0.50, N=0.72, B=0.78, A=0.75)
+                    sm.ingest_event(
+                        content={
+                            "type":       "skill_sensory_context",
+                            "task":       task_text[:120],
+                            "modality":   _mod,
+                            "sensory":    str(_live_sensory)[:300],
+                            "source":     "skill_teaching",
+                        },
+                        constraint_vector=cv,
+                        source="skill_teaching_sensory",
+                    )
+        except Exception:
+            pass
 
 
 def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) -> list:
@@ -4569,6 +4732,186 @@ def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) ->
         return _skill_memory.get_skill_hints(text, axis_context=axis_context, limit=2)
     except Exception:
         return []
+
+
+# ---------------------------------------------------------------------------
+# Sensory attention management
+# ---------------------------------------------------------------------------
+# When Aurora is learning something (capability gap → learning mode) or the
+# user directs her to pay attention with a specific sense, the attended
+# modality is sampled on every turn and weighted more heavily in the
+# observation string.  The sense is the teacher — semantic explanation alone
+# is insufficient when the experience is perceptual.
+
+_ATTENTION_TURNS = 6   # default turns before attention naturally releases
+
+
+def _set_sensory_attention(modality: str, turns: int = _ATTENTION_TURNS) -> None:
+    """
+    Arm a sensory attention mode.  While active:
+      1. Perceptual throttle bypassed — fresh sample every turn.
+      2. The attended sense is fed with elevated weight into the observation string.
+      3. Identity field receives a boosted sensory event for that modality.
+    """
+    global _sensory_attention, _last_perceptual_ts
+    import time as _t
+    with _sensory_attention_lock:
+        _sensory_attention = {
+            "modality": str(modality),
+            "turns_remaining": max(1, int(turns)),
+            "ts": _t.time(),
+        }
+    # Force next call to _sample_ambient_perception() to bypass the throttle
+    _last_perceptual_ts = 0.0
+    log.info("Sensory attention armed: modality=%r turns=%d", modality, turns)
+
+
+def _tick_sensory_attention() -> Optional[str]:
+    """
+    Decrement the attention turn counter and return the current modality
+    (or None if attention has expired).
+    """
+    global _sensory_attention
+    with _sensory_attention_lock:
+        if not _sensory_attention:
+            return None
+        _sensory_attention["turns_remaining"] -= 1
+        if _sensory_attention["turns_remaining"] <= 0:
+            mod = _sensory_attention.get("modality")
+            _sensory_attention = {}
+            log.debug("Sensory attention released: modality=%r", mod)
+            return None
+        return str(_sensory_attention.get("modality", ""))
+
+
+def _current_attention_modality() -> Optional[str]:
+    """Return the currently active attention modality without ticking."""
+    with _sensory_attention_lock:
+        if not _sensory_attention:
+            return None
+        return str(_sensory_attention.get("modality", "")) or None
+
+
+def _infer_attention_from_gap(gap_domain: str, instruction_text: str = "") -> Optional[str]:
+    """
+    Infer which sensory modality is most relevant to a capability gap domain.
+
+    Gap domain → primary modality:
+      device_action    → screen  (watch what's happening on the screen)
+      sequential_task  → screen  (step-by-step on screen)
+      knowledge_gap    → depends on instruction text
+      cognitive_task   → None    (purely semantic)
+      general_capability → depends on instruction text
+
+    If instruction_text is given, explicit sensory directives override the domain.
+    """
+    # Explicit directive in instruction overrides domain inference
+    if instruction_text:
+        if _AUDIO_ATTEND_RE.search(instruction_text):
+            return "audio"
+        if _CAMERA_ATTEND_RE.search(instruction_text):
+            return "camera"
+        if _SCREEN_ATTEND_RE.search(instruction_text):
+            return "screen"
+
+    # Domain-based inference
+    if gap_domain in ("device_action", "sequential_task"):
+        return "screen"
+    if gap_domain == "knowledge_gap":
+        # Knowledge gap with active audio → probably audio-perceptual
+        if _last_audio_observation.get("activity") not in ("", "silence", None):
+            return "audio"
+        return None
+    return None
+
+
+def _build_sensory_focus_note(modality: str, systems: dict) -> str:
+    """
+    Build a rich sensory focus note for the observation string.
+    Called from _sample_ambient_perception() when attention mode is active.
+    Returns a string that will be prepended as the FIRST item in obs_parts
+    so synthesis sees it at maximum salience.
+    """
+    parts = []
+
+    if modality == "audio":
+        # Full audio detail
+        _aud = _last_audio_observation or {}
+        if not _aud:
+            try:
+                import json as _j
+                from pathlib import Path as _p
+                _sd = (systems.get("state_dir") or "aurora_state")
+                _f = _p(_sd) / "ambient_audio_latest.json"
+                if _f.exists():
+                    _aud = _j.loads(_f.read_text())
+            except Exception:
+                pass
+        if _aud:
+            _act = str(_aud.get("activity", _aud.get("category", "sound")))
+            _rms = float(_aud.get("rms_db", _aud.get("rms_db_level", -60)))
+            _pitch = _aud.get("pitch", "")
+            _harm  = _aud.get("features", {}).get("harmonicity", "")
+            _zcr   = _aud.get("features", {}).get("zcr", "")
+            _vol   = ("loud" if _rms > -20 else "moderate volume" if _rms > -40 else "quiet")
+            parts.append(f"actively listening: {_act}, {_vol}")
+            if _pitch:
+                parts.append(f"pitch: {_pitch:.0f} Hz")
+            if _harm:
+                parts.append(f"harmonicity: {float(_harm):.2f}")
+            if _zcr:
+                _rhythm = "high rhythmic density" if float(_zcr) > 0.25 else "steady rhythm"
+                parts.append(_rhythm)
+        else:
+            parts.append("audio attention active — awaiting sound")
+
+    elif modality == "screen":
+        # Full screen text + visual state
+        _scr = dict(_last_screen_observation or {})
+        if _scr:
+            _pkg    = _scr.get("package", "")
+            _app    = _pkg.rsplit(".", 1)[-1] if _pkg else "app"
+            _vis    = [str(t) for t in (_scr.get("visible_text") or [])[:6] if t]
+            _evt    = _scr.get("event_type", "")
+            _own    = _scr.get("is_own_app", False)
+            if _own:
+                parts.append("watching own interface")
+            else:
+                parts.append(f"watching screen: {_app}")
+            if _vis:
+                parts.append(f"visible: {'; '.join(_vis[:4])}")
+            if _evt and _evt not in ("screen_event",):
+                parts.append(f"event: {_evt}")
+        else:
+            parts.append("screen attention active — awaiting screen content")
+
+    elif modality == "camera":
+        # Full camera detail
+        _cam = dict(_last_camera_observation or {})
+        if _cam:
+            _bright = float(_cam.get("brightness", 0.5))
+            _mot    = bool(_cam.get("motion_detected", False))
+            _hue    = str(_cam.get("dominant_hue", ""))
+            _faces  = _cam.get("faces", 0)
+            _objs   = [str(o) for o in (_cam.get("objects") or [])[:3]]
+            _b_str  = ("bright" if _bright > 0.65 else "dim" if _bright < 0.3 else "moderate")
+            parts.append(f"watching through camera: {_b_str}")
+            if _hue:
+                parts.append(_hue)
+            if _mot:
+                parts.append("movement detected")
+            if isinstance(_faces, int) and _faces > 0:
+                parts.append(f"{_faces} face{'s' if _faces != 1 else ''} visible")
+            elif hasattr(_faces, "__len__") and len(_faces) > 0:
+                parts.append(f"{len(_faces)} face(s) visible")
+            if _objs:
+                parts.append(f"seeing: {', '.join(_objs)}")
+        else:
+            parts.append("camera attention active — awaiting visual input")
+
+    if not parts:
+        return f"sensory focus: {modality}"
+    return f"[SENSORY FOCUS — {modality.upper()}] " + "; ".join(parts)
 
 
 # ---------------------------------------------------------------------------
