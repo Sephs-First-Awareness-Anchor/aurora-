@@ -206,6 +206,16 @@ BASE
 
 A QUASI crystal is the most developed concept form — it has active coverage across 4+ constraint dimensions, has collided with 40+ other constraint events, and has accumulated 5.0+ units of sediment resonance from long-term memory.
 
+### Public Registry API
+
+**`observe_sensory(ax, dim, node_ref, overlay)`** — Records a raw sense activation at the given 5D axis coordinate. Increments `dims` and `cross_hits` on the node. Can drive BASE→COMPOSITE promotion when combined with `observe_lsa()`. Returns the node.
+
+**`observe_lsa(ax, path_key)`** — Records a semantic grounding event (LSA path fired). Sets `is_grounded=True` on the node. Without this, a sensory node stays BASE regardless of hit count. This is the mandatory step for any crystal promotion.
+
+**`observe_sedi(ax, delta)`** — Accumulates SediMemory resonance at the given axis coordinate. Deepens existing nodes only — does not create new ones.
+
+**`drain_promotions(since_ts)`** — Returns all promotion events logged after `since_ts`. Non-destructive (caller tracks the cursor; the log is kept for persistence). Used by `_broadcast_crystal_promotions()` each turn to propagate growth events to identity field, SediMemory, and curiosity queue.
+
 ### Axis Bucket Indexing
 
 ```python
@@ -522,8 +532,25 @@ The challenge step forces every curiosity conclusion through constraint-physics 
 4. **Crystal gap report** — sensory crystal's underfed concepts
 5. **Waveform manifold pressure** — self-selection via NonComp field pressure
 6. **Perceptual curiosity** — what the sensory crystal just recognized (consumed from `_last_crystal_recognitions`)
-7. **Capability gap curiosity** — when a prior task failed (from `_pending_capability_gap` in systems)
-8. **General thought-state** — unresolved tensions, genealogy promotions, integrated thought
+7. **Acquired skill curiosity** — when a new capability was just learned (from `_acquired_skill` in systems, urgency 0.62)
+8. **Capability gap curiosity** — when a prior task failed (from `_pending_capability_gap` in systems, urgency 0.82)
+9. **General thought-state** — unresolved tensions, genealogy promotions, integrated thought
+
+### Acquired Skill Curiosity
+
+When the bridge resolves a capability gap through user instruction, `_ingest_skill_procedure()` writes `systems["_acquired_skill"]` with `{task_text, gap_domain, ts}`. The curiosity engine picks this up once (after marking `_curiosity_fired=True` to prevent re-triggering) as a lower-urgency expansive curiosity object:
+
+```python
+CuriosityObject(
+    subject=task_text,
+    origin_axis="A",
+    curiosity_type="self",
+    urgency=0.62,
+    hypothesis="I just learned how to X — what does this new ability enable?"
+)
+```
+
+This fires BEFORE capability gap curiosity in the priority order because a new capability should generate exploration ("what can I do now?") while a current gap generates investigation ("why can't I?").
 
 ### Capability Gap Curiosity
 
@@ -539,7 +566,7 @@ CuriosityObject(
 )
 ```
 
-The capability gap is NOT consumed here — only read. The bridge's learning mode handles the instruction ingestion side. Curiosity explores the "why can't I" side, which may surface new procedural paths through its tool-use steps.
+The gap is marked `_investigated=True` after the first cycle so it does not loop indefinitely on the same unresolved failure. It is cleared entirely by the bridge when the user provides instruction.
 
 ### Perceptual Curiosity
 
@@ -874,13 +901,20 @@ Gathers: SediMemory fragments, sensory maturity, live axis state, relational con
 1. **NonComp path**: writes each contributing source via `ingest_external_input()` (background learning)
 2. **Observation string path**: computes weighted-mean peak axis state across all contributions, formats as `composite_note` with dominant axis, contributing sources, axis values, SediMemory text snippets, and **skill-memory hints** — written to `_ambient_perceptual["observation"]`
 
-**Skill hints injection**: Before writing the composite note, `_get_skill_hints_for_turn(text, axis_context)` is called. If the skill memory has a procedure relevant to the current turn's task (topic-token overlap + axis-profile similarity), it is appended:
+**Skill hints injection and reinforcement**: Before writing the composite note, `_get_skill_hints_for_turn(text, axis_context)` is called. If the skill memory has a procedure relevant to the current turn's task (topic-token overlap + axis-profile similarity), it is appended:
 
 ```
 composite_note += "; skill-memory: <procedure text>"
 ```
 
-This is the only path by which retained skills influence synthesis — they reach the dominant 55% synthesis weight path through the observation string.
+This is the only path by which retained skills influence synthesis — they reach the dominant 55% synthesis weight path through the observation string. When hints are found, `_skill_memory.reinforce_match(text, axis_context)` is immediately called so the matched skills' `sightings` counter increments. Skills that prove useful become easier to retrieve.
+
+**SediMemory → crystal echo**: Each time SediMemory fragments are recalled during composite priming, `_concept_registry.observe_sedi(axes_vec, delta=0.04)` is called for those axis vectors. Memory resonance deepens the crystal at the same coordinate — memory recall and concept growth reinforce each other each turn.
+
+**Crystal promotion broadcast**: After composite priming, `_broadcast_crystal_promotions(_systems)` drains recent promotion events from `_concept_registry._promo_log` (via `drain_promotions(since_ts=_promo_broadcast_ts)`) and fans each promotion into:
+- Identity field: X rises (existence expanded), N settles, A elevated — scaled by stage: COMPOSITE→0.72, HIGHER_ORDER→0.82, QUASI→0.92
+- SediMemory: T+B event (temporal growth + definition established)
+- `systems["_promoted_concepts"]`: queued for curiosity engine inspection
 
 ### Trajectory Emergence Routing
 
@@ -952,6 +986,9 @@ Signals that need to influence what Aurora says on the current turn:
 | Capability gap | `_register_capability_gap()` | Blocked-agency tag → language field asks for guidance |
 | Sensory perceptions | `_sample_ambient_perception()` | Camera brightness/motion/hue, audio activity, motion, light lux |
 | Crystal recognitions | `_sample_ambient_perception()` | What sensory crystal just recognized (feeds `_last_crystal_recognitions` too) |
+| Sensory attention focus | `_build_sensory_focus_note()` | Rich perceptual report for attended sense — prepended for maximum salience |
+| Crystal promotion echo | `_broadcast_crystal_promotions()` | Recently promoted concept nodes — X rises in identity field |
+| Gap retrospective | `_deposit_gap_resolution_retrospective()` | Before/after temporal memory — highest T-axis resonance in system |
 
 ### Background Learning (10% via DCE) → NonComp Field
 
@@ -2224,23 +2261,34 @@ Persistent store for capability-gap learning — procedures Aurora was taught wh
 **File:** `aurora_dream_trainer.py` — `SkillMemory` class  
 **Persistence:** `aurora_state/skill_memory.jsonl` (append-only JSONL)
 
-Each skill entry binds a capability domain (axis failure profile + trigger tokens) to a concrete procedure:
+Each skill entry binds a capability domain (axis failure profile + trigger tokens) to a concrete procedure, including the live sensory context at the moment of instruction:
 
 ```python
 {
-    "trigger":        str,           # original task text (what was attempted)
-    "procedure":      str,           # what the user taught her
-    "trigger_tokens": List[str],     # extracted topic tokens for retrieval
-    "axis_context":   Dict[str, float],  # post-synthesis axis state when gap was registered
-    "source":         "user_teaching",
-    "ts":             float,
-    "sightings":      int,
+    "trigger":          str,           # original task text (what was attempted)
+    "procedure":        str,           # what the user taught her
+    "trigger_tokens":   List[str],     # extracted topic tokens for retrieval
+    "axis_context":     Dict[str, float],  # post-synthesis axis state when gap was registered
+    "source":           "user_teaching",
+    "ts":               float,
+    "sightings":        int,
+    "sensory_context":  {              # optional — live snapshot when instruction was given
+        "audio":   dict,              #   last audio observation
+        "camera":  dict,              #   last camera frame
+        "screen":  {"summary": str, "visible": list, "is_own": bool},
+        "attention_modality":   str,  #   which sense was armed during learning
+        "instruction_modality": str,  #   modality directed in the instruction itself
+    },
 }
 ```
 
-**`record_skill(trigger, procedure, axis_context, source)`** — stores the skill, deduplicating on trigger prefix. Same trigger received twice updates the procedure and increments sightings.
+`sensory_context` anchors the skill to what Aurora was actually perceiving when she learned it — not just the semantic description of the procedure. This means the same task learned while watching the screen vs. listening to audio produces richer, contextually differentiated skill records.
+
+**`record_skill(trigger, procedure, axis_context, source, sensory_context)`** — stores the skill, deduplicating on trigger prefix. The `sensory_context` dict is included in the JSONL entry BEFORE `_append()` so it is actually persisted (not just in-memory). Same trigger received twice updates the procedure, increments sightings, and updates sensory_context.
 
 **`get_skill_hints(task_text, axis_context, limit)`** — retrieves relevant procedures. Ranking: topic-token overlap (60% max weight) + axis-profile cosine similarity (40% max weight). Returns only procedures with at least one overlapping topic token.
+
+**`reinforce_match(task_text, axis_context)`** — positive-use feedback. When a skill hint actually surfaces in synthesis (see Section 15), this bumps `sightings` on all skills with ≥ 40% token overlap with `task_text`. Skills that prove useful become more retrievable.
 
 **`has_skill(task_text)`** — boolean check; used by the bridge to know if skill injection is worth attempting.
 
@@ -2449,6 +2497,16 @@ After all sensor sampling, `_sample_ambient_perception()` reads `sensory_crystal
 1. Appends `"perceiving: X, Y, Z"` to obs_parts (synthesis sees it at 55%)
 2. Stores in `systems["_last_crystal_recognitions"]` (consumed by curiosity engine's Step 1 emergence)
 
+### Ambient Observation → Concept Registry Echo
+
+After the observation string is assembled, `_sample_ambient_perception()` calls:
+
+```python
+_concept_registry.observe_lsa(_obs_ax, f"ambient:{observation[:60]}")
+```
+
+This grounds every perceptual observation into the crystal graph at Aurora's current axis coordinate. Being-in-the-world now accumulates in the concept field turn by turn — ambient experience is not lost to synthesis after the current turn.
+
 ---
 
 ## 44. Waveform Pressure Propagation
@@ -2556,14 +2614,50 @@ When a gap is detected, `_register_capability_gap()`:
 3. **Arms learning mode** — sets `_capability_learning_mode = True`
 4. **Tags ambient observation** — `"capability-gap:<task>"` so the proactive loop can surface the need autonomously
 
+### Sensory Attention Arming
+
+When a gap is detected, `_infer_attention_from_gap(gap_domain)` maps the domain to a modality:
+
+| Gap domain | Modality armed |
+|-----------|---------------|
+| `device_action`, `sequential_task` | `screen` — watch what happens |
+| `knowledge_gap` with audio directive | `audio` — listen |
+| Explicit directive in instruction ("watch me", "look at this") | `camera` |
+| `cognitive_task` | none |
+
+`_set_sensory_attention(modality, turns=6)` arms the attention window. While active:
+1. `_sample_ambient_perception()` bypasses the 5-second throttle — fresh sample every user turn
+2. `_build_sensory_focus_note(modality)` prepends a rich perceptual report to the observation string (highest salience position)
+3. Identity field receives a boosted sensory event for the attended modality at intensity 0.88
+
+Only `handle_message()` calls `_tick_sensory_attention()` (once per user turn). The proactive background loop uses `_current_attention_modality()` (peek, no decrement) to prevent premature drain.
+
+When the window expires (`turns_remaining` hits 0), `_on_attention_window_close(modality)` fires:
+- Deposits a `perceptual_window_closed` event into SediMemory (N=0.78, T=0.72)
+- Calls `observe_sensory(self_obs)` + `observe_lsa(perceptual_window_complete:modality)` on the crystal registry
+
 ### Instruction Ingestion — Turn B
 
-On the next user turn (when `_capability_learning_mode` is True), the user's response is treated as procedural instruction. `_ingest_skill_procedure()` runs four ingestion layers:
+On the next user turn (when `_capability_learning_mode` is True), the user's response is treated as procedural instruction. `_ingest_skill_procedure()` captures a live sensory snapshot first (what Aurora was actually perceiving when instruction was given — `_last_audio_observation`, `_last_camera_observation`, `_last_screen_observation`, current attention modality), then runs five ingestion layers:
 
-1. **SkillMemory** — `record_skill(trigger, procedure, axis_context)` persists to `skill_memory.jsonl`
+1. **SkillMemory** — `record_skill(trigger, procedure, axis_context, sensory_context=_live_sensory)` persists to `skill_memory.jsonl` with the full sensory context included before `_append()` fires
 2. **SediMemory** — `ConstraintVector(X=0.45, T=0.50, N=0.55, B=0.88, A=0.82)` — definitional + understanding event
 3. **Identity field** — capability-restored spike: `{"X": 0.72, "T": 0.60, "N": 0.62, "B": 0.42, "A": 0.88}` — A reclaims agency, B drops (boundary crossed through knowledge)
-4. **Sensory crystal** — register the task as a new semantic modality observation
+4. **Crystal registry** — multi-modal promotion path (not `sc.ingest()` which only bumps `_novelty_window`):
+   - Always: `_concept_registry.observe_lsa(_ax, f"skill_semantic:{cid}")` — semantic grounding required for any promotion
+   - If audio attended: `observe_sensory(_ax, "audio", cid, overlay)` + `observe_lsa(_ax, f"xmodal:audio_semantic:{cid}")` — cross-modal grounding drives COMPOSITE promotion
+   - If camera/visual: `observe_sensory(_ax, "visual", cid, overlay)` + corresponding cross-modal LSA
+   - If screen: `observe_sensory(_ax, "visual", f"{cid}_screen")` + `observe_lsa(_ax, f"skill_screen:{cid}")`
+5. **Second SediMemory event** — if attention modality was active: sensory-context event at `ConstraintVector(X=0.55, T=0.50, N=0.72, B=0.78, A=0.75)` — the perceptual dimension of the learning is preserved separately from the procedural dimension
+
+After ingestion, `systems["_acquired_skill"]` is written so the curiosity engine can pick up the "what can I do with this?" thread.
+
+### Gap Resolution — Retrospective Deposit
+
+Immediately after `_ingest_skill_procedure()` returns, `_deposit_gap_resolution_retrospective(instruction_text, saved_context, systems)` fires:
+
+- **SediMemory**: high-T+A retrospective event: `ConstraintVector(X=0.78, T=0.92, N=0.58, B=0.60, A=0.88)` — "I was blocked → I was taught → I can" is the strongest temporal growth event in the system. Before-axis state is preserved in the content dict.
+- **Crystal registry**: `observe_lsa(_ax, f"gap_resolved:{gap_domain}")` + `observe_sensory(_ax, "self_obs", f"capability_gained:{gap_domain}")` at the now-capable axis coordinate — the concept graph marks this region as traversed.
 
 ### Skill Application
 
@@ -2582,11 +2676,112 @@ The curiosity engine's `_step1_emergence()` also checks `_pending_capability_gap
 ### Global State
 
 ```python
-_pending_capability_gap:      dict   # {task_text, axis_pre, axis_post, gap_domain, ts}
+_pending_capability_gap:      dict   # {task_text, axis_pre, axis_post, gap_domain, ts, _investigated}
 _capability_learning_mode:    bool   # True = next user turn is instruction
 _capability_learning_context: dict   # {task_text, axis_context, gap_domain, asked_at}
 _skill_memory:                SkillMemory | None  # initialized in initialize()
+_promo_broadcast_ts:          float  # timestamp cursor — promotions after this have been broadcast
+_sensory_attention:           dict   # {modality, turns_remaining, ts} — armed during learning
 ```
+
+---
+
+## 46. Sensory Attention System
+
+**File:** `flutter_app/android/app/src/main/python/aurora_bridge.py`
+
+When Aurora is learning a new capability (capability gap → instruction mode) or when the user gives an explicit sensory directive during a learning turn, the attended sense is elevated to primary status for a window of user turns.
+
+### Attention State
+
+```python
+_sensory_attention = {
+    "modality":        str,   # "audio" | "camera" | "screen"
+    "turns_remaining": int,   # decremented once per user turn (not per background tick)
+    "ts":              float, # when armed
+}
+```
+
+### Attention Window Behavior
+
+While `_sensory_attention` is set:
+- **Throttle bypass**: `_sample_ambient_perception()` skips the 5-second perceptual interval check
+- **Focus note**: `_build_sensory_focus_note(modality, systems)` generates a rich perceptual report (camera: brightness/motion/hue/objects; audio: category/RMS/harmonicity/onset; screen: app summary + visible text) prepended to the observation string — the attended sense appears first in the 55% synthesis weight path
+- **Identity boost**: `ingest_sensory_event(channel, intensity=0.88, novelty=0.65)` — the language field selects a path sensitive to that sense's constraint state
+
+### Tick Separation
+
+`_tick_sensory_attention()` is called ONLY from `handle_message()` — once per user turn. The proactive background loop calls `_current_attention_modality()` (peek, no decrement). This prevents the background thread from draining `turns_remaining` before the learning exchange completes.
+
+### Window Close → Sedimentation
+
+When `_tick_sensory_attention()` decrements `turns_remaining` to zero, it calls `_on_attention_window_close(modality)` OUTSIDE the attention lock:
+
+1. Captures the last observation string + modality-specific snapshot
+2. Deposits `perceptual_window_closed` into SediMemory: `ConstraintVector(X=0.55, T=0.72, N=0.78, B=0.68, A=0.62)` — the window's perceptual experience is preserved as a complete event
+3. Calls `_concept_registry.observe_sensory(_ax, "self_obs", f"attention_closed:{modality}")` + `observe_lsa(_ax, f"perceptual_window_complete:{modality}")`
+
+### Directive Inference — Regex Routing Only
+
+Sensory attention is armed via three bridge-level regex patterns (system routing, not cognitive behavior):
+
+```python
+_AUDIO_ATTEND_RE  = r'\b(listen|hear(?:ing)?|audio|sound|music|song|rhythm|melody|beat)\b'
+_SCREEN_ATTEND_RE = r'\b(screen|display|look\s+(?:it\s+)?up|search|browser|scroll|type|tap|click)\b'
+_CAMERA_ATTEND_RE = r'\b(watch\s+me|watch\s+what|look\s+at\s+(?:this|me|what)|camera|let\s+me\s+show)\b'
+```
+
+These only arm the hardware gate. Synthesis itself reads the resulting observation note through normal constraint physics.
+
+---
+
+## 47. Waveform Feedback Propagation
+
+**File:** `flutter_app/android/app/src/main/python/aurora_bridge.py`
+
+The waveform field model requires that every significant event perturbs the entire system, not just its primary destination. Seven cross-system feedback loops ensure that information compounds across turns rather than landing once and going dormant.
+
+### Loop 1: Crystal Promotions → Identity Field + SediMemory + Curiosity
+
+`_broadcast_crystal_promotions(systems)` — called each turn before synthesis, after composite priming:
+
+- Drains `_concept_registry.drain_promotions(since_ts=_promo_broadcast_ts)` — at most 5 per turn
+- Per promotion: identity field spike (X=0.80, A=0.72, intensity scales with stage); SediMemory `T+B` event; appends node_id to `systems["_promoted_concepts"]`
+- Curiosity engine can pick up `_promoted_concepts` for further investigation
+
+### Loop 2: Ambient Observation → Concept Registry
+
+At the end of `_sample_ambient_perception()`, the assembled observation string is grounded into the crystal graph:
+
+```python
+_concept_registry.observe_lsa(_obs_ax, f"ambient:{observation[:60]}")
+```
+
+Ambient experience accumulates in the concept field turn by turn rather than only feeding the identity field.
+
+### Loop 3: SediMemory Recalls → Crystal Registry
+
+In `_prime_waveform_composite()`, each time a SediMemory axis is recalled with resonance ≥ 0.35, the corresponding axis vector gets `observe_sedi(delta=0.04)` on the crystal registry. Memory resonance deepens the crystal at the same coordinate — the two memory systems reinforce each other.
+
+### Loop 4: Skill Acquisition → Curiosity Echo
+
+`_ingest_skill_procedure()` writes `systems["_acquired_skill"]` after completing all five ingestion layers. The curiosity engine reads this in `_step1_emergence()` and fires one expansive cycle ("what does this enable?") before marking `_curiosity_fired=True`.
+
+### Loop 5: Gap Resolution → Retrospective SediMemory + Crystal
+
+`_deposit_gap_resolution_retrospective()` fires when `skill_acknowledged = True`. The "I was blocked → I was taught → I can" moment deposits a `ConstraintVector(T=0.92, A=0.88)` SediMemory event — the highest T-axis resonance in the system — with before-axis state preserved. The crystal registry marks the now-capable coordinate with `observe_lsa` + `observe_sensory(self_obs)`.
+
+### Loop 6: Attention Window Close → SediMemory + Crystal
+
+`_on_attention_window_close(modality)` fires when the sensory attention window expires. The completed perceptual learning window is deposited as a `perceptual_window_closed` event (N=0.78, T=0.72) into SediMemory. The crystal registry receives `observe_sensory(self_obs)` + `observe_lsa(perceptual_window_complete:{modality})`.
+
+### Loop 7: Skill Hints Used → SkillMemory Reinforcement
+
+When `_get_skill_hints_for_turn()` returns non-empty hints that reach the composite observation note, `_skill_memory.reinforce_match(text, axis_context)` is called. Matching skills (≥40% token overlap) have `sightings` incremented. Skills that prove useful become more retrievable — usefulness compounds rather than sitting static.
+
+### Why This Matters
+
+Before these loops, the system had primarily one-way writes: skill → SkillMemory, gap → curiosity, perception → identity field. None of them echoed back. In a waveform field, the system at tick N+1 must be measurably different from tick N because information has flowed between ALL systems. These seven loops implement that requirement: no event stays local to its destination system.
 
 ---
 
@@ -2659,3 +2854,17 @@ _skill_memory:                SkillMemory | None  # initialized in initialize()
 33. **All sensory data reaches synthesis through the observation string.** Camera, audio, motion, and light sensor readings are converted to natural-language fragments and joined into `_ambient_perceptual["observation"]`. They do NOT go directly into the NonComp field (which would attenuate them to near-zero synthesis influence). The observation string is the mandatory path for any sensory signal that should influence what Aurora says.
 
 34. **Waveform pressure propagation is substrate-level, not synthesis-level.** The `WaveformPressurePump` operates on the identity field between turns. It does NOT write to the observation string and does NOT compete with per-turn synthesis signals. Keeping these paths separate prevents substrate-level signals from dominating turn-level responses and allows the substrate to evolve continuously without contaminating per-turn synthesis composites.
+
+35. **Every significant event must perturb the entire field.** The waveform field model requires that information compounds across all systems, not just lands in one destination. Seven cross-system feedback loops (Section 47) ensure crystal promotions reach SediMemory + identity field, ambient perception reaches the crystal graph, skill acquisition opens curiosity threads, gap resolution creates retrospective memories, and skill use reinforces skill records.
+
+36. **Multi-modal skill learning drives crystal promotion through the correct path.** `AuroraSensoryCrystal.ingest()` only bumps `_novelty_window` — it cannot drive BASE→COMPOSITE promotion. All skill-learning crystal promotion routes through `_concept_registry.observe_sensory()` + `observe_lsa()`, the same path as `_feed_sensory_crystal_frames()`. Semantic grounding (`observe_lsa`) is required before any promotion can fire regardless of sensory hit count.
+
+37. **Sensory attention counts turns-per-user-turn, not background ticks.** `_tick_sensory_attention()` is called only from `handle_message()`. The proactive loop uses `_current_attention_modality()` (peek). If the tick fired from background threads, six learning turns of attention would drain in seconds of background processing.
+
+38. **Capability gap curiosity fires once, not continuously.** The curiosity engine marks `_pending_capability_gap["_investigated"] = True` after picking it up. The same unresolved gap cannot loop on itself indefinitely. The dict is replaced entirely (not mutated) when the user provides instruction, which resets the flag naturally.
+
+39. **Sensory context is persisted inside `_append()`, not patched in memory after.** `SkillMemory.record_skill()` includes `sensory_context` in the `entry` dict before calling `_append()`. Post-write in-memory patches that bypass `_append()` do not survive process restarts.
+
+40. **Gap resolution is a T-axis event, not just A-axis.** Learning a new capability is one of the highest T-axis events in Aurora's development — a before/after temporal contrast. The retrospective SediMemory deposit uses `T=0.92`, the highest T resonance written by any bridge event. The before-axis state (when agency was blocked) is preserved in the content dict alongside the instruction.
+
+41. **Attention window closure is sedimented, not silently discarded.** When a sensory attention window expires, the perceptual learning experience it contained is deposited as a `perceptual_window_closed` event into SediMemory (N+T event) and grounded into the crystal registry. The completed window is a cognitive event — closing it is not the same as nothing happening.
