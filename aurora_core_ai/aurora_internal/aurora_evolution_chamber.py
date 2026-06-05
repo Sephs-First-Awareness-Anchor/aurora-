@@ -1271,7 +1271,9 @@ class EvolutionaryChamber:
                         observe_notes[meta_key] = meta_val
 
             # 5. X Non-Comp: all nodes on admissible manifold
-            for nid, node in self.lattice.nodes.items():
+            # Snapshot items() to avoid RuntimeError if another thread mutates
+            # self.lattice.nodes concurrently (gauntlet + proactive loop race).
+            for nid, node in list(self.lattice.nodes.items()):
                 GlobalNonComps.check_X(node.mode, nid, self.tick_count)
 
             # 6. B Non-Comp: topology partitionable
