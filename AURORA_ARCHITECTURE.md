@@ -729,15 +729,15 @@ Contains the integrated axis state, dominant channel, voice register, grammar mo
 
 ### Synthesis Chain (`_chain_up3_purpose`)
 
-The weights at which different inputs feed into synthesis:
+The following describes the **relative influence** of each input path on what synthesis produces — these are NOT blend coefficients that sum to 100%. They operate at different integration points in the pipeline (axis vector contributions, text aggregation, ability selection), then pass through `_field_balancer.rebalanced_activation()` before synthesis reads the final axis state.
 
-| Source | Weight |
-|--------|--------|
-| Utterance / observation string | 55% |
-| IVM lattice polarity | 20% |
-| Genealogy state | 15% |
-| DCE frame | 10% |
-| Conscious crest (optional blend) | 25% when available |
+| Source | Relative influence | Integration point |
+|--------|--------|---------|
+| Utterance / observation string | 55% dominant | Single text string read by synthesis chain |
+| IVM lattice polarity | 20% | 10% net displacement blend into axis vector per tick |
+| Genealogy state | 15% | Biases ability selection, not direct axis write |
+| DCE frame | 10% | Emotional state into axis vector |
+| Conscious crest (when available, intensity ≥ 0.35) | 25% of crest axis slot | Applied inside `_project_utterance_axes()` to the crest's dominant axis only: `projection[axis] = cur×0.75 + crest_intensity×0.25`. Modulates one axis slot; does not add to the total. |
 
 The observation string is the dominant synthesis input. This is why all per-turn physics signals (confusion, geo ground hold, trajectory emergence, composite prime) are written to `_ambient_perceptual["observation"]` rather than only to the NonComp field.
 
@@ -1827,6 +1827,8 @@ class CoverageGap:
 ```
 
 `sixth_axis_candidate = True` when `best_coverage < ANOMALY_THRESHOLD = 0.35`. At this threshold, no known structure has meaningful overlap with the gap. The WARP system doesn't act on this immediately — it logs the gap signature. When the same signature accumulates `ANOMALY_CANDIDATE_THRESHOLD = 12` occurrences, it surfaces as a curiosity event.
+
+**Threshold calibration status:** `COVERAGE_THRESHOLD = 0.82`, `ANOMALY_THRESHOLD = 0.35`, `GAP_PERSISTENCE_REQUIRED = 3`, and `ANOMALY_CANDIDATE_THRESHOLD = 12` are principled estimates — they have not been calibrated against measured constraint event distributions. They define what "novel" means before Aurora has accumulated enough runtime data to validate the definitions empirically. These should be treated as provisional until logged event data allows tuning.
 
 ### AxisCoverageChecker
 
