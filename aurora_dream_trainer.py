@@ -1176,6 +1176,7 @@ class SkillMemory:
         procedure_text: str,
         axis_context: Optional[dict] = None,
         source: str = "user_teaching",
+        sensory_context: Optional[dict] = None,
     ) -> bool:
         """Store a learned procedure for a capability domain."""
         trigger_clean = re.sub(r'\s+', ' ', str(trigger_text or '').strip())
@@ -1183,7 +1184,7 @@ class SkillMemory:
         if len(procedure_clean.split()) < 3:
             return False
 
-        entry = {
+        entry: dict = {
             "trigger": trigger_clean[:200],
             "procedure": procedure_clean[:600],
             "trigger_tokens": self._tokens(trigger_clean),
@@ -1192,6 +1193,9 @@ class SkillMemory:
             "ts": time.time(),
             "sightings": 1,
         }
+        if sensory_context:
+            entry["sensory_context"] = sensory_context
+
         # Dedup: if same trigger already stored, boost sightings and update procedure
         trig_key = trigger_clean.lower()[:80]
         for existing in self._skills:
@@ -1199,6 +1203,8 @@ class SkillMemory:
                 existing["sightings"] = existing.get("sightings", 1) + 1
                 existing["procedure"] = procedure_clean[:600]
                 existing["ts"] = time.time()
+                if sensory_context:
+                    existing["sensory_context"] = sensory_context
                 self._append(entry)
                 return True
 

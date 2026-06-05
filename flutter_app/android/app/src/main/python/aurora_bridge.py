@@ -2207,9 +2207,11 @@ def _sample_ambient_perception(systems: dict) -> None:
     import time as _t
     now = _t.time()
 
-    # Tick the attention counter and get the active modality BEFORE the
-    # throttle check — so the tick fires every turn regardless.
-    _active_modality = _tick_sensory_attention()
+    # Peek at the active modality WITHOUT ticking. The tick (decrement) only
+    # fires from handle_message() — one decrement per user turn. If we ticked
+    # here, the background proactive loop would drain all turns_remaining in
+    # seconds, releasing attention before the user finishes their instruction.
+    _active_modality = _current_attention_modality()
 
     # Bypass throttle when attention mode is active so every learning turn
     # gets a fresh sensory sample from the attended sense.
@@ -2680,6 +2682,11 @@ def handle_message(text: str) -> str:
     # Sample camera + audio before each turn so dual_question_pipeline can
     # inject ambient perceptual context into Aurora's response synthesis.
     _sample_ambient_perception(_systems)
+    # Tick the attention counter ONCE per user turn (after the sample so the
+    # current turn still benefits from the full modality window). The proactive
+    # loop calls _sample_ambient_perception() too — keeping the tick here
+    # prevents background threads from draining turns_remaining prematurely.
+    _tick_sensory_attention()
     # This turn arrived via STT — the mic IS live. Mark it so the sensory
     # query handler doesn't wrongly report "audio feed offline" when the user
     # asks "can you hear me".
@@ -4603,17 +4610,12 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
     if _skill_memory is not None:
         try:
             _skill_memory.record_skill(
-                trigger_text   = task_text,
-                procedure_text = user_text,
-                axis_context   = axis_ctx,
-                source         = "user_teaching",
+                trigger_text    = task_text,
+                procedure_text  = user_text,
+                axis_context    = axis_ctx,
+                source          = "user_teaching",
+                sensory_context = _live_sensory or None,
             )
-            # Extend the stored skill with sensory context if available
-            if _live_sensory and _skill_memory._skills:
-                try:
-                    _skill_memory._skills[-1]["sensory_context"] = _live_sensory
-                except Exception:
-                    pass
         except Exception as exc:
             log.warning("SkillMemory record_skill: %s", exc)
 
@@ -4657,37 +4659,61 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
     except Exception as exc:
         log.warning("Identity field skill restore: %s", exc)
 
-    # 4. Sensory crystal — register semantic AND active sensory modality
+    # 4. Crystal promotion — route through ConceptCrystalRegistry so multi-modal
+    # skill learning actually drives BASE→COMPOSITE promotion.
+    # observe_sensory() increments dims/cross_hits (required for promotion).
+    # observe_lsa() provides the semantic grounding without which promotion is
+    # blocked regardless of sensory hit count.
+    # AuroraSensoryCrystal.ingest() only bumps _novelty_window — NOT promotion.
     try:
+        with _axis_state_lock:
+            _skill_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+        _att_mod  = _live_sensory.get("instruction_modality") or _live_sensory.get("attention_modality")
+        _cid_base = re.sub(r'\W+', '_', task_text[:60].lower().strip()) or "skill"
+
+        if _concept_registry is not None:
+            # Semantic grounding — always required for any promotion path.
+            # This binds the skill concept to the language plane.
+            _concept_registry.observe_lsa(_skill_ax, f"skill_semantic:{_cid_base}")
+
+            # Perceptual modality hit — drives dims/cross_hits for promotion.
+            if _att_mod == "audio" and _live_sensory.get("audio"):
+                _a_overlay = {
+                    "volume": float(_live_sensory["audio"].get("volume", 0.5)),
+                    "source": "skill_teaching",
+                }
+                _concept_registry.observe_sensory(_skill_ax, "audio", _cid_base, _a_overlay)
+                # Cross-modal grounding: audio co-occurring with semantic understanding
+                _concept_registry.observe_lsa(_skill_ax, f"xmodal:audio_semantic:{_cid_base}")
+
+            elif _att_mod in ("camera", "visual") and _live_sensory.get("camera"):
+                _v_overlay = {
+                    "brightness": float(_live_sensory["camera"].get("brightness", 0.5)),
+                    "motion":     bool(_live_sensory["camera"].get("motion_detected", False)),
+                    "source":     "skill_teaching",
+                }
+                _concept_registry.observe_sensory(_skill_ax, "visual", _cid_base, _v_overlay)
+                _concept_registry.observe_lsa(_skill_ax, f"xmodal:visual_semantic:{_cid_base}")
+
+            elif _att_mod == "screen" and _live_sensory.get("screen", {}).get("summary"):
+                # Screen is a visual+semantic compound: record as visual sense
+                # AND as an additional LSA grounding from the screen text.
+                _concept_registry.observe_sensory(
+                    _skill_ax, "visual", f"{_cid_base}_screen",
+                    {"source": "skill_teaching_screen"},
+                )
+                _concept_registry.observe_lsa(_skill_ax, f"skill_screen:{_cid_base}")
+
+        # Keep the AuroraSensoryCrystal ingest only for the semantic channel —
+        # it correctly handles novelty/recency for that path.
         sc = (
             _systems.get("sensory_crystal")
             or getattr(_systems.get("hardware"), "sensory_crystal", None)
             or getattr(_systems.get("sensory_integration"), "sensory_crystal", None)
         )
-        if sc is not None:
-            # Always register the semantic understanding
-            if hasattr(sc, "ingest"):
-                sc.ingest(task_text, modality="semantic", data=user_text, source="skill_teaching")
-            elif hasattr(sc, "observe"):
-                sc.observe(task_text, modality="semantic", text=user_text)
-
-            # Also register the perceptual experience that accompanied learning
-            _att_mod = _live_sensory.get("instruction_modality") or _live_sensory.get("attention_modality")
-            if _att_mod == "audio" and _live_sensory.get("audio"):
-                _aud_data = _live_sensory["audio"]
-                if hasattr(sc, "ingest"):
-                    sc.ingest(task_text, modality="audio", data=_aud_data, source="skill_teaching")
-            elif _att_mod == "camera" and _live_sensory.get("camera"):
-                _cam_data = _live_sensory["camera"]
-                if hasattr(sc, "ingest"):
-                    sc.ingest(task_text, modality="visual", data=_cam_data, source="skill_teaching")
-            elif _att_mod == "screen" and _live_sensory.get("screen", {}).get("summary"):
-                _scr_text = "; ".join(filter(None, [
-                    _live_sensory["screen"].get("summary", ""),
-                    *(_live_sensory["screen"].get("visible", [])[:3]),
-                ]))
-                if _scr_text and hasattr(sc, "ingest"):
-                    sc.ingest(task_text, modality="semantic", data=_scr_text, source="skill_teaching_screen")
+        if sc is not None and hasattr(sc, "ingest"):
+            sc.ingest(task_text, modality="semantic", data=user_text, source="skill_teaching")
     except Exception as exc:
         log.warning("Sensory crystal skill: %s", exc)
 

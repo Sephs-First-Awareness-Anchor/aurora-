@@ -565,15 +565,17 @@ class CuriosityEngine:
         # engine picks it up as a high-urgency self-type curiosity so Aurora
         # will actively try to understand WHY she can't do the thing, not just
         # express the inability.  Domain-appropriate tools get invoked at step 2.
+        # The gap is consumed (marked _investigated=True) after the first cycle
+        # so the engine doesn't loop on the same unreachable gap indefinitely.
+        # The bridge clears the gap entirely when the user provides instruction.
         try:
             _cap_gap = self.systems.get("_pending_capability_gap") or {}
-            if _cap_gap and _cap_gap.get("task_text"):
-                # Consume once — the learning mode in the bridge handles the
-                # instruction side; curiosity explores the "why can't I" side.
+            if _cap_gap and _cap_gap.get("task_text") and not _cap_gap.get("_investigated"):
                 _gap_task   = str(_cap_gap.get("task_text", ""))[:120]
                 _gap_domain = str(_cap_gap.get("gap_domain", "general_capability"))
-                _post_ax    = _cap_gap.get("axis_post", {})
-                # Don't re-register — just read it (bridge clears when user teaches)
+                # Mark as investigated so this exact gap doesn't re-fire next cycle.
+                # The bridge will replace the dict entirely when the user teaches.
+                _cap_gap["_investigated"] = True
                 return CuriosityObject(
                     subject=_gap_task,
                     origin_axis="A",   # A-axis: the gap lives in agency
