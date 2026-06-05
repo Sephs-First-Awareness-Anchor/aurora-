@@ -4907,6 +4907,11 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
             if hasattr(engine, "reset_idle_counter"):
                 engine.reset_idle_counter()
 
+            # Track unsettled subjects by type so we can trigger directed
+            # pursuit after the session — the cognitive equivalent of noticing
+            # a gap and then actually going to look something up.
+            _unsettled: dict = {}  # {curiosity_type: [subject, ...]}
+
             while True:
                 # Stop if cancelled or limits reached
                 if not _curiosity_session_active.is_set():
@@ -4928,14 +4933,28 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
 
                     cycle_count            += 1
                     stats["cycles_completed"] = cycle_count
-                    stats["concepts_explored"] += int(result.get("concepts_explored", 0)
-                                                      or result.get("gaps_probed", 0) or 1)
-                    stats["crystals_promoted"] += int(result.get("crystals_promoted", 0)
-                                                      or result.get("promotions", 0))
-                    stats["tools_used"]        += int(result.get("tools_used", 0)
-                                                      or result.get("tool_calls", 0))
-                    stats["settled"]           += int(result.get("settled", 0)
-                                                      or result.get("tensions_settled", 0))
+
+                    def _as_int(v):
+                        """Coerce a value that might be a list, bool, or number to int."""
+                        if isinstance(v, list):
+                            return len(v)
+                        try:
+                            return int(v) if v else 0
+                        except (TypeError, ValueError):
+                            return 0
+
+                    stats["concepts_explored"] += _as_int(
+                        result.get("concepts_explored") or result.get("gaps_probed") or 1
+                    )
+                    stats["crystals_promoted"] += _as_int(
+                        result.get("crystals_promoted") or result.get("promotions")
+                    )
+                    stats["tools_used"]        += _as_int(
+                        result.get("tools_used") or result.get("tool_calls")
+                    )
+                    stats["settled"]           += _as_int(
+                        result.get("settled") or result.get("tensions_settled")
+                    )
 
                     # Persist settled conclusions to SediMemory so they survive
                     # session boundaries and can be recalled in future turns.
@@ -4944,9 +4963,83 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                             result["conclusion"],
                             result.get("identity_delta", ""),
                         )
+                    elif not result.get("settled"):
+                        # Record what couldn't be resolved so we can pursue it
+                        _cobj = result.get("curiosity_object") or {}
+                        _subj = _cobj.get("subject", "")
+                        _ctype = _cobj.get("curiosity_type", "conceptual")
+                        if _subj and _subj != "?":
+                            _unsettled.setdefault(_ctype, []).append(_subj)
+
                 except Exception as exc:
                     log.warning("Curiosity cycle error: %s", exc)
                     break
+
+            # ── Directed pursuit for unsettled gaps ───────────────────────────
+            # She identified what she doesn't know — now do something about it.
+            # This is A-axis agency closing the loop on N-axis pressure.
+            if _unsettled and _systems is not None:
+                # Surface the most pressing gap so the proactive loop voices it
+                # through constraint physics — not a scripted string, just pressure.
+                _all_subjects = [s for ss in _unsettled.values() for s in ss]
+                _top_subject = _all_subjects[0] if _all_subjects else None
+                if _top_subject and not _systems.get("_gap_seeking_concept"):
+                    _top_type = next(iter(_unsettled))
+                    _systems["_gap_seeking_concept"] = _top_subject
+                    _systems["_gap_seeking_concept_type"] = _top_type
+                    # Inject into ambient perceptual so proactive synthesis
+                    # carries this pressure even when no user turn is pending.
+                    _ambient = _systems.get("_ambient_perceptual")
+                    if isinstance(_ambient, dict):
+                        _obs = _ambient.get("observation", "")
+                        _tag = f"gap:{_top_subject[:30]}"
+                        if _tag not in _obs:
+                            _ambient["observation"] = f"{_obs} {_tag}".strip()
+
+                # Trigger directed study for semantic/perceptual/conceptual gaps
+                def _pursue_study(_sys=_systems):
+                    try:
+                        _cr = __import__(
+                            "aurora_core_ai.corpus_runner",
+                            fromlist=["corpus_study_cycle"],
+                        )
+                        _cr.corpus_study_cycle(_sys, verbose=False)
+                    except Exception:
+                        pass
+
+                # Trigger evolve_identity for self-curiosity failures so she
+                # develops better introspective grounding on her own state.
+                def _pursue_self(_sys=_systems):
+                    try:
+                        with _axis_state_lock:
+                            _ax = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                        _cr = __import__(
+                            "aurora_core_ai.corpus_runner",
+                            fromlist=["evolve_identity"],
+                        )
+                        class _GP:
+                            x_activation = _ax.get("X", 0.5)
+                            t_activation = _ax.get("T", 0.5)
+                            n_activation = _ax.get("N", 0.5)
+                            b_activation = _ax.get("B", 0.5)
+                            a_activation = _ax.get("A", 0.5)
+                        _cr.evolve_identity(_sys, quality=0.55, geom=_GP())
+                    except Exception:
+                        pass
+
+                _has_semantic = any(
+                    t in _unsettled for t in ("semantic_gap", "perceptual_gap", "conceptual")
+                )
+                _has_self = "self" in _unsettled
+
+                if _has_semantic:
+                    threading.Thread(
+                        target=_pursue_study, daemon=True, name="gap_study"
+                    ).start()
+                if _has_self:
+                    threading.Thread(
+                        target=_pursue_self, daemon=True, name="gap_self"
+                    ).start()
 
         finally:
             _curiosity_session_active.clear()

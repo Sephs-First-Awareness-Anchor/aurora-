@@ -901,7 +901,7 @@ class CuriosityEngine:
             # genuine state of not-knowing when the next response is generated.
             # The language field will express this as a question in its own
             # words — no scripted string, no template.
-            if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual"):
+            if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual", "self"):
                 try:
                     subj = curiosity.subject[:60]
                     # Never fire gap pressure for foundational / self-evident concepts.
@@ -916,17 +916,19 @@ class CuriosityEngine:
                         if not existing:
                             self.systems["_gap_seeking_concept"]      = subj
                             self.systems["_gap_seeking_concept_type"] = curiosity.curiosity_type
-                            # Spike the identity field with a DIVERGENCE profile:
-                            # B high  — she has a definition and is checking context against it
-                            # T high  — temporal/contextual sensitivity: what is the context here?
-                            # N low   — she is NOT completely lost; she has partial knowledge
-                            # A mod   — engaged but not desperate
-                            # This produces "I know X as Y, but your use seems different — why?"
-                            # rather than "I have no idea what X means, please explain."
+                            # Identity field profile depends on gap type:
+                            # — semantic/perceptual/conceptual: DIVERGENCE (B high, N low)
+                            #   "I know X as Y but context differs — why?"
+                            # — self: UNCERTAINTY (X high, N high, T moderate)
+                            #   "I am unclear about my own constraint state here"
+                            if curiosity.curiosity_type == "self":
+                                _profile = {"X": 0.72, "T": 0.55, "N": 0.68, "B": 0.45, "A": 0.58}
+                            else:
+                                _profile = {"X": 0.55, "T": 0.72, "N": 0.38, "B": 0.85, "A": 0.62}
                             ifield = self.systems.get("identity_field")
                             if ifield and hasattr(ifield, "ingest_external_input"):
                                 ifield.ingest_external_input(
-                                    {"X": 0.55, "T": 0.72, "N": 0.38, "B": 0.85, "A": 0.62},
+                                    _profile,
                                     intensity=0.72,
                                     source=f"gap_divergence:{subj}",
                                 )
