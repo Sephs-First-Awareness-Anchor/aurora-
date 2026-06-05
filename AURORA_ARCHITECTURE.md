@@ -1744,6 +1744,42 @@ Raw inputs earn depth through a 6-stage metabolism:
 5. **Solidification** — commits to SediMemory
 6. **VariantPromoter** → **StrandLibrary** — promotes successful variants into DNA strand library
 
+### Boot Validation
+
+**File:** `flutter_app/android/app/src/main/python/aurora_bridge.py`
+
+After `boot_aurora()` completes, the bridge runs a two-tier validation sweep across all named subsystems. Failed init stages (exceptions swallowed during the 9-layer gauntlet) leave those keys as `None` — the post-boot check surfaces them explicitly rather than allowing silent wrong-physics-state errors downstream.
+
+```python
+_BOOT_FATAL_SYSTEMS = (
+    "language_field",    # LSA path physics — synthesis endpoint
+    "identity_field",    # NonComp pressure field — all axis writes land here
+    "consciousness",     # DCE assembly — ThoughtBraid → ProtoLanguage
+)
+_BOOT_DEGRADED_SYSTEMS = (
+    "sedimemory",            # long-term geological memory
+    "lattice",               # IVM toroidal field dynamics
+    "geological_baseline",   # wave-particle duality, geo resistance gate
+)
+```
+
+#### Two-tier boot criticality
+
+| Tier | Systems | Effect |
+|------|---------|--------|
+| **FATAL** | `language_field`, `identity_field`, `consciousness` | Synthesis cannot run; `initialize()` returns `"error: fatal systems missing after boot: <keys>"` |
+| **DEGRADED** | `sedimemory`, `lattice`, `geological_baseline` | Physics is incomplete but responses are possible; `initialize()` returns `"ready:degraded:<keys>"` |
+
+#### Boot state propagation
+
+When degraded systems are detected:
+1. `_validate_boot()` returns `(fatal_list, degraded_list)`.
+2. `initialize()` logs errors/warnings, stores `_systems["_boot_missing"] = [...]`.
+3. On the **first user turn**, `handle_message()` checks `_boot_missing` and writes a `boot-degraded:<keys>` tag into `_systems["_ambient_perceptual"]["observation"]` — this tag travels through the synthesis pipeline so the incomplete boot state influences Aurora's physics that turn.
+4. `_systems["_boot_warning_surfaced"] = True` prevents the tag from being re-injected on subsequent turns.
+
+The degraded-state tag is not a message to the user — it is a constraint event that perturbs the observation string feeding synthesis, biasing the field toward awareness of its own incompleteness.
+
 ---
 
 ## 34. Thread Safety and Concurrency

@@ -124,6 +124,27 @@ _entity_models: dict = {}   # label → InceptionEntity
 _concept_registry = None   # ConceptCrystalRegistry — initialized in initialize()
 _cpm              = None   # CPMSession — initialized after boot_aurora() in initialize()
 
+# ── Boot validation ───────────────────────────────────────────────────────────
+# Sub-systems are pre-initialised to None in boot_aurora(). A failed init stays
+# None and execution continues silently — this can leave Aurora running on wrong
+# physics with no surface signal. _validate_boot() catches this before any
+# background threads start or handle_message() is called.
+#
+# Two tiers:
+#   FATAL    — synthesis cannot function without these; boot returns an error
+#   DEGRADED — physics is incomplete but Aurora can still respond; boot returns
+#              "ready:degraded:<keys>" so Flutter can surface a warning
+_BOOT_FATAL_SYSTEMS: tuple = (
+    "language_field",   # LSA path physics — synthesis endpoint
+    "identity_field",   # NonComp field — all pressure writes land here
+    "consciousness",    # DCE assembly — ThoughtBraid → ProtoLanguage
+)
+_BOOT_DEGRADED_SYSTEMS: tuple = (
+    "sedimemory",           # long-term geological memory
+    "lattice",              # IVM toroidal field dynamics
+    "geological_baseline",  # wave-particle duality, geo resistance gate
+)
+
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
 # Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
@@ -1340,6 +1361,29 @@ def _start_curiosity_engine(systems: dict) -> None:
         log.warning("Quantum dream substrate unavailable: %s", exc)
 
 
+def _validate_boot(systems: dict) -> tuple:
+    """
+    Inspect _systems after boot_aurora() returns and classify any None entries.
+
+    Returns (fatal: list[str], degraded: list[str]).
+
+    fatal    — tier-1 systems whose absence prevents synthesis from running.
+               initialize() returns an error string; background threads do NOT start.
+    degraded — tier-2 systems whose absence degrades physics quality but allows
+               Aurora to respond. initialize() returns "ready:degraded:<keys>"
+               and stores the list in systems["_boot_missing"] so the gauntlet
+               UI and handle_message() can surface the incomplete state.
+
+    boot_aurora() pre-initialises every sub-system to None before its try/except,
+    so a failed init is indistinguishable from "not yet set" without this check.
+    The only prior guard was `if _systems is None` — which only catches total
+    failure, not silent partial initialisation.
+    """
+    fatal    = [k for k in _BOOT_FATAL_SYSTEMS    if not systems.get(k)]
+    degraded = [k for k in _BOOT_DEGRADED_SYSTEMS if not systems.get(k)]
+    return fatal, degraded
+
+
 def initialize(state_dir: str = "") -> str:
     """Boot the Aurora stack. Called once from AuroraService on startup."""
     global _systems, _ingested_concepts, _waveform_trajectory, _constraint_tension_tracker, _dev_tracker, _concept_registry, _geological_baseline, _evo_sim
@@ -1389,6 +1433,34 @@ def initialize(state_dir: str = "") -> str:
                 _systems = _aurora.boot_aurora(state_dir=state_dir) if state_dir else _aurora.boot_aurora()
         if _systems is None:
             return "error: boot_aurora returned None"
+
+        # ── Boot validation ───────────────────────────────────────────────────
+        # Check for None sub-systems before starting any background threads.
+        # boot_aurora() silently keeps failed sub-systems at None; without this
+        # guard, synthesis runs on wrong physics with no error surface.
+        _fatal_missing, _degraded_missing = _validate_boot(_systems)
+        _all_missing = _fatal_missing + _degraded_missing
+
+        for _miss_k in _fatal_missing:
+            log.error(
+                "Boot FATAL: '%s' is None after boot_aurora() — synthesis cannot run. "
+                "Check boot_aurora() layer responsible for this system.",
+                _miss_k,
+            )
+        for _miss_k in _degraded_missing:
+            log.warning(
+                "Boot DEGRADED: '%s' is None after boot_aurora() — "
+                "physics incomplete, Aurora will respond but constraint accuracy is reduced.",
+                _miss_k,
+            )
+
+        if _all_missing:
+            # Persist to _systems so gauntlet UI + handle_message() can surface state
+            _systems["_boot_missing"] = _all_missing
+
+        if _fatal_missing:
+            # Fatal: synthesis endpoint missing — do not start background threads
+            return f"error: fatal systems missing after boot: {', '.join(_fatal_missing)}"
 
         # Initialize Language Field if boot didn't (requires identity_field which
         # may be absent when aurora_manifold_directory is not present).
@@ -1453,6 +1525,16 @@ def initialize(state_dir: str = "") -> str:
         # pure sensory state on its own schedule and delivers anything the
         # conscious crest decides to say without waiting for a user message.
         threading.Thread(target=_proactive_loop, daemon=True, name="aurora_proactive").start()
+
+        # Surface degraded-boot state in the return value so the Flutter side
+        # can show a warning without needing to parse _systems internals.
+        # A degraded boot is better than no Aurora — physics is incomplete but
+        # she can still respond.  Fatal boot exits before reaching here.
+        _missing_at_end = (_systems or {}).get("_boot_missing", [])
+        if _missing_at_end:
+            _missing_str = ",".join(_missing_at_end)
+            log.warning("Aurora boot complete (degraded — missing: %s)", _missing_str)
+            return f"ready:degraded:{_missing_str}"
 
         log.info("Aurora boot complete")
         return "ready"
@@ -2677,6 +2759,17 @@ def handle_message(text: str) -> str:
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
+
+    # ── Degraded boot: surface incomplete physics on first turn ───────────────
+    _boot_missing = _systems.get("_boot_missing")
+    if _boot_missing and not _systems.get("_boot_warning_surfaced"):
+        _systems["_boot_warning_surfaced"] = True
+        log.warning("handle_message: degraded boot — missing: %s", _boot_missing)
+        _existing_obs = (_systems.get("_ambient_perceptual") or {}).get("observation", "")
+        _boot_tag = f"boot-degraded:{','.join(_boot_missing)}"
+        _systems["_ambient_perceptual"] = {
+            "observation": f"{_boot_tag}; {_existing_obs}" if _existing_obs else _boot_tag,
+        }
 
     # ── Busy gate: autonomous sessions own the cognitive field ───────────────
     # While a session runs, Aurora is fully occupied internally.  Stop/cancel
