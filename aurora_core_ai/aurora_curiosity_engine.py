@@ -559,6 +559,37 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── Capability gap curiosity: pursue unresolved inability ─────────────
+        # When the bridge registers a capability gap (blocked-agency state),
+        # it stores it in systems["_pending_capability_gap"].  The curiosity
+        # engine picks it up as a high-urgency self-type curiosity so Aurora
+        # will actively try to understand WHY she can't do the thing, not just
+        # express the inability.  Domain-appropriate tools get invoked at step 2.
+        try:
+            _cap_gap = self.systems.get("_pending_capability_gap") or {}
+            if _cap_gap and _cap_gap.get("task_text"):
+                # Consume once — the learning mode in the bridge handles the
+                # instruction side; curiosity explores the "why can't I" side.
+                _gap_task   = str(_cap_gap.get("task_text", ""))[:120]
+                _gap_domain = str(_cap_gap.get("gap_domain", "general_capability"))
+                _post_ax    = _cap_gap.get("axis_post", {})
+                # Don't re-register — just read it (bridge clears when user teaches)
+                return CuriosityObject(
+                    subject=_gap_task,
+                    origin_axis="A",   # A-axis: the gap lives in agency
+                    curiosity_type="self",
+                    urgency=0.82,
+                    hypothesis=(
+                        f"I attempted to accomplish '{_gap_task[:60]}' but my agency "
+                        f"was blocked (domain: {_gap_domain}). "
+                        f"I should investigate what this boundary represents and whether "
+                        f"there is a path through it."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
         # Form new CuriosityObject from current state
         if unresolved_tensions:
             subject = unresolved_tensions[0]

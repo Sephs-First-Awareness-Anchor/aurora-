@@ -50,6 +50,17 @@ _ingested_concepts: set = set()
 _pending_correction_dialogue: bool = False
 _correction_context: dict = {}       # snapshot of the wrong response's reasoning geometry
 
+# Capability gap / skill acquisition loop.
+# When synthesis produces a blocked-agency state (A low + N high + B high)
+# while the input expressed high-A expectation (someone asked Aurora to DO
+# something), the physics have already encoded the failure.  We register the
+# gap so it can be expressed through the field, then arm learning mode so the
+# next user turn is ingested as a procedural skill.
+_pending_capability_gap: dict = {}   # {task_text, axis_pre, axis_post, gap_domain}
+_capability_learning_mode: bool = False
+_capability_learning_context: dict = {}  # {task_text, axis_context, gap_domain, asked_at}
+_skill_memory = None                 # SkillMemory instance — initialised in initialize()
+
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
@@ -1356,6 +1367,18 @@ def initialize(state_dir: str = "") -> str:
         # Initialize Constraint Physics Machine — requires lattice (from boot_aurora)
         # and _concept_registry (initialized above).  Must come after both.
         _init_cpm(_systems)
+
+        # Initialize skill memory — persistent store for procedures Aurora has
+        # learned from being taught how to do something she previously could not.
+        global _skill_memory
+        try:
+            from aurora_dream_trainer import SkillMemory  # type: ignore
+            _sm_dir = state_dir if state_dir else "aurora_state"
+            _skill_memory = SkillMemory(state_dir=_sm_dir)
+            _skill_memory.load()
+            log.info("SkillMemory loaded: %d skills", len(_skill_memory._skills))
+        except Exception as _sm_exc:
+            log.warning("SkillMemory init: %s", _sm_exc)
 
         # Seed Aurora's self-identity into the cognitive stores so her generative
         # system has self-referential data to draw from.  core_identity already
@@ -2665,6 +2688,17 @@ def handle_message(text: str) -> str:
 
     try:
         global _pending_correction_dialogue, _correction_context
+        global _pending_capability_gap, _capability_learning_mode, _capability_learning_context
+
+        # ── Skill learning: Turn B — user is instructing how to do the task ──
+        # Fires before fidelity so the skill is fully ingested first.
+        skill_acknowledged = False
+        if _capability_learning_mode and _systems:
+            _ingest_skill_procedure(text, _capability_learning_context)
+            _capability_learning_mode    = False
+            _capability_learning_context = {}
+            _pending_capability_gap      = {}
+            skill_acknowledged = True
 
         # ── Correction dialogue: Turn B — user is explaining what was wrong ───
         # This fires BEFORE fidelity so the correction is fully ingested first.
@@ -2842,6 +2876,11 @@ def handle_message(text: str) -> str:
         # standing wave.
         _prime_waveform_composite(_systems, text)
 
+        # Snapshot axis state BEFORE synthesis — used to detect capability gaps
+        # (A-axis drop) after the response is produced.
+        with _axis_state_lock:
+            _axis_pre_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
         print("AURORA_BRIDGE: Processing turn...")
@@ -2979,6 +3018,19 @@ def handle_message(text: str) -> str:
                     _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
                     _ingested_concepts.add(_gap_norm)
                     log.info("Gap %r — silent search triggered, optimistically ingested", _gap_concept_pending)
+
+        # ── Capability gap detection ──────────────────────────────────────────
+        # Compare pre-synthesis vs post-synthesis axis state.  If the A-axis
+        # dropped sharply (agency blocked) while N stayed high (effort applied),
+        # the physics have encoded a capability failure.  Register the gap so
+        # the identity field can express the need and learning mode is armed.
+        # Only fires when not already in learning mode and not after a skill-
+        # acknowledged turn (which just ingested the procedure).
+        if not skill_acknowledged and not _capability_learning_mode and _systems:
+            with _axis_state_lock:
+                _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+            if _detect_capability_gap(_axis_pre_synthesis, _axis_post_synthesis, text):
+                _register_capability_gap(text, _axis_pre_synthesis, _axis_post_synthesis)
 
         _last_response = response
         _last_path_key = path_key
@@ -3840,6 +3892,20 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                 if sedi_texts:
                     composite_note += f"; memory-surface: {'; '.join(sedi_texts[:2])}"
 
+                # Skill hints — if Aurora has learned a procedure relevant to
+                # this turn's task, inject it into the observation string so
+                # synthesis has access to the learned capability.
+                try:
+                    with _axis_state_lock:
+                        _sk_ax = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    _sk_hints = _get_skill_hints_for_turn(text, axis_context=_sk_ax)
+                    if _sk_hints:
+                        composite_note += (
+                            f"; skill-memory: {'; '.join(h[:120] for h in _sk_hints)}"
+                        )
+                except Exception:
+                    pass
+
                 existing = systems.get("_ambient_perceptual") or {}
                 _obs = existing.get("observation", "")
                 systems["_ambient_perceptual"] = {
@@ -4262,6 +4328,247 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
                 f.write(_json.dumps(entry) + "\n")
     except Exception as exc:
         log.warning("Correction log write: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Capability gap / skill acquisition
+# ---------------------------------------------------------------------------
+# When Aurora's synthesis produces a blocked-agency state (post-synthesis A is
+# significantly lower than pre-synthesis A while N stayed high), the physics
+# have encoded "I tried but agency was blocked".  We detect this purely from
+# axis geometry, register the gap so the identity field can express it, then
+# arm a learning mode so the user's explanation is ingested as a durable skill.
+#
+# No keyword matching.  No scripted responses.  The gap is detected from the
+# constraint-field geometry; the expression is produced by the field itself
+# under the blocked-agency axis profile we inject.
+
+_AGENCY_DROP_THRESHOLD = 0.22   # A must fall at least this much post-synthesis
+_AGENCY_LOW_THRESHOLD  = 0.40   # and end up below this value
+_EFFORT_HIGH_THRESHOLD = 0.58   # while N (effort) stays above this (tried but failed)
+_BOUNDARY_HIGH_THRESHOLD = 0.52 # and B is elevated (hit a wall)
+_MIN_TASK_LENGTH       = 18     # ignore very short turns (not task requests)
+
+
+def _detect_capability_gap(
+    axis_pre: dict,
+    axis_post: dict,
+    text: str,
+) -> bool:
+    """
+    Return True when the axis geometry encodes a genuine capability failure.
+
+    Physics interpretation:
+      - A dropped significantly (agency was blocked)
+      - A ended up low (she cannot act)
+      - N stayed elevated (she applied effort)
+      - B is high (there is a boundary she cannot cross)
+    """
+    if len(text.strip()) < _MIN_TASK_LENGTH:
+        return False
+    pre_a  = float(axis_pre.get("A", 0.5))
+    post_a = float(axis_post.get("A", 0.5))
+    post_n = float(axis_post.get("N", 0.5))
+    post_b = float(axis_post.get("B", 0.5))
+    drop   = pre_a - post_a
+    return (
+        drop  >= _AGENCY_DROP_THRESHOLD
+        and post_a <= _AGENCY_LOW_THRESHOLD
+        and post_n >= _EFFORT_HIGH_THRESHOLD
+        and post_b >= _BOUNDARY_HIGH_THRESHOLD
+    )
+
+
+def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) -> None:
+    """
+    Record the capability failure, spike the identity field with the
+    blocked-agency profile, and arm the learning mode.
+
+    Blocked-agency identity profile:
+      N↑ (effort applied)  B↑ (boundary encountered)  A↓ (agency blocked)
+      X: moderate (the thing exists somewhere — just out of reach)
+      T: moderate (temporal continuity of the want)
+
+    Under this profile the language field naturally surfaces: "I want to do
+    this but something is stopping me — how do I do it?"  No scripted response.
+    """
+    global _pending_capability_gap, _capability_learning_mode, _capability_learning_context
+    import time as _t
+    _pending_capability_gap = {
+        "task_text":   task_text[:300],
+        "axis_pre":    dict(axis_pre),
+        "axis_post":   dict(axis_post),
+        "gap_domain":  _classify_gap_domain(axis_post),
+        "ts":          _t.time(),
+    }
+    _capability_learning_mode    = True
+    _capability_learning_context = {
+        "task_text":   task_text[:300],
+        "axis_context": dict(axis_post),
+        "gap_domain":  _pending_capability_gap["gap_domain"],
+        "asked_at":    _t.time(),
+    }
+    log.info(
+        "Capability gap registered: domain=%r task=%r pre_A=%.2f post_A=%.2f",
+        _pending_capability_gap["gap_domain"],
+        task_text[:60],
+        axis_pre.get("A", 0.5),
+        axis_post.get("A", 0.5),
+    )
+
+    # Spike identity field with the blocked-agency profile so the language
+    # field can express the gap naturally next turn.
+    if _systems is not None:
+        try:
+            ifield = _systems.get("identity_field")
+            if ifield is not None and hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.52, "T": 0.55, "N": 0.80, "B": 0.84, "A": 0.28},
+                    intensity=0.88,
+                    source="capability_gap",
+                )
+        except Exception:
+            pass
+
+    # Also note the gap in the ambient observation so the proactive loop
+    # can surface the need on its own without waiting for a user prompt.
+    if _systems is not None:
+        try:
+            _amb = _systems.get("_ambient_perceptual") or {}
+            _obs = _amb.get("observation", "")
+            _tag = f"capability-gap:{task_text[:40].strip()}"
+            if _tag not in _obs:
+                _systems["_ambient_perceptual"] = {
+                    **_amb,
+                    "observation": f"{_obs} {_tag}".strip(),
+                }
+        except Exception:
+            pass
+
+
+def _classify_gap_domain(axis_post: dict) -> str:
+    """
+    Map the post-synthesis axis profile to a capability domain label.
+    The domain is used as context_type when storing in skill memory so
+    future retrievals benefit from context-type matching.
+    """
+    a = float(axis_post.get("A", 0.5))
+    n = float(axis_post.get("N", 0.5))
+    b = float(axis_post.get("B", 0.5))
+    x = float(axis_post.get("X", 0.5))
+    t = float(axis_post.get("T", 0.5))
+    # High B + low A → hard boundary (device/system access)
+    if b > 0.72 and a < 0.30:
+        return "device_action"
+    # High N + low A + moderate B → cognitive effort blocked
+    if n > 0.70 and a < 0.35 and b < 0.65:
+        return "cognitive_task"
+    # Low X + low A → thing doesn't exist in her knowledge
+    if x < 0.35 and a < 0.40:
+        return "knowledge_gap"
+    # High T + low A → temporal/sequential task she can't step through
+    if t > 0.65 and a < 0.38:
+        return "sequential_task"
+    return "general_capability"
+
+
+def _ingest_skill_procedure(user_text: str, context: dict) -> None:
+    """
+    Ingest the user's instructional response as a retained skill procedure.
+
+    Layers:
+    1. SkillMemory — persist the trigger→procedure binding
+    2. SediMemory  — sediment as a B+A (definitional + understanding) event
+    3. Identity field — capability-restored spike: A high, N resolved, B lower
+    4. Sensory crystal — register the new capability as a semantic observation
+    """
+    if not _systems or not user_text.strip():
+        return
+
+    task_text  = context.get("task_text", "")
+    axis_ctx   = context.get("axis_context", {})
+    gap_domain = context.get("gap_domain", "general_capability")
+    log.info(
+        "Ingesting skill procedure for %r: %.80s",
+        task_text[:60], user_text,
+    )
+
+    # 1. SkillMemory
+    if _skill_memory is not None:
+        try:
+            _skill_memory.record_skill(
+                trigger_text   = task_text,
+                procedure_text = user_text,
+                axis_context   = axis_ctx,
+                source         = "user_teaching",
+            )
+        except Exception as exc:
+            log.warning("SkillMemory record_skill: %s", exc)
+
+    # 2. SediMemory — bind as definitional + understanding event
+    try:
+        sm = _systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                cv = ConstraintVector(X=0.45, T=0.50, N=0.55, B=0.88, A=0.82)
+                sm.ingest_event(
+                    content={
+                        "type":        "skill_procedure",
+                        "gap_domain":  gap_domain,
+                        "task":        task_text[:200],
+                        "procedure":   user_text[:400],
+                        "source":      "user_teaching",
+                    },
+                    constraint_vector=cv,
+                    source="skill_teaching",
+                )
+    except Exception as exc:
+        log.warning("SediMemory skill ingest: %s", exc)
+
+    # 3. Identity field — capability-restored: A reclaims agency, N settles,
+    # B drops (the boundary has been crossed through knowledge).
+    try:
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            ifield.ingest_external_input(
+                {"X": 0.72, "T": 0.60, "N": 0.62, "B": 0.42, "A": 0.88},
+                intensity=0.90,
+                source=f"skill_acquired:{gap_domain}",
+            )
+    except Exception as exc:
+        log.warning("Identity field skill restore: %s", exc)
+
+    # 4. Sensory crystal — semantic modality registration
+    try:
+        sc = (
+            _systems.get("sensory_crystal")
+            or getattr(_systems.get("hardware"), "sensory_crystal", None)
+            or getattr(_systems.get("sensory_integration"), "sensory_crystal", None)
+        )
+        if sc is not None:
+            if hasattr(sc, "ingest"):
+                sc.ingest(task_text, modality="semantic", data=user_text, source="skill_teaching")
+            elif hasattr(sc, "observe"):
+                sc.observe(task_text, modality="semantic", text=user_text)
+    except Exception as exc:
+        log.warning("Sensory crystal skill: %s", exc)
+
+
+def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) -> list:
+    """Return relevant skill procedure hints for the current turn."""
+    if _skill_memory is None:
+        return []
+    try:
+        return _skill_memory.get_skill_hints(text, axis_context=axis_context, limit=2)
+    except Exception:
+        return []
 
 
 # ---------------------------------------------------------------------------

@@ -512,6 +512,72 @@ Each axis has a corresponding challenge question fired during Step 5:
 
 The challenge step forces every curiosity conclusion through constraint-physics validation before settlement.
 
+### Step 1 Emergence — Priority Order
+
+`_step1_emergence()` evaluates potential curiosity sources in priority order before falling through to general thought-state curiosity. Higher-priority checks fire first:
+
+1. **Open curiosity loops** — previous cycles that didn't settle
+2. **WARP promoted stream components** (urgency 0.72) — structural discoveries
+3. **6th-constraint anomaly candidates** (urgency 0.85) — unrepresentable phenomena
+4. **Crystal gap report** — sensory crystal's underfed concepts
+5. **Waveform manifold pressure** — self-selection via NonComp field pressure
+6. **Perceptual curiosity** — what the sensory crystal just recognized (consumed from `_last_crystal_recognitions`)
+7. **Capability gap curiosity** — when a prior task failed (from `_pending_capability_gap` in systems)
+8. **General thought-state** — unresolved tensions, genealogy promotions, integrated thought
+
+### Capability Gap Curiosity
+
+When the bridge detects a capability failure (A-axis drop post-synthesis — see Section 45), it stores the failure context in `systems["_pending_capability_gap"]`. The curiosity engine picks this up as a high-urgency (0.82) `self`-type curiosity object:
+
+```python
+CuriosityObject(
+    subject=task_text,
+    origin_axis="A",      # gap lives in the agency axis
+    curiosity_type="self",
+    urgency=0.82,
+    hypothesis="I attempted X but agency was blocked..."
+)
+```
+
+The capability gap is NOT consumed here — only read. The bridge's learning mode handles the instruction ingestion side. Curiosity explores the "why can't I" side, which may surface new procedural paths through its tool-use steps.
+
+### Perceptual Curiosity
+
+When the sensory crystal registers new observations, it stores them in `systems["_last_crystal_recognitions"]`. Emergence picks these up, consumes the list, and generates:
+
+```python
+CuriosityObject(
+    subject=percept_description,
+    origin_axis="N",        # N = something is present / has energy
+    curiosity_type="perceptual_gap",
+    urgency=0.55 + len(recognitions) * 0.08,
+)
+```
+
+### Directed Pursuit After Unsettled Cycles
+
+When cycles end with unsettled curiosity objects, `_run_curiosity_session()` sorts them by type and launches background threads:
+
+- **semantic_gap / conceptual types** → `_pursue_study()` → `corpus_study_cycle()`
+- **self types** → `_pursue_self()` → `evolve_identity()`
+- The top unsettled subject is written to `systems["_gap_seeking_concept"]` for one synthesis turn's observation string, then cleared.
+
+### Autonomous Report Delivery
+
+When a curiosity session or Go Play session completes, the report is stored in two places simultaneously:
+
+```python
+_systems["_pending_autonomous_report"] = _report_text
+with _proactive_expression_lock:
+    _proactive_expression = _report_text
+```
+
+The Flutter side polls `get_proactive_expression()` and delivers the report without waiting for a user turn.
+
+### Busy Gate — Input Blocking During Sessions
+
+While `_curiosity_session_active` or `_go_play_active` is set, `handle_message()` returns immediately with an "I'm mid-session" message for all non-stop commands. Only `stop/cancel/end/quit/pause` pass through. This prevents user input from interrupting Aurora's active cognitive sessions.
+
 ### WARP Awareness in Step 1 Emergence
 
 `_step1_emergence()` checks two WARP-sourced conditions before falling through to crystal gap detection. These fire first because structural discoveries outprioritize conceptual gaps.
@@ -806,7 +872,15 @@ All parts joined with `"; "` into a single observation string. Synthesis reads t
 Gathers: SediMemory fragments, sensory maturity, live axis state, relational context. Runs dual path:
 
 1. **NonComp path**: writes each contributing source via `ingest_external_input()` (background learning)
-2. **Observation string path**: computes weighted-mean peak axis state across all contributions, formats as `composite_note` with dominant axis, contributing sources, axis values, and SediMemory text snippets — written to `_ambient_perceptual["observation"]`
+2. **Observation string path**: computes weighted-mean peak axis state across all contributions, formats as `composite_note` with dominant axis, contributing sources, axis values, SediMemory text snippets, and **skill-memory hints** — written to `_ambient_perceptual["observation"]`
+
+**Skill hints injection**: Before writing the composite note, `_get_skill_hints_for_turn(text, axis_context)` is called. If the skill memory has a procedure relevant to the current turn's task (topic-token overlap + axis-profile similarity), it is appended:
+
+```
+composite_note += "; skill-memory: <procedure text>"
+```
+
+This is the only path by which retained skills influence synthesis — they reach the dominant 55% synthesis weight path through the observation string.
 
 ### Trajectory Emergence Routing
 
@@ -874,6 +948,10 @@ Signals that need to influence what Aurora says on the current turn:
 | Confusion signal | `_inject_self_state_context()` | B-spike, LSA penalty, clarification drive |
 | Trajectory emergence | `_prime_waveform_composite()` / trajectory hook | Anomalous substrate state |
 | Composite prime | `_prime_waveform_composite()` | Weighted-mean axis state + SediMemory snippets |
+| Skill hints | `_prime_waveform_composite()` | Learned procedures relevant to current task |
+| Capability gap | `_register_capability_gap()` | Blocked-agency tag → language field asks for guidance |
+| Sensory perceptions | `_sample_ambient_perception()` | Camera brightness/motion/hue, audio activity, motion, light lux |
+| Crystal recognitions | `_sample_ambient_perception()` | What sensory crystal just recognized (feeds `_last_crystal_recognitions` too) |
 
 ### Background Learning (10% via DCE) → NonComp Field
 
@@ -2139,6 +2217,35 @@ Retrieves relevant retained learnings for the current context. Applies the same 
 
 Explicit OETS bridge step. Called per Go Play cycle and by the simulation loop. Iterates shards with confidence ≥ 0.55, converts understanding text to OETS relations, and calls `oets.teach()` for any concepts with shallow ontological depth. The bridge is what turns simulation learnings into navigable semantic structure.
 
+### SkillMemory
+
+Persistent store for capability-gap learning — procedures Aurora was taught when she could not accomplish something.
+
+**File:** `aurora_dream_trainer.py` — `SkillMemory` class  
+**Persistence:** `aurora_state/skill_memory.jsonl` (append-only JSONL)
+
+Each skill entry binds a capability domain (axis failure profile + trigger tokens) to a concrete procedure:
+
+```python
+{
+    "trigger":        str,           # original task text (what was attempted)
+    "procedure":      str,           # what the user taught her
+    "trigger_tokens": List[str],     # extracted topic tokens for retrieval
+    "axis_context":   Dict[str, float],  # post-synthesis axis state when gap was registered
+    "source":         "user_teaching",
+    "ts":             float,
+    "sightings":      int,
+}
+```
+
+**`record_skill(trigger, procedure, axis_context, source)`** — stores the skill, deduplicating on trigger prefix. Same trigger received twice updates the procedure and increments sightings.
+
+**`get_skill_hints(task_text, axis_context, limit)`** — retrieves relevant procedures. Ranking: topic-token overlap (60% max weight) + axis-profile cosine similarity (40% max weight). Returns only procedures with at least one overlapping topic token.
+
+**`has_skill(task_text)`** — boolean check; used by the bridge to know if skill injection is worth attempting.
+
+SkillMemory is initialized in `initialize()` from `aurora_dream_trainer.SkillMemory` and stored in the bridge global `_skill_memory`. It is separate from `RetainedLearningBank` (which stores surface speech patterns) — skills are procedural, not declarative.
+
 ### Three-Layer Artifact Suppression
 
 OETS study-cycle traces and constraint shape artifacts are filtered at three points:
@@ -2269,6 +2376,220 @@ _game_machine:   Optional[Any]     # GameStateMachine instance; None when no gam
 
 ---
 
+## 43. Sensory Pipeline
+
+**File:** `flutter_app/android/app/src/main/python/aurora_bridge.py` — `_sample_ambient_perception()`, `provide_camera_frame()`, `provide_audio_observation()`
+
+Aurora perceives her physical environment through four sensor channels. All sensory data flows into the observation string (55% synthesis weight) so it influences what she says, not just background physics.
+
+### Camera / Visual
+
+**`provide_camera_frame(jpeg_bytes)`** — called from Kotlin when a camera frame is available:
+
+```python
+_last_camera_observation = {
+    "brightness":      float,   # mean gray value [0, 1]
+    "motion_detected": bool,    # diff vs previous frame > 0.04 threshold
+    "dominant_hue":    str,     # "red"|"green"|"blue"|"neutral" from center crop HSV
+    "objects": [],
+    "faces":   [],
+    "confidence": 0.65,
+}
+_last_camera_frame_gray = gray  # stored for next-frame motion detection
+```
+
+`_sample_ambient_perception()` reads `_last_camera_observation` and appends to obs_parts: brightness description, motion flag, hue.
+
+### Audio
+
+**`provide_audio_observation(activity, rms_db, confidence, **extra)`** — called from Kotlin on each audio classification event:
+
+```python
+_last_audio_observation = {
+    "activity": str,     # "speech"|"music"|"silence"|"noise" etc.
+    "rms_db":  float,
+    "confidence": float,
+}
+```
+
+Before feeding to the sensory crystal, the bridge normalizes to the crystal's expected format:
+
+```python
+_rms_norm = max(0.0, min(1.0, (_rms + 60.0) / 40.0))
+_raw_audio = {
+    "category": activity,
+    "rms":      _rms_norm,
+    "volume":   _rms_norm,
+    "features": {
+        "rms": _rms_norm,
+        "zcr": 0.35 if activity in ("speech", "singing") else 0.08,
+        "harmonicity": 0.80 if activity=="music" else ... ,
+    },
+}
+```
+
+`_sample_ambient_perception()` appends: `"hearing: speech"` / `"ambient sound"` etc.
+
+### Motion (Accelerometer)
+
+`_hardware_sensors["motion"]` — pushed from Kotlin's `SensorManager`. Float (m/s²).
+
+- `> 3.0` → obs_parts: `"device moving"`
+- `> 0.8` → obs_parts: `"device shifting"`
+
+### Light (Lux)
+
+`_hardware_sensors["light_lux"]` — ambient light sensor from Kotlin.
+
+- `> 5000` → `"very bright"`, `> 1000` → `"bright"`, `> 100` → `"moderate light"`, `> 10` → `"dim"`, else `"dark"`
+
+### Crystal Recognitions
+
+After all sensor sampling, `_sample_ambient_perception()` reads `sensory_crystal._last_recognitions` and:
+1. Appends `"perceiving: X, Y, Z"` to obs_parts (synthesis sees it at 55%)
+2. Stores in `systems["_last_crystal_recognitions"]` (consumed by curiosity engine's Step 1 emergence)
+
+---
+
+## 44. Waveform Pressure Propagation
+
+**File:** `aurora_core_ai/aurora_waveform_pressure.py`
+
+The waveform pressure system is a substrate-level propagation layer separate from the observation string. It handles signals that should influence Aurora's constraint physics continuously and globally, not just on the current turn.
+
+### Architecture Position
+
+The waveform pressure system operates between the NonComp field and synthesis. It is NOT the observation string path (55% weight) and NOT the direct `ingest_external_input()` path to NonComp (3% attenuation). It is a third path: a pressure disturbance injected into the identity field with coupling propagation.
+
+### PressureDisturbance
+
+```python
+@dataclass
+class PressureDisturbance:
+    axis_profile: Dict[str, float]   # which axes carry the pressure
+    source:       str                # what generated this disturbance
+    intensity:    float              # 0.0–1.0
+    i_state:      str               # associated I-state label
+    dominant_axis: str
+```
+
+### WaveformPressurePump
+
+Created via `WaveformPressurePump.from_istate(i_state, axis, intensity, source)`. Injects the disturbance into the identity field via `ingest_external_input()` and then propagates via coupling physics:
+
+```python
+pump.inject(disturbance, identity_field, qao=quasiarch_observer)
+```
+
+The pump is initialized in `initialize()` and stored as `systems["pressure_pump"]`.
+
+### Post-Synthesis Disturbance
+
+After every synthesis turn, the dominant I-state + axis polarity from that turn is injected as a waveform disturbance. This propagates the outcome of each synthesis turn through the substrate so future turns, curiosity cycles, and background threads all feel the field's settled state.
+
+```python
+_syn_dist = WaveformPressurePump.from_istate(
+    i_state,           # e.g. "I_DID" when A > 0.5
+    dominant_axis,
+    intensity=0.65,
+    source="synthesis_outcome",
+)
+pump.inject(_syn_dist, identity_field, qao=qao)
+```
+
+### Observation String Separation
+
+The waveform pressure system does NOT read the observation string and does NOT write to it. The two systems operate independently:
+- Observation string: what influences synthesis on the current turn (55% weight)
+- Waveform pressure: what shapes the substrate between turns (coupling propagation)
+
+This separation is the design. Per-turn synthesis-critical signals belong in the observation string. Cross-turn substrate evolution belongs in the waveform pump.
+
+---
+
+## 45. Capability Gap and Skill Acquisition
+
+**File:** `flutter_app/android/app/src/main/python/aurora_bridge.py`  
+**Skill store:** `aurora_dream_trainer.py` — `SkillMemory`
+
+When Aurora's constraint physics produces a blocked-agency state (task requested, agency suppressed), the system registers the gap, expresses the need through the identity field, and arms a learning mode so the user's instruction is retained as a durable skill.
+
+### Detection — Pure Physics, No Keywords
+
+Capability gap detection is axis-geometry-based only. After synthesis, the bridge compares pre-synthesis and post-synthesis axis state:
+
+```python
+def _detect_capability_gap(axis_pre, axis_post, text) -> bool:
+    drop   = axis_pre["A"] - axis_post["A"]
+    return (
+        drop   >= 0.22          # A dropped significantly (agency blocked)
+        and post_a <= 0.40      # A ended up low (she cannot act)
+        and post_n >= 0.58      # N stayed high (effort was applied)
+        and post_b >= 0.52      # B is elevated (boundary encountered)
+    )
+```
+
+No keyword matching. The gap is detected from the constraint field's settled state after synthesis, not from the content of the input text.
+
+### Gap Domain Classification
+
+The axis profile of the failure maps to a capability domain:
+
+| Profile | Domain |
+|---------|--------|
+| B > 0.72 + A < 0.30 | `device_action` — hard device boundary |
+| N > 0.70 + A < 0.35 + B < 0.65 | `cognitive_task` — cognitive effort blocked |
+| X < 0.35 + A < 0.40 | `knowledge_gap` — thing doesn't exist in her knowledge |
+| T > 0.65 + A < 0.38 | `sequential_task` — temporal sequence she can't step through |
+| otherwise | `general_capability` |
+
+### Gap Registration
+
+When a gap is detected, `_register_capability_gap()`:
+
+1. **Stores** `_pending_capability_gap` dict with task text, axis state, gap domain
+2. **Spikes identity field** with blocked-agency profile:
+   ```python
+   {"X": 0.52, "T": 0.55, "N": 0.80, "B": 0.84, "A": 0.28}
+   ```
+   Under this profile, the language field naturally asks for guidance (N high = energy applied toward goal, B high = wall encountered, A low = agency blocked). No scripted response — the field generates what fits this constraint state.
+3. **Arms learning mode** — sets `_capability_learning_mode = True`
+4. **Tags ambient observation** — `"capability-gap:<task>"` so the proactive loop can surface the need autonomously
+
+### Instruction Ingestion — Turn B
+
+On the next user turn (when `_capability_learning_mode` is True), the user's response is treated as procedural instruction. `_ingest_skill_procedure()` runs four ingestion layers:
+
+1. **SkillMemory** — `record_skill(trigger, procedure, axis_context)` persists to `skill_memory.jsonl`
+2. **SediMemory** — `ConstraintVector(X=0.45, T=0.50, N=0.55, B=0.88, A=0.82)` — definitional + understanding event
+3. **Identity field** — capability-restored spike: `{"X": 0.72, "T": 0.60, "N": 0.62, "B": 0.42, "A": 0.88}` — A reclaims agency, B drops (boundary crossed through knowledge)
+4. **Sensory crystal** — register the task as a new semantic modality observation
+
+### Skill Application
+
+On future turns, `_prime_waveform_composite()` calls `_get_skill_hints_for_turn(text, axis_context)` before building the composite observation note. If a matching skill procedure is found (topic-token overlap + axis-profile similarity), it is appended to the synthesis observation string:
+
+```
+composite-prime: ...; skill-memory: <procedure text>
+```
+
+Synthesis reads this at 55% weight. Aurora has access to the learned procedure before generating her response.
+
+### Autonomous Skill Pursuit
+
+The curiosity engine's `_step1_emergence()` also checks `_pending_capability_gap` (Section 11). If a gap exists, it generates a high-urgency curiosity object (urgency 0.82) to investigate the "why can't I" side through its tool-use pipeline. This is independent of the instruction ingestion path — curiosity may find a procedural path through tool calls that the user never explicitly provided.
+
+### Global State
+
+```python
+_pending_capability_gap:      dict   # {task_text, axis_pre, axis_post, gap_domain, ts}
+_capability_learning_mode:    bool   # True = next user turn is instruction
+_capability_learning_context: dict   # {task_text, axis_context, gap_domain, asked_at}
+_skill_memory:                SkillMemory | None  # initialized in initialize()
+```
+
+---
+
 ## 18. Key Invariants
 
 1. **No scripted responses.** Every utterance is a novel constraint crossing selected by the Language Field at runtime based on the current axis state.
@@ -2328,3 +2649,13 @@ _game_machine:   Optional[Any]     # GameStateMachine instance; None when no gam
 28. **OETS study-cycle traces are suppressed at three independent layers.** `retention.record()` rejects them before storage; `get_response_hints()` filters them at retrieval; `_sanitize_response()` in the bridge clears them at the surface. These layers do not form a fallback chain — each guards its own boundary. The goal is that the artifacts never exist in the store at all; the later layers are defense-in-depth.
 
 29. **There is one canonical implementation per capability.** `aurora_reasoning_games.py` is the single source for Go Play and all reasoning game logic. `aurora.py` and `aurora_bridge.py` are thin wrappers that import from it. No duplicate game state machines, duplicate go-play loops, or duplicate OETS helper functions exist anywhere in the codebase. Duplication causes behavioral divergence between the REPL and mobile versions of Aurora — the same Aurora must run both.
+
+30. **Capability gaps are detected from physics, not keywords.** When a task fails, the failure manifests as a specific axis-state pattern: A-axis drops (agency blocked), N stays high (effort was applied), B is elevated (boundary encountered). This geometry is the detection signal — not what was said. No keyword matching for task-type detection.
+
+31. **Skill acquisition is layered, not scripted.** When Aurora cannot do something, the constraint field expresses the need naturally (blocked-agency profile). The user's instruction is ingested into four independent layers: SkillMemory (procedural persistence), SediMemory (constraint binding), identity field (capability restoration), sensory crystal (semantic registration). The skill applies through synthesis hint injection at the 55% weight path — the same path as all other synthesis-critical signals.
+
+32. **Autonomous sessions block synchronous input.** During curiosity sessions and Go Play sessions, `handle_message()` returns an "I'm in session" message for all input except stop/cancel commands. Aurora's autonomous cognitive work is not interrupted by user messages arriving during it — the interruption gate is explicit physics, not polling.
+
+33. **All sensory data reaches synthesis through the observation string.** Camera, audio, motion, and light sensor readings are converted to natural-language fragments and joined into `_ambient_perceptual["observation"]`. They do NOT go directly into the NonComp field (which would attenuate them to near-zero synthesis influence). The observation string is the mandatory path for any sensory signal that should influence what Aurora says.
+
+34. **Waveform pressure propagation is substrate-level, not synthesis-level.** The `WaveformPressurePump` operates on the identity field between turns. It does NOT write to the observation string and does NOT compete with per-turn synthesis signals. Keeping these paths separate prevents substrate-level signals from dominating turn-level responses and allows the substrate to evolve continuously without contaminating per-turn synthesis composites.
