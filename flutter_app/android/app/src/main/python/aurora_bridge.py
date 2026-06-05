@@ -2461,6 +2461,24 @@ def handle_message(text: str) -> str:
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
+
+    # ── Busy gate: autonomous sessions own the cognitive field ───────────────
+    # While a session runs, Aurora is fully occupied internally.  Stop/cancel
+    # commands are let through; everything else gets a brief busy response.
+    _txt_busy = text.strip().lower()
+    _is_stop_cmd = bool(re.search(r'\b(stop|cancel|end|quit|pause)\b', _txt_busy))
+    if _is_stop_cmd:
+        if _curiosity_session_active.is_set():
+            _curiosity_session_active.clear()
+            return "Curiosity session stopping."
+        if _go_play_active.is_set():
+            _go_play_active.clear()
+            return "Play session stopping."
+    elif _curiosity_session_active.is_set():
+        return "I'm mid curiosity session — I'll report back when I'm done."
+    elif _go_play_active.is_set():
+        return "I'm out playing — I'll let you know when I'm back."
+
     _setup_paths()
     # Sample camera + audio before each turn so dual_question_pipeline can
     # inject ambient perceptual context into Aurora's response synthesis.
@@ -4960,16 +4978,15 @@ def _store_curiosity_report(
         f"  Tool calls:         {stats['tools_used']}",
         f"  Tensions settled:   {stats['settled']}",
     ]
-    _systems["_pending_autonomous_report"] = "\n".join(report_lines)
+    global _proactive_expression
+    _report_text = "\n".join(report_lines)
+    _systems["_pending_autonomous_report"] = _report_text
     log.info("Curiosity session report stored (%s)", time_str)
 
-    # Proactive outreach: tell the user we're done
-    autonomy = _systems.get("autonomy")
-    if autonomy and hasattr(autonomy, "trigger"):
-        summary = (f"I've finished my curiosity session ({target_str}). "
-                   f"I explored {stats['concepts_explored']} concepts and "
-                   f"settled {stats['settled']} internal tensions.")
-        autonomy.trigger.add_thought(summary)
+    # Push immediately to the proactive expression channel so Flutter's
+    # polling loop picks it up without waiting for the user to speak.
+    with _proactive_expression_lock:
+        _proactive_expression = _report_text
 
 
 def _infer_dominant_facet(screen_obs: dict) -> str:
@@ -6488,7 +6505,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "30 chamber ticks"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: evo_chain skipped — corpus_runner.evolve_chain unavailable")
+            return "skipped (corpus_runner.evolve_chain unavailable)"
 
         elif stage_id == "identity":
             for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
@@ -6505,7 +6523,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "identity episode processed"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: identity skipped — corpus_runner.evolve_identity unavailable")
+            return "skipped (corpus_runner.evolve_identity unavailable)"
 
         elif stage_id == "voice":
             for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
@@ -6515,7 +6534,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "voice feedback applied"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: voice skipped — corpus_runner.evolve_voice unavailable")
+            return "skipped (corpus_runner.evolve_voice unavailable)"
 
         elif stage_id == "evo_burst":
             result_json = run_evolutionary_burst(n_generations=3)
@@ -6534,7 +6554,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "L5 + OETS consolidated"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: consolidate skipped — corpus_runner.consolidate unavailable")
+            return "skipped (corpus_runner.consolidate unavailable)"
 
         elif stage_id == "simulation":
             for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
@@ -6545,7 +6566,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return f"2 episodes, fitness={fitness}"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: simulation skipped — corpus_runner.simulation_burst unavailable")
+            return "skipped (corpus_runner.simulation_burst unavailable)"
 
         return "unknown stage"
     except Exception as exc:
@@ -6748,7 +6770,10 @@ def _run_go_play_session(duration_minutes: float) -> None:
     finally:
         _go_play_active.clear()
     if _systems:
+        global _proactive_expression
         _systems["_pending_autonomous_report"] = report
+        with _proactive_expression_lock:
+            _proactive_expression = report
 
 
 def _handle_game_turn(text: str):
