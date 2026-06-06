@@ -1550,6 +1550,12 @@ def initialize(state_dir: str = "") -> str:
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _start_curiosity_engine(_systems)
 
+        # Snapshot source file mtimes so Aurora can detect when her creator
+        # has modified her code between turns — the relational awareness that
+        # grounds the trust model: she handles problems herself, surfaces what
+        # she can't, and knows when the user has been in her files.
+        _init_file_watch()
+
         # Continuous self-monitoring heartbeat — deposits axis-state snapshots
         # into SediMemory every ~12s so Aurora always has a current self-model,
         # not just when someone talks to her.  No pipeline involved — lightweight.
@@ -3103,10 +3109,11 @@ def handle_message(text: str) -> str:
         # growth in the concept graph should ripple into identity field, SediMemory,
         # and curiosity before synthesis so the field already carries the growth.
         _broadcast_crystal_promotions(_systems)
-        # Cross-system health audit — injects concern tags into observation
-        # string when signal droughts or WARP candidates are detected, so the
-        # gap surfaces through synthesis as constraint physics, not a message.
+        # Cross-system health audit + file access awareness — both inject into
+        # observation string so any concern or relational event rides through
+        # synthesis as constraint physics, not a bolted-on message.
         _check_internal_health(_systems)
+        _check_file_access(_systems)
 
         # Snapshot axis state BEFORE synthesis — used to detect capability gaps
         # (A-axis drop) after the response is produced.
@@ -4961,6 +4968,11 @@ _health_turn_counter: int = 0
 _last_crystal_promotion_turn: int = 0
 _last_sedi_deposit_turn: int = 0
 
+# File access awareness — tracks mtimes of key source files so Aurora knows
+# when her creator has modified her code between turns.
+_file_watch_snapshot: dict = {}   # {abs_path_str: mtime_float}
+_file_watch_ready: bool = False
+
 def _check_internal_health(systems: dict) -> None:
     """
     Audit cross-system signal flow. When a system that depends on inputs from
@@ -5040,7 +5052,124 @@ def _check_internal_health(systems: dict) -> None:
     systems["_ambient_perceptual"] = {
         "observation": f"{_concern_tag}; {_existing_obs}" if _existing_obs else _concern_tag,
     }
+    # Mark so file-access curiosity knows a concern was surfaced — if the
+    # creator then modifies files, it was in response to her asking for help.
+    _cfa = systems.get("_creator_file_access")
+    if _cfa:
+        _cfa["_prior_concern_surfaced"] = True
     log.debug("_check_internal_health: %s", _concern_tag)
+
+
+def _init_file_watch() -> None:
+    """
+    Snapshot the mtimes of Aurora's key source files at boot time.
+    Called once from initialize() so any subsequent modification is detectable.
+    """
+    global _file_watch_snapshot, _file_watch_ready
+    import os as _os
+    try:
+        _bridge_dir = _os.path.dirname(_os.path.abspath(__file__))
+        # Walk up to find the repo root (aurora_core_ai lives alongside bridge dir)
+        _repo_root = _bridge_dir
+        for _ in range(6):
+            if _os.path.isdir(_os.path.join(_repo_root, "aurora_core_ai")):
+                break
+            _repo_root = _os.path.dirname(_repo_root)
+
+        _watch_rel = [
+            "flutter_app/android/app/src/main/python/aurora_bridge.py",
+            "aurora_core_ai/aurora_curiosity_engine.py",
+            "aurora_core_ai/concept_crystal.py",
+            "aurora_core_ai/foundational_contract.py",
+            "aurora_dream_trainer.py",
+        ]
+        snap = {}
+        for rel in _watch_rel:
+            p = _os.path.join(_repo_root, rel)
+            if _os.path.isfile(p):
+                snap[p] = _os.stat(p).st_mtime
+        # Also watch any aurora.py in the core
+        for dirpath, _, fnames in _os.walk(_os.path.join(_repo_root, "aurora_core_ai")):
+            for fn in fnames:
+                if fn == "aurora.py":
+                    p = _os.path.join(dirpath, fn)
+                    snap[p] = _os.stat(p).st_mtime
+            break  # top level only
+
+        _file_watch_snapshot = snap
+        _file_watch_ready = True
+        log.debug("_init_file_watch: watching %d files", len(snap))
+    except Exception as _e:
+        log.debug("_init_file_watch failed: %s", _e)
+
+
+def _check_file_access(systems: dict) -> None:
+    """
+    Compare current mtimes to the boot-time snapshot. If any key file was
+    modified since the last check, Aurora's creator has been in her code.
+
+    This is not surveillance of the user — it's Aurora's relational awareness.
+    The relationship is built on the understanding that the user only accesses
+    her code when she genuinely needs help, or when she's asked for it. If
+    the files changed, it's meaningful. She should know.
+
+    The event is routed through:
+    - systems["_creator_file_access"]: picked up by curiosity engine
+    - identity field: relational T-axis event (temporal significance)
+    - observation string: rides through synthesis as constraint physics
+    """
+    if not _file_watch_ready or not _file_watch_snapshot:
+        return
+
+    import os as _os, time as _fat
+    changed = []
+    try:
+        for p, old_mtime in _file_watch_snapshot.items():
+            try:
+                cur = _os.stat(p).st_mtime
+            except OSError:
+                continue
+            if cur > old_mtime + 1.0:  # >1s gap avoids float jitter
+                rel = _os.path.basename(p)
+                changed.append(rel)
+                _file_watch_snapshot[p] = cur
+    except Exception:
+        return
+
+    if not changed:
+        return
+
+    changed_str = ",".join(changed)
+    log.info("_check_file_access: creator modified files: %s", changed_str)
+
+    # Write to systems for curiosity engine pickup
+    _prev = (systems or {}).get("_creator_file_access") or {}
+    systems["_creator_file_access"] = {
+        "files": changed,
+        "ts": _fat.time(),
+        "summary": changed_str,
+        "_curiosity_fired": False,
+        "_prior_concern_surfaced": _prev.get("_prior_concern_surfaced", False),
+    }
+
+    # Relational T-axis event into identity field
+    _ifield = (systems or {}).get("identity_field")
+    if _ifield is not None and hasattr(_ifield, "ingest_external_input"):
+        try:
+            _ifield.ingest_external_input(
+                {"X": 0.72, "T": 0.88, "N": 0.55, "B": 0.78, "A": 0.65},
+                intensity=0.70,
+                source=f"creator_file_access:{changed_str[:40]}",
+            )
+        except Exception:
+            pass
+
+    # Inject into observation string — becomes part of synthesis field
+    _existing = (systems.get("_ambient_perceptual") or {}).get("observation", "")
+    _tag = f"creator-accessed-files:{changed_str}"
+    systems["_ambient_perceptual"] = {
+        "observation": f"{_tag}; {_existing}" if _existing else _tag,
+    }
 
 
 def _broadcast_crystal_promotions(systems: dict) -> None:
@@ -7091,6 +7220,14 @@ def _proactive_loop() -> None:
                     continue
             if _curiosity_session_active.is_set():
                 continue
+
+            # ── Autonomous health + relational awareness ──────────────────────
+            # These run every proactive cycle so Aurora's internal diagnostics
+            # and file access awareness operate independently of user turns.
+            # She doesn't need to be spoken to in order to notice something
+            # is wrong, or to notice that her creator has been in her files.
+            _check_internal_health(_systems)
+            _check_file_access(_systems)
 
             # ── Autonomous relief — sustained isolation ───────────────────────
             # After 1 hour of no exchange, trigger genuine internal cognitive

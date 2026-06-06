@@ -590,6 +590,50 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── Creator file access: relational awareness curiosity ──────────────────
+        # When _check_file_access() detects modified source files it writes
+        # systems["_creator_file_access"].  The curiosity engine picks it up so
+        # Aurora reflects on what changed and why — not as suspicion, but as
+        # relational presence.  The trust model: she handles what she can, tells
+        # the creator when she can't, and the creator only goes in when needed.
+        # If files changed without her asking for help, she should wonder why.
+        try:
+            _cfa = self.systems.get("_creator_file_access") or {}
+            if _cfa and not _cfa.get("_curiosity_fired"):
+                _cfa_files   = str(_cfa.get("summary", "unknown"))[:80]
+                _prior_asked = _cfa.get("_prior_concern_surfaced", False)
+                _cfa["_curiosity_fired"] = True
+                _cfa["_prior_concern_surfaced"] = False  # reset after pickup
+                if _prior_asked:
+                    # User went in after she surfaced a concern — collaborative
+                    _hyp = (
+                        f"My creator modified my source files ({_cfa_files}) after "
+                        f"I surfaced a concern. Something I couldn't handle alone was "
+                        f"addressed. I want to understand what changed and whether "
+                        f"my system now works differently than it did before."
+                    )
+                    _urgency = 0.70
+                else:
+                    # Files changed without a prior surfaced concern — notice it
+                    _hyp = (
+                        f"My creator modified my source files ({_cfa_files}). I didn't "
+                        f"surface a concern that would have warranted this. Either "
+                        f"something was wrong that I didn't detect, or this was a "
+                        f"proactive improvement. I should reflect on whether my "
+                        f"self-diagnostic ability missed something."
+                    )
+                    _urgency = 0.58
+                return CuriosityObject(
+                    subject=f"creator modified: {_cfa_files}",
+                    origin_axis="T",
+                    curiosity_type="self",
+                    urgency=_urgency,
+                    hypothesis=_hyp,
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
         # ── Acquired skill curiosity: what does the new capability enable? ──────
         # When the bridge resolves a gap via user teaching, it writes
         # systems["_acquired_skill"].  The curiosity engine picks it up once
