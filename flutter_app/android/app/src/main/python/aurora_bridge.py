@@ -1321,7 +1321,10 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
     if systems.get("language_field") is not None:
         return
     try:
-        from aurora_core_ai.aurora_language_field import LanguageField  # type: ignore
+        try:
+            from aurora_core_ai.aurora_language_field import LanguageField  # type: ignore
+        except ImportError:
+            from aurora_language_field import LanguageField  # type: ignore  # Chaquopy flat layout
         if state_dir:
             os.environ.setdefault("AURORA_STATE_DIR", state_dir)
         lang_field = LanguageField(
@@ -1330,7 +1333,10 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         )
         systems["language_field"] = lang_field
         try:
-            from aurora_core_ai.aurora_language_field import get_language_field  # type: ignore
+            try:
+                from aurora_core_ai.aurora_language_field import get_language_field  # type: ignore
+            except ImportError:
+                from aurora_language_field import get_language_field  # type: ignore
             get_language_field(
                 identity_field=systems.get("identity_field"),
                 tensor_layer=systems.get("tensor_expressions"),
@@ -1340,7 +1346,7 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         log.info("Language Field online — LSA has %d paths",
                  lang_field.status().get("lsa_entries", 0))
     except Exception as exc:
-        log.warning("Language Field init failed: %s", exc)
+        log.warning("Language Field init failed: %s", exc, exc_info=True)
 
 
 def _init_cpm(systems: dict) -> None:
@@ -1512,6 +1518,13 @@ def initialize(state_dir: str = "") -> str:
         if _systems is None:
             return "error: boot_aurora returned None"
 
+        # ── Language Field recovery ───────────────────────────────────────────
+        # boot_aurora() may leave language_field=None when aurora_manifold_directory
+        # is absent or identity_field initialised late. Attempt recovery here, BEFORE
+        # validation, so the fallback import (bare name / Chaquopy flat layout) has a
+        # chance to run rather than being blocked by the early fatal-return below.
+        _init_language_field(_systems, state_dir)
+
         # ── Boot validation ───────────────────────────────────────────────────
         # Check for None sub-systems before starting any background threads.
         # boot_aurora() silently keeps failed sub-systems at None; without this
@@ -1539,10 +1552,6 @@ def initialize(state_dir: str = "") -> str:
         if _fatal_missing:
             # Fatal: synthesis endpoint missing — do not start background threads
             return f"error: fatal systems missing after boot: {', '.join(_fatal_missing)}"
-
-        # Initialize Language Field if boot didn't (requires identity_field which
-        # may be absent when aurora_manifold_directory is not present).
-        _init_language_field(_systems, state_dir)
 
         # Initialize Constraint Physics Machine — requires lattice (from boot_aurora)
         # and _concept_registry (initialized above).  Must come after both.
