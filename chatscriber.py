@@ -3,16 +3,14 @@
 #
 # Chats Criteria (single-file, Termux-friendly, stdlib-only)
 # ---------------------------------------------------------
-# What this version adds:
-# - ingest-code: ingest a local codebase (e.g. Aurora) into the SAME continuity DB
-# - Keeps existing share-link ingest behavior intact
-# - Default DB path set to /storage/emulated/0/Aurora/chats_criteria.json (Termux-friendly)
-#
 # Usage:
-#   # 1) Ingest a ChatGPT share link (existing)
+#   # 1) Ingest a ChatGPT share link
 #   python chatscriber.py ingest "https://chatgpt.com/share/<id>" --db /storage/emulated/0/Aurora/chats_criteria.json
 #
-#   # 2) Ingest a codebase (NEW)
+#   # 2) Ingest a Claude.ai share link  (NEW — no login required)
+#   python chatscriber.py ingest-claude "https://claude.ai/share/<uuid>" --db /storage/emulated/0/Aurora/chats_criteria.json
+#
+#   # 3) Ingest a codebase
 #   python chatscriber.py ingest-code /storage/emulated/0/Aurora --name aurora --db /storage/emulated/0/Aurora/chats_criteria.json
 #
 from __future__ import annotations
@@ -816,128 +814,126 @@ def cmd_ingest_code(args: argparse.Namespace) -> int:
 
 
 # ----------------------------
-# Claude share-link text ingestion
+# Claude.ai share link ingestion
 # ----------------------------
-#
-# Claude.ai share pages are pure SPAs — no public JSON API, content
-# loads via JavaScript after page execution.  stdlib-only Python cannot
-# fetch the rendered conversation.
-#
-# Workflow to get a conversation in:
-#   1. Open the share link in your browser.
-#   2. Copy all visible text from the page  (Ctrl-A / Select All → Copy).
-#   3. Paste into a .txt file and add role markers before each turn:
-#
-#        [Human]
-#        your message here
-#
-#        [Claude]
-#        response text here
-#
-#        [Human]
-#        ...
-#
-#   4. Run:  python chatscriber.py ingest-text conversation.txt --db <path>
-#
-# The markers are case-insensitive: [Human]/[User]/[Me] → role "user"
-#                                   [Claude]/[Assistant]/[AI] → role "assistant"
-#
-# Lines that don't follow a marker are attached to the current speaker.
 
-_HUMAN_HEADER   = re.compile(r"^\[(human|user|me)\]\s*$", re.I)
-_CLAUDE_HEADER  = re.compile(r"^\[(claude|assistant|ai)\]\s*$", re.I)
+_CLAUDE_SHARE_RE = re.compile(
+    r"(?:https?://)?claude\.ai/share/([0-9a-fA-F-]{32,})"
+)
 
-def parse_text_conversation(text: str) -> List[Dict[str, Any]]:
+def extract_claude_share_id(s: str) -> Optional[str]:
+    s = (s or "").strip()
+    m = _CLAUDE_SHARE_RE.search(s)
+    if m:
+        return m.group(1)
+    # bare UUID
+    if re.fullmatch(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}", s):
+        return s
+    return None
+
+def _extract_content_text(content_blocks: Any) -> str:
     """
-    Parse a plain-text conversation file into [{role, text}, ...].
-    Expects [Human] / [Claude] markers on their own lines between turns.
-    Falls back to a heuristic scan if no markers are found.
+    Extract plain text from a Claude message content array.
+    Each block has a 'type'; we pull text from 'text' blocks and
+    lightly annotate tool_use blocks so the record isn't hollow.
     """
-    lines = (text or "").splitlines()
+    if not isinstance(content_blocks, list):
+        return str(content_blocks or "").strip()
 
-    # --- marker-based parse ---
-    messages: List[Dict[str, Any]] = []
-    current_role: Optional[str] = None
-    buf: List[str] = []
+    parts: List[str] = []
+    for block in content_blocks:
+        if not isinstance(block, dict):
+            continue
+        btype = block.get("type", "")
+        if btype == "text":
+            t = (block.get("text") or "").strip()
+            if t:
+                parts.append(t)
+        elif btype == "tool_use":
+            name = block.get("name", "tool")
+            inp = block.get("input") or {}
+            desc = inp.get("description") or inp.get("command") or ""
+            parts.append(f"[tool:{name}{': ' + desc if desc else ''}]")
+        elif btype == "tool_result":
+            # tool results are Aurora's tool observations — keep a note
+            parts.append("[tool_result]")
+        # skip image/file blocks
+    return "\n".join(parts).strip()
 
-    def flush():
-        if current_role and buf:
-            body = "\n".join(buf).strip()
-            if body:
-                messages.append({"role": current_role, "text": body})
-        buf.clear()
+def fetch_claude_share(share_id: str) -> Dict[str, Any]:
+    url = (
+        f"https://claude.ai/api/chat_snapshots/{share_id}"
+        f"?rendering_mode=messages&render_all_tools=true"
+    )
+    req = urllib.request.Request(url, headers={
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json",
+        "Referer": f"https://claude.ai/share/{share_id}",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=45) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP {e.code} fetching share snapshot: {e.reason}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Network error fetching share snapshot: {e.reason}") from e
 
-    for ln in lines:
-        stripped = ln.strip()
-        if _HUMAN_HEADER.match(stripped):
-            flush()
-            current_role = "user"
-        elif _CLAUDE_HEADER.match(stripped):
-            flush()
-            current_role = "assistant"
+def linearize_claude_share(data: Dict[str, Any]) -> List[Msg]:
+    raw_msgs = data.get("chat_messages") or []
+    out: List[Msg] = []
+    for m in raw_msgs:
+        sender = m.get("sender", "unknown")
+        role = "user" if sender == "human" else "assistant"
+
+        # Prefer content array; fall back to text field
+        content = m.get("content")
+        if content:
+            text = _extract_content_text(content)
         else:
-            buf.append(ln)
+            text = (m.get("text") or "").strip()
 
-    flush()
+        # Skip empty messages (pure tool_result turns with no text)
+        if not text:
+            continue
 
-    if messages:
-        return messages
+        ts_str = m.get("created_at")
+        ct: Optional[float] = None
+        if ts_str:
+            try:
+                import datetime as _dtmod
+                ct = _dtmod.datetime.fromisoformat(
+                    ts_str.replace("Z", "+00:00")
+                ).timestamp()
+            except Exception:
+                pass
 
-    # --- heuristic fallback: no markers found ---
-    # Split on blank lines; odd blocks → user, even blocks → assistant
-    # (rough but better than returning nothing)
-    blocks = re.split(r"\n{2,}", text.strip())
-    for i, block in enumerate(blocks):
-        body = block.strip()
-        if body:
-            role = "user" if i % 2 == 0 else "assistant"
-            messages.append({"role": role, "text": body})
+        out.append(Msg(role=role, text=text, create_time=ct, message_id=m.get("uuid")))
 
-    return messages
+    return out
 
-
-def cmd_ingest_text(args: argparse.Namespace) -> int:
-    """
-    Ingest a plain-text Claude conversation saved from a share link.
-    See module docstring above for the expected format.
-    """
-    path = args.input_file
-    if not path or not os.path.isfile(path):
-        print(f"File not found: {path}", file=sys.stderr)
+def cmd_ingest_claude(args: argparse.Namespace) -> int:
+    share_id = extract_claude_share_id(args.target)
+    if not share_id:
+        print(
+            "Could not parse share id.\n"
+            "Provide a full URL (https://claude.ai/share/<uuid>) or just the UUID.",
+            file=sys.stderr,
+        )
         return 2
 
-    with open(path, "r", encoding="utf-8", errors="replace") as f:
-        raw = f.read()
-
-    messages = parse_text_conversation(raw)
-    if not messages:
-        print("No messages parsed. Make sure the file has [Human]/[Claude] markers.", file=sys.stderr)
+    try:
+        data = fetch_claude_share(share_id)
+    except RuntimeError as e:
+        print(f"Error: {e}", file=sys.stderr)
         return 1
 
-    title = args.title or os.path.splitext(os.path.basename(path))[0]
+    title = data.get("snapshot_name") or f"claude-share:{share_id[:8]}"
+    messages = linearize_claude_share(data)
 
-    snap = {
-        "title": title,
-        "messages": messages,
-        "fingerprint": {
-            "sha1_text": _sha1(json.dumps(messages, ensure_ascii=False, sort_keys=True))
-        },
-        "stats": {
-            "messages_total": len(messages),
-            "user_messages":      sum(1 for m in messages if m["role"] == "user"),
-            "assistant_messages": sum(1 for m in messages if m["role"] == "assistant"),
-        },
-        "top_terms": dict(_top_terms_from_bag(
-            _bag(_tokenize(" ".join(m["text"] for m in messages))), n=30
-        )),
-        "high_signal_lines": [
-            {"role": m["role"], "line": _first_line(m["text"], 220)}
-            for m in sorted(messages,
-                            key=lambda m: len(m["text"]) + 6 * len(re.findall(r"\b[A-Z][a-z]{2,}\b", m["text"])),
-                            reverse=True)[:12]
-            if m["text"].strip()
-        ],
-    }
+    if not messages:
+        print("Fetched share but extracted 0 messages (all content may be tool-only or empty).", file=sys.stderr)
+
+    snap = summarize_conversation(messages, title=title, include_messages=(not args.compact))
 
     db_path = args.db or DEFAULT_DB_PATH
     db = _read_json(db_path) if os.path.exists(db_path) else {}
@@ -945,7 +941,7 @@ def cmd_ingest_text(args: argparse.Namespace) -> int:
     _write_json(db_path, db, pretty=args.pretty)
 
     print(f"[OK] Ingested: {title}")
-    print(f"[OK] Messages: {len(messages)}  (user: {snap['stats']['user_messages']}, assistant: {snap['stats']['assistant_messages']})")
+    print(f"[OK] Messages: {len(messages)}")
     print(f"[OK] DB: {db_path}")
     return 0
 
@@ -975,26 +971,15 @@ def build_parser() -> argparse.ArgumentParser:
     ic.add_argument("--include-hidden", action="store_true", help="Include hidden files/dirs (default: off)")
     ic.set_defaults(func=cmd_ingest_code)
 
-    it = sub.add_parser(
-        "ingest-text",
-        help="Ingest a Claude conversation saved as plain text (from a share link or paste).",
-        description=(
-            "Claude.ai share pages render via JavaScript — there is no public JSON API.\n"
-            "Workflow: open the share link → copy all text → save to a .txt file with\n"
-            "[Human] / [Claude] markers before each turn → run this command.\n\n"
-            "Example file format:\n"
-            "  [Human]\n"
-            "  what does your crystal promotion ladder look like?\n\n"
-            "  [Claude]\n"
-            "  BASE crystals promote to COMPOSITE when ...\n"
-        ),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+    cl = sub.add_parser(
+        "ingest-claude",
+        help="Ingest a Claude.ai share link (e.g. https://claude.ai/share/<uuid>).",
     )
-    it.add_argument("input_file", help="Path to the plain-text conversation file")
-    it.add_argument("--title", default="", help="Title for this conversation (default: filename)")
-    it.add_argument("--db", default=DEFAULT_DB_PATH, help=f"Path to persistent JSON (default: {DEFAULT_DB_PATH})")
-    it.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
-    it.set_defaults(func=cmd_ingest_text)
+    cl.add_argument("target", help="Full share URL or bare UUID")
+    cl.add_argument("--db", default=DEFAULT_DB_PATH, help=f"Path to persistent JSON (default: {DEFAULT_DB_PATH})")
+    cl.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
+    cl.add_argument("--compact", action="store_true", help="Do NOT store full message transcript (highlights/stats only).")
+    cl.set_defaults(func=cmd_ingest_claude)
 
     return p
 
