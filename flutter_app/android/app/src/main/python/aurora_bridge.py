@@ -904,6 +904,50 @@ class _ConstraintTensionTracker:
         except Exception:
             pass
 
+        # ── Register axis-pair pressure in adapter_hints → informs mutation cycle ──
+        # The WARP stress IS the evolutionary pressure for this constraint combination.
+        # The daemon's mutation cycle reads adapter_hints to choose what to evolve;
+        # by writing the axis pair here, the next mutation cycle targets
+        # architectural_reflection for the specific pair that needs a new surface.
+        try:
+            import json as _json_ah
+            _ah_state = str(
+                (systems or {}).get("state_dir") or os.getcwd() or "aurora_state"
+            )
+            _ah_path = os.path.join(_ah_state, "adapter_hints.json")
+            _ah: dict = {}
+            try:
+                with open(_ah_path, encoding="utf-8") as _ahf:
+                    _ah = _json_ah.load(_ahf) or {}
+            except Exception:
+                pass
+            # Axis names used by evolver bias system
+            _axis_map = {
+                "X": "existence", "T": "temporal",
+                "N": "energy", "B": "boundary", "A": "agency",
+            }
+            _ev_bias: dict = dict(_ah.get("evolver_bias_hints") or {})
+            for _ax in pair:
+                _mapped = _axis_map.get(_ax, _ax.lower())
+                _ev_bias[_mapped] = round(
+                    max(float(_ev_bias.get(_mapped, 0.0)), min(1.0, 0.6 + stress * 0.08)),
+                    3,
+                )
+            _ah["evolver_bias_hints"] = _ev_bias
+            # Unconsumed WARP emergence signal — daemon reads this to force
+            # architectural_reflection on the next mutation cycle.
+            _prev_warp_stress = float(_ah.get("warp_emergence_stress", 0.0) or 0.0)
+            _prev_consumed = bool(_ah.get("warp_emergence_consumed", True))
+            if stress > _prev_warp_stress or _prev_consumed:
+                _ah["warp_emergence_pair"] = f"{pair[0]}-{pair[1]}"
+                _ah["warp_emergence_stress"] = round(stress, 3)
+                _ah["warp_emergence_ts"] = time.time()
+                _ah["warp_emergence_consumed"] = False
+            with open(_ah_path, "w", encoding="utf-8") as _ahfw:
+                _json_ah.dump(_ah, _ahfw, indent=2)
+        except Exception:
+            pass
+
     @property
     def emergence_candidates(self) -> list:
         return list(self._emergence_log)
