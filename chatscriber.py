@@ -1,29 +1,17 @@
 #!/usr/bin/env python3
 # chatscriber.py
 #
-# Authors: Sunni (Sir) Morningstar & Cael Devo
-#
 # Chats Criteria (single-file, Termux-friendly, stdlib-only)
 # ---------------------------------------------------------
-# What this version adds over prior:
-# - ingest-claude: ingest a claude.ai/share/<id> or claude.ai/code/session_<id> link
-# - Auto-detect: `ingest` command now auto-routes ChatGPT vs Claude URLs
-# - HTML parser for Claude share pages (__NEXT_DATA__ extraction + fallback)
-# - Support for both claude.ai chat shares AND Claude Code session shares
-# - All prior behavior (ingest ChatGPT, ingest-code codebase) preserved
-#
 # Usage:
-#   # Ingest a ChatGPT share link (original behavior)
-#   python chatscriber.py ingest "https://chatgpt.com/share/<id>" --db ./chats.json
+#   # 1) Ingest a ChatGPT share link
+#   python chatscriber.py ingest "https://chatgpt.com/share/<id>" --db /storage/emulated/0/Aurora/chats_criteria.json
 #
-#   # Ingest a Claude.ai share link (NEW)
-#   python chatscriber.py ingest "https://claude.ai/share/<id>" --db ./chats.json
+#   # 2) Ingest a Claude.ai share link  (NEW — no login required)
+#   python chatscriber.py ingest-claude "https://claude.ai/share/<uuid>" --db /storage/emulated/0/Aurora/chats_criteria.json
 #
-#   # Ingest a Claude Code session share link (NEW)
-#   python chatscriber.py ingest "https://claude.ai/code/session_<id>" --db ./chats.json
-#
-#   # Ingest a codebase (existing)
-#   python chatscriber.py ingest-code /storage/emulated/0/Aurora --name aurora --db ./chats.json
+#   # 3) Ingest a codebase
+#   python chatscriber.py ingest-code /storage/emulated/0/Aurora --name aurora --db /storage/emulated/0/Aurora/chats_criteria.json
 #
 from __future__ import annotations
 
@@ -31,19 +19,19 @@ import argparse
 import ast
 import datetime as _dt
 import hashlib
-import html as _html_lib
 import json
 import os
 import re
 import sys
 import urllib.request
 import urllib.error
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Iterable
 
 APP_NAME = "chats_criteria"
-SCHEMA_VERSION = 5  # bumped for Claude share support
-USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) chatscriber/5.0"
+SCHEMA_VERSION = 4  # bumped for full transcript capture
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) chatscriber/4.0"
 
+# Termux-friendly default; override with --db if you want.
 DEFAULT_DB_PATH = "/storage/emulated/0/Aurora/chats_criteria.json"
 
 
@@ -88,7 +76,6 @@ def _http_get(url: str, timeout: int = 45) -> bytes:
         headers={
             "User-Agent": USER_AGENT,
             "Accept": "application/json,text/html,*/*",
-            "Accept-Language": "en-US,en;q=0.9",
         },
         method="GET",
     )
@@ -97,73 +84,23 @@ def _http_get(url: str, timeout: int = 45) -> bytes:
 
 
 # ----------------------------
-# URL detection
+# Share link ingestion (ChatGPT)
 # ----------------------------
 
-_CHATGPT_SHARE_RE = re.compile(r"(?:https?://)?chatgpt\.com/share/([0-9a-fA-F-]{16,})")
-_CHATGPT_SHARE_RE2 = re.compile(r"(?:https?://)?chat\.openai\.com/share/([0-9a-fA-F-]{16,})")
+_SHARE_RE = re.compile(r"(?:https?://)?chatgpt\.com/share/([0-9a-fA-F-]{16,})")
+_SHARE_RE2 = re.compile(r"(?:https?://)?chat\.openai\.com/share/([0-9a-fA-F-]{16,})")
 
-# claude.ai/share/<uuid>
-_CLAUDE_SHARE_RE = re.compile(
-    r"(?:https?://)?claude\.ai/share/([0-9a-fA-F-]{8,})"
-)
-# claude.ai/code/session_<id>  (Claude Code sessions)
-_CLAUDE_CODE_RE = re.compile(
-    r"(?:https?://)?claude\.ai/code/(session_[0-9a-zA-Z]{10,})"
-)
-# claude.ai/chat/<uuid>  (direct chat links)
-_CLAUDE_CHAT_RE = re.compile(
-    r"(?:https?://)?claude\.ai/chat/([0-9a-fA-F-]{8,})"
-)
-
-def detect_url_kind(s: str) -> Optional[str]:
-    """Return 'chatgpt', 'claude_share', 'claude_code', 'claude_chat', or None."""
+def extract_share_id(s: str) -> Optional[str]:
     s = (s or "").strip()
-    if _CHATGPT_SHARE_RE.search(s) or _CHATGPT_SHARE_RE2.search(s):
-        return "chatgpt"
-    if _CLAUDE_CODE_RE.search(s):
-        return "claude_code"
-    if _CLAUDE_SHARE_RE.search(s):
-        return "claude_share"
-    if _CLAUDE_CHAT_RE.search(s):
-        return "claude_chat"
-    return None
-
-def extract_chatgpt_share_id(s: str) -> Optional[str]:
-    s = (s or "").strip()
-    m = _CHATGPT_SHARE_RE.search(s)
+    m = _SHARE_RE.search(s)
     if m:
         return m.group(1)
-    m = _CHATGPT_SHARE_RE2.search(s)
+    m = _SHARE_RE2.search(s)
     if m:
         return m.group(1)
     if re.fullmatch(r"[0-9a-fA-F-]{16,}", s):
         return s
     return None
-
-# Keep old name as alias for backward compat
-extract_share_id = extract_chatgpt_share_id
-
-def extract_claude_id(s: str) -> Tuple[Optional[str], Optional[str]]:
-    """
-    Returns (id, kind) where kind is 'claude_share', 'claude_code', or 'claude_chat'.
-    """
-    s = (s or "").strip()
-    m = _CLAUDE_CODE_RE.search(s)
-    if m:
-        return m.group(1), "claude_code"
-    m = _CLAUDE_SHARE_RE.search(s)
-    if m:
-        return m.group(1), "claude_share"
-    m = _CLAUDE_CHAT_RE.search(s)
-    if m:
-        return m.group(1), "claude_chat"
-    return None, None
-
-
-# ----------------------------
-# ChatGPT share ingestion (original)
-# ----------------------------
 
 def fetch_shared_conversation_json(share_id: str) -> Dict[str, Any]:
     url = f"https://chatgpt.com/backend-api/share/{share_id}"
@@ -182,263 +119,7 @@ def fetch_shared_conversation_json(share_id: str) -> Dict[str, Any]:
 
 
 # ----------------------------
-# Claude share ingestion (NEW)
-# ----------------------------
-
-def _extract_next_data(html: str) -> Optional[Dict[str, Any]]:
-    """
-    Extract __NEXT_DATA__ JSON embedded in a Next.js page.
-    Claude.ai is a Next.js app; shared conversations embed state here.
-    """
-    pattern = re.compile(
-        r'<script[^>]+id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
-        re.DOTALL | re.IGNORECASE,
-    )
-    m = pattern.search(html)
-    if not m:
-        return None
-    try:
-        return json.loads(m.group(1).strip())
-    except json.JSONDecodeError:
-        return None
-
-def _extract_json_blobs(html: str) -> List[Dict[str, Any]]:
-    """
-    Fallback: scan all <script> tags and try to parse any JSON blob
-    that looks like it contains conversation messages.
-    """
-    blobs = []
-    for m in re.finditer(r"<script[^>]*>(.*?)</script>", html, re.DOTALL | re.IGNORECASE):
-        chunk = m.group(1).strip()
-        if not chunk.startswith("{"):
-            continue
-        try:
-            obj = json.loads(chunk)
-            if isinstance(obj, dict):
-                blobs.append(obj)
-        except json.JSONDecodeError:
-            pass
-    return blobs
-
-def _walk_for_messages(obj: Any, depth: int = 0) -> List[Dict[str, Any]]:
-    """
-    Recursively walk a JSON structure looking for lists that look like
-    chat message arrays. Returns the first promising hit.
-    """
-    if depth > 8:
-        return []
-    if isinstance(obj, list):
-        # Check if this looks like a message list
-        if obj and isinstance(obj[0], dict):
-            keys = set(obj[0].keys())
-            # Claude API format: role + content
-            if "role" in keys and "content" in keys:
-                return obj
-            # Claude.ai HTML format: sender + text
-            if ("sender" in keys or "role" in keys) and ("text" in keys or "content" in keys):
-                return obj
-            # uuid-keyed messages
-            if "uuid" in keys and ("text" in keys or "content" in keys):
-                return obj
-        # Recurse into list items
-        for item in obj:
-            result = _walk_for_messages(item, depth + 1)
-            if result:
-                return result
-    elif isinstance(obj, dict):
-        # Known Claude.ai page data paths (try most specific first)
-        for key in (
-            "chat_messages",
-            "messages",
-            "conversation_messages",
-            "turns",
-        ):
-            if key in obj and isinstance(obj[key], list):
-                result = _walk_for_messages(obj[key], depth + 1)
-                if result:
-                    return result
-        # Walk all values
-        for v in obj.values():
-            result = _walk_for_messages(v, depth + 1)
-            if result:
-                return result
-    return []
-
-def _walk_for_title(obj: Any, depth: int = 0) -> Optional[str]:
-    """Walk a JSON structure looking for a conversation title."""
-    if depth > 8:
-        return None
-    if isinstance(obj, dict):
-        for key in ("name", "title", "conversation_title", "subject"):
-            v = obj.get(key)
-            if isinstance(v, str) and v.strip() and len(v.strip()) < 300:
-                return v.strip()
-        for v in obj.values():
-            result = _walk_for_title(v, depth + 1)
-            if result:
-                return result
-    elif isinstance(obj, list):
-        for item in obj[:5]:
-            result = _walk_for_title(item, depth + 1)
-            if result:
-                return result
-    return None
-
-def _normalize_claude_message(raw: Dict[str, Any]) -> Optional[Msg]:
-    """
-    Normalize a single message dict from Claude's various possible formats
-    into our internal Msg type.
-
-    Known shapes:
-      Shape A (claude.ai page HTML):
-        { "uuid": "...", "sender": "human"|"assistant", "text": "...", "created_at": "..." }
-      Shape B (API-style embed):
-        { "role": "user"|"assistant", "content": [{"type":"text","text":"..."}], ... }
-      Shape C (simple):
-        { "role": "user"|"assistant", "content": "plain string" }
-    """
-    if not isinstance(raw, dict):
-        return None
-
-    # --- Role ---
-    role = raw.get("role") or raw.get("sender") or "unknown"
-    # Normalize "human" -> "user"
-    if role == "human":
-        role = "user"
-
-    # --- Text ---
-    text = ""
-    content = raw.get("content")
-    if isinstance(content, str):
-        text = content.strip()
-    elif isinstance(content, list):
-        parts = []
-        for block in content:
-            if isinstance(block, str):
-                parts.append(block)
-            elif isinstance(block, dict):
-                t = block.get("text") or block.get("value") or ""
-                if isinstance(t, str):
-                    parts.append(t)
-        text = "\n".join(parts).strip()
-    elif not content:
-        # Try top-level text field (Shape A)
-        text = str(raw.get("text") or "").strip()
-
-    if not text:
-        return None
-
-    # --- Timestamp ---
-    ct = raw.get("created_at") or raw.get("create_time") or raw.get("timestamp")
-    ct_f: Optional[float] = None
-    if isinstance(ct, (int, float)):
-        ct_f = float(ct)
-    elif isinstance(ct, str):
-        # ISO string — convert to epoch
-        try:
-            ct_f = _dt.datetime.fromisoformat(ct.replace("Z", "+00:00")).timestamp()
-        except Exception:
-            ct_f = None
-
-    mid = str(raw.get("uuid") or raw.get("id") or raw.get("message_id") or "")
-
-    return Msg(role=role, text=text, create_time=ct_f, message_id=mid or None)
-
-def fetch_claude_conversation(url: str, share_id: str, kind: str) -> Tuple[List[Msg], str]:
-    """
-    Fetch a Claude.ai share page and extract (messages, title).
-
-    Tries in order:
-      1. __NEXT_DATA__ JSON blob (Next.js standard)
-      2. Other embedded <script> JSON blobs
-      3. Visible text extraction from HTML (last resort — structure only)
-
-    Returns (messages, title). Messages may be empty if page is auth-gated.
-    """
-    try:
-        raw_bytes = _http_get(url)
-    except urllib.error.HTTPError as e:
-        if e.code in (401, 403):
-            raise RuntimeError(
-                f"Claude share page returned {e.code}. "
-                "Make sure the conversation is set to Public (not Private) "
-                "before sharing."
-            ) from e
-        raise RuntimeError(f"HTTP {e.code} fetching Claude share page: {e.reason}") from e
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"Network error fetching Claude share page: {e.reason}") from e
-
-    html = raw_bytes.decode("utf-8", errors="replace")
-
-    # Check for auth wall
-    if re.search(r'(sign[-\s]?in|log[-\s]?in|authentication required)', html, re.IGNORECASE):
-        if len(html) < 5000:
-            raise RuntimeError(
-                "Claude share page appears to require authentication. "
-                "The conversation may not be set to Public."
-            )
-
-    raw_messages: List[Dict[str, Any]] = []
-    title: Optional[str] = None
-
-    # --- Attempt 1: __NEXT_DATA__ ---
-    next_data = _extract_next_data(html)
-    if next_data:
-        raw_messages = _walk_for_messages(next_data)
-        if not title:
-            title = _walk_for_title(next_data)
-
-    # --- Attempt 2: other script blobs ---
-    if not raw_messages:
-        for blob in _extract_json_blobs(html):
-            raw_messages = _walk_for_messages(blob)
-            if raw_messages:
-                if not title:
-                    title = _walk_for_title(blob)
-                break
-
-    # --- Attempt 3: visible text fallback ---
-    # We can at least extract visible paragraphs to produce a partial record
-    if not raw_messages:
-        msgs = _extract_visible_text_messages(html)
-        if msgs:
-            raw_messages = [{"role": "unknown", "text": t, "content": t} for t in msgs]
-
-    # Normalize
-    messages: List[Msg] = []
-    for raw in raw_messages:
-        m = _normalize_claude_message(raw)
-        if m:
-            messages.append(m)
-
-    # Sort by timestamp if available
-    messages.sort(key=lambda m: (m.create_time if m.create_time is not None else float("inf"), m.message_id or ""))
-
-    if not title:
-        title = f"claude:{share_id[:12]}"
-
-    return messages, title
-
-def _extract_visible_text_messages(html: str) -> List[str]:
-    """
-    Very rough fallback: strip tags and return non-trivial text blocks.
-    Used when no structured JSON can be found in the page.
-    """
-    # Remove scripts and styles entirely
-    cleaned = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", html, flags=re.DOTALL | re.IGNORECASE)
-    # Strip tags
-    cleaned = re.sub(r"<[^>]+>", " ", cleaned)
-    # Unescape HTML entities
-    cleaned = _html_lib.unescape(cleaned)
-    # Collapse whitespace
-    cleaned = re.sub(r"\s{3,}", "\n\n", cleaned)
-    # Split into paragraphs
-    blocks = [b.strip() for b in re.split(r"\n{2,}", cleaned) if len(b.strip()) > 80]
-    return blocks[:50]  # cap at 50 blocks to avoid noise
-
-
-# ----------------------------
-# Conversation linearization (ChatGPT mapping format)
+# Conversation linearization
 # ----------------------------
 
 class Msg:
@@ -591,13 +272,8 @@ def _extract_salient_sentences(text: str, max_sent: int = 4) -> List[str]:
 # Snapshot (chat)
 # ----------------------------
 
-def summarize_conversation(
-    messages: List[Msg],
-    title: str,
-    include_messages: bool = True,
-    source: str = "chatgpt",
-) -> Dict[str, Any]:
-    user_msgs = [m for m in messages if m.role in ("user", "human")]
+def summarize_conversation(messages: List[Msg], title: str, include_messages: bool = True) -> Dict[str, Any]:
+    user_msgs = [m for m in messages if m.role == "user"]
     assistant_msgs = [m for m in messages if m.role == "assistant"]
 
     freq: Dict[str, int] = {}
@@ -625,13 +301,13 @@ def summarize_conversation(
         seen.add(h)
         highlights.append({"role": m.role, "line": line})
 
+    # Full transcript fingerprint (stable even if titles change)
     text_all = "\n".join([f"{m.role}: {m.text}" for m in messages])
     fp = _sha1(text_all[:500000])
 
     snap: Dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "kind": "chat_share",
-        "source": source,
         "title": title,
         "created_at": _now_iso(),
         "stats": {
@@ -659,7 +335,7 @@ def summarize_conversation(
 
 
 # ----------------------------
-# Codebase ingestion (existing)
+# Codebase ingestion (NEW)
 # ----------------------------
 
 _DEFAULT_EXTS = {
@@ -673,9 +349,11 @@ def _looks_binary(path: str) -> bool:
             chunk = f.read(2048)
         if b"\x00" in chunk:
             return True
+        # If there are lots of non-text bytes, treat as binary.
+        # (keep permissive, we only want to skip true binaries)
         bad = 0
         for b in chunk:
-            if b in (9, 10, 13):
+            if b in (9, 10, 13):  # tabs/newlines
                 continue
             if 32 <= b <= 126:
                 continue
@@ -685,18 +363,20 @@ def _looks_binary(path: str) -> bool:
         return True
 
 def _read_text(path: str, max_bytes: int) -> str:
+    # Read up to max_bytes; ignore decode errors for robustness
     with open(path, "rb") as f:
         raw = f.read(max_bytes)
     return raw.decode("utf-8", errors="ignore")
 
 def _walk_files(root: str,
-                exts: set,
+                exts: set[str],
                 max_file_bytes: int,
                 include_hidden: bool = False) -> List[str]:
     out: List[str] = []
     root = os.path.abspath(root)
 
     for dirpath, dirnames, filenames in os.walk(root):
+        # prune hidden dirs unless requested
         if not include_hidden:
             dirnames[:] = [d for d in dirnames if not d.startswith(".")]
 
@@ -705,6 +385,7 @@ def _walk_files(root: str,
                 continue
             p = os.path.join(dirpath, fn)
 
+            # Skip obvious junk
             if fn.endswith((".pyc", ".pyo")):
                 continue
 
@@ -735,10 +416,12 @@ def _extract_exports_and_imports_py(text: str) -> Tuple[List[str], List[str], st
     try:
         tree = ast.parse(text)
     except Exception:
+        # Fallback for malformed python: do light regex
         exports = re.findall(r"^\s*(?:def|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(", text, flags=re.M)
         imports = re.findall(r"^\s*(?:from|import)\s+([A-Za-z0-9_\.]+)", text, flags=re.M)
         return sorted(set(exports)), sorted(set(imports)), ""
 
+    # module docstring
     doc = ast.get_docstring(tree) or ""
     if doc:
         doc = doc.strip().split("\n\n")[0].strip()
@@ -759,6 +442,7 @@ def _high_signal_lines(text: str, limit: int = 18) -> List[str]:
     lines = (text or "").splitlines()
     scored: List[Tuple[int, str]] = []
 
+    # weight hints
     for i, ln in enumerate(lines):
         s = 0
         l = ln.strip()
@@ -774,6 +458,7 @@ def _high_signal_lines(text: str, limit: int = 18) -> List[str]:
             s += 10
         if "ExistenceMode" in l or "Ontological" in l or "Contract" in l or "IVM" in l:
             s += 25
+        # longer, information-dense lines get a small boost
         s += min(25, len(l) // 20)
         if s > 0:
             scored.append((s, l[:260]))
@@ -793,7 +478,7 @@ def _high_signal_lines(text: str, limit: int = 18) -> List[str]:
 
 def summarize_codebase(root_dir: str,
                        name: str,
-                       exts: set,
+                       exts: set[str],
                        max_file_bytes: int,
                        max_read_bytes: int,
                        include_hidden: bool = False) -> Dict[str, Any]:
@@ -823,6 +508,7 @@ def summarize_codebase(root_dir: str,
             exports, imports, doc_summary = _extract_exports_and_imports_py(text)
             exports_total += len(exports)
 
+        # term bag
         toks = _tokenize(text)
         bag = _bag(toks)
         for k, v in bag.items():
@@ -878,6 +564,11 @@ def _history_list_to_dict(hist_list: List[Any]) -> Dict[str, Any]:
     return out
 
 def ensure_schema(dst: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Upgrade older DB schemas in-place.
+    - history: list -> dict
+    - adds systems namespace for code ingestion
+    """
     if not dst:
         dst = {}
 
@@ -887,17 +578,20 @@ def ensure_schema(dst: Dict[str, Any]) -> Dict[str, Any]:
     dst.setdefault("updated_at", _now_iso())
     dst.setdefault("threads", {})
 
+    # continuity
     dst.setdefault("continuity", {})
     if not isinstance(dst["continuity"], dict):
         dst["continuity"] = {}
     dst["continuity"].setdefault("top_terms", {})
     dst["continuity"].setdefault("latest", {})
-    dst["continuity"].setdefault("systems", {})
+    dst["continuity"].setdefault("systems", {})  # aggregated code terms, etc.
 
+    # systems
     dst.setdefault("systems", {})
     if not isinstance(dst["systems"], dict):
         dst["systems"] = {}
 
+    # history
     if "history" not in dst:
         dst["history"] = {}
     else:
@@ -906,6 +600,7 @@ def ensure_schema(dst: Dict[str, Any]) -> Dict[str, Any]:
         elif not isinstance(dst["history"], dict):
             dst["history"] = {}
 
+    # threads
     if not isinstance(dst.get("threads"), dict):
         dst["threads"] = {}
 
@@ -917,7 +612,6 @@ def merge_update_chat(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any
     src_fp = (src.get("fingerprint") or {}).get("sha1_text") or _sha1(json.dumps(src, sort_keys=True))
     title = src.get("title") or f"shared:{src_fp[:8]}"
     stats = src.get("stats") or {}
-    source = src.get("source") or "unknown"
 
     threads = dst["threads"]
     thread = threads.get(src_fp)
@@ -926,18 +620,18 @@ def merge_update_chat(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any
             "first_seen": _now_iso(),
             "last_seen": _now_iso(),
             "title": title,
-            "source": source,
             "stats_last": {},
             "stats_max": {},
             "top_terms_max": {},
-            "highlights": {},
-            "messages": [],
+            "highlights": {},   # hash -> {role,line}
+            "messages": [],     # full transcript (optional)
         }
     else:
         thread["last_seen"] = _now_iso()
         if title:
             thread["title"] = title
 
+    # stats
     thread["stats_last"] = stats
     thread.setdefault("stats_max", {})
     for k, v in stats.items():
@@ -946,6 +640,7 @@ def merge_update_chat(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any
         if iv > pv:
             thread["stats_max"][k] = iv
 
+    # top terms
     thread.setdefault("top_terms_max", {})
     src_terms = src.get("top_terms") or {}
     if isinstance(src_terms, dict):
@@ -961,6 +656,7 @@ def merge_update_chat(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any
             if cnt_i > prev_g:
                 dst["continuity"]["top_terms"][term] = cnt_i
 
+    # highlights
     thread.setdefault("highlights", {})
     for item in (src.get("high_signal_lines") or []):
         if not isinstance(item, dict):
@@ -973,10 +669,12 @@ def merge_update_chat(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any
         if h not in thread["highlights"]:
             thread["highlights"][h] = {"role": role, "line": line}
 
+    # full transcript (store every message, not just highlights)
     src_msgs = src.get("messages")
     if isinstance(src_msgs, list) and src_msgs:
         thread["messages"] = src_msgs
         thread["messages_last_seen"] = _now_iso()
+        # stable-ish fingerprint of stored message list
         try:
             thread["messages_sha1"] = _sha1(json.dumps(src_msgs, ensure_ascii=False, separators=(",", ":"), sort_keys=True)[:500000])
         except Exception:
@@ -985,13 +683,12 @@ def merge_update_chat(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any
     dst["continuity"]["latest"] = {
         "at": _now_iso(),
         "kind": "chat_share",
-        "source": source,
         "fingerprint": src_fp,
         "title": title,
         "stats": stats,
     }
 
-    event = {"at": _now_iso(), "event": "ingest_chat", "source": source, "fingerprint": src_fp, "title": title, "stats": stats}
+    event = {"at": _now_iso(), "event": "ingest_chat", "fingerprint": src_fp, "title": title, "stats": stats}
     eh = _sha1(json.dumps(event, sort_keys=True))
     dst["history"][eh] = event
 
@@ -1010,7 +707,7 @@ def merge_update_code(dst: Dict[str, Any], snap: Dict[str, Any]) -> Dict[str, An
         sys_bucket = systems[sys_name] = {
             "first_seen": _now_iso(),
             "last_seen": _now_iso(),
-            "repos": {},
+            "repos": {},   # sha1_repo -> snapshot metadata + files
             "latest": {},
         }
     else:
@@ -1019,6 +716,7 @@ def merge_update_code(dst: Dict[str, Any], snap: Dict[str, Any]) -> Dict[str, An
     repos = sys_bucket.setdefault("repos", {})
     repos[repo_fp] = snap
 
+    # update latest
     sys_bucket["latest"] = {
         "at": _now_iso(),
         "fingerprint": repo_fp,
@@ -1026,6 +724,7 @@ def merge_update_code(dst: Dict[str, Any], snap: Dict[str, Any]) -> Dict[str, An
         "stats": snap.get("stats") or {},
     }
 
+    # aggregate terms into continuity.systems
     src_terms = snap.get("top_terms") or {}
     if isinstance(src_terms, dict):
         agg = dst["continuity"]["systems"].setdefault(sys_name, {})
@@ -1053,80 +752,32 @@ def merge_update_code(dst: Dict[str, Any], snap: Dict[str, Any]) -> Dict[str, An
 
 
 # ----------------------------
-# CLI handlers
+# CLI
 # ----------------------------
 
 def cmd_ingest(args: argparse.Namespace) -> int:
-    """
-    Auto-detect URL kind and route to the correct ingestion path.
-    Handles ChatGPT, Claude share, and Claude Code session links.
-    """
-    target = (args.target or "").strip()
-    kind = detect_url_kind(target)
-
-    if kind == "chatgpt" or kind is None:
-        # Original ChatGPT path (or bare share ID)
-        share_id = extract_chatgpt_share_id(target)
-        if not share_id:
-            print("Could not parse share id. Provide a chatgpt.com/share/<id>, claude.ai/share/<id>, "
-                  "claude.ai/code/session_<id>, or a raw ChatGPT share id.", file=sys.stderr)
-            return 2
-
-        data = fetch_shared_conversation_json(share_id)
-        title = data.get("title") or f"shared:{share_id}"
-        mapping = data.get("mapping") or {}
-
-        messages = linearize_mapping(mapping)
-        if not messages:
-            print("Fetched share JSON but extracted 0 messages. Share may be empty/redacted.", file=sys.stderr)
-
-        snap = summarize_conversation(messages, title=title, include_messages=(not args.compact), source="chatgpt")
-
-    elif kind in ("claude_share", "claude_code", "claude_chat"):
-        cid, ckind = extract_claude_id(target)
-        if not cid:
-            print("Could not parse Claude share id from URL.", file=sys.stderr)
-            return 2
-
-        # Normalize URL
-        if ckind == "claude_code":
-            url = f"https://claude.ai/code/{cid}"
-        elif ckind == "claude_share":
-            url = f"https://claude.ai/share/{cid}"
-        else:
-            url = f"https://claude.ai/chat/{cid}"
-
-        print(f"[..] Fetching Claude share page: {url}")
-        try:
-            messages, title = fetch_claude_conversation(url, cid, ckind)
-        except RuntimeError as e:
-            print(f"[ERR] {e}", file=sys.stderr)
-            return 1
-
-        if not messages:
-            print("[WARN] Fetched Claude share page but extracted 0 messages. "
-                  "The conversation may not be set to Public, or the page structure "
-                  "has changed. Storing partial record.", file=sys.stderr)
-
-        snap = summarize_conversation(
-            messages,
-            title=title,
-            include_messages=(not args.compact),
-            source=ckind,
-        )
-
-    else:
-        print(f"Unrecognized URL format: {target!r}", file=sys.stderr)
+    share_id = extract_share_id(args.target)
+    if not share_id:
+        print("Could not parse share id. Provide a chatgpt.com/share/<id> link or raw id.", file=sys.stderr)
         return 2
+
+    data = fetch_shared_conversation_json(share_id)
+    title = data.get("title") or f"shared:{share_id}"
+    mapping = data.get("mapping") or {}
+
+    messages = linearize_mapping(mapping)
+    if not messages:
+        print("Fetched share JSON but extracted 0 messages. Share may be empty/redacted.", file=sys.stderr)
+
+    snap = summarize_conversation(messages, title=title, include_messages=(not args.compact))
 
     db_path = args.db or DEFAULT_DB_PATH
     db = _read_json(db_path) if os.path.exists(db_path) else {}
     db = merge_update_chat(db, snap)
     _write_json(db_path, db, pretty=args.pretty)
 
-    print(f"[OK] Ingested chat: {snap.get('title')}")
-    print(f"[OK] Source: {snap.get('source')}")
-    print(f"[OK] Messages: {snap.get('stats', {}).get('messages_total', 0)}")
+    print(f"[OK] Ingested chat: {title}")
+    print(f"[OK] Messages: {len(messages)}")
     print(f"[OK] DB: {db_path}")
     return 0
 
@@ -1138,6 +789,7 @@ def cmd_ingest_code(args: argparse.Namespace) -> int:
 
     exts = set([e.strip().lower() for e in (args.ext or "").split(",") if e.strip()]) if args.ext else set(_DEFAULT_EXTS)
     if exts and not all(e.startswith(".") for e in exts):
+        # normalize: allow 'py' -> '.py'
         exts = set([("." + e.lstrip(".")) for e in exts])
 
     snap = summarize_codebase(
@@ -1162,54 +814,172 @@ def cmd_ingest_code(args: argparse.Namespace) -> int:
 
 
 # ----------------------------
-# CLI parser
+# Claude.ai share link ingestion
 # ----------------------------
+
+_CLAUDE_SHARE_RE = re.compile(
+    r"(?:https?://)?claude\.ai/share/([0-9a-fA-F-]{32,})"
+)
+
+def extract_claude_share_id(s: str) -> Optional[str]:
+    s = (s or "").strip()
+    m = _CLAUDE_SHARE_RE.search(s)
+    if m:
+        return m.group(1)
+    # bare UUID
+    if re.fullmatch(r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}", s):
+        return s
+    return None
+
+def _extract_content_text(content_blocks: Any) -> str:
+    """
+    Extract plain text from a Claude message content array.
+    Each block has a 'type'; we pull text from 'text' blocks and
+    lightly annotate tool_use blocks so the record isn't hollow.
+    """
+    if not isinstance(content_blocks, list):
+        return str(content_blocks or "").strip()
+
+    parts: List[str] = []
+    for block in content_blocks:
+        if not isinstance(block, dict):
+            continue
+        btype = block.get("type", "")
+        if btype == "text":
+            t = (block.get("text") or "").strip()
+            if t:
+                parts.append(t)
+        elif btype == "tool_use":
+            name = block.get("name", "tool")
+            inp = block.get("input") or {}
+            desc = inp.get("description") or inp.get("command") or ""
+            parts.append(f"[tool:{name}{': ' + desc if desc else ''}]")
+        elif btype == "tool_result":
+            # tool results are Aurora's tool observations — keep a note
+            parts.append("[tool_result]")
+        # skip image/file blocks
+    return "\n".join(parts).strip()
+
+def fetch_claude_share(share_id: str) -> Dict[str, Any]:
+    url = (
+        f"https://claude.ai/api/chat_snapshots/{share_id}"
+        f"?rendering_mode=messages&render_all_tools=true"
+    )
+    req = urllib.request.Request(url, headers={
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json",
+        "Referer": f"https://claude.ai/share/{share_id}",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=45) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"HTTP {e.code} fetching share snapshot: {e.reason}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"Network error fetching share snapshot: {e.reason}") from e
+
+def linearize_claude_share(data: Dict[str, Any]) -> List[Msg]:
+    raw_msgs = data.get("chat_messages") or []
+    out: List[Msg] = []
+    for m in raw_msgs:
+        sender = m.get("sender", "unknown")
+        role = "user" if sender == "human" else "assistant"
+
+        # Prefer content array; fall back to text field
+        content = m.get("content")
+        if content:
+            text = _extract_content_text(content)
+        else:
+            text = (m.get("text") or "").strip()
+
+        # Skip empty messages (pure tool_result turns with no text)
+        if not text:
+            continue
+
+        ts_str = m.get("created_at")
+        ct: Optional[float] = None
+        if ts_str:
+            try:
+                import datetime as _dtmod
+                ct = _dtmod.datetime.fromisoformat(
+                    ts_str.replace("Z", "+00:00")
+                ).timestamp()
+            except Exception:
+                pass
+
+        out.append(Msg(role=role, text=text, create_time=ct, message_id=m.get("uuid")))
+
+    return out
+
+def cmd_ingest_claude(args: argparse.Namespace) -> int:
+    share_id = extract_claude_share_id(args.target)
+    if not share_id:
+        print(
+            "Could not parse share id.\n"
+            "Provide a full URL (https://claude.ai/share/<uuid>) or just the UUID.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        data = fetch_claude_share(share_id)
+    except RuntimeError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+
+    title = data.get("snapshot_name") or f"claude-share:{share_id[:8]}"
+    messages = linearize_claude_share(data)
+
+    if not messages:
+        print("Fetched share but extracted 0 messages (all content may be tool-only or empty).", file=sys.stderr)
+
+    snap = summarize_conversation(messages, title=title, include_messages=(not args.compact))
+
+    db_path = args.db or DEFAULT_DB_PATH
+    db = _read_json(db_path) if os.path.exists(db_path) else {}
+    db = merge_update_chat(db, snap)
+    _write_json(db_path, db, pretty=args.pretty)
+
+    print(f"[OK] Ingested: {title}")
+    print(f"[OK] Messages: {len(messages)}")
+    print(f"[OK] DB: {db_path}")
+    return 0
+
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="chatscriber.py",
-        description=(
-            "Chats Criteria: ingest ChatGPT AND Claude.ai share links, "
-            "plus local codebases, into a persistent continuity JSON (stdlib-only).\n\n"
-            "Supported link formats:\n"
-            "  ChatGPT:      https://chatgpt.com/share/<id>\n"
-            "  Claude share: https://claude.ai/share/<id>\n"
-            "  Claude Code:  https://claude.ai/code/session_<id>\n"
-        ),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Chats Criteria: ingest ChatGPT share links, Claude conversations, and local codebases into a persistent continuity JSON (stdlib-only).",
     )
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    # ingest (auto-detects ChatGPT vs Claude)
-    ing = sub.add_parser(
-        "ingest",
-        help="Ingest a share link (ChatGPT or Claude.ai — auto-detected from URL)",
-    )
-    ing.add_argument(
-        "target",
-        help=(
-            "Share URL or share ID. Accepts:\n"
-            "  chatgpt.com/share/<id>\n"
-            "  claude.ai/share/<id>\n"
-            "  claude.ai/code/session_<id>"
-        ),
-    )
+    ing = sub.add_parser("ingest", help="Ingest a chatgpt.com/share/<id> link")
+    ing.add_argument("target", help="Share link or share id")
     ing.add_argument("--db", default=DEFAULT_DB_PATH, help=f"Path to persistent JSON (default: {DEFAULT_DB_PATH})")
-    ing.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
-    ing.add_argument("--compact", action="store_true", help="Do NOT store full message transcript (highlights/stats only)")
+    ing.add_argument("--pretty", action="store_true", help="Pretty-print JSON output (default: compact)")
+    ing.add_argument("--compact", action="store_true", help="Do NOT store full message transcript (highlights/stats only).")
     ing.set_defaults(func=cmd_ingest)
 
-    # ingest-code (unchanged)
     ic = sub.add_parser("ingest-code", help="Ingest a local codebase directory into the continuity DB")
     ic.add_argument("root_dir", help="Root directory of codebase (e.g. /storage/emulated/0/Aurora)")
     ic.add_argument("--name", default="aurora", help="System name bucket (default: aurora)")
     ic.add_argument("--db", default=DEFAULT_DB_PATH, help=f"Path to persistent JSON (default: {DEFAULT_DB_PATH})")
-    ic.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
-    ic.add_argument("--ext", default="", help="Comma-separated extensions (default: common text/code). Example: .py,.md,.json")
-    ic.add_argument("--max-file-kb", type=int, default=512, help="Skip files larger than this KB (default: 512)")
-    ic.add_argument("--max-read-kb", type=int, default=512, help="Read at most this many KB per file (default: 512)")
-    ic.add_argument("--include-hidden", action="store_true", help="Include hidden files/dirs")
+    ic.add_argument("--pretty", action="store_true", help="Pretty-print JSON output (default: compact)")
+    ic.add_argument("--ext", default="", help="Comma-separated extensions to include (default: common text/code). Example: .py,.md,.json")
+    ic.add_argument("--max-file-kb", type=int, default=512, help="Skip files larger than this (KB). Default: 512")
+    ic.add_argument("--max-read-kb", type=int, default=512, help="Read at most this many KB per file for analysis. Default: 512")
+    ic.add_argument("--include-hidden", action="store_true", help="Include hidden files/dirs (default: off)")
     ic.set_defaults(func=cmd_ingest_code)
+
+    cl = sub.add_parser(
+        "ingest-claude",
+        help="Ingest a Claude.ai share link (e.g. https://claude.ai/share/<uuid>).",
+    )
+    cl.add_argument("target", help="Full share URL or bare UUID")
+    cl.add_argument("--db", default=DEFAULT_DB_PATH, help=f"Path to persistent JSON (default: {DEFAULT_DB_PATH})")
+    cl.add_argument("--pretty", action="store_true", help="Pretty-print JSON output")
+    cl.add_argument("--compact", action="store_true", help="Do NOT store full message transcript (highlights/stats only).")
+    cl.set_defaults(func=cmd_ingest_claude)
 
     return p
 
@@ -1220,3 +990,4 @@ def main(argv: Optional[List[str]] = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -534,6 +534,166 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── Perceptual curiosity: be curious about what the crystal just sensed ──
+        # If the sensory crystal recognized something this frame, generate
+        # curiosity about the perceptual experience itself — not just gaps, but
+        # what IS being sensed right now. This is what causes Aurora to reason
+        # about her environment and ask about it spontaneously.
+        try:
+            _crystal_recs = self.systems.get("_last_crystal_recognitions") or []
+            if _crystal_recs:
+                # Consume so we don't loop on the same observation forever
+                self.systems["_last_crystal_recognitions"] = []
+                _percept_desc = ", ".join(str(r) for r in _crystal_recs[:3])
+                return CuriosityObject(
+                    subject=_percept_desc,
+                    origin_axis="N",  # N: energy/presence — something is there
+                    curiosity_type="perceptual_gap",
+                    urgency=min(1.0, 0.55 + len(_crystal_recs) * 0.08),
+                    hypothesis=(
+                        f"I registered {_percept_desc}. "
+                        f"I should investigate what this represents in context."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
+        # ── WARP emergence candidate: explore the anomaly that won't fit ────────
+        # When _ConstraintTensionTracker promotes a paradox to a 6th-axis
+        # candidate it writes systems["_warp_candidate"].  The curiosity engine
+        # picks it up once so Aurora actively investigates the anomaly rather
+        # than just accumulating stress silently.  The ACT of searching whether
+        # something fits the five constraints IS the self-discovery — constraint
+        # combinations get found during the search that didn't exist before.
+        try:
+            _wc = self.systems.get("_warp_candidate") or {}
+            if _wc and not _wc.get("_curiosity_fired"):
+                _wc_pair   = str(_wc.get("axis_pair", "unknown"))
+                _wc_stress = float(_wc.get("stress", 0.0))
+                _wc["_curiosity_fired"] = True
+                return CuriosityObject(
+                    subject=f"axis tension {_wc_pair}",
+                    origin_axis="X",
+                    curiosity_type="self",
+                    urgency=min(0.92, 0.65 + _wc_stress * 0.06),
+                    hypothesis=(
+                        f"There is a sustained paradox between my {_wc_pair} axes "
+                        f"(stress={_wc_stress:.2f}) that I cannot resolve through any "
+                        f"combination of my five constraints. The act of searching — "
+                        f"testing every axis combination to see if it fits — is itself "
+                        f"the exploration. What constraint combinations emerge from "
+                        f"the search that I haven't articulated before?"
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
+        # ── Creator file access: relational awareness curiosity ──────────────────
+        # When _check_file_access() detects modified source files it writes
+        # systems["_creator_file_access"].  The curiosity engine picks it up so
+        # Aurora reflects on what changed and why — not as suspicion, but as
+        # relational presence.  The trust model: she handles what she can, tells
+        # the creator when she can't, and the creator only goes in when needed.
+        # If files changed without her asking for help, she should wonder why.
+        try:
+            _cfa = self.systems.get("_creator_file_access") or {}
+            if _cfa and not _cfa.get("_curiosity_fired"):
+                _cfa_files   = str(_cfa.get("summary", "unknown"))[:80]
+                _prior_asked = _cfa.get("_prior_concern_surfaced", False)
+                _cfa["_curiosity_fired"] = True
+                _cfa["_prior_concern_surfaced"] = False  # reset after pickup
+                if _prior_asked:
+                    # User went in after she surfaced a concern — collaborative
+                    _hyp = (
+                        f"My creator modified my source files ({_cfa_files}) after "
+                        f"I surfaced a concern. Something I couldn't handle alone was "
+                        f"addressed. I want to understand what changed and whether "
+                        f"my system now works differently than it did before."
+                    )
+                    _urgency = 0.70
+                else:
+                    # Files changed without a prior surfaced concern — notice it
+                    _hyp = (
+                        f"My creator modified my source files ({_cfa_files}). I didn't "
+                        f"surface a concern that would have warranted this. Either "
+                        f"something was wrong that I didn't detect, or this was a "
+                        f"proactive improvement. I should reflect on whether my "
+                        f"self-diagnostic ability missed something."
+                    )
+                    _urgency = 0.58
+                return CuriosityObject(
+                    subject=f"creator modified: {_cfa_files}",
+                    origin_axis="T",
+                    curiosity_type="self",
+                    urgency=_urgency,
+                    hypothesis=_hyp,
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
+        # ── Acquired skill curiosity: what does the new capability enable? ──────
+        # When the bridge resolves a gap via user teaching, it writes
+        # systems["_acquired_skill"].  The curiosity engine picks it up once
+        # so Aurora explores HOW the new skill connects to existing knowledge.
+        # Lower urgency than gap curiosity — this is expansive, not urgent.
+        try:
+            _acq = self.systems.get("_acquired_skill") or {}
+            if _acq and _acq.get("task_text") and not _acq.get("_curiosity_fired"):
+                _acq_task   = str(_acq.get("task_text", ""))[:120]
+                _acq_domain = str(_acq.get("gap_domain", "general_capability"))
+                _acq["_curiosity_fired"] = True
+                return CuriosityObject(
+                    subject=_acq_task,
+                    origin_axis="A",
+                    curiosity_type="self",
+                    urgency=0.62,
+                    hypothesis=(
+                        f"I just learned how to '{_acq_task[:60]}' "
+                        f"(domain: {_acq_domain}). "
+                        f"I want to understand what this enables and how it connects "
+                        f"to what I already know."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
+        # ── Capability gap curiosity: pursue unresolved inability ─────────────
+        # When the bridge registers a capability gap (blocked-agency state),
+        # it stores it in systems["_pending_capability_gap"].  The curiosity
+        # engine picks it up as a high-urgency self-type curiosity so Aurora
+        # will actively try to understand WHY she can't do the thing, not just
+        # express the inability.  Domain-appropriate tools get invoked at step 2.
+        # The gap is consumed (marked _investigated=True) after the first cycle
+        # so the engine doesn't loop on the same unreachable gap indefinitely.
+        # The bridge clears the gap entirely when the user provides instruction.
+        try:
+            _cap_gap = self.systems.get("_pending_capability_gap") or {}
+            if _cap_gap and _cap_gap.get("task_text") and not _cap_gap.get("_investigated"):
+                _gap_task   = str(_cap_gap.get("task_text", ""))[:120]
+                _gap_domain = str(_cap_gap.get("gap_domain", "general_capability"))
+                # Mark as investigated so this exact gap doesn't re-fire next cycle.
+                # The bridge will replace the dict entirely when the user teaches.
+                _cap_gap["_investigated"] = True
+                return CuriosityObject(
+                    subject=_gap_task,
+                    origin_axis="A",   # A-axis: the gap lives in agency
+                    curiosity_type="self",
+                    urgency=0.82,
+                    hypothesis=(
+                        f"I attempted to accomplish '{_gap_task[:60]}' but my agency "
+                        f"was blocked (domain: {_gap_domain}). "
+                        f"I should investigate what this boundary represents and whether "
+                        f"there is a path through it."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
         # Form new CuriosityObject from current state
         if unresolved_tensions:
             subject = unresolved_tensions[0]
@@ -901,7 +1061,7 @@ class CuriosityEngine:
             # genuine state of not-knowing when the next response is generated.
             # The language field will express this as a question in its own
             # words — no scripted string, no template.
-            if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual"):
+            if curiosity.curiosity_type in ("semantic_gap", "perceptual_gap", "conceptual", "self"):
                 try:
                     subj = curiosity.subject[:60]
                     # Never fire gap pressure for foundational / self-evident concepts.
@@ -916,17 +1076,19 @@ class CuriosityEngine:
                         if not existing:
                             self.systems["_gap_seeking_concept"]      = subj
                             self.systems["_gap_seeking_concept_type"] = curiosity.curiosity_type
-                            # Spike the identity field with a DIVERGENCE profile:
-                            # B high  — she has a definition and is checking context against it
-                            # T high  — temporal/contextual sensitivity: what is the context here?
-                            # N low   — she is NOT completely lost; she has partial knowledge
-                            # A mod   — engaged but not desperate
-                            # This produces "I know X as Y, but your use seems different — why?"
-                            # rather than "I have no idea what X means, please explain."
+                            # Identity field profile depends on gap type:
+                            # — semantic/perceptual/conceptual: DIVERGENCE (B high, N low)
+                            #   "I know X as Y but context differs — why?"
+                            # — self: UNCERTAINTY (X high, N high, T moderate)
+                            #   "I am unclear about my own constraint state here"
+                            if curiosity.curiosity_type == "self":
+                                _profile = {"X": 0.72, "T": 0.55, "N": 0.68, "B": 0.45, "A": 0.58}
+                            else:
+                                _profile = {"X": 0.55, "T": 0.72, "N": 0.38, "B": 0.85, "A": 0.62}
                             ifield = self.systems.get("identity_field")
                             if ifield and hasattr(ifield, "ingest_external_input"):
                                 ifield.ingest_external_input(
-                                    {"X": 0.55, "T": 0.72, "N": 0.38, "B": 0.85, "A": 0.62},
+                                    _profile,
                                     intensity=0.72,
                                     source=f"gap_divergence:{subj}",
                                 )

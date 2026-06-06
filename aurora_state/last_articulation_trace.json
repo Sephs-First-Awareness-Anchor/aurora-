@@ -1,37 +1,30 @@
 {
-  "original": "I exist in this moment. There is something delusional here. I starting, though I structured carefully.",
-  "candidate": "",
-  "selected": "I exist in this moment. There is something delusional here. I starting, though I structured carefully.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.86,
-  "candidate_score": 0.0,
-  "original_pressure": 0.303,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.697,
-  "safe": false,
+  "original": "I am here",
+  "candidate": "I am here.",
+  "selected": "I am here.",
+  "accepted": true,
+  "reason": "accepted_deterministic",
+  "original_score": 0.57,
+  "candidate_score": 0.62,
+  "original_pressure": 0.466,
+  "candidate_pressure": 0.396,
+  "pressure_relief": 0.07,
+  "safe": true,
   "metadata": {
-    "prompt_excerpt": "Earlier you said: \"I can have the.\". Keep continuity and build from that thread.",
+    "prompt_excerpt": "How are you feeling?",
     "input_interpretation": {
-      "raw_prompt": "Earlier you said: \"I can have the.\". Keep continuity and build from that thread.",
-      "intent_hint": "action_request",
+      "raw_prompt": "How are you feeling?",
+      "intent_hint": "question",
       "topic_terms": [
-        "earlier",
-        "said",
-        "have",
-        "keep",
-        "continuity",
-        "build",
-        "thread"
+        "feeling"
       ],
       "entities": [
-        "Earlier",
-        "Keep"
+        "How"
       ]
     },
     "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1780520190.155723,
+    "source": "deterministic",
+    "timestamp": 1780647212.635046,
     "min_relief_used": 0.035
   }
 }

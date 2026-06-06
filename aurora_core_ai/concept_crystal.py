@@ -614,3 +614,10 @@ class ConceptCrystalRegistry:
             "function_class": node.function_class,
             "ts":           time.time(),
         })
+
+    def drain_promotions(self, since_ts: float = 0.0) -> List[Dict[str, Any]]:
+        """
+        Return all promotion events logged after since_ts. Non-destructive —
+        the caller tracks the cursor; the log itself is kept for persistence.
+        """
+        return [p for p in self._promo_log if p.get("ts", 0.0) > since_ts]

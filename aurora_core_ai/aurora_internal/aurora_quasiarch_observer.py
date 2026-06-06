@@ -1424,6 +1424,31 @@ class AuroraQuasiArchObserver:
                 f"conf={float(doctrine.confidence):.2f} v={int(doctrine.lineage_version)}"
             )
             decision.applied = True
+            # Doctrine confidence gate passed — signal mutation cycle to project
+            # the confirmed behavioural pattern into native evolved surfaces.
+            # This is the path from QAO doctrine convergence → structural code change.
+            try:
+                import json as _json_qao
+                import time as _t_qao
+                _qsig_path = os.path.join(self.state_dir, "qao_mutation_signal.json")
+                _existing_qsig: dict = {}
+                try:
+                    with open(_qsig_path, encoding="utf-8") as _qsf:
+                        _existing_qsig = _json_qao.load(_qsf) or {}
+                except Exception:
+                    pass
+                # Only write if previous signal was consumed (don't overwrite pending work)
+                if bool(_existing_qsig.get("consumed", True)):
+                    with open(_qsig_path, "w", encoding="utf-8") as _qsfw:
+                        _json_qao.dump({
+                            "doctrine_strategy": str(doctrine.primary_strategy or ""),
+                            "confidence": round(float(doctrine.confidence), 4),
+                            "operator_hint": "native_surface_projection",
+                            "ts": _t_qao.time(),
+                            "consumed": False,
+                        }, _qsfw, indent=2)
+            except Exception:
+                pass
         elif self.mode == "advisory":
             patched["rationale"].append(
                 f"quasiarch_advisory:{doctrine.primary_strategy} "

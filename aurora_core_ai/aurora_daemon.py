@@ -2440,6 +2440,66 @@ def _qao_check_surface_integrity(systems: Dict[str, Any], op_key: str = "") -> b
         return True   # error in the check itself — don't block
 
 
+def _select_discovery_driven_operator() -> str:
+    """
+    Returns the operator key for the next mutation cycle, prioritising any
+    unconsumed WARP emergence or QAO doctrine signals over blind rotation.
+
+    Priority order:
+      1. WARP axis-pair emergence (architectural_reflection — generates new
+         constraint combination surface for the pair under tension)
+      2. QAO doctrine gate signal (native_surface_projection — projects a
+         doctrine-confirmed behavioural pattern into native module exports)
+      3. Fallback: existing adapter_hints rotation / bias
+    """
+    now = time.time()
+
+    # 1. WARP emergence signal written by bridge's _surface_emergence_candidate()
+    try:
+        hints_path = _STATE_DIR / "adapter_hints.json"
+        if hints_path.exists():
+            _hd = json.loads(hints_path.read_text()) or {}
+            _pair = str(_hd.get("warp_emergence_pair") or "")
+            _consumed = bool(_hd.get("warp_emergence_consumed", True))
+            _wstress = float(_hd.get("warp_emergence_stress", 0.0) or 0.0)
+            _wts = float(_hd.get("warp_emergence_ts", 0.0) or 0.0)
+            if _pair and not _consumed and _wstress >= 3.0 and (now - _wts) < 3600:
+                _log(
+                    f"  [MUTATE] WARP signal: {_pair} stress={_wstress:.2f} "
+                    f"→ architectural_reflection"
+                )
+                _hd["warp_emergence_consumed"] = True
+                hints_path.write_text(json.dumps(_hd, indent=2))
+                return "architectural_reflection"
+    except Exception:
+        pass
+
+    # 2. QAO doctrine gate signal written by advise_training_plan() when
+    #    doctrine confidence >= gate_confidence (0.82).
+    try:
+        _qsig = _STATE_DIR / "qao_mutation_signal.json"
+        if _qsig.exists():
+            _qd = json.loads(_qsig.read_text()) or {}
+            _qconsumed = bool(_qd.get("consumed", True))
+            _qts = float(_qd.get("ts", 0.0) or 0.0)
+            _qop = str(_qd.get("operator_hint", "native_surface_projection") or "native_surface_projection")
+            if not _qconsumed and (now - _qts) < 7200:
+                _log(
+                    f"  [MUTATE] QAO gate signal: strategy={_qd.get('doctrine_strategy')} "
+                    f"conf={_qd.get('confidence', 0.0):.2f} → {_qop}"
+                )
+                _qd["consumed"] = True
+                _qsig.write_text(json.dumps(_qd, indent=2))
+                if _qop in _CODE_MUTATION_OPERATORS:
+                    return _qop
+    except Exception:
+        pass
+
+    # 3. Existing adapter_hints bias / rotation
+    selection = _select_code_mutation_operator_from_hints(advance_rotation=True)
+    return str(selection.get("op_key", _CODE_MUTATION_OPERATORS[0]) or _CODE_MUTATION_OPERATORS[0])
+
+
 def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
     """
     Apply one autonomous code mutation using accumulated genealogy + adapter hint state.
@@ -2462,9 +2522,11 @@ def _run_code_mutation_cycle(systems: Dict[str, Any]) -> None:
         _log(f"  [MUTATE] Chain only {links} links — waiting for {MIN_LINKS} before code mutation.")
         return
 
-    # Pick operator — bias toward adapter_hints recommendation, fall back to rotation.
-    selection = _select_code_mutation_operator_from_hints(advance_rotation=True)
-    op_key = str(selection.get("op_key", _CODE_MUTATION_OPERATORS[0]) or _CODE_MUTATION_OPERATORS[0])
+    # Check for pending WARP constraint discoveries or QAO doctrine signals.
+    # These represent Aurora's own pressure-derived knowledge that a specific
+    # constraint combination needs a new evolved surface.  They take priority
+    # over the blind rotation so the mutation cycle reflects actual discoveries.
+    op_key = _select_discovery_driven_operator()
 
     target = str(_BASE_DIR / "aurora_internal" / "aurora_evolved_surfaces.py")
     if not Path(target).exists():

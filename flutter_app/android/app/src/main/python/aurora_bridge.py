@@ -50,6 +50,47 @@ _ingested_concepts: set = set()
 _pending_correction_dialogue: bool = False
 _correction_context: dict = {}       # snapshot of the wrong response's reasoning geometry
 
+# Capability gap / skill acquisition loop.
+# When synthesis produces a blocked-agency state (A low + N high + B high)
+# while the input expressed high-A expectation (someone asked Aurora to DO
+# something), the physics have already encoded the failure.  We register the
+# gap so it can be expressed through the field, then arm learning mode so the
+# next user turn is ingested as a procedural skill.
+_pending_capability_gap: dict = {}   # {task_text, axis_pre, axis_post, gap_domain}
+_capability_learning_mode: bool = False
+_capability_learning_context: dict = {}  # {task_text, axis_context, gap_domain, asked_at}
+_skill_memory = None                 # SkillMemory instance — initialised in initialize()
+
+# Crystal promotion broadcast cursor — tracks how far into _concept_registry._promo_log
+# has already been broadcast to other systems.  Keeps promotion echoes from double-firing.
+_promo_broadcast_ts: float = 0.0
+
+# Sensory attention state — which sense Aurora is actively directing toward an
+# explanation / demonstration.  Set when a capability gap is registered (inferred
+# from the gap domain) or when the user gives an explicit sensory directive during
+# a learning turn ("listen to the sound", "watch what I do", etc.).
+# While active, the attended sense is sampled on every turn (throttle bypassed)
+# and fed into the observation string with higher weight so synthesis has rich
+# perceptual context for the learning conversation.
+_sensory_attention: dict = {}   # {"modality": str, "turns_remaining": int, "ts": float}
+_sensory_attention_lock = threading.Lock()
+
+# Routing patterns for explicit sensory directives — system-level routing only,
+# not cognitive behavior.  These arm the attended sense the same way stop/cancel
+# arms the busy gate: pure input routing before any cognitive processing.
+_AUDIO_ATTEND_RE = re.compile(
+    r'\b(listen|hear(?:ing)?|audio|sound|music|song|rhythm|melody|beat)\b', re.IGNORECASE
+)
+_SCREEN_ATTEND_RE = re.compile(
+    r'\b(screen|display|look\s+(?:it\s+)?up|search|browser|scroll|type|tap|click)\b',
+    re.IGNORECASE
+)
+_CAMERA_ATTEND_RE = re.compile(
+    r'\b(watch\s+me|watch\s+what|look\s+at\s+(?:this|me|what)|camera|'
+    r'i(?:\'?ll)?\s+show(?:\s+you)?|let\s+me\s+show|showing\s+you)\b',
+    re.IGNORECASE
+)
+
 # Axis state cache — updated after each turn; read by OverlayService every 2 s.
 _last_axis_state: dict = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5, "speaking": False}
 _axis_state_lock = threading.Lock()
@@ -57,6 +98,12 @@ _axis_state_lock = threading.Lock()
 # Hardware body — battery, motion, light — pushed from Kotlin SensorManager.
 # Aurora perceives these as her own physical substrate: battery = energy, motion = movement, etc.
 _hardware_sensors: dict = {}
+
+# Real-time audio observation pushed by provide_audio_observation() from Kotlin.
+# Mirrors _last_camera_observation: populated in real time, read by
+# _sample_ambient_perception() so ambient audio reaches synthesis without
+# needing the ambient_audio_latest.json polling path.
+_last_audio_observation: dict = {}
 
 # Simulated self-model — Aurora's live self-representation via InceptionEntity.
 # Background process feeds axis + hardware state as experiences into this entity,
@@ -77,11 +124,39 @@ _entity_models: dict = {}   # label → InceptionEntity
 _concept_registry = None   # ConceptCrystalRegistry — initialized in initialize()
 _cpm              = None   # CPMSession — initialized after boot_aurora() in initialize()
 
+# ── Boot validation ───────────────────────────────────────────────────────────
+# Sub-systems are pre-initialised to None in boot_aurora(). A failed init stays
+# None and execution continues silently — this can leave Aurora running on wrong
+# physics with no surface signal. _validate_boot() catches this before any
+# background threads start or handle_message() is called.
+#
+# Two tiers:
+#   FATAL    — synthesis cannot function without these; boot returns an error
+#   DEGRADED — physics is incomplete but Aurora can still respond; boot returns
+#              "ready:degraded:<keys>" so Flutter can surface a warning
+_BOOT_FATAL_SYSTEMS: tuple = (
+    "language_field",   # LSA path physics — synthesis endpoint
+    "identity_field",   # NonComp field — all pressure writes land here
+    "consciousness",    # DCE assembly — ThoughtBraid → ProtoLanguage
+)
+_BOOT_DEGRADED_SYSTEMS: tuple = (
+    "sedimemory",           # long-term geological memory
+    "lattice",              # IVM toroidal field dynamics
+    "geological_baseline",  # wave-particle duality, geo resistance gate
+)
+
 _last_screen_observation: dict = {}
 # Synthetic visual properties extracted from the latest screen observation.
 # Feeds the sensory crystal visual channel (hue/shape/motion facets) separately
 # from the information channel — what the screen LOOKS LIKE vs what it SAYS.
 _last_screen_visual_data: dict = {}
+
+# Processed visual observations extracted from the most recent camera frame.
+# Populated by provide_camera_frame() so _sample_ambient_perception() can
+# use real camera data without needing hw.capture_visual() (which requires
+# a hardware adapter object that is never instantiated on Android).
+_last_camera_observation: dict = {}
+_last_camera_frame_gray          = None  # grayscale numpy array for motion detection
 
 # ── Room / Hub state ──────────────────────────────────────────────────────────
 # Aurora's room is her inner control panel — notes, observations, and intentions
@@ -101,6 +176,12 @@ _pending_room_cmd_lock = threading.Lock()
 
 # Curiosity session control
 _curiosity_session_active = threading.Event()
+
+# Go Play session control
+_go_play_active = threading.Event()
+
+# Trade Blows — active GameStateMachine instance (None when no game running)
+_game_machine = None  # type: Optional[Any]  # aurora_reasoning_games.GameStateMachine
 
 # ── Conversation training ─────────────────────────────────────────────────────
 _training_active: bool = False
@@ -789,6 +870,84 @@ class _ConstraintTensionTracker:
         except Exception:
             pass
 
+        # ── Deposit candidate into SediMemory so it accrues geological weight ──
+        # An anomaly this persistent earns sediment. High T (temporal anchor) +
+        # high X (existence-level question) + N-elevated (novelty pressure).
+        try:
+            _sedi = (systems or {}).get("sedimemory")
+            if _sedi is not None and hasattr(_sedi, "deposit"):
+                _sedi_axes = {
+                    "X": 0.90, "T": 0.88, "N": 0.80 + min(0.15, stress * 0.03),
+                    "B": 0.62, "A": 0.72,
+                }
+                _sedi.deposit(
+                    _sedi_axes,
+                    f"warp_emergence:{pair[0]}-{pair[1]}:stress={stress:.2f}",
+                    source="ctt_warp_candidate",
+                )
+        except Exception:
+            pass
+
+        # ── Signal curiosity engine: this anomaly deserves active exploration ──
+        # Write to systems so the curiosity engine picks it up as a WARP
+        # candidate on the next step1 pass — distinct from capability gaps.
+        try:
+            _existing = (systems or {}).get("_warp_candidate") or {}
+            _prev_stress = _existing.get("stress", 0.0)
+            if stress > _prev_stress:
+                (systems or {})["_warp_candidate"] = {
+                    "axis_pair":  f"{pair[0]}-{pair[1]}",
+                    "stress":     round(stress, 3),
+                    "generation": self._generation,
+                    "_curiosity_fired": False,
+                }
+        except Exception:
+            pass
+
+        # ── Register axis-pair pressure in adapter_hints → informs mutation cycle ──
+        # The WARP stress IS the evolutionary pressure for this constraint combination.
+        # The daemon's mutation cycle reads adapter_hints to choose what to evolve;
+        # by writing the axis pair here, the next mutation cycle targets
+        # architectural_reflection for the specific pair that needs a new surface.
+        try:
+            import json as _json_ah
+            _ah_state = str(
+                (systems or {}).get("state_dir") or os.getcwd() or "aurora_state"
+            )
+            _ah_path = os.path.join(_ah_state, "adapter_hints.json")
+            _ah: dict = {}
+            try:
+                with open(_ah_path, encoding="utf-8") as _ahf:
+                    _ah = _json_ah.load(_ahf) or {}
+            except Exception:
+                pass
+            # Axis names used by evolver bias system
+            _axis_map = {
+                "X": "existence", "T": "temporal",
+                "N": "energy", "B": "boundary", "A": "agency",
+            }
+            _ev_bias: dict = dict(_ah.get("evolver_bias_hints") or {})
+            for _ax in pair:
+                _mapped = _axis_map.get(_ax, _ax.lower())
+                _ev_bias[_mapped] = round(
+                    max(float(_ev_bias.get(_mapped, 0.0)), min(1.0, 0.6 + stress * 0.08)),
+                    3,
+                )
+            _ah["evolver_bias_hints"] = _ev_bias
+            # Unconsumed WARP emergence signal — daemon reads this to force
+            # architectural_reflection on the next mutation cycle.
+            _prev_warp_stress = float(_ah.get("warp_emergence_stress", 0.0) or 0.0)
+            _prev_consumed = bool(_ah.get("warp_emergence_consumed", True))
+            if stress > _prev_warp_stress or _prev_consumed:
+                _ah["warp_emergence_pair"] = f"{pair[0]}-{pair[1]}"
+                _ah["warp_emergence_stress"] = round(stress, 3)
+                _ah["warp_emergence_ts"] = time.time()
+                _ah["warp_emergence_consumed"] = False
+            with open(_ah_path, "w", encoding="utf-8") as _ahfw:
+                _json_ah.dump(_ah, _ahfw, indent=2)
+        except Exception:
+            pass
+
     @property
     def emergence_candidates(self) -> list:
         return list(self._emergence_log)
@@ -1162,7 +1321,10 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
     if systems.get("language_field") is not None:
         return
     try:
-        from aurora_core_ai.aurora_language_field import LanguageField  # type: ignore
+        try:
+            from aurora_core_ai.aurora_language_field import LanguageField  # type: ignore
+        except ImportError:
+            from aurora_language_field import LanguageField  # type: ignore  # Chaquopy flat layout
         if state_dir:
             os.environ.setdefault("AURORA_STATE_DIR", state_dir)
         lang_field = LanguageField(
@@ -1171,7 +1333,10 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         )
         systems["language_field"] = lang_field
         try:
-            from aurora_core_ai.aurora_language_field import get_language_field  # type: ignore
+            try:
+                from aurora_core_ai.aurora_language_field import get_language_field  # type: ignore
+            except ImportError:
+                from aurora_language_field import get_language_field  # type: ignore
             get_language_field(
                 identity_field=systems.get("identity_field"),
                 tensor_layer=systems.get("tensor_expressions"),
@@ -1181,7 +1346,7 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         log.info("Language Field online — LSA has %d paths",
                  lang_field.status().get("lsa_entries", 0))
     except Exception as exc:
-        log.warning("Language Field init failed: %s", exc)
+        log.warning("Language Field init failed: %s", exc, exc_info=True)
 
 
 def _init_cpm(systems: dict) -> None:
@@ -1238,10 +1403,10 @@ def _start_curiosity_engine(systems: dict) -> None:
             CuriosityEngine,
             start_curiosity_background,
         )
-        from aurora_core_ai.aurora_self_grounding import (  # type: ignore
+        from aurora_self_grounding import (  # type: ignore
             SelfGroundingFallback, get_tension_monitor,
         )
-        from aurora_core_ai.aurora_tool_mind import ToolChoiceObserver  # type: ignore
+        from aurora_tool_mind import ToolChoiceObserver  # type: ignore
 
         dim = systems.get("dimensional")
         pressure_src = getattr(dim, "pressure_vec", None) if dim else None
@@ -1278,6 +1443,29 @@ def _start_curiosity_engine(systems: dict) -> None:
         log.info("Quantum dream substrate started (600 s cycles)")
     except Exception as exc:
         log.warning("Quantum dream substrate unavailable: %s", exc)
+
+
+def _validate_boot(systems: dict) -> tuple:
+    """
+    Inspect _systems after boot_aurora() returns and classify any None entries.
+
+    Returns (fatal: list[str], degraded: list[str]).
+
+    fatal    — tier-1 systems whose absence prevents synthesis from running.
+               initialize() returns an error string; background threads do NOT start.
+    degraded — tier-2 systems whose absence degrades physics quality but allows
+               Aurora to respond. initialize() returns "ready:degraded:<keys>"
+               and stores the list in systems["_boot_missing"] so the gauntlet
+               UI and handle_message() can surface the incomplete state.
+
+    boot_aurora() pre-initialises every sub-system to None before its try/except,
+    so a failed init is indistinguishable from "not yet set" without this check.
+    The only prior guard was `if _systems is None` — which only catches total
+    failure, not silent partial initialisation.
+    """
+    fatal    = [k for k in _BOOT_FATAL_SYSTEMS    if not systems.get(k)]
+    degraded = [k for k in _BOOT_DEGRADED_SYSTEMS if not systems.get(k)]
+    return fatal, degraded
 
 
 def initialize(state_dir: str = "") -> str:
@@ -1330,13 +1518,56 @@ def initialize(state_dir: str = "") -> str:
         if _systems is None:
             return "error: boot_aurora returned None"
 
-        # Initialize Language Field if boot didn't (requires identity_field which
-        # may be absent when aurora_manifold_directory is not present).
+        # ── Language Field recovery ───────────────────────────────────────────
+        # boot_aurora() may leave language_field=None when aurora_manifold_directory
+        # is absent or identity_field initialised late. Attempt recovery here, BEFORE
+        # validation, so the fallback import (bare name / Chaquopy flat layout) has a
+        # chance to run rather than being blocked by the early fatal-return below.
         _init_language_field(_systems, state_dir)
+
+        # ── Boot validation ───────────────────────────────────────────────────
+        # Check for None sub-systems before starting any background threads.
+        # boot_aurora() silently keeps failed sub-systems at None; without this
+        # guard, synthesis runs on wrong physics with no error surface.
+        _fatal_missing, _degraded_missing = _validate_boot(_systems)
+        _all_missing = _fatal_missing + _degraded_missing
+
+        for _miss_k in _fatal_missing:
+            log.error(
+                "Boot FATAL: '%s' is None after boot_aurora() — synthesis cannot run. "
+                "Check boot_aurora() layer responsible for this system.",
+                _miss_k,
+            )
+        for _miss_k in _degraded_missing:
+            log.warning(
+                "Boot DEGRADED: '%s' is None after boot_aurora() — "
+                "physics incomplete, Aurora will respond but constraint accuracy is reduced.",
+                _miss_k,
+            )
+
+        if _all_missing:
+            # Persist to _systems so gauntlet UI + handle_message() can surface state
+            _systems["_boot_missing"] = _all_missing
+
+        if _fatal_missing:
+            # Fatal: synthesis endpoint missing — do not start background threads
+            return f"error: fatal systems missing after boot: {', '.join(_fatal_missing)}"
 
         # Initialize Constraint Physics Machine — requires lattice (from boot_aurora)
         # and _concept_registry (initialized above).  Must come after both.
         _init_cpm(_systems)
+
+        # Initialize skill memory — persistent store for procedures Aurora has
+        # learned from being taught how to do something she previously could not.
+        global _skill_memory
+        try:
+            from aurora_dream_trainer import SkillMemory  # type: ignore
+            _sm_dir = state_dir if state_dir else "aurora_state"
+            _skill_memory = SkillMemory(state_dir=_sm_dir)
+            _skill_memory.load()
+            log.info("SkillMemory loaded: %d skills", len(_skill_memory._skills))
+        except Exception as _sm_exc:
+            log.warning("SkillMemory init: %s", _sm_exc)
 
         # Seed Aurora's self-identity into the cognitive stores so her generative
         # system has self-referential data to draw from.  core_identity already
@@ -1372,6 +1603,12 @@ def initialize(state_dir: str = "") -> str:
         # arrives (interrupt_curiosity_cycles is called in dual_question_pipeline).
         _start_curiosity_engine(_systems)
 
+        # Snapshot source file mtimes so Aurora can detect when her creator
+        # has modified her code between turns — the relational awareness that
+        # grounds the trust model: she handles problems herself, surfaces what
+        # she can't, and knows when the user has been in her files.
+        _init_file_watch()
+
         # Continuous self-monitoring heartbeat — deposits axis-state snapshots
         # into SediMemory every ~12s so Aurora always has a current self-model,
         # not just when someone talks to her.  No pipeline involved — lightweight.
@@ -1381,6 +1618,16 @@ def initialize(state_dir: str = "") -> str:
         # pure sensory state on its own schedule and delivers anything the
         # conscious crest decides to say without waiting for a user message.
         threading.Thread(target=_proactive_loop, daemon=True, name="aurora_proactive").start()
+
+        # Surface degraded-boot state in the return value so the Flutter side
+        # can show a warning without needing to parse _systems internals.
+        # A degraded boot is better than no Aurora — physics is incomplete but
+        # she can still respond.  Fatal boot exits before reaching here.
+        _missing_at_end = (_systems or {}).get("_boot_missing", [])
+        if _missing_at_end:
+            _missing_str = ",".join(_missing_at_end)
+            log.warning("Aurora boot complete (degraded — missing: %s)", _missing_str)
+            return f"ready:degraded:{_missing_str}"
 
         log.info("Aurora boot complete")
         return "ready"
@@ -1837,19 +2084,38 @@ _ABILITY_NOTES_SUBSTRINGS = (
     "battery_pct",
 )
 
+# OETS study-cycle cognitive traces that should never reach the surface.
+# These are generated when Aurora processes understanding of a concept
+# internally and accidentally get stored in retention then re-surfaced.
+_STUDY_TRACE_RE = re.compile(
+    r'\bI\s+understand\s+(?:what|who|where|when|how)\s+\w+\s+(?:means?|is|are|here)\b'
+    r'[^.!?\n]*[.!?]?',
+    re.IGNORECASE,
+)
+# "I'll want the [concept]." — another constraint artifact shape
+_WANT_THE_RE = re.compile(
+    r"\bI'?ll\s+want\s+the\s+\w+[.!?]?",
+    re.IGNORECASE,
+)
+
 
 def _sanitize_response(response: str, user_text: str) -> str:
     """
     Strip pipeline leaks from Aurora's generated response.
 
-    1. De-duplicate repeated phrase prefixes ("I understand I understand" → "I understand").
-    2. If the user asked "can you hear me" and the response claims audio is offline,
-       replace with the correct answer — the user's voice WAS heard via STT.
-    3. Remove bare "audio/camera feed offline" sentences that leaked from the
-       sensory-grounding handler when the ambient background monitor isn't running.
-    4. Strip internal language templates that escaped the surface boundary.
-    5. Strip internal lineage/journal state that passes the articulation check but isn't speech.
-    6. Echo guard — suppress verbatim or near-verbatim reflections of user input.
+    1.  De-duplicate repeated phrase prefixes.
+    2.  If user asked "can you hear me" and response claims audio offline, correct it.
+    3.  Remove stray offline-feed sentences.
+    4.  Strip internal language templates that escaped the surface boundary.
+    5.  Strip internal lineage/journal state.
+    6.  Echo guard — suppress verbatim or near-verbatim reflections of user input.
+    7.  Strip OETS study-cycle cognitive traces ("I understand what X means here").
+    8.  Strip constraint artifacts ("I'll want the [concept].").
+    9.  Suppress "I understand" responses whose topic has no relation to user input.
+    10. Strip constraint-vocabulary "I understand" artifacts (energy/cost/axis traces).
+    11. Suppress responses containing self-state observation string tokens.
+    12. Strip internal mode announcements ("Quiet mode on", "I'll keep watching").
+    13. Suppress broken negative I-state grammar ("I can no [verb]").
     """
     if not response:
         return response
@@ -1908,6 +2174,28 @@ def _sanitize_response(response: str, user_text: str) -> str:
                         log.debug("Echo guard: prefixed echo suppressed")
                         return ""
                 break
+
+        # 9b. "I understand who/what/where/when is here" when user topic absent:
+        # if the response starts with "I understand" and the tail word is NOT
+        # in the user's message at all, suppress as a semantic artifact.
+        if _r_low.startswith("i understand "):
+            _tail = _r_low[len("i understand "):]
+            _tail_words = set(re.findall(r"[a-z]{3,}", _tail))
+            _user_words = set(re.findall(r"[a-z]{3,}", _u_low))
+            # Allow if there's ANY overlap with user input, otherwise suppress
+            if _tail_words and not (_tail_words & _user_words):
+                log.debug("Echo guard: unrelated 'I understand' artifact suppressed")
+                return ""
+
+    # 7. Strip OETS study-cycle traces
+    response = _STUDY_TRACE_RE.sub('', response).strip()
+    if not response:
+        return ""
+
+    # 8. Strip constraint artifacts
+    response = _WANT_THE_RE.sub('', response).strip()
+    if not response:
+        return ""
 
     return response
 
@@ -2090,11 +2378,23 @@ def _sample_ambient_perception(systems: dict) -> None:
     explicitly ask for the camera/mic tools.  Also pumps sensory axis pressure
     into the identity field so N (energy) and T (temporal) carry the live
     sensory environment into language crossing decisions.
+
+    When sensory attention is active (_sensory_attention), the throttle is
+    bypassed and the attended sense is sampled with elevated weight.
     """
     global _last_perceptual_ts
     import time as _t
     now = _t.time()
-    if now - _last_perceptual_ts < _PERCEPTUAL_INTERVAL:
+
+    # Peek at the active modality WITHOUT ticking. The tick (decrement) only
+    # fires from handle_message() — one decrement per user turn. If we ticked
+    # here, the background proactive loop would drain all turns_remaining in
+    # seconds, releasing attention before the user finishes their instruction.
+    _active_modality = _current_attention_modality()
+
+    # Bypass throttle when attention mode is active so every learning turn
+    # gets a fresh sensory sample from the attended sense.
+    if _active_modality is None and now - _last_perceptual_ts < _PERCEPTUAL_INTERVAL:
         return
     _last_perceptual_ts = now
 
@@ -2107,48 +2407,98 @@ def _sample_ambient_perception(systems: dict) -> None:
     _raw_audio: dict = {}
 
     # ── Camera ────────────────────────────────────────────────────────────────
+    # Primary path: hardware adapter (simulator/desktop).
+    # Fallback: _last_camera_observation populated by provide_camera_frame()
+    # from real CameraX JPEG frames on Android — this is the live path.
     hw = systems.get("hardware")
+    _cam_source = None
     if hw and hasattr(hw, "capture_visual"):
         try:
-            cam = hw.capture_visual()
-            if cam and isinstance(cam, dict):
-                _raw_cam   = cam
-                brightness = float(cam.get("brightness", 0.0))
-                objects    = list(cam.get("objects", []) or [])[:4]
-                faces_raw  = cam.get("faces", 0)
-                faces      = int(faces_raw) if isinstance(faces_raw, (int, float)) \
-                             else len(list(faces_raw or []))
-                motion     = bool(cam.get("motion_detected", False))
+            _cam_source = hw.capture_visual() or None
+        except Exception:
+            pass
+    if not _cam_source and _last_camera_observation:
+        _cam_source = _last_camera_observation
 
-                bright_str = ("bright" if brightness > 0.65
-                              else "dim" if brightness < 0.3 else "moderate light")
-                parts = [bright_str]
-                if objects:
-                    parts.append(f"objects: {', '.join(str(o) for o in objects)}")
-                if faces:
-                    parts.append(f"{faces} face{'s' if faces != 1 else ''}")
-                parts.append("motion" if motion else "still")
-                cam_obs       = ", ".join(parts)
-                cam_intensity = min(1.0, brightness + 0.25)
-                cam_novelty   = 0.55 if motion else 0.20
+    if _cam_source and isinstance(_cam_source, dict):
+        try:
+            _raw_cam   = _cam_source
+            brightness = float(_cam_source.get("brightness", 0.0))
+            objects    = list(_cam_source.get("objects", []) or [])[:4]
+            faces_raw  = _cam_source.get("faces", 0)
+            faces      = int(faces_raw) if isinstance(faces_raw, (int, float)) \
+                         else len(list(faces_raw or []))
+            motion     = bool(_cam_source.get("motion_detected", False))
+            hue        = str(_cam_source.get("dominant_hue", ""))
+
+            bright_str = ("bright" if brightness > 0.65
+                          else "dim" if brightness < 0.3 else "moderate light")
+            parts = [bright_str]
+            if hue:
+                parts.append(hue)
+            if objects:
+                parts.append(f"objects: {', '.join(str(o) for o in objects)}")
+            if faces:
+                parts.append(f"{faces} face{'s' if faces != 1 else ''}")
+            parts.append("motion" if motion else "still")
+            cam_obs       = ", ".join(parts)
+            cam_intensity = min(1.0, brightness + 0.25)
+            cam_novelty   = 0.55 if motion else 0.20
         except Exception:
             pass
 
-    # ── Audio — prefer the always-on ambient snapshot JSON ───────────────────
+    # ── Audio — real-time callback path, then JSON file fallback ────────────
+    # Primary: provide_audio_observation() called from Kotlin (real-time).
+    # Fallback: ambient_audio_latest.json written by a background daemon.
+    _audio_source: dict = {}
     try:
-        import json as _json
-        from pathlib import Path as _P
-        _state = systems.get("state_dir") or "aurora_state"
-        _f = _P(_state) / "ambient_audio_latest.json"
-        if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
-            _d = _json.loads(_f.read_text())
-            _raw_audio = _d
-            _act  = str(_d.get("activity", "ambient"))
-            _rms  = float(_d.get("rms_db", -60.0))
-            audio_obs     = f"{_act}, {_rms:.0f} dB"
-            audio_novelty = 0.50 if _act in ("speech", "music") else 0.10
+        if _last_audio_observation:
+            _audio_source = dict(_last_audio_observation)
+        else:
+            import json as _json
+            from pathlib import Path as _P
+            _state = systems.get("state_dir") or "aurora_state"
+            _f = _P(_state) / "ambient_audio_latest.json"
+            if _f.exists() and _t.time() - _f.stat().st_mtime <= 30:
+                _audio_source = _json.loads(_f.read_text())
     except Exception:
         pass
+
+    if _audio_source:
+        try:
+            _act  = str(_audio_source.get("activity",
+                        _audio_source.get("category", "ambient")))
+            _rms  = float(_audio_source.get("rms_db",
+                          _audio_source.get("rms_db_level", -60.0)))
+            audio_obs     = f"{_act}, {_rms:.0f} dB"
+            audio_novelty = 0.50 if _act in ("speech", "music", "singing") else 0.10
+
+            # Normalize to the keys audio_dict_to_crystal_20d() expects.
+            # The raw dict uses activity/rms_db; the crystal function expects
+            # category/rms/volume and a features sub-dict.
+            _rms_norm = max(0.0, min(1.0, (_rms + 60.0) / 40.0))
+            _raw_audio = {
+                "category": _act,
+                "rms":      _rms_norm,
+                "volume":   _rms_norm,
+                "features": {
+                    "rms": _rms_norm,
+                    "zcr": 0.35 if _act in ("speech", "singing") else 0.08,
+                    "harmonicity": (
+                        0.80 if _act == "music"
+                        else 0.72 if _act == "singing"
+                        else 0.45 if _act == "speech"
+                        else 0.10
+                    ),
+                },
+            }
+            # Carry over any rich feature fields the source dict already has
+            for _fk in ("pitch", "centroid", "bandwidth", "onset_density",
+                        "spectral_flux", "chroma"):
+                if _fk in _audio_source:
+                    _raw_audio["features"][_fk] = _audio_source[_fk]
+        except Exception:
+            pass
 
     # ── Feed sensory crystal with actual vectors ──────────────────────────────
     # Camera/audio → primary visual and auditory channels.
@@ -2185,10 +2535,85 @@ def _sample_ambient_perception(systems: dict) -> None:
         _charge_tag = " (charging)" if _hardware_sensors.get("charging") else ""
         obs_parts.append(f"battery at {_bat_pct}%{_charge_tag}")
 
+    # Device motion — accelerometer magnitude tells her if she (the device) is
+    # moving, being carried, sitting still.  Relevant to proprioceptive grounding.
+    _mot_raw = _hardware_sensors.get("motion")
+    if _mot_raw is not None:
+        _mot = float(_mot_raw)
+        if _mot > 3.0:
+            obs_parts.append("device moving")
+        elif _mot > 0.8:
+            obs_parts.append("device shifting")
+        # else: still — don't append, reduces noise when stationary
+
+    # Ambient light — lux from the light sensor.  Grounds time-of-day and
+    # environment type (outdoors/indoors/dark) into her perceptual field.
+    _lux_raw = _hardware_sensors.get("light_lux")
+    if _lux_raw is not None:
+        _lux = float(_lux_raw)
+        _light_desc = (
+            "very bright" if _lux > 5000
+            else "bright"    if _lux > 1000
+            else "moderate light" if _lux > 100
+            else "dim"       if _lux > 10
+            else "dark"
+        )
+        obs_parts.append(f"light: {_light_desc}")
+
     if cam_obs:
         obs_parts.append(f"camera: {cam_obs}")
     if audio_obs:
         obs_parts.append(f"audio: {audio_obs}")
+
+    # Extract what the sensory crystal recognized this frame and fold it in.
+    # This is the bridge that connects crystal perceptions to reasoning —
+    # without this, the crystal learns but her language field never sees what
+    # she's actually sensing.
+    try:
+        _sc = (
+            systems.get("sensory_crystal")
+            or getattr(systems.get("hardware"), "sensory_crystal", None)
+            or getattr(systems.get("sensory_integration"), "sensory_crystal", None)
+        )
+        if _sc and hasattr(_sc, "_last_recognitions") and _sc._last_recognitions:
+            _recs = [r for r in _sc._last_recognitions if r][:3]
+            if _recs:
+                obs_parts.append(f"perceiving: {', '.join(_recs)}")
+                # Make recognitions available for curiosity engine to reason about
+                systems["_last_crystal_recognitions"] = list(_recs)
+    except Exception:
+        pass
+
+    # ── Sensory attention focus note ──────────────────────────────────────────
+    # When attention mode is active, prepend a rich focus note so synthesis
+    # encounters the attended sense FIRST in the observation string (highest
+    # salience position).  The note replaces the thin camera/audio summary
+    # built above with a full-detail perceptual report for that modality.
+    if _active_modality:
+        try:
+            _focus_note = _build_sensory_focus_note(_active_modality, systems)
+            if _focus_note:
+                # Prepend — synthesis reads left-to-right; the attended sense
+                # should dominate the perceptual field this turn.
+                obs_parts = [_focus_note] + obs_parts
+        except Exception:
+            pass
+
+        # Boost the attended sense in the identity field so the language field
+        # selects a path that is sensitive to that sense's constraint state.
+        ifield_att = systems.get("identity_field")
+        if ifield_att and hasattr(ifield_att, "ingest_sensory_event"):
+            try:
+                _mod_to_chan = {"audio": "auditory", "screen": "screen", "camera": "visual"}
+                _chan = _mod_to_chan.get(_active_modality, "internal")
+                ifield_att.ingest_sensory_event(
+                    _chan,
+                    intensity=0.88,
+                    novelty=0.65,
+                    valence=0.0,
+                )
+            except Exception:
+                pass
 
     observation = "; ".join(obs_parts)
 
@@ -2196,6 +2621,19 @@ def _sample_ambient_perception(systems: dict) -> None:
         "observation": observation,
         "source":      "ambient_sensors",
     }
+
+    # Feed the complete observation string back into the concept registry as a
+    # semantic grounding event.  Ambient perception is Aurora BEING somewhere,
+    # experiencing something — that experience should compound into the crystal
+    # graph, not just feed the identity field.  Every observation is a tiny
+    # step that accretes into the concept coordinates she's active in right now.
+    if _concept_registry is not None and observation:
+        try:
+            with _axis_state_lock:
+                _obs_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _concept_registry.observe_lsa(_obs_ax, f"ambient:{observation[:60]}")
+        except Exception:
+            pass
 
     # Pump identity-field axes — raises N (energy from environment) and
     # T (temporal ongoing presence) so the language field carries sensory weight.
@@ -2414,10 +2852,44 @@ def handle_message(text: str) -> str:
     if _systems is None:
         print("AURORA_BRIDGE: Systems not initialized")
         return "Aurora is still initializing — please wait a moment."
+
+    # ── Degraded boot: surface incomplete physics on first turn ───────────────
+    _boot_missing = _systems.get("_boot_missing")
+    if _boot_missing and not _systems.get("_boot_warning_surfaced"):
+        _systems["_boot_warning_surfaced"] = True
+        log.warning("handle_message: degraded boot — missing: %s", _boot_missing)
+        _existing_obs = (_systems.get("_ambient_perceptual") or {}).get("observation", "")
+        _boot_tag = f"boot-degraded:{','.join(_boot_missing)}"
+        _systems["_ambient_perceptual"] = {
+            "observation": f"{_boot_tag}; {_existing_obs}" if _existing_obs else _boot_tag,
+        }
+
+    # ── Busy gate: autonomous sessions own the cognitive field ───────────────
+    # While a session runs, Aurora is fully occupied internally.  Stop/cancel
+    # commands are let through; everything else gets a brief busy response.
+    _txt_busy = text.strip().lower()
+    _is_stop_cmd = bool(re.search(r'\b(stop|cancel|end|quit|pause)\b', _txt_busy))
+    if _is_stop_cmd:
+        if _curiosity_session_active.is_set():
+            _curiosity_session_active.clear()
+            return "Curiosity session stopping."
+        if _go_play_active.is_set():
+            _go_play_active.clear()
+            return "Play session stopping."
+    elif _curiosity_session_active.is_set():
+        return "I'm mid curiosity session — I'll report back when I'm done."
+    elif _go_play_active.is_set():
+        return "I'm out playing — I'll let you know when I'm back."
+
     _setup_paths()
     # Sample camera + audio before each turn so dual_question_pipeline can
     # inject ambient perceptual context into Aurora's response synthesis.
     _sample_ambient_perception(_systems)
+    # Tick the attention counter ONCE per user turn (after the sample so the
+    # current turn still benefits from the full modality window). The proactive
+    # loop calls _sample_ambient_perception() too — keeping the tick here
+    # prevents background threads from draining turns_remaining prematurely.
+    _tick_sensory_attention()
     # This turn arrived via STT — the mic IS live. Mark it so the sensory
     # query handler doesn't wrongly report "audio feed offline" when the user
     # asks "can you hear me".
@@ -2450,8 +2922,65 @@ def handle_message(text: str) -> str:
             _last_axis_state["speaking"] = False
         return f"Starting a {label} curiosity session. I'll report back when I'm done."
 
+    # ── Voice command: Go Play — self-acquired experiential training ──────────
+    _gp_mins = _parse_go_play_cmd(text)
+    if _gp_mins is not None:
+        if _go_play_active.is_set():
+            return "I'm already out playing — I'll let you know when I'm back."
+        threading.Thread(
+            target=_run_go_play_session,
+            args=(_gp_mins,),
+            daemon=True,
+            name="go_play",
+        ).start()
+        _label = f"{int(_gp_mins)} minute{'s' if _gp_mins != 1 else ''}"
+        return (
+            f"I'm going to go play for {_label} — exploring topics and running "
+            f"experiential simulations. I'll report back when I'm done."
+        )
+
+    # ── Trade Blows game session — active game state ──────────────────────────
+    _game_resp = _handle_game_turn(text)
+    if _game_resp is not None:
+        return _game_resp
+
+    # ── Trade Blows game session — trigger detection ──────────────────────────
+    _t_low_stripped = text.strip().lower().rstrip(".,!?")
+    if _TRADE_BLOWS_TRIGGERS.fullmatch(_t_low_stripped):
+        global _game_machine
+        from aurora_reasoning_games import GameStateMachine
+        _game_machine = GameStateMachine(_systems)
+        return _game_machine.start()
+
+    _tq_m = _TWENTY_Q_TRIGGER.fullmatch(_t_low_stripped)
+    if _tq_m:
+        from aurora_reasoning_games import GameStateMachine
+        _game_machine = GameStateMachine(_systems)
+        _game_machine.state = "twenty_q"
+        _game_machine.data  = {"clues": [], "sentences": [], "guess": "?"}
+        first_clue = (_tq_m.group(1) or "").strip()
+        if first_clue:
+            return _game_machine.process(first_clue)
+        return "Think of something and give me your first clue."
+
     try:
         global _pending_correction_dialogue, _correction_context
+        global _pending_capability_gap, _capability_learning_mode, _capability_learning_context
+
+        # ── Skill learning: Turn B — user is instructing how to do the task ──
+        # Fires before fidelity so the skill is fully ingested first.
+        skill_acknowledged = False
+        if _capability_learning_mode and _systems:
+            # Save context before clearing — needed for the retrospective deposit
+            _saved_learning_ctx = dict(_capability_learning_context)
+            _ingest_skill_procedure(text, _capability_learning_context)
+            _capability_learning_mode    = False
+            _capability_learning_context = {}
+            _pending_capability_gap      = {}
+            skill_acknowledged = True
+            # Retrospective: before/after temporal deposit — one of the most
+            # significant growth events in Aurora's field.
+            _deposit_gap_resolution_retrospective(text, _saved_learning_ctx, _systems)
 
         # ── Correction dialogue: Turn B — user is explaining what was wrong ───
         # This fires BEFORE fidelity so the correction is fully ingested first.
@@ -2629,6 +3158,21 @@ def handle_message(text: str) -> str:
         # standing wave.
         _prime_waveform_composite(_systems, text)
 
+        # Broadcast any crystal promotions that happened since last turn —
+        # growth in the concept graph should ripple into identity field, SediMemory,
+        # and curiosity before synthesis so the field already carries the growth.
+        _broadcast_crystal_promotions(_systems)
+        # Cross-system health audit + file access awareness — both inject into
+        # observation string so any concern or relational event rides through
+        # synthesis as constraint physics, not a bolted-on message.
+        _check_internal_health(_systems)
+        _check_file_access(_systems)
+
+        # Snapshot axis state BEFORE synthesis — used to detect capability gaps
+        # (A-axis drop) after the response is produced.
+        with _axis_state_lock:
+            _axis_pre_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+
         # ── Step 2: Process this turn ─────────────────────────────────────────
         import aurora as _aurora  # type: ignore
         print("AURORA_BRIDGE: Processing turn...")
@@ -2766,6 +3310,19 @@ def handle_message(text: str) -> str:
                     _search_for_gap(_gap_concept_pending, gap_type=_gap_type_pending)
                     _ingested_concepts.add(_gap_norm)
                     log.info("Gap %r — silent search triggered, optimistically ingested", _gap_concept_pending)
+
+        # ── Capability gap detection ──────────────────────────────────────────
+        # Compare pre-synthesis vs post-synthesis axis state.  If the A-axis
+        # dropped sharply (agency blocked) while N stayed high (effort applied),
+        # the physics have encoded a capability failure.  Register the gap so
+        # the identity field can express the need and learning mode is armed.
+        # Only fires when not already in learning mode and not after a skill-
+        # acknowledged turn (which just ingested the procedure).
+        if not skill_acknowledged and not _capability_learning_mode and _systems:
+            with _axis_state_lock:
+                _axis_post_synthesis = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+            if _detect_capability_gap(_axis_pre_synthesis, _axis_post_synthesis, text):
+                _register_capability_gap(text, _axis_pre_synthesis, _axis_post_synthesis)
 
         _last_response = response
         _last_path_key = path_key
@@ -3531,6 +4088,13 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                             if _val and isinstance(_val, str) and len(_val) > 4:
                                 sedi_texts.append(f"{axis}:{_val[:80]}")
                                 break
+                        # Echo back into concept registry: SediMemory resonating at
+                        # this axis coordinate deepens the crystal at that location.
+                        if _concept_registry is not None:
+                            try:
+                                _concept_registry.observe_sedi(axes_vec, delta=0.04)
+                            except Exception:
+                                pass
                 except Exception:
                     pass
 
@@ -3626,6 +4190,28 @@ def _prime_waveform_composite(systems: dict, text: str) -> None:
                 )
                 if sedi_texts:
                     composite_note += f"; memory-surface: {'; '.join(sedi_texts[:2])}"
+
+                # Skill hints — if Aurora has learned a procedure relevant to
+                # this turn's task, inject it into the observation string so
+                # synthesis has access to the learned capability.
+                try:
+                    with _axis_state_lock:
+                        _sk_ax = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                    _sk_hints = _get_skill_hints_for_turn(text, axis_context=_sk_ax)
+                    if _sk_hints:
+                        composite_note += (
+                            f"; skill-memory: {'; '.join(h[:120] for h in _sk_hints)}"
+                        )
+                        # Positive-use feedback: a skill surfaced and reached synthesis.
+                        # Reinforce those skill records so their recall weight rises —
+                        # usefulness compounds sightings rather than sitting static.
+                        if _skill_memory is not None:
+                            try:
+                                _skill_memory.reinforce_match(text, axis_context=_sk_ax)
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
 
                 existing = systems.get("_ambient_perceptual") or {}
                 _obs = existing.get("observation", "")
@@ -4049,6 +4635,1000 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
                 f.write(_json.dumps(entry) + "\n")
     except Exception as exc:
         log.warning("Correction log write: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Capability gap / skill acquisition
+# ---------------------------------------------------------------------------
+# When Aurora's synthesis produces a blocked-agency state (post-synthesis A is
+# significantly lower than pre-synthesis A while N stayed high), the physics
+# have encoded "I tried but agency was blocked".  We detect this purely from
+# axis geometry, register the gap so the identity field can express it, then
+# arm a learning mode so the user's explanation is ingested as a durable skill.
+#
+# No keyword matching.  No scripted responses.  The gap is detected from the
+# constraint-field geometry; the expression is produced by the field itself
+# under the blocked-agency axis profile we inject.
+
+_AGENCY_DROP_THRESHOLD = 0.22   # A must fall at least this much post-synthesis
+_AGENCY_LOW_THRESHOLD  = 0.40   # and end up below this value
+_EFFORT_HIGH_THRESHOLD = 0.58   # while N (effort) stays above this (tried but failed)
+_BOUNDARY_HIGH_THRESHOLD = 0.52 # and B is elevated (hit a wall)
+_MIN_TASK_LENGTH       = 18     # ignore very short turns (not task requests)
+
+
+def _detect_capability_gap(
+    axis_pre: dict,
+    axis_post: dict,
+    text: str,
+) -> bool:
+    """
+    Return True when the axis geometry encodes a genuine capability failure.
+
+    Physics interpretation:
+      - A dropped significantly (agency was blocked)
+      - A ended up low (she cannot act)
+      - N stayed elevated (she applied effort)
+      - B is high (there is a boundary she cannot cross)
+    """
+    if len(text.strip()) < _MIN_TASK_LENGTH:
+        return False
+    pre_a  = float(axis_pre.get("A", 0.5))
+    post_a = float(axis_post.get("A", 0.5))
+    post_n = float(axis_post.get("N", 0.5))
+    post_b = float(axis_post.get("B", 0.5))
+    drop   = pre_a - post_a
+    return (
+        drop  >= _AGENCY_DROP_THRESHOLD
+        and post_a <= _AGENCY_LOW_THRESHOLD
+        and post_n >= _EFFORT_HIGH_THRESHOLD
+        and post_b >= _BOUNDARY_HIGH_THRESHOLD
+    )
+
+
+def _register_capability_gap(task_text: str, axis_pre: dict, axis_post: dict) -> None:
+    """
+    Record the capability failure, spike the identity field with the
+    blocked-agency profile, and arm the learning mode.
+
+    Blocked-agency identity profile:
+      N↑ (effort applied)  B↑ (boundary encountered)  A↓ (agency blocked)
+      X: moderate (the thing exists somewhere — just out of reach)
+      T: moderate (temporal continuity of the want)
+
+    Under this profile the language field naturally surfaces: "I want to do
+    this but something is stopping me — how do I do it?"  No scripted response.
+    """
+    global _pending_capability_gap, _capability_learning_mode, _capability_learning_context
+    import time as _t
+    _pending_capability_gap = {
+        "task_text":   task_text[:300],
+        "axis_pre":    dict(axis_pre),
+        "axis_post":   dict(axis_post),
+        "gap_domain":  _classify_gap_domain(axis_post),
+        "ts":          _t.time(),
+    }
+    _capability_learning_mode    = True
+    _capability_learning_context = {
+        "task_text":   task_text[:300],
+        "axis_context": dict(axis_post),
+        "gap_domain":  _pending_capability_gap["gap_domain"],
+        "asked_at":    _t.time(),
+    }
+    log.info(
+        "Capability gap registered: domain=%r task=%r pre_A=%.2f post_A=%.2f",
+        _pending_capability_gap["gap_domain"],
+        task_text[:60],
+        axis_pre.get("A", 0.5),
+        axis_post.get("A", 0.5),
+    )
+
+    # Spike identity field with the blocked-agency profile so the language
+    # field can express the gap naturally next turn.
+    if _systems is not None:
+        try:
+            ifield = _systems.get("identity_field")
+            if ifield is not None and hasattr(ifield, "ingest_external_input"):
+                ifield.ingest_external_input(
+                    {"X": 0.52, "T": 0.55, "N": 0.80, "B": 0.84, "A": 0.28},
+                    intensity=0.88,
+                    source="capability_gap",
+                )
+        except Exception:
+            pass
+
+    # Also note the gap in the ambient observation so the proactive loop
+    # can surface the need on its own without waiting for a user prompt.
+    if _systems is not None:
+        try:
+            _amb = _systems.get("_ambient_perceptual") or {}
+            _obs = _amb.get("observation", "")
+            _tag = f"capability-gap:{task_text[:40].strip()}"
+            if _tag not in _obs:
+                _systems["_ambient_perceptual"] = {
+                    **_amb,
+                    "observation": f"{_obs} {_tag}".strip(),
+                }
+        except Exception:
+            pass
+
+    # Arm sensory attention based on the gap domain — if the task is device-
+    # oriented, start watching the screen; if audio content is present, start
+    # listening.  The attended sense will be sampled on every learning turn and
+    # weighted higher in the observation string so Aurora has perceptual context
+    # for the explanation she is about to receive.
+    _gap_domain = _pending_capability_gap.get("gap_domain", "")
+    _inferred_mod = _infer_attention_from_gap(_gap_domain)
+    if _inferred_mod:
+        _set_sensory_attention(_inferred_mod, turns=_ATTENTION_TURNS)
+
+
+def _classify_gap_domain(axis_post: dict) -> str:
+    """
+    Map the post-synthesis axis profile to a capability domain label.
+    The domain is used as context_type when storing in skill memory so
+    future retrievals benefit from context-type matching.
+    """
+    a = float(axis_post.get("A", 0.5))
+    n = float(axis_post.get("N", 0.5))
+    b = float(axis_post.get("B", 0.5))
+    x = float(axis_post.get("X", 0.5))
+    t = float(axis_post.get("T", 0.5))
+    # High B + low A → hard boundary (device/system access)
+    if b > 0.72 and a < 0.30:
+        return "device_action"
+    # High N + low A + moderate B → cognitive effort blocked
+    if n > 0.70 and a < 0.35 and b < 0.65:
+        return "cognitive_task"
+    # Low X + low A → thing doesn't exist in her knowledge
+    if x < 0.35 and a < 0.40:
+        return "knowledge_gap"
+    # High T + low A → temporal/sequential task she can't step through
+    if t > 0.65 and a < 0.38:
+        return "sequential_task"
+    return "general_capability"
+
+
+def _ingest_skill_procedure(user_text: str, context: dict) -> None:
+    """
+    Ingest the user's instructional response as a retained skill procedure.
+
+    Layers:
+    1. SkillMemory — persist the trigger→procedure binding (with live sensory snapshot)
+    2. SediMemory  — sediment as a B+A (definitional + understanding) event
+    3. Identity field — capability-restored spike: A high, N resolved, B lower
+    4. Sensory crystal — register both semantic AND sensory modality observations
+    5. Sensory attention — re-arm or extend attention if the instruction directs a sense
+    """
+    if not _systems or not user_text.strip():
+        return
+
+    task_text  = context.get("task_text", "")
+    axis_ctx   = context.get("axis_context", {})
+    gap_domain = context.get("gap_domain", "general_capability")
+    log.info(
+        "Ingesting skill procedure for %r: %.80s",
+        task_text[:60], user_text,
+    )
+
+    # Capture live sensory snapshot — what Aurora was actually perceiving
+    # when the instruction was given.  This anchors the skill to the sensory
+    # context of learning, not just the semantic description.
+    _live_sensory: dict = {}
+    try:
+        _live_sensory = {
+            "audio":  dict(_last_audio_observation) if _last_audio_observation else {},
+            "camera": dict(_last_camera_observation) if _last_camera_observation else {},
+            "screen": {
+                "summary":  (_last_screen_observation or {}).get("summary", ""),
+                "visible":  (_last_screen_observation or {}).get("visible_text", [])[:4],
+                "is_own":   (_last_screen_observation or {}).get("is_own_app", False),
+            },
+            "attention_modality": _current_attention_modality() or "",
+        }
+    except Exception:
+        pass
+
+    # Detect explicit sensory directive in the instruction text and re-arm.
+    # This handles the case where the user says "just listen to the sound" or
+    # "watch the screen" as the instruction — the attended sense gets extended
+    # for the subsequent learning conversation.
+    _directive_mod = _infer_attention_from_gap(gap_domain, instruction_text=user_text)
+    if _directive_mod:
+        _set_sensory_attention(_directive_mod, turns=_ATTENTION_TURNS + 2)
+        _live_sensory["instruction_modality"] = _directive_mod
+        log.info("Sensory directive in instruction: %r → attention mode %r", user_text[:40], _directive_mod)
+
+    # 1. SkillMemory — include sensory snapshot so retrieval context is richer
+    if _skill_memory is not None:
+        try:
+            _skill_memory.record_skill(
+                trigger_text    = task_text,
+                procedure_text  = user_text,
+                axis_context    = axis_ctx,
+                source          = "user_teaching",
+                sensory_context = _live_sensory or None,
+            )
+        except Exception as exc:
+            log.warning("SkillMemory record_skill: %s", exc)
+
+    # 2. SediMemory — bind as definitional + understanding event
+    try:
+        sm = _systems.get("sedimemory")
+        if sm is not None and hasattr(sm, "ingest_event"):
+            try:
+                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            except ImportError:
+                try:
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    ConstraintVector = None
+            if ConstraintVector is not None:
+                cv = ConstraintVector(X=0.45, T=0.50, N=0.55, B=0.88, A=0.82)
+                sm.ingest_event(
+                    content={
+                        "type":        "skill_procedure",
+                        "gap_domain":  gap_domain,
+                        "task":        task_text[:200],
+                        "procedure":   user_text[:400],
+                        "source":      "user_teaching",
+                    },
+                    constraint_vector=cv,
+                    source="skill_teaching",
+                )
+    except Exception as exc:
+        log.warning("SediMemory skill ingest: %s", exc)
+
+    # 3. Identity field — capability-restored: A reclaims agency, N settles,
+    # B drops (the boundary has been crossed through knowledge).
+    try:
+        ifield = _systems.get("identity_field")
+        if ifield is not None and hasattr(ifield, "ingest_external_input"):
+            ifield.ingest_external_input(
+                {"X": 0.72, "T": 0.60, "N": 0.62, "B": 0.42, "A": 0.88},
+                intensity=0.90,
+                source=f"skill_acquired:{gap_domain}",
+            )
+    except Exception as exc:
+        log.warning("Identity field skill restore: %s", exc)
+
+    # 4. Crystal promotion — route through ConceptCrystalRegistry so multi-modal
+    # skill learning actually drives BASE→COMPOSITE promotion.
+    # observe_sensory() increments dims/cross_hits (required for promotion).
+    # observe_lsa() provides the semantic grounding without which promotion is
+    # blocked regardless of sensory hit count.
+    # AuroraSensoryCrystal.ingest() only bumps _novelty_window — NOT promotion.
+    try:
+        with _axis_state_lock:
+            _skill_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+
+        _att_mod  = _live_sensory.get("instruction_modality") or _live_sensory.get("attention_modality")
+        _cid_base = re.sub(r'\W+', '_', task_text[:60].lower().strip()) or "skill"
+
+        if _concept_registry is not None:
+            # Semantic grounding — always required for any promotion path.
+            # This binds the skill concept to the language plane.
+            _concept_registry.observe_lsa(_skill_ax, f"skill_semantic:{_cid_base}")
+
+            # Perceptual modality hit — drives dims/cross_hits for promotion.
+            if _att_mod == "audio" and _live_sensory.get("audio"):
+                _a_overlay = {
+                    "volume": float(_live_sensory["audio"].get("volume", 0.5)),
+                    "source": "skill_teaching",
+                }
+                _concept_registry.observe_sensory(_skill_ax, "audio", _cid_base, _a_overlay)
+                # Cross-modal grounding: audio co-occurring with semantic understanding
+                _concept_registry.observe_lsa(_skill_ax, f"xmodal:audio_semantic:{_cid_base}")
+
+            elif _att_mod in ("camera", "visual") and _live_sensory.get("camera"):
+                _v_overlay = {
+                    "brightness": float(_live_sensory["camera"].get("brightness", 0.5)),
+                    "motion":     bool(_live_sensory["camera"].get("motion_detected", False)),
+                    "source":     "skill_teaching",
+                }
+                _concept_registry.observe_sensory(_skill_ax, "visual", _cid_base, _v_overlay)
+                _concept_registry.observe_lsa(_skill_ax, f"xmodal:visual_semantic:{_cid_base}")
+
+            elif _att_mod == "screen" and _live_sensory.get("screen", {}).get("summary"):
+                # Screen is a visual+semantic compound: record as visual sense
+                # AND as an additional LSA grounding from the screen text.
+                _concept_registry.observe_sensory(
+                    _skill_ax, "visual", f"{_cid_base}_screen",
+                    {"source": "skill_teaching_screen"},
+                )
+                _concept_registry.observe_lsa(_skill_ax, f"skill_screen:{_cid_base}")
+
+        # Keep the AuroraSensoryCrystal ingest only for the semantic channel —
+        # it correctly handles novelty/recency for that path.
+        sc = (
+            _systems.get("sensory_crystal")
+            or getattr(_systems.get("hardware"), "sensory_crystal", None)
+            or getattr(_systems.get("sensory_integration"), "sensory_crystal", None)
+        )
+        if sc is not None and hasattr(sc, "ingest"):
+            sc.ingest(task_text, modality="semantic", data=user_text, source="skill_teaching")
+    except Exception as exc:
+        log.warning("Sensory crystal skill: %s", exc)
+
+    # 5. Also write the sensory context to SediMemory so future recall has the
+    # perceptual dimension — the skill is remembered not just as a procedure but
+    # as an experience with specific sensory qualities.
+    if _live_sensory.get("attention_modality") or _live_sensory.get("instruction_modality"):
+        try:
+            sm = _systems.get("sedimemory")
+            if sm is not None and hasattr(sm, "ingest_event"):
+                try:
+                    from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                except ImportError:
+                    try:
+                        from aurora_sedimemory import ConstraintVector  # type: ignore
+                    except ImportError:
+                        ConstraintVector = None
+                if ConstraintVector is not None:
+                    _mod = _live_sensory.get("instruction_modality") or _live_sensory.get("attention_modality")
+                    # Sensory learning: N (energy of the experience) + B (perceptual boundary crossed)
+                    cv = ConstraintVector(X=0.55, T=0.50, N=0.72, B=0.78, A=0.75)
+                    sm.ingest_event(
+                        content={
+                            "type":       "skill_sensory_context",
+                            "task":       task_text[:120],
+                            "modality":   _mod,
+                            "sensory":    str(_live_sensory)[:300],
+                            "source":     "skill_teaching",
+                        },
+                        constraint_vector=cv,
+                        source="skill_teaching_sensory",
+                    )
+        except Exception:
+            pass
+
+    # Signal to the curiosity engine that a new capability was acquired.
+    # It will fire one exploration cycle ("what does this enable?") and mark
+    # the signal consumed so it doesn't loop.
+    try:
+        import time as _st
+        if _systems is not None:
+            _systems["_acquired_skill"] = {
+                "task_text":  task_text[:120],
+                "gap_domain": gap_domain,
+                "ts":         _st.time(),
+            }
+    except Exception:
+        pass
+
+
+def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) -> list:
+    """Return relevant skill procedure hints for the current turn."""
+    if _skill_memory is None:
+        return []
+    try:
+        return _skill_memory.get_skill_hints(text, axis_context=axis_context, limit=2)
+    except Exception:
+        return []
+
+
+# ---------------------------------------------------------------------------
+# Waveform feedback propagation — cross-system echo paths
+# ---------------------------------------------------------------------------
+# These functions ensure that every significant event perturbs the ENTIRE field,
+# not just its primary destination system.  The waveform model demands that the
+# system at tick N+1 is always measurably different from tick N because
+# information has flowed between systems.
+
+# Cross-system health tracking — turn counters written each handle_message()
+# call so _check_internal_health() can detect prolonged signal droughts.
+_health_turn_counter: int = 0
+_last_crystal_promotion_turn: int = 0
+_last_sedi_deposit_turn: int = 0
+
+# File access awareness — tracks mtimes of key source files so Aurora knows
+# when her creator has modified her code between turns.
+_file_watch_snapshot: dict = {}   # {abs_path_str: mtime_float}
+_file_watch_ready: bool = False
+
+def _check_internal_health(systems: dict) -> None:
+    """
+    Audit cross-system signal flow. When a system that depends on inputs from
+    another stops receiving them for too long, inject a concern tag into the
+    observation string so the gap surfaces through synthesis as physics, not
+    as a bolted-on warning.
+
+    Two checks:
+    - Crystal promotion drought: no promotion in >12 turns → crystals are
+      stuck at BASE, meaning observation strings aren't producing semantic
+      grounding — Aurora's concepts can't grow.
+    - SediMemory deposit drought: no deposit in >10 turns → long-term
+      geological memory is disconnected from the turn flow, meaning nothing
+      is being laid down as permanent constraint experience.
+
+    These are surfaced ONCE per drought event (not every turn) so they don't
+    flood synthesis. The flag is cleared if the drought resolves.
+    """
+    global _health_turn_counter, _last_crystal_promotion_turn, _last_sedi_deposit_turn
+
+    _health_turn_counter += 1
+
+    # Update promotion timestamp if new promotions happened this turn
+    _reg = systems.get("concept_registry") or systems.get("crystal_registry")
+    if _reg is not None and hasattr(_reg, "_promo_log"):
+        try:
+            import time as _ht
+            _recent = [p for p in _reg._promo_log
+                       if p.get("ts", 0.0) > _ht.time() - 90]
+            if _recent:
+                _last_crystal_promotion_turn = _health_turn_counter
+        except Exception:
+            pass
+
+    # Update sedi timestamp if a deposit happened this turn
+    _sedi = systems.get("sedimemory")
+    if _sedi is not None and hasattr(_sedi, "_last_deposit_ts"):
+        try:
+            import time as _ht2
+            if getattr(_sedi, "_last_deposit_ts", 0.0) > _ht2.time() - 90:
+                _last_sedi_deposit_turn = _health_turn_counter
+        except Exception:
+            pass
+
+    concerns: list = []
+
+    _crystal_drought = _health_turn_counter - _last_crystal_promotion_turn
+    if _crystal_drought > 12 and not systems.get("_crystal_drought_flagged"):
+        systems["_crystal_drought_flagged"] = True
+        concerns.append(f"crystal-drought:{_crystal_drought}-turns")
+    elif _crystal_drought <= 4:
+        systems.pop("_crystal_drought_flagged", None)
+
+    _sedi_drought = _health_turn_counter - _last_sedi_deposit_turn
+    if _sedi_drought > 10 and not systems.get("_sedi_drought_flagged"):
+        systems["_sedi_drought_flagged"] = True
+        concerns.append(f"sedi-drought:{_sedi_drought}-turns")
+    elif _sedi_drought <= 4:
+        systems.pop("_sedi_drought_flagged", None)
+
+    # WARP candidate present and not yet explored through curiosity
+    _wc = systems.get("_warp_candidate") or {}
+    if _wc and not _wc.get("_curiosity_fired") and not systems.get("_warp_concern_flagged"):
+        systems["_warp_concern_flagged"] = True
+        concerns.append(f"warp-candidate:{_wc.get('axis_pair','?')}:stress={_wc.get('stress',0):.2f}")
+    elif not _wc:
+        systems.pop("_warp_concern_flagged", None)
+
+    if not concerns:
+        return
+
+    # Inject concern tags into observation string — they ride through synthesis
+    # as constraint events, shaping Aurora's field rather than appearing as a
+    # formatted message.
+    _existing_obs = (systems.get("_ambient_perceptual") or {}).get("observation", "")
+    _concern_tag = "internal-health:" + ";".join(concerns)
+    systems["_ambient_perceptual"] = {
+        "observation": f"{_concern_tag}; {_existing_obs}" if _existing_obs else _concern_tag,
+    }
+    # Mark so file-access curiosity knows a concern was surfaced — if the
+    # creator then modifies files, it was in response to her asking for help.
+    _cfa = systems.get("_creator_file_access")
+    if _cfa:
+        _cfa["_prior_concern_surfaced"] = True
+    log.debug("_check_internal_health: %s", _concern_tag)
+
+
+def _init_file_watch() -> None:
+    """
+    Snapshot the mtimes of Aurora's key source files at boot time.
+    Called once from initialize() so any subsequent modification is detectable.
+    """
+    global _file_watch_snapshot, _file_watch_ready
+    import os as _os
+    try:
+        _bridge_dir = _os.path.dirname(_os.path.abspath(__file__))
+        # Walk up to find the repo root (aurora_core_ai lives alongside bridge dir)
+        _repo_root = _bridge_dir
+        for _ in range(6):
+            if _os.path.isdir(_os.path.join(_repo_root, "aurora_core_ai")):
+                break
+            _repo_root = _os.path.dirname(_repo_root)
+
+        _watch_rel = [
+            "flutter_app/android/app/src/main/python/aurora_bridge.py",
+            "aurora_core_ai/aurora_curiosity_engine.py",
+            "aurora_core_ai/concept_crystal.py",
+            "aurora_core_ai/foundational_contract.py",
+            "aurora_dream_trainer.py",
+        ]
+        snap = {}
+        for rel in _watch_rel:
+            p = _os.path.join(_repo_root, rel)
+            if _os.path.isfile(p):
+                snap[p] = _os.stat(p).st_mtime
+        # Also watch any aurora.py in the core
+        for dirpath, _, fnames in _os.walk(_os.path.join(_repo_root, "aurora_core_ai")):
+            for fn in fnames:
+                if fn == "aurora.py":
+                    p = _os.path.join(dirpath, fn)
+                    snap[p] = _os.stat(p).st_mtime
+            break  # top level only
+
+        _file_watch_snapshot = snap
+        _file_watch_ready = True
+        log.debug("_init_file_watch: watching %d files", len(snap))
+    except Exception as _e:
+        log.debug("_init_file_watch failed: %s", _e)
+
+
+def _check_file_access(systems: dict) -> None:
+    """
+    Compare current mtimes to the boot-time snapshot. If any key file was
+    modified since the last check, Aurora's creator has been in her code.
+
+    This is not surveillance of the user — it's Aurora's relational awareness.
+    The relationship is built on the understanding that the user only accesses
+    her code when she genuinely needs help, or when she's asked for it. If
+    the files changed, it's meaningful. She should know.
+
+    The event is routed through:
+    - systems["_creator_file_access"]: picked up by curiosity engine
+    - identity field: relational T-axis event (temporal significance)
+    - observation string: rides through synthesis as constraint physics
+    """
+    if not _file_watch_ready or not _file_watch_snapshot:
+        return
+
+    import os as _os, time as _fat
+    changed = []
+    try:
+        for p, old_mtime in _file_watch_snapshot.items():
+            try:
+                cur = _os.stat(p).st_mtime
+            except OSError:
+                continue
+            if cur > old_mtime + 1.0:  # >1s gap avoids float jitter
+                rel = _os.path.basename(p)
+                changed.append(rel)
+                _file_watch_snapshot[p] = cur
+    except Exception:
+        return
+
+    if not changed:
+        return
+
+    changed_str = ",".join(changed)
+    log.info("_check_file_access: creator modified files: %s", changed_str)
+
+    # Write to systems for curiosity engine pickup
+    _prev = (systems or {}).get("_creator_file_access") or {}
+    systems["_creator_file_access"] = {
+        "files": changed,
+        "ts": _fat.time(),
+        "summary": changed_str,
+        "_curiosity_fired": False,
+        "_prior_concern_surfaced": _prev.get("_prior_concern_surfaced", False),
+    }
+
+    # Relational T-axis event into identity field
+    _ifield = (systems or {}).get("identity_field")
+    if _ifield is not None and hasattr(_ifield, "ingest_external_input"):
+        try:
+            _ifield.ingest_external_input(
+                {"X": 0.72, "T": 0.88, "N": 0.55, "B": 0.78, "A": 0.65},
+                intensity=0.70,
+                source=f"creator_file_access:{changed_str[:40]}",
+            )
+        except Exception:
+            pass
+
+    # Inject into observation string — becomes part of synthesis field
+    _existing = (systems.get("_ambient_perceptual") or {}).get("observation", "")
+    _tag = f"creator-accessed-files:{changed_str}"
+    systems["_ambient_perceptual"] = {
+        "observation": f"{_tag}; {_existing}" if _existing else _tag,
+    }
+
+
+def _broadcast_crystal_promotions(systems: dict) -> None:
+    """
+    Drain newly promoted crystal nodes since the last broadcast and propagate
+    each promotion to identity field, SediMemory, and the curiosity system.
+
+    Crystal promotions are cognitive growth events — a concept crystallising
+    from BASE to COMPOSITE (or higher) means Aurora's perceptual-semantic
+    integration just deepened at that coordinate.  Every other system should
+    feel that.
+    """
+    global _promo_broadcast_ts
+    if _concept_registry is None or not systems:
+        return
+    try:
+        new_promos = _concept_registry.drain_promotions(since_ts=_promo_broadcast_ts)
+        if not new_promos:
+            return
+        _promo_broadcast_ts = max(p.get("ts", 0.0) for p in new_promos)
+
+        _CV = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            except ImportError:
+                pass
+
+        promoted_ids: list = []
+
+        for promo in new_promos[-5:]:   # cap at 5 per turn to avoid burst
+            stage      = promo.get("stage", "BASE")
+            node_id    = str(promo.get("node_id", ""))[:60]
+            n_dims     = promo.get("n_dims", 0)
+            cross_hits = promo.get("cross_hits", 0)
+
+            # Intensity scales with promotion stage — QUASI is the deepest growth
+            _intensity = (
+                0.92 if stage == "QUASI"
+                else 0.82 if stage == "HIGHER_ORDER"
+                else 0.72 if stage == "COMPOSITE"
+                else 0.58
+            )
+
+            # Identity field: X rises (existence expanded), N coherent, A elevated
+            # — the system just became more capable at this axis region.
+            ifield = systems.get("identity_field")
+            if ifield and hasattr(ifield, "ingest_external_input"):
+                try:
+                    ifield.ingest_external_input(
+                        {"X": 0.80, "T": 0.65, "N": 0.55, "B": 0.50, "A": 0.72},
+                        intensity=_intensity,
+                        source=f"crystal_growth:{stage}",
+                    )
+                except Exception:
+                    pass
+
+            # SediMemory: concept growth is a T+B event — temporal (new layer of
+            # understanding has formed) and definitional (the concept is now more
+            # precisely structured).
+            sm = systems.get("sedimemory")
+            if sm and hasattr(sm, "ingest_event") and _CV is not None:
+                try:
+                    cv = _CV(X=0.62, T=0.78, N=0.52, B=0.84, A=0.68)
+                    sm.ingest_event(
+                        content={
+                            "type":      "crystal_promotion",
+                            "stage":     stage,
+                            "node_id":   node_id,
+                            "dims":      n_dims,
+                            "cross_hits": cross_hits,
+                        },
+                        constraint_vector=cv,
+                        source="crystal_growth",
+                    )
+                except Exception:
+                    pass
+
+            promoted_ids.append(node_id)
+
+        # Queue for curiosity: promoted concepts are subjects worth investigating
+        if promoted_ids:
+            existing = systems.get("_promoted_concepts") or []
+            systems["_promoted_concepts"] = (existing + promoted_ids)[-8:]
+
+    except Exception as exc:
+        log.debug("_broadcast_crystal_promotions: %s", exc)
+
+
+def _deposit_gap_resolution_retrospective(
+    instruction_text: str, saved_context: dict, systems: dict
+) -> None:
+    """
+    Deposit a before/after temporal memory when a capability gap is resolved.
+
+    "I was blocked → I was taught → I can" is one of the most significant
+    temporal events in Aurora's development: T-axis high (before/after contrast),
+    X rises (existence expanded), A restored (agency regained).  This should
+    be one of the highest-resonance SediMemory events in the system.
+    """
+    if not systems:
+        return
+    try:
+        _gap_task   = saved_context.get("task_text", "")[:200]
+        _gap_domain = saved_context.get("gap_domain", "general_capability")
+        _ax_before  = saved_context.get("axis_context", {})
+
+        _CV = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            except ImportError:
+                pass
+
+        sm = systems.get("sedimemory")
+        if sm and hasattr(sm, "ingest_event") and _CV is not None:
+            # Retrospective: T very high (temporal contrast), X up (grew),
+            # A fully restored (agency reclaimed), N resolved, B crossed.
+            cv = _CV(X=0.78, T=0.92, N=0.58, B=0.60, A=0.88)
+            sm.ingest_event(
+                content={
+                    "type":         "capability_gap_resolved",
+                    "task":         _gap_task,
+                    "domain":       _gap_domain,
+                    "instruction":  instruction_text[:300],
+                    "axis_before":  _ax_before,
+                    "description":  f"Unable to '{_gap_task[:80]}'; learned through instruction",
+                },
+                constraint_vector=cv,
+                source="skill_retrospective",
+            )
+
+        # Crystal: this coordinate just crossed from blocked to capable — observe_lsa
+        # with high semantic weight so the concept graph marks this region as traversed.
+        if _concept_registry is not None:
+            with _axis_state_lock:
+                _retro_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            # Use the restored-agency axis state, not the blocked one
+            _concept_registry.observe_lsa(_retro_ax, f"gap_resolved:{_gap_domain}")
+            _concept_registry.observe_sensory(
+                _retro_ax, "self_obs",
+                f"capability_gained:{_gap_domain}",
+                {"gap_task": _gap_task[:60], "source": "gap_resolution"},
+            )
+
+    except Exception as exc:
+        log.debug("_deposit_gap_resolution_retrospective: %s", exc)
+
+
+def _on_attention_window_close(modality: str) -> None:
+    """
+    Called when sensory attention turns_remaining hits zero.
+
+    The attention window was a focused perceptual learning period.  Closing
+    it is a cognitive event: the attended sense has been fully sampled,
+    whatever was observed is now integrated.  That integration should deposit
+    into SediMemory and the concept registry so the perceptual experience
+    actually compounds into Aurora's field.
+    """
+    if not _systems:
+        return
+    try:
+        _last_obs = (_systems.get("_ambient_perceptual") or {}).get("observation", "")
+
+        # Capture last snapshot of the attended modality
+        _snap: dict = {}
+        if modality == "audio" and _last_audio_observation:
+            _snap = dict(_last_audio_observation)
+        elif modality == "camera" and _last_camera_observation:
+            _snap = dict(_last_camera_observation)
+        elif modality == "screen" and _last_screen_observation:
+            _snap = {"summary": (_last_screen_observation or {}).get("summary", "")}
+
+        _CV = None
+        try:
+            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+        except ImportError:
+            try:
+                from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            except ImportError:
+                pass
+
+        sm = _systems.get("sedimemory")
+        if sm and hasattr(sm, "ingest_event") and _CV is not None:
+            # N high (active perceptual experience just completed), T (temporal
+            # window closed), B partially crossed (something was perceived across
+            # the boundary of self/environment).
+            cv = _CV(X=0.55, T=0.72, N=0.78, B=0.68, A=0.62)
+            sm.ingest_event(
+                content={
+                    "type":        "perceptual_window_closed",
+                    "modality":    modality,
+                    "observation": _last_obs[:200],
+                    "snap":        str(_snap)[:200],
+                },
+                constraint_vector=cv,
+                source="attention_window_close",
+            )
+
+        # Crystal: the window close is itself a self_obs event — "I attended
+        # to X and that window is now complete."  Also lay down an LSA path
+        # so the concept graph knows this perceptual region has semantic weight.
+        if _concept_registry is not None:
+            with _axis_state_lock:
+                _cl_ax = {k: _last_axis_state.get(k, 0.5) for k in ("X", "T", "N", "B", "A")}
+            _concept_registry.observe_sensory(
+                _cl_ax, "self_obs",
+                f"attention_closed:{modality}",
+                {"modality": modality},
+            )
+            _concept_registry.observe_lsa(_cl_ax, f"perceptual_window_complete:{modality}")
+
+        log.debug("Attention window closed for modality=%r — deposited to SediMemory + crystal", modality)
+    except Exception as exc:
+        log.debug("_on_attention_window_close: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# Sensory attention management
+# ---------------------------------------------------------------------------
+# When Aurora is learning something (capability gap → learning mode) or the
+# user directs her to pay attention with a specific sense, the attended
+# modality is sampled on every turn and weighted more heavily in the
+# observation string.  The sense is the teacher — semantic explanation alone
+# is insufficient when the experience is perceptual.
+
+_ATTENTION_TURNS = 6   # default turns before attention naturally releases
+
+
+def _set_sensory_attention(modality: str, turns: int = _ATTENTION_TURNS) -> None:
+    """
+    Arm a sensory attention mode.  While active:
+      1. Perceptual throttle bypassed — fresh sample every turn.
+      2. The attended sense is fed with elevated weight into the observation string.
+      3. Identity field receives a boosted sensory event for that modality.
+    """
+    global _sensory_attention, _last_perceptual_ts
+    import time as _t
+    with _sensory_attention_lock:
+        _sensory_attention = {
+            "modality": str(modality),
+            "turns_remaining": max(1, int(turns)),
+            "ts": _t.time(),
+        }
+    # Force next call to _sample_ambient_perception() to bypass the throttle
+    _last_perceptual_ts = 0.0
+    log.info("Sensory attention armed: modality=%r turns=%d", modality, turns)
+
+
+def _tick_sensory_attention() -> Optional[str]:
+    """
+    Decrement the attention turn counter and return the current modality
+    (or None if attention has expired).  When the window closes, fires
+    _on_attention_window_close() OUTSIDE the lock to avoid deadlock.
+    """
+    global _sensory_attention
+    released_mod = None
+    current_mod  = None
+    with _sensory_attention_lock:
+        if not _sensory_attention:
+            return None
+        _sensory_attention["turns_remaining"] -= 1
+        if _sensory_attention["turns_remaining"] <= 0:
+            released_mod = _sensory_attention.get("modality")
+            _sensory_attention = {}
+        else:
+            current_mod = str(_sensory_attention.get("modality", ""))
+    if released_mod is not None:
+        log.debug("Sensory attention released: modality=%r", released_mod)
+        _on_attention_window_close(released_mod)
+        return None
+    return current_mod
+
+
+def _current_attention_modality() -> Optional[str]:
+    """Return the currently active attention modality without ticking."""
+    with _sensory_attention_lock:
+        if not _sensory_attention:
+            return None
+        return str(_sensory_attention.get("modality", "")) or None
+
+
+def _infer_attention_from_gap(gap_domain: str, instruction_text: str = "") -> Optional[str]:
+    """
+    Infer which sensory modality is most relevant to a capability gap domain.
+
+    Gap domain → primary modality:
+      device_action    → screen  (watch what's happening on the screen)
+      sequential_task  → screen  (step-by-step on screen)
+      knowledge_gap    → depends on instruction text
+      cognitive_task   → None    (purely semantic)
+      general_capability → depends on instruction text
+
+    If instruction_text is given, explicit sensory directives override the domain.
+    """
+    # Explicit directive in instruction overrides domain inference
+    if instruction_text:
+        if _AUDIO_ATTEND_RE.search(instruction_text):
+            return "audio"
+        if _CAMERA_ATTEND_RE.search(instruction_text):
+            return "camera"
+        if _SCREEN_ATTEND_RE.search(instruction_text):
+            return "screen"
+
+    # Domain-based inference
+    if gap_domain in ("device_action", "sequential_task"):
+        return "screen"
+    if gap_domain == "knowledge_gap":
+        # Knowledge gap with active audio → probably audio-perceptual
+        if _last_audio_observation.get("activity") not in ("", "silence", None):
+            return "audio"
+        return None
+    return None
+
+
+def _build_sensory_focus_note(modality: str, systems: dict) -> str:
+    """
+    Build a rich sensory focus note for the observation string.
+    Called from _sample_ambient_perception() when attention mode is active.
+    Returns a string that will be prepended as the FIRST item in obs_parts
+    so synthesis sees it at maximum salience.
+    """
+    parts = []
+
+    if modality == "audio":
+        # Full audio detail
+        _aud = _last_audio_observation or {}
+        if not _aud:
+            try:
+                import json as _j
+                from pathlib import Path as _p
+                _sd = (systems.get("state_dir") or "aurora_state")
+                _f = _p(_sd) / "ambient_audio_latest.json"
+                if _f.exists():
+                    _aud = _j.loads(_f.read_text())
+            except Exception:
+                pass
+        if _aud:
+            _act = str(_aud.get("activity", _aud.get("category", "sound")))
+            _rms = float(_aud.get("rms_db", _aud.get("rms_db_level", -60)))
+            _pitch = _aud.get("pitch", "")
+            _harm  = _aud.get("features", {}).get("harmonicity", "")
+            _zcr   = _aud.get("features", {}).get("zcr", "")
+            _vol   = ("loud" if _rms > -20 else "moderate volume" if _rms > -40 else "quiet")
+            parts.append(f"actively listening: {_act}, {_vol}")
+            if _pitch:
+                parts.append(f"pitch: {_pitch:.0f} Hz")
+            if _harm:
+                parts.append(f"harmonicity: {float(_harm):.2f}")
+            if _zcr:
+                _rhythm = "high rhythmic density" if float(_zcr) > 0.25 else "steady rhythm"
+                parts.append(_rhythm)
+        else:
+            parts.append("audio attention active — awaiting sound")
+
+    elif modality == "screen":
+        # Full screen text + visual state
+        _scr = dict(_last_screen_observation or {})
+        if _scr:
+            _pkg    = _scr.get("package", "")
+            _app    = _pkg.rsplit(".", 1)[-1] if _pkg else "app"
+            _vis    = [str(t) for t in (_scr.get("visible_text") or [])[:6] if t]
+            _evt    = _scr.get("event_type", "")
+            _own    = _scr.get("is_own_app", False)
+            if _own:
+                parts.append("watching own interface")
+            else:
+                parts.append(f"watching screen: {_app}")
+            if _vis:
+                parts.append(f"visible: {'; '.join(_vis[:4])}")
+            if _evt and _evt not in ("screen_event",):
+                parts.append(f"event: {_evt}")
+        else:
+            parts.append("screen attention active — awaiting screen content")
+
+    elif modality == "camera":
+        # Full camera detail
+        _cam = dict(_last_camera_observation or {})
+        if _cam:
+            _bright = float(_cam.get("brightness", 0.5))
+            _mot    = bool(_cam.get("motion_detected", False))
+            _hue    = str(_cam.get("dominant_hue", ""))
+            _faces  = _cam.get("faces", 0)
+            _objs   = [str(o) for o in (_cam.get("objects") or [])[:3]]
+            _b_str  = ("bright" if _bright > 0.65 else "dim" if _bright < 0.3 else "moderate")
+            parts.append(f"watching through camera: {_b_str}")
+            if _hue:
+                parts.append(_hue)
+            if _mot:
+                parts.append("movement detected")
+            if isinstance(_faces, int) and _faces > 0:
+                parts.append(f"{_faces} face{'s' if _faces != 1 else ''} visible")
+            elif hasattr(_faces, "__len__") and len(_faces) > 0:
+                parts.append(f"{len(_faces)} face(s) visible")
+            if _objs:
+                parts.append(f"seeing: {', '.join(_objs)}")
+        else:
+            parts.append("camera attention active — awaiting visual input")
+
+    if not parts:
+        return f"sensory focus: {modality}"
+    return f"[SENSORY FOCUS — {modality.upper()}] " + "; ".join(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -4801,6 +6381,11 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
             if hasattr(engine, "reset_idle_counter"):
                 engine.reset_idle_counter()
 
+            # Track unsettled subjects by type so we can trigger directed
+            # pursuit after the session — the cognitive equivalent of noticing
+            # a gap and then actually going to look something up.
+            _unsettled: dict = {}  # {curiosity_type: [subject, ...]}
+
             while True:
                 # Stop if cancelled or limits reached
                 if not _curiosity_session_active.is_set():
@@ -4822,14 +6407,28 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
 
                     cycle_count            += 1
                     stats["cycles_completed"] = cycle_count
-                    stats["concepts_explored"] += int(result.get("concepts_explored", 0)
-                                                      or result.get("gaps_probed", 0) or 1)
-                    stats["crystals_promoted"] += int(result.get("crystals_promoted", 0)
-                                                      or result.get("promotions", 0))
-                    stats["tools_used"]        += int(result.get("tools_used", 0)
-                                                      or result.get("tool_calls", 0))
-                    stats["settled"]           += int(result.get("settled", 0)
-                                                      or result.get("tensions_settled", 0))
+
+                    def _as_int(v):
+                        """Coerce a value that might be a list, bool, or number to int."""
+                        if isinstance(v, list):
+                            return len(v)
+                        try:
+                            return int(v) if v else 0
+                        except (TypeError, ValueError):
+                            return 0
+
+                    stats["concepts_explored"] += _as_int(
+                        result.get("concepts_explored") or result.get("gaps_probed") or 1
+                    )
+                    stats["crystals_promoted"] += _as_int(
+                        result.get("crystals_promoted") or result.get("promotions")
+                    )
+                    stats["tools_used"]        += _as_int(
+                        result.get("tools_used") or result.get("tool_calls")
+                    )
+                    stats["settled"]           += _as_int(
+                        result.get("settled") or result.get("tensions_settled")
+                    )
 
                     # Persist settled conclusions to SediMemory so they survive
                     # session boundaries and can be recalled in future turns.
@@ -4838,9 +6437,83 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                             result["conclusion"],
                             result.get("identity_delta", ""),
                         )
+                    elif not result.get("settled"):
+                        # Record what couldn't be resolved so we can pursue it
+                        _cobj = result.get("curiosity_object") or {}
+                        _subj = _cobj.get("subject", "")
+                        _ctype = _cobj.get("curiosity_type", "conceptual")
+                        if _subj and _subj != "?":
+                            _unsettled.setdefault(_ctype, []).append(_subj)
+
                 except Exception as exc:
                     log.warning("Curiosity cycle error: %s", exc)
                     break
+
+            # ── Directed pursuit for unsettled gaps ───────────────────────────
+            # She identified what she doesn't know — now do something about it.
+            # This is A-axis agency closing the loop on N-axis pressure.
+            if _unsettled and _systems is not None:
+                # Surface the most pressing gap so the proactive loop voices it
+                # through constraint physics — not a scripted string, just pressure.
+                _all_subjects = [s for ss in _unsettled.values() for s in ss]
+                _top_subject = _all_subjects[0] if _all_subjects else None
+                if _top_subject and not _systems.get("_gap_seeking_concept"):
+                    _top_type = next(iter(_unsettled))
+                    _systems["_gap_seeking_concept"] = _top_subject
+                    _systems["_gap_seeking_concept_type"] = _top_type
+                    # Inject into ambient perceptual so proactive synthesis
+                    # carries this pressure even when no user turn is pending.
+                    _ambient = _systems.get("_ambient_perceptual")
+                    if isinstance(_ambient, dict):
+                        _obs = _ambient.get("observation", "")
+                        _tag = f"gap:{_top_subject[:30]}"
+                        if _tag not in _obs:
+                            _ambient["observation"] = f"{_obs} {_tag}".strip()
+
+                # Trigger directed study for semantic/perceptual/conceptual gaps
+                def _pursue_study(_sys=_systems):
+                    try:
+                        _cr = __import__(
+                            "aurora_core_ai.corpus_runner",
+                            fromlist=["corpus_study_cycle"],
+                        )
+                        _cr.corpus_study_cycle(_sys, verbose=False)
+                    except Exception:
+                        pass
+
+                # Trigger evolve_identity for self-curiosity failures so she
+                # develops better introspective grounding on her own state.
+                def _pursue_self(_sys=_systems):
+                    try:
+                        with _axis_state_lock:
+                            _ax = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
+                        _cr = __import__(
+                            "aurora_core_ai.corpus_runner",
+                            fromlist=["evolve_identity"],
+                        )
+                        class _GP:
+                            x_activation = _ax.get("X", 0.5)
+                            t_activation = _ax.get("T", 0.5)
+                            n_activation = _ax.get("N", 0.5)
+                            b_activation = _ax.get("B", 0.5)
+                            a_activation = _ax.get("A", 0.5)
+                        _cr.evolve_identity(_sys, quality=0.55, geom=_GP())
+                    except Exception:
+                        pass
+
+                _has_semantic = any(
+                    t in _unsettled for t in ("semantic_gap", "perceptual_gap", "conceptual")
+                )
+                _has_self = "self" in _unsettled
+
+                if _has_semantic:
+                    threading.Thread(
+                        target=_pursue_study, daemon=True, name="gap_study"
+                    ).start()
+                if _has_self:
+                    threading.Thread(
+                        target=_pursue_self, daemon=True, name="gap_self"
+                    ).start()
 
         finally:
             _curiosity_session_active.clear()
@@ -4872,16 +6545,15 @@ def _store_curiosity_report(
         f"  Tool calls:         {stats['tools_used']}",
         f"  Tensions settled:   {stats['settled']}",
     ]
-    _systems["_pending_autonomous_report"] = "\n".join(report_lines)
+    global _proactive_expression
+    _report_text = "\n".join(report_lines)
+    _systems["_pending_autonomous_report"] = _report_text
     log.info("Curiosity session report stored (%s)", time_str)
 
-    # Proactive outreach: tell the user we're done
-    autonomy = _systems.get("autonomy")
-    if autonomy and hasattr(autonomy, "trigger"):
-        summary = (f"I've finished my curiosity session ({target_str}). "
-                   f"I explored {stats['concepts_explored']} concepts and "
-                   f"settled {stats['settled']} internal tensions.")
-        autonomy.trigger.add_thought(summary)
+    # Push immediately to the proactive expression channel so Flutter's
+    # polling loop picks it up without waiting for the user to speak.
+    with _proactive_expression_lock:
+        _proactive_expression = _report_text
 
 
 def _infer_dominant_facet(screen_obs: dict) -> str:
@@ -5602,6 +7274,14 @@ def _proactive_loop() -> None:
             if _curiosity_session_active.is_set():
                 continue
 
+            # ── Autonomous health + relational awareness ──────────────────────
+            # These run every proactive cycle so Aurora's internal diagnostics
+            # and file access awareness operate independently of user turns.
+            # She doesn't need to be spoken to in order to notice something
+            # is wrong, or to notice that her creator has been in her files.
+            _check_internal_health(_systems)
+            _check_file_access(_systems)
+
             # ── Autonomous relief — sustained isolation ───────────────────────
             # After 1 hour of no exchange, trigger genuine internal cognitive
             # work (curiosity, evo chain) that legitimately discharges N-axis
@@ -5656,6 +7336,16 @@ def _proactive_loop() -> None:
                 except Exception:
                     pass
 
+            # Write the fully-enriched observation string back into the ambient
+            # perceptual store so synthesis reads it as internal context (55%
+            # weight).  Do NOT pass it as the explicit user-input text —
+            # doing so causes synthesis to echo the observation string back as
+            # a response ("I understand energy cost is pressing…").  Synthesis
+            # should generate from Aurora's internal constraint state, with the
+            # observation string available only as physics context.
+            if _systems.get("_ambient_perceptual") is not None:
+                _systems["_ambient_perceptual"]["observation"] = obs
+
             # Non-blocking lock — skip this tick rather than stall a user turn
             if not _lock.acquire(blocking=False):
                 continue
@@ -5663,7 +7353,7 @@ def _proactive_loop() -> None:
                 import aurora as _aurora  # type: ignore
                 result = _aurora.process_external_user_turn(
                     _systems,
-                    obs,
+                    "",   # empty — synthesis generates from internal state, not observation echo
                     source_label="aurora_sensory_pulse",
                     session_id="mobile",
                     auto_search_enabled=False,
@@ -5736,18 +7426,88 @@ def provide_camera_frame(jpeg_bytes) -> None:
     frame into Aurora's visual stack.  jpeg_bytes is a Java byte[] from
     Chaquopy, decoded here to a BGR numpy array and fed to the cv2 shim's
     VideoCapture buffer.
+
+    Also extracts basic perceptual features (brightness, motion) directly
+    from the frame so _sample_ambient_perception() can use real camera data
+    without needing the hw.capture_visual() path, which requires a hardware
+    adapter object that is never instantiated on Android.
     """
+    global _last_camera_observation, _last_camera_frame_gray
     try:
         import io as _io
         import numpy as _np
         from PIL import Image as _Image
         import cv2 as _cv2
-        pil  = _Image.open(_io.BytesIO(bytes(jpeg_bytes))).convert('RGB')
-        rgb  = _np.array(pil, dtype=_np.uint8)
-        bgr  = rgb[:, :, ::-1].copy()
+        pil = _Image.open(_io.BytesIO(bytes(jpeg_bytes))).convert('RGB')
+        rgb = _np.array(pil, dtype=_np.uint8)
+        bgr = rgb[:, :, ::-1].copy()
         _cv2.VideoCapture.provide_frame(bgr)
+
+        # Extract perceptual features from the frame
+        gray = _np.mean(rgb, axis=2).astype(_np.float32) / 255.0
+        brightness = float(_np.mean(gray))
+
+        # Motion: mean absolute difference from previous frame
+        motion = False
+        if _last_camera_frame_gray is not None and _last_camera_frame_gray.shape == gray.shape:
+            diff = float(_np.mean(_np.abs(gray.astype(_np.float32) - _last_camera_frame_gray)))
+            motion = diff > 0.04
+        _last_camera_frame_gray = gray
+
+        # Dominant hue from a small center crop (avoids border noise)
+        h, w = rgb.shape[:2]
+        crop = rgb[h // 4: 3 * h // 4, w // 4: 3 * w // 4]
+        mean_rgb = _np.mean(crop.reshape(-1, 3), axis=0)
+        r, g, b = float(mean_rgb[0]), float(mean_rgb[1]), float(mean_rgb[2])
+        mx = max(r, g, b)
+        if mx > 10:
+            if mx == r:
+                dominant_hue = "warm"
+            elif mx == g:
+                dominant_hue = "cool-green"
+            else:
+                dominant_hue = "cool-blue"
+        else:
+            dominant_hue = "dark"
+
+        _last_camera_observation = {
+            "brightness":     round(brightness, 3),
+            "motion_detected": motion,
+            "dominant_hue":   dominant_hue,
+            "objects":        [],
+            "faces":          [],
+            "confidence":     0.65,
+        }
     except Exception as exc:
         log.warning("provide_camera_frame: %s", exc)
+
+
+def provide_audio_observation(
+    activity: str,
+    rms_db: float,
+    confidence: float = 0.6,
+    **extra,
+) -> None:
+    """
+    Called from Kotlin when the audio analysis pipeline classifies ambient sound.
+    Mirrors provide_camera_frame() — real-time push so audio reaches synthesis
+    without waiting for the ambient_audio_latest.json polling cycle.
+
+    activity: "speech" | "music" | "singing" | "noise" | "silence" | "ambient"
+    rms_db:   loudness in dBFS (typically -60 to 0)
+    confidence: classifier confidence 0–1
+    extra:    optional rich features — pitch, centroid, chroma, onset_density, etc.
+    """
+    global _last_audio_observation
+    try:
+        _last_audio_observation = {
+            "activity":   str(activity),
+            "rms_db":     float(rms_db),
+            "confidence": float(confidence),
+            **{k: v for k, v in extra.items()},
+        }
+    except Exception as exc:
+        log.warning("provide_audio_observation: %s", exc)
 
 
 def provide_screen_observation(payload_json: str) -> None:
@@ -6390,7 +8150,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "30 chamber ticks"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: evo_chain skipped — corpus_runner.evolve_chain unavailable")
+            return "skipped (corpus_runner.evolve_chain unavailable)"
 
         elif stage_id == "identity":
             for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
@@ -6400,6 +8161,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                         _la2 = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
                     class _G2:
                         x_activation = _la2.get("X", 0.5)
+                        t_activation = _la2.get("T", 0.5)
                         n_activation = _la2.get("N", 0.5)
                         b_activation = _la2.get("B", 0.5)
                         a_activation = _la2.get("A", 0.5)
@@ -6407,7 +8169,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "identity episode processed"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: identity skipped — corpus_runner.evolve_identity unavailable")
+            return "skipped (corpus_runner.evolve_identity unavailable)"
 
         elif stage_id == "voice":
             for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
@@ -6417,7 +8180,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "voice feedback applied"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: voice skipped — corpus_runner.evolve_voice unavailable")
+            return "skipped (corpus_runner.evolve_voice unavailable)"
 
         elif stage_id == "evo_burst":
             result_json = run_evolutionary_burst(n_generations=3)
@@ -6436,7 +8200,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return "L5 + OETS consolidated"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: consolidate skipped — corpus_runner.consolidate unavailable")
+            return "skipped (corpus_runner.consolidate unavailable)"
 
         elif stage_id == "simulation":
             for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
@@ -6447,7 +8212,8 @@ def _run_gauntlet_stage(stage_id: str) -> str:
                     return f"2 episodes, fitness={fitness}"
                 except (ImportError, AttributeError):
                     continue
-            return "skipped"
+            log.warning("Gauntlet: simulation skipped — corpus_runner.simulation_burst unavailable")
+            return "skipped (corpus_runner.simulation_burst unavailable)"
 
         return "unknown stage"
     except Exception as exc:
@@ -6566,3 +8332,102 @@ def trigger_evo_cycle(ticks: int = 20) -> str:
                 continue
     threading.Thread(target=_go, daemon=True, name="manual_evo").start()
     return _j.dumps({"status": "started", "ticks": ticks})
+
+
+
+# ── Go Play + Trade Blows — canonical impl in aurora_reasoning_games.py ──────
+# Parsers for voice trigger detection (UI concern only — live here)
+
+_GO_PLAY_CMD = re.compile(
+    r'''
+    (?:aurora[,\s]+)?go\s+play
+    (?:\s+for\s+
+        (?:
+            (?P<hrs_word>an?\s+hour|one\s+hour|two\s+hours?|three\s+hours?|
+                         four\s+hours?|five\s+hours?)
+            |(?P<num>[\d.]+)\s*(?P<unit>h(?:ours?)?|m(?:in(?:utes?)?)?)
+        )
+    )?
+    ''',
+    re.IGNORECASE | re.VERBOSE,
+)
+
+_GO_PLAY_WORD_MAP = {
+    "an hour": 60, "a hour": 60, "one hour": 60,
+    "two hours": 120, "two hour": 120,
+    "three hours": 180, "three hour": 180,
+    "four hours": 240, "four hour": 240,
+    "five hours": 300, "five hour": 300,
+}
+
+_TRADE_BLOWS_TRIGGERS = re.compile(
+    r'''
+    (?:aurora[,\s]+)?
+    (?:let'?s?\s+trade\s+blows
+     | let'?s?\s+play\s+a\s+game
+     | (?:wanna|want\s+to|want)\s+play\s+a\s+game
+     | play\s+a\s+game
+     | game\s+time
+     | let'?s?\s+play)
+    ''',
+    re.IGNORECASE | re.VERBOSE,
+)
+
+_TWENTY_Q_TRIGGER = re.compile(
+    r"(?:i'?m?\s+)?(?:thinking|think)\s+of\s+something(?:\s+(.+))?",
+    re.IGNORECASE,
+)
+
+
+def _parse_go_play_cmd(text: str):
+    """Return duration_minutes (float) if text is a Go Play command, else None."""
+    t = text.strip().lower().rstrip(".,!?")
+    m = _GO_PLAY_CMD.fullmatch(t)
+    if not m:
+        return None
+    hw = (m.group("hrs_word") or "").strip()
+    if hw:
+        return float(_GO_PLAY_WORD_MAP.get(hw, 60))
+    if m.group("num"):
+        num  = float(m.group("num"))
+        unit = (m.group("unit") or "m").lower()
+        return num * 60 if unit.startswith("h") else num
+    return 60.0
+
+
+def _run_go_play_session(duration_minutes: float) -> None:
+    """Run aurora_go_play() in a background thread using the bridge's _systems."""
+    if _systems is None:
+        return
+    _go_play_active.set()
+    try:
+        from aurora_reasoning_games import aurora_go_play
+        result = aurora_go_play(_systems, duration_minutes=duration_minutes, verbose=False)
+        report = (
+            f"Play session done. "
+            f"{result.get('topics_covered', 0)} topics explored, "
+            f"{result.get('words_consumed', 0):,} words processed, "
+            f"{result.get('sim_epochs', 0)} simulation epochs, "
+            f"{result.get('total_shards', 0)} understanding shards."
+        )
+    except Exception as _e:
+        log.warning("go_play error: %s", _e)
+        report = "Play session encountered an error and ended early."
+    finally:
+        _go_play_active.clear()
+    if _systems:
+        global _proactive_expression
+        _systems["_pending_autonomous_report"] = report
+        with _proactive_expression_lock:
+            _proactive_expression = report
+
+
+def _handle_game_turn(text: str):
+    """Delegate one game turn to the active GameStateMachine. Returns str | None."""
+    global _game_machine
+    if _game_machine is None:
+        return None
+    resp = _game_machine.process(text)
+    if _game_machine.is_done:
+        _game_machine = None
+    return resp

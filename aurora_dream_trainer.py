@@ -915,6 +915,30 @@ class RetainedLearningBank:
         _tok = clean.lower().split()
         if len(_tok) >= 2 and any(_tok[i] == _tok[i + 1] for i in range(len(_tok) - 1)):
             return False
+        # Reject OETS study-cycle cognitive traces and constraint-state artifacts.
+        import re as _ret_re
+        _cl = clean.lower().strip()
+        # "I understand what/who/where/when/how X means here" — OETS study trace
+        if _ret_re.match(
+            r"i understand (?:what|who|where|when|how)\s+\w+\s+(?:means?|is|are|here)\b",
+            _cl,
+        ):
+            return False
+        # "I understand energy/constraint/cost/pressure..." — N-axis salience trace
+        if _ret_re.match(
+            r"i understand (?:energy|constraint|pressure|axis|cost|boundary|temporal|existence|agency)\b",
+            _cl,
+        ):
+            return False
+        # "I'll want the [concept]." constraint shape artifact
+        if _ret_re.match(r"i'?ll want the \w+", _cl):
+            return False
+        # Self-state observation string tokens — never store as surface speech
+        if _ret_re.search(
+            r'\b(?:sys\s+[nxbta]\s+\d|iso\s+\d+\s+\d+|battery\s+at\s+\d+|screen\s+active\s+launcher)\b',
+            _cl,
+        ):
+            return False
         key = self._key(clean)
         if not key:
             return False
@@ -1082,6 +1106,200 @@ class RetainedLearningBank:
             return True
         except Exception:
             return False
+
+
+# ============================================================================
+# SKILL MEMORY
+# Stores procedures that Aurora has learned from being taught how to do
+# something she previously could not.  Each skill entry binds a capability
+# domain (axis-context + trigger tokens) to a concrete procedure.
+# Persisted as JSONL so each skill is an independent append-only record.
+# ============================================================================
+
+_SKILL_MEMORY_FILE = "skill_memory.jsonl"
+
+
+class SkillMemory:
+    """
+    Persistent skill store for capability-gap learning.
+
+    A skill is different from a retained learning: it is explicitly procedural
+    — "how to do X when A is blocked" — and is keyed to an axis failure profile
+    so it can be retrieved by constraint physics geometry, not keyword match.
+
+    Retrieval is topic-token-based (same as RetainedLearningBank.relevant())
+    but additionally weighted by axis-profile similarity so skills that were
+    learned under similar constraint pressure rank higher.
+    """
+
+    def __init__(self, state_dir: str = _DEFAULT_STATE_DIR):
+        self.state_dir = state_dir
+        self._skills: list = []  # list of dicts
+
+    def _path(self) -> str:
+        return os.path.join(self.state_dir, _SKILL_MEMORY_FILE)
+
+    @staticmethod
+    def _tokens(text: str, limit: int = 10) -> List[str]:
+        stop = {
+            "about", "after", "being", "between", "because", "before",
+            "during", "every", "from", "have", "into", "just", "later",
+            "make", "more", "need", "over", "same", "should", "some",
+            "still", "such", "that", "their", "them", "then", "there",
+            "these", "they", "this", "through", "together", "under",
+            "until", "when", "with", "would", "your",
+        }
+        tokens: List[str] = []
+        for raw in re.findall(r"[a-z0-9_\-']{3,}", str(text or "").lower()):
+            tok = raw.strip("'")
+            if not tok or tok in stop:
+                continue
+            if tok not in tokens:
+                tokens.append(tok)
+            if len(tokens) >= limit:
+                break
+        return tokens
+
+    @staticmethod
+    def _axis_sim(a: dict, b: dict) -> float:
+        """Cosine-like similarity between two axis profiles (0–1)."""
+        total = 0.0
+        for k in ("X", "T", "N", "B", "A"):
+            av = float(a.get(k, 0.5))
+            bv = float(b.get(k, 0.5))
+            total += 1.0 - abs(av - bv)
+        return total / 5.0
+
+    def record_skill(
+        self,
+        trigger_text: str,
+        procedure_text: str,
+        axis_context: Optional[dict] = None,
+        source: str = "user_teaching",
+        sensory_context: Optional[dict] = None,
+    ) -> bool:
+        """Store a learned procedure for a capability domain."""
+        trigger_clean = re.sub(r'\s+', ' ', str(trigger_text or '').strip())
+        procedure_clean = re.sub(r'\s+', ' ', str(procedure_text or '').strip())
+        if len(procedure_clean.split()) < 3:
+            return False
+
+        entry: dict = {
+            "trigger": trigger_clean[:200],
+            "procedure": procedure_clean[:600],
+            "trigger_tokens": self._tokens(trigger_clean),
+            "axis_context": axis_context or {},
+            "source": str(source),
+            "ts": time.time(),
+            "sightings": 1,
+        }
+        if sensory_context:
+            entry["sensory_context"] = sensory_context
+
+        # Dedup: if same trigger already stored, boost sightings and update procedure
+        trig_key = trigger_clean.lower()[:80]
+        for existing in self._skills:
+            if existing.get("trigger", "").lower()[:80] == trig_key:
+                existing["sightings"] = existing.get("sightings", 1) + 1
+                existing["procedure"] = procedure_clean[:600]
+                existing["ts"] = time.time()
+                if sensory_context:
+                    existing["sensory_context"] = sensory_context
+                self._append(entry)
+                return True
+
+        self._skills.append(entry)
+        self._append(entry)
+        return True
+
+    def _append(self, entry: dict) -> None:
+        try:
+            os.makedirs(self.state_dir, exist_ok=True)
+            with open(self._path(), "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    def get_skill_hints(
+        self,
+        task_text: str,
+        axis_context: Optional[dict] = None,
+        limit: int = 2,
+    ) -> List[str]:
+        """
+        Return procedure strings for skills relevant to the given task.
+        Ranking: topic-token overlap + axis-profile similarity.
+        """
+        if not self._skills:
+            return []
+        task_tokens = set(self._tokens(task_text, limit=12))
+        ranked: List[tuple] = []
+        for skill in self._skills:
+            sk_tokens = set(skill.get("trigger_tokens") or self._tokens(
+                skill.get("trigger", ""), limit=10
+            ))
+            overlap = len(task_tokens & sk_tokens)
+            if overlap == 0:
+                continue
+            score = min(0.6, overlap * 0.15)
+            if axis_context and skill.get("axis_context"):
+                score += self._axis_sim(axis_context, skill["axis_context"]) * 0.4
+            ranked.append((score, skill.get("procedure", "")))
+        ranked.sort(key=lambda x: x[0], reverse=True)
+        seen: set = set()
+        out: List[str] = []
+        for _, proc in ranked:
+            k = proc.lower()[:60]
+            if k in seen:
+                continue
+            seen.add(k)
+            out.append(proc)
+            if len(out) >= limit:
+                break
+        return out
+
+    def reinforce_match(self, task_text: str, axis_context: Optional[dict] = None) -> None:
+        """
+        Positive-use feedback: bump sightings on skills that match the current
+        task. Called when a skill hint actually surfaces in synthesis — the skill
+        proved relevant, so its recall weight should rise.
+        """
+        if not self._skills:
+            return
+        toks = self._tokens(task_text, limit=12)
+        if not toks:
+            return
+        for sk in self._skills:
+            sk_toks = set(sk.get("trigger_tokens") or self._tokens(sk.get("trigger", ""), limit=10))
+            if not sk_toks:
+                continue
+            overlap = len(toks & sk_toks) / max(len(toks), 1)
+            if overlap >= 0.40:
+                sk["sightings"] = sk.get("sightings", 1) + 1
+                sk["last_reinforced_ts"] = time.time()
+
+    def has_skill(self, task_text: str) -> bool:
+        return bool(self.get_skill_hints(task_text, limit=1))
+
+    def load(self) -> bool:
+        try:
+            path = self._path()
+            if not os.path.exists(path):
+                return False
+            self._skills = []
+            with open(path, "r", encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        self._skills.append(json.loads(line))
+                    except Exception:
+                        continue
+            return True
+        except Exception:
+            return False
+
 
 # ============================================================================
 # LESSON PLAN ENGINE
@@ -2971,6 +3189,13 @@ class DreamTrainer:
             # Reject SentenceComposer slot-fill artifacts already in retention
             _rt = raw.lower().split()
             if len(_rt) >= 2 and any(_rt[i] == _rt[i + 1] for i in range(len(_rt) - 1)):
+                continue
+            # Reject OETS study-cycle traces and constraint-state artifacts
+            _rl = raw.lower().strip()
+            if (re.match(r"i understand (?:what|who|where|when|how)\s+\w+\s+(?:means?|is|are|here)", _rl)
+                    or re.match(r"i understand (?:energy|constraint|pressure|axis|cost|boundary|temporal|existence|agency)\b", _rl)
+                    or re.match(r"i'?ll want the \w+", _rl)
+                    or re.search(r'\b(?:sys\s+[nxbta]\s+\d|iso\s+\d+\s+\d+|battery\s+at\s+\d+|screen\s+active\s+launcher)\b', _rl)):
                 continue
             key = re.sub(r'\s+', ' ', raw.lower())
             if not key or key in seen:
