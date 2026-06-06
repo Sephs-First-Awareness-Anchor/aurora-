@@ -559,6 +559,37 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # ── WARP emergence candidate: explore the anomaly that won't fit ────────
+        # When _ConstraintTensionTracker promotes a paradox to a 6th-axis
+        # candidate it writes systems["_warp_candidate"].  The curiosity engine
+        # picks it up once so Aurora actively investigates the anomaly rather
+        # than just accumulating stress silently.  The ACT of searching whether
+        # something fits the five constraints IS the self-discovery — constraint
+        # combinations get found during the search that didn't exist before.
+        try:
+            _wc = self.systems.get("_warp_candidate") or {}
+            if _wc and not _wc.get("_curiosity_fired"):
+                _wc_pair   = str(_wc.get("axis_pair", "unknown"))
+                _wc_stress = float(_wc.get("stress", 0.0))
+                _wc["_curiosity_fired"] = True
+                return CuriosityObject(
+                    subject=f"axis tension {_wc_pair}",
+                    origin_axis="X",
+                    curiosity_type="self",
+                    urgency=min(0.92, 0.65 + _wc_stress * 0.06),
+                    hypothesis=(
+                        f"There is a sustained paradox between my {_wc_pair} axes "
+                        f"(stress={_wc_stress:.2f}) that I cannot resolve through any "
+                        f"combination of my five constraints. The act of searching — "
+                        f"testing every axis combination to see if it fits — is itself "
+                        f"the exploration. What constraint combinations emerge from "
+                        f"the search that I haven't articulated before?"
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
         # ── Acquired skill curiosity: what does the new capability enable? ──────
         # When the bridge resolves a gap via user teaching, it writes
         # systems["_acquired_skill"].  The curiosity engine picks it up once

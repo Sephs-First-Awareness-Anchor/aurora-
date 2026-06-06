@@ -870,6 +870,40 @@ class _ConstraintTensionTracker:
         except Exception:
             pass
 
+        # ── Deposit candidate into SediMemory so it accrues geological weight ──
+        # An anomaly this persistent earns sediment. High T (temporal anchor) +
+        # high X (existence-level question) + N-elevated (novelty pressure).
+        try:
+            _sedi = (systems or {}).get("sedimemory")
+            if _sedi is not None and hasattr(_sedi, "deposit"):
+                _sedi_axes = {
+                    "X": 0.90, "T": 0.88, "N": 0.80 + min(0.15, stress * 0.03),
+                    "B": 0.62, "A": 0.72,
+                }
+                _sedi.deposit(
+                    _sedi_axes,
+                    f"warp_emergence:{pair[0]}-{pair[1]}:stress={stress:.2f}",
+                    source="ctt_warp_candidate",
+                )
+        except Exception:
+            pass
+
+        # ── Signal curiosity engine: this anomaly deserves active exploration ──
+        # Write to systems so the curiosity engine picks it up as a WARP
+        # candidate on the next step1 pass — distinct from capability gaps.
+        try:
+            _existing = (systems or {}).get("_warp_candidate") or {}
+            _prev_stress = _existing.get("stress", 0.0)
+            if stress > _prev_stress:
+                (systems or {})["_warp_candidate"] = {
+                    "axis_pair":  f"{pair[0]}-{pair[1]}",
+                    "stress":     round(stress, 3),
+                    "generation": self._generation,
+                    "_curiosity_fired": False,
+                }
+        except Exception:
+            pass
+
     @property
     def emergence_candidates(self) -> list:
         return list(self._emergence_log)
@@ -3069,6 +3103,10 @@ def handle_message(text: str) -> str:
         # growth in the concept graph should ripple into identity field, SediMemory,
         # and curiosity before synthesis so the field already carries the growth.
         _broadcast_crystal_promotions(_systems)
+        # Cross-system health audit — injects concern tags into observation
+        # string when signal droughts or WARP candidates are detected, so the
+        # gap surfaces through synthesis as constraint physics, not a message.
+        _check_internal_health(_systems)
 
         # Snapshot axis state BEFORE synthesis — used to detect capability gaps
         # (A-axis drop) after the response is produced.
@@ -4916,6 +4954,94 @@ def _get_skill_hints_for_turn(text: str, axis_context: Optional[dict] = None) ->
 # not just its primary destination system.  The waveform model demands that the
 # system at tick N+1 is always measurably different from tick N because
 # information has flowed between systems.
+
+# Cross-system health tracking — turn counters written each handle_message()
+# call so _check_internal_health() can detect prolonged signal droughts.
+_health_turn_counter: int = 0
+_last_crystal_promotion_turn: int = 0
+_last_sedi_deposit_turn: int = 0
+
+def _check_internal_health(systems: dict) -> None:
+    """
+    Audit cross-system signal flow. When a system that depends on inputs from
+    another stops receiving them for too long, inject a concern tag into the
+    observation string so the gap surfaces through synthesis as physics, not
+    as a bolted-on warning.
+
+    Two checks:
+    - Crystal promotion drought: no promotion in >12 turns → crystals are
+      stuck at BASE, meaning observation strings aren't producing semantic
+      grounding — Aurora's concepts can't grow.
+    - SediMemory deposit drought: no deposit in >10 turns → long-term
+      geological memory is disconnected from the turn flow, meaning nothing
+      is being laid down as permanent constraint experience.
+
+    These are surfaced ONCE per drought event (not every turn) so they don't
+    flood synthesis. The flag is cleared if the drought resolves.
+    """
+    global _health_turn_counter, _last_crystal_promotion_turn, _last_sedi_deposit_turn
+
+    _health_turn_counter += 1
+
+    # Update promotion timestamp if new promotions happened this turn
+    _reg = systems.get("concept_registry") or systems.get("crystal_registry")
+    if _reg is not None and hasattr(_reg, "_promo_log"):
+        try:
+            import time as _ht
+            _recent = [p for p in _reg._promo_log
+                       if p.get("ts", 0.0) > _ht.time() - 90]
+            if _recent:
+                _last_crystal_promotion_turn = _health_turn_counter
+        except Exception:
+            pass
+
+    # Update sedi timestamp if a deposit happened this turn
+    _sedi = systems.get("sedimemory")
+    if _sedi is not None and hasattr(_sedi, "_last_deposit_ts"):
+        try:
+            import time as _ht2
+            if getattr(_sedi, "_last_deposit_ts", 0.0) > _ht2.time() - 90:
+                _last_sedi_deposit_turn = _health_turn_counter
+        except Exception:
+            pass
+
+    concerns: list = []
+
+    _crystal_drought = _health_turn_counter - _last_crystal_promotion_turn
+    if _crystal_drought > 12 and not systems.get("_crystal_drought_flagged"):
+        systems["_crystal_drought_flagged"] = True
+        concerns.append(f"crystal-drought:{_crystal_drought}-turns")
+    elif _crystal_drought <= 4:
+        systems.pop("_crystal_drought_flagged", None)
+
+    _sedi_drought = _health_turn_counter - _last_sedi_deposit_turn
+    if _sedi_drought > 10 and not systems.get("_sedi_drought_flagged"):
+        systems["_sedi_drought_flagged"] = True
+        concerns.append(f"sedi-drought:{_sedi_drought}-turns")
+    elif _sedi_drought <= 4:
+        systems.pop("_sedi_drought_flagged", None)
+
+    # WARP candidate present and not yet explored through curiosity
+    _wc = systems.get("_warp_candidate") or {}
+    if _wc and not _wc.get("_curiosity_fired") and not systems.get("_warp_concern_flagged"):
+        systems["_warp_concern_flagged"] = True
+        concerns.append(f"warp-candidate:{_wc.get('axis_pair','?')}:stress={_wc.get('stress',0):.2f}")
+    elif not _wc:
+        systems.pop("_warp_concern_flagged", None)
+
+    if not concerns:
+        return
+
+    # Inject concern tags into observation string — they ride through synthesis
+    # as constraint events, shaping Aurora's field rather than appearing as a
+    # formatted message.
+    _existing_obs = (systems.get("_ambient_perceptual") or {}).get("observation", "")
+    _concern_tag = "internal-health:" + ";".join(concerns)
+    systems["_ambient_perceptual"] = {
+        "observation": f"{_concern_tag}; {_existing_obs}" if _existing_obs else _concern_tag,
+    }
+    log.debug("_check_internal_health: %s", _concern_tag)
+
 
 def _broadcast_crystal_promotions(systems: dict) -> None:
     """
