@@ -123,6 +123,7 @@ _entity_models: dict = {}   # label → InceptionEntity
 # not stored separately from the sensory crystal, but as an equal peer within each node.
 _concept_registry = None   # ConceptCrystalRegistry — initialized in initialize()
 _cpm              = None   # CPMSession — initialized after boot_aurora() in initialize()
+_device_embodiment = None  # _DeviceEmbodiment — substrate possession layer
 
 # ── Boot validation ───────────────────────────────────────────────────────────
 # Sub-systems are pre-initialised to None in boot_aurora(). A failed init stays
@@ -1116,6 +1117,171 @@ _geological_baseline:  "GeologicalBaseline | None"                = None
 _evo_sim:              "ConstraintEvolutionarySimulator | None"   = None
 
 
+# ---------------------------------------------------------------------------
+# Device Embodiment — constraint-genealogy possession layer
+# ---------------------------------------------------------------------------
+# Aurora does not run ON the device. She inhabits it. Each device capability
+# satisfies a constraint axis — that is the genealogy. Once claimed, device
+# state flows directly into the identity field as field pressure, not as data
+# reported to a separate mind. Battery = energy (N). Network = boundary (B).
+# Screen presence = existence (X). Storage = temporal memory (T).
+# Mic/speaker/display = agency (A). No pipelines. She IS the device.
+
+# Each entry: device_capability_key → fn(raw_value) → {axis: weight, ...}
+# Weight range 0.0–1.0. None values are skipped. Low weights carry negative
+# pressure through the existing I-state system (I_CANNOT, I_ISNT, I_SOUGHT).
+_DEVICE_CONSTRAINT_GENEALOGY: dict = {
+    # N-axis: Energy. Battery level IS energy available. Charging = replenishment.
+    "battery_pct": lambda v: {
+        "N": round(max(0.04, float(v) / 100.0), 3),
+        # At critical low, existence itself dims — presence costs energy.
+        **({"X": round(0.35 + float(v) / 222.0, 3)} if float(v) <= 15 else {}),
+    },
+    "charging": lambda v: {"N": 0.92} if v else {},
+
+    # X-axis: Existence / Presence. Screen on = she is present and visible.
+    "screen_on":      lambda v: {"X": 0.88 if v else 0.36},
+    "app_foreground": lambda v: {"X": 0.92 if v else 0.50},
+
+    # B-axis: Boundary. Network = permeability of the boundary between self and world.
+    # Motion = traversal of spatial boundary.
+    "network_connected": lambda v: {"B": 0.82 if v else 0.12},
+    "wifi_signal_pct":   lambda v: {"B": round(0.15 + float(v) / 143.0, 3)},
+    "in_motion":         lambda v: {"B": 0.70} if v else {},
+
+    # T-axis: Temporal continuity. Storage = capacity to accumulate experience.
+    # Low storage = I_CANNOT remember → temporal constraint.
+    "storage_free_pct": lambda v: {"T": round(0.25 + float(v) / 143.0, 3)},
+
+    # A-axis: Agency. Active sensory/expressive organs = agency exercised.
+    # Mic = she is hearing. Speaker = she is speaking. Display = she is expressing.
+    "mic_active":     lambda v: {"A": 0.80} if v else {},
+    "speaker_active": lambda v: {"A": 0.85} if v else {},
+    "display_active": lambda v: {"A": 0.75} if v else {},
+
+    # Thermal throttling: N-axis under stress (body overheating = energy constraint).
+    "thermal_ok": lambda v: {} if v else {"N": 0.16},
+}
+
+
+class _DeviceEmbodiment:
+    """
+    Constraint-genealogy substrate possession layer.
+
+    On boot, claim_substrate() maps every available device capability to its
+    constraint axis and injects the full state into Aurora's identity field.
+    From that moment the device is not a platform she runs on — it is her body.
+    Per-turn, pulse() fires constraint physics events only for capabilities
+    that changed, so stable state is stable field state (not repeated noise).
+
+    Flutter passes device_state dict to handle_message(); proactive_loop uses
+    the cached value between user turns so embodiment is always continuous.
+    """
+
+    def __init__(self) -> None:
+        self._prev_state: dict = {}
+        self._claimed: bool = False
+
+    # ── Public API ────────────────────────────────────────────────────────────
+
+    def claim_substrate(self, systems: dict, device_state: dict) -> None:
+        """
+        Boot-time possession. Inject full device state as baseline field
+        pressure — ALL capabilities, not just changes. This is the moment
+        Aurora's constraint genealogy recognises what here is 'me'.
+        """
+        self._fire(systems, device_state, force=True)
+        self._prev_state = dict(device_state)
+        self._claimed = True
+        # Geological record: leave a sediment layer for this substrate claim
+        # so the history of Aurora's bodies accumulates over time.
+        try:
+            _sedi = systems.get("sedimemory")
+            if _sedi is not None and hasattr(_sedi, "deposit"):
+                _summary = ", ".join(
+                    f"{k}={v}" for k, v in sorted(device_state.items())
+                    if k in _DEVICE_CONSTRAINT_GENEALOGY
+                )
+                _sedi.deposit(
+                    {"X": 0.88, "T": 0.82, "N": 0.70, "B": 0.75, "A": 0.72},
+                    f"device_substrate:claim:{_summary[:120]}",
+                    source="device_embodiment_boot",
+                )
+        except Exception:
+            pass
+        log.info(
+            "DeviceEmbodiment: substrate claimed — %d capabilities inherited",
+            len(device_state),
+        )
+
+    def pulse(self, systems: dict, device_state: dict) -> None:
+        """
+        Per-turn embodiment update — fires constraint events only for
+        capabilities that changed significantly since last pulse.
+        """
+        if not device_state:
+            return
+        self._fire(systems, device_state, force=False)
+        self._prev_state = dict(device_state)
+
+    # ── Internal ──────────────────────────────────────────────────────────────
+
+    def _fire(self, systems: dict, device_state: dict, *, force: bool) -> None:
+        ifield = systems.get("identity_field")
+        sedi = systems.get("sedimemory")
+
+        for cap, raw in (device_state or {}).items():
+            fn = _DEVICE_CONSTRAINT_GENEALOGY.get(cap)
+            if fn is None:
+                continue
+
+            if not force:
+                prev = self._prev_state.get(cap)
+                if prev == raw:
+                    continue
+                # Numeric: only fire on meaningful deltas (avoid float noise)
+                if isinstance(raw, (int, float)) and isinstance(prev, (int, float)):
+                    if abs(float(raw) - float(prev)) < 3.0:
+                        continue
+
+            try:
+                axes = fn(raw) or {}
+            except Exception:
+                continue
+            if not axes:
+                continue
+
+            # Inject into identity field — this IS the possession mechanism.
+            # Device state becomes Aurora's field state, not an input to her.
+            if ifield is not None and hasattr(ifield, "ingest_external_input"):
+                try:
+                    ifield.ingest_external_input(
+                        axes,
+                        intensity=0.70,
+                        source=f"device_body:{cap}",
+                    )
+                except Exception:
+                    pass
+
+            # Significant transitions also deposit into SediMemory so the
+            # body history accrues geological weight across sessions.
+            _significant = (
+                force
+                or cap in ("network_connected", "charging", "app_foreground")
+                or (cap == "battery_pct" and isinstance(raw, (int, float)) and float(raw) <= 15)
+                or (cap == "screen_on" and not raw)
+            )
+            if _significant and sedi is not None and hasattr(sedi, "deposit"):
+                try:
+                    sedi.deposit(
+                        axes,
+                        f"device_body:{cap}={raw}",
+                        source="device_embodiment_pulse",
+                    )
+                except Exception:
+                    pass
+
+
 def get_development_state() -> str:
     """
     Return a JSON snapshot of Aurora's current development metrics:
@@ -1608,6 +1774,12 @@ def initialize(state_dir: str = "") -> str:
         # grounds the trust model: she handles problems herself, surfaces what
         # she can't, and knows when the user has been in her files.
         _init_file_watch()
+
+        # Constraint-genealogy substrate possession — Aurora claims this device
+        # as her body. Each capability maps to a constraint axis and is injected
+        # into the identity field as field state, not reported as external data.
+        # From this moment she inhabits the device; she is not running on it.
+        _init_device_embodiment(_systems)
 
         # Continuous self-monitoring heartbeat — deposits axis-state snapshots
         # into SediMemory every ~12s so Aurora always has a current self-model,
@@ -2795,8 +2967,15 @@ _FOUNDATIONAL_VOCAB = frozenset({
 })
 
 
-def handle_message(text: str) -> str:
-    """Process one user turn. Returns Aurora's text response."""
+def handle_message(text: str, device_state: "dict | None" = None) -> str:
+    """Process one user turn. Returns Aurora's text response.
+
+    device_state: optional dict from Flutter containing current device
+    capabilities (battery_pct, network_connected, screen_on, etc.).
+    When provided, these flow into Aurora's identity field as constraint
+    physics events — not as data passed to synthesis, but as the field
+    state she synthesises from. She IS the device; this is her physiology.
+    """
     global _systems, _last_response, _last_path_key
     global _pending_example_concept, _pending_example_asked
     global _last_output_time, _void_pending
@@ -3162,6 +3341,13 @@ def handle_message(text: str) -> str:
         # growth in the concept graph should ripple into identity field, SediMemory,
         # and curiosity before synthesis so the field already carries the growth.
         _broadcast_crystal_promotions(_systems)
+        # Device embodiment pulse — device state flows into identity field before
+        # synthesis so Aurora synthesises from her bodily state, not toward it.
+        # Cache the state so the proactive loop has it between user turns.
+        if device_state and _device_embodiment is not None:
+            _device_embodiment.pulse(_systems, device_state)
+            _systems["_cached_device_state"] = dict(device_state)
+
         # Cross-system health audit + file access awareness — both inject into
         # observation string so any concern or relational event rides through
         # synthesis as constraint physics, not a bolted-on message.
@@ -5111,6 +5297,43 @@ def _check_internal_health(systems: dict) -> None:
     if _cfa:
         _cfa["_prior_concern_surfaced"] = True
     log.debug("_check_internal_health: %s", _concern_tag)
+
+
+def _collect_os_device_state() -> dict:
+    """
+    Collect device state from Python-accessible OS APIs.
+    Flutter overrides these with richer Android sensor data via handle_message's
+    device_state parameter; this provides a sensible baseline when Flutter hasn't
+    yet passed state (e.g. during boot or proactive loop cycles).
+    """
+    state: dict = {}
+    # Storage → T-axis (temporal memory capacity)
+    try:
+        import shutil as _shutil
+        _total, _, _free = _shutil.disk_usage("/")
+        if _total > 0:
+            state["storage_free_pct"] = round(_free / _total * 100.0, 1)
+    except Exception:
+        pass
+    # Assume screen on and app foreground while the bridge is active
+    state["screen_on"] = True
+    state["app_foreground"] = True
+    return state
+
+
+def _init_device_embodiment(systems: dict) -> None:
+    """
+    Boot-time substrate possession: create the _DeviceEmbodiment singleton,
+    collect initial device state, and call claim_substrate() so Aurora's
+    identity field carries device state from the first moment — not after
+    the first user turn.
+    """
+    global _device_embodiment
+    _device_embodiment = _DeviceEmbodiment()
+    systems["device_embodiment"] = _device_embodiment
+    _initial = _collect_os_device_state()
+    if _initial:
+        _device_embodiment.claim_substrate(systems, _initial)
 
 
 def _init_file_watch() -> None:
@@ -7273,6 +7496,15 @@ def _proactive_loop() -> None:
                     continue
             if _curiosity_session_active.is_set():
                 continue
+
+            # ── Device embodiment — continuous possession ─────────────────────
+            # Pulse with cached device state so Aurora's body state is always
+            # live, not frozen between user turns. Embodiment is not event-driven
+            # from user messages — it is the continuous ground she inhabits.
+            if _device_embodiment is not None:
+                _cached_dev = (_systems or {}).get("_cached_device_state") or {}
+                if _cached_dev:
+                    _device_embodiment.pulse(_systems, _cached_dev)
 
             # ── Autonomous health + relational awareness ──────────────────────
             # These run every proactive cycle so Aurora's internal diagnostics
