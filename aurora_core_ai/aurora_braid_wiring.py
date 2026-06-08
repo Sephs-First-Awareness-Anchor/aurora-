@@ -98,7 +98,7 @@ def _get_continuity():
         return None
 
 
-def _build_turn_process_contexts(systems: Dict[str, Any], tick: int):
+def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: str = ""):
     """
     Build ProcessContext list representing active processes at turn start.
     Registers memory, constraint pressure, and identity as concurrent
@@ -111,22 +111,42 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int):
 
     contexts = []
 
-    # Memory process — SediMemory ambient presence
+    # Memory process — SediMemory live recall seeded into memory lane
     try:
         sm = systems.get('sedimemory')
         if sm is None:
             consciousness = systems.get('consciousness')
             sm = getattr(consciousness, 'sedimemory', None) if consciousness else None
         if sm is not None:
+            # Attempt live recall using the user_text as query seed
+            _sedi_topic = str(user_text or "")[:120]
+            _recalled_strata = []
+            if _sedi_topic and hasattr(sm, 'recall_semantic'):
+                try:
+                    _recalled_strata = list(sm.recall_semantic(
+                        _sedi_topic,
+                        axis_filter=("T", "B", "A"),
+                        max_results=4,
+                    ) or [])
+                except Exception:
+                    pass
+            _sedi_context = (
+                f"recalled:{len(_recalled_strata)}_strata" if _recalled_strata
+                else "sedi_ambient"
+            )
+            _sedi_relevance = min(0.85, 0.55 + len(_recalled_strata) * 0.07)
             contexts.append(make_process_context(
                 process_id=f"turn_memory_{tick}",
                 process_type="memory",
                 what_triggered_it="user_turn",
-                what_it_is_operating_on="sedi_ambient",
-                self_relevance=0.55,
+                what_it_is_operating_on=_sedi_context,
+                self_relevance=_sedi_relevance,
                 axis_signature=["X", "T"],
                 tick=tick,
             ))
+            # Store recalled strata in systems for downstream use
+            if _recalled_strata:
+                systems['_braid_sedi_recall'] = _recalled_strata
     except Exception:
         pass
 
@@ -266,7 +286,7 @@ def begin_response_turn(
         continuity.prime_integration_space(space)
 
         # Register turn-level process contexts
-        turn_contexts = _build_turn_process_contexts(systems, tick=turn_tick)
+        turn_contexts = _build_turn_process_contexts(systems, tick=turn_tick, user_text=user_text)
         for ctx in turn_contexts:
             space.register(ctx)
 
