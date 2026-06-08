@@ -20629,6 +20629,40 @@ def _run_reasoning_pipeline(
                                 pass
                     except Exception:
                         pass
+
+                    # ---- LANGUAGE FIELD — re-entry loop (fidelity + tone prosody) ----
+                    try:
+                        _lf_re = systems.get('language_field')
+                        _lf_proto = getattr(_lf_re, '_last_proto', None) if _lf_re else None
+                        if _lf_re is not None and _lf_proto is not None:
+                            _lf_fidelity = _lf_re.measure_fidelity(_lf_proto, _expressed)
+                            _lf_xpath = _lf_re.select_crossing_path(_lf_proto)
+                            _lf_path_key = str(_lf_xpath.get('path_key', 'default'))
+                            _lf_reentry = _lf_re.reentry(_expressed, _lf_fidelity, _lf_path_key, proto=_lf_proto)
+                            systems['_last_lf_fidelity'] = _lf_fidelity
+                            systems['_last_lf_reentry'] = _lf_reentry
+                            _lf_prosody = _lf_re.extract_tone_prosody(_lf_proto)
+                            systems['_last_tone_prosody'] = _lf_prosody
+                            _prosody_tone = str(_lf_prosody.get('tone', '') or '')
+                            _cur_resp_tone = str(getattr(state, 'response_tone', 'neutral') or 'neutral')
+                            if _prosody_tone and _cur_resp_tone == 'neutral' and _prosody_tone != 'neutral':
+                                state.response_tone = _prosody_tone
+                    except Exception:
+                        pass
+
+                    # ---- WARP — advance LanguageField WARP trials ----
+                    try:
+                        _lf_warp = systems.get('language_field')
+                        if _lf_warp is not None and hasattr(_lf_warp, 'evaluate_warp_trials'):
+                            _warp_promoted, _warp_dissolved = _lf_warp.evaluate_warp_trials()
+                            if _warp_promoted or _warp_dissolved:
+                                systems['_last_warp_result'] = {
+                                    'promoted': list(_warp_promoted),
+                                    'dissolved': list(_warp_dissolved),
+                                }
+                    except Exception:
+                        pass
+
         except Exception:
             pass
 
@@ -21476,6 +21510,13 @@ def _run_reasoning_pipeline(
     except Exception:
         pass
 
+    # ---- CURIOSITY ENGINE — clear interruptible flag (re-entry complete) ----
+    try:
+        from aurora_curiosity_engine import _CYCLE_INTERRUPTIBLE as _CE_INT_CLR
+        _CE_INT_CLR.clear()
+    except Exception:
+        pass
+
     return resp_A, resp_B, offered_lookup
 
 
@@ -21749,10 +21790,18 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             systems["_language_ignition"] = _ign_result
             # Apply ignition state to response confidence
             try:
-                _ign_live = bool(_ign_result.get("live", True))
-                if not _ign_live:
+                _ign_go = bool(_ign_result.get("go", True))
+                if not _ign_go:
                     _cur_conf = float(getattr(state, 'response_confidence', 0.5) or 0.5)
                     state.response_confidence = min(_cur_conf, 0.65)
+                    _ign_stages = dict(_ign_result.get("stages", {}) or {})
+                    if not _ign_stages.get("reflection", False):
+                        try:
+                            _ps_ign = systems.get('_pipeline_state') or {}
+                            if isinstance(_ps_ign, dict):
+                                _ps_ign['ignition_held'] = True
+                        except Exception:
+                            pass
             except Exception:
                 pass
             if hasattr(_lf_ign, "extract_proto_language"):
@@ -24879,6 +24928,62 @@ def boot_aurora(
 
     _install_support_constraint_surfaces(systems)
 
+    # ---- LANGUAGE FIELD — boot from identity_field + tensor layer ----
+    if systems.get('language_field') is None:
+        try:
+            from aurora_language_field import get_language_field as _get_lf
+            _lf_boot = _get_lf(
+                identity_field=systems.get('identity_field'),
+                tensor_layer=systems.get('tensor_expressions'),
+            )
+            if _lf_boot is not None:
+                systems['language_field'] = _lf_boot
+                try:
+                    _cpm_lf_boot = systems.get('_cpm_session') or systems.get('cpm')
+                    if _cpm_lf_boot is not None and hasattr(_lf_boot, 'set_cpm'):
+                        _lf_boot.set_cpm(_cpm_lf_boot)
+                except Exception:
+                    pass
+                if verbose:
+                    print("  [LANGUAGE FIELD] Booted from identity_field + tensor layer")
+        except Exception as _lf_e:
+            if verbose:
+                print(f"  [LANGUAGE FIELD] Unavailable: {_lf_e}")
+
+    # ---- ATTENTION ENGINE + DIFFERENCE HISTORY BUFFER + BRAIDED SUBSTRATE ----
+    try:
+        from aurora_internal.aurora_attention_engine import AttentionEngine
+        if systems.get('_attention_engine') is None:
+            systems['_attention_engine'] = AttentionEngine()
+            if verbose:
+                print("  [ATTENTION ENGINE] Online")
+    except Exception as _ae_e:
+        systems['_attention_engine'] = None
+        if verbose:
+            print(f"  [ATTENTION ENGINE] Unavailable: {_ae_e}")
+
+    try:
+        from aurora_internal.aurora_difference_buffer import DifferenceHistoryBuffer
+        if systems.get('_diff_history_buffer') is None:
+            systems['_diff_history_buffer'] = DifferenceHistoryBuffer()
+            if verbose:
+                print("  [DIFF BUFFER] Online")
+    except Exception as _dhb_e:
+        systems['_diff_history_buffer'] = None
+        if verbose:
+            print(f"  [DIFF BUFFER] Unavailable: {_dhb_e}")
+
+    try:
+        from aurora_internal.aurora_braided_substrate import BraidedSubstrateLayer
+        if systems.get('_braided_substrate') is None:
+            systems['_braided_substrate'] = BraidedSubstrateLayer()
+            if verbose:
+                print("  [BRAIDED SUBSTRATE] Online")
+    except Exception as _bsl_e:
+        systems['_braided_substrate'] = None
+        if verbose:
+            print(f"  [BRAIDED SUBSTRATE] Unavailable: {_bsl_e}")
+
     # ---- THOUGHT BRAID — boot continuous braid background thread ----
     try:
         from aurora_braid_wiring import boot_thought_braid
@@ -26170,6 +26275,28 @@ def _run_live_response_turn(
     except Exception:
         pass
 
+    # ---- CURIOSITY ENGINE — set interruptible flag (block curiosity during response) ----
+    try:
+        from aurora_curiosity_engine import _CYCLE_INTERRUPTIBLE as _CE_INT_SET
+        _CE_INT_SET.set()
+    except Exception:
+        pass
+
+    # ---- LANGUAGE FIELD — build pragmatic receiver vector ----
+    try:
+        _lf_pv = systems.get('language_field')
+        if _lf_pv is not None and hasattr(_lf_pv, 'build_pragmatic_vector'):
+            _wm_pv = systems.get('working_memory')
+            _recv_state = {
+                'turn_count': int(getattr(_wm_pv, 'turn_count', 0) or 0),
+                'last_tone': str(getattr(_wm_pv, 'last_tone', 'neutral') or 'neutral'),
+                'axis_weights': {},
+            }
+            _pv = _lf_pv.build_pragmatic_vector(receiver_state=_recv_state)
+            systems['_pragmatic_vector'] = _pv
+    except Exception:
+        pass
+
     # ---- STRATA-AWARE INTAKE: Resolve Vitals BEFORE parsing Signal ----
     # 1. Pull the Subsurface DCE Convergence (Conscious Crest)
     try:
@@ -26192,6 +26319,31 @@ def _run_live_response_turn(
     except Exception:
         pass
 
+    # ---- DIFFERENCE HISTORY BUFFER + ATTENTION ENGINE — per-turn tick ----
+    try:
+        from aurora_internal.aurora_constraint_manifold_patched import Constraint
+        _dhb_pt = systems.get('_diff_history_buffer')
+        _ae_pt = systems.get('_attention_engine')
+        if _dhb_pt is not None:
+            _cc_pt = dict(systems.get('_live_conscious_crest') or {})
+            _axis_map_pt = {'X': 'existence', 'T': 'temporal', 'N': 'energy', 'B': 'boundary', 'A': 'agency'}
+            _mags_pt: dict = {}
+            for _cname_pt, _ckey_pt in _axis_map_pt.items():
+                _raw_pt = float(_cc_pt.get(_ckey_pt, _cc_pt.get(_cname_pt, 0.5)) or 0.5)
+                _mags_pt[getattr(Constraint, _cname_pt)] = min(1.0, max(0.0, _raw_pt))
+            _dhb_pt.record(tick=turn_tick, magnitudes=_mags_pt)
+            _diff_snap_pt = _dhb_pt.snapshot(tick=turn_tick)
+            systems['_last_diff_snapshot'] = _diff_snap_pt
+            if _ae_pt is not None:
+                _ext_stim_pt = {
+                    'intensity': min(1.0, len(str(user_text or '').split()) / 20.0),
+                    'addressed': True,
+                    'tags': [],
+                }
+                _ae_frame_pt = _ae_pt.tick(turn_tick, _ext_stim_pt, _diff_snap_pt)
+                systems['_last_attention_frame'] = _ae_frame_pt
+    except Exception:
+        pass
 
     # 3. Parse the signal as a perturbation of the above state
     try:
@@ -26782,6 +26934,21 @@ def _run_live_response_turn(
                 )
             except Exception:
                 understanding_application = {}
+
+    # ---- LANGUAGE FIELD — inter-field resonance (prior aurora → this user turn) ----
+    try:
+        _lf_res = systems.get('language_field')
+        _last_aurora_lf = str(systems.get('_last_aurora_response', '') or '')
+        if _lf_res is not None and _last_aurora_lf and hasattr(_lf_res, 'measure_resonance'):
+            _field_resonance = _lf_res.measure_resonance(_last_aurora_lf, user_text)
+            systems['_last_field_resonance'] = _field_resonance
+    except Exception:
+        pass
+    # Store this response as prior aurora text for next turn's resonance measurement
+    try:
+        systems['_last_aurora_response'] = str(getattr(resp_A, 'content', '') or '').strip()
+    except Exception:
+        pass
 
     # ---- REFLECTION RE-ENTRY SEQUENCE (AURORA_COGNITIVE_PHYSICS.md §6–§8) ----
     # Mandatory: STATE → EXPRESSION → RE-ENTRY → RECONCILIATION → UNDERSTANDING

@@ -2778,6 +2778,17 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
     except Exception as _gfe:
         _log(f"  [GAP-FILL] Crystal gap cycle error: {_gfe}")
 
+    # AxisEmergenceDetector — scan codebase for novel axis co-occurrences
+    try:
+        from aurora_internal.aurora_axis_emergence import AxisEmergenceDetector
+        _aed = AxisEmergenceDetector(str(_BASE_DIR))
+        _aed_result = _aed.scan_and_register()
+        _new_slots = int((_aed_result or {}).get('new_virtual_slots', 0))
+        if _new_slots:
+            _log(f"  [AXIS] {_new_slots} new virtual channel(s) registered.")
+    except Exception as _aed_e:
+        _log(f"  [AXIS] AxisEmergenceDetector error: {_aed_e}")
+
 
 def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
                 timeout: float = 12.0) -> str:
