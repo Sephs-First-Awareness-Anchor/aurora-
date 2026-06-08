@@ -2069,6 +2069,20 @@ class UniverseSteerer:
                 )
                 bsl.update(evt)
                 self._last_braid_snapshot = bsl.snapshot()
+                # Project braid state into constraint axes — closes the 8D→5D gap.
+                # heat (contradiction accumulation) → B-axis tension;
+                # stability (recurrence coherence) → T-axis + X-axis grounding.
+                _bsnap = self._last_braid_snapshot or {}
+                _b_heat = float(_bsnap.get("heat", 0.0) or 0.0)
+                _b_stab = float(_bsnap.get("stability", 0.5) or 0.5)
+                _ifield_braid = getattr(self._s, "identity_field", None)
+                if _ifield_braid is not None and hasattr(_ifield_braid, "ingest_external_input"):
+                    _braid_axes: Dict[str, float] = {
+                        "B": 0.35 + _b_heat * 0.40,        # contradiction → B-axis tension
+                        "T": 0.30 + _b_stab * 0.35,        # stability → T-axis continuity
+                        "X": 0.28 + _b_stab * 0.25,        # stability → X-axis existence
+                    }
+                    _ifield_braid.ingest_external_input(_braid_axes, intensity=0.18, source="braided_substrate")
             except Exception:
                 self._last_braid_snapshot = None
 

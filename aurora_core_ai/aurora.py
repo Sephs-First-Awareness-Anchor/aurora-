@@ -3635,22 +3635,36 @@ class WorkingMemory:
 
                 if _lf_rci is not None and _proto_rci is not None and hasattr(_lf_rci, "select_crossing_path"):
                     try:
-                        _xing = _lf_rci.select_crossing_path(_proto_rci) or {}
-                        if _xing and _ifield_rci is not None and hasattr(_ifield_rci, "ingest_external_input"):
-                            _nc = float(_xing.get("n_cost", 0.5))
-                            _bm = float(_xing.get("b_match", 0.5))
-                            if _xing.get("is_novel"):
-                                # High N-cost → field is in uncharted territory; A-axis active (pioneering)
-                                _xpulse = {"N": 0.50 + _nc * 0.40, "A": 0.45 + _nc * 0.25, "X": 0.35, "T": 0.30, "B": 0.30}
-                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.35, source="crossing_novel")
-                            elif _xing.get("is_metaphor"):
-                                # Approximating via proxy: N-pressure + B-boundary tension from poor match
-                                _xpulse = {"N": 0.45 + _nc * 0.25, "B": 0.50 + (1.0 - _bm) * 0.25, "X": 0.35, "T": 0.35, "A": 0.38}
-                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.30, source="crossing_metaphor")
-                            else:
-                                # Worn path: field settling into familiar, grounded territory
-                                _xpulse = {"X": 0.45 + _bm * 0.20, "T": 0.50 + _bm * 0.20, "N": 0.28, "B": 0.38, "A": 0.35}
-                                _ifield_rci.ingest_external_input(_xpulse, intensity=0.25, source="crossing_worn")
+                        # Silence gate: language field decides whether to cross the B-boundary.
+                        # Silence is a positive field decision — n_topology IS the message.
+                        _silence_res: dict = {}
+                        if hasattr(_lf_rci, "silence_check"):
+                            try:
+                                _silence_res = _lf_rci.silence_check(_proto_rci) or {}
+                            except Exception:
+                                pass
+                        if _silence_res.get("silence"):
+                            # Field chose silence: inject n_topology as field state, not output
+                            _n_topo = _silence_res.get("n_topology") or {}
+                            if _n_topo and _ifield_rci is not None and hasattr(_ifield_rci, "ingest_external_input"):
+                                _ifield_rci.ingest_external_input(_n_topo, intensity=0.28, source="silence_field_state")
+                        else:
+                            _xing = _lf_rci.select_crossing_path(_proto_rci) or {}
+                            if _xing and _ifield_rci is not None and hasattr(_ifield_rci, "ingest_external_input"):
+                                _nc = float(_xing.get("n_cost", 0.5))
+                                _bm = float(_xing.get("b_match", 0.5))
+                                if _xing.get("is_novel"):
+                                    # High N-cost → field is in uncharted territory; A-axis active (pioneering)
+                                    _xpulse = {"N": 0.50 + _nc * 0.40, "A": 0.45 + _nc * 0.25, "X": 0.35, "T": 0.30, "B": 0.30}
+                                    _ifield_rci.ingest_external_input(_xpulse, intensity=0.35, source="crossing_novel")
+                                elif _xing.get("is_metaphor"):
+                                    # Approximating via proxy: N-pressure + B-boundary tension from poor match
+                                    _xpulse = {"N": 0.45 + _nc * 0.25, "B": 0.50 + (1.0 - _bm) * 0.25, "X": 0.35, "T": 0.35, "A": 0.38}
+                                    _ifield_rci.ingest_external_input(_xpulse, intensity=0.30, source="crossing_metaphor")
+                                else:
+                                    # Worn path: field settling into familiar, grounded territory
+                                    _xpulse = {"X": 0.45 + _bm * 0.20, "T": 0.50 + _bm * 0.20, "N": 0.28, "B": 0.38, "A": 0.35}
+                                    _ifield_rci.ingest_external_input(_xpulse, intensity=0.25, source="crossing_worn")
                     except Exception:
                         pass
 
@@ -20609,7 +20623,7 @@ def _run_reasoning_pipeline(
                 # promoted patterns to produce coherent output (requires /grammarboot
                 # or accumulated exchange history).
                 _ge_st = _ge.status() or {}
-                _promoted_count = int((_ge_st.get("motif_lineage") or {}).get("promoted_count", 0) or 0)
+                _promoted_count = int((_ge_st.get("motif_lineage") or {}).get("promoted", 0) or 0)
                 if _promoted_count >= 8:
                     _gs = _ge.suggest_structure(state.response_content, user_text, tone=state.response_tone, passion=state.emotional_state.get("passion", "observant"), drive=state.emotional_state.get("drive", "steady"))
                     if _gs and _gs.get("applied_text"):
@@ -21032,6 +21046,35 @@ def _run_reasoning_pipeline(
             ps["coherence"] = float(_e.get("coherence", ps.get("coherence", 1.0)))
             ps["novelty"] = float(_e.get("novelty", ps.get("novelty", 0.5)))
             ps["stagnation"] = float(_e.get("stagnation", ps.get("stagnation", 0.0)))
+    # L4 → L6: assembly constraint context shapes behavioral identity
+    # Trait values then feed back into constraint axes as background pressure (bidirectional)
+    _identity_sys = systems.get('identity')
+    if _asm is not None and _identity_sys is not None and hasattr(_identity_sys, 'process_from_assembly'):
+        try:
+            _identity_sys.process_from_assembly(_asm, mode=mode)
+            _ifield_ident = systems.get('identity_field')
+            if _ifield_ident is not None and hasattr(_ifield_ident, 'ingest_external_input') and hasattr(_identity_sys, 'get_personality'):
+                _pers = _identity_sys.get_personality() or {}
+                _traits = _pers.get('traits', {}) or {}
+                # Each trait maps to the constraint axes it most activates
+                _TRAIT_AXIS_FEEDBACK = {
+                    'curiosity':               {'N': 0.55, 'A': 0.50},
+                    'caution':                 {'B': 0.60, 'T': 0.45},
+                    'emotional_expressiveness': {'N': 0.50, 'A': 0.45, 'X': 0.40},
+                    'pattern_sensitivity':     {'T': 0.55, 'B': 0.45},
+                    'social_engagement':       {'X': 0.50, 'A': 0.45},
+                    'introspection':           {'X': 0.50, 'T': 0.45},
+                    'energy_conservation':     {'N': 0.30},
+                    'verbosity':               {'A': 0.45},
+                }
+                _ax_fb: dict = {}
+                for _tn, _tv in _traits.items():
+                    for _ax, _base in _TRAIT_AXIS_FEEDBACK.get(_tn, {}).items():
+                        _ax_fb[_ax] = max(_ax_fb.get(_ax, 0.0), _base * float(_tv))
+                if _ax_fb:
+                    _ifield_ident.ingest_external_input(_ax_fb, intensity=0.20, source="trait_feedback")
+        except Exception:
+            pass
     try:
         _requested_frame = str(gw._mode_to_frame(mode) if hasattr(gw, "_mode_to_frame") else "balanced")
     except Exception:

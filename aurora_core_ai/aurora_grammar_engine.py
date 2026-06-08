@@ -1075,6 +1075,24 @@ class GrammarEngine:
         if drive == "exploratory":
             orientation["X"] = orientation.get("X", 1.0) * 1.2
 
+        # Discourse-aware orientation: discourse tracker's suggested turn type biases
+        # which constraint axes dominate motif selection this turn.
+        try:
+            _disc_type = self._discourse.suggest_next_turn_type()
+            if _disc_type:
+                _DISC_AXIS_BIAS: Dict[str, Dict[str, float]] = {
+                    "question":      {"A": 1.25, "T": 1.15},
+                    "callback":      {"T": 1.30, "X": 1.15},
+                    "clarification": {"B": 1.25, "T": 1.20},
+                    "empathy":       {"N": 1.25, "A": 1.15},
+                    "hypothesis":    {"T": 1.20, "N": 1.15},
+                    "assertion":     {"X": 1.15, "A": 1.10},
+                }
+                for _ax, _mult in _DISC_AXIS_BIAS.get(_disc_type, {}).items():
+                    orientation[_ax] = _clamp(orientation.get(_ax, 1.0) * _mult, 0.5, 2.0)
+        except Exception:
+            pass
+
         # IVM heat modulates clause complexity preference.
         # High contradiction heat → prefer simpler (lower clause_depth) motifs.
         try:
