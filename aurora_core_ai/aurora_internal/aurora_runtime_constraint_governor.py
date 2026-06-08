@@ -162,6 +162,40 @@ def _clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, value))
 
 
+# Sunni's Law — intrinsic axis cost coefficients (kX < kT < kN < kB < kA).
+# An operation whose axis profile is weighted toward A must cost at least as
+# much as the axis-weighted sum of these coefficients.
+_SUNNI_AXIS_COST: Dict[str, float] = {
+    "X": 0.10, "T": 0.18, "N": 0.28, "B": 0.42, "A": 0.62,
+}
+
+
+def _enforce_cost_hierarchy(profile: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Validate that a task profile's scalar `cost` respects Sunni's Law.
+    The minimum permissible cost is the dot product of axis weights and the
+    Sunni cost coefficients.  If the profile's cost is below this floor,
+    raise it to comply.  Returns the (possibly corrected) profile.
+    """
+    axes = dict(profile.get("axes", {}) or {})
+    if not axes:
+        return profile
+    hierarchy_floor = sum(
+        float(axes.get(ax, 0.0)) * _SUNNI_AXIS_COST.get(ax, 0.0)
+        for ax in _AXES
+    )
+    # Normalize: axis weights may not sum to 1.0
+    axis_sum = sum(float(axes.get(ax, 0.0)) for ax in _AXES) or 1.0
+    hierarchy_floor /= axis_sum
+    declared_cost = float(profile.get("cost", 0.0) or 0.0)
+    if declared_cost < hierarchy_floor:
+        corrected = dict(profile)
+        corrected["cost"] = round(hierarchy_floor, 4)
+        corrected["_cost_hierarchy_corrected"] = True
+        return corrected
+    return profile
+
+
 class RuntimeConstraintGovernor:
     def __init__(self, state_dir: str = ""):
         self.state_dir = str(state_dir or "")
@@ -181,7 +215,7 @@ class RuntimeConstraintGovernor:
         state_write_lock: bool = False,
     ) -> Dict[str, Any]:
         now = float(now if now is not None else time.time())
-        profile = dict(_TASK_PROFILES.get(task_name, {}))
+        profile = _enforce_cost_hierarchy(dict(_TASK_PROFILES.get(task_name, {})))
         if not profile:
             return {
                 "allowed": True,

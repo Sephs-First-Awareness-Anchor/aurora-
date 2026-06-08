@@ -996,6 +996,7 @@ class GrammarEngine:
         if not self._genealogy or not text_changed:
             return
         try:
+            from aurora_internal.constraint_genealogy import PressureVec, TraceItem  # type: ignore
             r = clarity * 0.03   # base relief magnitude (small but real)
 
             # B-axis relief scales with clause structure quality (from motif)
@@ -1006,22 +1007,20 @@ class GrammarEngine:
             t_score = (motif.constraint_scores.get("T", 0.5) if motif else 0.5)
             t_relief = r * (0.5 + t_score)
 
-            pv_before = {
-                "A": r * 2.0,       # A under most pressure (expression pending)
-                "B": b_relief * 1.5, # B pressure from unresolved containment
-                "T": t_relief * 1.5, # T pressure from unresolved sequence
-                "N": r,
-                "X": 0.0,
-            }
-            pv_after = {
-                "A": 0.0, "B": 0.0, "T": 0.0, "N": 0.0, "X": 0.0,
-            }
+            pv_before = PressureVec(
+                A=r * 2.0,         # A under most pressure (expression pending)
+                B=b_relief * 1.5,  # B pressure from unresolved containment
+                T=t_relief * 1.5,  # T pressure from unresolved sequence
+                N=r,
+                X=0.0,
+            )
+            pv_after = PressureVec(A=0.0, B=0.0, T=0.0, N=0.0, X=0.0)
             self._genealogy.observe(
                 pressure_before=pv_before,
                 trace=[
-                    {"ability": "A:OUTLET_PUSH",        "cost": 0.001, "source": "grammar"},
-                    {"ability": "B:INTERFACE_WEAKEN",    "cost": 0.001, "source": "grammar"},
-                    {"ability": "T:ADVANCE_TICK",        "cost": 0.001, "source": "grammar"},
+                    TraceItem(kind="ABILITY", id="A:OUTLET_PUSH"),
+                    TraceItem(kind="ABILITY", id="B:INTERFACE_WEAKEN"),
+                    TraceItem(kind="ABILITY", id="T:ADVANCE_TICK"),
                 ],
                 pressure_after=pv_after,
                 state_sig_before=hashlib.md5(b"gram_before").hexdigest()[:8],
@@ -1032,7 +1031,7 @@ class GrammarEngine:
                     "b_score": round(b_score, 3),
                     "t_score": round(t_score, 3),
                 },
-                difference_snapshot={},
+                difference_snapshot=None,
             )
         except Exception:
             pass

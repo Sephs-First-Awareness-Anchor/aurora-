@@ -21075,6 +21075,64 @@ def _run_reasoning_pipeline(
                     _ifield_ident.ingest_external_input(_ax_fb, intensity=0.20, source="trait_feedback")
         except Exception:
             pass
+    # Gap 6: QUASI crystal function dispatch — when the CPM head is at a QUASI crystal,
+    # dispatch function-class-specific axis pressure into the identity field.
+    # PREDICTIVE → elevated T (forward temporal projection) + N (cost of prediction).
+    # ENTITY_MODEL → elevated B (stable boundary model) + X (another entity's existence).
+    try:
+        _cpm_g6 = systems.get('cpm')
+        _ifield_g6 = systems.get('identity_field')
+        if _cpm_g6 is not None and _ifield_g6 is not None and hasattr(_ifield_g6, 'ingest_external_input'):
+            _head_g6 = getattr(_cpm_g6, 'head', None)
+            _curr_g6 = getattr(_head_g6, 'current', None) if _head_g6 is not None else None
+            if _curr_g6 is not None:
+                _xtal_g6 = getattr(_curr_g6, 'crystal', None)
+                if _xtal_g6 is not None and getattr(_xtal_g6, 'stage', None) == 'quasi':
+                    _fc = str(getattr(_xtal_g6, 'function_class', '') or '')
+                    if _fc == 'predictive':
+                        # Predictive framing: T-axis (projection through time) + N-axis (cost of commitment)
+                        _ifield_g6.ingest_external_input(
+                            {'T': 0.62, 'N': 0.48, 'A': 0.40, 'X': 0.30, 'B': 0.28},
+                            intensity=0.25, source="quasi_predictive_dispatch",
+                        )
+                    elif _fc == 'entity_model':
+                        # Entity model framing: B-axis (stable boundary of other) + X-axis (existence of other)
+                        _ifield_g6.ingest_external_input(
+                            {'B': 0.60, 'X': 0.52, 'T': 0.38, 'A': 0.35, 'N': 0.28},
+                            intensity=0.25, source="quasi_entity_model_dispatch",
+                        )
+    except Exception:
+        pass
+    # Gap 7: Ability lineage manifest synthesis-time lookup — check if current axis
+    # state crosses thresholds that unlock a compiled capability, then route new
+    # unlocks into the identity field as agency events (A-axis + T-axis activation).
+    try:
+        _lineage_act = systems.get('lineage_activation')
+        _ifield_g7 = systems.get('identity_field')
+        if isinstance(_lineage_act, dict) and _ifield_g7 is not None and hasattr(_ifield_g7, 'ingest_external_input'):
+            _loaded_targets = list(_lineage_act.get('loaded_targets', []) or [])
+            _combined_shadow = dict(_lineage_act.get('combined_shadow_state', {}) or {})
+            if _loaded_targets and _combined_shadow:
+                # Check whether current genealogy outlet fraction signals capability unlock
+                _gen_g7 = systems.get('genealogy')
+                _outlet_g7 = 0.0
+                if _gen_g7 is not None and hasattr(_gen_g7, '_outlet_fraction'):
+                    try:
+                        _outlet_g7 = float(_gen_g7._outlet_fraction() or 0.0)
+                    except Exception:
+                        pass
+                # Unlock condition: outlet fraction > 0.35 (capability active, not blocked)
+                if _outlet_g7 > 0.35:
+                    _pipeline_shadow = dict(_combined_shadow.get('pipeline', {}) or {})
+                    _n_caps = sum(1 for v in _pipeline_shadow.values() if bool(v))
+                    if _n_caps > 0:
+                        # Route as agency event: A-axis (capability exercised) + T-axis (new before/after)
+                        _ifield_g7.ingest_external_input(
+                            {'A': 0.55 + min(0.20, _outlet_g7 * 0.25), 'T': 0.48, 'X': 0.32, 'N': 0.28, 'B': 0.25},
+                            intensity=0.22, source="lineage_capability_unlock",
+                        )
+    except Exception:
+        pass
     try:
         _requested_frame = str(gw._mode_to_frame(mode) if hasattr(gw, "_mode_to_frame") else "balanced")
     except Exception:
