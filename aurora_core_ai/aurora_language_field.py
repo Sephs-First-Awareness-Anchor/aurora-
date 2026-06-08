@@ -172,13 +172,21 @@ class LanguageField(WarpCapable):
         self._recent_paths: collections.deque = collections.deque(maxlen=5)
         self._warp_usage_counts: Dict[str, int] = {}   # component_id → usage count
         self._cpm: Optional[Any] = None               # CPMSession — wired in post-boot
+        # Interface confirmation flags — set on first successful call so status()
+        # can report which paths are live vs. falling back to approximations.
+        self._tensor_confirmed: bool = False
+        self._cpm_confirmed: bool = False
         self._load_lsa()
         if _WARP_AVAILABLE:
             self._init_warp()
 
     def set_cpm(self, cpm: Any) -> None:
         """Wire in the CPMSession after boot so crossing cost reflects crystal depth."""
-        self._cpm = cpm
+        if cpm is not None and hasattr(getattr(cpm, 'head', None), 'crystal_stage'):
+            self._cpm = cpm
+            self._cpm_confirmed = True
+        else:
+            self._cpm = cpm  # still assign; will fail gracefully in _cpm_adjust_cost
 
     # ── Persistence ──────────────────────────────────────────────────────────
 
@@ -302,12 +310,19 @@ class LanguageField(WarpCapable):
         function levels. Language field reads FROM these — it does not re-derive.
 
         Falls back to identity-field axis topology if tensor layer is unavailable.
+        Interface confirmed: TensorExpressionLayer.behavioral_state() verified present.
         """
         if self._tensor is not None:
             try:
-                return self._tensor.behavioral_state()
+                result = self._tensor.behavioral_state()
+                if not self._tensor_confirmed:
+                    self._tensor_confirmed = True
+                return result
             except Exception:
                 pass
+        # Tensor layer absent or call failed — falling back to identity field approximation.
+        # This is expected in daemon context (tensor not always wired) but should be rare
+        # in the bridge context where tensor_expressions is initialized first.
 
         # Fallback: approximate from raw axis topology
         try:
@@ -1002,11 +1017,15 @@ class LanguageField(WarpCapable):
             if self._lsa else 0.0
         )
         return {
-            "lsa_entries":   len(self._lsa),
-            "worn_paths":    worn,
-            "novel_paths":   novel,
-            "avg_fidelity":  round(avg_f, 3),
-            "silence_events": len(self._silence_log),
+            "lsa_entries":      len(self._lsa),
+            "worn_paths":       worn,
+            "novel_paths":      novel,
+            "avg_fidelity":     round(avg_f, 3),
+            "silence_events":   len(self._silence_log),
+            "tensor_confirmed": self._tensor_confirmed,
+            "cpm_confirmed":    self._cpm_confirmed,
+            "tensor_live":      self._tensor is not None,
+            "cpm_live":         self._cpm is not None,
             "last_proto": {
                 "comparison_type": self._last_proto.comparison_type,
                 "dominant_axes":   self._last_proto.dominant_axes,

@@ -2069,6 +2069,20 @@ class UniverseSteerer:
                 )
                 bsl.update(evt)
                 self._last_braid_snapshot = bsl.snapshot()
+                # Project braid state into constraint axes — closes the 8D→5D gap.
+                # heat (contradiction accumulation) → B-axis tension;
+                # stability (recurrence coherence) → T-axis + X-axis grounding.
+                _bsnap = self._last_braid_snapshot or {}
+                _b_heat = float(_bsnap.get("heat", 0.0) or 0.0)
+                _b_stab = float(_bsnap.get("stability", 0.5) or 0.5)
+                _ifield_braid = getattr(self._s, "identity_field", None)
+                if _ifield_braid is not None and hasattr(_ifield_braid, "ingest_external_input"):
+                    _braid_axes: Dict[str, float] = {
+                        "B": 0.35 + _b_heat * 0.40,        # contradiction → B-axis tension
+                        "T": 0.30 + _b_stab * 0.35,        # stability → T-axis continuity
+                        "X": 0.28 + _b_stab * 0.25,        # stability → X-axis existence
+                    }
+                    _ifield_braid.ingest_external_input(_braid_axes, intensity=0.18, source="braided_substrate")
             except Exception:
                 self._last_braid_snapshot = None
 
@@ -2134,41 +2148,72 @@ class UniverseSteerer:
                 if internal_drift is not None:
                     frame = attention_engine.tick(tick, external_stimuli, internal_drift)
                     self._last_attention_frame = frame
-                    
-                    # 5. Meaning Formation Trigger
+
+                    # 5. WillIntent dispatch — attention → intention → axis pressure
+                    # generate_will() produces an uncommitted intention; route it through
+                    # the identity field as the axis most activated by that intent class.
+                    will = attention_engine.generate_will()
+                    if will is not None:
+                        _ifield_attn = getattr(self._s, "identity_field", None)
+                        if _ifield_attn is not None and hasattr(_ifield_attn, "ingest_external_input"):
+                            _WILL_AXIS: dict = {
+                                "curiosity":    {"T": 0.55, "N": 0.48, "A": 0.40},
+                                "agency":       {"A": 0.65, "N": 0.50, "T": 0.38},
+                                "grounding":    {"X": 0.62, "B": 0.45, "T": 0.35},
+                                "self_check":   {"N": 0.58, "X": 0.45, "B": 0.38},
+                                "environmental":{"B": 0.60, "X": 0.48, "N": 0.40},
+                            }
+                            _waxes = _WILL_AXIS.get(will.class_name, {"A": 0.45, "T": 0.40})
+                            try:
+                                _ifield_attn.ingest_external_input(
+                                    _waxes,
+                                    intensity=min(0.35, 0.15 + will.resonance * 0.30),
+                                    source=f"will_intent:{will.class_name}",
+                                )
+                            except Exception:
+                                pass
+
+                    # 6. Meaning Formation Trigger
                     nucleus = attention_engine.get_meaning_nucleus()
                     if nucleus:
                         res = nucleus["resonance"]
                         axes = nucleus["axes"]
-                        
+
                         # --- Feedback: Emotional (L3 DER) ---
                         if self._s.has("dimensional"):
                             self._s.dimensional.der.register_attention_pulse(res, axes)
-                        
+
                         # --- Feedback: Reasoning (DPME) ---
                         if self._s.has("dpme"):
                             self._s.dpme.apply_attentional_guidance(res, axes)
                             # Pass 2: Semantic Reasoning
                             if self._s.has("perception") and self._s.perception.oets:
                                 self._s.dpme.resolve_semantic_tension(self._s.perception.oets)
-                            
+
                         # --- Feedback: Identity (L6) ---
                         if self._s.has("identity"):
                             self._s.identity.reinforce_identity(res, axes)
-                            
+
                         # --- Feedback: Expression (L5) ---
                         if self._s.has("perception"):
                             self._s.perception.set_attentional_focus(nucleus)
 
-                        # Signal OETS to consolidate high-resonance relationships
+                        # OETS relational anchor creation — when state == FORMING and
+                        # anchors are present, teach each anchor concept into the
+                        # ontological web so high-resonance meanings crystallize there.
                         if self._s.has("perception") and self._s.perception.oets:
-                            # Direct her research focus to the current attention anchors
-                            if nucleus["anchors"]:
-                                try:
-                                    self._s.perception.oets.consolidate()
-                                    # Future: feed nucleus["anchors"] into identify_research_targets
-                                except Exception:
-                                    pass
+                            try:
+                                self._s.perception.oets.consolidate()
+                                for _anchor in (nucleus.get("anchors") or []):
+                                    if _anchor and isinstance(_anchor, str):
+                                        # teach() creates/reinforces the node; description
+                                        # encodes the resonance context so it's not blank
+                                        self._s.perception.oets.teach(
+                                            _anchor,
+                                            f"attention anchor at resonance {res:.3f}",
+                                        )
+                            except Exception:
+                                pass
             except Exception:
                 self._last_attention_frame = None
 

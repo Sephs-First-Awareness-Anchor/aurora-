@@ -6428,8 +6428,18 @@ def run(systems: Dict[str, Any]) -> None:
             )
             if _lf_d is not None:
                 systems['language_field'] = _lf_d
+                # Wire CPM into language field so crystal_stage() cost adjustments run
+                _cpm_lf = systems.get('cpm')
+                if _cpm_lf is not None and hasattr(_lf_d, 'set_cpm'):
+                    try:
+                        _lf_d.set_cpm(_cpm_lf)
+                    except Exception:
+                        pass
+                _lf_stat = _lf_d.status()
                 _log(f"  [LANGUAGE FIELD] Daemon online — "
-                     f"LSA={_lf_d.status()['lsa_entries']} paths")
+                     f"LSA={_lf_stat['lsa_entries']} paths "
+                     f"tensor={'confirmed' if _lf_stat.get('tensor_live') else 'fallback'} "
+                     f"cpm={'live' if _lf_stat.get('cpm_live') else 'absent'}")
         except Exception as _lf_de:
             _log(f"  [LANGUAGE FIELD] Daemon init failed: {_lf_de}")
 

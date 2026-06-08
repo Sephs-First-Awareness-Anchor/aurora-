@@ -996,6 +996,7 @@ class GrammarEngine:
         if not self._genealogy or not text_changed:
             return
         try:
+            from aurora_internal.constraint_genealogy import PressureVec, TraceItem  # type: ignore
             r = clarity * 0.03   # base relief magnitude (small but real)
 
             # B-axis relief scales with clause structure quality (from motif)
@@ -1006,22 +1007,20 @@ class GrammarEngine:
             t_score = (motif.constraint_scores.get("T", 0.5) if motif else 0.5)
             t_relief = r * (0.5 + t_score)
 
-            pv_before = {
-                "A": r * 2.0,       # A under most pressure (expression pending)
-                "B": b_relief * 1.5, # B pressure from unresolved containment
-                "T": t_relief * 1.5, # T pressure from unresolved sequence
-                "N": r,
-                "X": 0.0,
-            }
-            pv_after = {
-                "A": 0.0, "B": 0.0, "T": 0.0, "N": 0.0, "X": 0.0,
-            }
+            pv_before = PressureVec(
+                A=r * 2.0,         # A under most pressure (expression pending)
+                B=b_relief * 1.5,  # B pressure from unresolved containment
+                T=t_relief * 1.5,  # T pressure from unresolved sequence
+                N=r,
+                X=0.0,
+            )
+            pv_after = PressureVec(A=0.0, B=0.0, T=0.0, N=0.0, X=0.0)
             self._genealogy.observe(
                 pressure_before=pv_before,
                 trace=[
-                    {"ability": "A:OUTLET_PUSH",        "cost": 0.001, "source": "grammar"},
-                    {"ability": "B:INTERFACE_WEAKEN",    "cost": 0.001, "source": "grammar"},
-                    {"ability": "T:ADVANCE_TICK",        "cost": 0.001, "source": "grammar"},
+                    TraceItem(kind="ABILITY", id="A:OUTLET_PUSH"),
+                    TraceItem(kind="ABILITY", id="B:INTERFACE_WEAKEN"),
+                    TraceItem(kind="ABILITY", id="T:ADVANCE_TICK"),
                 ],
                 pressure_after=pv_after,
                 state_sig_before=hashlib.md5(b"gram_before").hexdigest()[:8],
@@ -1032,7 +1031,7 @@ class GrammarEngine:
                     "b_score": round(b_score, 3),
                     "t_score": round(t_score, 3),
                 },
-                difference_snapshot={},
+                difference_snapshot=None,
             )
         except Exception:
             pass
@@ -1074,6 +1073,24 @@ class GrammarEngine:
             orientation["A"] = orientation.get("A", 1.0) * 1.4
         if drive == "exploratory":
             orientation["X"] = orientation.get("X", 1.0) * 1.2
+
+        # Discourse-aware orientation: discourse tracker's suggested turn type biases
+        # which constraint axes dominate motif selection this turn.
+        try:
+            _disc_type = self._discourse.suggest_next_turn_type()
+            if _disc_type:
+                _DISC_AXIS_BIAS: Dict[str, Dict[str, float]] = {
+                    "question":      {"A": 1.25, "T": 1.15},
+                    "callback":      {"T": 1.30, "X": 1.15},
+                    "clarification": {"B": 1.25, "T": 1.20},
+                    "empathy":       {"N": 1.25, "A": 1.15},
+                    "hypothesis":    {"T": 1.20, "N": 1.15},
+                    "assertion":     {"X": 1.15, "A": 1.10},
+                }
+                for _ax, _mult in _DISC_AXIS_BIAS.get(_disc_type, {}).items():
+                    orientation[_ax] = _clamp(orientation.get(_ax, 1.0) * _mult, 0.5, 2.0)
+        except Exception:
+            pass
 
         # IVM heat modulates clause complexity preference.
         # High contradiction heat → prefer simpler (lower clause_depth) motifs.
