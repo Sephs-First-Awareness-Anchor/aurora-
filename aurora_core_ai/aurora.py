@@ -20580,9 +20580,55 @@ def _run_reasoning_pipeline(
             _perc_a5 = systems.get("perception")
             _resp_draft = str(getattr(state, "response_content", "") or "")
             if _perc_a5 and _resp_draft and hasattr(_perc_a5, "express"):
+                # ---- THOUGHT BRAID — EXPRESSION anchor ----
+                try:
+                    from aurora_braid_wiring import begin_expression
+                    begin_expression(systems)
+                except Exception:
+                    pass
                 _expressed = _perc_a5.express(_resp_draft, tone=str(getattr(state, "response_tone", "neutral") or "neutral"))
                 if _expressed and isinstance(_expressed, str) and len(_expressed.split()) >= 4:
                     state.response_content = _expressed
+                    # ---- THOUGHT BRAID — checkpoint: re-tap braid against draft ----
+                    try:
+                        from aurora_braid_wiring import checkpoint_expression
+                        checkpoint_expression(systems, expression_text=_expressed)
+                    except Exception:
+                        pass
+                    # ---- LANGUAGE STRUCTURE FITNESS — score expression against intention ----
+                    try:
+                        from aurora_language_structure_fitness import LanguageStructureFitness
+                        _lsf = LanguageStructureFitness()
+                        _intention = systems.get('_current_semantic_intention')
+                        _perception = systems.get('perception')
+                        _composer = getattr(_perception, 'composer', None) if _perception else None
+                        _base_fit = float(getattr(state, 'response_confidence', 0.5) or 0.5)
+                        _fit_result = _lsf.score(
+                            _expressed,
+                            _intention,
+                            _base_fit,
+                            composer=_composer,
+                        )
+                        systems['_last_fitness_result'] = {
+                            'fidelity': _fit_result.fidelity_score,
+                            'keyword_coverage': _fit_result.keyword_coverage,
+                            'lane_alignment': _fit_result.lane_alignment,
+                            'combined_fitness': _fit_result.combined_fitness,
+                        }
+                        if _fit_result.combined_fitness < 0.4:
+                            try:
+                                _sedi = systems.get('sedimemory')
+                                if _sedi and hasattr(_sedi, 'ingest_event'):
+                                    _sedi.ingest_event({
+                                        'type': 'expression_misfit',
+                                        'fitness': _fit_result.combined_fitness,
+                                        'lane': getattr(_intention, 'semantic_lane', 'unknown'),
+                                        'source': 'LanguageStructureFitness',
+                                    })
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
         except Exception:
             pass
 
@@ -21423,6 +21469,13 @@ def _run_reasoning_pipeline(
     except Exception:
         pass
 
+    # ---- THOUGHT BRAID — RE-ENTRY: close the expression loop ----
+    try:
+        from aurora_braid_wiring import complete_expression
+        complete_expression(systems, state)
+    except Exception:
+        pass
+
     return resp_A, resp_B, offered_lookup
 
 
@@ -21694,6 +21747,14 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         if _lf_ign is not None and hasattr(_lf_ign, "ignition_check"):
             _ign_result = _lf_ign.ignition_check()
             systems["_language_ignition"] = _ign_result
+            # Apply ignition state to response confidence
+            try:
+                _ign_live = bool(_ign_result.get("live", True))
+                if not _ign_live:
+                    _cur_conf = float(getattr(state, 'response_confidence', 0.5) or 0.5)
+                    state.response_confidence = min(_cur_conf, 0.65)
+            except Exception:
+                pass
             if hasattr(_lf_ign, "extract_proto_language"):
                 _lf_ign.extract_proto_language(
                     user_text=_raw_user_text, source="comprehension"
@@ -24818,6 +24879,13 @@ def boot_aurora(
 
     _install_support_constraint_surfaces(systems)
 
+    # ---- THOUGHT BRAID — boot continuous braid background thread ----
+    try:
+        from aurora_braid_wiring import boot_thought_braid
+        boot_thought_braid(systems, verbose=verbose)
+    except Exception:
+        pass
+
     return systems
 
 
@@ -26094,6 +26162,13 @@ def _run_live_response_turn(
 
     if turn_tick is None:
         turn_tick = int(getattr(working_memory, 'turn_count', 0) or 0) + 1
+
+    # ---- THOUGHT BRAID — STATE phase: tap braid, build ThoughtState for this turn ----
+    try:
+        from aurora_braid_wiring import begin_response_turn
+        begin_response_turn(systems, user_text=user_text, turn_tick=turn_tick)
+    except Exception:
+        pass
 
     # ---- STRATA-AWARE INTAKE: Resolve Vitals BEFORE parsing Signal ----
     # 1. Pull the Subsurface DCE Convergence (Conscious Crest)
