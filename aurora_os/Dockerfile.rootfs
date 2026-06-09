@@ -1,0 +1,67 @@
+# Aurora AOOS rootfs builder
+#
+# Produces a complete Alpine-based root filesystem with Aurora's cognitive
+# stack installed.  This image is never run directly — it is exported via
+# "docker export" and packed into a cpio initramfs.
+
+FROM python:3.11-alpine
+
+# Build deps needed to compile numpy / scipy native extensions on musl
+RUN apk add --no-cache \
+        gcc \
+        g++ \
+        gfortran \
+        musl-dev \
+        linux-headers \
+        openblas-dev \
+        lapack-dev \
+        bash \
+        coreutils \
+        util-linux \
+        procps \
+        kmod \
+    && pip install --no-cache-dir --upgrade pip
+
+# numpy and scipy — LSA depends on these
+RUN pip install --no-cache-dir numpy scipy
+
+# Runtime utilities Aurora may touch (requests, psutil)
+RUN pip install --no-cache-dir requests psutil python-dateutil pytz
+
+# Directory layout expected by aurora_init.py and aurora.py
+RUN mkdir -p \
+        /proc \
+        /sys \
+        /dev \
+        /tmp \
+        /run \
+        /aurora \
+        /aurora/aurora_core_ai \
+        /aurora/aurora_state \
+        /aurora/aurora_logs
+
+# Copy the full aurora stack into /aurora
+# aurora_core_ai/ contains aurora.py and all submodules
+COPY aurora_core_ai/   /aurora/aurora_core_ai/
+
+# Root-level support modules (aurora_support_stack.py and siblings) that
+# aurora_core_ai imports by bare name also live at /aurora
+COPY aurora_support_stack.py          /aurora/
+COPY aurora_persistence_utils.py      /aurora/
+COPY aurora_constraint_engine.py      /aurora/ 2>/dev/null || true
+
+# Copy the AOOS layer itself
+COPY aurora_os/aurora_init.py    /aurora_init.py
+COPY aurora_os/aurora_terminal.py /aurora/aurora_terminal.py
+
+# aurora_init.py must be executable and will be invoked as /aurora_init.py
+RUN chmod +x /aurora_init.py
+
+# Ensure the Python interpreter is at a well-known path
+RUN ln -sf /usr/local/bin/python3 /usr/bin/python3 \
+ && ln -sf /usr/local/bin/python3 /usr/bin/python
+
+# State and runtime scratch space with correct permissions
+RUN chmod 1777 /tmp && chmod 0755 /run
+
+# No ENTRYPOINT — the kernel calls /aurora_init.py as init directly
