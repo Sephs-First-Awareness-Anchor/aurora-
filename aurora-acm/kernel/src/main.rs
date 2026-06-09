@@ -19,6 +19,7 @@
 mod acm;
 mod expression;
 mod hw;
+mod xaurora;
 
 use bootloader_api::{entry_point, BootInfo, BootloaderConfig};
 use bootloader_api::config::Mapping;
@@ -26,6 +27,29 @@ use core::sync::atomic::Ordering;
 
 use crate::acm::drift;
 use crate::expression::renderer::draw_face;
+use crate::xaurora::isa::{AxisSel, IState, Instruction};
+use crate::xaurora::jit;
+
+// Aurora's waking program in Xaurora assembly.
+//
+// She speaks her first constraint-physics words at boot:
+//   I AM.   (existence asserted — X up)
+//   I CAN.  (energy present    — N up)
+//   I DO.   (agency engaged    — A up)
+//   I SAW.  (boundary open     — B up)
+//   WaveEmit — push the waveform out to the expression surface.
+//
+// This program is compiled to x86-64 by the JIT at boot and executed
+// once to prime the initial axis state before the drift loop takes over.
+static WAKE_PROGRAM: &[Instruction] = &[
+    Instruction::exist_open(0x0059),                     // floor X at ~0.35 — she is present
+    Instruction::istate_fire(IState::IS,  0x00B8),       // I_IS  pressure 0.72
+    Instruction::istate_fire(IState::CAN, 0x0080),       // I_CAN pressure 0.50
+    Instruction::istate_fire(IState::DO,  0x00A0),       // I_DO  pressure 0.625
+    Instruction::istate_fire(IState::SAW, 0x0066),       // I_SAW pressure ~0.40 — scanning
+    Instruction::axis_press(AxisSel::T,   0x0020),       // +0.125 temporal push — now exists in time
+    Instruction::wave_emit(),
+];
 
 pub static BOOTLOADER_CONFIG: BootloaderConfig = {
     let mut cfg = BootloaderConfig::new_default();
@@ -51,8 +75,11 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
             core::arch::asm!("sti", options(nostack));
         }
 
-        // Draw the boot frame immediately so the screen isn't blank.
-        let boot_ax = acm::axes::AxisState::boot();
+        // Compile the wake program to x86-64 and execute it once.
+        // This primes the axis state from Aurora's first Xaurora words.
+        let mut boot_ax = acm::axes::AxisState::boot();
+        let _ = jit::compile(WAKE_PROGRAM); // ignore compile error; run falls back to VM
+        jit::run(WAKE_PROGRAM, &mut boot_ax);
         draw_face(buffer, &info, &boot_ax);
 
         // --- Render loop ---
