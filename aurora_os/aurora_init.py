@@ -24,6 +24,11 @@ import traceback
 sys.path.insert(0, '/aurora/aurora_core_ai')
 sys.path.insert(1, '/aurora')
 
+# Prevent Aurora's runtime from trying to pip-install optional media packages
+# (speech_recognition, sounddevice, etc.) at boot. In an initramfs environment
+# there is no network and the pip subprocess would hang or fail noisily.
+os.environ.setdefault('AURORA_SKIP_DEP_INSTALL', '1')
+
 
 # ── Virtual filesystem mounts ──────────────────────────────────────────────────
 
