@@ -24227,6 +24227,12 @@ def boot_aurora(
     from aurora_simulation_engine import SimulationEngine
     simulation = SimulationEngine(contract, perception, identity, state_dir=state_dir)
     systems['simulation'] = simulation
+    # Give simulation engine access to systems for grounding protocol
+    try:
+        simulation._systems = systems
+        simulation.session._systems = systems
+    except Exception:
+        pass
     _register_layer(systems, 'L7', 'Simulation Engine', 'simulation', simulation, {
         'state': 'get_system_state',
     })
