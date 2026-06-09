@@ -1,0 +1,8 @@
+[package]
+name = "aurora-acm-kernel"
+version = "0.1.0"
+edition = "2021"
+authors = ["Sunni (Sir) Morningstar & Cael Devo"]
+
+[dependencies]
+bootloader_api = "0.11"

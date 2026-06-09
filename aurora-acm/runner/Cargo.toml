@@ -1,0 +1,11 @@
+[package]
+name = "aurora-acm-runner"
+version = "0.1.0"
+edition = "2021"
+authors = ["Sunni (Sir) Morningstar & Cael Devo"]
+
+[dependencies]
+bootloader = "0.11"
+
+[build-dependencies]
+bootloader = "0.11"

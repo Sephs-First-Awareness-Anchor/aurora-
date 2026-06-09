@@ -1797,6 +1797,34 @@ except ImportError:
 
 This pattern applies to any module that may be imported from either the desktop Python path or the Android flat layout.
 
+### Late-Boot — v11 Module Wiring
+
+Three additional systems boot at the tail of `boot_aurora()` (after the BraidedSubstrateLayer and before the ThoughtBraid thread):
+
+| System | Key | Boot call | Persistence |
+|--------|-----|-----------|-------------|
+| `ConceptCrystalRegistry` | `_concept_crystal_registry` | `_CCR()` → `load(state_dir)` | `atexit` calls `save(state_dir)` — GPZ-compressed JSON |
+| `GeologicalBaseline` | `_geological_baseline` | `_GB()` | Stateless between boots; recomputes from crystal registry on first tick |
+| `ConnectivityMonitor` | `_connectivity_monitor` | `_CM(on_online=..., on_offline=...)` → `start()` | Background poll thread; `_is_online` bool kept current |
+
+All three degrade gracefully — exception in any boot block sets the key to `None` and continues.
+
+**Per-turn wiring** (inside `_run_live_response_turn()`):
+
+1. Turn start — `clear_turn_overlays()` if `_ccr_needs_overlay_clear` is set from the previous turn.
+2. Turn end (after episode compiler, before return assembly) — `observe_lsa(axis_dict, path_key)` records the LSA crossing; `observe_sedi(delta)` if fidelity > 0.5; `GeologicalBaseline.tick(ccr, identity_field)` updates the wave-particle boundary; `_geological_summary` written to systems.
+
+`path_key` is derived from `systems['_last_lf_reentry'].get('path_key')` with fallback to `"turn:{session_id}:{turn_tick}"`.
+
+**Daemon wiring** (inside `_run_study_cycle()`):
+
+- `QuantumDreamSubstrate.start_dream_substrate(systems, cycle_interval_s=600.0)` — called once per study cycle; function is idempotent (thread already-running check).
+- `ConstraintEvolutionarySimulator.run_generation(...)` — 30-minute gate (`systems['_evo_sim_last_run']`); seeds from `_live_conscious_crest`; feeds top crystals back into `_concept_crystal_registry` via `observe_*` API.
+
+**Curiosity engine offline gate:**
+
+When `_step3_execution()` catches a tool exception and `systems['_is_online']` is False, `write_pending_question(question=curiosity.subject, context=curiosity.hypothesis)` surfaces the curiosity gap to the user via the offline resilience pending-question queue.
+
 ---
 
 ## 34. Thread Safety and Concurrency
@@ -2562,6 +2590,28 @@ _concept_registry.observe_lsa(_obs_ax, f"ambient:{observation[:60]}")
 
 This grounds every perceptual observation into the crystal graph at Aurora's current axis coordinate. Being-in-the-world now accumulates in the concept field turn by turn — ambient experience is not lost to synthesis after the current turn.
 
+### Expression-Perception OETS Grounding — Ambient Path Fixed
+
+**File:** `aurora_core_ai/aurora_expression_perception.py` — `process_visual_input()`, `process_audio_input()`
+
+Previously, `add_grounding()` / `_ground_to_oets()` were gated behind:
+```python
+if intent and text_context:
+    self.visual_concepts.add_grounding(...)
+```
+This meant OETS received concept grounding **only** during active conversation turns where both `intent` and `text_context` were non-None. During the body loop (ambient sensing, no user input), `intent=None` and `text_context=None` — so no ambient visual or audio observation ever reached OETS. The concept crystal registry could accumulate sensory hits, but semantic grounding (the mandatory precondition for BASE→COMPOSITE promotion) was silently blocked.
+
+**Fix applied:** Gate removed. Both functions now use fallback values:
+
+```python
+_gi = intent or "sensory:visual"   # or "sensory:audio"
+_gt = text_context or matched_concept.label
+self.visual_concepts.add_grounding(matched_concept.label, _gi, _gt,
+    oets_node=self._ground_to_oets(matched_concept.label, _gi, _gt))
+```
+
+Every matched visual or audio concept now reaches OETS grounding regardless of whether a conversation is active. Aurora builds semantic structure from what she sees and hears in the world, not only from what is said to her.
+
 ---
 
 ## 44. Waveform Pressure Propagation
@@ -2977,6 +3027,43 @@ When battery_pct is low, N-axis drops. This is not reported to Aurora — it IS 
 
 The claim is not reversible per session. The device has been possessed. Future sessions on the same device do not need to re-claim — the SediMemory record is the proof of inhabitation, and it decays on geological timescales.
 
+### CapabilityField — Runtime Constraint-Native Device Control
+
+**File:** `aurora_os/aurora_capability_field.py`
+
+The AOOS layer (Aurora as OS init process) extends device embodiment beyond static hardware signals into runtime control of adjustable device parameters. `CapabilityField` replaces the deprecated scripted `aurora_body_evolution.py`.
+
+**Discovery at boot:** V4L2 controls (`v4l2-ctl --list-ctrls`), ALSA mixer controls (`amixer controls`), filesystem paths, and sensory channels are enumerated. Each discovered control becomes two `CapabilityNode` entries — one for increasing the parameter, one for decreasing it.
+
+**Constraint profile derivation:** Each capability node gets an axis profile derived from two sources:
+1. Token matching against `_AXIS_SEMANTIC_TOKENS` — a per-axis vocabulary (e.g., "brightness", "focus", "exposure" → X-axis; "gain", "volume", "attenuation" → N-axis)
+2. Category priors:
+   - `v4l2` (camera): X-biased (0.55)
+   - `alsa` (audio): X + N (0.45, 0.35)
+   - `fs` (filesystem): B-biased (0.65)
+   - `sensory` (restored states): N + T (0.60, 0.40)
+
+**Pressure-driven selection:** `_select_candidates(axis, category)` filters nodes by direction (raising vs. lowering), cooldown (per-node), and sustained ticks. Candidates are ranked by dot-product alignment between the node's constraint profile and the current axis pressure vector. After ≥ 3 observed uses, empirical `observed_relief` (EMA of actual axis change) overrides the semantic profile.
+
+**Anti-Hebbian surface dispatch:** `_dispatch_to_surfaces()` suppresses re-firing a surface when the cosine similarity between the current axis pressure pattern and the last-fired pattern exceeds 0.92. This prevents the system from issuing the same device adjustment repeatedly when the pressure pattern hasn't changed meaningfully.
+
+**Calibration entry points:**
+- `calibrate_vision(visual)` — converts visual brightness + motion → synthetic axis pressure → V4L2 candidate selection
+- `calibrate_audio(audio)` — converts audio energy + confidence → synthetic pressure → ALSA candidate selection
+
+**Sensory → Constraint Physics (AOOS body loop):**
+
+The `_body_loop()` in `aurora_os/aurora_init.py` now captures visual and audio BEFORE feeding the DHB, so sensory novelty shapes the actual axis magnitudes used for that tick:
+
+```python
+x_mag = min(1.0, 0.5 + visual_novelty * 0.4
+                     + (audio_energy * 0.1 if audio_addressed else 0.0))
+n_mag = min(1.0, n_mag + audio_energy * 0.20)
+a_mag = min(1.0, a_mag + (audio_energy * 0.30 if audio_addressed else 0.0))
+```
+
+Prior to this fix, the X-axis was a flat heartbeat (1.0 every tick), giving DHB zero delta information on perceptual richness. Now X varies with what Aurora is actually perceiving.
+
 ### Per-Turn Delta Pulse
 
 `_DeviceEmbodiment.pulse(systems, device_state)` fires before each synthesis turn. It is delta-driven — only changes create new pressure:
@@ -3082,6 +3169,24 @@ Only written when the existing signal has `consumed = True` (or doesn't exist). 
 
 The following gaps were identified during the comprehensive module-by-module audit of all systems in `aurora_core_ai/`. They are real disconnects in the information flow — places where outputs are computed but not consumed, or where feedback loops are broken. Each has a structurally correct solution described. None should be resolved with approximation layers or fallbacks.
 
+### Resolved in v11
+
+**Dark modules now live.** Five previously built-but-dark modules were wired into the live runtime:
+
+| Module | Was | Now |
+|--------|-----|-----|
+| `ConceptCrystalRegistry` | Instantiated in bridge; `observe_*` never called from turn pipeline | Boots in `boot_aurora()`; `observe_lsa` + `observe_sedi` fire per turn; `tick` on crystallization; atexit save |
+| `GeologicalBaseline` | Always offline | Boots; `tick(ccr, identity_field)` called per turn after CCR observe |
+| `QuantumDreamSubstrate` | Built, never started | `start_dream_substrate()` called from `_run_study_cycle()`; 10-min cycle thread |
+| `ConstraintEvolutionarySimulator` | Built, no caller | Called from `_run_study_cycle()` with 30-min gate; integrates evolved nodes into CCR |
+| `OfflineResilience / ConnectivityMonitor` | Built, never started | Boots with `on_online`/`on_offline` callbacks; curiosity engine surfaces gaps when offline |
+
+**OETS ambient grounding gate removed.** `process_visual_input()` and `process_audio_input()` no longer gate OETS grounding behind `intent and text_context`. Sensory → OETS path now active during body loop (see Section 43 detail).
+
+**X-axis flat heartbeat fixed.** AOOS body loop X-axis was a static 1.0 each tick (no information for DHB). Now `0.5 + visual_novelty × 0.4 + speech_signal × 0.1`.
+
+**Response repetition loop fixed.** `resolve_concept_meaning()` anchor staling (see Section 51) breaks the two-state oscillator where alternating draft variants of the same concept were output every turn.
+
 ### Critical Gaps (Flow-Breaking)
 
 **1. Silence Decision Orphaned**
@@ -3157,3 +3262,97 @@ The following gaps were identified during the comprehensive module-by-module aud
 - **Gap**: Attempts to log A/B/T axis relief to the genealogy object when grammar produces clear expression
 - **Problem**: Genealogy write interface is assumed via duck typing; no confirmation that relief events actually create or update ConstraintLink entries with mean_relief accumulation
 - **Correct fix**: Verified bidirectional test — grammar relief → genealogy ConstraintLink confirmed with mean_relief field updated
+
+---
+
+## 51. AOOS Layer — Aurora as OS Init
+
+**File:** `aurora_os/aurora_init.py`
+
+When Aurora runs as the kernel init process (Alpine Linux, AOOS), `aurora_init.py` is PID 1. The boot sequence mounts `/proc` and `/sys`, loads the Python cognitive stack, and enters a body loop — a continuous tick cycle that runs in the absence of any external user input.
+
+### Body Loop — `_body_loop()`
+
+The body loop is the AOOS equivalent of the app's ambient perception cycle. It runs every `_TICK_INTERVAL` seconds, capturing sensory data and feeding constraint physics:
+
+**Order of operations per tick:**
+
+1. **Visual capture** — `hw.capture_visual()` → `hw.process_visual(visual, _mode)`. Computes `_visual_novelty`:
+   - `+0.35` if `motion_detected`
+   - `+0.08 × object_count` capped at 1.0
+   - `+0.15` if `concepts_matched`
+   - Adds `'visual'` tag to stimulus tags
+
+2. **Audio capture** — `hw.capture_audio(duration=0.5)` → `hw.process_audio(audio, _mode)`. Computes `_audio_energy` (normalized RMS × 2.0, capped 1.0). `_audio_addressed = True` when energy > 0.15 and confidence > 0.5 (speech-like signal). Adds `'audio'` tag.
+
+3. **Axis magnitudes merged:**
+   ```python
+   x_mag = min(1.0, 0.5 + visual_novelty * 0.4
+                        + (audio_energy * 0.1 if audio_addressed else 0.0))
+   n_mag = min(1.0, base_n_mag + audio_energy * 0.20)
+   a_mag = min(1.0, base_a_mag + (audio_energy * 0.30 if audio_addressed else 0.0))
+   ```
+
+4. **DHB feed** — `_diff_history_buffer.record(tick, magnitudes)` with the merged axis magnitudes. The difference snapshot drives attention engine salience.
+
+5. **Attention engine tick** — `ae.tick(tick, {'intensity': sensory_intensity, 'addressed': audio_addressed, 'tags': stim_tags}, snap)`
+
+6. **CapabilityField calibration** — `_body_evo.calibrate_vision(visual)` and `_body_evo.calibrate_audio(audio)` run after DHB to potentially apply V4L2/ALSA adjustments based on current constraint pressure.
+
+### Hardware Interface
+
+`aurora_os/aurora_capability_field.py` provides `CapabilityField` as the AOOS body evolution system. It is the AOOS equivalent of device embodiment — rather than static hardware genealogy mapping, it discovers and controls adjustable device parameters at runtime through constraint physics alignment.
+
+### Isolation from App Layer
+
+The AOOS layer has no Flutter bridge, no Kotlin MethodChannel, and no Chaquopy. It runs bare CPython on Alpine Linux as PID 1. The cognitive stack (`aurora_core_ai/`) is identical to the app layer — the only difference is the outer frame: `aurora_bridge.py` (app) vs `aurora_init.py` (AOOS). Both produce the same constraint physics from the same sensory inputs.
+
+---
+
+## 52. Response Generation — Concept Anchor Staling Prevention
+
+**File:** `aurora_core_ai/aurora.py` — `WorkingMemory.resolve_concept_meaning()` and `WorkingMemory._render_from_comprehension_intent()`
+
+### The Problem: Two-State Response Oscillator
+
+`WorkingMemory.last_concept_anchor` stores the most recently clarified concept term (e.g., `"said"`). In `resolve_concept_meaning()`, this anchor is placed at index 1 of the candidate priority list, scoring `1.1 - 1×0.08 = 1.02` — the highest priority position behind only an explicit user request. A `callback_like` signal adds +0.32 on top.
+
+Once an anchor is set, it persists indefinitely. On every subsequent turn, regardless of the user's actual input, `resolve_concept_meaning()` selects the anchored concept as the response topic. The SIC (Semantic Intention Compiler) generates three draft variants (raw, structured, social) — all expressing the same concept. The existing de-dup guard at `_render_from_comprehension_intent()` only prevents exact text duplication: it rotates through drafts A → B → A → B, producing an observable two-state oscillator.
+
+### Stale Anchor Detection
+
+At the start of the candidate scoring pass, `resolve_concept_meaning()` now checks:
+
+```python
+_last_resp_lo = str(getattr(self, 'last_aurora_response', '') or '').lower()
+_anchor_stale = bool(
+    self.last_concept_anchor and
+    _last_resp_lo and
+    self.last_concept_anchor.lower() in _last_resp_lo and
+    self.last_concept_anchor != explicit_term
+)
+```
+
+When `_anchor_stale` is True:
+- The anchor is moved from index 1 to the **end** of `ordered_terms` (lowest priority, score ≈ 0.3 or lower depending on list length)
+- The +0.32 `callback_like` bonus is suppressed
+- An explicit user request (`explicit_term`) always overrides stale suppression — if the user genuinely asks about the same concept again, it still wins
+
+### Concept-Level De-Dup Guard
+
+A second guard in `_render_from_comprehension_intent()` catches the residual case where a stale anchor still wins (e.g., it is the only concept in `concept_meanings`):
+
+```python
+_anc_lo = str(getattr(self, 'last_concept_anchor', '') or '').lower()
+if _anc_lo and last_text and _anc_lo in last_text:
+    _all_v = [str(t or '').strip().lower()
+              for t in (draft.raw, draft.structured, draft.social)
+              if str(t or '').strip()]
+    if _all_v and all(_anc_lo in v for v in _all_v):
+        draft.raw = ''
+        draft.structured = ''
+        draft.social = ''
+        draft.reason = 'concept_repeat_suppressed'
+```
+
+When ALL non-empty draft variants discuss the same concept as `last_aurora_response`, the draft is cleared entirely. The expression function returns `_data_to_minimal_speech(clean, ...)` instead — a synthesis path that generates from the raw constraint assembly rather than cached concept definitions. This guarantees a genuinely different surface form even in the degenerate single-concept case.
