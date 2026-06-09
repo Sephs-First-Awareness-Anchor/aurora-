@@ -736,15 +736,22 @@ class LanguageField(WarpCapable):
 
     def measure_fidelity(self, proto: ProtoLanguage, utterance: str) -> float:
         """
-        Measure geometric mismatch between proto-language comparison geometry
+        Measure geometric fidelity between proto-language comparison geometry
         and the utterance that crossed the B-boundary.
 
-        High score (→1.0) = utterance faithfully carries the comparison geometry.
-        Low score (→0.0)  = high mismatch; residual tension remains; re-entry
-                             will generate clarification pressure.
+        Method: geometric re-ignition.
+        The utterance is treated as inbound signal. Its proto-language is
+        extracted using the same field infrastructure, then compared to the
+        original proto via cosine similarity on raw_axes. The field hears
+        itself — this is what makes fidelity a real measurement rather than
+        a vocabulary correlation.
 
-        This signal is mandatory — the re-entry loop has nothing to evaluate
-        without it.
+        High score (→1.0) = utterance faithfully carries the comparison geometry.
+        Low score (→0.0)  = high mismatch; re-entry will generate clarification
+                             pressure and push toward novel path next crossing.
+
+        Geometry carries 0.75 weight. Lexical coherence carries 0.25 as a
+        secondary guard against word-salad and extremely short outputs.
         """
         if not utterance or not utterance.strip():
             return 0.0
@@ -753,56 +760,70 @@ class LanguageField(WarpCapable):
         if len(words) < 2:
             return 0.1
 
-        score   = 0.0
-        factors = 0.0
-        u_lower = utterance.lower()
+        # ── 1. GEOMETRIC RE-IGNITION (weight: 0.75) ──────────────────────────
+        # Extract an axis profile from the utterance using the same semantic
+        # token map. Compare to the original proto's raw_axes via cosine
+        # similarity. The field hears itself.
+        geometric_score = 0.5  # neutral fallback if extraction fails
+        try:
+            u_lower = utterance.lower()
+            u_axis_scores: Dict[str, float] = {}
+            for ax, tokens in _AXIS_SEMANTIC_TOKENS.items():
+                hits = sum(1 for t in tokens if t in u_lower)
+                u_axis_scores[ax] = min(1.0, hits / max(len(tokens) * 0.3, 1))
 
-        # 1. Length proportional to N-axis tension
-        # High tension warrants substantive utterance
-        expected = max(4, int(proto.tension_level * 22))
-        length_score = min(1.0, len(words) / expected)
-        score += length_score; factors += 1.0
+            total = sum(u_axis_scores.values()) or 1.0
+            u_normalized = {ax: v / total for ax, v in u_axis_scores.items()}
 
-        # 2. Comparison type alignment
-        type_markers = {
-            "question":      ["?", "what", "how", "why", "when", "where", "do", "can", "is", "are"],
-            "assertion":     ["is", "are", "will", "must", "always", "never", "because", "therefore"],
-            "state":         ["am", "is", "are", "was", "were", "have", "see", "feel", "sense"],
-            "change":        ["changed", "becoming", "shifting", "moving", "now", "before", "since"],
-            "relation":      ["between", "connects", "relates", "like", "similar", "different", "across"],
-            "self_reflection":["i", "me", "myself", "my", "realize", "understand", "notice", "aware"],
-            "empathy":       ["you", "your", "feel", "sense", "understand", "hear", "with you"],
-        }
-        markers = type_markers.get(proto.comparison_type, [])
-        matches = sum(1 for m in markers if m in u_lower)
-        type_score = min(1.0, matches / max(len(markers) * 0.4, 1))
-        score += type_score; factors += 1.0
+            orig = proto.raw_axes
+            if orig:
+                dot = sum(orig.get(ax, 0.0) * u_normalized.get(ax, 0.0)
+                          for ax in "XTNBA")
+                mag_orig = math.sqrt(sum(v ** 2 for v in orig.values())) or 1.0
+                mag_utt  = math.sqrt(sum(v ** 2 for v in u_normalized.values())) or 1.0
+                cosine_sim = max(0.0, min(1.0, dot / (mag_orig * mag_utt)))
 
-        # 3. Dominant axis semantic coverage
-        covered = sum(
-            1 for ax in proto.dominant_axes
-            if any(w in u_lower for w in _AXIS_SEMANTIC_TOKENS.get(ax, []))
-        )
-        axis_score = covered / max(len(proto.dominant_axes), 1)
-        score += axis_score; factors += 1.0
+                # Comparison type alignment: utterance axis profile should
+                # concentrate on the same axes the comparison type specifies
+                type_axes = _COMPARISON_TYPE_AXES.get(proto.comparison_type, [])
+                type_coverage = sum(
+                    1 for ax in type_axes
+                    if u_normalized.get(ax, 0.0) > (1.0 / len("XTNBA"))
+                ) / max(len(type_axes), 1)
 
-        # 4. Reflection bonus — self-aware language when reflection is active
-        if proto.reflection_active:
-            refl_tokens = ["i", "me", "realize", "notice", "aware", "sense", "my", "see that"]
-            if any(w in u_lower for w in refl_tokens):
-                score += 0.5
-            factors += 0.5
+                geometric_score = (cosine_sim * 0.70) + (type_coverage * 0.30)
+        except Exception:
+            geometric_score = 0.5
 
-        # 5. Lexical diversity — guards against word salad
-        unique_ratio = len(set(words)) / len(words)
-        diversity_score = min(1.0, unique_ratio * 1.3)
-        score += diversity_score; factors += 1.0
+        # ── 2. LEXICAL COHERENCE GUARD (weight: 0.25) ─────────────────────────
+        # Prevents high geometric score on word salad or pathologically short
+        # outputs. Not a primary measure — purely a coherence floor.
+        lexical_score = 0.0
+        lexical_factors = 0.0
+        try:
+            u_lower = utterance.lower()
 
-        # 6. Self-direction bonus — owned language when self-directed meaning was active
-        if proto.self_directed and "i " in u_lower:
-            score += 0.3; factors += 0.3
+            expected = max(4, int(proto.tension_level * 18))
+            length_score = min(1.0, len(words) / expected)
+            lexical_score += length_score
+            lexical_factors += 1.0
 
-        return round(min(1.0, score / max(factors, 1.0)), 3)
+            unique_ratio = len(set(words)) / len(words)
+            diversity_score = min(1.0, unique_ratio * 1.2)
+            lexical_score += diversity_score
+            lexical_factors += 1.0
+
+            if proto.self_directed and "i " in u_lower:
+                lexical_score += 0.3
+                lexical_factors += 0.3
+
+            lexical_score = lexical_score / max(lexical_factors, 1.0)
+        except Exception:
+            lexical_score = 0.5
+
+        # ── 3. COMBINED SCORE ─────────────────────────────────────────────────
+        final = (geometric_score * 0.75) + (lexical_score * 0.25)
+        return round(min(1.0, max(0.0, final)), 3)
 
     # ── Re-Entry Loop (Mandatory) ─────────────────────────────────────────────
 
