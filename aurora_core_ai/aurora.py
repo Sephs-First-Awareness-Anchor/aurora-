@@ -3420,13 +3420,26 @@ class WorkingMemory:
 
         candidates: List[Tuple[float, Dict[str, Any]]] = []
         seen_terms = set()
+
+        # If the anchor was already the primary subject of Aurora's last response,
+        # move it to the back of the queue.  This breaks the two-state oscillator
+        # where alternating draft variants keep expressing the same concept every
+        # turn.  An explicit user request (explicit_term) always overrides this.
+        _last_resp_lo = str(getattr(self, 'last_aurora_response', '') or '').lower()
+        _anchor_stale = bool(
+            self.last_concept_anchor and
+            _last_resp_lo and
+            self.last_concept_anchor.lower() in _last_resp_lo and
+            self.last_concept_anchor != explicit_term
+        )
+
         ordered_terms = []
         if explicit_term:
             ordered_terms.append(explicit_term)
         ordered_terms.extend(
             [
                 self._normalize_mention(native["understood"].get('topic', '')),
-                self.last_concept_anchor,
+                None if _anchor_stale else self.last_concept_anchor,
                 self.current_topic,
             ]
         )
@@ -3434,6 +3447,9 @@ class WorkingMemory:
             self._normalize_mention(term)
             for term in native.get('native_topic_words', []) + native.get('native_entities', [])
         )
+        # Stale anchor appended at lowest priority rather than dropped entirely
+        if _anchor_stale and self.last_concept_anchor:
+            ordered_terms.append(self.last_concept_anchor)
 
         for idx, term in enumerate(ordered_terms):
             if not term or term in seen_terms or term not in self.concept_meanings:
@@ -3442,7 +3458,7 @@ class WorkingMemory:
             score = max(0.0, 1.1 - idx * 0.08)
             if term == explicit_term:
                 score += 0.55
-            if callback_like and term == self.last_concept_anchor:
+            if callback_like and term == self.last_concept_anchor and not _anchor_stale:
                 score += 0.32
             if term == self.current_topic:
                 score += 0.18
@@ -3696,6 +3712,22 @@ class WorkingMemory:
                             draft.selected = idx
                             draft.reason = 'avoid_exact_repeat'
                             break
+
+                # Concept-level repeat guard: if every non-empty draft variant
+                # discusses the same concept anchor as the last response, none
+                # of them is genuinely novel.  Clear the draft so the pipeline
+                # falls back to _data_to_minimal_speech rather than oscillating
+                # between surface forms of the same repeated concept.
+                _anc_lo = str(getattr(self, 'last_concept_anchor', '') or '').lower()
+                if _anc_lo and last_text and _anc_lo in last_text:
+                    _all_v = [str(t or '').strip().lower()
+                              for t in (draft.raw, draft.structured, draft.social)
+                              if str(t or '').strip()]
+                    if _all_v and all(_anc_lo in v for v in _all_v):
+                        draft.raw = ''
+                        draft.structured = ''
+                        draft.social = ''
+                        draft.reason = 'concept_repeat_suppressed'
 
                 evo._last_draft = draft
                 final_text = str(draft.selected_text() or '').strip()
