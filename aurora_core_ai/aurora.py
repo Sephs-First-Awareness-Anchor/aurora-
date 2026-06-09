@@ -26335,13 +26335,58 @@ def _run_live_response_turn(
             _diff_snap_pt = _dhb_pt.snapshot(tick=turn_tick)
             systems['_last_diff_snapshot'] = _diff_snap_pt
             if _ae_pt is not None:
+                # Salience = how unexpected this input is relative to
+                # what the field was tracking. Source: DifferenceSnapshot.
+                # This makes salience a genuine surprise signal, not a
+                # proxy for message length.
+                _salience_pt = 0.5
+                if _diff_snap_pt is not None:
+                    try:
+                        _dvals = list(_diff_snap_pt.values.values())
+                        if _dvals:
+                            _salience_pt = min(1.0, sum(abs(v) for v in _dvals)
+                                               / len(_dvals) * 2.0)
+                    except Exception:
+                        pass
+
+                # Direct address adds a floor but does not override surprise signal
+                _addressed_pt = bool(user_text and user_text.strip())
+                if _addressed_pt:
+                    _salience_pt = max(_salience_pt, 0.40)
+
+                # Semantic novelty bonus: topics not seen recently raise salience
+                try:
+                    _wm_sal = systems.get('working_memory')
+                    _recent_topics = set(getattr(_wm_sal, '_recent_topics', []) or [])
+                    _parsed_topics = set(
+                        str(systems.get('_pre_parsed_utterance', {}).get('topic', '') or '').lower().split()
+                    )
+                    _novel_topics = _parsed_topics - _recent_topics
+                    if _novel_topics:
+                        _salience_pt = min(1.0, _salience_pt + 0.15)
+                except Exception:
+                    pass
+
                 _ext_stim_pt = {
-                    'intensity': min(1.0, len(str(user_text or '').split()) / 20.0),
-                    'addressed': True,
-                    'tags': [],
+                    'intensity': round(_salience_pt, 4),
+                    'addressed': _addressed_pt,
+                    'tags': list(
+                        str(systems.get('_pre_parsed_utterance', {}).get('topic', '') or '').split()[:4]
+                    ),
                 }
                 _ae_frame_pt = _ae_pt.tick(turn_tick, _ext_stim_pt, _diff_snap_pt)
                 systems['_last_attention_frame'] = _ae_frame_pt
+
+                # Wire meaning nucleus to understanding contract when FORMING
+                try:
+                    _nucleus = _ae_pt.get_meaning_nucleus()
+                    if _nucleus is not None:
+                        systems['_meaning_nucleus'] = _nucleus
+                        _uc_mn = systems.get('understanding_contract')
+                        if _uc_mn is not None and hasattr(_uc_mn, 'register_meaning_event'):
+                            _uc_mn.register_meaning_event(_nucleus)
+                except Exception:
+                    pass
     except Exception:
         pass
 
