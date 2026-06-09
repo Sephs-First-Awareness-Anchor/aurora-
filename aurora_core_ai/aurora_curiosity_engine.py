@@ -834,6 +834,17 @@ class CuriosityEngine:
                 record_tool_result(packet)
             except Exception:
                 results[tool_name] = "error during execution"
+                # ---- OFFLINE RESILIENCE — surface gap to user if offline ----
+                try:
+                    if not self.systems.get('_is_online', True):
+                        from aurora_offline_resilience import write_pending_question
+                        if curiosity.subject:
+                            write_pending_question(
+                                question=curiosity.subject,
+                                context=str(curiosity.hypothesis or ''),
+                            )
+                except Exception:
+                    pass
         return results
 
     def _step4_conclusion(

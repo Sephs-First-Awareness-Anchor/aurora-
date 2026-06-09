@@ -25008,6 +25008,79 @@ def boot_aurora(
         if verbose:
             print(f"  [BRAIDED SUBSTRATE] Unavailable: {_bsl_e}")
 
+    # ---- CONCEPT CRYSTAL REGISTRY — perceptual hierarchy (base→quasi) ----
+    try:
+        from concept_crystal import ConceptCrystalRegistry as _CCR
+        _ccr = _CCR()
+        _cc_state_dir = str(systems.get('state_dir') or '')
+        if _cc_state_dir:
+            _ccr.load(_cc_state_dir)
+        systems['_concept_crystal_registry'] = _ccr
+        try:
+            import atexit as _atexit_ccr
+            def _save_ccr():
+                try:
+                    _ccr_sv = systems.get('_concept_crystal_registry')
+                    _dir_sv = str(systems.get('state_dir') or '')
+                    if _ccr_sv is not None and _dir_sv:
+                        _ccr_sv.save(_dir_sv)
+                except Exception:
+                    pass
+            _atexit_ccr.register(_save_ccr)
+        except Exception:
+            pass
+        if verbose:
+            _cc_stats = _ccr.stats()
+            print(f"  [CCR]  ConceptCrystalRegistry online "
+                  f"({_cc_stats['total']} nodes, "
+                  f"{_cc_stats['grounded']} grounded)")
+    except Exception as _ccr_e:
+        systems['_concept_crystal_registry'] = None
+        if verbose:
+            print(f"  [CCR]  ConceptCrystalRegistry unavailable: {_ccr_e}")
+
+    # ---- GEOLOGICAL BASELINE — wave/particle boundary + persistent pressure ----
+    try:
+        from geological_baseline import GeologicalBaseline as _GB
+        _gb = _GB()
+        systems['_geological_baseline'] = _gb
+        if verbose:
+            print("  [GEO]  GeologicalBaseline online")
+    except Exception as _gb_e:
+        systems['_geological_baseline'] = None
+        if verbose:
+            print(f"  [GEO]  GeologicalBaseline unavailable: {_gb_e}")
+
+    # ---- OFFLINE RESILIENCE — connectivity monitor + provisional knowledge ----
+    try:
+        from aurora_offline_resilience import (
+            ConnectivityMonitor as _CM,
+            check_connectivity as _check_conn,
+        )
+        def _on_online():
+            systems['_is_online'] = True
+            try:
+                from aurora_offline_resilience import ProvisionalStore, run_verification_sweep
+                run_verification_sweep(ProvisionalStore())
+            except Exception:
+                pass
+
+        def _on_offline():
+            systems['_is_online'] = False
+
+        _cm = _CM(on_online=_on_online, on_offline=_on_offline)
+        systems['_connectivity_monitor'] = _cm
+        systems['_is_online'] = _check_conn()
+        _cm.start()
+        if verbose:
+            _conn_status = 'online' if systems['_is_online'] else 'OFFLINE'
+            print(f"  [NET]  ConnectivityMonitor started ({_conn_status})")
+    except Exception as _cm_e:
+        systems['_connectivity_monitor'] = None
+        systems['_is_online'] = True
+        if verbose:
+            print(f"  [NET]  ConnectivityMonitor unavailable: {_cm_e}")
+
     # ---- THOUGHT BRAID — boot continuous braid background thread ----
     try:
         from aurora_braid_wiring import boot_thought_braid
@@ -26306,6 +26379,16 @@ def _run_live_response_turn(
     except Exception:
         pass
 
+    # ---- CONCEPT CRYSTAL — clear turn overlays from last turn ----
+    try:
+        if systems.get('_ccr_needs_overlay_clear'):
+            _ccr_clr = systems.get('_concept_crystal_registry')
+            if _ccr_clr is not None and hasattr(_ccr_clr, 'clear_turn_overlays'):
+                _ccr_clr.clear_turn_overlays()
+            systems['_ccr_needs_overlay_clear'] = False
+    except Exception:
+        pass
+
     # ---- LANGUAGE FIELD — build pragmatic receiver vector ----
     try:
         _lf_pv = systems.get('language_field')
@@ -27379,6 +27462,42 @@ def _run_live_response_turn(
                             _dt_ep.train_on_bundle(_bundle, systems)
                     except Exception:
                         pass
+    except Exception:
+        pass
+
+    # ---- CONCEPT CRYSTAL — observe LSA crossing for this turn ----
+    try:
+        _ccr_lsa = systems.get('_concept_crystal_registry')
+        if _ccr_lsa is not None:
+            _ax_lsa = systems.get('_live_conscious_crest') or {}
+            _ax_dict_lsa = {
+                'X': float(_ax_lsa.get('X', _ax_lsa.get('existence', 0.5)) or 0.5),
+                'T': float(_ax_lsa.get('T', _ax_lsa.get('temporal', 0.5)) or 0.5),
+                'N': float(_ax_lsa.get('N', _ax_lsa.get('energy', 0.5)) or 0.5),
+                'B': float(_ax_lsa.get('B', _ax_lsa.get('boundary', 0.5)) or 0.5),
+                'A': float(_ax_lsa.get('A', _ax_lsa.get('agency', 0.5)) or 0.5),
+            }
+            _pkey_ccr = (
+                str((systems.get('_last_lf_reentry') or {}).get('path_key', '') or '') or
+                f"turn:{session_id}:{turn_tick}"
+            )
+            _ccr_lsa.observe_lsa(_ax_dict_lsa, _pkey_ccr)
+            _fid_lsa = float(systems.get('_last_lf_fidelity', 0.5) or 0.5)
+            if _fid_lsa > 0.5:
+                _ccr_lsa.observe_sedi(_ax_dict_lsa, delta=round(_fid_lsa * 0.06, 4))
+            systems['_ccr_needs_overlay_clear'] = True
+    except Exception:
+        pass
+
+    # ---- GEOLOGICAL BASELINE — tick on crystal activity ----
+    try:
+        _gb_pt = systems.get('_geological_baseline')
+        if _gb_pt is not None:
+            _gb_pt.tick(
+                systems.get('_concept_crystal_registry'),
+                systems.get('identity_field'),
+            )
+            systems['_geological_summary'] = _gb_pt.summary()
     except Exception:
         pass
 
