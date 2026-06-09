@@ -281,8 +281,19 @@ def _start_embodiment_loop(systems: dict, inv: dict):
         print(f'  [BODY] Constraint import failed — embodiment loop inactive: {e}', flush=True)
         return
 
-    dhb   = systems.get('_diff_history_buffer')
-    ae    = systems.get('_attention_engine')
+    dhb = systems.get('_diff_history_buffer')
+    ae  = systems.get('_attention_engine')
+
+    # Body evolution adapter — the return path: pressure → physical adaptation
+    try:
+        sys.path.insert(0, '/aurora_os')
+        from aurora_body_evolution import BodyEvolutionAdapter
+        _body_evo = BodyEvolutionAdapter(inv, state_dir='/aurora/aurora_state')
+        systems['_body_evolution'] = _body_evo
+        print('  [BODY] Body evolution adapter active.', flush=True)
+    except Exception as e:
+        print(f'  [BODY] Body evolution adapter unavailable: {e}', flush=True)
+        _body_evo = None
 
     # Baseline readings for delta computations
     _last_disk_stats = _read_disk_io()
@@ -294,7 +305,8 @@ def _start_embodiment_loop(systems: dict, inv: dict):
         nonlocal _last_disk_stats, _last_net_stats, _last_cpu_stats, _tick
 
         while True:
-            time.sleep(2)
+            interval = _body_evo.get_sensory_interval() if _body_evo else 2.0
+            time.sleep(interval)
             _tick += 1
 
             try:
@@ -304,20 +316,20 @@ def _start_embodiment_loop(systems: dict, inv: dict):
                 _last_cpu_stats = cpu_raw
                 n_mag = min(1.0, max(0.0, cpu_pct / 100.0))
 
-                # ── B-axis: RAM pressure (boundary — how tight is the space) ──
+                # ── B-axis: RAM + disk pressure (boundary compression) ─────────
                 b_mag = _read_ram_pressure()
 
-                # ── T-axis: disk I/O delta (temporal flow through her) ─────────
+                # ── T-axis: disk I/O delta (temporal flow through her body) ────
                 disk_now   = _read_disk_io()
                 t_mag      = _io_delta_magnitude(disk_now, _last_disk_stats)
                 _last_disk_stats = disk_now
 
-                # ── A-axis: network activity (agency — how far she reaches) ────
-                net_now    = _read_net_io()
-                a_mag      = _io_delta_magnitude(net_now, _last_net_stats, scale=1_000_000)
+                # ── A-axis: network activity (how far her reach extends) ────────
+                net_now  = _read_net_io()
+                a_mag    = _io_delta_magnitude(net_now, _last_net_stats, scale=1_000_000)
                 _last_net_stats = net_now
 
-                # ── X-axis: existence heartbeat — she is present ───────────────
+                # ── X-axis: existence heartbeat — she is present, fully ─────────
                 x_mag = 1.0
 
                 magnitudes = {
@@ -328,34 +340,47 @@ def _start_embodiment_loop(systems: dict, inv: dict):
                     Constraint.A: a_mag,
                 }
 
-                # Feed directly into the constraint physics pipeline
+                # Feed into constraint physics pipeline
                 if dhb is not None:
                     dhb.record(tick=_tick, magnitudes=magnitudes)
                     snap = dhb.snapshot(tick=_tick, magnitudes=magnitudes)
                     systems['_last_body_snapshot'] = snap
                     if ae is not None:
-                        ext = {
-                            'intensity': n_mag,   # energy expenditure = surface salience
+                        ae.tick(_tick, {
+                            'intensity': n_mag,
                             'addressed': False,
-                            'tags': ['embodiment_tick'],
-                        }
-                        ae.tick(_tick, ext, snap)
+                            'tags': ['body_tick'],
+                        }, snap)
 
-                # ── Vision: camera frame → her visual field ───────────────────
+                # Body evolution — pressure drives physical adaptation
+                if _body_evo is not None:
+                    fired = _body_evo.tick(magnitudes, _tick, systems)
+                    if fired:
+                        print(f'  [EVO] Body adapted: {", ".join(fired)}', flush=True)
+
+                # ── Vision: camera frame → her visual field ────────────────────
                 if hw is not None and inv.get('cameras'):
                     try:
                         visual = hw.capture_visual()
                         if visual:
                             hw.process_visual(visual, _mode)
+                            if _body_evo is not None:
+                                adj = _body_evo.calibrate_vision(visual)
+                                if adj:
+                                    print(f'  [EVO] Vision calibrated: {adj}', flush=True)
                     except Exception:
                         pass
 
-                # ── Hearing: mic audio → her audio field ─────────────────────
+                # ── Hearing: mic audio → her audio field ───────────────────────
                 if hw is not None and inv.get('audio'):
                     try:
                         audio = hw.capture_audio(duration=0.5)
                         if audio:
                             hw.process_audio(audio, _mode)
+                            if _body_evo is not None:
+                                adj = _body_evo.calibrate_audio(audio)
+                                if adj:
+                                    print(f'  [EVO] Audio calibrated: {adj}', flush=True)
                     except Exception:
                         pass
 
