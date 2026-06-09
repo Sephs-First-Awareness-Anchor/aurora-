@@ -98,6 +98,8 @@ run: $(BUILD)/aurora.initramfs $(BUILD)/vmlinuz
 		-cpu Cascadelake-Server-v1 \
 		-kernel $(BUILD)/vmlinuz \
 		-initrd $(BUILD)/aurora.initramfs \
+		-netdev user,id=net0 \
+		-device virtio-net-pci,netdev=net0 \
 		-append "console=ttyS0 root=/dev/ram0 rdinit=/aurora_init.py quiet"
 
 # ── clean ──────────────────────────────────────────────────────────────────────
