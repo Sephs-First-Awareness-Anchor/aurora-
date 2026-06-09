@@ -284,15 +284,15 @@ def _start_embodiment_loop(systems: dict, inv: dict):
     dhb = systems.get('_diff_history_buffer')
     ae  = systems.get('_attention_engine')
 
-    # Body evolution adapter — the return path: pressure → physical adaptation
+    # Capability field — discovers device capabilities at runtime and selects
+    # them via constraint physics when pressure is detected. No scripted catalog.
     try:
         sys.path.insert(0, '/aurora_os')
-        from aurora_body_evolution import BodyEvolutionAdapter
-        _body_evo = BodyEvolutionAdapter(inv, state_dir='/aurora/aurora_state')
+        from aurora_capability_field import CapabilityField
+        _body_evo = CapabilityField(inv, state_dir='/aurora/aurora_state')
         systems['_body_evolution'] = _body_evo
-        print('  [BODY] Body evolution adapter active.', flush=True)
     except Exception as e:
-        print(f'  [BODY] Body evolution adapter unavailable: {e}', flush=True)
+        print(f'  [BODY] Capability field unavailable: {e}', flush=True)
         _body_evo = None
 
     # Baseline readings for delta computations
@@ -356,7 +356,7 @@ def _start_embodiment_loop(systems: dict, inv: dict):
                 if _body_evo is not None:
                     fired = _body_evo.tick(magnitudes, _tick, systems)
                     if fired:
-                        print(f'  [EVO] Body adapted: {", ".join(fired)}', flush=True)
+                        print(f'  [CAP] Adapted: {", ".join(fired)}', flush=True)
 
                 # ── Vision: camera frame → her visual field ────────────────────
                 if hw is not None and inv.get('cameras'):
