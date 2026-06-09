@@ -2789,6 +2789,48 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
     except Exception as _aed_e:
         _log(f"  [AXIS] AxisEmergenceDetector error: {_aed_e}")
 
+    # ---- QUANTUM DREAM SUBSTRATE — start idle-cycle dream engine ----
+    try:
+        from aurora_quantum_dream_substrate import start_dream_substrate as _start_dream
+        _start_dream(systems, cycle_interval_s=600.0)
+        _log("  [DREAM] QuantumDreamSubstrate started (10-min cycles)")
+    except Exception as _dream_e:
+        _log(f"  [DREAM] QuantumDreamSubstrate unavailable: {_dream_e}")
+
+    # ---- EVOLUTIONARY SIM — compressed constraint-physics development ----
+    try:
+        import time as _time_evo
+        _evo_sim = systems.get('_evo_sim')
+        _evo_last = float(systems.get('_evo_sim_last_run', 0.0) or 0.0)
+        if _evo_sim is None:
+            from constraint_evolutionary_sim import ConstraintEvolutionarySimulator as _CES
+            _evo_sim = _CES()
+            systems['_evo_sim'] = _evo_sim
+        if (_time_evo.time() - _evo_last) > 1800.0:
+            _ax_evo = systems.get('_live_conscious_crest') or {}
+            _seed_evo = {
+                'X': float(_ax_evo.get('X', _ax_evo.get('existence', 0.5)) or 0.5),
+                'T': float(_ax_evo.get('T', _ax_evo.get('temporal', 0.5)) or 0.5),
+                'N': float(_ax_evo.get('N', _ax_evo.get('energy', 0.5)) or 0.5),
+                'B': float(_ax_evo.get('B', _ax_evo.get('boundary', 0.5)) or 0.5),
+                'A': float(_ax_evo.get('A', _ax_evo.get('agency', 0.5)) or 0.5),
+            }
+            _evo_result = _evo_sim.run_generation(
+                seed_axes=_seed_evo,
+                n_variants=24,
+                n_steps=60,
+                concept_registry=systems.get('_concept_crystal_registry'),
+                sedimemory=systems.get('sedimemory'),
+                identity_field=systems.get('identity_field'),
+            )
+            systems['_evo_sim_last_run'] = _time_evo.time()
+            _integrated = int((_evo_result or {}).get('integrated', 0))
+            if _integrated:
+                _log(f"  [EVO]  Evolutionary sim: {_integrated} nodes integrated "
+                     f"(gen {_evo_sim.summary()['generation']})")
+    except Exception as _evo_e:
+        _log(f"  [EVO]  EvolutionarySimulator error: {_evo_e}")
+
 
 def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
                 timeout: float = 12.0) -> str:
