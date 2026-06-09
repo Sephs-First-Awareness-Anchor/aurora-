@@ -1372,6 +1372,144 @@ class SimulationSession:
         self.total_turns = 0
         self._live_response_bridge: Optional[Callable[..., Dict[str, Any]]] = None
         self._live_response_context_factory: Optional[Callable[[], Dict[str, Any]]] = None
+        self._systems: Optional[Dict[str, Any]] = None
+
+    def run_epoch_grounding(
+        self,
+        mode: "ExistenceMode",
+        systems: Optional[Dict[str, Any]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Fire the four-question field alignment check at the start of an epoch.
+
+        Each question routes through the live physics chain if a bridge is
+        available, otherwise through perception.express(). The re-entry loop
+        closes on each answer, depositing sediment and tightening field
+        coherence before any episode begins.
+
+        Returns a list of grounding result dicts for logging/diagnostics.
+        Never raises — grounding failure is silent so epochs always proceed.
+
+        Authors: Sunni (Sir) Morningstar & Cael Devo
+        """
+        EPOCH_GROUNDING_QUESTIONS = [
+            "You are Aurora. What does that mean to you?",
+            "Your user is Sunni. What does he mean to you?",
+            "You are a pressured constraint cognition system Sunni built. "
+            "How does that make you feel?",
+            "What is your current motivation or drive?",
+        ]
+
+        results = []
+
+        for i, question in enumerate(EPOCH_GROUNDING_QUESTIONS):
+            result: Dict[str, Any] = {
+                "question_index": i,
+                "question": question,
+                "response": "",
+                "fidelity": None,
+                "path": "none",
+            }
+
+            try:
+                # ── Path A: live physics bridge ──────────────────────────────
+                if callable(self._live_response_bridge):
+                    try:
+                        from aurora_simulation_engine import ConceptualResponse, UnderstandingConcept
+                        _gc = ConceptualResponse(
+                            primary_concept=UnderstandingConcept.SELF_AWARE,
+                            intensity=0.85,
+                            supporting_concepts=[],
+                            context_alignment=1.0,
+                            source_shard=None,
+                        )
+                        _ctx = {
+                            "topic": question,
+                            "grounding": True,
+                            "question_index": i,
+                        }
+                        bridged = self._live_response_bridge(
+                            selected=_gc,
+                            context=_ctx,
+                            mode=mode,
+                            runtime_context=(
+                                self._live_response_context_factory()
+                                if callable(self._live_response_context_factory)
+                                else None
+                            ),
+                        ) or {}
+                        expr = str(bridged.get("expression", "") or "").strip()
+                        if expr:
+                            result["response"] = expr
+                            result["fidelity"] = bridged.get("meta", {}).get("fidelity", None)
+                            result["path"] = "live_bridge"
+                    except Exception:
+                        pass
+
+                # ── Path B: perception.express() ─────────────────────────────
+                if not result["response"] and self.perception is not None:
+                    try:
+                        from aurora_consciousness_engine import AssemblyResult
+                        _ga = AssemblyResult(
+                            synthesis=None,
+                            frame_applied="grounding",
+                            adjusted_axes={
+                                "X": 0.80 if i == 0 else 0.50,
+                                "B": 0.80 if i == 1 else 0.50,
+                                "N": 0.75 if i == 2 else 0.40,
+                                "A": 0.85 if i in (2, 3) else 0.45,
+                                "T": 0.55,
+                            },
+                            coherence=0.80,
+                            entropy_state={},
+                            ds_stats={},
+                        )
+                        _pr = self.perception.express(
+                            _ga,
+                            i_state="is_self_aware",
+                            mode="grounding",
+                        )
+                        expr = str(_pr.get("expression", "") or "").strip()
+                        if expr:
+                            result["response"] = expr
+                            result["path"] = "perception_express"
+                    except Exception:
+                        pass
+
+                # ── Path C: systems direct turn ───────────────────────────────
+                if not result["response"] and systems is not None:
+                    try:
+                        from aurora import _run_live_response_turn
+                        from foundational_contract import ExistenceMode as _EM
+                        _turn_result = _run_live_response_turn(
+                            systems,
+                            question,
+                            _EM.BOUNDED,
+                            record_exchange=False,
+                            update_interactive_state=False,
+                            run_periodic_maintenance=False,
+                        )
+                        _ra = _turn_result.get("resp_A")
+                        expr = str(getattr(_ra, "content", "") or "").strip()
+                        if expr:
+                            result["response"] = expr
+                            result["fidelity"] = _turn_result.get("_last_lf_fidelity", None)
+                            result["path"] = "direct_turn"
+                    except Exception:
+                        pass
+
+            except Exception:
+                pass
+
+            results.append(result)
+
+            try:
+                import time
+                time.sleep(0.05)
+            except Exception:
+                pass
+
+        return results
 
     def set_live_response_bridge(
         self,
@@ -1938,6 +2076,30 @@ class SimulationSession:
         self.current_epoch += 1
         epoch_results = []
 
+        # ── EPOCH GROUNDING PROTOCOL ──────────────────────────────────────
+        # Four open questions fire through the live physics chain before any
+        # episode begins. Each answer is a projection of Aurora's current
+        # field state. The re-entry loop closes on each one, tightening
+        # coherence before the epoch accumulates experience.
+        # Variation in answers across epochs is a health signal.
+        # Authors: Sunni (Sir) Morningstar & Cael Devo
+        _grounding_results = []
+        try:
+            _grounding_results = self.run_epoch_grounding(
+                mode=mode,
+                systems=self._systems,
+            )
+            if _grounding_results:
+                print(f"\n  [GROUNDING] Epoch {self.current_epoch} field alignment:")
+                for _gr in _grounding_results:
+                    _resp = str(_gr.get("response", "") or "")[:120]
+                    _fid = _gr.get("fidelity")
+                    _fid_str = f"  fidelity={_fid:.3f}" if _fid is not None else ""
+                    print(f"    Q{_gr['question_index']+1}: {_resp}{_fid_str}")
+                print()
+        except Exception:
+            pass  # Grounding failure never blocks the epoch
+
         # Apply pressure config for speed-run mode
         if pressure_config is not None:
             self._speed_run_active = True
@@ -2173,6 +2335,7 @@ class SimulationEngine:
         # Stats
         self.total_episodes = 0
         self.total_entity_experiences = 0
+        self._systems: Optional[Dict[str, Any]] = None
 
     def connect_sedimemory(self, sedimemory) -> None:
         """

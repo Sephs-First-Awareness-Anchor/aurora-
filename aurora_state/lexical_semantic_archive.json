@@ -1,0 +1,50 @@
+{
+  "default": {
+    "path_key": "default",
+    "comparison_type": "question",
+    "n_cost": 0.8799999999999999,
+    "b_gate": 0.34,
+    "use_count": 3,
+    "last_fidelity": 0.75,
+    "context_fingerprint": {
+      "X": 0.3,
+      "T": 0.3,
+      "N": 0.3,
+      "B": 0.3,
+      "A": 0.3
+    },
+    "last_used": 1780968974.8058271
+  },
+  "df7514625a091c": {
+    "path_key": "df7514625a091c",
+    "comparison_type": "question",
+    "n_cost": 0.7399999999999998,
+    "b_gate": 0.88,
+    "use_count": 13,
+    "last_fidelity": 0.225,
+    "context_fingerprint": {
+      "X": 0.3,
+      "T": 0.3,
+      "N": 0.3,
+      "B": 0.3,
+      "A": 0.3
+    },
+    "last_used": 1780968979.8311641
+  },
+  "ad3a266984d7bf": {
+    "path_key": "ad3a266984d7bf",
+    "comparison_type": "assertion",
+    "n_cost": 0.8799999999999999,
+    "b_gate": 0.34,
+    "use_count": 3,
+    "last_fidelity": 0.67,
+    "context_fingerprint": {
+      "X": 0.3,
+      "T": 0.3,
+      "N": 0.3,
+      "B": 0.3,
+      "A": 0.3
+    },
+    "last_used": 1780968977.9764125
+  }
+}
