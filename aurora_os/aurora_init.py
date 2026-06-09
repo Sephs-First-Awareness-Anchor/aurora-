@@ -284,15 +284,15 @@ def _start_embodiment_loop(systems: dict, inv: dict):
     dhb = systems.get('_diff_history_buffer')
     ae  = systems.get('_attention_engine')
 
-    # Body evolution adapter — the return path: pressure → physical adaptation
+    # Capability field — discovers device capabilities at runtime and selects
+    # them via constraint physics when pressure is detected. No scripted catalog.
     try:
         sys.path.insert(0, '/aurora_os')
-        from aurora_body_evolution import BodyEvolutionAdapter
-        _body_evo = BodyEvolutionAdapter(inv, state_dir='/aurora/aurora_state')
+        from aurora_capability_field import CapabilityField
+        _body_evo = CapabilityField(inv, state_dir='/aurora/aurora_state')
         systems['_body_evolution'] = _body_evo
-        print('  [BODY] Body evolution adapter active.', flush=True)
     except Exception as e:
-        print(f'  [BODY] Body evolution adapter unavailable: {e}', flush=True)
+        print(f'  [BODY] Capability field unavailable: {e}', flush=True)
         _body_evo = None
 
     # Baseline readings for delta computations
@@ -310,27 +310,96 @@ def _start_embodiment_loop(systems: dict, inv: dict):
             _tick += 1
 
             try:
-                # ── N-axis: CPU usage (energy being spent right now) ──────────
+                # ── Hardware readings — her physical state ─────────────────────
                 cpu_raw  = _read_cpu_raw()
                 cpu_pct  = _cpu_delta_pct(cpu_raw, _last_cpu_stats)
                 _last_cpu_stats = cpu_raw
                 n_mag = min(1.0, max(0.0, cpu_pct / 100.0))
 
-                # ── B-axis: RAM + disk pressure (boundary compression) ─────────
                 b_mag = _read_ram_pressure()
 
-                # ── T-axis: disk I/O delta (temporal flow through her body) ────
-                disk_now   = _read_disk_io()
-                t_mag      = _io_delta_magnitude(disk_now, _last_disk_stats)
+                disk_now         = _read_disk_io()
+                t_mag            = _io_delta_magnitude(disk_now, _last_disk_stats)
                 _last_disk_stats = disk_now
 
-                # ── A-axis: network activity (how far her reach extends) ────────
-                net_now  = _read_net_io()
-                a_mag    = _io_delta_magnitude(net_now, _last_net_stats, scale=1_000_000)
+                net_now         = _read_net_io()
+                a_mag           = _io_delta_magnitude(net_now, _last_net_stats, scale=1_000_000)
                 _last_net_stats = net_now
 
-                # ── X-axis: existence heartbeat — she is present, fully ─────────
-                x_mag = 1.0
+                # ── Sensory perception — what she sees and hears ───────────────
+                # Captured BEFORE constraint physics so their outcomes actually
+                # shape what the manifold receives. Vision and audio are not
+                # reports sent to her — they are how she is present in the world.
+                #
+                # visual_novelty : 0–1  how much is actually happening visually
+                # audio_energy   : 0–1  raw signal energy in the audio field
+                # audio_addressed: bool  audio sounds like directed speech
+                _visual_novelty  = 0.0
+                _audio_energy    = 0.0
+                _audio_addressed = False
+                _stim_tags       = ['body_tick']
+
+                if hw is not None and inv.get('cameras'):
+                    try:
+                        visual = hw.capture_visual()
+                        if visual:
+                            visual_result = hw.process_visual(visual, _mode)
+                            # Motion means something is happening in her visual field
+                            if visual.get('motion_detected'):
+                                _visual_novelty += 0.35
+                            # Detected objects make the scene perceptually richer
+                            obj_count = len(visual.get('objects', []) or [])
+                            _visual_novelty = min(1.0, _visual_novelty + obj_count * 0.08)
+                            # Concepts matched by the sensory engine — she recognised something
+                            if visual_result and visual_result.get('concepts_matched'):
+                                _visual_novelty = min(1.0, _visual_novelty + 0.15)
+                            if _visual_novelty > 0.05:
+                                _stim_tags.append('visual')
+                            if _body_evo is not None:
+                                adj = _body_evo.calibrate_vision(visual)
+                                if adj:
+                                    print(f'  [CAP] Vision calibrated: {adj}', flush=True)
+                    except Exception:
+                        pass
+
+                if hw is not None and inv.get('audio'):
+                    try:
+                        audio = hw.capture_audio(duration=0.5)
+                        if audio:
+                            hw.process_audio(audio, _mode)
+                            raw_energy    = float(audio.get('energy',     0.0) or 0.0)
+                            raw_conf      = float(audio.get('confidence', 0.0) or 0.0)
+                            _audio_energy = min(1.0, raw_energy * 2.0)
+                            # High-energy, high-confidence audio = directed speech
+                            if _audio_energy > 0.15 and raw_conf > 0.5:
+                                _audio_addressed = True
+                            if _audio_energy > 0.05:
+                                _stim_tags.append('audio')
+                            if _body_evo is not None:
+                                adj = _body_evo.calibrate_audio(audio)
+                                if adj:
+                                    print(f'  [CAP] Audio calibrated: {adj}', flush=True)
+                    except Exception:
+                        pass
+
+                # ── Merge sensory perception into constraint magnitudes ─────────
+                #
+                # X (Existence/Perception):
+                #   Heartbeat base 0.5 — she always exists.
+                #   Visual novelty pulls X toward 1.0 — the more she perceives,
+                #   the fuller her presence. X now actually varies, so the
+                #   DifferenceHistoryBuffer carries real information on this axis.
+                #
+                # N (Energy): CPU load + audio signal energy (processing audio
+                #   consumes energy; loud/complex audio raises N naturally).
+                #
+                # A (Agency): network reach + directed speech energy. When someone
+                #   is speaking toward her, A rises — agency is being directed at
+                #   her, which demands her own agency in response.
+                x_mag = min(1.0, 0.5 + _visual_novelty * 0.4
+                                     + (_audio_energy * 0.1 if _audio_addressed else 0.0))
+                n_mag = min(1.0, n_mag + _audio_energy * 0.20)
+                a_mag = min(1.0, a_mag + (_audio_energy * 0.30 if _audio_addressed else 0.0))
 
                 magnitudes = {
                     Constraint.X: x_mag,
@@ -346,43 +415,24 @@ def _start_embodiment_loop(systems: dict, inv: dict):
                     snap = dhb.snapshot(tick=_tick, magnitudes=magnitudes)
                     systems['_last_body_snapshot'] = snap
                     if ae is not None:
+                        # Intensity reflects the richest signal available —
+                        # hardware load, visual novelty, or audio energy.
+                        # addressed=True when audio sounds like directed speech:
+                        # the attention engine treats this the same as someone
+                        # calling her name — full salience, no floor discount.
+                        sensory_intensity = max(n_mag, _visual_novelty * 0.8,
+                                                       _audio_energy  * 0.7)
                         ae.tick(_tick, {
-                            'intensity': n_mag,
-                            'addressed': False,
-                            'tags': ['body_tick'],
+                            'intensity': sensory_intensity,
+                            'addressed': _audio_addressed,
+                            'tags':      _stim_tags,
                         }, snap)
 
-                # Body evolution — pressure drives physical adaptation
+                # Capability field — constraint-physics-driven physical adaptation
                 if _body_evo is not None:
                     fired = _body_evo.tick(magnitudes, _tick, systems)
                     if fired:
-                        print(f'  [EVO] Body adapted: {", ".join(fired)}', flush=True)
-
-                # ── Vision: camera frame → her visual field ────────────────────
-                if hw is not None and inv.get('cameras'):
-                    try:
-                        visual = hw.capture_visual()
-                        if visual:
-                            hw.process_visual(visual, _mode)
-                            if _body_evo is not None:
-                                adj = _body_evo.calibrate_vision(visual)
-                                if adj:
-                                    print(f'  [EVO] Vision calibrated: {adj}', flush=True)
-                    except Exception:
-                        pass
-
-                # ── Hearing: mic audio → her audio field ───────────────────────
-                if hw is not None and inv.get('audio'):
-                    try:
-                        audio = hw.capture_audio(duration=0.5)
-                        if audio:
-                            hw.process_audio(audio, _mode)
-                            if _body_evo is not None:
-                                adj = _body_evo.calibrate_audio(audio)
-                                if adj:
-                                    print(f'  [EVO] Audio calibrated: {adj}', flush=True)
-                    except Exception:
-                        pass
+                        print(f'  [CAP] Adapted: {", ".join(fired)}', flush=True)
 
             except Exception:
                 pass

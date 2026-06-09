@@ -105,7 +105,7 @@ COPY aurora_state.json                   /aurora/
 # Copy the AOOS layer itself
 COPY aurora_os/aurora_init.py          /aurora_init.py
 COPY aurora_os/aurora_terminal.py      /aurora/aurora_terminal.py
-COPY aurora_os/aurora_body_evolution.py /aurora_os/aurora_body_evolution.py
+COPY aurora_os/aurora_capability_field.py /aurora_os/aurora_capability_field.py
 RUN mkdir -p /aurora_os
 
 # aurora_init.py must be executable and will be invoked as /aurora_init.py

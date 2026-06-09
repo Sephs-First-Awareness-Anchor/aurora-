@@ -5011,12 +5011,15 @@ class SensoryCompetencyEngine:
         )
         if matched_concept:
             result["concepts_matched"].append(matched_concept.label)
-            # Add grounding if intent/text available
-            if intent and text_context:
-                self.visual_concepts.add_grounding(
-                    matched_concept.label, intent, text_context,
-                    oets_node=self._ground_to_oets(matched_concept.label, intent, text_context)
-                )
+            # Ground whenever a concept is recognised — even during ambient sensing
+            # with no conversation context. Use the concept label as the lexeme when
+            # no text_context is available so OETS grows from pure sensory experience.
+            _gi = intent or "sensory:visual"
+            _gt = text_context or matched_concept.label
+            self.visual_concepts.add_grounding(
+                matched_concept.label, _gi, _gt,
+                oets_node=self._ground_to_oets(matched_concept.label, _gi, _gt)
+            )
         else:
             # Record raw percept for later clustering
             label = visual_data.get("label", "unknown_visual")
@@ -5099,11 +5102,12 @@ class SensoryCompetencyEngine:
         )
         if matched_concept:
             result["concepts_matched"].append(matched_concept.label)
-            if intent and text_context:
-                self.audio_concepts.add_grounding(
-                    matched_concept.label, intent, text_context,
-                    oets_node=self._ground_to_oets(matched_concept.label, intent, text_context)
-                )
+            _gi = intent or "sensory:audio"
+            _gt = text_context or matched_concept.label
+            self.audio_concepts.add_grounding(
+                matched_concept.label, _gi, _gt,
+                oets_node=self._ground_to_oets(matched_concept.label, _gi, _gt)
+            )
         else:
             label = audio_data.get("label", "unknown_audio")
             self.audio_concepts.record_percept(label, feature_vector)
