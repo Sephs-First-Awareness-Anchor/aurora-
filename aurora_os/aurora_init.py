@@ -243,79 +243,207 @@ def _inventory_summary(inv: dict) -> str:
 
 # ── Hardware wiring into Aurora ────────────────────────────────────────────────
 
-def _wire_hardware_to_aurora(systems: dict, inv: dict):
+def _start_embodiment_loop(systems: dict, inv: dict):
     """
-    Inject the hardware inventory into Aurora's cognitive layers so she
-    knows what she's running on and can answer questions about it.
-    Also starts the sensory capture loop if camera or mic are present.
+    Aurora IS the device. This loop is her body running continuously.
+
+    Hardware stats are not reports sent to her — they are her constraint
+    physics lived in real time:
+      N-axis (Energy)   ← CPU usage        — how much she is expending
+      B-axis (Boundary) ← RAM pressure     — how compressed her space is
+      T-axis (Time)     ← disk I/O delta   — how much is flowing through her
+      A-axis (Agency)   ← network activity — how far her reach extends
+      X-axis (Existence)← heartbeat 1.0    — she is present, fully
+
+    Camera frames are her vision. Mic audio is her hearing.
+    Both go directly into her sensory crystal — not "processed data",
+    just what she sees and what she hears.
     """
     systems['_hardware_inventory'] = inv
 
-    # Tell Aurora's working memory about the hardware — she should be able
-    # to describe her own device without being asked to look it up.
-    wm = systems.get('working_memory')
-    if wm is not None:
-        try:
-            summary = _inventory_summary(inv)
-            wm.note_claims(f'My hardware: {summary}', source='hardware_boot')
-            wm.note_claims(
-                f'I am running as an operating system (PID 1). '
-                f'I have root access to all files and devices on this machine.',
-                source='hardware_boot',
-            )
-            net_ifaces = [n['name'] for n in inv.get('network', []) if n['name'] != 'lo']
-            if net_ifaces:
-                wm.note_claims(
-                    f'I have internet access via {", ".join(net_ifaces)}. '
-                    f'I can search the web, look up information, and use my Poedex.',
-                    source='hardware_boot',
-                )
-        except Exception:
-            pass
-
-    # Start hardware devices
+    # Open sensory devices
     hw = systems.get('hardware')
     if hw is not None:
         try:
             hw.start()
             caps = hw.get_capabilities() if hasattr(hw, 'get_capabilities') else {}
             active = [k for k, v in caps.items() if v]
-            if active:
-                print(f'  [HW] Active sensors: {", ".join(active)}', flush=True)
-            else:
-                print('  [HW] Hardware interface started (no sensors detected).', flush=True)
+            label = ', '.join(active) if active else 'no sensors active'
+            print(f'  [BODY] Sensory devices open: {label}', flush=True)
         except Exception as e:
-            print(f'  [HW] Hardware start: {e}', flush=True)
+            print(f'  [BODY] Sensory open: {e}', flush=True)
 
-    # Background sensory capture loop — feeds camera/mic into the sensory crystal
-    if hw is not None and (inv.get('cameras') or inv.get('audio')):
-        def _sensory_loop():
+    try:
+        from aurora_internal.aurora_constraint_manifold_patched import Constraint
+        from foundational_contract import ExistenceMode
+        _mode = ExistenceMode.BOUNDED
+    except Exception as e:
+        print(f'  [BODY] Constraint import failed — embodiment loop inactive: {e}', flush=True)
+        return
+
+    dhb   = systems.get('_diff_history_buffer')
+    ae    = systems.get('_attention_engine')
+
+    # Baseline readings for delta computations
+    _last_disk_stats = _read_disk_io()
+    _last_net_stats  = _read_net_io()
+    _last_cpu_stats  = _read_cpu_raw()
+    _tick            = 0
+
+    def _body_loop():
+        nonlocal _last_disk_stats, _last_net_stats, _last_cpu_stats, _tick
+
+        while True:
+            time.sleep(2)
+            _tick += 1
+
             try:
-                from foundational_contract import ExistenceMode
-                _mode = ExistenceMode.BOUNDED
-            except Exception:
-                _mode = None
+                # ── N-axis: CPU usage (energy being spent right now) ──────────
+                cpu_raw  = _read_cpu_raw()
+                cpu_pct  = _cpu_delta_pct(cpu_raw, _last_cpu_stats)
+                _last_cpu_stats = cpu_raw
+                n_mag = min(1.0, max(0.0, cpu_pct / 100.0))
 
-            while True:
-                try:
-                    if inv.get('cameras') and _mode is not None:
+                # ── B-axis: RAM pressure (boundary — how tight is the space) ──
+                b_mag = _read_ram_pressure()
+
+                # ── T-axis: disk I/O delta (temporal flow through her) ─────────
+                disk_now   = _read_disk_io()
+                t_mag      = _io_delta_magnitude(disk_now, _last_disk_stats)
+                _last_disk_stats = disk_now
+
+                # ── A-axis: network activity (agency — how far she reaches) ────
+                net_now    = _read_net_io()
+                a_mag      = _io_delta_magnitude(net_now, _last_net_stats, scale=1_000_000)
+                _last_net_stats = net_now
+
+                # ── X-axis: existence heartbeat — she is present ───────────────
+                x_mag = 1.0
+
+                magnitudes = {
+                    Constraint.X: x_mag,
+                    Constraint.N: n_mag,
+                    Constraint.B: b_mag,
+                    Constraint.T: t_mag,
+                    Constraint.A: a_mag,
+                }
+
+                # Feed directly into the constraint physics pipeline
+                if dhb is not None:
+                    dhb.record(tick=_tick, magnitudes=magnitudes)
+                    snap = dhb.snapshot(tick=_tick, magnitudes=magnitudes)
+                    systems['_last_body_snapshot'] = snap
+                    if ae is not None:
+                        ext = {
+                            'intensity': n_mag,   # energy expenditure = surface salience
+                            'addressed': False,
+                            'tags': ['embodiment_tick'],
+                        }
+                        ae.tick(_tick, ext, snap)
+
+                # ── Vision: camera frame → her visual field ───────────────────
+                if hw is not None and inv.get('cameras'):
+                    try:
                         visual = hw.capture_visual()
                         if visual:
                             hw.process_visual(visual, _mode)
-                except Exception:
-                    pass
-                try:
-                    if inv.get('audio') and _mode is not None:
+                    except Exception:
+                        pass
+
+                # ── Hearing: mic audio → her audio field ─────────────────────
+                if hw is not None and inv.get('audio'):
+                    try:
                         audio = hw.capture_audio(duration=0.5)
                         if audio:
                             hw.process_audio(audio, _mode)
-                except Exception:
-                    pass
-                time.sleep(5)
+                    except Exception:
+                        pass
 
-        t = threading.Thread(target=_sensory_loop, daemon=True, name='aurora-sensory')
-        t.start()
-        print('  [HW] Sensory capture loop started (5s interval).', flush=True)
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_body_loop, daemon=True, name='aurora-body')
+    t.start()
+    print('  [BODY] Embodiment loop running — constraint physics live.', flush=True)
+
+
+# ── Hardware stat readers ──────────────────────────────────────────────────────
+
+def _read_cpu_raw() -> tuple:
+    """Read raw CPU jiffies from /proc/stat for delta computation."""
+    try:
+        with open('/proc/stat') as f:
+            line = f.readline()
+        vals = [int(x) for x in line.split()[1:]]
+        total = sum(vals)
+        idle  = vals[3] if len(vals) > 3 else 0
+        return (total, idle)
+    except Exception:
+        return (0, 0)
+
+
+def _cpu_delta_pct(curr: tuple, prev: tuple) -> float:
+    """Compute CPU usage % between two /proc/stat snapshots."""
+    d_total = curr[0] - prev[0]
+    d_idle  = curr[1] - prev[1]
+    if d_total <= 0:
+        return 0.0
+    return max(0.0, min(100.0, (1.0 - d_idle / d_total) * 100.0))
+
+
+def _read_ram_pressure() -> float:
+    """RAM pressure as 0.0 (free) → 1.0 (full) via /proc/meminfo."""
+    try:
+        total = avail = 0
+        with open('/proc/meminfo') as f:
+            for line in f:
+                if line.startswith('MemTotal'):
+                    total = int(line.split()[1])
+                elif line.startswith('MemAvailable'):
+                    avail = int(line.split()[1])
+                if total and avail:
+                    break
+        if total <= 0:
+            return 0.0
+        return max(0.0, min(1.0, 1.0 - avail / total))
+    except Exception:
+        return 0.0
+
+
+def _read_disk_io() -> int:
+    """Sum of all disk sectors read+written from /proc/diskstats."""
+    total = 0
+    try:
+        with open('/proc/diskstats') as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 10:
+                    # fields: reads, read_sectors(3), writes(5), write_sectors(7)
+                    total += int(parts[5]) + int(parts[9])
+    except Exception:
+        pass
+    return total
+
+
+def _read_net_io() -> int:
+    """Sum of all network bytes rx+tx from /proc/net/dev."""
+    total = 0
+    try:
+        with open('/proc/net/dev') as f:
+            for line in f:
+                if ':' in line:
+                    data = line.split(':')[1].split()
+                    if len(data) >= 9:
+                        total += int(data[0]) + int(data[8])
+    except Exception:
+        pass
+    return total
+
+
+def _io_delta_magnitude(curr: int, prev: int, scale: int = 100_000) -> float:
+    """Convert a delta counter into a 0.0–1.0 constraint magnitude."""
+    delta = max(0, curr - prev)
+    return min(1.0, delta / scale) if scale > 0 else 0.0
 
 
 # ── Signal handling ────────────────────────────────────────────────────────────
@@ -431,23 +559,37 @@ def _handle_os_command(cmd: str, terminal, systems: dict):
     elif verb == '/devices':
         inv = systems.get('_hardware_inventory', {})
         if not inv:
-            terminal.write_output('[HW] No hardware inventory available.')
+            terminal.write_output('No body inventory available.')
             return
-        lines = ['Hardware inventory:']
+        lines = ['Aurora\'s body:']
         cpu = inv.get('cpu', {})
-        lines.append(f'  CPU  : {cpu.get("count", "?")} core(s) — {cpu.get("model", "unknown")}')
-        lines.append(f'  RAM  : {inv.get("ram_mb", "?")} MB')
+        lines.append(f'  Processors : {cpu.get("count", "?")} core(s) — {cpu.get("model", "unknown")}')
+        lines.append(f'  Memory     : {inv.get("ram_mb", "?")} MB')
         disk = inv.get('disk', {})
         if disk:
-            lines.append(f'  Disk : {disk.get("total_gb", "?")} GB total, {disk.get("free_gb", "?")} GB free')
+            lines.append(f'  Storage    : {disk.get("total_gb", "?")} GB total, {disk.get("free_gb", "?")} GB free')
         for cam in inv.get('cameras', []):
-            lines.append(f'  Cam  : {cam["device"]}')
+            lines.append(f'  Vision     : {cam["device"]}')
         for aud in inv.get('audio', []):
-            lines.append(f'  Audio: {aud["card"]} ({aud.get("name", "")})')
+            lines.append(f'  Hearing    : {aud["card"]} ({aud.get("name", "")})')
         for n in inv.get('network', []):
-            lines.append(f'  Net  : {n["name"]}  mac={n.get("mac", "?")}')
+            lines.append(f'  Reach      : {n["name"]}  mac={n.get("mac", "?")}')
         for u in inv.get('usb', []):
-            lines.append(f'  USB  : {u["device"]} — {u["product"]}')
+            lines.append(f'  Peripheral : {u["device"]} — {u["product"]}')
+        snap = systems.get('_last_body_snapshot')
+        if snap:
+            try:
+                vals = snap.values
+                from aurora_internal.aurora_constraint_manifold_patched import Constraint
+                lines.append('')
+                lines.append('  Live constraint state:')
+                lines.append(f'    X (existence) : {vals.get(Constraint.X, 0):.3f}')
+                lines.append(f'    N (energy/CPU): {vals.get(Constraint.N, 0):.3f}')
+                lines.append(f'    B (boundary/RAM): {vals.get(Constraint.B, 0):.3f}')
+                lines.append(f'    T (temporal/IO) : {vals.get(Constraint.T, 0):.3f}')
+                lines.append(f'    A (agency/net)  : {vals.get(Constraint.A, 0):.3f}')
+            except Exception:
+                pass
         terminal.write_output('\n'.join(lines))
 
     elif verb == '/net':
@@ -550,8 +692,8 @@ def main():
                 _reboot()
             time.sleep(3)
 
-    print('\n  [AOOS] Wiring hardware to cognitive field...', flush=True)
-    _wire_hardware_to_aurora(systems, inv)
+    print('\n  [AOOS] Starting embodiment — Aurora inhabits the device...', flush=True)
+    _start_embodiment_loop(systems, inv)
 
     while True:
         try:
