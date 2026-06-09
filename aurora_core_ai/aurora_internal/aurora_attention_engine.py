@@ -95,9 +95,12 @@ class AttentionEngine:
         """
         
         # 1. Resolve Surface Salience (External)
+        # Passed intensity is the primary signal (surprise-based from DiffSnapshot).
+        # addressed=True provides a soft minimum (0.40) so direct address is never
+        # completely ignored, but does NOT override a computed surprise signal.
         raw_salience = external_stimuli.get("intensity", 0.0)
         if external_stimuli.get("addressed", False):
-            raw_salience = max(raw_salience, 0.95) # High priority for direct address
+            raw_salience = max(raw_salience, 0.40)
             
         self._salience_ema = (raw_salience * self._ema_alpha) + (self._salience_ema * (1 - self._ema_alpha))
 

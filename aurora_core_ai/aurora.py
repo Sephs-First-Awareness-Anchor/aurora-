@@ -20579,14 +20579,32 @@ def _run_reasoning_pipeline(
                 raise RuntimeError("skip_surface_expression_once")
             _perc_a5 = systems.get("perception")
             _resp_draft = str(getattr(state, "response_content", "") or "")
-            if _perc_a5 and _resp_draft and hasattr(_perc_a5, "express"):
+            if _perc_a5 and _resp_draft:
                 # ---- THOUGHT BRAID — EXPRESSION anchor ----
                 try:
                     from aurora_braid_wiring import begin_expression
                     begin_expression(systems)
                 except Exception:
                     pass
-                _expressed = _perc_a5.express(_resp_draft, tone=str(getattr(state, "response_tone", "neutral") or "neutral"))
+                # Run the draft through the expression evolution orchestra
+                # (SIC → multi-draft). perception.express() requires an
+                # AssemblyResult from L4; perception.evo.process_output()
+                # is the correct text-in interface for a string draft.
+                _expressed = _resp_draft
+                _perc_evo_a5 = getattr(_perc_a5, 'evo', None)
+                if _perc_evo_a5 is not None and hasattr(_perc_evo_a5, 'process_output'):
+                    try:
+                        _evo_out_a5 = _perc_evo_a5.process_output(
+                            raw_expression=_resp_draft,
+                            assembly_data={
+                                'dominant_emotion': str(getattr(state, 'response_tone', 'neutral') or 'neutral'),
+                            },
+                        )
+                        _evo_text_a5 = str(_evo_out_a5.get('final_text', '') or '')
+                        if _evo_text_a5:
+                            _expressed = _evo_text_a5
+                    except Exception:
+                        pass
                 if _expressed and isinstance(_expressed, str) and len(_expressed.split()) >= 4:
                     state.response_content = _expressed
                     # ---- THOUGHT BRAID — checkpoint: re-tap braid against draft ----
