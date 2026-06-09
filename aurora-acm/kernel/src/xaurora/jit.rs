@@ -239,6 +239,38 @@ impl Emitter {
         self.emit_axis_press(AxisSel::B.offset(), strength * 0.5)
     }
 
+    // BOUND.RELEASE: relax B toward 0.5 at `rate`.
+    // b_new = b*(1-rate) + 0.5*rate
+    fn emit_bound_release(&mut self, rate: f32) -> Result<(), &'static str> {
+        let off = AxisSel::B.offset();
+        // xmm3 = rate
+        self.load_xmm3_f32(rate)?;
+        // xmm4 = 1.0 - rate
+        self.load_xmm4_f32(1.0_f32)?;
+        self.subss_xmm4_xmm3()?;
+        // xmm0 = b
+        self.load_xmm0(off)?;
+        // xmm0 *= xmm4   (b * (1-rate))
+        self.mulss_xmm0_xmm4()?;
+        // xmm2 = 0.5
+        self.emit(&[0x41, 0xBA])?;
+        self.emit_u32_le(0.5_f32.to_bits())?;
+        self.emit(&[0x66, 0x41, 0x0F, 0x6E, 0xD2])?;  // MOVD xmm2, r10d
+        // xmm2 *= xmm3   (0.5 * rate)
+        self.mulss_xmm2_xmm3()?;
+        // xmm0 += xmm2
+        self.addss_xmm0_xmm2()?;
+        self.clamp_xmm0()?;
+        self.store_xmm0(off)
+    }
+
+    // Absolute CALL: MOV rax, addr64; CALL rax.  RDI (axes ptr) is preserved.
+    fn emit_abs_call(&mut self, addr: u64) -> Result<(), &'static str> {
+        self.emit(&[0x48, 0xB8])?;   // MOV rax, imm64
+        self.emit_u64_le(addr)?;
+        self.emit(&[0xFF, 0xD0])     // CALL rax
+    }
+
     // RET
     pub fn ret(&mut self) {
         let _ = self.emit_byte(0xC3);
@@ -294,27 +326,33 @@ impl Emitter {
             }
 
             Some(Opcode::WaveEmit) => {
-                // WAVE.EMIT: increment TICK via absolute CALL to drift::on_tick.
-                // MOV rax, abs64     →  48 B8 [addr64 LE]
-                // CALL rax           →  FF D0
-                let fn_addr = vm::wave_emit_thunk as *const () as u64;
-                self.emit(&[0x48, 0xB8])?;
-                self.emit_u64_le(fn_addr)?;
-                self.emit(&[0xFF, 0xD0])
+                self.emit_abs_call(vm::wave_emit_thunk as *const () as u64)
             }
 
-            // These ops touch state outside AxisState — fall through to VM.
-            // PUSH RDI (save axes ptr), MOV RSI, prog_ptr, MOV RDX, prog_len,
-            // CALL vm::execute_thunk, POP RDI.
-            // For v0.1 these are stubbed as NOPs in emitted code; the vm
-            // interpreter handles them when run() detects fallback mode.
-            Some(Opcode::AxisRead)
-            | Some(Opcode::IstatePoll)
-            | Some(Opcode::CrystalObs)
-            | Some(Opcode::CrystalSeed)
-            | Some(Opcode::SediDeposit)
-            | Some(Opcode::SediRecall)
-            | Some(Opcode::BoundRelease) => Ok(()), // NOP in JIT; vm handles
+            // Memory ops: emit absolute CALL thunks.  RDI still holds *mut AxisState.
+            // MOV rax, abs64 (48 B8 [addr64 LE])  then  CALL rax (FF D0).
+            Some(Opcode::CrystalObs) => {
+                self.emit_abs_call(vm::crystal_obs_thunk as *const () as u64)
+            }
+            Some(Opcode::CrystalSeed) => {
+                self.emit_abs_call(vm::crystal_seed_thunk as *const () as u64)
+            }
+            Some(Opcode::SediDeposit) => {
+                self.emit_abs_call(vm::sedi_deposit_thunk as *const () as u64)
+            }
+            Some(Opcode::SediRecall) => {
+                self.emit_abs_call(vm::sedi_recall_thunk as *const () as u64)
+            }
+
+            // BOUND.RELEASE: relax B toward 0.5 at `rate`.
+            // b_new = b*(1-rate) + 0.5*rate
+            Some(Opcode::BoundRelease) => {
+                let rate = insn.imm_f32().clamp(0.0, 1.0);
+                self.emit_bound_release(rate)
+            }
+
+            // Read-only hints — no state change emitted.
+            Some(Opcode::AxisRead) | Some(Opcode::IstatePoll) => Ok(()),
         }
     }
 }

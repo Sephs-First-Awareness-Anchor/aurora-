@@ -16,6 +16,7 @@
 #![feature(abi_x86_interrupt)]
 
 mod acm;
+mod bridge;
 mod cpm;
 mod expression;
 mod hw;
@@ -25,7 +26,7 @@ use bootloader_api::{entry_point, BootInfo, BootloaderConfig};
 use bootloader_api::config::Mapping;
 use core::sync::atomic::Ordering;
 
-use crate::acm::drift;
+use crate::acm::{crystal, drift, sedi};
 use crate::cpm::organ::{dream_organ, heart_organ, sense_organ};
 use crate::cpm::scheduler::CpmScheduler;
 use crate::expression::renderer::draw_face;
@@ -60,6 +61,7 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
             hw::pit::set_hz(60);
         }
         hw::idt::init();
+        bridge::init();
         unsafe { core::arch::asm!("sti", options(nostack)); }
 
         let mut boot_ax = acm::axes::AxisState::boot();
@@ -77,7 +79,14 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
             let tick = drift::TICK.load(Ordering::Relaxed);
             if tick != last_tick {
                 last_tick = tick;
-                let ax = drift::axis_for_tick(tick);
+
+                let ax = bridge::get_axes(tick)
+                    .unwrap_or_else(|| drift::axis_for_tick(tick));
+
+                // Deposit this frame into sedimentary memory and tick crystal decay.
+                sedi::deposit(&ax, tick);
+                crystal::tick_decay();
+
                 cpm.tick(&ax);
                 draw_face(buffer, &info, &ax);
             }
