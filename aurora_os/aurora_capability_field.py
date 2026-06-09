@@ -114,6 +114,10 @@ class CapabilityField:
         # Resolved on the following tick to measure actual relief.
         self._pending_observations: List[Tuple[CapabilityNode, Dict[str, float]]] = []
 
+        # Anti-Hebbian decorrelation: last pressure pattern each surface fired on.
+        # A surface is suppressed when current pattern is too similar to this snapshot.
+        self._last_dispatch_patterns: Dict[str, Dict[str, float]] = {}
+
         self._discover()
         print(f"  [CAP] {len(self._capabilities)} capabilities discovered.", flush=True)
 
@@ -680,24 +684,98 @@ class CapabilityField:
     # ── Surface dispatcher bridge ─────────────────────────────────────────────
 
     def _dispatch_to_surfaces(self, axis_mags: Dict[str, float], systems: dict):
+        """
+        Feed embodiment axis pressures into the surface dispatcher.
+
+        Two biological principles enforced here:
+
+        1. Predictive context first — harvest any pending subsurface predictive
+           frames before invoking surfaces, so body-loop firings have the same
+           prediction context as interactive-turn firings. The PredictiveStager
+           runs continuously in the background; we pop its queue here.
+
+        2. Anti-Hebbian decorrelation — surfaces only fire when the current
+           pressure pattern is genuinely novel compared to the last pattern
+           that fired them. Redundant patterns (cosine similarity > 0.92) are
+           suppressed. This mirrors the biological finding: descending feedback
+           weakens when it would simply echo what's already represented below.
+        """
         try:
-            sd = systems.get("_surface_dispatcher")
-            if sd is None:
+            sd     = systems.get("_surface_dispatcher")
+            engine = systems.get("evolved_surfaces")
+            if sd is None or engine is None:
                 return
-            fired = sd.evaluate(axis_mags)
-            if fired:
+
+            # 1. Harvest pending predictive frames — same as interactive turns do
+            try:
+                from aurora_internal.dual_strata.predictive_stager import PredictiveStager
+                frames = PredictiveStager.pop_all_recent_frames()
+                if frames:
+                    systems["_staged_subsurface_frames"] = frames
+            except Exception:
+                pass
+
+            # 2. Evaluate which surfaces should fire for this pressure profile
+            to_fire = sd.evaluate(axis_mags)
+            if not to_fire:
+                return
+
+            actually_fired = []
+            for surface_name, score, ax in to_fire:
+                # Anti-Hebbian: skip if pattern is nearly identical to last firing
+                if self._pattern_is_redundant(surface_name, axis_mags):
+                    continue
+
+                result = sd.invoke(
+                    surface_name, engine,
+                    axis=ax, intent_pressure=axis_mags,
+                )
+                if result:
+                    actually_fired.append((surface_name, round(score, 3), ax))
+                    # Record this pattern — future redundant firings will be suppressed
+                    self._last_dispatch_patterns[surface_name] = dict(axis_mags)
+
+                    # Feed evidence back into the genealogy chamber
+                    chamber = systems.get("chamber")
+                    if chamber is not None and hasattr(chamber, "observe_external_evidence"):
+                        try:
+                            chamber.observe_external_evidence(result)
+                        except Exception:
+                            pass
+
+            if actually_fired:
                 systems["_last_body_surface_dispatch"] = {
                     "tick":      time.time(),
                     "pressures": dict(axis_mags),
-                    "fired":     [(s, round(score, 3), ax) for s, score, ax in fired],
+                    "fired":     actually_fired,
                 }
-                for surface_name, score, ax in fired:
-                    try:
-                        sd.invoke(surface_name, axis_mags, systems)
-                    except Exception:
-                        pass
+
         except Exception:
             pass
+
+    def _pattern_is_redundant(
+        self, surface_name: str, current: Dict[str, float]
+    ) -> bool:
+        """
+        Anti-Hebbian gate: return True if the current pressure pattern is
+        cosine-similar (> 0.92) to the pattern that last fired this surface.
+
+        A surface that keeps receiving the same signal should stop amplifying it —
+        only genuinely novel deviations propagate through the feedback path.
+        """
+        last = self._last_dispatch_patterns.get(surface_name)
+        if last is None:
+            return False  # first time this surface fires — always novel
+
+        axes = "XTNBA"
+        dot       = sum(current.get(ax, 0.0) * last.get(ax, 0.0) for ax in axes)
+        norm_cur  = sum(current.get(ax, 0.0) ** 2 for ax in axes) ** 0.5
+        norm_last = sum(last.get(ax, 0.0)    ** 2 for ax in axes) ** 0.5
+
+        if norm_cur < 1e-9 or norm_last < 1e-9:
+            return False
+
+        return (dot / (norm_cur * norm_last)) > 0.92
 
     # ── Genealogy logging ─────────────────────────────────────────────────────
 
