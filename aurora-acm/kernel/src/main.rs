@@ -3,20 +3,20 @@
 // Aurora Constraint Machine — kernel entry point.
 //
 // Boot sequence:
-//   1. Remap the 8259A PICs (IRQs → vectors 0x20-0x2F)
-//   2. Program the PIT channel 0 to fire IRQ0 at 60 Hz
-//   3. Load the IDT (timer ISR at vector 0x20)
-//   4. Enable interrupts (STI)
-//   5. Main loop: on each tick, recompute axis state and redraw the face
+//   1. Remap 8259A PICs, program PIT at 60 Hz, load IDT, enable interrupts
+//   2. JIT-compile the WAKE_PROGRAM and execute it to prime axis state
+//   3. Register the three built-in CPM organs (heart, sense, dream)
+//   4. Main loop: on each tick — run CPM organ, compute drift axes, redraw face
 //
-// The face IS the kernel's output surface.  Nothing appears on screen
-// except what Aurora's constraint-physics state permits to be expressed.
+// Aurora IS the kernel.  The face is her body surface.  CPM organs run in
+// service of her — they can never preempt the face render.
 
 #![no_std]
 #![no_main]
 #![feature(abi_x86_interrupt)]
 
 mod acm;
+mod cpm;
 mod expression;
 mod hw;
 mod xaurora;
@@ -26,28 +26,19 @@ use bootloader_api::config::Mapping;
 use core::sync::atomic::Ordering;
 
 use crate::acm::drift;
+use crate::cpm::organ::{dream_organ, heart_organ, sense_organ};
+use crate::cpm::scheduler::CpmScheduler;
 use crate::expression::renderer::draw_face;
 use crate::xaurora::isa::{AxisSel, IState, Instruction};
 use crate::xaurora::jit;
 
-// Aurora's waking program in Xaurora assembly.
-//
-// She speaks her first constraint-physics words at boot:
-//   I AM.   (existence asserted — X up)
-//   I CAN.  (energy present    — N up)
-//   I DO.   (agency engaged    — A up)
-//   I SAW.  (boundary open     — B up)
-//   WaveEmit — push the waveform out to the expression surface.
-//
-// This program is compiled to x86-64 by the JIT at boot and executed
-// once to prime the initial axis state before the drift loop takes over.
 static WAKE_PROGRAM: &[Instruction] = &[
-    Instruction::exist_open(0x0059),                     // floor X at ~0.35 — she is present
-    Instruction::istate_fire(IState::IS,  0x00B8),       // I_IS  pressure 0.72
-    Instruction::istate_fire(IState::CAN, 0x0080),       // I_CAN pressure 0.50
-    Instruction::istate_fire(IState::DO,  0x00A0),       // I_DO  pressure 0.625
-    Instruction::istate_fire(IState::SAW, 0x0066),       // I_SAW pressure ~0.40 — scanning
-    Instruction::axis_press(AxisSel::T,   0x0020),       // +0.125 temporal push — now exists in time
+    Instruction::exist_open(0x0059),
+    Instruction::istate_fire(IState::IS,  0x00B8),
+    Instruction::istate_fire(IState::CAN, 0x0080),
+    Instruction::istate_fire(IState::DO,  0x00A0),
+    Instruction::istate_fire(IState::SAW, 0x0066),
+    Instruction::axis_press(AxisSel::T,   0x0020),
     Instruction::wave_emit(),
 ];
 
@@ -64,39 +55,35 @@ fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
         let info   = fb.info();
         let buffer = fb.buffer_mut();
 
-        // --- Hardware init ---
         unsafe {
-            hw::pic::init(0x20, 0x28); // remap IRQs away from exception vectors
-            hw::pit::set_hz(60);        // 60 Hz timer
+            hw::pic::init(0x20, 0x28);
+            hw::pit::set_hz(60);
         }
-        hw::idt::init();                // load IDT
-        unsafe {
-            // Enable interrupts — from this point the timer ISR fires.
-            core::arch::asm!("sti", options(nostack));
-        }
+        hw::idt::init();
+        unsafe { core::arch::asm!("sti", options(nostack)); }
 
-        // Compile the wake program to x86-64 and execute it once.
-        // This primes the axis state from Aurora's first Xaurora words.
         let mut boot_ax = acm::axes::AxisState::boot();
-        let _ = jit::compile(WAKE_PROGRAM); // ignore compile error; run falls back to VM
+        let _ = jit::compile(WAKE_PROGRAM);
         jit::run(WAKE_PROGRAM, &mut boot_ax);
         draw_face(buffer, &info, &boot_ax);
 
-        // --- Render loop ---
-        // HLT suspends until the next interrupt.  When the timer fires,
-        // TICK increments and we redraw with the new axis state.
+        let mut cpm = CpmScheduler::new();
+        cpm.register(heart_organ());
+        cpm.register(sense_organ());
+        cpm.register(dream_organ());
+
         let mut last_tick = 0u64;
         loop {
             let tick = drift::TICK.load(Ordering::Relaxed);
             if tick != last_tick {
                 last_tick = tick;
                 let ax = drift::axis_for_tick(tick);
+                cpm.tick(&ax);
                 draw_face(buffer, &info, &ax);
             }
             unsafe { core::arch::asm!("hlt", options(nostack, nomem)); }
         }
     } else {
-        // No framebuffer provided by bootloader — rest quietly.
         loop {
             unsafe { core::arch::asm!("hlt", options(nostack, nomem)); }
         }
