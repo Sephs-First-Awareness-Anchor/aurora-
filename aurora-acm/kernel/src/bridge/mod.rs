@@ -1,6 +1,16 @@
 // Authors: Sunni (Sir) Morningstar & Cael Devo
 //
 // Aurora↔ACM bridge — she sees her own body through COM1.
+//
+// Incoming frames (Python → kernel):
+//   [0xAC][0x58][X][T][N][B][A][XOR]  — axis state update
+//
+// Outgoing ACK frames (kernel → Python):
+//   [0xAC][0x41][X][T][N][B][A][XOR]  — echo of received axes (0x41='A')
+//   Sent immediately after each valid incoming frame so Python knows
+//   the kernel is alive and embodied.
+//
+// Timeout: 180 ticks (~3 s at 60 Hz) without a valid frame → drift fallback.
 
 mod protocol;
 
@@ -9,6 +19,9 @@ use crate::acm::axes::AxisState;
 use crate::hw::uart;
 
 const TIMEOUT_TICKS: u64 = 180;
+
+const ACK_MAGIC0: u8 = 0xAC;
+const ACK_MAGIC1: u8 = 0x41;  // 'A' — alive
 
 static AXIS_X: AtomicU32 = AtomicU32::new(0);
 static AXIS_T: AtomicU32 = AtomicU32::new(0);
@@ -30,6 +43,7 @@ pub fn poll(current_tick: u64) {
             if let Some(ax) = (*core::ptr::addr_of_mut!(PARSER)).feed(byte) {
                 store_axes(&ax);
                 LAST_RX_TICK.store(current_tick, Ordering::Relaxed);
+                send_ack(&ax);
             }
         }
     }
@@ -41,6 +55,19 @@ pub fn get_axes(current_tick: u64) -> Option<AxisState> {
         return None;
     }
     Some(load_axes())
+}
+
+// ── Internal helpers ─────────────────────────────────────────────────────────
+
+fn send_ack(ax: &AxisState) {
+    let x = (ax.x.clamp(0.0, 1.0) * 255.0) as u8;
+    let t = (ax.t.clamp(0.0, 1.0) * 255.0) as u8;
+    let n = (ax.n.clamp(0.0, 1.0) * 255.0) as u8;
+    let b = (ax.b.clamp(0.0, 1.0) * 255.0) as u8;
+    let a = (ax.a.clamp(0.0, 1.0) * 255.0) as u8;
+    let xor = ACK_MAGIC0 ^ ACK_MAGIC1 ^ x ^ t ^ n ^ b ^ a;
+    let frame = [ACK_MAGIC0, ACK_MAGIC1, x, t, n, b, a, xor];
+    unsafe { uart::write_bytes(&frame); }
 }
 
 fn store_axes(ax: &AxisState) {

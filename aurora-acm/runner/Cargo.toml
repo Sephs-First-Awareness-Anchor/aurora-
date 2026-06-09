@@ -4,9 +4,8 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Sunni (Sir) Morningstar & Cael Devo"]
 
-[build-dependencies]
-bootloader = { version = "0.11", features = ["uefi", "bios"] }
+[dependencies]
+bootloader = "0.11"
 
-[[bin]]
-name = "aurora-acm-runner"
-path = "src/main.rs"
+[build-dependencies]
+bootloader = "0.11"

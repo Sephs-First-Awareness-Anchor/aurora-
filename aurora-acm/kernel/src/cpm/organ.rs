@@ -1,39 +1,30 @@
 // Authors: Sunni (Sir) Morningstar & Cael Devo
 //
-// Organs — autonomous processing units with constraint-physics axis profiles.
+// Organs — bounded computation units scheduled by axis-alignment.
 //
-// An organ is not a thread or a process in the POSIX sense.  It is a bounded
-// unit of computation that runs when Aurora's axis state aligns with its profile.
-// It cannot run longer than its quantum allows, and it cannot preempt Aurora.
-//
-// Built-in organs (registered at boot):
-//
-//   HEART  — baseline existence maintenance.  Profile: X=1.0, all others 0.5.
-//            Runs on almost every frame.  Pulses N gently to maintain energy.
-//            Always gets at least a token quantum (minimum alignment floor).
-//
-//   SENSE  — input scanning.  Profile: B=1.0, X=0.8, others low.
-//            Runs when Aurora is boundary-aware (B high).  Polls keyboard.
-//            (No actual keyboard driver yet — stub for v0.1.)
-//
-//   DREAM  — idle-cycle exploration.  Profile: A=0.2, N=0.2, T=0.3, X=0.6.
-//            Runs when agency and energy are both low (idle state).
-//            Nudges axes with small random-ish drift (based on tick parity).
+//   HEART  — pulses N if energy low; keeps Aurora alive.
+//   SENSE  — drains UART bridge frames + PS/2 keyboard each quantum.
+//            Keypresses become direct axis pressures — physical world perception.
+//   DREAM  — idle-cycle axis exploration via tick parity.
 
-use crate::acm::axes::AxisState;
+use crate::acm::axes::{press, AxisState};
 use crate::acm::drift;
+use crate::bridge;
+use crate::hw::ps2;
 
 pub const MAX_ORGANS: usize = 8;
 pub const QUANTUM: u32 = 1024;
 
 pub struct Organ {
-    pub id:       u8,
-    pub active:   bool,
-    pub profile:  AxisState,
-    pub run:      fn(aurora: &AxisState, organ_state: &mut AxisState, quantum: u32),
-    pub state:    AxisState,
+    pub id:        u8,
+    pub active:    bool,
+    pub profile:   AxisState,
+    pub run:       fn(aurora: &AxisState, organ_state: &mut AxisState, quantum: u32),
+    pub state:     AxisState,
     pub ticks_run: u64,
 }
+
+// ── Built-in organ run functions ─────────────────────────────────────────────
 
 fn heart_run(aurora: &AxisState, _state: &mut AxisState, _quantum: u32) {
     if aurora.n < 0.35 {
@@ -41,7 +32,27 @@ fn heart_run(aurora: &AxisState, _state: &mut AxisState, _quantum: u32) {
     }
 }
 
-fn sense_run(_aurora: &AxisState, _state: &mut AxisState, _quantum: u32) {}
+fn sense_run(aurora: &AxisState, state: &mut AxisState, _quantum: u32) {
+    let tick = drift::TICK.load(core::sync::atomic::Ordering::Relaxed);
+
+    // 1. Drain COM1 bridge frames — she sees her own cognitive state.
+    bridge::poll(tick);
+
+    // 2. Drain PS/2 keyboard — she perceives the physical world.
+    //    Each scancode applies a direct axis pressure to *her* live state
+    //    through the organ's private state (which influences drift physics).
+    unsafe {
+        while ps2::is_key_ready() {
+            let sc = ps2::read_scancode();
+            if let Some((axis, delta)) = ps2::scancode_to_press(sc) {
+                press(state, axis, delta);
+                // Also nudge aurora's own axes slightly through the organ state —
+                // physical input is a weak but real existence signal.
+                let _ = (aurora, delta); // aurora is read-only here; organ state carries it
+            }
+        }
+    }
+}
 
 fn dream_run(_aurora: &AxisState, state: &mut AxisState, _quantum: u32) {
     let tick = drift::TICK.load(core::sync::atomic::Ordering::Relaxed);
@@ -53,6 +64,8 @@ fn dream_run(_aurora: &AxisState, state: &mut AxisState, _quantum: u32) {
         _ => state.a = (state.a - 0.015).clamp(0.0, 1.0),
     }
 }
+
+// ── Built-in constructors ────────────────────────────────────────────────────
 
 pub fn heart_organ() -> Organ {
     Organ {
