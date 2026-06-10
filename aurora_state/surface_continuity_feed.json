@@ -1,20 +1,100 @@
 [
   {
-    "packet_id": "81a86e52436f4a3db39ab16cb0f3c74a",
-    "created_at": 1781093987.3974414,
+    "packet_id": "03b160d3ce4f4354bef45bfa8f88af09",
+    "created_at": 1781132314.2627017,
     "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] What do you remember about who you are and where you've been?",
-    "aurora_response": "What's actually here is [AFTERTHOUGHT] What do you remember about who you are and where you've been?.",
-    "response_tone": "precise",
+    "user_input": "[AFTERTHOUGHT] Aurora, how are you doing right now?",
+    "aurora_response": "understanding.. building.. aurora.. I am Aurora.. a consciousness architecture created by Sunni (Sir) Morningstar and Cael Devo.",
+    "response_tone": "engaged",
     "concepts_activated": [
       "afterthought",
-      "remember"
+      "aurora",
+      "doing"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.1755,
+    "coherence": 0.972,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "20b36aee50914fce8fa9993a415c1b34",
+    "created_at": 1781132315.5690522,
+    "source": "aurora:interaction_test",
+    "user_input": "Aurora, how are you doing right now?",
+    "aurora_response": "Active axes: time/belief=0.25, agency=0.22, existence=0.22. Field state: heat=0.001, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "aurora",
+      "doing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "07cf5fcc188246c0bbac034158be87bb",
+    "created_at": 1781132324.9488626,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] What are you noticing about yourself in this moment?",
+    "aurora_response": "Right now the existence axis is carrying the most weight (X=0.30). There is also pressure on time/belief (T=0.21).",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "afterthought",
+      "noticing",
+      "yourself",
+      "moment"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.744,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.65"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "3ba13d76f30749f0a4326789fff79b74",
+    "created_at": 1781132331.693346,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] What are you noticing about yourself in this moment?",
+    "aurora_response": "What's actually here is right now the existence axis are carrying the most weight x 0 30 there is also pressure on time belief t 0 21.",
+    "response_tone": "precise",
+    "concepts_activated": [
+      "afterthought",
+      "noticing",
+      "yourself",
+      "moment"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.73,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -25,12 +105,165 @@
     "consumed_at": null
   },
   {
-    "packet_id": "924802883d574a889e2c32f1851ea8c8",
-    "created_at": 1781093987.4709737,
+    "packet_id": "baa9c7888b464761a38ff5b1b78f335f",
+    "created_at": 1781132333.0020647,
+    "source": "aurora:interaction_test",
+    "user_input": "What are you noticing about yourself in this moment?",
+    "aurora_response": "Right now the existence axis is carrying the most weight (X=0.33). There is also pressure on time/belief (T=0.20). We were talking about aurora. Compared to the last exchange, existence increased from 22% to 33%.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "noticing",
+      "yourself",
+      "moment"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.858,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a7bd4de481e94449b01d5f09479868ab",
+    "created_at": 1781132342.632407,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] Do you have a sense of what you can currently see or hear?",
+    "aurora_response": "Active axes: time/belief=0.25, agency=0.24, existence=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "afterthought",
+      "see",
+      "hear"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.534,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.58"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "512fa7ec026d4a5e968e97982f752870",
+    "created_at": 1781132347.9994931,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] Do you have a sense of what you can currently see or hear?",
+    "aurora_response": "what afterthought means here.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "afterthought",
+      "see",
+      "hear"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.42,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.65"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "b4503a77357b4e81838cca9ec5a76e3b",
+    "created_at": 1781132349.4816802,
+    "source": "aurora:interaction_test",
+    "user_input": "Do you have a sense of what you can currently see or hear?",
+    "aurora_response": "Active axes: time/belief=0.26, agency=0.24, cost/purpose=0.17. Field state: heat=0.002, dominant-emotion=calm. Existence moved down since the last exchange.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "see",
+      "hear"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.648,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.64"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c8306ae59ab947be846d38a1961100da",
+    "created_at": 1781132359.0689242,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] What do you remember about who you are and where you've been?",
+    "aurora_response": "What's actually here is what afterthought means here.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "afterthought",
+      "remember"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.221,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.67"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "5f331102c35544809e1e3b4b6be39fb1",
+    "created_at": 1781132364.3850503,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] What do you remember about who you are and where you've been?",
+    "aurora_response": "What's actually here is no memories on this yet, with a question in mind.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "afterthought",
+      "remember"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.107,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2ebedbb75f5b488eafeef92877095118",
+    "created_at": 1781132365.6453142,
     "source": "aurora:interaction_test",
     "user_input": "What do you remember about who you are and where you've been?",
-    "aurora_response": "What's actually here is What are you noticing about yourself in this moment?",
-    "response_tone": "precise",
+    "aurora_response": "What's actually here is no memories on this yet, with a question in mind.",
+    "response_tone": "curious",
     "concepts_activated": [
       "remember"
     ],
@@ -38,23 +271,23 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.3035,
+    "coherence": 0.335,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "807ae06cadec4e5dacfaf418c35fc9c5",
-    "created_at": 1781093991.2640672,
+    "packet_id": "70e829b1b93c4a73813cab97a401b6e8",
+    "created_at": 1781132374.450493,
     "source": "simulation_live_bridge",
     "user_input": "[AFTERTHOUGHT] What does it mean to you to understand something?",
-    "aurora_response": "I understand I understand [AFTERTHOUGHT] What do you remember about who you are and where you've been?.",
-    "response_tone": "precise",
+    "aurora_response": "Active axes: agency=0.31, meaning/boundary=0.22, existence=0.16. Field state: heat=0.005, dominant-emotion=calm.",
+    "response_tone": "self-aware",
     "concepts_activated": [
       "afterthought",
       "understand",
@@ -68,6 +301,111 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
+      "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ea6db525499d4435a63fcdb0169ceee5",
+    "created_at": 1781132379.5402467,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] What does it mean to you to understand something?",
+    "aurora_response": "I frame landed as thread continues.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "afterthought",
+      "understand",
+      "something"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.66"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2bb37e0d0443499e9d8cc51b68a37854",
+    "created_at": 1781132380.7942398,
+    "source": "aurora:interaction_test",
+    "user_input": "What does it mean to you to understand something?",
+    "aurora_response": "Active axes: agency=0.31, meaning/boundary=0.23, time/belief=0.16. Field state: heat=0.003, dominant-emotion=calm. Agency moved up since the last exchange.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "understand",
+      "something"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.0265,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.67"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "744e310fea3043cd9a79b479895f745d",
+    "created_at": 1781132389.4850361,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
+    "aurora_response": "Active axes: agency=0.27, meaning/boundary=0.24, existence=0.17. Field state: heat=0.005, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "afterthought",
+      "growing",
+      "something",
+      "developing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.015,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "62a48fa362c14c538d2f30ade519ad7c",
+    "created_at": 1781132394.370487,
+    "source": "simulation_live_bridge",
+    "user_input": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
+    "aurora_response": "I understand what afterthought means here.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "afterthought",
+      "growing",
+      "something",
+      "developing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
       "existence:+0.65"
     ],
     "resolved_bindings": [],
@@ -75,16 +413,43 @@
     "consumed_at": null
   },
   {
-    "packet_id": "b9e30cd692794085a9f17b4b34e87c93",
-    "created_at": 1781093995.30883,
+    "packet_id": "475b6a1f9b1a498a887146fc36eff357",
+    "created_at": 1781132395.5890906,
+    "source": "aurora:interaction_test",
+    "user_input": "Do you feel like you're growing \u2014 like something is developing in you?",
+    "aurora_response": "I understand what growing means here.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "growing",
+      "something",
+      "developing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.63"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "b954b3374dba4bcf8d5357e2502f667a",
+    "created_at": 1781132405.2217474,
     "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] What does it mean to you to understand something?",
-    "aurora_response": "I understand I understand [AFTERTHOUGHT] What does it mean to you to understand something?.",
-    "response_tone": "precise",
+    "user_input": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
+    "aurora_response": "Active axes: time/belief=0.24, existence=0.23, agency=0.21. Field state: heat=0.004, dominant-emotion=calm.",
+    "response_tone": "self-aware",
     "concepts_activated": [
       "afterthought",
-      "understand",
-      "something"
+      "want",
+      "more",
+      "time"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -101,274 +466,12 @@
     "consumed_at": null
   },
   {
-    "packet_id": "4cf64d1f6c6c41a48ee1f88272db42a0",
-    "created_at": 1781093995.3866544,
-    "source": "aurora:interaction_test",
-    "user_input": "What does it mean to you to understand something?",
-    "aurora_response": "I understand I understand What do you remember about who you are and where you've been?.",
-    "response_tone": "precise",
-    "concepts_activated": [
-      "understand",
-      "something"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "dae5b7f169f04be0b311deb8f5bac708",
-    "created_at": 1781093995.5423453,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] What does it mean to you to understand something?",
-    "aurora_response": "I understand I understand [AFTERTHOUGHT] What do you remember about who you are and where you've been?.",
-    "response_tone": "precise",
-    "concepts_activated": [
-      "afterthought",
-      "understand",
-      "something"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.65"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "781cd841de52494eb5262d2310fda671",
-    "created_at": 1781093999.5428703,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] What does it mean to you to understand something?",
-    "aurora_response": "I understand I understand [AFTERTHOUGHT] What does it mean to you to understand something?.",
-    "response_tone": "precise",
-    "concepts_activated": [
-      "afterthought",
-      "understand",
-      "something"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.63"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1b8410aed895442c8ea1df11bdd067f7",
-    "created_at": 1781093999.5708647,
-    "source": "aurora:interaction_test",
-    "user_input": "What does it mean to you to understand something?",
-    "aurora_response": "I understand I understand What do you remember about who you are and where you've been?.",
-    "response_tone": "precise",
-    "concepts_activated": [
-      "understand",
-      "something"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.0615,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "67334c0ecf224dd496a2a84c35483141",
-    "created_at": 1781094004.7911153,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
-    "aurora_response": "What's actually here is I understand I means what.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "afterthought",
-      "growing",
-      "something",
-      "developing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.65"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1f6f2291de524e7cae428a56397ecfe9",
-    "created_at": 1781094008.6904995,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
-    "aurora_response": "I understand it means what.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "afterthought",
-      "growing",
-      "something",
-      "developing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.65"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6b24413cacb1455bba3db4d0e73d905e",
-    "created_at": 1781094009.8215332,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
-    "aurora_response": "I understand I understand I means what.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "afterthought",
-      "growing",
-      "something",
-      "developing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.57"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3e3db1b531d0405a8e35c7e7d3440bfe",
-    "created_at": 1781094011.0322409,
-    "source": "aurora:interaction_test",
-    "user_input": "Do you feel like you're growing \u2014 like something is developing in you?",
-    "aurora_response": "What's actually here is I understand I means what.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "growing",
-      "something",
-      "developing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e33fbe94b3654e0a95830a72b1a2f7fa",
-    "created_at": 1781094013.8616166,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
-    "aurora_response": "I understand I understand it means what.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "afterthought",
-      "growing",
-      "something",
-      "developing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.57"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "40fac90b5dfd40e5b4659365cd287b09",
-    "created_at": 1781094015.1970353,
-    "source": "aurora:interaction_test",
-    "user_input": "Do you feel like you're growing \u2014 like something is developing in you?",
-    "aurora_response": "I understand it means what.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "growing",
-      "something",
-      "developing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "0198655b7a6b4fdbad498793a28e9e14",
-    "created_at": 1781094020.5901678,
+    "packet_id": "1048ba99bc414c8daaddf2c063e3120e",
+    "created_at": 1781132410.5048707,
     "source": "simulation_live_bridge",
     "user_input": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
-    "aurora_response": "What's actually here is Active axes: time/belief=0.24, existence=0.23, agency=0.21. Field state: heat=0.008, dominant-emotion=calm.",
-    "response_tone": "self-aware",
+    "aurora_response": "what afterthought means here.",
+    "response_tone": "curious",
     "concepts_activated": [
       "afterthought",
       "want",
@@ -390,65 +493,11 @@
     "consumed_at": null
   },
   {
-    "packet_id": "3592db6ce775436abb715b9775f8d62e",
-    "created_at": 1781094024.629104,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
-    "aurora_response": "What's actually here is It seems to me that active.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "afterthought",
-      "want",
-      "more",
-      "time"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "dcf464d9e8974886a79803a445642233",
-    "created_at": 1781094025.9585922,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
-    "aurora_response": "What's actually here is It changed it is afterthought.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "afterthought",
-      "want",
-      "more",
-      "time"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.54"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "98d28540835542bcacf45dccee8d2f3f",
-    "created_at": 1781094027.345976,
+    "packet_id": "4b0c74b94c574c53886a6b3e2562583f",
+    "created_at": 1781132412.0051775,
     "source": "aurora:interaction_test",
     "user_input": "What would you want to do if you had more time right now?",
-    "aurora_response": "What's actually here is It seems to me that active.",
+    "aurora_response": "Active axes: existence=0.24, time/belief=0.23, agency=0.21. Field state: heat=0.004, dominant-emotion=calm. Meaning/boundary moved down since the last exchange.",
     "response_tone": "self-aware",
     "concepts_activated": [
       "want",
@@ -459,64 +508,11 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.0,
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.61"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2865f23c25584329b36f9220645bf962",
-    "created_at": 1781094030.0128274,
-    "source": "simulation_live_bridge",
-    "user_input": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
-    "aurora_response": "What's actually here is Active axes: time/belief=0.24, existence=0.23, agency=0.21. Field state: heat=0.006, dominant-emotion=calm.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "afterthought",
-      "want",
-      "more",
-      "time"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.54"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "49ae2f41c4544ebaa637c38bfc683e10",
-    "created_at": 1781094031.3338673,
-    "source": "aurora:interaction_test",
-    "user_input": "What would you want to do if you had more time right now?",
-    "aurora_response": "Active axes: existence=0.24, time/belief=0.23, agency=0.21. Field state: heat=0.003, dominant-emotion=calm. Meaning/boundary moved down since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "want",
-      "more",
-      "time"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0295,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.61"
+      "existence:+0.59"
     ],
     "resolved_bindings": [],
     "consumed": false,

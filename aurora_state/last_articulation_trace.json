@@ -1,14 +1,14 @@
 {
-  "original": "I reflected always -- there is what here",
-  "candidate": "I reflected always -- there is what here.",
-  "selected": "I reflected always -- there is what here.",
+  "original": "want attention something right predictive reflected form something what what reflected real something reflected time",
+  "candidate": "want attention something right predictive reflected form something what reflected real something reflected time.",
+  "selected": "want attention something right predictive reflected form something what reflected real something reflected time.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.87,
-  "candidate_score": 0.92,
-  "original_pressure": 0.326,
-  "candidate_pressure": 0.256,
-  "pressure_relief": 0.07,
+  "original_score": 0.53,
+  "candidate_score": 0.74,
+  "original_pressure": 0.539,
+  "candidate_pressure": 0.277,
+  "pressure_relief": 0.262,
   "safe": true,
   "metadata": {
     "prompt_excerpt": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
@@ -26,9 +26,9 @@
         "AFTERTHOUGHT"
       ]
     },
-    "tone": "warm",
+    "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1781094028.7529466,
+    "timestamp": 1781132409.2471743,
     "min_relief_used": 0.035
   }
 }
