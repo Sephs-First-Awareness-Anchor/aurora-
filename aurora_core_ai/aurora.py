@@ -5748,14 +5748,19 @@ class WorkingMemory:
                         self.last_response_anchor_claim = {}
         for subject in list(self.stated_facts.keys())[-4:]:
             self._register_mention(subject, 'fact', 'memory', 0.68)
-        self.last_aurora_response = aurora_text or self.last_aurora_response
-        if aurora_text:
+        _aurora_text_clean = aurora_text or ""
+        # Never store internal-tagged strings as claims or last response.
+        _internal_prefixes = ("[AFTERTHOUGHT]", "[CODE]", "[PRESSURE]", "125-layer manifold:")
+        if any(_aurora_text_clean.startswith(p) for p in _internal_prefixes):
+            _aurora_text_clean = ""
+        self.last_aurora_response = _aurora_text_clean or self.last_aurora_response
+        if _aurora_text_clean:
             skip_aurora_claim_ingest = bool(
                 self._skip_next_aurora_claim_ingest or skip_aurora_claim_ingest
             )
             if not skip_aurora_claim_ingest:
-                self.note_claims(aurora_text, source='aurora')
-                self._register_response_mentions(aurora_text)
+                self.note_claims(_aurora_text_clean, source='aurora')
+                self._register_response_mentions(_aurora_text_clean)
         self.refresh_claim_conflicts(preferred_claim=anchor_claim)
         if prior_control_response:
             self._context_control_response_text = ""
@@ -8310,13 +8315,19 @@ def _is_identity_question(text: str) -> bool:
     identity_markers = (
         "who are you", "who made you", "who created you", "who built you",
         "who is sunni", "who is cael", "what is your name", "what's your name",
-        "whats your name", "what are you",
+        "whats your name",
         "tell me about yourself", "your identity", "your creator",
         "your author", "who do you belong to", "who is your",
         "do you know who", "what do you know about yourself",
         "who is sir", "sir morningstar",
     )
-    return any(m in t for m in identity_markers)
+    if any(m in t for m in identity_markers):
+        return True
+    # "what are you" only when it's the question itself, not "what are you doing/noticing/thinking"
+    if "what are you" in t:
+        import re as _re
+        return bool(_re.search(r"what are you\s*[?.,!]?$", t.strip()))
+    return False
 
 
 def _generate_identity_response(
@@ -9453,6 +9464,11 @@ def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed:
     )
     if any(trigger in _text_low_cl for trigger in _RECALL_TRIGGERS):
         return "recall_question"
+
+    # Inner-state / wellbeing: keyword check fires regardless of axis dominant
+    # because casual wellbeing queries ("how are you") project X or T, not A.
+    if is_q and _looks_like_inner_state_query(text, parsed):
+        return "wellbeing_query"
 
     # A-axis dominant: self-directed / inner-field question
     if dominant == "A" and axis.get("A", 0.0) > 0.36 and _looks_like_inner_state_query(text, parsed):
@@ -11799,8 +11815,12 @@ def _generate_perspective_from_core(
                 dominant_meaning_form=_uc_dominant_form,
                 active_topic=_uc_active_topic,
             )
-            _claim_data = [_surface_claim] if _surface_claim else []
-            if _internal_state_request or (not _surface_claim and not _live_question_claims):
+            _surface_claim_usable = (
+                bool(_surface_claim) and
+                not any(p in _surface_claim.lower() for p in _INTERNAL_INSTRUCTION_PHRASES)
+            )
+            _claim_data = [_surface_claim] if _surface_claim_usable else []
+            if _internal_state_request or (not _surface_claim_usable and not _live_question_claims):
                 if anchor_low and not _is_surface_meta_anchor_label(anchor_low, systems.get("working_memory")):
                     _claim_data.append(f"I am holding {anchor_low} in view here")
                 elif _focus_terms:
@@ -11850,15 +11870,15 @@ def _generate_perspective_from_core(
         if not _claim_data:
             # Fallback to manifold semantic data if no specific claims found
             _AXIS_SEMANTICS = {
-                "X": "metabolic resolution; information; what is present",
-                "T": "persistence; what carries forward; continuity",
-                "N": "conservation; purpose; cost of holding focus",
-                "B": "boundary; meaning; structure; separation",
-                "A": "agency; understanding; capacity to resolve",
+                "X": "what is present and what can be grounded here",
+                "T": "what persists and carries forward in time",
+                "N": "the cost and purpose of what I am holding",
+                "B": "the meaning and structure of this",
+                "A": "what I can act on and commit to",
             }
             _claim_data = [_AXIS_SEMANTICS.get(_dom_letter, _dom_name)]
             if _second_ax:
-                _claim_data.append(_AXIS_SEMANTICS.get(_second_ax[0], "").split(";")[0])
+                _claim_data.append(_AXIS_SEMANTICS.get(_second_ax[0], ""))
 
         core_claim = ", ".join(_claim_data)
         _concepts = [c for c in _concepts if c][:6]
@@ -19238,6 +19258,7 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                     or ("basis=" in _top_hint and "target=" in _top_hint)
                     or _top_hint.startswith("[CODE]")
                     or _top_hint.startswith("[PRESSURE]")
+                    or _top_hint.startswith("[AFTERTHOUGHT]")
                 )
                 if not _is_meta and not _is_diagnostic and len(_top_hint.split()) >= 6:
                     state.response_content = _top_hint
@@ -19944,7 +19965,10 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                    if w.lower() not in {"that", "this", "with", "what", "from",
                                         "have", "does", "here", "there", "than",
                                         "some", "more", "less", "come", "been",
-                                        "will", "your", "just", "when", "also"}
+                                        "will", "your", "just", "when", "also",
+                                        "means", "mean", "want", "wants", "know",
+                                        "feel", "feels", "think", "thinks", "says",
+                                        "about", "right", "doing", "like", "into"}
                    and not _is_weak_response_topic(w.lower())]
             if _uw:
                 _gap_claim = "what " + _uw[0] + " points to"
@@ -23627,9 +23651,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                                 try:
                                     from aurora_dimensional_systems import CrystalLevel
                                     if _crystal.level == CrystalLevel.BASE:
-                                        _crystal_text = (
-                                            f"understanding; building; {tw}; {best}"
-                                        )
+                                        _crystal_text = f"{tw.capitalize()}: {best}"
                                         _crystal_conf = 0.60
                                     elif _crystal.level == CrystalLevel.COMPOSITE:
                                         _crystal_conf = 0.72
