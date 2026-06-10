@@ -137,6 +137,7 @@ def _dump_state(systems, result, label, elapsed):
 
 
 def main():
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_core_ai"))
     from aurora import boot_aurora, process_external_user_turn
 
     print(f"\n{SEP}")

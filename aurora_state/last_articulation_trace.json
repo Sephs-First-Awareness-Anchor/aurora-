@@ -1,33 +1,34 @@
 {
-  "original": "If I'm right about exist, that matters.",
+  "original": "when completing this legally lattice immoral updates There is something oval here.",
   "candidate": "",
-  "selected": "If I'm right about exist, that matters.",
+  "selected": "when completing this legally lattice immoral updates There is something oval here.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.92,
+  "original_score": 0.86,
   "candidate_score": 0.0,
-  "original_pressure": 0.256,
+  "original_pressure": 0.303,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.744,
+  "pressure_relief": -0.697,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "[AFTERTHOUGHT] What are you noticing about yourself in this moment?",
+    "prompt_excerpt": "[AFTERTHOUGHT] Do you have a sense of what you can currently see or hear?",
     "input_interpretation": {
-      "raw_prompt": "[AFTERTHOUGHT] What are you noticing about yourself in this moment?",
-      "intent_hint": "self_description_request",
+      "raw_prompt": "[AFTERTHOUGHT] Do you have a sense of what you can currently see or hear?",
+      "intent_hint": "question",
       "topic_terms": [
         "afterthought",
-        "noticing",
-        "yourself",
-        "moment"
+        "have",
+        "sense",
+        "currently",
+        "hear"
       ],
       "entities": [
         "AFTERTHOUGHT"
       ]
     },
-    "tone": "playful",
+    "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1781088154.719211,
+    "timestamp": 1781093681.3202581,
     "min_relief_used": 0.035
   }
 }
