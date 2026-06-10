@@ -1551,6 +1551,50 @@
       "sightings": 3,
       "first_seen": 1780514811.386414,
       "last_seen": 1780514827.530095
+    },
+    {
+      "text": "what want what means here",
+      "confidence": 0.66,
+      "sources": [
+        "aurora:interaction_test:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "want",
+        "what want what"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1781087613.023623,
+      "last_seen": 1781087613.023623
+    },
+    {
+      "text": "i understand it changed it is afterthought",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought",
+        "i understand it changed it"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1781087887.7220602,
+      "last_seen": 1781087887.7220602
     }
   ]
 }

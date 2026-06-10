@@ -1,30 +1,33 @@
 {
-  "original": "I am here",
-  "candidate": "I am here.",
-  "selected": "I am here.",
-  "accepted": true,
-  "reason": "accepted_deterministic",
-  "original_score": 0.57,
-  "candidate_score": 0.62,
-  "original_pressure": 0.466,
-  "candidate_pressure": 0.396,
-  "pressure_relief": 0.07,
-  "safe": true,
+  "original": "If I'm right about exist, that matters.",
+  "candidate": "",
+  "selected": "If I'm right about exist, that matters.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.92,
+  "candidate_score": 0.0,
+  "original_pressure": 0.256,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.744,
+  "safe": false,
   "metadata": {
-    "prompt_excerpt": "How are you feeling?",
+    "prompt_excerpt": "[AFTERTHOUGHT] What are you noticing about yourself in this moment?",
     "input_interpretation": {
-      "raw_prompt": "How are you feeling?",
-      "intent_hint": "question",
+      "raw_prompt": "[AFTERTHOUGHT] What are you noticing about yourself in this moment?",
+      "intent_hint": "self_description_request",
       "topic_terms": [
-        "feeling"
+        "afterthought",
+        "noticing",
+        "yourself",
+        "moment"
       ],
       "entities": [
-        "How"
+        "AFTERTHOUGHT"
       ]
     },
-    "tone": "gentle",
-    "source": "deterministic",
-    "timestamp": 1780647212.635046,
+    "tone": "playful",
+    "source": "no_pattern_matched",
+    "timestamp": 1781088154.719211,
     "min_relief_used": 0.035
   }
 }

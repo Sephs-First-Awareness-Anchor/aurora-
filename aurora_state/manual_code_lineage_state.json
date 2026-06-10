@@ -1,2245 +1,6 @@
 {
   "history": [
     {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:e3d01f827164",
-      "dominant_axis": "X",
-      "file": "test_oets.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "test_oets",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_5d33daa473",
-      "source": "aurora.boot",
-      "timestamp": 1777793387.4972928
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:d5bf7d6288b4",
-      "dominant_axis": "X",
-      "file": "aurora_expression_perception.py",
-      "matched_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "source": "aurora.boot",
-      "timestamp": 1777793526.8361115
-    },
-    {
-      "axis_signature": "A^1",
-      "change_id": "MC:85ee3e77a80d",
-      "dominant_axis": "A",
-      "file": "test_alignment.py",
-      "matched_ability_id": "",
-      "matched_score": 0.313333,
-      "mode": "created_manual_branch",
-      "module_name": "test_alignment",
-      "purpose_lane": "repair_commitment",
-      "registered_ability_id": "A:CODE_LINEAGE_1aacbcd509",
-      "source": "aurora.boot",
-      "timestamp": 1777793748.0169032
-    },
-    {
-      "axis_signature": "A^1",
-      "change_id": "MC:2b0e1b143317",
-      "dominant_axis": "A",
-      "file": "test_alignment.py",
-      "matched_ability_id": "A:CODE_LINEAGE_1aacbcd509",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "test_alignment",
-      "purpose_lane": "repair_commitment",
-      "registered_ability_id": "A:CODE_LINEAGE_1aacbcd509",
-      "source": "aurora.boot",
-      "timestamp": 1777793777.7837322
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:04d184186bfc",
-      "dominant_axis": "X",
-      "file": "test_oets_conf.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "test_oets_conf",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_e3703507c3",
-      "source": "aurora.boot",
-      "timestamp": 1777793812.6003034
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2a0c2cc76c11",
-      "dominant_axis": "X",
-      "file": "test_emitter_crash.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "test_emitter_crash",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_345df4a31d",
-      "source": "aurora.boot",
-      "timestamp": 1777793847.8380332
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:55e2f3ffbe99",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_emission.py",
-      "matched_ability_id": "",
-      "matched_score": 0.313333,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_constraint_emission",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_966ad68486",
-      "source": "aurora.boot",
-      "timestamp": 1777793952.4876359
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:7941c19cf406",
-      "dominant_axis": "X",
-      "file": "aurora_expression_perception.py",
-      "matched_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "source": "aurora.boot",
-      "timestamp": 1777794154.5172956
-    },
-    {
-      "axis_signature": "X^1*A^1",
-      "change_id": "MC:dc79a49c524f",
-      "dominant_axis": "X",
-      "file": "aurora_core_ai/aurora_behavioral_identity.py",
-      "matched_ability_id": "",
-      "matched_score": 0.473333,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_behavioral_identity",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_70877ad209",
-      "source": "aurora.boot",
-      "timestamp": 1777795013.677219
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:db6cafe87259",
-      "dominant_axis": "X",
-      "file": "aurora_core_ai/aurora_consciousness_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_consciousness_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_d11f506e16",
-      "source": "aurora.boot",
-      "timestamp": 1777795015.3563
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:1eb64537843c",
-      "dominant_axis": "X",
-      "file": "aurora_core_ai/aurora_dimensional_systems.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_dimensional_systems",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_1f60f2ffe4",
-      "source": "aurora.boot",
-      "timestamp": 1777795016.948208
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:5fe82dcfb018",
-      "dominant_axis": "X",
-      "file": "aurora_core_ai/aurora_expression_perception.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_76a1ae7f0e",
-      "source": "aurora.boot",
-      "timestamp": 1777795018.9898949
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:4eba06c1d794",
-      "dominant_axis": "X",
-      "file": "aurora_core_ai/aurora_internal/aurora_sensory_crystal.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_internal.aurora_sensory_crystal",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_7e74c7d193",
-      "source": "aurora.boot",
-      "timestamp": 1777795020.51047
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:b59d756642d1",
-      "dominant_axis": "X",
-      "file": "aurora_core_ai/aurora_sedimemory.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_sedimemory",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_81903e6f67",
-      "source": "aurora.boot",
-      "timestamp": 1777795022.039038
-    },
-    {
-      "axis_signature": "T^1*A^1",
-      "change_id": "MC:71e0285f9155",
-      "dominant_axis": "T",
-      "file": "aurora_core_ai/aurora_simulation_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.473333,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_simulation_engine",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "T:CODE_LINEAGE_4ee55852ec",
-      "source": "aurora.boot",
-      "timestamp": 1777795023.5687711
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:048faa5dd2f8",
-      "dominant_axis": "X",
-      "file": "aurora_expression_perception.py",
-      "matched_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "source": "aurora.boot",
-      "timestamp": 1777795025.1796248
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:9942fd831dd8",
-      "dominant_axis": "X",
-      "file": "aurora_governance_persistence_gateway.py",
-      "matched_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_governance_persistence_gateway",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "source": "aurora.boot",
-      "timestamp": 1777795026.8082385
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:fc1a7a7b9eab",
-      "dominant_axis": "X",
-      "file": "aurora_live_vision.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_live_vision",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_5d16870230",
-      "source": "aurora.boot",
-      "timestamp": 1777795028.4865618
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:194bc6f0348b",
-      "dominant_axis": "X",
-      "file": "aurora_sedimemory.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_sedimemory",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_79af0bb284",
-      "source": "aurora.boot",
-      "timestamp": 1777795030.0253398
-    },
-    {
-      "axis_signature": "T^1*A^1",
-      "change_id": "MC:f8596063dfe8",
-      "dominant_axis": "T",
-      "file": "aurora_simulation_engine.py",
-      "matched_ability_id": "B:CODE_EVOLVE_bed049aa28",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_simulation_engine",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "B:CODE_EVOLVE_bed049aa28",
-      "source": "aurora.boot",
-      "timestamp": 1777795031.6456769
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:fed0e75ebdb2",
-      "dominant_axis": "X",
-      "file": "fix_signatures.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "fix_signatures",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_3f2bf81a60",
-      "source": "aurora.boot",
-      "timestamp": 1777795033.1687186
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:3bbc9981c264",
-      "dominant_axis": "X",
-      "file": "aurora_expression_perception.py",
-      "matched_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "B:CODE_EVOLVE_9bd0a87311",
-      "source": "aurora.boot",
-      "timestamp": 1777795299.2400188
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:f5852d86bf4c",
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "source": "aurora.boot",
-      "timestamp": 1777801621.5152144
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:bad772230ea5",
-      "code_pressure_snapshot": {
-        "measured_at": 1777801700.1764712,
-        "metrics": {
-          "avg_function_lines": 65.50323974082073,
-          "branches": 8696,
-          "classes": 11,
-          "fanout_hotspots": 0,
-          "file_pressures": {
-            "aurora.py": {
-              "A": 0.7929677419354838,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24159107271418284,
-              "X": 0.0
-            }
-          },
-          "files": 1,
-          "functions": 463,
-          "imports_local": 0,
-          "loc": 29398,
-          "module_pressures": {
-            "__root__": {
-              "A": 0.7929677419354838,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24159107271418284,
-              "X": 0.0
-            }
-          },
-          "mutable_ops": 36,
-          "public_functions": 98,
-          "subsystem_pressures": {
-            "core": {
-              "A": 0.7929677419354838,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24159107271418284,
-              "X": 0.0
-            }
-          },
-          "syntax_failures": 0,
-          "test_files": 0
-        },
-        "pressure": {
-          "A": 0.7929677419354838,
-          "B": 0.0,
-          "N": 1.0,
-          "T": 0.24159107271418284,
-          "X": 0.0
-        }
-      },
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "source": "aurora.save",
-      "timestamp": 1777801698.932222
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:580a2d22633f",
-      "code_pressure_snapshot": {
-        "measured_at": 1777801773.5789456,
-        "metrics": {
-          "avg_function_lines": 65.55291576673866,
-          "branches": 8703,
-          "classes": 11,
-          "fanout_hotspots": 0,
-          "file_pressures": {
-            "aurora.py": {
-              "A": 0.79297170951882,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24173596112311016,
-              "X": 0.0
-            }
-          },
-          "files": 1,
-          "functions": 463,
-          "imports_local": 0,
-          "loc": 29420,
-          "module_pressures": {
-            "__root__": {
-              "A": 0.79297170951882,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24173596112311016,
-              "X": 0.0
-            }
-          },
-          "mutable_ops": 36,
-          "public_functions": 98,
-          "subsystem_pressures": {
-            "core": {
-              "A": 0.79297170951882,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24173596112311016,
-              "X": 0.0
-            }
-          },
-          "syntax_failures": 0,
-          "test_files": 0
-        },
-        "pressure": {
-          "A": 0.79297170951882,
-          "B": 0.0,
-          "N": 1.0,
-          "T": 0.24173596112311016,
-          "X": 0.0
-        }
-      },
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "source": "aurora.save",
-      "timestamp": 1777801772.3753674
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:b9938bb004d8",
-      "code_pressure_snapshot": {
-        "measured_at": 1777801834.740651,
-        "metrics": {
-          "avg_function_lines": 65.5658747300216,
-          "branches": 8703,
-          "classes": 11,
-          "fanout_hotspots": 0,
-          "file_pressures": {
-            "aurora.py": {
-              "A": 0.79297170951882,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24177375809935206,
-              "X": 0.0
-            }
-          },
-          "files": 1,
-          "functions": 463,
-          "imports_local": 0,
-          "loc": 29426,
-          "module_pressures": {
-            "__root__": {
-              "A": 0.79297170951882,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24177375809935206,
-              "X": 0.0
-            }
-          },
-          "mutable_ops": 36,
-          "public_functions": 98,
-          "subsystem_pressures": {
-            "core": {
-              "A": 0.79297170951882,
-              "B": 0.0,
-              "N": 1.0,
-              "T": 0.24177375809935206,
-              "X": 0.0
-            }
-          },
-          "syntax_failures": 0,
-          "test_files": 0
-        },
-        "pressure": {
-          "A": 0.79297170951882,
-          "B": 0.0,
-          "N": 1.0,
-          "T": 0.24177375809935206,
-          "X": 0.0
-        }
-      },
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "N:CODE_EVOLVE_c83a588052",
-      "source": "aurora.save",
-      "timestamp": 1777801833.5820465
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2e1c990f8be3",
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "",
-      "matched_score": 0.07,
-      "mode": "created_manual_branch",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_df9ab80d81",
-      "source": "aurora.boot",
-      "timestamp": 1777834361.4262848
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:49bf999e3dd6",
-      "dominant_axis": "X",
-      "file": "aurora_dream_trainer.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_dream_trainer",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_b0281e145c",
-      "source": "aurora.boot",
-      "timestamp": 1777834361.9726906
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2842b28b8125",
-      "dominant_axis": "X",
-      "file": "aurora_expression_perception.py",
-      "matched_ability_id": "",
-      "matched_score": 0.5,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_5a1ec4fffb",
-      "source": "aurora.boot",
-      "timestamp": 1777834362.5314136
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:4a9fb7e55984",
-      "dominant_axis": "X",
-      "file": "aurora_governance_persistence_gateway.py",
-      "matched_ability_id": "",
-      "matched_score": 0.5,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_governance_persistence_gateway",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_c0b8c55571",
-      "source": "aurora.boot",
-      "timestamp": 1777834363.2088819
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:0aa7f46dd607",
-      "dominant_axis": "X",
-      "file": "aurora_live_vision.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_live_vision",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_f930bf2836",
-      "source": "aurora.boot",
-      "timestamp": 1777834363.841086
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:e177fdfe800e",
-      "dominant_axis": "X",
-      "file": "aurora_sedimemory.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_sedimemory",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_7f8f6921b3",
-      "source": "aurora.boot",
-      "timestamp": 1777834364.3801668
-    },
-    {
-      "axis_signature": "T^1*A^1",
-      "change_id": "MC:36f7980f8383",
-      "dominant_axis": "T",
-      "file": "aurora_simulation_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.253333,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_simulation_engine",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "T:CODE_LINEAGE_203d1e2c97",
-      "source": "aurora.boot",
-      "timestamp": 1777834364.8817096
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:d72189f5073f",
-      "dominant_axis": "X",
-      "file": "foundational_contract.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "foundational_contract",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_a1007cc898",
-      "source": "aurora.boot",
-      "timestamp": 1777834365.330409
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:9f88f09c9e18",
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "X:CODE_LINEAGE_df9ab80d81",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_df9ab80d81",
-      "source": "aurora.boot",
-      "timestamp": 1777836630.837132
-    },
-    {
-      "axis_signature": "X^1*A^1",
-      "change_id": "MC:115c0cd01fb4",
-      "dominant_axis": "X",
-      "file": "aurora_behavioral_identity.py",
-      "matched_ability_id": "",
-      "matched_score": 0.473333,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_behavioral_identity",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_e3943e3f5d",
-      "source": "aurora.boot",
-      "timestamp": 1777836631.2092376
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:225033da6c80",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_manifold_router.py",
-      "matched_ability_id": "",
-      "matched_score": 0.253333,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_constraint_manifold_router",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_bf39a8291a",
-      "source": "aurora.boot",
-      "timestamp": 1777836631.762249
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:80f63626c995",
-      "dominant_axis": "X",
-      "file": "aurora_daemon.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_daemon",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_5883d9ea71",
-      "source": "aurora.boot",
-      "timestamp": 1777836632.2841241
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:52b80b587e0c",
-      "dominant_axis": "X",
-      "file": "aurora_dimensional_systems.py",
-      "matched_ability_id": "",
-      "matched_score": 0.5,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_dimensional_systems",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_852c2c3fdf",
-      "source": "aurora.boot",
-      "timestamp": 1777836632.8816729
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2ec64a3b1a09",
-      "dominant_axis": "X",
-      "file": "aurora_dream_trainer.py",
-      "matched_ability_id": "X:CODE_LINEAGE_b0281e145c",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_dream_trainer",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_b0281e145c",
-      "source": "aurora.boot",
-      "timestamp": 1777836633.2418203
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:364396a9e929",
-      "dominant_axis": "X",
-      "file": "aurora_grammar_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_grammar_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_d3a39b655c",
-      "source": "aurora.boot",
-      "timestamp": 1777836633.6018314
-    },
-    {
-      "axis_signature": "X^1",
-      "change_id": "MC:ba2b2be9a14a",
-      "dominant_axis": "X",
-      "file": "aurora_i_state_beings.py",
-      "matched_ability_id": "",
-      "matched_score": 0.52,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_i_state_beings",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_c0eb92bd69",
-      "source": "aurora.boot",
-      "timestamp": 1777836634.0476272
-    },
-    {
-      "axis_signature": "T^1*A^1",
-      "change_id": "MC:2445f137a126",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_conversation_episode_compiler.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_conversation_episode_compiler",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "T:CODE_LINEAGE_827fa724df",
-      "source": "aurora.boot",
-      "timestamp": 1777836634.469239
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:f0dc72b0e011",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_noncomp_registry.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_noncomp_registry",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_33a6003aaa",
-      "source": "aurora.boot",
-      "timestamp": 1777836634.8542807
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:e62e865faa2c",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_ontological_scaffolding.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_ontological_scaffolding",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_70cfd0b3dd",
-      "source": "aurora.boot",
-      "timestamp": 1777836635.2562747
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:2525ec449996",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_pressure_router.py",
-      "matched_ability_id": "",
-      "matched_score": 0.492,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_pressure_router",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "T:CODE_LINEAGE_693dc47c18",
-      "source": "aurora.boot",
-      "timestamp": 1777836635.6208615
-    },
-    {
-      "axis_signature": "T^1*B^1",
-      "change_id": "MC:866a0a516238",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_runtime_constraint_governor.py",
-      "matched_ability_id": "",
-      "matched_score": 0.52,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_runtime_constraint_governor",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "T:CODE_LINEAGE_47d9af4594",
-      "source": "aurora.boot",
-      "timestamp": 1777836636.007306
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:f50077051486",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_turn_chain.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_turn_chain",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "T:CODE_LINEAGE_62fbae9b84",
-      "source": "aurora.boot",
-      "timestamp": 1777836636.4423568
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:bf70c93ca327",
-      "dominant_axis": "X",
-      "file": "aurora_manifold_directory_reader.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_manifold_directory_reader",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_9b84767b25",
-      "source": "aurora.boot",
-      "timestamp": 1777836636.8112319
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2569bab4e548",
-      "dominant_axis": "X",
-      "file": "aurora_sedimemory.py",
-      "matched_ability_id": "X:CODE_LINEAGE_7f8f6921b3",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_sedimemory",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_7f8f6921b3",
-      "source": "aurora.boot",
-      "timestamp": 1777836637.1789134
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:c7309b0056cc",
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "X:CODE_LINEAGE_df9ab80d81",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_df9ab80d81",
-      "source": "aurora.boot",
-      "timestamp": 1777837569.2685108
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:b747bde1d9dd",
-      "dominant_axis": "X",
-      "file": "_engine_integration_test.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "_engine_integration_test",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_2d580141ad",
-      "source": "aurora.boot",
-      "timestamp": 1777914197.005784
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:3f314f5f0325",
-      "dominant_axis": "X",
-      "file": "_retired_cbu_stack/aurora_cbu_registry.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "_retired_cbu_stack.aurora_cbu_registry",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_895b08a969",
-      "source": "aurora.boot",
-      "timestamp": 1777914199.1279788
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:dfe48dfbe61c",
-      "dominant_axis": "B",
-      "file": "_retired_cbu_stack/aurora_constraint_ontology.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "_retired_cbu_stack.aurora_constraint_ontology",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_94204f5a09",
-      "source": "aurora.boot",
-      "timestamp": 1777914201.1771402
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:177364534635",
-      "dominant_axis": "B",
-      "file": "_retired_cbu_stack/aurora_constraint_profile.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "_retired_cbu_stack.aurora_constraint_profile",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_9af822be53",
-      "source": "aurora.boot",
-      "timestamp": 1777914203.0585444
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:cd12823d8f8b",
-      "dominant_axis": "B",
-      "file": "_retired_cbu_stack/aurora_constraint_stack.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "_retired_cbu_stack.aurora_constraint_stack",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_f4fe2741cf",
-      "source": "aurora.boot",
-      "timestamp": 1777914205.0245204
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:a0630df178b7",
-      "dominant_axis": "B",
-      "file": "_retired_cbu_stack/aurora_constraint_unit_adapter.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "_retired_cbu_stack.aurora_constraint_unit_adapter",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_d3f6ede887",
-      "source": "aurora.boot",
-      "timestamp": 1777914206.8983917
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:7afaf60e28a2",
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "X:CODE_LINEAGE_df9ab80d81",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_df9ab80d81",
-      "source": "aurora.boot",
-      "timestamp": 1777914208.9131558
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:2db7b73ab37e",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_emission.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_constraint_emission",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_6d55cf1327",
-      "source": "aurora.boot",
-      "timestamp": 1777914210.643556
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:1c42dd42900a",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_manifold_compiler.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_constraint_manifold_compiler",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_728a70fa56",
-      "source": "aurora.boot",
-      "timestamp": 1777914212.671065
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:543f09582db7",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_manifold_router.py",
-      "matched_ability_id": "B:CODE_LINEAGE_bf39a8291a",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_constraint_manifold_router",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_bf39a8291a",
-      "source": "aurora.boot",
-      "timestamp": 1777914214.4964943
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:5d82bf5e9e9b",
-      "dominant_axis": "X",
-      "file": "aurora_core_ai/aurora_expression_perception.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_core_ai.aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_0bd9fb278c",
-      "source": "aurora.boot",
-      "timestamp": 1777914216.3213167
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:761ca092b3ca",
-      "dominant_axis": "X",
-      "file": "aurora_daemon.py",
-      "matched_ability_id": "X:CODE_LINEAGE_5883d9ea71",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_daemon",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_5883d9ea71",
-      "source": "aurora.boot",
-      "timestamp": 1777914218.1686144
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:60db05eb02ec",
-      "dominant_axis": "X",
-      "file": "aurora_expression_perception.py",
-      "matched_ability_id": "X:CODE_LINEAGE_5a1ec4fffb",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_5a1ec4fffb",
-      "source": "aurora.boot",
-      "timestamp": 1777914220.5967863
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:e2c5cdafabcb",
-      "dominant_axis": "X",
-      "file": "aurora_governance_persistence_gateway.py",
-      "matched_ability_id": "X:CODE_LINEAGE_c0b8c55571",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_governance_persistence_gateway",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_c0b8c55571",
-      "source": "aurora.boot",
-      "timestamp": 1777914222.4100573
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:699642920ab7",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_dna_strand_schema.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_dna_strand_schema",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_1f9df33505",
-      "source": "aurora.boot",
-      "timestamp": 1777914224.1661515
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:635d847b6b69",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_evolution_chamber.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_evolution_chamber",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_fd3f7a2b20",
-      "source": "aurora.boot",
-      "timestamp": 1777914226.0846622
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:6255c5fe616d",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_variant_promotion.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_variant_promotion",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_2249f41cd1",
-      "source": "aurora.boot",
-      "timestamp": 1777914228.1333644
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:308553fbe964",
-      "dominant_axis": "B",
-      "file": "aurora_internal/constraint_genealogy.py",
-      "matched_ability_id": "",
-      "matched_score": 0.5,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.constraint_genealogy",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_5380db7222",
-      "source": "aurora.boot",
-      "timestamp": 1777914229.8412132
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:a008649cf843",
-      "dominant_axis": "X",
-      "file": "aurora_sedimemory.py",
-      "matched_ability_id": "X:CODE_LINEAGE_7f8f6921b3",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_sedimemory",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_7f8f6921b3",
-      "source": "aurora.boot",
-      "timestamp": 1777914232.0594754
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:e4c7fcd792c3",
-      "dominant_axis": "X",
-      "file": "aurora_surface_daemon.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_surface_daemon",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_608f6f3371",
-      "source": "aurora.boot",
-      "timestamp": 1777914233.939174
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:b7cc3b8da37c",
-      "dominant_axis": "X",
-      "file": "aurora_voice.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_voice",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_811ca89b4e",
-      "source": "aurora.boot",
-      "timestamp": 1777914235.5843556
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:25152664f7df",
-      "dominant_axis": "X",
-      "file": "run_intelligence_test_surface.py",
-      "matched_ability_id": "",
-      "matched_score": 0.66,
-      "mode": "created_manual_branch",
-      "module_name": "run_intelligence_test_surface",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_25afc6f693",
-      "source": "aurora.boot",
-      "timestamp": 1777914237.7767096
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:37f2e9295e76",
-      "dominant_axis": "X",
-      "file": "aurora.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.107716
-    },
-    {
-      "axis_signature": "X^1*A^1",
-      "change_id": "MC:9d020aee7d21",
-      "dominant_axis": "X",
-      "file": "aurora_behavioral_identity.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_behavioral_identity",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1101213
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:fc56204159c2",
-      "dominant_axis": "X",
-      "file": "aurora_braid_wiring.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_braid_wiring",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.111914
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:f490ed148829",
-      "dominant_axis": "X",
-      "file": "aurora_computational_model.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_computational_model",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.113871
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:f6560be5d1f2",
-      "dominant_axis": "X",
-      "file": "aurora_consciousness_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_consciousness_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1162384
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:526261c7547d",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_head.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_constraint_head",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1181827
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:ee7a3a11ef2b",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_ontology.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_constraint_ontology",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.120131
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:6533167e5817",
-      "dominant_axis": "B",
-      "file": "aurora_constraint_unit_adapter.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_constraint_unit_adapter",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.122029
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:dae62ef0d43e",
-      "dominant_axis": "X",
-      "file": "aurora_curiosity_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_curiosity_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1237712
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2b22a4f892d6",
-      "dominant_axis": "X",
-      "file": "aurora_daemon.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_daemon",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1256447
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:3371f726c7b8",
-      "dominant_axis": "X",
-      "file": "aurora_dimensional_systems.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_dimensional_systems",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1273537
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:3825c60d6121",
-      "dominant_axis": "X",
-      "file": "aurora_expression_perception.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_expression_perception",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1292214
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:8e34927781da",
-      "dominant_axis": "X",
-      "file": "aurora_grammar_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_grammar_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.131035
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:6b6a32e97a03",
-      "dominant_axis": "X",
-      "file": "aurora_hardware_io.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_hardware_io",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1328852
-    },
-    {
-      "axis_signature": "X^1",
-      "change_id": "MC:f511b111a4ec",
-      "dominant_axis": "X",
-      "file": "aurora_i_state_beings.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_i_state_beings",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.134568
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:29d4885c08a8",
-      "dominant_axis": "X",
-      "file": "aurora_internal/.trashed-1782442462-aurora_language_faculty.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal..trashed-1782442462-aurora_language_faculty",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1365514
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:1fbf042c76e4",
-      "dominant_axis": "X",
-      "file": "aurora_internal/__init__.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.__init__",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.138416
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:98fea8606335",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_625_pressure_map.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_625_pressure_map",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.140552
-    },
-    {
-      "axis_signature": "X^1*B^1",
-      "change_id": "MC:a9cb569c790a",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_ability_lineage_compiler.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_ability_lineage_compiler",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.142286
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:1253ca240ecb",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_attention_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_attention_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1442575
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:079484375bee",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_axis_emergence.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_axis_emergence",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1462371
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:7a0e6b8ea6d4",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_braided_substrate.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_braided_substrate",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1482744
-    },
-    {
-      "axis_signature": "T^1*A^1",
-      "change_id": "MC:9e5b20ccfedb",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_capability_assimilator.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_capability_assimilator",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1501532
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:ceeae8e49c76",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_code_autoevolver.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_code_autoevolver",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1521847
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:9b1754679697",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_code_evolution_chamber.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_code_evolution_chamber",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1539633
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:3115e9c994e7",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_code_evolution_stack.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_code_evolution_stack",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1560507
-    },
-    {
-      "axis_signature": "B^1*A^1",
-      "change_id": "MC:3e1bfd7cc9fb",
-      "dominant_axis": "B",
-      "file": "aurora_internal/aurora_code_mutation_operators.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_code_mutation_operators",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1578262
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:784802e9db32",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_comprehension_gap.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_comprehension_gap",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1598437
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:0f0ee420a917",
-      "dominant_axis": "B",
-      "file": "aurora_internal/aurora_constraint_manifold.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_constraint_manifold",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1617298
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:219b98a9cfe7",
-      "dominant_axis": "B",
-      "file": "aurora_internal/aurora_constraint_manifold_patched.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_constraint_manifold_patched",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1637957
-    },
-    {
-      "axis_signature": "T^1*A^1",
-      "change_id": "MC:1bc91e2ecc93",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_conversation_episode_compiler.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_conversation_episode_compiler",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.165588
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:edff5f97fbd9",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_conversation_rubric_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_conversation_rubric_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1676357
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:b0d1d4c251b0",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_corpus_lifecycle.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_corpus_lifecycle",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1694715
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:579b9fc8e7ea",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_cost_diff_score.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_cost_diff_score",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1716309
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:7345104cbdc6",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_difference_buffer.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_difference_buffer",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1734357
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:e6781d241ba2",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_directed_training_corpus.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_directed_training_corpus",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1755536
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:8fd76caa27e0",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_dna_strand_schema-2.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_dna_strand_schema-2",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1775713
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:90ffd65b7b81",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_dna_strand_schema.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_dna_strand_schema",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1798556
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2e157a694ef3",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_doc.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_doc",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1823413
-    },
-    {
-      "axis_signature": "T^1*N^1*B^1*A^1",
-      "change_id": "MC:dcdd58c85b98",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_dpme_pressure_bridge.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_dpme_pressure_bridge",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.185004
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:b606f38b1c8f",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_dream_curriculum_queue.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_dream_curriculum_queue",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.187401
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:dbd837caadbd",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_dream_evolution_orchestrator.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_dream_evolution_orchestrator",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.189865
-    },
-    {
-      "axis_signature": "B^1*A^1",
-      "change_id": "MC:1bdbb895a7c3",
-      "dominant_axis": "B",
-      "file": "aurora_internal/aurora_dream_genealogy_bridge.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_dream_genealogy_bridge",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1921291
-    },
-    {
-      "axis_signature": "N^1",
-      "change_id": "MC:645b2163a632",
-      "dominant_axis": "N",
-      "file": "aurora_internal/aurora_energy_layer_costs.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_energy_layer_costs",
-      "purpose_lane": "load_uncertainty",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1944823
-    },
-    {
-      "axis_signature": "N^1",
-      "change_id": "MC:a98aac2b3ad3",
-      "dominant_axis": "N",
-      "file": "aurora_internal/aurora_energy_layer_costs_decay.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_energy_layer_costs_decay",
-      "purpose_lane": "load_uncertainty",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.196941
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:6b65ff226401",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_entropy_detector.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_entropy_detector",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.1996877
-    },
-    {
-      "axis_signature": "T^1*A^1",
-      "change_id": "MC:2617a53e1949",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_episode_slip_profiler.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_episode_slip_profiler",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2019773
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:fe85cec1154a",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_evolution_chamber.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_evolution_chamber",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2045755
-    },
-    {
-      "axis_signature": "X^1*T^1*B^1*A^1",
-      "change_id": "MC:8b8b3f9f65aa",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_evolved_surfaces.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_evolved_surfaces",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.213574
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:3aaac1b1136c",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_frontier_ops.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_frontier_ops",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2165895
-    },
-    {
-      "axis_signature": "X^1*A^1",
-      "change_id": "MC:803b011db547",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_identity_persistence.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_identity_persistence",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.218761
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:71e3d9f21192",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_intake_metabolism.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_intake_metabolism",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2212336
-    },
-    {
-      "axis_signature": "X^1",
-      "change_id": "MC:48fbf1df1e8e",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_language_state.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_language_state",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2236488
-    },
-    {
-      "axis_signature": "N^1",
-      "change_id": "MC:f4b90b1edd0f",
-      "dominant_axis": "N",
-      "file": "aurora_internal/aurora_leverage_relief.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_leverage_relief",
-      "purpose_lane": "load_uncertainty",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2256262
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:7ac2dd5f82fe",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_leverage_scalar.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_leverage_scalar",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2276776
-    },
-    {
-      "axis_signature": "X^1*B^1",
-      "change_id": "MC:d41691cfe326",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_lineage_bound_traits.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_lineage_bound_traits",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2297065
-    },
-    {
-      "axis_signature": "X^1*T^1*B^1",
-      "change_id": "MC:376aabb2f587",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_lineage_runtime_activation.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_lineage_runtime_activation",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2318242
-    },
-    {
-      "axis_signature": "X^1*B^1",
-      "change_id": "MC:4db801a2b8bc",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_live_lineage_journal.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_live_lineage_journal",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2338767
-    },
-    {
-      "axis_signature": "B^1*A^1",
-      "change_id": "MC:282d24d8bcca",
-      "dominant_axis": "B",
-      "file": "aurora_internal/aurora_local_llm_bridge.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_local_llm_bridge",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2363336
-    },
-    {
-      "axis_signature": "X^1*B^1",
-      "change_id": "MC:2f3b07f05073",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_manual_code_lineage.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_manual_code_lineage",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2384768
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:6bd33abda171",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_meaning_evolution.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_meaning_evolution",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2405827
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:455003126049",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_noncomp_registry-2.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_noncomp_registry-2",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2430432
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:0dae4b6f6cf8",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_noncomp_registry.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_noncomp_registry",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.245617
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:d6e5a63086da",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_ontological_scaffolding.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_ontological_scaffolding",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2483208
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:7bacb76d9551",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_persistence_utils.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_persistence_utils",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2509336
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:d4855d658c7c",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_polarity_gradient.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_polarity_gradient",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2532222
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:2f403d8294f3",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_pressure_adapter.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_pressure_adapter",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.255834
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:f1449f180d6e",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_pressure_classifier.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_pressure_classifier",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.258185
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:9b045a9e1727",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_pressure_ledger.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_pressure_ledger",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2608464
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:125db6bbac11",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_pressure_mathematics_tracker.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_pressure_mathematics_tracker",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2636318
-    },
-    {
-      "axis_signature": "T^1*N^1",
-      "change_id": "MC:62269dadc4d3",
-      "dominant_axis": "T",
-      "file": "aurora_internal/aurora_pressure_router.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_pressure_router",
-      "purpose_lane": "continuity_memory",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2661295
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:4095f1386ec0",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_primitive_extractor.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_primitive_extractor",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2687845
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:ca7194dde45a",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_proposition_substrate.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_proposition_substrate",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2716694
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:f17d618b9773",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_quasiarch_observer.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_quasiarch_observer",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2742534
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:d3c570912dd0",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_recommendation_hub.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_recommendation_hub",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2769055
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:a9eb369dfc91",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_relational_comparison.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_relational_comparison",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1780466349.2796106
-    },
-    {
       "axis_signature": "T^1*N^1",
       "change_id": "MC:c7121f51053f",
       "dominant_axis": "T",
@@ -3498,594 +1259,2706 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1780520093.3424053
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:7f306273bd18",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.553972
+    },
+    {
+      "axis_signature": "B^1*A^1",
+      "change_id": "MC:4ba4e133e706",
+      "dominant_axis": "B",
+      "file": "aurora_acm_bridge.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_acm_bridge",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5569754
+    },
+    {
+      "axis_signature": "X^1*A^1",
+      "change_id": "MC:91363b5a2d3f",
+      "dominant_axis": "X",
+      "file": "aurora_behavioral_identity.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_behavioral_identity",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5597227
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:a493e146d5a5",
+      "dominant_axis": "X",
+      "file": "aurora_braid_wiring.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_braid_wiring",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5624475
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:d4dc1a2fc22d",
+      "dominant_axis": "X",
+      "file": "aurora_computational_model.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_computational_model",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5651114
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:ec1cca5edfb3",
+      "dominant_axis": "X",
+      "file": "aurora_consciousness_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_consciousness_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5679722
+    },
+    {
+      "axis_signature": "B^1",
+      "change_id": "MC:a9df4650e0b2",
+      "dominant_axis": "B",
+      "file": "aurora_constraint_head.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_constraint_head",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5705345
+    },
+    {
+      "axis_signature": "B^1",
+      "change_id": "MC:9c659e443778",
+      "dominant_axis": "B",
+      "file": "aurora_constraint_ontology.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_constraint_ontology",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.573392
+    },
+    {
+      "axis_signature": "B^1",
+      "change_id": "MC:e2bdf68d41a2",
+      "dominant_axis": "B",
+      "file": "aurora_constraint_unit_adapter.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_constraint_unit_adapter",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5763857
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:db30208171a5",
+      "dominant_axis": "X",
+      "file": "aurora_curiosity_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_curiosity_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5790308
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:abcc3558322e",
+      "dominant_axis": "X",
+      "file": "aurora_daemon.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_daemon",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5818417
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:c931d537b7df",
+      "dominant_axis": "X",
+      "file": "aurora_dimensional_systems.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_dimensional_systems",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5845666
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:95af6fa32346",
+      "dominant_axis": "T",
+      "file": "aurora_experiential_sim.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_experiential_sim",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.587154
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:d292eea14369",
+      "dominant_axis": "X",
+      "file": "aurora_expression_perception.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_expression_perception",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5902545
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:e750796c10b2",
+      "dominant_axis": "X",
+      "file": "aurora_grammar_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_grammar_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5929751
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f1359f3e2dc4",
+      "dominant_axis": "X",
+      "file": "aurora_hardware_io.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_hardware_io",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5955806
+    },
+    {
+      "axis_signature": "X^1",
+      "change_id": "MC:b1024eca6ce0",
+      "dominant_axis": "X",
+      "file": "aurora_i_state_beings.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_i_state_beings",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.5981085
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:e91deed66c5f",
+      "dominant_axis": "X",
+      "file": "aurora_internal/__init__.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.__init__",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6007504
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:d6714012263a",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_625_pressure_map.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_625_pressure_map",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6032524
+    },
+    {
+      "axis_signature": "X^1*B^1",
+      "change_id": "MC:6324225b5c08",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_ability_lineage_compiler.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_ability_lineage_compiler",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.605875
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:2d217249cb71",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_attention_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_attention_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6083407
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:56637011619a",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_axis_emergence.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_axis_emergence",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6112468
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:fe88b9f83bed",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_braided_substrate.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_braided_substrate",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6140382
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:5683dc31dfef",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_capability_assimilator.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_capability_assimilator",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6166587
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:c5db3afc2eff",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_code_autoevolver.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_code_autoevolver",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6194315
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f28fa4104307",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_code_evolution_chamber.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_code_evolution_chamber",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6225333
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:015bba63d8d8",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_code_evolution_stack.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_code_evolution_stack",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6253734
+    },
+    {
+      "axis_signature": "B^1*A^1",
+      "change_id": "MC:4bd610b148f9",
+      "dominant_axis": "B",
+      "file": "aurora_internal/aurora_code_mutation_operators.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_code_mutation_operators",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.628021
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f2d72271db1e",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_comprehension_gap.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_comprehension_gap",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6308887
+    },
+    {
+      "axis_signature": "B^1",
+      "change_id": "MC:62aed514af90",
+      "dominant_axis": "B",
+      "file": "aurora_internal/aurora_constraint_manifold.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_constraint_manifold",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6334598
+    },
+    {
+      "axis_signature": "B^1",
+      "change_id": "MC:73eae46cd496",
+      "dominant_axis": "B",
+      "file": "aurora_internal/aurora_constraint_manifold_patched.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_constraint_manifold_patched",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.635954
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:9a5d500217d8",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_conversation_episode_compiler.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_conversation_episode_compiler",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6387138
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:3581d8739ed4",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_conversation_rubric_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_conversation_rubric_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6412702
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:bbea9a51823f",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_corpus_lifecycle.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_corpus_lifecycle",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6438522
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:846afab45326",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_cost_diff_score.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_cost_diff_score",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6469035
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:12ca34955732",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_difference_buffer.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_difference_buffer",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6495256
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f4175a965203",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_directed_training_corpus.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_directed_training_corpus",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.652261
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:fb8c97b56c17",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_dna_strand_schema-2.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_dna_strand_schema-2",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.654758
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:6c24be2e5607",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_dna_strand_schema.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_dna_strand_schema",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.657321
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:dc41a0c99c86",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_doc.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_doc",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.660427
+    },
+    {
+      "axis_signature": "T^1*N^1*B^1*A^1",
+      "change_id": "MC:e2f996e28032",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_dpme_pressure_bridge.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_dpme_pressure_bridge",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.663201
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:40dc11d4de75",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_dream_curriculum_queue.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_dream_curriculum_queue",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6659343
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:2a3d60703c73",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_dream_evolution_orchestrator.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_dream_evolution_orchestrator",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6685576
+    },
+    {
+      "axis_signature": "B^1*A^1",
+      "change_id": "MC:32563cc7cb9e",
+      "dominant_axis": "B",
+      "file": "aurora_internal/aurora_dream_genealogy_bridge.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_dream_genealogy_bridge",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6712203
+    },
+    {
+      "axis_signature": "N^1",
+      "change_id": "MC:cce64b599401",
+      "dominant_axis": "N",
+      "file": "aurora_internal/aurora_energy_layer_costs.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_energy_layer_costs",
+      "purpose_lane": "load_uncertainty",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6740122
+    },
+    {
+      "axis_signature": "N^1",
+      "change_id": "MC:408e2f81544d",
+      "dominant_axis": "N",
+      "file": "aurora_internal/aurora_energy_layer_costs_decay.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_energy_layer_costs_decay",
+      "purpose_lane": "load_uncertainty",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6766725
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:e57316d6edff",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_entropy_detector.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_entropy_detector",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.679369
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:8c5e9245f80b",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_episode_slip_profiler.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_episode_slip_profiler",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.681847
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:b702647fe291",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_evolution_chamber.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_evolution_chamber",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.684215
+    },
+    {
+      "axis_signature": "X^1*T^1*B^1*A^1",
+      "change_id": "MC:539162fb87f2",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_evolved_surfaces.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_evolved_surfaces",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6932635
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:6e6ff2664791",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_frontier_ops.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_frontier_ops",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.695848
+    },
+    {
+      "axis_signature": "X^1*A^1",
+      "change_id": "MC:9f2c30ab4646",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_identity_persistence.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_identity_persistence",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.6987393
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:2a8ec8aaf1fc",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_intake_metabolism.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_intake_metabolism",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7011547
+    },
+    {
+      "axis_signature": "X^1",
+      "change_id": "MC:3674115a96a9",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_language_state.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_language_state",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7038953
+    },
+    {
+      "axis_signature": "N^1",
+      "change_id": "MC:03621d51182b",
+      "dominant_axis": "N",
+      "file": "aurora_internal/aurora_leverage_relief.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_leverage_relief",
+      "purpose_lane": "load_uncertainty",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7070787
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:3dd314910f7c",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_leverage_scalar.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_leverage_scalar",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.709642
+    },
+    {
+      "axis_signature": "X^1*B^1",
+      "change_id": "MC:dd6247158a07",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_lineage_bound_traits.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_lineage_bound_traits",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7121394
+    },
+    {
+      "axis_signature": "X^1*T^1*B^1",
+      "change_id": "MC:68b2a8d35ce9",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_lineage_runtime_activation.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_lineage_runtime_activation",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7147553
+    },
+    {
+      "axis_signature": "X^1*B^1",
+      "change_id": "MC:15b93942c3fe",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_live_lineage_journal.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_live_lineage_journal",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.717175
+    },
+    {
+      "axis_signature": "B^1*A^1",
+      "change_id": "MC:6b573ea2c358",
+      "dominant_axis": "B",
+      "file": "aurora_internal/aurora_local_llm_bridge.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_local_llm_bridge",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7209241
+    },
+    {
+      "axis_signature": "X^1*B^1",
+      "change_id": "MC:53ebda8cfe63",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_manual_code_lineage.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_manual_code_lineage",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7234383
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:cce61a7b5f6d",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_meaning_evolution.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_meaning_evolution",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7258902
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:726f6ed6126d",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_noncomp_registry-2.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_noncomp_registry-2",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.728252
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:ad66b93c7bec",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_noncomp_registry.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_noncomp_registry",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7308865
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:3fd2ceba7802",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_ontological_scaffolding.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_ontological_scaffolding",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.733464
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:7f80a0a6d0cc",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_persistence_utils.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_persistence_utils",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7361143
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:9f4a56a5d362",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_polarity_gradient.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_polarity_gradient",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7387037
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:e9ba8445b21d",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_pressure_adapter.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_pressure_adapter",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.741155
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:83b8bb5b7e9b",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_pressure_classifier.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_pressure_classifier",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7435992
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:5f01d5b0ab01",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_pressure_ledger.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_pressure_ledger",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.746072
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:0b9a21f1407b",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_pressure_mathematics_tracker.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_pressure_mathematics_tracker",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7484484
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:b5077c69ed81",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_pressure_router.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_pressure_router",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.751136
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:364bd261a44f",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_primitive_extractor.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_primitive_extractor",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7535973
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:9e68a2fdd904",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_proposition_substrate.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_proposition_substrate",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7559793
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:a6afc3095a80",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_quasiarch_observer.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_quasiarch_observer",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7584398
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:ca77d47414c1",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_recommendation_hub.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_recommendation_hub",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7609322
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:5522a2dc8354",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_relational_comparison.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_relational_comparison",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.763299
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:45f7f4c60c53",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_response_pressure_tuner.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_response_pressure_tuner",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.765993
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:cad318c52e4f",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_room_operator.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_room_operator",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7686439
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:b055b14b3cae",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_rubric_influence_graph.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_rubric_influence_graph",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7713208
+    },
+    {
+      "axis_signature": "T^1*B^1",
+      "change_id": "MC:67df32355789",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_runtime_constraint_governor.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_runtime_constraint_governor",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7739408
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:cbbd3fbea61b",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_second_gen.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_second_gen",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7763546
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:493a49cbebed",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_sensory_crystal.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_sensory_crystal",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.778914
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:194f62249bde",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_solidification.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_solidification",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7814689
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:1a5b48549bdc",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_specialized_avatar_synthesizer.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_specialized_avatar_synthesizer",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7838683
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:53ab6200fd90",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_stack_trace_instrumentation.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_stack_trace_instrumentation",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7863116
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:fc36c733fd9d",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_structural_pressure_steering.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_structural_pressure_steering",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7890244
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:fa9bbc2c3aa4",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_surface_dispatcher.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_surface_dispatcher",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.791612
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:55f13daa0620",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_surface_doc.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_surface_doc",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.794182
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:538dbbdb9f10",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_tensor_expressions.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_tensor_expressions",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.7965648
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:6e60ba923375",
+      "dominant_axis": "T",
+      "file": "aurora_internal/aurora_turn_chain.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_turn_chain",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.798993
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:c501a78d1c36",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_understanding_contract.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_understanding_contract",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8014603
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:380915435026",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_utterance_parser.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_utterance_parser",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.803879
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:59ce69b8178b",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_variant_promotion.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_variant_promotion",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8063474
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:3affb8d89dcc",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_worth_evaluator.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.aurora_worth_evaluator",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8089242
+    },
+    {
+      "axis_signature": "B^1",
+      "change_id": "MC:b94f912ac57b",
+      "dominant_axis": "B",
+      "file": "aurora_internal/constraint_genealogy.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.constraint_genealogy",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8113344
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:4795981e3946",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/__init__.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.__init__",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8142633
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:11309bc9f817",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/activation_field.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.activation_field",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8167822
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:a672bc9b5c8a",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/conscious_frame.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.conscious_frame",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8192112
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:a3df5301f9b8",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/contextual_overlay.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.contextual_overlay",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8217285
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:08cc46d0585a",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/crest.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.crest",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.824109
+    },
+    {
+      "axis_signature": "B^1*A^1",
+      "change_id": "MC:7eb8aef1e0a1",
+      "dominant_axis": "B",
+      "file": "aurora_internal/dual_strata/dce_bridge.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.dce_bridge",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.826571
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:e87fdaf49902",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/downward_traversal.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.downward_traversal",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8289943
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:5886499e4c5b",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/micro_reasoning.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.micro_reasoning",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8314273
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:70ef53adc6e7",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/prediction_field.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.prediction_field",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.833971
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:9980ddb1d45b",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/predictive_stager.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.predictive_stager",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8368785
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:6176bd5315f4",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/sensory_control_channel.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.sensory_control_channel",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8394358
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:ba9fc87a5c7c",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/sensory_observation.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.sensory_observation",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.842072
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:0f079c69b980",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/sensory_snapshot_channel.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.sensory_snapshot_channel",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8445005
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f83b6ae682ca",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/sleep_cycle.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.sleep_cycle",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8471723
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:b55f5df4669c",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/subsurface_projection.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.subsurface_projection",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8497934
+    },
+    {
+      "axis_signature": "X^1",
+      "change_id": "MC:81e28094a4ec",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/subsurface_state.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.subsurface_state",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8522513
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:bbae0d026777",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/subsystem_waveforms.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.subsystem_waveforms",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8547297
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:c20d53c7d291",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/surface_channel.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.surface_channel",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8571312
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:5c72c77516a7",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/surface_continuity_feed.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.surface_continuity_feed",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8595479
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:2dfcc62c1636",
+      "dominant_axis": "X",
+      "file": "aurora_internal/dual_strata/surface_sensory_proxy.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.dual_strata.surface_sensory_proxy",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.862092
+    },
+    {
+      "axis_signature": "X^1*B^1",
+      "change_id": "MC:b192b0212017",
+      "dominant_axis": "X",
+      "file": "aurora_internal/lineage_canonical.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.lineage_canonical",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.864489
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:ceb08d0438a9",
+      "dominant_axis": "X",
+      "file": "aurora_internal/quasiarch_observer/__init__.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.quasiarch_observer.__init__",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8673234
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:8ae0bb25e5b5",
+      "dominant_axis": "X",
+      "file": "aurora_internal/quasiarch_observer/crystal_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.quasiarch_observer.crystal_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.869919
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:bf216562240f",
+      "dominant_axis": "X",
+      "file": "aurora_internal/quasiarch_observer/dimensional_memory.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.quasiarch_observer.dimensional_memory",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8723829
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:423687469e35",
+      "dominant_axis": "X",
+      "file": "aurora_internal/quasiarch_observer/dimensional_processing.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.quasiarch_observer.dimensional_processing",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8748486
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:793541e13311",
+      "dominant_axis": "X",
+      "file": "aurora_internal/quasiarch_observer/ghost_relics.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.quasiarch_observer.ghost_relics",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8772542
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:b84d70fc4683",
+      "dominant_axis": "X",
+      "file": "aurora_internal/sleep_cycle.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.sleep_cycle",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8797607
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:a0b8004e98c0",
+      "dominant_axis": "X",
+      "file": "aurora_internal/surface_channel.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.surface_channel",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8822248
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:7eb48d212ace",
+      "dominant_axis": "X",
+      "file": "aurora_internal/surface_continuity_feed.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.surface_continuity_feed",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8845863
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:e93936e5458c",
+      "dominant_axis": "X",
+      "file": "aurora_internal/tool_registry.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_internal.tool_registry",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.887024
+    },
+    {
+      "axis_signature": "X^1",
+      "change_id": "MC:a5ceb9b3e9d1",
+      "dominant_axis": "X",
+      "file": "aurora_istate_operations.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_istate_operations",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8901134
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:d84394142eac",
+      "dominant_axis": "X",
+      "file": "aurora_ivm.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_ivm",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8927212
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:6e150173479e",
+      "dominant_axis": "X",
+      "file": "aurora_language_field.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_language_field",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.8967254
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:ce0afcbd6fe8",
+      "dominant_axis": "X",
+      "file": "aurora_language_structure_fitness.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_language_structure_fitness",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9015267
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:a1f09439261e",
+      "dominant_axis": "X",
+      "file": "aurora_offline_resilience.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_offline_resilience",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.906235
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:8a47418b2637",
+      "dominant_axis": "X",
+      "file": "aurora_quantum_dream_substrate.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_quantum_dream_substrate",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9110632
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f65158925a7d",
+      "dominant_axis": "X",
+      "file": "aurora_sedimemory.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_sedimemory",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.91463
+    },
+    {
+      "axis_signature": "B^1*A^1",
+      "change_id": "MC:3ca346dda670",
+      "dominant_axis": "B",
+      "file": "aurora_semantic_intention_bridge.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_semantic_intention_bridge",
+      "purpose_lane": "distinction_branching",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.917227
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:cea578fd2a00",
+      "dominant_axis": "T",
+      "file": "aurora_simulation_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_simulation_engine",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9196446
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:57b2663d3527",
+      "dominant_axis": "X",
+      "file": "aurora_streaming_expression.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_streaming_expression",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.922152
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:e528e01b4fbd",
+      "dominant_axis": "X",
+      "file": "aurora_subsurface_daemon.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_subsurface_daemon",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9250007
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:904644fda20a",
+      "dominant_axis": "X",
+      "file": "aurora_surface_daemon.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_surface_daemon",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9278276
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:03b2c5dda129",
+      "dominant_axis": "X",
+      "file": "aurora_systems_test.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_systems_test",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.930326
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:99c2309355d5",
+      "dominant_axis": "X",
+      "file": "aurora_thought_formation.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_thought_formation",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9327993
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:521e0aa4d03a",
+      "dominant_axis": "X",
+      "file": "aurora_training_pulse.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_training_pulse",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9352508
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:6ecc2d85ad4c",
+      "dominant_axis": "X",
+      "file": "aurora_warp_protocol.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_warp_protocol",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.937736
+    },
+    {
+      "axis_signature": "T^1*N^1",
+      "change_id": "MC:a23d71ee5b79",
+      "dominant_axis": "T",
+      "file": "aurora_waveform_pressure.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_waveform_pressure",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.940176
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:c8ef7a565e1b",
+      "dominant_axis": "X",
+      "file": "concept_crystal.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "concept_crystal",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9428232
+    },
+    {
+      "axis_signature": "T^1*B^1*A^1",
+      "change_id": "MC:830774ee09e5",
+      "dominant_axis": "T",
+      "file": "constraint_evolutionary_sim.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "constraint_evolutionary_sim",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.945309
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:92c2bba04b89",
+      "dominant_axis": "X",
+      "file": "corpus_runner.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "corpus_runner",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9477353
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:cf4abf7f37d8",
+      "dominant_axis": "X",
+      "file": "foundational_contract.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "foundational_contract",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9501472
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:52f9d4a686fb",
+      "dominant_axis": "X",
+      "file": "geological_baseline.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "geological_baseline",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9525328
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:271e4a12b106",
+      "dominant_axis": "X",
+      "file": "main.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "main",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087498.9550018
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:89055c8ad469",
+      "dominant_axis": "X",
+      "file": "aurora_expression_perception.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_expression_perception",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781087851.709425
     }
   ],
   "initialized": true,
-  "last_run_at": 1780520093.36583,
+  "last_run_at": 1781087851.7123046,
   "manifest": {
     "aurora.py": {
-      "mtime_ns": 1780520014926110147,
-      "size": 1399935
+      "mtime_ns": 1781087269318582757,
+      "size": 1437638
+    },
+    "aurora_acm_bridge.py": {
+      "mtime_ns": 1781087269324738684,
+      "size": 16963
     },
     "aurora_behavioral_identity.py": {
-      "mtime_ns": 1778751706113129529,
-      "size": 75303
+      "mtime_ns": 1781087269329185630,
+      "size": 75350
     },
     "aurora_braid_wiring.py": {
-      "mtime_ns": 1779483379807515272,
-      "size": 18050
+      "mtime_ns": 1781087269323770956,
+      "size": 19041
     },
     "aurora_computational_model.py": {
-      "mtime_ns": 1780446613583506854,
-      "size": 11210
+      "mtime_ns": 1781087269329116466,
+      "size": 11257
     },
     "aurora_consciousness_engine.py": {
-      "mtime_ns": 1779248808616284883,
-      "size": 120579
+      "mtime_ns": 1781087269321389209,
+      "size": 120626
     },
     "aurora_constraint_head.py": {
-      "mtime_ns": 1780446487891499382,
-      "size": 6775
+      "mtime_ns": 1781087269321061918,
+      "size": 6822
     },
     "aurora_constraint_ontology.py": {
-      "mtime_ns": 1779296433692163875,
-      "size": 6190
+      "mtime_ns": 1781087269323713332,
+      "size": 6237
     },
     "aurora_constraint_unit_adapter.py": {
-      "mtime_ns": 1779294891134688953,
+      "mtime_ns": 1781087269324192558,
       "size": 9913
     },
     "aurora_curiosity_engine.py": {
-      "mtime_ns": 1780458213717015458,
-      "size": 47757
+      "mtime_ns": 1781087269326906003,
+      "size": 57278
     },
     "aurora_daemon.py": {
-      "mtime_ns": 1780019266285066830,
-      "size": 324464
+      "mtime_ns": 1781087269750283957,
+      "size": 330640
     },
     "aurora_dimensional_systems.py": {
-      "mtime_ns": 1778751706116434461,
-      "size": 167902
+      "mtime_ns": 1781087269750522732,
+      "size": 167949
+    },
+    "aurora_experiential_sim.py": {
+      "mtime_ns": 1781087269751039831,
+      "size": 18058
     },
     "aurora_expression_perception.py": {
-      "mtime_ns": 1780514748289485373,
-      "size": 448574
+      "mtime_ns": 1781087830218001258,
+      "size": 449939
     },
     "aurora_grammar_engine.py": {
-      "mtime_ns": 1779296989964566589,
-      "size": 52226
+      "mtime_ns": 1781087269329997309,
+      "size": 54356
     },
     "aurora_hardware_io.py": {
-      "mtime_ns": 1779408187702591992,
+      "mtime_ns": 1781087269321290582,
       "size": 34950
     },
     "aurora_i_state_beings.py": {
-      "mtime_ns": 1778751706120434461,
-      "size": 38140
-    },
-    "aurora_internal/.trashed-1782442462-aurora_language_faculty.py": {
-      "mtime_ns": 1780019266289066830,
-      "size": 21675
+      "mtime_ns": 1781087269330328176,
+      "size": 38187
     },
     "aurora_internal/__init__.py": {
-      "mtime_ns": 1778751706120434461,
-      "size": 52
+      "mtime_ns": 1781087269756541423,
+      "size": 99
     },
     "aurora_internal/aurora_625_pressure_map.py": {
-      "mtime_ns": 1779483379807515272,
-      "size": 35785
+      "mtime_ns": 1781087269758198408,
+      "size": 35832
     },
     "aurora_internal/aurora_ability_lineage_compiler.py": {
-      "mtime_ns": 1778751706121831702,
-      "size": 51905
+      "mtime_ns": 1781087269765420138,
+      "size": 51952
     },
     "aurora_internal/aurora_attention_engine.py": {
-      "mtime_ns": 1779483379807515272,
-      "size": 7767
+      "mtime_ns": 1781087269756453058,
+      "size": 8027
     },
     "aurora_internal/aurora_axis_emergence.py": {
-      "mtime_ns": 1778751706121831702,
-      "size": 16458
+      "mtime_ns": 1781087269752162239,
+      "size": 16505
     },
     "aurora_internal/aurora_braided_substrate.py": {
-      "mtime_ns": 1778751706121831702,
-      "size": 10613
+      "mtime_ns": 1781087269761760562,
+      "size": 10660
     },
     "aurora_internal/aurora_capability_assimilator.py": {
-      "mtime_ns": 1778751706121831702,
-      "size": 16999
+      "mtime_ns": 1781087269763794608,
+      "size": 17046
     },
     "aurora_internal/aurora_code_autoevolver.py": {
-      "mtime_ns": 1778751706121831702,
-      "size": 137293
+      "mtime_ns": 1781087269760593693,
+      "size": 137340
     },
     "aurora_internal/aurora_code_evolution_chamber.py": {
-      "mtime_ns": 1778751706121831702,
-      "size": 93447
+      "mtime_ns": 1781087269757404146,
+      "size": 93494
     },
     "aurora_internal/aurora_code_evolution_stack.py": {
-      "mtime_ns": 1779483379807515272,
-      "size": 32510
+      "mtime_ns": 1781087269760760923,
+      "size": 32557
     },
     "aurora_internal/aurora_code_mutation_operators.py": {
-      "mtime_ns": 1778751706121831702,
-      "size": 4423
+      "mtime_ns": 1781087269761293718,
+      "size": 4470
     },
     "aurora_internal/aurora_comprehension_gap.py": {
-      "mtime_ns": 1780019266293066830,
-      "size": 61353
+      "mtime_ns": 1781087269758362142,
+      "size": 61400
     },
     "aurora_internal/aurora_constraint_manifold.py": {
-      "mtime_ns": 1779483379807515272,
-      "size": 181
+      "mtime_ns": 1781087269759815480,
+      "size": 228
     },
     "aurora_internal/aurora_constraint_manifold_patched.py": {
-      "mtime_ns": 1778751706124434460,
-      "size": 62230
+      "mtime_ns": 1781087269751543314,
+      "size": 62277
     },
     "aurora_internal/aurora_conversation_episode_compiler.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269758026853,
       "size": 21473
     },
     "aurora_internal/aurora_conversation_rubric_engine.py": {
-      "mtime_ns": 1778751706124434460,
+      "mtime_ns": 1781087269760813113,
       "size": 25742
     },
     "aurora_internal/aurora_corpus_lifecycle.py": {
-      "mtime_ns": 1779841954539398188,
-      "size": 8595
+      "mtime_ns": 1781087269751880541,
+      "size": 8642
     },
     "aurora_internal/aurora_cost_diff_score.py": {
-      "mtime_ns": 1779841954539398188,
-      "size": 108367
+      "mtime_ns": 1781087269758983092,
+      "size": 108414
     },
     "aurora_internal/aurora_difference_buffer.py": {
-      "mtime_ns": 1778751706124434460,
-      "size": 27051
+      "mtime_ns": 1781087269763095460,
+      "size": 27098
     },
     "aurora_internal/aurora_directed_training_corpus.py": {
-      "mtime_ns": 1778751706124434460,
-      "size": 12950
+      "mtime_ns": 1781087269759603132,
+      "size": 12997
     },
     "aurora_internal/aurora_dna_strand_schema-2.py": {
-      "mtime_ns": 1779483379807515272,
-      "size": 28570
+      "mtime_ns": 1781087269758095008,
+      "size": 28617
     },
     "aurora_internal/aurora_dna_strand_schema.py": {
-      "mtime_ns": 1778751706124434460,
-      "size": 28500
+      "mtime_ns": 1781087269751436612,
+      "size": 28547
     },
     "aurora_internal/aurora_doc.py": {
-      "mtime_ns": 1778751706128434460,
-      "size": 3496
+      "mtime_ns": 1781087269763892000,
+      "size": 3543
     },
     "aurora_internal/aurora_dpme_pressure_bridge.py": {
-      "mtime_ns": 1778751706128434460,
-      "size": 7771
+      "mtime_ns": 1781087269757674912,
+      "size": 7818
     },
     "aurora_internal/aurora_dream_curriculum_queue.py": {
-      "mtime_ns": 1778751706128434460,
+      "mtime_ns": 1781087269751703651,
       "size": 12844
     },
     "aurora_internal/aurora_dream_evolution_orchestrator.py": {
-      "mtime_ns": 1778751706128434460,
+      "mtime_ns": 1781087269759270567,
       "size": 41274
     },
     "aurora_internal/aurora_dream_genealogy_bridge.py": {
-      "mtime_ns": 1778751706128434460,
-      "size": 33207
+      "mtime_ns": 1781087269754626870,
+      "size": 33254
     },
     "aurora_internal/aurora_energy_layer_costs.py": {
-      "mtime_ns": 1778751706132434460,
-      "size": 213246
+      "mtime_ns": 1781087269764079406,
+      "size": 213293
     },
     "aurora_internal/aurora_energy_layer_costs_decay.py": {
-      "mtime_ns": 1778751706132434460,
-      "size": 38422
+      "mtime_ns": 1781087269760004827,
+      "size": 38469
     },
     "aurora_internal/aurora_entropy_detector.py": {
-      "mtime_ns": 1778751706132434460,
-      "size": 63120
+      "mtime_ns": 1781087269759127760,
+      "size": 63167
     },
     "aurora_internal/aurora_episode_slip_profiler.py": {
-      "mtime_ns": 1778751706132434460,
+      "mtime_ns": 1781087269758321728,
       "size": 9606
     },
     "aurora_internal/aurora_evolution_chamber.py": {
-      "mtime_ns": 1778751706136434460,
-      "size": 266271
+      "mtime_ns": 1781087269761048278,
+      "size": 266436
     },
     "aurora_internal/aurora_evolved_surfaces.py": {
-      "mtime_ns": 1778751706144434460,
-      "size": 1057010
+      "mtime_ns": 1781087269754868031,
+      "size": 1057057
     },
     "aurora_internal/aurora_frontier_ops.py": {
-      "mtime_ns": 1778751706144434460,
-      "size": 24648
+      "mtime_ns": 1781087269756624740,
+      "size": 24695
     },
     "aurora_internal/aurora_identity_persistence.py": {
-      "mtime_ns": 1778751706144434460,
-      "size": 75967
+      "mtime_ns": 1781087269760446735,
+      "size": 76014
     },
     "aurora_internal/aurora_intake_metabolism.py": {
-      "mtime_ns": 1778751706148434460,
-      "size": 70485
+      "mtime_ns": 1781087269754732119,
+      "size": 70532
     },
     "aurora_internal/aurora_language_state.py": {
-      "mtime_ns": 1780153969930070250,
+      "mtime_ns": 1781087269759850210,
       "size": 124034
     },
     "aurora_internal/aurora_leverage_relief.py": {
-      "mtime_ns": 1778751706148434460,
-      "size": 14213
+      "mtime_ns": 1781087269761331281,
+      "size": 14260
     },
     "aurora_internal/aurora_leverage_scalar.py": {
-      "mtime_ns": 1778751706148434460,
-      "size": 59110
+      "mtime_ns": 1781087269756694856,
+      "size": 59157
     },
     "aurora_internal/aurora_lineage_bound_traits.py": {
-      "mtime_ns": 1778751706152434460,
-      "size": 11146
+      "mtime_ns": 1781087269761713655,
+      "size": 11193
     },
     "aurora_internal/aurora_lineage_runtime_activation.py": {
-      "mtime_ns": 1778751706152434460,
-      "size": 8267
+      "mtime_ns": 1781087269762142810,
+      "size": 8314
     },
     "aurora_internal/aurora_live_lineage_journal.py": {
-      "mtime_ns": 1778751706152434460,
-      "size": 9325
+      "mtime_ns": 1781087269756995478,
+      "size": 9372
     },
     "aurora_internal/aurora_local_llm_bridge.py": {
-      "mtime_ns": 1779483379811515273,
-      "size": 9945
+      "mtime_ns": 1781087269751787054,
+      "size": 9992
     },
     "aurora_internal/aurora_manual_code_lineage.py": {
-      "mtime_ns": 1778751706152434460,
-      "size": 19611
+      "mtime_ns": 1781087269758602377,
+      "size": 19658
     },
     "aurora_internal/aurora_meaning_evolution.py": {
-      "mtime_ns": 1778751706152434460,
-      "size": 21603
+      "mtime_ns": 1781087269757040928,
+      "size": 21650
     },
     "aurora_internal/aurora_noncomp_registry-2.py": {
-      "mtime_ns": 1779483379811515273,
-      "size": 106128
+      "mtime_ns": 1781087269761601900,
+      "size": 106175
     },
     "aurora_internal/aurora_noncomp_registry.py": {
-      "mtime_ns": 1779248808616284883,
-      "size": 105408
+      "mtime_ns": 1781087269754265275,
+      "size": 105455
     },
     "aurora_internal/aurora_ontological_scaffolding.py": {
-      "mtime_ns": 1780486209940905101,
-      "size": 111672
+      "mtime_ns": 1781087269764297105,
+      "size": 111719
     },
     "aurora_internal/aurora_persistence_utils.py": {
-      "mtime_ns": 1779483379811515273,
-      "size": 2392
+      "mtime_ns": 1781087269751400794,
+      "size": 2439
     },
     "aurora_internal/aurora_polarity_gradient.py": {
-      "mtime_ns": 1778751706156434460,
-      "size": 56346
+      "mtime_ns": 1781087269751306359,
+      "size": 56393
     },
     "aurora_internal/aurora_pressure_adapter.py": {
-      "mtime_ns": 1778751706156434460,
-      "size": 17802
+      "mtime_ns": 1781087269765287750,
+      "size": 17849
     },
     "aurora_internal/aurora_pressure_classifier.py": {
-      "mtime_ns": 1778751706156434460,
-      "size": 16775
+      "mtime_ns": 1781087269759383508,
+      "size": 16822
     },
     "aurora_internal/aurora_pressure_ledger.py": {
-      "mtime_ns": 1778751706156434460,
-      "size": 16529
+      "mtime_ns": 1781087269760549639,
+      "size": 16576
     },
     "aurora_internal/aurora_pressure_mathematics_tracker.py": {
-      "mtime_ns": 1778751706156434460,
-      "size": 31167
+      "mtime_ns": 1781087269757172879,
+      "size": 31214
     },
     "aurora_internal/aurora_pressure_router.py": {
-      "mtime_ns": 1778751706156434460,
-      "size": 25688
+      "mtime_ns": 1781087269765199806,
+      "size": 25735
     },
     "aurora_internal/aurora_primitive_extractor.py": {
-      "mtime_ns": 1778751706156434460,
+      "mtime_ns": 1781087269758855140,
       "size": 71142
     },
     "aurora_internal/aurora_proposition_substrate.py": {
-      "mtime_ns": 1778751706156434460,
-      "size": 16354
+      "mtime_ns": 1781087269757754419,
+      "size": 16401
     },
     "aurora_internal/aurora_quasiarch_observer.py": {
-      "mtime_ns": 1780458032153012939,
-      "size": 68346
+      "mtime_ns": 1781087269756822635,
+      "size": 69787
     },
     "aurora_internal/aurora_recommendation_hub.py": {
-      "mtime_ns": 1778751706160434460,
-      "size": 6624
+      "mtime_ns": 1781087269754379960,
+      "size": 6671
     },
     "aurora_internal/aurora_relational_comparison.py": {
-      "mtime_ns": 1779483379811515273,
-      "size": 4699
+      "mtime_ns": 1781087269754167650,
+      "size": 7931
     },
     "aurora_internal/aurora_response_pressure_tuner.py": {
-      "mtime_ns": 1778751706160434460,
-      "size": 15888
+      "mtime_ns": 1781087269752040513,
+      "size": 15935
     },
     "aurora_internal/aurora_room_operator.py": {
-      "mtime_ns": 1778751706160434460,
-      "size": 25486
+      "mtime_ns": 1781087269754527146,
+      "size": 25533
     },
     "aurora_internal/aurora_rubric_influence_graph.py": {
-      "mtime_ns": 1778751706160434460,
-      "size": 10636
+      "mtime_ns": 1781087269751979747,
+      "size": 10683
     },
     "aurora_internal/aurora_runtime_constraint_governor.py": {
-      "mtime_ns": 1780019266293066830,
-      "size": 29067
+      "mtime_ns": 1781087269761954410,
+      "size": 30470
     },
     "aurora_internal/aurora_second_gen.py": {
-      "mtime_ns": 1778751706160434460,
-      "size": 17390
+      "mtime_ns": 1781087269757267120,
+      "size": 17437
     },
     "aurora_internal/aurora_sensory_crystal.py": {
-      "mtime_ns": 1780009838727679918,
-      "size": 96307
+      "mtime_ns": 1781087269759699606,
+      "size": 97771
     },
     "aurora_internal/aurora_solidification.py": {
-      "mtime_ns": 1778751706160434460,
-      "size": 30309
+      "mtime_ns": 1781087269764006449,
+      "size": 30356
     },
     "aurora_internal/aurora_specialized_avatar_synthesizer.py": {
-      "mtime_ns": 1778751706164434460,
+      "mtime_ns": 1781087269754417272,
       "size": 42412
     },
     "aurora_internal/aurora_stack_trace_instrumentation.py": {
-      "mtime_ns": 1778751706164434460,
-      "size": 9825
+      "mtime_ns": 1781087269760955247,
+      "size": 9872
     },
     "aurora_internal/aurora_structural_pressure_steering.py": {
-      "mtime_ns": 1778751706164434460,
-      "size": 26877
+      "mtime_ns": 1781087269758756738,
+      "size": 26924
     },
     "aurora_internal/aurora_surface_dispatcher.py": {
-      "mtime_ns": 1778751706164434460,
-      "size": 13477
+      "mtime_ns": 1781087269757919415,
+      "size": 13524
     },
     "aurora_internal/aurora_surface_doc.py": {
-      "mtime_ns": 1778751706164434460,
-      "size": 18157
+      "mtime_ns": 1781087269761795299,
+      "size": 18204
     },
     "aurora_internal/aurora_tensor_expressions.py": {
-      "mtime_ns": 1779248808616284883,
-      "size": 27554
+      "mtime_ns": 1781087269760285519,
+      "size": 27601
     },
     "aurora_internal/aurora_turn_chain.py": {
-      "mtime_ns": 1778751706164434460,
-      "size": 6585
+      "mtime_ns": 1781087269762026654,
+      "size": 6632
     },
     "aurora_internal/aurora_understanding_contract.py": {
-      "mtime_ns": 1779248808616284883,
-      "size": 117763
+      "mtime_ns": 1781087269757507972,
+      "size": 117810
     },
     "aurora_internal/aurora_utterance_parser.py": {
-      "mtime_ns": 1779402566031004676,
-      "size": 49318
+      "mtime_ns": 1781087269758492821,
+      "size": 49365
     },
     "aurora_internal/aurora_variant_promotion.py": {
-      "mtime_ns": 1778751706164434460,
-      "size": 26177
+      "mtime_ns": 1781087269764820435,
+      "size": 26224
     },
     "aurora_internal/aurora_worth_evaluator.py": {
-      "mtime_ns": 1778751706168434459,
-      "size": 40887
+      "mtime_ns": 1781087269758643533,
+      "size": 40934
     },
     "aurora_internal/constraint_genealogy.py": {
-      "mtime_ns": 1780446556895503484,
-      "size": 307178
+      "mtime_ns": 1781087269764593995,
+      "size": 307225
     },
     "aurora_internal/dual_strata/__init__.py": {
-      "mtime_ns": 1779841954539398188,
-      "size": 1465
+      "mtime_ns": 1781087269752764920,
+      "size": 1512
     },
     "aurora_internal/dual_strata/activation_field.py": {
-      "mtime_ns": 1779841954539398188,
-      "size": 16271
+      "mtime_ns": 1781087269754030143,
+      "size": 16318
     },
     "aurora_internal/dual_strata/conscious_frame.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269753517086,
       "size": 4020
     },
     "aurora_internal/dual_strata/contextual_overlay.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269753849663,
       "size": 1972
     },
     "aurora_internal/dual_strata/crest.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269752977781,
       "size": 1502
     },
     "aurora_internal/dual_strata/dce_bridge.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269753783370,
       "size": 24074
     },
     "aurora_internal/dual_strata/downward_traversal.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269753344701,
       "size": 5640
     },
     "aurora_internal/dual_strata/micro_reasoning.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 5234
+      "mtime_ns": 1781087269753430504,
+      "size": 5281
     },
     "aurora_internal/dual_strata/prediction_field.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 11113
+      "mtime_ns": 1781087269752464393,
+      "size": 11160
     },
     "aurora_internal/dual_strata/predictive_stager.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269753059404,
       "size": 19084
     },
     "aurora_internal/dual_strata/sensory_control_channel.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 1899
+      "mtime_ns": 1781087269753261978,
+      "size": 1946
     },
     "aurora_internal/dual_strata/sensory_observation.py": {
-      "mtime_ns": 1779841954539398188,
-      "size": 7671
+      "mtime_ns": 1781087269752889580,
+      "size": 7718
     },
     "aurora_internal/dual_strata/sensory_snapshot_channel.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 11326
+      "mtime_ns": 1781087269753597192,
+      "size": 11373
     },
     "aurora_internal/dual_strata/sleep_cycle.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 3137
+      "mtime_ns": 1781087269752302356,
+      "size": 3184
     },
     "aurora_internal/dual_strata/subsurface_projection.py": {
-      "mtime_ns": 1779841954539398188,
-      "size": 20513
+      "mtime_ns": 1781087269753963426,
+      "size": 20560
     },
     "aurora_internal/dual_strata/subsurface_state.py": {
-      "mtime_ns": 1779841954539398188,
+      "mtime_ns": 1781087269753686753,
       "size": 1957
     },
     "aurora_internal/dual_strata/subsystem_waveforms.py": {
-      "mtime_ns": 1780360330609707613,
+      "mtime_ns": 1781087269752390897,
       "size": 27986
     },
     "aurora_internal/dual_strata/surface_channel.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 4625
+      "mtime_ns": 1781087269753155273,
+      "size": 4672
     },
     "aurora_internal/dual_strata/surface_continuity_feed.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 4927
+      "mtime_ns": 1781087269752672421,
+      "size": 4974
     },
     "aurora_internal/dual_strata/surface_sensory_proxy.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 6588
+      "mtime_ns": 1781087269752583513,
+      "size": 6635
     },
     "aurora_internal/lineage_canonical.py": {
-      "mtime_ns": 1778751706172434459,
-      "size": 9642
+      "mtime_ns": 1781087269757712475,
+      "size": 9689
     },
     "aurora_internal/quasiarch_observer/__init__.py": {
-      "mtime_ns": 1778751706180434459,
-      "size": 786
+      "mtime_ns": 1781087269763584812,
+      "size": 833
     },
     "aurora_internal/quasiarch_observer/crystal_engine.py": {
-      "mtime_ns": 1778751706181109876,
+      "mtime_ns": 1781087269763393345,
       "size": 93233
     },
     "aurora_internal/quasiarch_observer/dimensional_memory.py": {
-      "mtime_ns": 1778751706181109876,
+      "mtime_ns": 1781087269763505657,
       "size": 89357
     },
     "aurora_internal/quasiarch_observer/dimensional_processing.py": {
-      "mtime_ns": 1778751706181109876,
+      "mtime_ns": 1781087269763613114,
       "size": 82591
     },
     "aurora_internal/quasiarch_observer/ghost_relics.py": {
-      "mtime_ns": 1778751706181109876,
-      "size": 10157
+      "mtime_ns": 1781087269763754068,
+      "size": 10204
     },
     "aurora_internal/sleep_cycle.py": {
-      "mtime_ns": 1779483379811515273,
-      "size": 1907
+      "mtime_ns": 1781087269751671201,
+      "size": 1954
     },
     "aurora_internal/surface_channel.py": {
-      "mtime_ns": 1779483379811515273,
-      "size": 4913
+      "mtime_ns": 1781087269759516630,
+      "size": 4960
     },
     "aurora_internal/surface_continuity_feed.py": {
-      "mtime_ns": 1779483379811515273,
-      "size": 1437
+      "mtime_ns": 1781087269756361507,
+      "size": 1484
     },
     "aurora_internal/tool_registry.py": {
-      "mtime_ns": 1780019266297066830,
+      "mtime_ns": 1781087269760058301,
       "size": 84802
     },
     "aurora_istate_operations.py": {
-      "mtime_ns": 1780446535019502184,
-      "size": 10124
+      "mtime_ns": 1781087269751125642,
+      "size": 10171
     },
     "aurora_ivm.py": {
-      "mtime_ns": 1778751706184434459,
-      "size": 156633
+      "mtime_ns": 1781087269323853427,
+      "size": 156680
     },
     "aurora_language_field.py": {
-      "mtime_ns": 1780448745878859658,
-      "size": 44253
+      "mtime_ns": 1781087269321183814,
+      "size": 46654
     },
     "aurora_language_structure_fitness.py": {
-      "mtime_ns": 1779483379811515273,
+      "mtime_ns": 1781087269325036214,
       "size": 4704
     },
     "aurora_offline_resilience.py": {
-      "mtime_ns": 1779291110397524816,
-      "size": 15445
+      "mtime_ns": 1781087269324578353,
+      "size": 15492
     },
     "aurora_quantum_dream_substrate.py": {
-      "mtime_ns": 1779596079208903398,
+      "mtime_ns": 1781087269325178383,
       "size": 18994
     },
     "aurora_sedimemory.py": {
-      "mtime_ns": 1780050390294912299,
-      "size": 90580
+      "mtime_ns": 1781087269324808076,
+      "size": 90627
     },
     "aurora_semantic_intention_bridge.py": {
-      "mtime_ns": 1779483379811515273,
+      "mtime_ns": 1781087269324406418,
       "size": 4867
     },
     "aurora_simulation_engine.py": {
-      "mtime_ns": 1780486250584903596,
-      "size": 172133
+      "mtime_ns": 1781087269326364271,
+      "size": 179715
     },
     "aurora_streaming_expression.py": {
-      "mtime_ns": 1779483379811515273,
+      "mtime_ns": 1781087269330190845,
       "size": 23884
     },
     "aurora_subsurface_daemon.py": {
-      "mtime_ns": 1778751706512434452,
-      "size": 186
+      "mtime_ns": 1781087269326184097,
+      "size": 233
     },
     "aurora_surface_daemon.py": {
-      "mtime_ns": 1779841954539398188,
-      "size": 34433
+      "mtime_ns": 1781087269326099045,
+      "size": 34480
+    },
+    "aurora_systems_test.py": {
+      "mtime_ns": 1781087269320979529,
+      "size": 25722
     },
     "aurora_thought_formation.py": {
-      "mtime_ns": 1780458194029015185,
+      "mtime_ns": 1781087269326802492,
       "size": 72780
     },
+    "aurora_training_pulse.py": {
+      "mtime_ns": 1781087269329962757,
+      "size": 11451
+    },
     "aurora_warp_protocol.py": {
-      "mtime_ns": 1780360615173724529,
-      "size": 34217
+      "mtime_ns": 1781087269324646680,
+      "size": 34264
     },
     "aurora_waveform_pressure.py": {
-      "mtime_ns": 1780458012621012667,
-      "size": 9366
+      "mtime_ns": 1781087269323649967,
+      "size": 9413
     },
     "concept_crystal.py": {
-      "mtime_ns": 1780095549096529082,
-      "size": 26786
+      "mtime_ns": 1781087269327090486,
+      "size": 27169
     },
     "constraint_evolutionary_sim.py": {
-      "mtime_ns": 1780134318893164701,
-      "size": 27245
+      "mtime_ns": 1781087269326250332,
+      "size": 27292
     },
     "corpus_runner.py": {
-      "mtime_ns": 1780152840041749529,
-      "size": 109950
+      "mtime_ns": 1781087269324262738,
+      "size": 116456
     },
     "foundational_contract.py": {
-      "mtime_ns": 1778751706516434452,
-      "size": 39919
+      "mtime_ns": 1781087269329713609,
+      "size": 39966
     },
     "geological_baseline.py": {
-      "mtime_ns": 1780099982885853443,
-      "size": 16491
+      "mtime_ns": 1781087269329812638,
+      "size": 16538
     },
     "main.py": {
-      "mtime_ns": 1778751706516434452,
-      "size": 3198
+      "mtime_ns": 1781087269321697118,
+      "size": 3245
     }
   }
 }
