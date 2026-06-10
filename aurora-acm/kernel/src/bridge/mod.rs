@@ -19,7 +19,7 @@
 mod protocol;
 
 use core::sync::atomic::{AtomicU32, AtomicU64, Ordering};
-use crate::acm::{axes::AxisState, crystal, drift, sedi};
+use crate::acm::{axes::AxisState, crystal, sedi};
 use crate::expression::face::Expression;
 use crate::hw::uart;
 
