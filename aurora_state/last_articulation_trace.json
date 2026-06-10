@@ -1,34 +1,34 @@
 {
-  "original": "when completing this legally lattice immoral updates There is something oval here.",
-  "candidate": "",
-  "selected": "when completing this legally lattice immoral updates There is something oval here.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.86,
-  "candidate_score": 0.0,
-  "original_pressure": 0.303,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.697,
-  "safe": false,
+  "original": "I reflected always -- there is what here",
+  "candidate": "I reflected always -- there is what here.",
+  "selected": "I reflected always -- there is what here.",
+  "accepted": true,
+  "reason": "accepted_deterministic",
+  "original_score": 0.87,
+  "candidate_score": 0.92,
+  "original_pressure": 0.326,
+  "candidate_pressure": 0.256,
+  "pressure_relief": 0.07,
+  "safe": true,
   "metadata": {
-    "prompt_excerpt": "[AFTERTHOUGHT] Do you have a sense of what you can currently see or hear?",
+    "prompt_excerpt": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
     "input_interpretation": {
-      "raw_prompt": "[AFTERTHOUGHT] Do you have a sense of what you can currently see or hear?",
+      "raw_prompt": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
       "intent_hint": "question",
       "topic_terms": [
         "afterthought",
-        "have",
-        "sense",
-        "currently",
-        "hear"
+        "want",
+        "more",
+        "time",
+        "right"
       ],
       "entities": [
         "AFTERTHOUGHT"
       ]
     },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1781093681.3202581,
+    "tone": "warm",
+    "source": "deterministic",
+    "timestamp": 1781094028.7529466,
     "min_relief_used": 0.035
   }
 }

@@ -1617,6 +1617,52 @@
       "sightings": 1,
       "first_seen": 1781093672.8480768,
       "last_seen": 1781093672.8480768
+    },
+    {
+      "text": "it changed it is afterthought",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought",
+        "it changed it"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1781093968.230023,
+      "last_seen": 1781093968.230023
+    },
+    {
+      "text": "i understand it means what",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame",
+        "aurora:interaction_test:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought",
+        "i understand it",
+        "growing"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 2,
+      "first_seen": 1781094008.734856,
+      "last_seen": 1781094015.2540293
     }
   ]
 }
