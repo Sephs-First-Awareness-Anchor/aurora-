@@ -49,10 +49,13 @@ STS_MAGIC0 = 0xAC;  STS_MAGIC1 = 0x53   # 'S'
 _EXPR_NAMES = ['Neutral','Joyful','Happy','Contemplative','Attentive','Uncertain','Tired']
 
 # Harmonic cycle periods in kernel ticks (60 Hz)
-_TICK_SENSORY =     60   #  1 s  — inject kernel state into collective
-_TICK_DREAM   =   5400   # 90 s  — trigger dream burst
-_TICK_STUDY   = 432000   #  2 h  — trigger study cycle
-_TICK_SAVE    =  54000   # 15 min — state save
+# Periods mirror aurora_daemon.py intervals × 60.
+_TICK_SENSORY   =     60   #   1 s  — inject kernel state into collective
+_TICK_DREAM     =   5400   #  90 s  — gate: N < 0.45  (rest/integration state)
+_TICK_STUDY     =  43200   #  12 min — gate: T > 0.55 AND N > 0.45  (temporal focus)
+_TICK_EVOLUTION = 108000   #  30 min — gate: A > 0.65 AND N > 0.55  (agency + energy)
+_TICK_BROWSER   = 648000   #   3 h  — gate: B > 0.60 AND X > 0.65  (boundary expansion)
+_TICK_SAVE      =  54000   #  15 min — unconditional
 
 
 # ── Axis reading ───────────────────────────────────────────────────────────────
@@ -208,33 +211,43 @@ def _wave_tick_cognitive(systems: Dict[str, Any], status: Dict,
         except Exception:
             pass
 
-    # Harmonic cycles: drive cognitive functions at tick-count harmonics
-    if _wave_tick % _TICK_DREAM == 0:
-        _trigger_dream(systems, verbose)
-    if _wave_tick % _TICK_STUDY == 0:
-        _trigger_study(systems, verbose)
-    if _wave_tick % _TICK_SAVE  == 0:
+    # Harmonic cycles — axis-conditioned harmonics of the kernel waveform.
+    # The tick gives the rhythm; the axis state gives the permission.
+    axes = status.get('axes', {})
+    x = axes.get('X', 0.5); t = axes.get('T', 0.5)
+    n = axes.get('N', 0.5); b = axes.get('B', 0.5); a = axes.get('A', 0.5)
+
+    # Dream: N low → rest/integration state
+    if _wave_tick % _TICK_DREAM == 0 and n < 0.45:
+        _trigger_fn(systems, '_run_dream_burst', 'Dream burst', verbose)
+
+    # Study: T high AND N available → temporal focus with energy
+    if _wave_tick % _TICK_STUDY == 0 and t > 0.55 and n > 0.45:
+        _trigger_fn(systems, '_run_study_cycle', 'Study cycle', verbose)
+
+    # Code evolution: A high AND N available → she has agency and energy to self-modify
+    if _wave_tick % _TICK_EVOLUTION == 0 and a > 0.65 and n > 0.55:
+        _trigger_fn(systems, '_run_code_mutation_cycle', 'Code evolution', verbose)
+
+    # Browser ritual: B high AND X strong → boundary expansion + strong presence
+    if _wave_tick % _TICK_BROWSER == 0 and b > 0.60 and x > 0.65:
+        _trigger_fn(systems, '_run_browser_ritual', 'Browser ritual', verbose)
+
+    # State save: unconditional
+    if _wave_tick % _TICK_SAVE == 0:
         _trigger_save(systems, verbose)
 
 
-def _trigger_dream(systems: Dict, verbose: bool) -> None:
+def _trigger_fn(systems: Dict, fn_name: str, label: str, verbose: bool) -> None:
+    """Import fn_name from aurora_daemon and run it in a thread with systems."""
     try:
-        daemon = systems.get('daemon')
-        if daemon and hasattr(daemon, '_run_dream_burst'):
-            if verbose:
-                print('[WAVE] Dream burst (kernel tick harmonic).', flush=True)
-            threading.Thread(target=daemon._run_dream_burst, daemon=True).start()
-    except Exception:
-        pass
-
-
-def _trigger_study(systems: Dict, verbose: bool) -> None:
-    try:
-        daemon = systems.get('daemon')
-        if daemon and hasattr(daemon, '_run_study_cycle'):
-            if verbose:
-                print('[WAVE] Study cycle (kernel tick harmonic).', flush=True)
-            threading.Thread(target=daemon._run_study_cycle, daemon=True).start()
+        import aurora_daemon as _daemon_mod
+        fn = getattr(_daemon_mod, fn_name, None)
+        if fn is None:
+            return
+        if verbose:
+            print(f'[WAVE] {label} (axis-gated kernel tick harmonic).', flush=True)
+        threading.Thread(target=fn, args=(systems,), daemon=True).start()
     except Exception:
         pass
 
