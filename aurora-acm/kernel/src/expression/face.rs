@@ -27,6 +27,18 @@ pub enum Expression {
 }
 
 impl Expression {
+    pub fn as_u8(self) -> u8 {
+        match self {
+            Expression::Neutral       => 0,
+            Expression::Joyful        => 1,
+            Expression::Happy         => 2,
+            Expression::Contemplative => 3,
+            Expression::Attentive     => 4,
+            Expression::Uncertain     => 5,
+            Expression::Tired         => 6,
+        }
+    }
+
     pub fn from_axes(ax: &AxisState) -> Self {
         if ax.a > 0.80 && ax.n > 0.65 {
             Expression::Joyful

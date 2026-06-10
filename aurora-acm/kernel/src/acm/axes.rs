@@ -33,16 +33,14 @@ impl AxisState {
         }
     }
 
-    // Negative (pressure) pole for each axis — used by CPM and I-State dispatch.
-    #[allow(dead_code)]
+    // Negative (pressure) pole for each axis — the 5 constraint negatives.
     #[inline] pub fn x_neg(&self) -> f32 { 1.0 - self.x }
-    #[allow(dead_code)] #[inline] pub fn t_neg(&self) -> f32 { 1.0 - self.t }
-    #[allow(dead_code)] #[inline] pub fn n_neg(&self) -> f32 { 1.0 - self.n }
-    #[allow(dead_code)] #[inline] pub fn b_neg(&self) -> f32 { 1.0 - self.b }
-    #[allow(dead_code)] #[inline] pub fn a_neg(&self) -> f32 { 1.0 - self.a }
+    #[inline] pub fn t_neg(&self) -> f32 { 1.0 - self.t }
+    #[inline] pub fn n_neg(&self) -> f32 { 1.0 - self.n }
+    #[inline] pub fn b_neg(&self) -> f32 { 1.0 - self.b }
+    #[inline] pub fn a_neg(&self) -> f32 { 1.0 - self.a }
 
-    // Dot-product alignment with another axis state — used by CPM scheduler.
-    #[allow(dead_code)]
+    // Dot-product alignment with another axis state.
     pub fn alignment(&self, other: &AxisState) -> f32 {
         self.x * other.x
             + self.t * other.t

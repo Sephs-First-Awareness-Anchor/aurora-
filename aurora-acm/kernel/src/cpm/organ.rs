@@ -7,10 +7,11 @@
 //            Keypresses become direct axis pressures — physical world perception.
 //   DREAM  — idle-cycle axis exploration via tick parity.
 
-use crate::acm::axes::{press, AxisState};
+use crate::acm::axes::AxisState;
 use crate::acm::drift;
 use crate::bridge;
 use crate::hw::ps2;
+use crate::xaurora::vm::press;
 
 pub const MAX_ORGANS: usize = 8;
 pub const QUANTUM: u32 = 1024;
