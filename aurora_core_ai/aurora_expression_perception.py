@@ -107,7 +107,7 @@ if not _SKIP_OETS_IMPORTS:
 _LANG_STATE_AVAILABLE = False
 if not _SKIP_LANG_IMPORTS:
     try:
-        from aurora_language_state import (
+        from aurora_internal.aurora_language_state import (
             ExpressionEvolutionOrchestra, LSVMetrics
         )
         _LANG_STATE_AVAILABLE = True
