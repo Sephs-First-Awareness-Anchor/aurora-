@@ -61,6 +61,7 @@ PASSES:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import os
 import re
@@ -1613,8 +1614,28 @@ def physics_absorb_truth(
         else:
             # SURFACE only: vocabulary seeding, no template absorption
             # (tension items and low-significance items don't template yet)
+            # FIX-A010: words were stamped role="noun", meaning="absorbed"
+            # with no valence — flattening every absorbed word into noun
+            # slots and leaving it invisible to noncomp-driven selection.
+            # Use the perception layer's own inference instead.
+            from aurora_expression_perception import (
+                infer_word_role,
+                infer_word_valence,
+            )
             for w in clean_words[:10]:  # Seed lexicon but don't template
-                perception.lexicon.add_word(w, meaning="absorbed", role="noun")
+                perception.lexicon.add_word(
+                    w,
+                    meaning=f"corpus:{w}",
+                    role=infer_word_role(w),
+                    valence=infer_word_valence(w, tone),
+                    lineage="corpus",
+                )
+        # FIX-A009: persist vocabulary growth — without this every corpus
+        # run's lexical gains evaporated at process exit.
+        try:
+            perception.lexicon.save()
+        except Exception:
+            pass
 
     return geom
 
@@ -1951,6 +1972,51 @@ def run_corpus_ingestion(
     curriculum_tension = CurriculumTension()
     systems["curriculum_tension"] = curriculum_tension
 
+    # ── FIXED-PATH WELD (FIX-A008/A011/A012) ────────────────────────────────
+    # Every corpus ingestion — no matter who invokes it — now runs the same
+    # learning write-paths as the live pipeline:
+    #   _pulse        : TrainingPulse field energization (daemon cadence,
+    #                   time-compressed) so attention/tension EMAs climb and
+    #                   ignition can form during training.
+    #   _grammar_weld : observe_exchange() on every pair, so motif fitness
+    #                   accumulates toward promotion instead of staying dead.
+    # Both are best-effort: a missing subsystem degrades gracefully and the
+    # ingestion continues exactly as before.
+    _pulse = None
+    try:
+        from aurora_training_pulse import TrainingPulse
+        _pulse = TrainingPulse(systems)
+        if verbose:
+            print("  [CORPUS] Fixed-path weld active: TrainingPulse + grammar observation")
+    except Exception:
+        _pulse = None
+
+    _grammar_weld = systems.get("grammar_engine")
+    if _grammar_weld is not None and not hasattr(_grammar_weld, "observe_exchange"):
+        _grammar_weld = None
+
+    def _weld_observe(user_t: str, aurora_t: str, success: bool, clarity: float):
+        """Feed one exchange into the motif lineage (FIX-A008 write path)."""
+        if _grammar_weld is None or not aurora_t:
+            return
+        try:
+            _grammar_weld.observe_exchange(
+                str(user_t or ""), str(aurora_t), success=bool(success),
+                clarity=max(0.0, min(1.0, float(clarity))),
+            )
+        except Exception:
+            pass
+
+    def _weld_pulse(text: str, cycles: int = 2, intensity: float = 0.6):
+        """Energize the field around an exchange (FIX-A011 write path)."""
+        if _pulse is None:
+            return
+        try:
+            _pulse.energize(str(text or ""), "", cycles=cycles, intensity=intensity)
+        except Exception:
+            pass
+    # ── end weld ─────────────────────────────────────────────────────────────
+
     if verbose:
         print("=" * 70)
         print("  [CORPUS] Physics-Grounded Absorption (geometry-first)")
@@ -2258,6 +2324,7 @@ def run_corpus_ingestion(
             if verbose and start_line > 0:
                 print(f"  [CHECKPOINT] Resuming observer from line {start_line}")
 
+        _last_user_obs: str = ""
         for line_idx, (role, content) in enumerate(stream):
             if line_idx < start_line:
                 continue
@@ -2268,6 +2335,20 @@ def run_corpus_ingestion(
             _, geom = witness(role.upper(), content,
                               source="corpus_observer",
                               context_hash=ctx_hash)
+
+            # ── FIXED-PATH WELD: observer pass ──────────────────────────
+            # Assistant exemplars are successful structural evidence even
+            # in pure absorption mode — feed the motif lineage so observer
+            # runs build promotion pressure, and pulse the field on a
+            # light cadence so absorption happens in a live manifold.
+            if role == "user":
+                _last_user_obs = content
+            elif role == "assistant" and _last_user_obs:
+                _weld_observe(_last_user_obs, content, success=True,
+                              clarity=0.65)
+            if counter % 8 == 0:
+                _weld_pulse(content, cycles=1, intensity=0.55)
+            # ── end weld ────────────────────────────────────────────────
 
             curriculum_tension.decay(1)
             run_cadence(counter, geom=geom)
@@ -2396,6 +2477,28 @@ def run_corpus_ingestion(
                     truth=next_content,
                     seen_fingerprints=absorption_field._seen_fingerprints,
                 )
+
+                # ── FIXED-PATH WELD: learning write-paths per pair ──────────
+                # Field energization (light — heavy pulses every 4th pair to
+                # keep throughput) so tension/salience EMAs accumulate.
+                if counter % 4 == 0:
+                    _weld_pulse(content, cycles=2, intensity=0.6)
+                # Truth exemplar → motif lineage as a SUCCESS with clarity
+                # from its geometry fidelity context: this is what teaches
+                # her the structural shapes inside Sunni's corpora.
+                _weld_observe(content, next_content, success=True,
+                              clarity=fidelity_result["geometry_fidelity"]
+                              if fidelity_result.get("geometry_fidelity") is not None
+                              else 0.65)
+                # Her own attempt → motif lineage with success gated on the
+                # fidelity she actually achieved: closes her self-learning
+                # loop so structures that WORK get promoted, ones that fail
+                # accumulate demotion pressure.
+                if resp and getattr(resp, "content", ""):
+                    _gf = float(fidelity_result.get("geometry_fidelity", 0.0) or 0.0)
+                    _weld_observe(content, resp.content,
+                                  success=_gf >= unlock_min, clarity=_gf)
+                # ── end weld ────────────────────────────────────────────────
 
                 # DPME governed by geometry fidelity
                 dpme_result = dpme_adjust_from_geometry(
@@ -2632,6 +2735,22 @@ def run_corpus_ingestion(
         elif verbose:
             print(f"  [LEXICON] Save skipped ÃÂ¢Ã¢âÂ¬Ã¢â¬Â "
                   f"memory({_perc.lexicon.size}) < disk({_disk_count})")
+        # FIX-A008: final motif lineage flush — the weld accumulated
+        # success/demotion pressure all run; ensure the last increments
+        # hit disk so they carry forward to her next boot.
+        try:
+            _ge_flush = systems.get("grammar_engine")
+            _lin = getattr(_ge_flush, "_lineage", None) if _ge_flush else None
+            if _lin is not None and hasattr(_lin, "save"):
+                _lin.save()
+                if verbose:
+                    _promoted_n = (len(_lin.get_promoted())
+                                   if hasattr(_lin, "get_promoted") else "?")
+                    print(f"  [GRAMMAR] Motif lineage flushed "
+                          f"({len(getattr(_lin, '_motifs', {}) or {})} patterns, "
+                          f"{_promoted_n} promoted)")
+        except Exception:
+            pass
         print("  [CORPUS] Ingestion complete.\n")
 
 

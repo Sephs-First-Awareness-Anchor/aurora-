@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import csv

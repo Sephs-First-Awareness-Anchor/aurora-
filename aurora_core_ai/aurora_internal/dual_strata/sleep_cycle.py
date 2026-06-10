@@ -9,6 +9,7 @@ Architectural law:
 Schedule: 8 hours awake, 2 hours asleep.
 During sleep: Subsurface runs a dream burst to integrate what was accumulated.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json

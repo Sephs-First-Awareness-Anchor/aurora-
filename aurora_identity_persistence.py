@@ -25,6 +25,7 @@ DOCTRINE:
 Authors: Sunni (Sir) Morningstar and Cael Devo
 Created: February 2026
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import json
 import time

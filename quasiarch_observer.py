@@ -5,6 +5,7 @@ Aurora Strata keeps the active observer implementation under
 ``aurora_internal.quasiarch_observer``.  This facade preserves the older
 top-level import path used by interaction processing.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -31,6 +31,7 @@ Deduplication:
   A lightweight bloom-set is persisted at aurora_state/assimilated_ids.json.
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

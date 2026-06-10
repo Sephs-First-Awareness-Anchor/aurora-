@@ -6,6 +6,7 @@ Distillation moves oversized temporal residue out of the live stack and into
 reversible archive rounds. Structural summaries stay attached to Aurora,
 while the raw purged details are packed into a restoreable archive folder.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -27,6 +27,7 @@ Lineage structure:
          └─ mechanism (leaf: specific code path + mathematical form)
               └─ ability (genealogy: which promoted link relieves this)
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -5,6 +5,7 @@ run_gpt_session.py — Boot Aurora and run a GPT peer-learning session.
 Targets the current top fail dimensions. Runs until conversation quality
 drops (n_turns=30 max). Bridges all learnings to OETS on completion.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
 import os

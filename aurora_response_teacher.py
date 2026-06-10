@@ -32,6 +32,7 @@ Usage:
   # Teach from a specific source
   python3 aurora_response_teacher.py --source reddit
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

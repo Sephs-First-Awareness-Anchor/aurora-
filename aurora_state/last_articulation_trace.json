@@ -1,30 +1,34 @@
 {
-  "original": "I am here",
-  "candidate": "I am here.",
-  "selected": "I am here.",
+  "original": "want attention something right predictive reflected form something what what reflected real something reflected time",
+  "candidate": "want attention something right predictive reflected form something what reflected real something reflected time.",
+  "selected": "want attention something right predictive reflected form something what reflected real something reflected time.",
   "accepted": true,
   "reason": "accepted_deterministic",
-  "original_score": 0.57,
-  "candidate_score": 0.62,
-  "original_pressure": 0.466,
-  "candidate_pressure": 0.396,
-  "pressure_relief": 0.07,
+  "original_score": 0.53,
+  "candidate_score": 0.74,
+  "original_pressure": 0.539,
+  "candidate_pressure": 0.277,
+  "pressure_relief": 0.262,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "How are you feeling?",
+    "prompt_excerpt": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
     "input_interpretation": {
-      "raw_prompt": "How are you feeling?",
+      "raw_prompt": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
       "intent_hint": "question",
       "topic_terms": [
-        "feeling"
+        "afterthought",
+        "want",
+        "more",
+        "time",
+        "right"
       ],
       "entities": [
-        "How"
+        "AFTERTHOUGHT"
       ]
     },
     "tone": "gentle",
     "source": "deterministic",
-    "timestamp": 1780647212.635046,
+    "timestamp": 1781132409.2471743,
     "min_relief_used": 0.035
   }
 }

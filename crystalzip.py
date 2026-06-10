@@ -19,6 +19,7 @@ Why:
     v2.2 and v2.3 showed that manually "smarter" ordering can hurt.
     v2.5 uses the v2.4 winning sorter directly for max mode, while ultra keeps the tournament.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

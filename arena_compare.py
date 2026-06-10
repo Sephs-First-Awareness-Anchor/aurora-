@@ -9,6 +9,7 @@ Changed for CrystalZip v2.1:
 - Invalid 7z is disqualified
 - Termux-safe 7z mode remains default
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

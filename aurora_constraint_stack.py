@@ -8,6 +8,7 @@ Purpose:
 - Provide one canonical import surface for DifferenceBuffer + CostDiffScore.
 - Preserve backward compatibility with legacy modules.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from aurora_internal.aurora_difference_buffer import (
     DifferenceHistoryBuffer,

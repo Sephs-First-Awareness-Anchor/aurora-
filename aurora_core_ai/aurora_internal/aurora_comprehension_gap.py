@@ -24,6 +24,7 @@ more capable of understanding that type of input in every future conversation.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import re
 import time

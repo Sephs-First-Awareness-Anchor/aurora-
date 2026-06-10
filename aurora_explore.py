@@ -5,6 +5,7 @@ reads QAO journal after each exchange, and logs everything for analysis.
 
 Output: aurora_state/exploration_log.json
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys, os, json, time, datetime, traceback, re
 from collections import Counter, defaultdict

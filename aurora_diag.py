@@ -6,6 +6,7 @@ that fire DURING each interaction, and produces a causal diagnostic report.
 Usage:
     python3 aurora_diag.py
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
 import os

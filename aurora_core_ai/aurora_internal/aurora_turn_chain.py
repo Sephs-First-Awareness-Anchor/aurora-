@@ -34,6 +34,7 @@ OBSERVATION (two-chain perception):
 Each stage reads from state, enriches it, and passes it to the next.
 The stage functions themselves live in aurora.py.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional

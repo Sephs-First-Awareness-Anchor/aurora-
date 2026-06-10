@@ -58,6 +58,7 @@ OUTPUT
 Authors: Sunni (Sir) Morningstar and Cael Devo
 Created: March 2026
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

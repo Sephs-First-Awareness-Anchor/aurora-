@@ -2647,6 +2647,9 @@ class WorkingMemory:
         prior_text = str(best_match.get('text', '') or '').strip()
         if not prior_text:
             return ""
+        # Don't echo user questions back as Aurora's first-person recall.
+        if prior_text.endswith("?"):
+            return ""
         core_claim = prior_text[:220]
         rendered = self._render_from_comprehension_intent(
             systems,
@@ -5131,7 +5134,10 @@ class WorkingMemory:
 
         resolved = self.resolve_claims(user_text, understood)
         if not claim:
-            claim = resolved.get('focus_claim', {}) or {}
+            _fc = resolved.get('focus_claim', {}) or {}
+            # Don't use user-source claims as Aurora's first-person memory.
+            if str(_fc.get('source', '')) != 'user':
+                claim = _fc
         if not claim and 'where' in t_low:
             for recent in self.recent_claims:
                 if str(recent.get('relation', '')).startswith('located_'):
@@ -5168,12 +5174,12 @@ class WorkingMemory:
         _claim_content_words = set(
             re.findall(r'[a-z]{3,}', (subject + ' ' + obj + ' ' + summary).lower())
         ) - {'the', 'and', 'that', 'this', 'with', 'for', 'from', 'are', 'was',
-             'can', 'may', 'its', 'also', 'such', 'some', 'any', 'all'}
+             'can', 'may', 'its', 'also', 'such', 'some', 'any', 'all', 'about'}
         _query_content_words = set(
             re.findall(r'[a-z]{3,}', t_low)
         ) - {'how', 'why', 'what', 'does', 'that', 'this', 'then', 'there',
              'tell', 'now', 'here', 'work', 'works', 'working', 'you', 'your',
-             'the', 'and', 'for', 'from', 'with', 'can', 'its'}
+             'the', 'and', 'for', 'from', 'with', 'can', 'its', 'about'}
         _claim_topic_relevant = (
             bool(_claim_content_words & _query_content_words) or callback_request
         )
@@ -5194,12 +5200,12 @@ class WorkingMemory:
             certainty_hint = 0.82
 
         elif 'remember' in t_low or 'what did i say' in t_low or 'what did you say' in t_low:
-            if proposition:
+            # Only surface a stored claim if it's topically relevant to the query.
+            # Without this guard, any recent aurora claim leaks out for any "remember" query.
+            if _claim_topic_relevant:
                 core_claim = summary
-            else:
-                core_claim = summary
-            tone = 'precise'
-            certainty_hint = 0.86
+                tone = 'precise'
+                certainty_hint = 0.86
 
         elif ('check first' in t_low or 'look first' in t_low) and locative_relation:
             core_claim = f"the first place to check is {locative_prep} {obj}"
@@ -5747,14 +5753,18 @@ class WorkingMemory:
                         self.last_response_anchor_claim = {}
         for subject in list(self.stated_facts.keys())[-4:]:
             self._register_mention(subject, 'fact', 'memory', 0.68)
-        self.last_aurora_response = aurora_text or self.last_aurora_response
-        if aurora_text:
+        _aurora_text_clean = str(aurora_text or "").strip()
+        _internal_prefixes = ("[AFTERTHOUGHT]", "[CODE]", "[PRESSURE]", "125-layer manifold:")
+        if any(_aurora_text_clean.startswith(p) for p in _internal_prefixes):
+            _aurora_text_clean = ""
+        self.last_aurora_response = _aurora_text_clean or self.last_aurora_response
+        if _aurora_text_clean:
             skip_aurora_claim_ingest = bool(
                 self._skip_next_aurora_claim_ingest or skip_aurora_claim_ingest
             )
             if not skip_aurora_claim_ingest:
-                self.note_claims(aurora_text, source='aurora')
-                self._register_response_mentions(aurora_text)
+                self.note_claims(_aurora_text_clean, source='aurora')
+                self._register_response_mentions(_aurora_text_clean)
         self.refresh_claim_conflicts(preferred_claim=anchor_claim)
         if prior_control_response:
             self._context_control_response_text = ""
@@ -9383,9 +9393,13 @@ def _looks_like_inner_state_query(text: str, parsed: Optional[dict] = None) -> b
         "how are you",
         "how do you feel",
         "what do you feel",
+        "do you feel",
         "what do you think",
         "what are you thinking",
+        "what are you noticing",
+        "what are you experiencing",
         "what do you want",
+        "what would you want",
         "what's on your mind",
         "whats on your mind",
         "who are you",
@@ -9396,6 +9410,12 @@ def _looks_like_inner_state_query(text: str, parsed: Optional[dict] = None) -> b
         "what is my name",
         "what's my name",
         "whats my name",
+        "what does it mean to you",
+        "are you growing",
+        "something developing",
+        "do you have a sense",
+        "what can you see",
+        "what can you hear",
     )
     if any(marker in low for marker in markers):
         return True
@@ -9449,12 +9469,18 @@ def _classify_input_intent(text: str, *, _axis_activation: dict = None, _parsed:
         "don't you remember", "do you remember what i",
         "what's my name", "what is my name",
         "what did i say my name", "what was my name",
+        # Self-directed recall: Aurora reflecting on her own memory/history
+        "what do you remember", "what do you recall",
+        "what have you learned", "what do you know about yourself",
+        "who are you", "where have you been",
+        "who were you", "what were you",
     )
     if any(trigger in _text_low_cl for trigger in _RECALL_TRIGGERS):
         return "recall_question"
 
-    # A-axis dominant: self-directed / inner-field question
-    if dominant == "A" and axis.get("A", 0.0) > 0.36 and _looks_like_inner_state_query(text, parsed):
+    # Inner-state / wellbeing: keyword check fires regardless of axis dominant
+    # because casual wellbeing queries ("how are you") project X or T, not A.
+    if is_q and _looks_like_inner_state_query(text, parsed):
         return "wellbeing_query"
 
     # T-axis dominant + callback/clarification: continuity / recall
@@ -10908,16 +10934,29 @@ def _answer_from_sedimemory_context(
     requested_field = _extract_requested_surface_memory_field(user_text)
     quote_request = any(marker in text_low for marker in ("what did i say", "repeat", "what was that"))
 
+    _malformed_prefixes = ("What's actually here is", "It changed it is", "[AFTERTHOUGHT]")
+
     for item in list(recalled or []):
+        # Skip afterthought simulation entries — they are internal re-processing
+        # artifacts, not genuine memory content.
+        _item_user_text = str((item.get("content", {}) or {}).get("user_text", "") or "").strip()
+        if _item_user_text.startswith("[AFTERTHOUGHT]"):
+            continue
+        _item_source = str(item.get("source", "") or "").strip()
+        if _item_source == "afterthought":
+            continue
         content = dict(item.get("content", {}) or {})
         candidate_texts: List[str] = []
         for key in ("fact", "summary", "claim", "user_text", "response", "note", "insight", "topic"):
             value = content.get(key)
             if isinstance(value, str) and value.strip():
-                candidate_texts.append(value.strip())
+                # Skip malformed template-wrapped content from corrupted prior runs.
+                if not any(value.startswith(p) for p in _malformed_prefixes):
+                    candidate_texts.append(value.strip())
         for value in content.values():
             if isinstance(value, str) and value.strip() and value.strip() not in candidate_texts:
-                candidate_texts.append(value.strip())
+                if not any(value.startswith(p) for p in _malformed_prefixes):
+                    candidate_texts.append(value.strip())
 
         if quote_request:
             quoted = str(content.get("user_text", "") or "").strip()
@@ -10955,8 +10994,15 @@ def _answer_from_sedimemory_context(
 
     for item in list(recalled or []):
         content = dict(item.get("content", {}) or {})
-        user_line = str(content.get("user_text", "") or "").strip()
-        if user_line:
+        # Skip afterthought simulation entries in this loop too.
+        _ut2 = str(content.get("user_text", "") or "").strip()
+        if _ut2.startswith("[AFTERTHOUGHT]"):
+            continue
+        if str(item.get("source", "") or "").strip() == "afterthought":
+            continue
+        user_line = _ut2
+        # Don't echo back user questions as Aurora's first-person memory.
+        if user_line and not user_line.endswith("?") and not any(user_line.startswith(p) for p in _malformed_prefixes):
             return _render_runtime_intent(
                 systems,
                 user_line[:220],
@@ -10967,7 +11013,11 @@ def _answer_from_sedimemory_context(
                 constraints=['recall', 'memory'],
             )
         summary = str(item.get("summary", "") or "").strip()
-        if summary:
+        # Skip bare token strings that are internal system labels (intent codes, source names
+        # like "wellbeing_query", "dna_crystallization", "simulation") — they are metadata,
+        # not meaningful recall content. A valid summary contains spaces or is a sentence.
+        _bare_token_pattern = bool(re.match(r'^[a-z][a-z0-9_]{2,}$', summary))
+        if summary and not _bare_token_pattern and not any(summary.startswith(p) for p in _malformed_prefixes):
             return _render_runtime_intent(
                 systems,
                 summary,
@@ -19185,6 +19235,10 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
                 state.response_content = ""
             elif str(state.intent or "") in _direct_intents or state.response_tone in {"self-aware", "warm", "curious"}:
                 state.response_content = _bind_orphan_surface_predicate(_comp_clean)
+                # Arm literal preservation so the EVO does not re-render this
+                # already-formed response through SIC stance templates.
+                systems["_preserve_literal_response_once"] = True
+                systems["_skip_belief_refinement_once"] = True
             else:
                 _rendered_comp = _render_runtime_intent(
                     systems,
@@ -19750,12 +19804,14 @@ def _chain_down4_meaning(user_text: str, systems: dict, state: Any, *, auto_sear
             ans = ReasoningEngine().reason(
                 user_text, understood, working_memory, oets, systems=systems
             )
-            if ans:
+            _ans_str = str(ans or "").strip()
+            _malformed_ans = ("What's actually here is", "It changed it is", "[AFTERTHOUGHT]")
+            if _ans_str and not any(_ans_str.startswith(p) for p in _malformed_ans):
                 # Wrap the reasoning result in a runtime intent so the SIC authors the final speech.
                 # This prevents raw monologue fragments from leaking.
                 state.response_content = _render_runtime_intent(
                     systems,
-                    str(ans),
+                    _ans_str,
                     emotion_tone="reflective",
                     certainty=0.72 if _cond_notes else 0.82,
                     supporting_concepts=list(understood.get("topic_words", []))[:3],
@@ -19943,7 +19999,11 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                    if w.lower() not in {"that", "this", "with", "what", "from",
                                         "have", "does", "here", "there", "than",
                                         "some", "more", "less", "come", "been",
-                                        "will", "your", "just", "when", "also"}
+                                        "will", "your", "just", "when", "also",
+                                        "means", "mean", "want", "wants", "know",
+                                        "feel", "feels", "think", "thinks", "says",
+                                        "about", "right", "doing", "like", "into",
+                                        "time", "moment", "sense", "currently"}
                    and not _is_weak_response_topic(w.lower())]
             if _uw:
                 _gap_claim = "what " + _uw[0] + " points to"
@@ -19984,6 +20044,10 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         state.response_tone = "curious"
         state.response_confidence = 0.58
         state.response_src = "generative"
+        # Preserve gap-claim responses: the SIC already rendered the claim above;
+        # another EVO pass would re-process a fragile fragment into word salad.
+        if isinstance(systems, dict):
+            systems["_preserve_literal_response_once"] = True
     # Evolutionary refinement (learning hints woven in)
     try:
         state.response_content = _evolutionary_response_refinement(
@@ -22022,9 +22086,11 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     # ---- UNIVERSAL GREETING INTERCEPT — fires before any intent-specific dispatch ----
     # "hey aurora", "hi", "hello", etc. classified as 'statement', 'wellbeing_query',
     # or 'general' — intercept all of them here and respond from live axis/emotional state.
+    # "how are you" / "how are you doing" are wellbeing queries, not greetings.
+    # They must NOT be intercepted here \u2014 let them reach _chain_down5_understanding.
     _GREETING_DETECT_UNIVERSAL = re.compile(
         r'^(hey|hi+|hello|howdy|yo|greetings?|what\s*[\u2019\']?s\s*up|'
-        r'how\s+are\s+you|how\s*[\u2019\']?s\s+it\s+going|'
+        r'how\s*[\u2019\']?s\s+it\s+going|'
         r'good\s+(morning|afternoon|evening|night))\b',
         re.IGNORECASE,
     )
@@ -22196,8 +22262,12 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
     if intent == 'wellbeing_query':
         t_low = user_text.lower()
         # Reflective / relational questions  -- about what the user means to Aurora
+        # "mean to you" alone over-matches ("what does it mean to you to understand X")
+        # so require the subject to be "i" (first-person relational) before firing.
+        _relational_mean = ('do i mean to you' in t_low or 'what do i mean to you' in t_low
+                            or ('mean to you' in t_low and 'i mean to you' in t_low))
         _reflective = (
-            'mean to you' in t_low or 'do i mean' in t_low or
+            _relational_mean or 'do i mean' in t_low or
             'feel about me' in t_low or 'think about me' in t_low or
             'do you care' in t_low
         )
@@ -22563,8 +22633,6 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                     ) if working_memory else str(recalled[0])
                     _arm_literal_response_preservation(systems)
                     return (str(rendered or recalled[0]), "precise", 0.85)
-        if _generative_only:
-            return (None, None, None)
         return (_render_runtime_intent(
             systems, "no memories on this yet",
             emotion_tone='curious', relationship_signal='inquiry', certainty=0.6,

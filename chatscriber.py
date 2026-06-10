@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 # chatscriber.py
 #
 # Chats Criteria (single-file, Termux-friendly, stdlib-only)

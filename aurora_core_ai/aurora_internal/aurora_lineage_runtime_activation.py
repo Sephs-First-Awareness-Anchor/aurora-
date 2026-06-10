@@ -5,6 +5,7 @@ Loads autowritten activation manifests from aurora_state/ability_lineages and
 applies their patch steps to live Aurora systems. This keeps runtime
 capabilities tied to genealogy artifacts instead of ad hoc flags.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

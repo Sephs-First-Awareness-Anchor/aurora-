@@ -6,6 +6,7 @@ who chooses one action per recommendation:
 - discuss_with_user
 - dismiss
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

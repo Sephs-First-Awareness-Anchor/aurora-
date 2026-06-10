@@ -26,6 +26,7 @@ Negative I-states are PRESSURE, not absence. I_ISNT is active constraint tension
 the X axis — it operates on the cell just as powerfully as I_IS, in the opposing
 direction. This is why all 10 states are here, not just the 5 positive ones.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 from dataclasses import dataclass

@@ -8,6 +8,7 @@ started running". This journal watches the live genealogy state, records newly
 seen lineage items, and exposes a compact natural-language summary Aurora can
 use in dialogue.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

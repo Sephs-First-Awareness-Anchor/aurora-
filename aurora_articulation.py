@@ -6,6 +6,7 @@ Aurora uses her own scoring and deterministic phrase repair to smooth drafts.
 No external LLM is involved — candidates are generated from Aurora's own
 phrase patterns and evaluated against her pressure and clarity signals.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

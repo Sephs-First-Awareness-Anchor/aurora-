@@ -4,6 +4,7 @@
 The parent process calls this script with JSON on stdin. If llama.cpp aborts,
 only this worker process dies; Aurora can continue and treat it as no candidate.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

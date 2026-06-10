@@ -5,6 +5,7 @@ Aurora Crystal State Bridge
 
 Pack and restore Aurora's local state with CrystalZip.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -11,6 +11,7 @@ Boots Aurora against fresh temp state for each probe so we can inspect:
 This is meant to verify that manifold selection is behaviorally live, not just
 diagnostic, without touching Aurora's real state directory.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

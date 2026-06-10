@@ -69,6 +69,7 @@ WHAT DOES NOT CHANGE
 Authors: Sunni (Sir) Morningstar and Cael Devo
 Created: March 2026
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 # =============================================================================
 # PATCH 1 — ADD TO IMPORTS BLOCK

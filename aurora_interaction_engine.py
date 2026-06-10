@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Interaction-lineage compression semantics for Aurora."""
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import hashlib

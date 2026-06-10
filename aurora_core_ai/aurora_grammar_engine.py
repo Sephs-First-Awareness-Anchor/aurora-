@@ -28,6 +28,7 @@ Reference stability:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import os
 import re
@@ -722,6 +723,15 @@ class MotifMiner:
                                     texts.append(part)
                         elif isinstance(content, str) and content.strip():
                             texts.append(content)
+                elif "user" in conv or "assistant" in conv:
+                    # FIX-A012: training-pair format used by Aurora's corpora
+                    # (batch_corpus.json, intensive_corpus.json, fast_corpus.json):
+                    # [{"user": ..., "assistant": ...}, ...]. Previously invisible
+                    # to the miner — every existing corpus mined 0 patterns.
+                    for k in ("user", "assistant"):
+                        t = conv.get(k, "")
+                        if isinstance(t, str) and t.strip():
+                            texts.append(t)
                 else:
                     # Flat messages list
                     for m in conv.get("messages", []):
@@ -788,6 +798,14 @@ class MotifMiner:
                                     texts.append(part)
                         elif isinstance(content, str) and content.strip():
                             texts.append(content)
+                elif "user" in conv or "assistant" in conv:
+                    # FIX-A012: Aurora training-pair format — user turn then
+                    # assistant turn is exactly the discourse transition the
+                    # bigram counter needs.
+                    for k in ("user", "assistant"):
+                        t = conv.get(k, "")
+                        if isinstance(t, str) and t.strip():
+                            texts.append(t)
                 else:
                     texts = [(m.get("content", "") if isinstance(m, dict) else str(m))
                              for m in conv.get("messages", [])]
@@ -1167,6 +1185,9 @@ class GrammarEngine:
         aurora_text: str,
         success:     bool,
         clarity:     float = 0.65,
+        tone:        str   = "neutral",
+        passion:     str   = "observant",
+        drive:       str   = "steady",
     ):
         """
         Observe a completed exchange and update motif fitness.

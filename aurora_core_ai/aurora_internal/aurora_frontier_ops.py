@@ -19,6 +19,7 @@ inject_frontier_descriptors(repo_root) registers all four into the
 operation descriptor pool so the evolver can reflect on them immediately.
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

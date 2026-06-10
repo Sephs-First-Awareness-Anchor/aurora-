@@ -38,6 +38,7 @@ THREE SYSTEMS IN ONE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import time
 import math

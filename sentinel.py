@@ -23,6 +23,7 @@ Usage:
     python3 sentinel.py watch --config sentinel_config.json
     python3 sentinel.py init-config -o sentinel_config.json
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

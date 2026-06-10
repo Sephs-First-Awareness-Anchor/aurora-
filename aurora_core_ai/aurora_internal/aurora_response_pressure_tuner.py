@@ -8,6 +8,7 @@ counter-pressure, threshold, and decision margin for each emit/suppress event
 so Aurora can inspect recurring pressure patterns and reuse them during
 training and runtime tuning.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

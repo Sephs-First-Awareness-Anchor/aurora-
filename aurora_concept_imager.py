@@ -18,6 +18,7 @@ Flow:
 Tracker file: aurora_state/concept_images_fetched.json
     {"fetched": ["apple", "ocean", ...], "failed": ["xyzzy", ...]}
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -13,6 +13,7 @@ constraint axes (X/T/N/B/A), quasicrystal memory/continuity, King Quasicrystal
 identity (78,125 slots).  Aurora generates responses via her own cognitive physics,
 not via an external LLM language faculty.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import logging

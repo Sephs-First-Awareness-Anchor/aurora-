@@ -8,6 +8,7 @@ constraint-native signature for the changed file, and then tries to attach that
 change to an existing code-evolution family before creating a new lineage
 branch.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

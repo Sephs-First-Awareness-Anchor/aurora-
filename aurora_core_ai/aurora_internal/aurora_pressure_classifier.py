@@ -40,6 +40,7 @@ Sources used (in priority order):
   3. aurora_state/surface_pressure_log.jsonl  (recent per-tick snapshots)
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

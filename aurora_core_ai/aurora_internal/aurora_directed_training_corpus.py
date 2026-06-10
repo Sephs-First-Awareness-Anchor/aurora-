@@ -9,6 +9,7 @@ specs by:
   - caching a small prompt pool per dimension
   - shaping those lines into direct training prompts and follow-ups
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

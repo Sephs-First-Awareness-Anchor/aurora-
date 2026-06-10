@@ -16,6 +16,7 @@ Public interface:
 
 The daemon calls this when Aurora should actively engage with her room.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -17,6 +17,7 @@ Usage:
     python aurora_conversation_trainer.py --duration 60 --provider gemini
     python aurora_conversation_trainer.py --turns 500 --state-dir /path/to/aurora_state
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

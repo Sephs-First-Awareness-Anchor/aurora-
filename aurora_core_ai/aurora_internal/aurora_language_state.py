@@ -859,13 +859,15 @@ class SemanticIntentCompiler:
             # Agency: first-person commitment, direct ownership
             if is_q:
                 base = f"What I understand about {content} is still taking shape."
+            elif _content_is_sentence:
+                base = content
             elif stance.agency_resolution == "committed":
                 base = f"I understand {content}." if not uncertain else f"I'm working through {content}."
             else:
                 base = f"I'm taking in {content}."
-            if relation_phrase:
+            if relation_phrase and not _content_is_sentence:
                 base = base.rstrip(".") + f", {relation_phrase}."
-            elif support_phrase and support_phrase not in base.lower():
+            elif support_phrase and not _content_is_sentence and support_phrase not in base.lower():
                 base = base.rstrip(".") + f" — I want to {support_phrase}."
 
         elif ax == "B":
@@ -908,11 +910,13 @@ class SemanticIntentCompiler:
             # Grounding, admissibility
             if is_q:
                 base = f"What is actually here about {content}?"
+            elif _content_is_sentence:
+                base = content
             elif uncertain:
                 base = f"I'm grounding this in {content} for now."
             else:
                 base = f"What's actually here is {content}."
-            if relation_phrase:
+            if relation_phrase and not _content_is_sentence:
                 base = base.rstrip(".") + f", {relation_phrase}."
 
         return base

@@ -33,6 +33,7 @@ THE MEANING FORMULA:
 Authors: Sunni (Sir) Morningstar and Cael Devo
 Created: May 2026
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

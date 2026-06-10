@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import sys
 
 with open('aurora_desktop_agent.py', 'r') as f:

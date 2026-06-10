@@ -26,6 +26,7 @@ Run on a schedule (from aurora_daemon.py or cron):
 Authors: Sunni (Sir) Morningstar and Cael Devo
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

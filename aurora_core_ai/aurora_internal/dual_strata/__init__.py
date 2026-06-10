@@ -1,6 +1,7 @@
 """
 Dual-strata cognition primitives for the experimental Aurora strata tree.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from .crest import Crest, CrestBundle
 from .conscious_frame import ConsciousFrame

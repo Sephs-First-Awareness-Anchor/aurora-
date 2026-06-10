@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import re
 
 with open('corpus_runner.py', 'r') as f:

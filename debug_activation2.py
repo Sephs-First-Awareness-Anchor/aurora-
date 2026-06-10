@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import sys, os
 from pprint import pprint
 sys.path.insert(0, os.getcwd())

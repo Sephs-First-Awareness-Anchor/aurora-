@@ -20,6 +20,7 @@ Integration points:
     dream_trainer -- lesson episode fitness below threshold
     lsv_template  -- expression template fitness drop
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import hashlib

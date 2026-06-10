@@ -19,6 +19,7 @@ Interface expected by aurora.py and aurora_consciousness_engine.py:
   field.status()                                 → dict
   field.reset_pressure_topology(understanding)   → None (pressure decay)
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json

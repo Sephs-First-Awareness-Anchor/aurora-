@@ -14,6 +14,7 @@ Strategy:
 
 No Python import, no boot, no file lock conflicts.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json

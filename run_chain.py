@@ -23,6 +23,7 @@ Chain report is printed at the end of every run.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import argparse
 import os

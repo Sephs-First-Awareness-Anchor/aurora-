@@ -9,6 +9,7 @@ Usage:
   python3 run_corpus.py --corpus conversations.json --passes triple
   python3 run_corpus.py --corpus fast_corpus.json --passes observer
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import sys
 import os
 

@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import json
 
 # Replace with your actual JSON file name

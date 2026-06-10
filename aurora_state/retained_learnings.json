@@ -1551,6 +1551,72 @@
       "sightings": 3,
       "first_seen": 1780514811.386414,
       "last_seen": 1780514827.530095
+    },
+    {
+      "text": "what want what means here",
+      "confidence": 0.66,
+      "sources": [
+        "aurora:interaction_test:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "want",
+        "what want what"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "generative"
+      ],
+      "sightings": 1,
+      "first_seen": 1781127653.2368085,
+      "last_seen": 1781127653.2368085
+    },
+    {
+      "text": "right now the existence axis are carrying the most weight x 0 30 there is also pressure on time belief t 0 21",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "afterthought",
+        "right now the existence axis"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "identity"
+      ],
+      "sightings": 13,
+      "first_seen": 1781127837.5918436,
+      "last_seen": 1781132324.9519515
+    },
+    {
+      "text": "right now the existence axis are carrying the most weight x 0 33 there is also pressure on time belief t 0 20 we were talking about aurora compared to the last exchange existence increased from 22 to 33",
+      "confidence": 0.66,
+      "sources": [
+        "aurora:interaction_test:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "noticing",
+        "right now the existence axis"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "identity"
+      ],
+      "sightings": 13,
+      "first_seen": 1781127845.451587,
+      "last_seen": 1781132333.016548
     }
   ]
 }

@@ -861,7 +861,22 @@ class SemanticCrystalNode:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "SemanticCrystalNode":
-        return cls(**{k: d[k] for k in cls.__dataclass_fields__ if k in d})
+        data = {k: d[k] for k in cls.__dataclass_fields__ if k in d}
+        # Legacy-state resilience (FIX-A007): pre-facet seed/state schemas carry
+        # only `lane`. Derive audio_facet/visual_facet from the canonical
+        # CROSS_MODAL_PAIRS lane mapping so restore never hard-fails and the
+        # 6-facet crystal always boots.
+        if "audio_facet" not in data or "visual_facet" not in data:
+            lane = str(data.get("lane", "") or "")
+            for (a_facet, v_facet), label in LANE_LABEL.items():
+                if label == lane:
+                    data.setdefault("audio_facet", a_facet)
+                    data.setdefault("visual_facet", v_facet)
+                    break
+            else:
+                data.setdefault("audio_facet", "")
+                data.setdefault("visual_facet", "")
+        return cls(**data)
 
 # =============================================================================
 # AURORA SENSORY CRYSTAL  —  full 6-facet assembly
@@ -1247,6 +1262,20 @@ class AuroraSensoryCrystal:
             recognitions.append(f"cross-modal {lane.replace('_', ' ')}")
         self._last_recognitions = recognitions[:6]
         return {"audio": audio_hits, "visual": visual_hits, "semantic": sem_hits}
+
+    def concept_registry_summary(self) -> Dict[str, Any]:
+        """Summary of the semantic concept registry (FIX-A013).
+
+        corpus_runner.py calls this at boot banner, cadence saves, and
+        end-of-ingestion — it never existed, so every corpus run crashed
+        at the first verbose cadence checkpoint. Shape matches the
+        runner's expectations: {'total': int, 'by_stage': {stage: count}}.
+        """
+        by_stage: Dict[str, int] = {}
+        for n in self._semantic.values():
+            s = str(getattr(n, "stage", "unknown") or "unknown")
+            by_stage[s] = by_stage.get(s, 0) + 1
+        return {"total": len(self._semantic), "by_stage": by_stage}
 
     def _find_semantic(self, a_nid: str, v_nid: str) -> Optional[SemanticCrystalNode]:
         for n in self._semantic.values():

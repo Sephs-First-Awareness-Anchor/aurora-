@@ -13,6 +13,7 @@ If an environment limitation blocks a modality (for example OpenCV-backed
 image loading), the report makes that explicit and continues with the rest of
 the stack instead of silently pretending the modality passed.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

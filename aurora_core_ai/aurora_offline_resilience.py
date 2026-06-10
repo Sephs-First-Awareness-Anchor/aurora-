@@ -20,6 +20,7 @@ Key pieces
   run_verification_sweep()      Verifies pending items when back online
   ConnectivityMonitor           Background thread — fires on_online/on_offline
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json

@@ -5,6 +5,7 @@ This is a deterministic data population pass for FGAE_SPECIFICATION.md.  It
 does not recompute or modify slot geometry; it derives the semantic layer from
 the existing NonComp identity and slot properties.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

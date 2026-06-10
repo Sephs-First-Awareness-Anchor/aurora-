@@ -6,6 +6,7 @@ This script traces a single input through Aurora's full stack to verify
 that the Attention Engine (Layer 4.5) is correctly influencing reasoning,
 emotion, and expression.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from aurora_runtime import AuroraRuntime
 from aurora_internal.aurora_attention_engine import AttentionState

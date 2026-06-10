@@ -13,6 +13,7 @@ This module is written to be drop-in friendly:
 - If aurora_noncomp_registry.REGISTRY exists, we read k values from it.
 - Otherwise we fall back to canonical constants: X=1, T=4, N=10, B=40, A=150.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

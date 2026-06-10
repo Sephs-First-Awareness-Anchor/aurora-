@@ -16,6 +16,7 @@ This module does not bolt on a finished capability. It:
 Current built-in target:
   - proposition_understanding
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 
