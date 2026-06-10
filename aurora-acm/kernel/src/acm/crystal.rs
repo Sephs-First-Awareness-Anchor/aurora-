@@ -137,3 +137,7 @@ pub fn tick_decay() {
 pub fn strongest_pattern() -> Option<AxisState> {
     unsafe { (*core::ptr::addr_of!(CRYSTAL_STORE)).strongest_pattern() }
 }
+
+pub fn count() -> usize {
+    unsafe { (*core::ptr::addr_of!(CRYSTAL_STORE)).count }
+}

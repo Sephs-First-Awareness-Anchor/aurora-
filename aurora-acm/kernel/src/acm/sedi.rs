@@ -77,3 +77,7 @@ pub fn deposit(axes: &AxisState, tick: u64) {
 pub fn recall_resonant(query: &AxisState) -> Option<AxisState> {
     unsafe { (*core::ptr::addr_of!(SEDI)).recall_resonant(query) }
 }
+
+pub fn count() -> usize {
+    unsafe { (*core::ptr::addr_of!(SEDI)).count }
+}
