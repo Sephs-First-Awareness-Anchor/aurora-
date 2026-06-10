@@ -27,6 +27,7 @@ Secondary channel: the second-highest-pressure axis also gets a boost at
 half strength — matching DPME's existing secondary channel behavior.
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

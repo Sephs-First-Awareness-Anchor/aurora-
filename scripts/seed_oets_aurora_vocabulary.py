@@ -8,6 +8,7 @@ about herself: IVM axes, constraint field, polarity, coherence, emergence, etc.
 The definitions are written at the level Aurora can build on — not textbook
 entries, but the actual meaning of each concept *inside her own experience*.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import hashlib
 import json

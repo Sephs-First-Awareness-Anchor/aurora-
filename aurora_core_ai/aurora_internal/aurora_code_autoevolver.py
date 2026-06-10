@@ -5,6 +5,7 @@ AURORA CODE AUTO-EVOLVER
 Applies constrained code mutations, runs simulation-gated selection,
 and rolls back rejected mutations.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

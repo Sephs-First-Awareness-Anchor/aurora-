@@ -35,6 +35,7 @@ Usage from aurora_runtime (or any autonomy loop):
       chamber.observe_external_evidence(ev)
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

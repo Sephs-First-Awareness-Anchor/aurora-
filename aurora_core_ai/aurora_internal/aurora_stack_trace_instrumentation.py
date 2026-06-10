@@ -5,6 +5,7 @@ Aurora stack-wide developmental trace instrumentation.
 This module wraps active runtime call surfaces so methods/functions emit
 evolutionary trace records with pressure-before/after and applied effects.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

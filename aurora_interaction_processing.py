@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Interaction crystal formation, promotion, collapse, and routing."""
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import re

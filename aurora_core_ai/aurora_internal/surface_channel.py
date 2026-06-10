@@ -11,6 +11,7 @@ This keeps the LLM out of authority. It simply tries Aurora's native gateway/
 response paths and returns text. If a richer surface daemon exists later, it can
 replace this module without changing aurora.py.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json

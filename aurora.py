@@ -5,6 +5,7 @@ AURORA  Unified Runner Proxy
 Everything every platform should run off one whole system.
 This file now proxies all logic to 'aurora_core_ai/aurora.py'.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
 import os

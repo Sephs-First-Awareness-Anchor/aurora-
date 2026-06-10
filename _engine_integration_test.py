@@ -4,6 +4,7 @@ aurora_constraint_engine — live stack integration test
 Verifies engine-native types flow correctly through the real modules,
 not just through the self-test harness.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys, math
 sys.path.insert(0, ".")

@@ -4,6 +4,7 @@ AURORA SUPPORT STACK (Consolidated Facade)
 =========================================
 Consolidates non-core support modules used by canonical runtime layers.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 # Parser
 from aurora_internal.aurora_utterance_parser import UtteranceParser, parse_utterance

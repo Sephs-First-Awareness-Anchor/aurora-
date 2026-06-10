@@ -10,6 +10,7 @@ terminal loop forever.
 
 If anything crashes, we reboot. PID 1 cannot exit.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
 import os

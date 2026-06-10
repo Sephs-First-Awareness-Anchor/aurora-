@@ -14,6 +14,7 @@ Auto-refreshes every 5 s (Overview), 3 s (QAO), 2 s (Vision).
 Launch:
     python3 aurora_hub.py
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -6,6 +6,7 @@ Handles raw console I/O for the Aurora cognitive field session.
 On a bare-metal serial console or VGA tty inside initramfs there is no
 readline, no curses, and no pty magic — we keep it simple and robust.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
 import os

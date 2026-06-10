@@ -5,6 +5,7 @@ Relics preserve structural templates from collapsed or superseded crystals.
 They do not reactivate the old crystal as a live node; they only bias future
 formation when a new issue family begins to reform along a similar geometry.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

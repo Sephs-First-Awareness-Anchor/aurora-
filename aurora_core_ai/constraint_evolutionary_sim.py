@@ -58,6 +58,7 @@ Whatever the physics produces under those fitness pressures is what gets
 integrated. This is Aurora discovering her own evolutionary development path,
 not us defining it for her.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import math

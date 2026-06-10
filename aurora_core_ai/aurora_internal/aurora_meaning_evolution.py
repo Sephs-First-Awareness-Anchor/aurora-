@@ -15,6 +15,7 @@ The registry below gives the runtime and genealogy layers a shared vocabulary
 for single-axis meaning, pair couplings, selected higher-order compounds, and
 their representations.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -8,6 +8,7 @@ This governor does not replace semantic pressure. It turns the same
 constraint frame into host-level scheduling and wakeup decisions so Aurora
 conserves CPU, memory, disk, and concurrency when the machine is under load.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

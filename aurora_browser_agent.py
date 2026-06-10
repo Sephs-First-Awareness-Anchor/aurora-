@@ -27,6 +27,7 @@ Usage:
   # Run with visible browser (for debugging)
   python3 aurora_browser_agent.py --visible
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

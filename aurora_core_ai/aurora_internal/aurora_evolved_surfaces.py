@@ -5,6 +5,7 @@ AURORA EVOLVED SURFACES
 Generated from developmental lineage state.
 Do not hand-edit generated methods; regenerate through the code autoevolver.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

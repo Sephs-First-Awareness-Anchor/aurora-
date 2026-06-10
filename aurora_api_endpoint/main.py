@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import os
 import json
 from flask import Flask, request, jsonify

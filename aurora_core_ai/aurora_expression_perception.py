@@ -30,6 +30,7 @@ DOCTRINE:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import time
 import math
@@ -260,7 +261,11 @@ def _extract_rich_audio_features(
 class LexicalMemory:
     """Aurora's vocabulary. Grows through interaction, not pre-loading."""
 
-    _DEFAULT_PATH = "aurora_state/lexicon.json"
+    # Anchored to this module's directory (FIX-A009) — the old relative path
+    # made persistence cwd-dependent: daemon, CLI, and test launches each
+    # resolved a different lexicon.json, so vocabulary never round-tripped.
+    _DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "aurora_state", "lexicon.json")
 
     def __init__(self):
         self.entries: Dict[str, LexicalEntry] = {}
@@ -343,6 +348,13 @@ class LexicalMemory:
     def find_by_valence(self, min_val: float, max_val: float) -> List["LexicalEntry"]:
         return [e for e in self.entries.values()
                 if min_val <= e.emotional_valence <= max_val]
+
+    @property
+    def size(self) -> int:
+        """Vocabulary count (FIX-A013) — the corpus runner reads
+        perception.lexicon.size throughout; the live class never had it,
+        so every responder/warmup pass crashed with AttributeError."""
+        return len(self.entries)
 
     def save(self, path: str = "") -> bool:
         """Persist full vocabulary to disk."""
@@ -2706,6 +2718,17 @@ class SentenceComposer:
 # ============================================================================
 
 class ExpressionPerceptionEngine:
+    """FIX-A013 note: save_lexicon() below is called by corpus_runner.py at
+    mid-pass cadence saves and at end-of-ingestion; it never existed on this
+    engine, so corpus runs crashed with AttributeError before persisting."""
+
+    def save_lexicon(self) -> bool:
+        """Persist the vocabulary via the lexicon's own save path."""
+        try:
+            return bool(self.lexicon.save())
+        except Exception:
+            return False
+
     """
     The Layer 5 orchestrator. Manages both pipelines.
 

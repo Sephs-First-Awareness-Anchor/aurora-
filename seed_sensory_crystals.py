@@ -12,6 +12,7 @@ Duplicate logic:
 Semantic wiring resolves node IDs from both newly-added nodes AND from
 already-persisted nodes (for idempotent re-runs).
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import gzip
 import json
@@ -335,10 +336,20 @@ for audio_name, visual_name, lane, label in semantic_seeds:
         continue
 
     sem_node_id = str(uuid.uuid4())
+    # Canonical lane → (audio_facet, visual_facet) mapping — must mirror
+    # CROSS_MODAL_PAIRS / LANE_LABEL in aurora_internal/aurora_sensory_crystal.py.
+    _lane_to_facets = {
+        "tonal_colour": ("tone",   "hue"),
+        "texture_form": ("timbre", "shape"),
+        "tempo_flow":   ("rhythm", "motion"),
+    }
+    _a_facet, _v_facet = _lane_to_facets.get(lane, ("", ""))
     sem_node = {
         "node_id": sem_node_id,
         "name": label,
         "lane": lane,
+        "audio_facet": _a_facet,
+        "visual_facet": _v_facet,
         "audio_node_id": audio_id,
         "audio_node_name": audio_name,
         "visual_node_id": visual_id,

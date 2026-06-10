@@ -8,6 +8,7 @@ Handles the autonomous lifecycle of training corpora:
 - Detecting variable file formats (JSON, JSONL, CSV, TXT).
 - Providing a universal iterator for the training system.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

@@ -89,6 +89,7 @@ KING QUASICRYSTAL — IDENTITY (recursive):
   axis state they carry — they are the substrate from which identity's
   recursive self-reference draws.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import gzip

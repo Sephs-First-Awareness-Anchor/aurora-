@@ -24,6 +24,7 @@ Coupling physics (same as CPM axis coupling):
   B → {N: 0.30, A: 0.25}
   A → {T: 0.20, B: 0.25, N: 0.15}
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import time

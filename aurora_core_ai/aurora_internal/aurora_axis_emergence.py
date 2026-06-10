@@ -44,6 +44,7 @@ Usage:
   # result: {"new_compounds": ["NB", "AT"], "total": 3, "virtual_slots_added": 18}
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

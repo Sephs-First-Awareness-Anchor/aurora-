@@ -9,6 +9,7 @@ Usage:
     python aurora_stack_export.py /path/to/Aurora -o aurora_full_stack.md
     python aurora_stack_export.py /path/to/Aurora --extensions .py .json .md .txt
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

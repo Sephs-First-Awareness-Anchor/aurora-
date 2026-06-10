@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from .crystal_engine import ALL_ROTATIONS, CrystalEngine, CrystalOrder, QuasiInnerStrata
 from .dimensional_memory import DataNode, DimensionalMemory, IntegratedMemoryPipeline, LineageEdge
 from .dimensional_processing import (

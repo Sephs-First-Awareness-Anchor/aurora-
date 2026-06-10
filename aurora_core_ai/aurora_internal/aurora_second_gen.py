@@ -23,6 +23,7 @@ Key differences for gen-2 descriptors:
   - _generation = 2 marker for tracking
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

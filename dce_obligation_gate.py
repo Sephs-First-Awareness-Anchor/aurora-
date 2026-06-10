@@ -25,6 +25,7 @@ Critical principle:
 
 Authors: Sunni (Sir) Morningstar
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

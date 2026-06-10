@@ -8,6 +8,7 @@ Outputs:
 
 This script is intentionally deterministic so repeated runs are stable.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

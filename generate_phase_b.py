@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import json
 
 axes = ["X", "T", "N", "B", "A"]

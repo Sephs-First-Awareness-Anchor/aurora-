@@ -19,6 +19,7 @@ The GPT system prompt is tailored each session from:
   - Axis orientation (which axes are compressing / expanding in genealogy)
   - Pressure orientation (what the chamber thinks needs relief)
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

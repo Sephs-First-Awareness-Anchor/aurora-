@@ -72,6 +72,7 @@ scripted systems: gap pressure emerges naturally from a thin geological ground
 naturally from deep geological ground (HIGHER_ORDER position = synthesis draws
 from accumulated understanding automatically).
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import math

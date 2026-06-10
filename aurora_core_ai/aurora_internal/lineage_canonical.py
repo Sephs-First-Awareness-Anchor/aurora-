@@ -4,6 +4,7 @@
 This module stabilizes operation-to-constraint ancestry so existing
 operational abilities are not reclassified differently by module.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

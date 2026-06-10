@@ -18,6 +18,7 @@ layer that derives its state from Aurora's actual working memory, emotional
 signals, articulation debt, contradiction state, and current response policy.
 Every operator it uses is registered into the five-constraint genealogy.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

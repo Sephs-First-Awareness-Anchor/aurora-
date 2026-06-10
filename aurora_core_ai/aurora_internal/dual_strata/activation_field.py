@@ -15,6 +15,7 @@ This is not retrieval. It is priming — the same spreading-activation
 mechanism the human brain uses to make related knowledge available
 before it is explicitly needed.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

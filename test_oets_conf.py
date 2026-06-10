@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import sys, os
 sys.path.insert(0, os.getcwd())
 from aurora import boot_aurora

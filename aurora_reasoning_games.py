@@ -20,6 +20,7 @@ Trigger (voice/text):
   "I'm thinking of something X"                    → 20Q directly
   "Aurora go play for an hour"                     → self-training
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import re
 import random

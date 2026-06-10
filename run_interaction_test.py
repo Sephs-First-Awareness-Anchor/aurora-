@@ -6,6 +6,7 @@ Boots Aurora, runs a series of probing exchanges, and prints the full
 internal state after each turn — response text, IVM axis pressures,
 emergence stats, competency scores, and repair/continuity health.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import json, os, sys, time, traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

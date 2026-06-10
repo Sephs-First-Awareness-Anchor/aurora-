@@ -25,6 +25,7 @@ Transcription engine priority:
   1. speech_recognition + Google (most accurate for conversation)
   2. PocketSphinx (offline fallback)
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

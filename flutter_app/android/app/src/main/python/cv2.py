@@ -6,6 +6,7 @@ numpy + Pillow implementations of the cv2 functions Aurora's cognitive stack
 uses.  Camera frames are injected via VideoCapture.provide_frame() from the
 Kotlin CameraX bridge through aurora_bridge.provide_camera_frame().
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import threading

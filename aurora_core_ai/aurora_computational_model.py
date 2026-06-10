@@ -57,6 +57,7 @@ CPMSession is instantiated at boot with references to IVM, crystal registry,
 and genealogy logger. It is stored in _systems under the key 'cpm'. Other
 subsystems can call cpm.advance(), cpm.apply_istate(), cpm.snapshot() etc.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 from typing import Any, Dict, List, Optional

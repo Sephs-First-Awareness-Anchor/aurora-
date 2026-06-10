@@ -2,6 +2,7 @@
 """
 Test script to verify Aurora's conversation and meaning formation on desktop.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from aurora import boot_aurora, process_external_user_turn
 import time

@@ -9,6 +9,7 @@ This module keeps proposition structure small and executable:
 It is intentionally lightweight so it can be activated from lineage artifacts
 without pulling the rest of the runtime into a heavy import chain.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

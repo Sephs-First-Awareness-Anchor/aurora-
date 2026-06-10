@@ -12,6 +12,7 @@ Axis legend (from AURORA_COGNITIVE_PHYSICS.md):
     B = Boundary    — definition, separability, identity surface
     A = Agency      — will, directed expression, authorship
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 from typing import Any, Dict, Optional

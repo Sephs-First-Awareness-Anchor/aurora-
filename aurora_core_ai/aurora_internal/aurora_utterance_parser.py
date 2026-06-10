@@ -34,6 +34,7 @@ BACKWARD COMPATIBILITY:
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import re
 from dataclasses import dataclass, field

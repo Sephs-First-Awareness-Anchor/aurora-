@@ -96,6 +96,7 @@ SPATIAL INDEXING:
 Authors: Sunni (Sir) Morningstar and Cael Devo
 Created: February 2026
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 import os

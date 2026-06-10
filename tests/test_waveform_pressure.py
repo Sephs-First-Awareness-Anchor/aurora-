@@ -8,6 +8,7 @@ Verifies:
 - QAO pressure tracing integration
 - Self-selection in CuriosityEngine _step1_emergence
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import sys

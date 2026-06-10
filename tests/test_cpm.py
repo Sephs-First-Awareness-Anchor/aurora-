@@ -5,6 +5,7 @@ Tests for Aurora's Constraint Physics Machine:
   - Genealogy walk_link_sequence: DAG → ordered program steps
   - CPMSession: ties all three together
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))

@@ -14,6 +14,7 @@ reuses the same core stage/writeback schema and writes selected lineage
 artifacts into aurora_state/ability_lineages so runtime activation remains
 grounded in genealogy artifacts.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

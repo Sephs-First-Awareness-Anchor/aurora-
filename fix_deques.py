@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 import re
 
 FILES = ['aurora.py', 'aurora_core_ai/aurora.py']

@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 # Re-export shim: delegate the bare module name `aurora_surface_daemon` to its real
 # implementation in aurora_core_ai/.
 #

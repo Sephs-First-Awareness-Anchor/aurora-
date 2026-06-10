@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys, os, json, time, traceback
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

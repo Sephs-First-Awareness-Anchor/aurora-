@@ -4,6 +4,7 @@ AURORA CODE MUTATION OPERATORS
 ==============================
 Canonical mutation operator catalog for code-level evolution.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

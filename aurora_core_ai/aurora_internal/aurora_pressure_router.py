@@ -34,6 +34,7 @@ time you want the system to reconsider its growth priorities.
 Output file: aurora_state/query_bias.json
 ─────────────────────────────────────────────────────────────────────────────
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

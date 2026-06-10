@@ -14,6 +14,7 @@ Integration (from aurora.py boot):
     from aurora_live_vision import boot_screen_observer
     systems['screen_observer'] = boot_screen_observer(systems, interval=5.0)
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

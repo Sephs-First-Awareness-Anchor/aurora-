@@ -7,6 +7,7 @@ Lowest-scale continuity substrate for intent/context/style invariants.
 BSL stores state transitions (crossings) and derives stable signatures and
 compact bias vectors that can be used by memory and IVM layers.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

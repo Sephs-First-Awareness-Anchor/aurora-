@@ -5,6 +5,7 @@ This keeps the copied QuasiArch subsystem inside Aurora's stack as a
 diagnostic observer first. It records interventions, builds doctrine, and
 can be queried for hypotheses. Active steering is opt-in.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

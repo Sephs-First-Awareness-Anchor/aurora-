@@ -14,6 +14,7 @@ The same five constraints are applied at code level:
   B boundary  : coupling/interface pressure
   A agency    : adaptive steering pressure (ability to evolve safely)
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

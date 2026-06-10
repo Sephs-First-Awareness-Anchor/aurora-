@@ -128,6 +128,7 @@ Quantum Ghost           | QuantumGhostCompressionEngine | from quantum_ghost_uni
 
 ================================================================================
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import time
 import threading

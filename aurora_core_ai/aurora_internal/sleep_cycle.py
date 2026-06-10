@@ -3,6 +3,7 @@
 
 Subsurface owns the sleep/wake clock. Surface checks is_sleeping().
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json

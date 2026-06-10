@@ -23,6 +23,7 @@ Usage:
     weak = get_telemetry().mechanistic_fails(threshold=0.45)
     # → [("coherence_maintenance", 0.72), ("framing_selection", 0.55)]
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

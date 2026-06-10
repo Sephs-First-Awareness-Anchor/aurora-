@@ -21,6 +21,7 @@ you can read them in the terminal chat (/messages).
 Quiet hours (default 22:00-08:00): no voice/notifications. Internal
 cycles still run.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

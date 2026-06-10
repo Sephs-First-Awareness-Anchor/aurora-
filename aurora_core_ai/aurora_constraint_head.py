@@ -15,6 +15,7 @@ IVM axis names → crystal axis keys:
 IVM global_polarity is signed [-1.0, +1.0] (cosine of toroidal phase).
 Crystal bucket addressing uses [0.0, 1.0]. Mapping: (polarity + 1.0) / 2.0
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 from dataclasses import dataclass, field

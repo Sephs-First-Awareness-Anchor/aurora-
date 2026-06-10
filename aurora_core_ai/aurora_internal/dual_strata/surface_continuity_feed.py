@@ -11,6 +11,7 @@ and integrates the result into its continuity state.
 Without this handoff, Surface is theatrical: it sees, hears, and talks
 but the organism does not absorb the moment.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json

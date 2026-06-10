@@ -1,3 +1,4 @@
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from foundational_contract import FoundationalContract
 from aurora_ivm import IVMLattice, RecursionLevel
 from aurora_internal.aurora_evolution_chamber import EvolutionaryChamber

@@ -4,6 +4,7 @@ AURORA CODE EVOLUTION STACK (Facade)
 ====================================
 Canonical import surface for code evolution chamber primitives.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from typing import Any, Dict
 

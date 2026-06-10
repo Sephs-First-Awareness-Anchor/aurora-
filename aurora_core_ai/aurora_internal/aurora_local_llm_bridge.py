@@ -6,6 +6,7 @@ This module is not Aurora's cognition. It only offers input interpretation
 candidates and final wording polish candidates. The llama.cpp work runs in a
 child process so native crashes cannot terminate Aurora.
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 

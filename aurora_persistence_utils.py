@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Shared persistence utilities for Aurora."""
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 from __future__ import annotations
 
 import json
