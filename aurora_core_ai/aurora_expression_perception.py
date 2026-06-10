@@ -782,6 +782,7 @@ class ImpressionCascade:
         self.shards: Dict[str, EmotionShard] = {}
         self.seeds: Dict[str, ImpressionSeed] = {}
         self.relics: Dict[str, GhostRelic] = {}
+        self.entries: Dict[str, "LexicalEntry"] = {}
         self.total_energy_processed = 0
 
     def energy_to_shard(self, channels: Dict[str, float],
