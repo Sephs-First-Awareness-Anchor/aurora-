@@ -26,6 +26,7 @@ Nothing enters without validation. Nothing exits without personality.
 
 Authors: Sunni (Sir) Morningstar and Cael Devo
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys
 import os
@@ -20835,6 +20836,49 @@ def _run_reasoning_pipeline(
         except Exception:
             pass
 
+    # ---- GRAMMAR ENGINE — post-turn exchange observation (FIX-A008) ----
+    # Closes the motif learning loop. suggest_structure() only READS promoted
+    # motifs; observe_exchange() is the WRITE path that lets motifs accumulate
+    # success_count / contexts_seen and reach should_promote(). This call was
+    # documented above as "runs post-turn" but was never actually wired, so
+    # the lineage never promoted and the >= 8 promoted gate never opened.
+    if state.response_content:
+        try:
+            _ge_obs = systems.get("grammar_engine")
+            if _ge_obs and hasattr(_ge_obs, "observe_exchange"):
+                _resp_txt = str(state.response_content).strip()
+                _obs_success = len(_resp_txt.split()) >= 3
+                _obs_clarity = 0.65
+                try:
+                    _uc_obs = systems.get("understanding_contract")
+                    _acc_obs = getattr(_uc_obs, "accuracy", None) if _uc_obs is not None else None
+                    if _acc_obs is not None:
+                        _obs_clarity = max(0.0, min(1.0, float(_acc_obs)))
+                except Exception:
+                    pass
+                _ge_obs.observe_exchange(
+                    str(user_text or ""),
+                    _resp_txt,
+                    success=_obs_success,
+                    clarity=_obs_clarity,
+                    tone=str(state.response_tone or "neutral"),
+                    passion=str(state.emotional_state.get("passion", "observant")),
+                    drive=str(state.emotional_state.get("drive", "steady")),
+                )
+        except Exception:
+            pass
+
+    # ---- LEXICON PERSISTENCE — vocabulary survives shutdown (FIX-A009) ----
+    # Lexicon.save() existed with zero call sites: every word learned in a
+    # session died at exit, so vocab reset to the 28 seed words on every boot.
+    try:
+        _perc_lex = systems.get("perception")
+        if _perc_lex is not None and hasattr(_perc_lex, "lexicon"):
+            if hasattr(_perc_lex.lexicon, "save"):
+                _perc_lex.lexicon.save()
+    except Exception:
+        pass
+
     # Expression perception tone reconciliation
     if (
         state.response_content and
@@ -24311,6 +24355,7 @@ def boot_aurora(
         if verbose:
             print(f"  [GRAM] Grammar engine unavailable: {_gram_e}")
 
+
     # Layer 6: Behavioral Identity
     if verbose: print("  [L6] Behavioral Identity...", end=" ", flush=True)
     from aurora_behavioral_identity import BehavioralIdentityEngine
@@ -24412,6 +24457,14 @@ def boot_aurora(
             )
             systems['chamber']   = _chamber
             systems['genealogy'] = _genealogy
+            # EDIT (constraint-expansive concepts): DPS WARP searches the
+            # genealogy fossil record before fresh concept synthesis.
+            try:
+                _dps_g = getattr(systems.get('dimensional'), 'dps', None)
+                if _dps_g is not None and hasattr(_dps_g, 'set_warp_genealogy'):
+                    _dps_g.set_warp_genealogy(_genealogy)
+            except Exception:
+                pass
             systems['field_balancer'] = _field_balancer
             # Restore corpus-trained links so they inject on first session
             _restore_genealogy_state(_genealogy, output_dir=_gen_dir, verbose=False)
@@ -24799,6 +24852,13 @@ def boot_aurora(
             _dps = getattr(systems.get("dimensional"), "dps", None)
             if _dps is not None:
                 systems["sensory_crystal"].wire_dimensional(_dps)
+                # EDIT (one-crystal doctrine): the composer reads from the
+                # SAME crystals sensory writes to — word selection consults
+                # DPS crystal constraint_signatures and word facets.
+                try:
+                    systems["perception"].composer.dps = _dps
+                except Exception:
+                    pass
             # Wire hardware camera/mic → crystal so every captured frame feeds in.
             # HardwareInterface.process_visual/audio already has crystal routing —
             # we just need to set its sensory_crystal reference.
@@ -24824,6 +24884,7 @@ def boot_aurora(
     except Exception as _sc_e:
         if verbose:
             print(f"  [SENSORY-CRYSTAL] Unavailable: {_sc_e}")
+
 
     systems["interaction_processing"] = None
     systems["_last_interaction_route"] = {}

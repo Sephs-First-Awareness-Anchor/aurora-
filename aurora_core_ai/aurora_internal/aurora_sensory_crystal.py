@@ -1117,10 +1117,20 @@ class AuroraSensoryCrystal:
         if self._dps_ref is None:
             return
         try:
-            concept = f"sensory:semantic:{node.lane}:{node.node_id}"
+            # EDIT (one-crystal doctrine): the DPS key is the node's CONCEPT
+            # (its cross-modal name, falling back to its lane), NOT its
+            # node_id. Per-node keys gave every semantic observation its own
+            # crystal, so nothing accumulated — concept crystals stayed
+            # starved while node crystals multiplied. Now every observation
+            # of the same concept lands on the SAME crystal, which gains
+            # facets and association and climbs the ladder the way the
+            # architecture intended. The node_id is preserved as a facet.
+            _cname = (node.name or "").strip() or node.lane
+            concept = f"sensory:semantic:{_cname}"
             crystal = self._dps_ref._get_or_create(concept)
             if count_use:
                 crystal.use()
+            crystal.add_facet("semantic_node", node.node_id[:12], confidence=node.confidence)
             crystal.add_facet("semantic_lane", node.lane, confidence=node.confidence)
             crystal.add_facet("semantic_stage", node.stage, confidence=node.confidence)
             crystal.add_facet("semantic_generation", f"gen:{node.generation}", confidence=node.confidence)

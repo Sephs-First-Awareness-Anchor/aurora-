@@ -65,6 +65,10 @@ import numpy as np
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from collections import defaultdict, deque
+# EDIT (constraint-expansive concepts): WARP machinery for DPS
+from aurora_warp_protocol import (
+    WarpCapable, WarpComponent, axes_to_istates, istates_to_axes,
+)
 from enum import Enum, IntEnum
 
 from aurora_constraint_unit_adapter import build_constraint_profile
@@ -317,10 +321,50 @@ class Crystal:
             return False
         if self.level < CrystalLevel.QUASI:
             self.level = CrystalLevel(self.level + 1)
+            # EDIT (constraint compound derivation): leveling IS compounding.
+            # The new level's constraint_signature derives as the compound of
+            # this crystal's own signature with the signatures of its
+            # strongest connected crystals — evolution stays inside the
+            # constraint physics instead of being a facet-count formality.
+            # Signed polarity is preserved (abs() never applied) and weights
+            # come from the existing `connections` strengths.
+            try:
+                self._compound_signature()
+            except Exception:
+                pass
             if self.level == CrystalLevel.QUASI:
                 self._internalize_laws()
             return True
         return False
+
+    def _compound_signature(self) -> None:
+        """Derive signature as compound of self + strongest connections.
+
+        `connections` maps crystal_id → strength, but crystals don't hold
+        references to each other — the registry (DPS) resolves them. So the
+        compound is performed lazily through the class-level resolver that
+        CrystalProcessingSystem installs (`_resolve_crystal`); without a
+        resolver the signature simply stays as stamped.
+        """
+        resolver = getattr(Crystal, "_resolve_crystal", None)
+        if resolver is None or not self.connections:
+            return
+        own = dict(self.constraint_signature or {})
+        total_w = 1.0
+        acc = {k: v * 1.0 for k, v in own.items()}
+        for cid, strength in sorted(self.connections.items(),
+                                    key=lambda kv: -kv[1])[:3]:
+            other = resolver(cid)
+            sig = getattr(other, "constraint_signature", None) if other else None
+            if not sig:
+                continue
+            w = max(0.0, min(1.0, float(strength)))
+            for ax, val in sig.items():
+                acc[ax] = acc.get(ax, 0.0) + val * w   # signed — no abs()
+            total_w += w
+        if total_w > 1.0 and acc:
+            self.constraint_signature = {ax: v / total_w
+                                         for ax, v in acc.items()}
 
     def _internalize_laws(self):
         for law in INTERNAL_LAWS:
@@ -339,10 +383,19 @@ class Crystal:
         return {'law': law_name, 'outcome': outcome, 'crystal': self.concept}
 
 
-class CrystalProcessingSystem:
+class CrystalProcessingSystem(WarpCapable):
     """
     DPS â€" processes data into crystals. Gate: PERSISTENT+.
     Registers new crystals and facets with DER for energy tracking.
+
+    EDIT (constraint-expansive concepts): DPS is now WarpCapable. When an
+    incoming constraint profile resonates with NO existing crystal, WARP
+    derives a PROVISIONAL concept from combinations of what already exists
+    (genealogy fossil record consulted first). The provisional concept does
+    not solidify until it validates through experiential recurrence — the
+    mixin's trial lifecycle (gap persistence → TRIAL_TICKS of EMA scoring →
+    promote or dissolve) IS that validation. Pressure (IVM polarity) sets
+    the constraint potency of every combination via axes_to_istates.
     """
     GATE = ExistenceMode.PERSISTENT
 
@@ -352,6 +405,68 @@ class CrystalProcessingSystem:
         self.concept_index: Dict[str, str] = {}  # concept â†' crystal_id
         self._energy_system = energy_system  # Set after DER init
         self._sedimemory = None  # L3.5 SediMemory (injected externally)
+        self._init_warp()
+        # EDIT (constraint compound derivation): crystals resolve their
+        # connections through the registry so evolve() can compound
+        # signatures from connected crystals.
+        Crystal._resolve_crystal = staticmethod(
+            lambda cid, _reg=self: _reg.crystals.get(cid))
+
+    # ── WarpCapable hooks (all over existing crystal mechanics) ──────────
+
+    def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
+        """Coverage = the constraint signatures her crystals already hold."""
+        out: Dict[str, Dict[str, float]] = {}
+        for cid, c in self.crystals.items():
+            sig = getattr(c, "constraint_signature", None)
+            if sig:
+                out[cid] = axes_to_istates(
+                    {ax: abs(float(v)) for ax, v in sig.items()},
+                    ivm_polarity={ax: (1.0 if float(v) >= 0 else -1.0)
+                                  for ax, v in sig.items()})
+        return out
+
+    def _warp_level_name(self) -> str:
+        return "dimensional_crystal"
+
+    def _integrate_warp(self, component: "WarpComponent") -> None:
+        """A provisional concept crystal — created through the same
+        _get_or_create path every crystal uses, stamped with the derived
+        compound signature, genealogy recorded as facets."""
+        crystal = self._get_or_create(component.name)
+        crystal.constraint_signature = istates_to_axes(component.axis_profile)
+        crystal.add_facet("warp_provisional", component.component_id,
+                          confidence=0.5)
+        for pid in getattr(component, "parent_ids", []) or []:
+            crystal.add_facet("warp_genealogy", pid, confidence=0.6)
+        self.tracker.record('dps', 'warp_trial', 1.0)
+
+    def _score_trial(self, component: "WarpComponent") -> float:
+        """Experiential recurrence: the provisional crystal's own usage and
+        facet growth since birth — concepts validate by being lived."""
+        cid = self.concept_index.get(component.name)
+        crystal = self.crystals.get(cid) if cid else None
+        if crystal is None:
+            return 0.0
+        recurrence = min(1.0, crystal.usage_count / 8.0)
+        substance = min(1.0, len(crystal.facets) / 5.0)
+        return 0.7 * recurrence + 0.3 * substance
+
+    def _dissolve_warp(self, component_id: str) -> None:
+        """A provisional concept that never recurred dissolves — only if it
+        is still BASE-level and still marked provisional."""
+        for concept, cid in list(self.concept_index.items()):
+            crystal = self.crystals.get(cid)
+            if crystal is None:
+                continue
+            marked = any(f.role == "warp_provisional"
+                         and f.content == component_id
+                         for f in crystal.facets.values())
+            if marked and crystal.level == CrystalLevel.BASE:
+                self.crystals.pop(cid, None)
+                self.concept_index.pop(concept, None)
+                self.tracker.record('dps', 'warp_dissolved', 1.0)
+                return
 
     def set_energy_system(self, energy_system: 'EnergyRegulatorSystem'):
         """Wire DER after both systems are created."""

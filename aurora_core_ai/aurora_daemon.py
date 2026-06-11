@@ -2684,6 +2684,29 @@ def _process_expression_gap_queue(systems: Dict[str, Any]) -> None:
 
 def _run_study_cycle(systems: Dict[str, Any]) -> None:
     _log("  [STUDY] Running OETS study cycle...")
+    # ACCOMMODATION (warp trial clock — daemon twin): provisional concepts
+    # and trial representations must validate through LIVED experience, not
+    # only corpus runs. The study cycle is the daemon's "apply learnings"
+    # beat, so both trial lifecycles tick here.
+    try:
+        _dps_d = getattr(systems.get("dimensional"), "dps", None)
+        if _dps_d is not None and hasattr(_dps_d, "evaluate_warp_trials"):
+            _pr_d, _di_d = _dps_d.evaluate_warp_trials()
+            if _pr_d or _di_d:
+                _log(f"  [WARP-DPS] live: promoted={len(_pr_d)} "
+                     f"dissolved={len(_di_d)}")
+        _perc_d = systems.get("perception")
+        if _perc_d is not None and hasattr(_perc_d, "evaluate_warp_trials") \
+                and getattr(_perc_d, "_warp_trials", None):
+            _rp_d, _rd_d = _perc_d.evaluate_warp_trials()
+            for _rid_d in _rp_d:
+                _comp_d = _perc_d._warp_promoted.get(_rid_d)
+                if _comp_d is not None:
+                    _perc_d.commit_representation(_comp_d)
+                    _log(f"  [WARP-REPR] live representation COMMITTED: "
+                         f"{getattr(_comp_d, 'name', _rid_d)}")
+    except Exception:
+        pass
     try:
         perception = systems.get("perception")
         if perception and hasattr(perception, "oets") and perception.oets:

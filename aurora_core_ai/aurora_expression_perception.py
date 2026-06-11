@@ -38,6 +38,7 @@ import os
 import shutil
 import hashlib
 import random
+from aurora_warp_protocol import WarpCapable
 import re
 import numpy as np
 from enum import Enum, IntEnum, auto
@@ -107,7 +108,7 @@ if not _SKIP_OETS_IMPORTS:
 _LANG_STATE_AVAILABLE = False
 if not _SKIP_LANG_IMPORTS:
     try:
-        from aurora_internal.aurora_language_state import (
+        from aurora_language_state import (
             ExpressionEvolutionOrchestra, LSVMetrics
         )
         _LANG_STATE_AVAILABLE = True
@@ -355,6 +356,71 @@ class LexicalMemory:
         perception.lexicon.size throughout; the live class never had it,
         so every responder/warmup pass crashed with AttributeError."""
         return len(self.entries)
+
+    # ── CONCEPT ASSOCIATION (FIX-A015) ───────────────────────────────────
+    # The lexicon's design intent: each crystallized concept (noncomp
+    # channel, 5 axes × 5 characters = 25) holds the words that fit it.
+    # Words are saved WITH their associative concept, derived from the
+    # absorption geometry SHE extracted — not hand-mapped. Only the 26
+    # seed words were ever mapped before this; the other 90%+ of her
+    # vocabulary was unreachable by constraint-driven selection.
+
+    NONCOMP_CHARACTERS = ("POLARITY", "MAGNITUDE", "OPERATOR", "COST", "DIFFERENCE")
+    NONCOMP_AXES = ("X", "T", "N", "B", "A")
+
+    def associate(self, word: str, noncomp_id: str, strength: float = 1.0) -> bool:
+        """Vote a word into a concept channel. Votes accumulate across
+        observations; the leading channel becomes the word's noncomp_id.
+        Evidence-weighted so one noisy sentence can't mis-crystallize a
+        word, but consistent geometry converges quickly."""
+        word = (word or "").lower().strip()
+        if not word or word not in self.entries or not noncomp_id:
+            return False
+        ax, _, ch = noncomp_id.partition(":")
+        if ax not in self.NONCOMP_AXES or ch not in self.NONCOMP_CHARACTERS:
+            return False
+        if not hasattr(self, "_assoc_votes"):
+            self._assoc_votes = {}
+        votes = self._assoc_votes.setdefault(word, {})
+        votes[noncomp_id] = votes.get(noncomp_id, 0.0) + max(0.0, float(strength))
+        leader = max(votes.items(), key=lambda kv: kv[1])[0]
+        entry = self.entries[word]
+        if entry.noncomp_id != leader:
+            entry.noncomp_id = leader
+            self._invalidate_noncomp_index()
+        return True
+
+    def concept_words(self, noncomp_id: str) -> List["LexicalEntry"]:
+        """The concept→words view: every word crystallized into a channel."""
+        self._ensure_noncomp_index()
+        return [self.entries[w] for w in self._noncomp_index.get(noncomp_id, ())
+                if w in self.entries]
+
+    def concept_coverage(self) -> Dict[str, Any]:
+        """Diagnostic: how much of the vocabulary is concept-associated."""
+        self._ensure_noncomp_index()
+        mapped = sum(len(v) for v in self._noncomp_index.values())
+        return {
+            "total_words": len(self.entries),
+            "mapped_words": mapped,
+            "channels_populated": sum(1 for v in self._noncomp_index.values() if v),
+            "by_channel": {k: len(v) for k, v in sorted(self._noncomp_index.items())
+                           if v},
+        }
+
+    def _invalidate_noncomp_index(self) -> None:
+        self._noncomp_index_valid = False
+
+    def _ensure_noncomp_index(self) -> None:
+        if getattr(self, "_noncomp_index_valid", False):
+            return
+        idx: Dict[str, list] = {}
+        for w, e in self.entries.items():
+            if e.noncomp_id:
+                idx.setdefault(e.noncomp_id, []).append(w)
+        self._noncomp_index = idx
+        self._noncomp_index_valid = True
+    # ── end concept association ──────────────────────────────────────────
 
     def save(self, path: str = "") -> bool:
         """Persist full vocabulary to disk."""
@@ -782,7 +848,6 @@ class ImpressionCascade:
         self.shards: Dict[str, EmotionShard] = {}
         self.seeds: Dict[str, ImpressionSeed] = {}
         self.relics: Dict[str, GhostRelic] = {}
-        self.entries: Dict[str, "LexicalEntry"] = {}
         self.total_energy_processed = 0
 
     def energy_to_shard(self, channels: Dict[str, float],
@@ -1761,13 +1826,30 @@ class SentenceComposer:
 
     def absorb(self, text: str, tone: str = 'neutral'):
         """
-        Extract sentence patterns from input text and add to template pool.
-        When OETS is available, creates scaffolded patterns with semantic
-        annotations based on the ontological depth of the words encountered.
+        FIX-A016: template minting RETIRED. Absorbed text no longer creates
+        authored skeletons in a template pool — structural learning flows
+        exclusively through the grammar motif lineage (observe_exchange,
+        welded into the live turn and both corpus passes), and vocabulary
+        flows through the lexicon with concept association (FIX-A015).
+        This method now forwards structure to the motif lineage when the
+        grammar engine is attached, and otherwise does nothing.
 
-        Author: Sunni (Sir) Morningstar
-        Validation: Skip correction turns to avoid learning incorrect patterns.
+        Author: Sunni (Sir) Morningstar & Cael Devo
         """
+        if not text or len(text.strip()) < 5:
+            return
+        try:
+            engine = getattr(self, "grammar_engine", None)
+            if engine is not None and hasattr(engine, "observe_exchange"):
+                engine.observe_exchange("", text, success=True,
+                                        clarity=0.6, tone=tone)
+        except Exception:
+            pass
+        return
+
+    def _absorb_retired(self, text: str, tone: str = 'neutral'):
+        """Original template-absorbing implementation, kept for reference
+        but unreachable. (FIX-A016 excision.)"""
         if not text or len(text.strip()) < 5:
             return
 
@@ -2183,90 +2265,266 @@ class SentenceComposer:
                 i_state: str,
                 personality: Optional[Dict[str, float]] = None) -> str:
         """
-        Compose a grammatical expression from evolving templates + lexicon.
-        Tracks words used for OETS feedback loop.
+        FIX-A016: TEMPLATE-FREE constraint composition.
+
+        Sentences are built from the structures SHE promoted (grammar motif
+        lineage) filled with words SHE crystallized into concept channels --
+        no authored skeletons anywhere in the path. Structure selection is
+        driven by the assembly's live axis pressures (best_for_pressure),
+        word selection by concept-channel lookup (find_by_noncomp) with
+        role-based fallback. When no motifs are promoted yet, a minimal
+        agent-action-object assembly from her own lexicon is used -- still
+        zero canned strings. Her fluency is now exactly her learning.
         """
         coherence = assembly.coherence if assembly.coherence else 0.5
         tone = offspring.tone or "neutral"
         traits = personality or {}
 
-        # Reset expression tracking
         self._last_words_used = []
         self._last_word_sources = {}
+        self._last_templates_used = []      # legacy field, kept for callers
+        self._last_motifs_used = []
 
-        # How many sentences
+        # Live constraint orientation from the assembly's adjusted axes
+        orientation = {}
+        try:
+            for ax in ("X", "T", "N", "B", "A"):
+                orientation[ax] = float((assembly.adjusted_axes or {}).get(ax, 0.5))
+        except Exception:
+            orientation = {ax: 0.5 for ax in ("X", "T", "N", "B", "A")}
+        outlet = max(0.0, min(1.0, sum(orientation.values()) / max(1, len(orientation))))
+
+        # Valence target derived from tone semantics (a scalar, not a script)
+        _tone_valence = {
+            "warm": 0.45, "gentle": 0.35, "playful": 0.5, "curious": 0.2,
+            "reflective": 0.05, "precise": 0.0, "focused": 0.0,
+            "determined": 0.25, "neutral": 0.0,
+        }
+        valence_target = _tone_valence.get(tone, 0.0)
+
         verbosity = traits.get('verbosity', 0.5)
-        base_count = 1 + int(coherence * 2) + int(verbosity > 0.6)
-        sentence_count = max(1, min(4, base_count))
+        sentence_count = max(1, min(4, 1 + int(coherence * 2) + int(verbosity > 0.6)))
+
+        engine = getattr(self, "grammar_engine", None)
+        lineage = getattr(engine, "_lineage", None) if engine is not None else None
 
         sentences = []
-
-        # Optional i-state frame as opener  -- low probability so templates dominate
-        introspection = traits.get('introspection', 0.5)
-        if random.random() < introspection * 0.2 and i_state in self.I_STATE_FRAMES:
-            opener = random.choice(self.I_STATE_FRAMES[i_state])
-            sentences.append(opener)
-            sentence_count -= 1
-
-        # Select templates from the evolving pool
-        pool = self.pool.get(tone, self.pool.get('neutral', []))
-        if not pool:
-            pool = self.pool.get('neutral', [])
-
-        templates_used = []
-        for _ in range(max(1, sentence_count)):
-            if not pool:
-                break
-            # Fitness-weighted selection with scaffolding bonus
-            weights = []
-            for t in pool:
-                w = max(0.05, t['fitness'])
-                w += t.get('scaffolding_level', 0) * 0.05
-                weights.append(w)
-
-            chosen = random.choices(pool, weights=weights, k=1)[0]
-            templates_used.append(chosen)
-            filled = self._fill_template(chosen['pattern'], tone, coherence,
-                                         chosen.get('semantic_constraints', {}),
-                                         chosen.get('cluster_references', []),
-                                         chosen.get('scaffolding_level', 0))
-            if filled:
-                sentences.append(filled)
-
-        # Optional question if curious trait is high
-        curiosity = traits.get('curiosity', 0.5)
-        if curiosity > 0.7 and random.random() < 0.4:
-            q_pool = self.pool.get('curious', pool)
-            if q_pool:
-                q_weights = [max(0.05, t['fitness']) for t in q_pool]
-                q_tmpl = random.choices(q_pool, weights=q_weights, k=1)[0]
-                q = self._fill_template(q_tmpl['pattern'], tone, coherence,
-                                        q_tmpl.get('semantic_constraints', {}),
-                                        q_tmpl.get('cluster_references', []),
-                                        q_tmpl.get('scaffolding_level', 0))
-                if q:
-                    sentences.append(q)
+        for s_i in range(sentence_count):
+            motif = None
+            if lineage is not None:
+                try:
+                    # Perturb orientation slightly per sentence so consecutive
+                    # sentences draw different structures under similar pressure
+                    _orient = {ax: v * (1.0 + 0.08 * ((s_i + hash(ax)) % 3 - 1))
+                               for ax, v in orientation.items()}
+                    motif = lineage.best_for_pressure(_orient, outlet)
+                except Exception:
+                    motif = None
+            sent = self._compose_from_motif(motif, orientation, valence_target,
+                                            i_state, s_i,
+                                            used_words=self._last_words_used)
+            if sent:
+                sentences.append(sent)
+                if motif is not None:
+                    self._last_motifs_used.append(motif)
 
         text = " ".join(sentences)
 
-        # Pace trimming
+        # Pace trimming (voice genome -- hers)
         if self.voice.pace < 0.3 and len(text.split()) > 15:
-            sentences = sentences[:2]
-            text = " ".join(sentences)
+            text = " ".join(sentences[:2])
 
-        # Store template usage for fitness feedback
-        self._last_templates_used = [(tone, t['pattern']) for t in templates_used]
         self._expression_count += 1
 
         return text
 
+    def _compose_from_motif(self, motif, orientation: Dict[str, float],
+                            valence_target: float, i_state: str,
+                            sentence_index: int,
+                            used_words: Optional[list] = None) -> str:
+        """Fill one motif's role sequence with concept-channel words."""
+        dominant_axis = max(orientation.items(), key=lambda kv: kv[1])[0]
+
+        # Role -> preferred concept characters on the dominant axis
+        _role_chars = {
+            "action":     ("OPERATOR", "COST"),
+            "object":     ("MAGNITUDE", "POLARITY", "DIFFERENCE"),
+            "descriptor": ("MAGNITUDE", "POLARITY"),
+            "connector":  (),
+            "agent":      (),
+        }
+        _role_lexroles = {
+            "action": "verb", "object": "noun",
+            "descriptor": "adjective", "connector": "connector",
+            "agent": "pronoun",
+        }
+
+        roles = []
+        if motif is not None:
+            try:
+                roles = [getattr(r, "value", str(r)) for r in motif.role_sequence]
+            except Exception:
+                roles = []
+        if not roles:
+            # Pre-promotion minimal assembly: agent-action-object from her
+            # own lexicon -- structure is naked but it is HERS.
+            roles = ["agent", "action", "object"]
+
+        words = list(used_words or [])  # cross-sentence diversity pressure
+        _new_start = len(words)
+        for r_i, role in enumerate(roles):
+            word = self._select_constraint_word(
+                role, dominant_axis,
+                _role_chars.get(role, ()),
+                _role_lexroles.get(role, "noun"),
+                valence_target, words,
+            )
+            if word:
+                words.append(word)
+
+        # Need at least subject+verb-grade content to emit
+        words = words[_new_start:]
+        if len(words) < 2:
+            return ""
+        sent = " ".join(words)
+        sent = sent[0].upper() + sent[1:]
+        if not sent.endswith((".", "!", "?")):
+            sent += "."
+        return sent
+
+    def _select_constraint_word(self, role: str, dominant_axis: str,
+                                chars: tuple, lex_role: str,
+                                valence_target: float,
+                                already: list) -> str:
+        """Concept-channel word selection with role fallback.
+
+        Priority: words SHE crystallized into the dominant axis's channels
+        (find_by_noncomp) -> any axis with the right character -> lexicon
+        role lookup. Diversity pressure: avoid repeating words within a
+        sentence and prefer lower usage_count among the top candidates.
+        """
+        import random as _r
+
+        if role == "agent":
+            # Her agent position is herself unless boundary pressure points
+            # outward -- derived, not scripted.
+            return "I" if dominant_axis != "B" or _r.random() < 0.7 else "you"
+
+        candidates = []
+        seen = set(w.lower() for w in already)
+
+        # EDIT (one-crystal doctrine): word candidates come first from HER
+        # EXISTING DPS crystals — resonance between the live dominant axis
+        # and each crystal's constraint_signature (stamped by
+        # process_synthesis), words drawn from "word" facets. Read-only:
+        # no crystal creation, no pipeline bypass.
+        dps = getattr(self, "dps", None)
+        if dps is not None:
+            try:
+                scored = []
+                for _cr in getattr(dps, "crystals", {}).values():
+                    sig = getattr(_cr, "constraint_signature", None)
+                    if not sig:
+                        continue
+                    dom = float(sig.get(dominant_axis, 0.0) or 0.0)
+                    mag = sum(abs(v) for v in sig.values()) or 1.0
+                    res = abs(dom) / mag           # axis share of the signature
+                    if res >= 0.3:
+                        scored.append((res, _cr))
+                scored.sort(key=lambda rc: -rc[0])
+                for _res, _cr in scored[:5]:
+                    for _f in _cr.facets.values():
+                        if _f.role != "word":
+                            continue
+                        _wd = str(_f.content or "").lower().strip()
+                        if not _wd or _wd in seen:
+                            continue
+                        _e = self.lexicon.entries.get(_wd)
+                        if _e is not None and (_e.role == lex_role or not chars):
+                            candidates.append(_e)
+                    if len(candidates) >= 6:
+                        break
+            except Exception:
+                pass
+
+        for ch in chars:
+            try:
+                found = self.lexicon.find_by_noncomp(
+                    f"{dominant_axis}:{ch}", valence_target)
+                candidates.extend(e for e in found
+                                  if e.word.lower() not in seen)
+            except Exception:
+                pass
+            if len(candidates) >= 6:
+                break
+
+        if not candidates and chars:
+            # Cross-axis: same character, any axis (concept family first)
+            for ax in ("X", "T", "N", "B", "A"):
+                if ax == dominant_axis:
+                    continue
+                try:
+                    found = self.lexicon.find_by_noncomp(
+                        f"{ax}:{chars[0]}", valence_target)
+                    candidates.extend(e for e in found
+                                      if e.word.lower() not in seen)
+                except Exception:
+                    pass
+                if len(candidates) >= 4:
+                    break
+
+        if not candidates:
+            try:
+                found = self.lexicon.find_by_role(lex_role)
+                candidates = [e for e in found if e.word.lower() not in seen]
+            except Exception:
+                candidates = []
+
+        if not candidates:
+            return ""
+
+        # Valence proximity then usage diversity among the top few
+        candidates.sort(key=lambda e: (abs(e.emotional_valence - valence_target),
+                                       e.usage_count))
+        top = candidates[:4]
+        chosen = _r.choice(top)
+        try:
+            self._last_words_used.append(chosen.word)
+            self._last_word_sources[chosen.word] = chosen.noncomp_id or chosen.role
+            chosen.usage_count += 1
+        except Exception:
+            pass
+        return chosen.word
+
     def feedback(self, fitness: float):
         """
-        Feed expression fitness back to the templates that produced it,
-        AND to the OETS for bidirectional learning.
+        FIX-A016: fitness now feeds the MOTIF LINEAGE that produced the
+        expression — selection pressure shapes HER structures, not an
+        authored template pool. (The old path sent fitness to canned
+        skeletons, so her expression evolution was optimizing which of
+        Sunni's templates scored best — blocking emergence at the
+        gradient level.) OETS word feedback unchanged.
         """
-        for tone, pattern in getattr(self, '_last_templates_used', []):
-            self.record_fitness(tone, pattern, fitness)
+        try:
+            engine = getattr(self, "grammar_engine", None)
+            lineage = getattr(engine, "_lineage", None) if engine else None
+            motifs = getattr(self, "_last_motifs_used", []) or []
+            if lineage is not None and motifs:
+                import hashlib as _hl
+                ctx = _hl.md5(" ".join(self._last_words_used)[:80]
+                              .encode("utf-8", errors="replace")).hexdigest()[:8]
+                for m in motifs:
+                    if fitness >= 0.5:
+                        lineage.record_success(
+                            m.role_sequence, ctx,
+                            len(self._last_words_used),
+                            {ax: 1.0 for ax in ("X", "T", "N", "B", "A")},
+                        )
+                    else:
+                        lineage.record_fail(m.role_sequence)
+        except Exception:
+            pass
+
 
         # OETS feedback: words learn from how well they performed
         if self._has_oets and self._last_words_used:
@@ -2718,10 +2976,258 @@ class SentenceComposer:
 # SECTION 10: ORCHESTRATOR - UNIFIED ENGINE
 # ============================================================================
 
-class ExpressionPerceptionEngine:
+def json_dumps_safe(obj) -> str:
+    """Deterministic serialization for representation fingerprinting."""
+    import json as _j
+    try:
+        return _j.dumps(obj, sort_keys=True)
+    except Exception:
+        return str(obj)
+
+
+class ExpressionPerceptionEngine(WarpCapable):
     """FIX-A013 note: save_lexicon() below is called by corpus_runner.py at
     mid-pass cadence saves and at end-of-ingestion; it never existed on this
-    engine, so corpus runs crashed with AttributeError before persisting."""
+    engine, so corpus runs crashed with AttributeError before persisting.
+
+    EDIT (representational discovery — the paradigm layer): this engine is
+    now WarpCapable for REPRESENTATIONS. The constraints (XTNBA) are fixed;
+    the representations of them are discoverable. v1 representation space:
+    the role→character affinity tables that encode words into the 25-channel
+    basis (previously authored, now evolvable). Insufficiency signal:
+    dispersion collapse — when distinct contexts keep encoding to nearly
+    identical profiles, the current representation is blind to differences
+    that exist. Trials are alternative affinity tables scored on whether
+    they restore distinguishability over the SAME lived events; promotion
+    commits the table as her active lens and propagates (feedback loop):
+    lexicon concept index invalidated, understanding registered, every
+    future encoding flows through the discovered representation."""
+
+    # Authored defaults — her seed representation, replaceable by discovery
+    _BASE_AFFINITY = {
+        "verb":      {"OPERATOR": 0.55, "COST": 0.2,  "MAGNITUDE": 0.25},
+        "adjective": {"MAGNITUDE": 0.55, "POLARITY": 0.3, "DIFFERENCE": 0.15},
+        "adverb":    {"MAGNITUDE": 0.55, "POLARITY": 0.3, "DIFFERENCE": 0.15},
+        "default":   {"MAGNITUDE": 0.45, "POLARITY": 0.3, "OPERATOR": 0.25},
+    }
+    _REPR_STATE_PATH = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "aurora_state", "representations.json")
+
+    def character_affinity(self, role: str, valence: float,
+                           word: str = "") -> Dict[str, float]:
+        """The ACTIVE representation: promoted discovered table if one
+        exists for this role-class, else the authored seed."""
+        promoted = getattr(self, "_repr_active", None) or {}
+        key = role if role in ("verb", "adjective", "adverb") else "default"
+        table = promoted.get(key) or self._BASE_AFFINITY.get(
+            key, self._BASE_AFFINITY["default"])
+        return dict(table)
+
+    def observe_encoding(self, role: str, valence: float, word: str,
+                         axes: Dict[str, float], profile: Dict[str, float],
+                         context_hash: str) -> None:
+        """Every encoding event is representational evidence. Detects
+        dispersion collapse across distinct contexts and spawns trial
+        representations (perturbed affinity tables) when it persists."""
+        try:
+            if not hasattr(self, "_repr_recent"):
+                from collections import deque
+                self._repr_recent = deque(maxlen=48)
+                self._repr_gap_count = 0
+                self._repr_active = self._load_representations()
+                if not hasattr(self, "_warp_trials"):
+                    self._init_warp()
+            self._repr_recent.append({
+                "role": role, "valence": float(valence or 0.0),
+                "word": word, "axes": dict(axes or {}),
+                "profile": dict(profile or {}), "ctx": context_hash,
+            })
+            if len(self._repr_recent) < 24:
+                return
+            events = list(self._repr_recent)
+            ctxs = {e["ctx"] for e in events}
+            if len(ctxs) < 8:
+                return
+            disp = self._encoding_dispersion(
+                [e["profile"] for e in events])
+            if disp >= 0.12:
+                self._repr_gap_count = 0
+                return
+            self._repr_gap_count += 1
+            from aurora_warp_protocol import GAP_PERSISTENCE_REQUIRED
+            if self._repr_gap_count < GAP_PERSISTENCE_REQUIRED:
+                return
+            self._repr_gap_count = 0
+            self._spawn_representation_trial(disp)
+        except Exception:
+            pass
+
+    @staticmethod
+    def _encoding_dispersion(profiles: List[Dict[str, float]]) -> float:
+        """Mean pairwise L1 distance over recent encodings — low dispersion
+        across diverse contexts = the representation is collapsing
+        distinctions that exist."""
+        if len(profiles) < 2:
+            return 1.0
+        import random as _r
+        total, n = 0.0, 0
+        idx = list(range(len(profiles)))
+        for _ in range(min(64, len(profiles) * 2)):
+            i, j = _r.sample(idx, 2)
+            a, b = profiles[i], profiles[j]
+            keys = set(a) | set(b)
+            total += sum(abs(a.get(k, 0.0) - b.get(k, 0.0)) for k in keys) / 2.0
+            n += 1
+        return total / max(1, n)
+
+    def _spawn_representation_trial(self, current_disp: float) -> None:
+        """Derive a candidate representation: a bounded perturbation of the
+        active affinity tables (derivation from what exists, never from
+        nothing — same law as every other WARP derivation)."""
+        import hashlib as _hl
+        import random as _r
+        from aurora_warp_protocol import WarpComponent, representation_degree
+        base = {k: dict(self.character_affinity(k, 0.0))
+                for k in ("verb", "adjective", "adverb", "default")}
+        seed = _hl.md5(json_dumps_safe(base).encode()).hexdigest()
+        rng = _r.Random(seed + str(len(self._warp_trials)))
+        candidate: Dict[str, Dict[str, float]] = {}
+        chars = ("POLARITY", "MAGNITUDE", "OPERATOR", "COST", "DIFFERENCE")
+        for key, table in base.items():
+            t = {c: max(0.02, table.get(c, 0.05)
+                        + rng.uniform(-0.2, 0.2)) for c in chars}
+            s = sum(t.values()) or 1.0
+            candidate[key] = {c: round(v / s, 4) for c, v in t.items()}
+        # Fingerprint: re-encode recent events through the candidate and
+        # express the candidate as the channel profile it produces.
+        fp: Dict[str, float] = {}
+        for e in list(self._repr_recent)[-12:]:
+            prof = self._encode_with(candidate, e["role"], e["axes"])
+            for ch, w in prof.items():
+                fp[ch] = fp.get(ch, 0.0) + w
+        comp = WarpComponent(
+            component_id="REPR:" + seed[:10],
+            level="representation",
+            axis_profile={k: round(v, 4) for k, v in fp.items()},
+            parent_ids=["authored_seed" if not getattr(self, "_repr_active", None)
+                        else "promoted_prior"],
+            name="repr_" + seed[:6],
+            parameters={"tables": candidate,
+                        "baseline_dispersion": round(current_disp, 4),
+                        "degrees": representation_degree(fp)},
+        )
+        if comp.component_id in self._warp_trials or \
+                comp.component_id in self._warp_promoted:
+            return
+        self._warp_trials[comp.component_id] = comp
+
+    @staticmethod
+    def _encode_with(tables: Dict[str, Dict[str, float]],
+                     role: str, axes: Dict[str, float]) -> Dict[str, float]:
+        key = role if role in ("verb", "adjective", "adverb") else "default"
+        chars = tables.get(key, tables.get("default", {}))
+        cw_total = sum(chars.values()) or 1.0
+        out: Dict[str, float] = {}
+        for ax, a_w in (axes or {}).items():
+            a_w = max(0.0, float(a_w or 0.0))
+            if a_w <= 0.05:
+                continue
+            for ch, c_w in chars.items():
+                out[f"{ax}:{ch}"] = a_w * (c_w / cw_total)
+        return out
+
+    # ── WarpCapable hooks (representation lifecycle) ────────────────────
+
+    def _get_axis_profiles(self) -> Dict[str, Dict[str, float]]:
+        return {cid: dict(c.axis_profile)
+                for cid, c in getattr(self, "_warp_promoted", {}).items()}
+
+    def _warp_level_name(self) -> str:
+        return "representation"
+
+    def _integrate_warp(self, component) -> None:
+        return  # representations apply only on PROMOTION (commit)
+
+    def _score_trial(self, component) -> float:
+        """Score = does the candidate restore distinguishability over the
+        SAME lived events the active representation collapsed? Plus a
+        translation-consistency gate: the candidate must broadly agree with
+        the active representation on dominant axes (new notation must
+        translate) — protection against a representation gaming its own
+        evaluation."""
+        try:
+            events = list(getattr(self, "_repr_recent", []))[-24:]
+            if len(events) < 8:
+                return 0.0
+            tables = component.parameters.get("tables", {})
+            cand_profiles, agree, n = [], 0, 0
+            for e in events:
+                cp = self._encode_with(tables, e["role"], e["axes"])
+                cand_profiles.append(cp)
+                if cp and e["profile"]:
+                    dom_c = max(cp.items(), key=lambda kv: kv[1])[0].split(":")[0]
+                    dom_a = max(e["profile"].items(),
+                                key=lambda kv: kv[1])[0].split(":")[0]
+                    agree += 1 if dom_c == dom_a else 0
+                    n += 1
+            cand_disp = self._encoding_dispersion(cand_profiles)
+            base_disp = float(component.parameters.get(
+                "baseline_dispersion", 0.1) or 0.1)
+            gain = min(1.0, max(0.0, (cand_disp - base_disp) / 0.25))
+            translation = (agree / n) if n else 0.0
+            if translation < 0.5:
+                return 0.0          # fails the invariance gate
+            return round(0.7 * gain + 0.3 * translation, 4)
+        except Exception:
+            return 0.0
+
+    def _dissolve_warp(self, component_id: str) -> None:
+        return  # nothing was applied during trial; nothing to remove
+
+    def commit_representation(self, component) -> None:
+        """THE FEEDBACK LOOP (Sunni's addition): a promoted representation
+        immediately becomes how she perceives. Active tables swap, the
+        commitment persists, the lexicon's concept index invalidates so
+        concept families re-form under the new lens, and the event is
+        available for understanding registration at the call site."""
+        try:
+            tables = component.parameters.get("tables")
+            if not tables:
+                return
+            self._repr_active = tables
+            self._save_representations(component)
+            try:
+                self.lexicon._invalidate_noncomp_index()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    def _save_representations(self, component) -> None:
+        try:
+            import json as _j
+            os.makedirs(os.path.dirname(self._REPR_STATE_PATH), exist_ok=True)
+            data = {"active": self._repr_active,
+                    "component_id": component.component_id,
+                    "name": component.name,
+                    "degrees": component.parameters.get("degrees", {}),
+                    "promoted_at": time.time()}
+            tmp = self._REPR_STATE_PATH + ".tmp"
+            with open(tmp, "w") as f:
+                _j.dump(data, f)
+            os.replace(tmp, self._REPR_STATE_PATH)
+        except Exception:
+            pass
+
+    def _load_representations(self):
+        try:
+            import json as _j
+            if os.path.exists(self._REPR_STATE_PATH):
+                return _j.load(open(self._REPR_STATE_PATH)).get("active")
+        except Exception:
+            pass
+        return None
 
     def save_lexicon(self) -> bool:
         """Persist the vocabulary via the lexicon's own save path."""
@@ -2796,9 +3302,15 @@ class ExpressionPerceptionEngine:
             pass  # heat is read at expression time via get_global_heat()
 
     def set_grammar(self, engine):
-        """Wire GrammarEngine for constraint-driven sentence structure."""
+        """Wire GrammarEngine for constraint-driven sentence structure.
+        FIX-A014: also attach to the SentenceComposer — template-free
+        composition builds sentences directly from promoted motifs."""
         if self.evo:
             self.evo.set_grammar(engine)
+        try:
+            self.composer.grammar_engine = engine
+        except Exception:
+            pass
 
     def get_thought_log(self, n: int = 10) -> List[Dict]:
         """Return last N internal thought traces (for /thought command)."""

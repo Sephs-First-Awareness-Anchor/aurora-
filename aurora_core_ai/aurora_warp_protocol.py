@@ -166,6 +166,66 @@ def axes_to_istates(
     return result
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# REPRESENTATIONAL DISCOVERY (EDIT — the paradigm layer)
+# ═══════════════════════════════════════════════════════════════════════════
+# Representation = FUNCTION, not form. Something represents a constraint if
+# it carries that constraint's information through one of the five character
+# lenses — which the architecture already defines:
+#
+#   POLARITY    → presence/absence, being vs non-being        (X-criterial)
+#   MAGNITUDE   → degree, intensity, how-much                  (all axes)
+#   OPERATOR    → transformation, action capacity              (N-criterial)
+#   COST        → effort, expenditure, work                    (N/T-criterial)
+#   DIFFERENCE  → distinguishability, inside/outside, deviation (B-criterial)
+#
+# So the root-level criteria are not a new definition set — they are the
+# 25-channel basis read functionally. A candidate representation of axis C
+# is any encoding whose output carries C-channel information; its DEGREE is
+# set by the pressure system (potency), per the doctrine: pressure
+# determines the level of constraint potency in any combination.
+
+REPRESENTATION_CRITERIA: Dict[str, str] = {
+    "X": "establishes presence, persistence, or distinguishability from non-being",
+    "T": "encodes change, sequence, duration, or continuity across states",
+    "N": "reflects capacity for action, transformation, or state change",
+    "B": "distinguishes inside from outside; defines separation or contact",
+    "A": "encodes directed selection, ownership, or attribution of action",
+}
+
+
+def representation_degree(
+    channel_weights: Dict[str, float],
+    axis_pressures: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
+    """
+    To what DEGREE does an encoded pattern represent each constraint?
+
+    Degree per axis = that axis's share of channel information, weighted by
+    live pressure potency (axis_pressures in [0,1], e.g. from the identity
+    field). High pressure on an axis amplifies how strongly patterns
+    carrying that axis's channels count as representing it — the pressure
+    system is the arbiter of constraint potency.
+    """
+    pressures = axis_pressures or {}
+    raw: Dict[str, float] = {}
+    total = 0.0
+    for ch, w in (channel_weights or {}).items():
+        ax = str(ch).split(":")[0]
+        if ax in ("X", "T", "N", "B", "A"):
+            v = abs(float(w or 0.0))
+            raw[ax] = raw.get(ax, 0.0) + v
+            total += v
+    if total <= 0:
+        return {ax: 0.0 for ax in ("X", "T", "N", "B", "A")}
+    out: Dict[str, float] = {}
+    for ax in ("X", "T", "N", "B", "A"):
+        share = raw.get(ax, 0.0) / total
+        potency = 0.5 + float(pressures.get(ax, 0.5) or 0.5)   # [0.5, 1.5]
+        out[ax] = round(min(1.0, share * potency), 4)
+    return out
+
+
 def istates_to_axes(istate_weights: Dict[str, float]) -> Dict[str, float]:
     """
     Collapse 10D I-state vector back to 5D axis magnitudes.

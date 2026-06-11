@@ -1573,6 +1573,104 @@ def heartbeat(systems: Dict[str, Any]):
     sync_der_to_oets(systems)   # keep OETS grounded after every energy tick
 
 
+_NEGATION_WORDS = {"not", "never", "without", "isnt", "wasnt", "dont", "didnt",
+                   "cant", "wont", "unlike", "differ", "different", "difference",
+                   "instead", "rather", "except", "neither", "nor"}
+_COST_WORDS = {"cost", "costs", "effort", "energy", "tired", "exhaust",
+               "expensive", "spend", "spent", "drain", "heavy", "burden",
+               "price", "pay", "paid", "lose", "lost", "loss"}
+
+
+def derive_channel_weights(geom: "ComparisonGeometry",
+                           role: str,
+                           valence: float,
+                           word: str = "",
+                           perception: Any = None) -> Dict[str, float]:
+    """FIX-A017: FULL basis projection of an absorption event — the live
+    geometry's axis activations distributed across characters by the word's
+    functional affinity. This feeds the unified crystal registry; the argmax
+    of this vector is what derive_noncomp_channel returns (compat)."""
+    if geom is None:
+        return {}
+    acts = {
+        "X": float(getattr(geom, "x_activation", 0.0) or 0.0),
+        "T": float(getattr(geom, "t_activation", 0.0) or 0.0),
+        "N": float(getattr(geom, "n_activation", 0.0) or 0.0),
+        "B": float(getattr(geom, "b_activation", 0.0) or 0.0),
+        "A": float(getattr(geom, "a_activation", 0.0) or 0.0),
+    }
+    if max(acts.values() or [0.0]) <= 0.05:
+        return {}
+    w = (word or "").lower()
+    # Character affinity distribution (tempered — no argmax dominance).
+    # EDIT (representational discovery): negation/cost words keep their
+    # functional overrides; everything else flows through the perception
+    # engine's ACTIVE representation — the authored seed until she
+    # discovers and commits a better one (the feedback loop).
+    if w in _NEGATION_WORDS:
+        chars = {"DIFFERENCE": 0.6, "POLARITY": 0.25, "MAGNITUDE": 0.15}
+    elif w in _COST_WORDS:
+        chars = {"COST": 0.6, "MAGNITUDE": 0.25, "OPERATOR": 0.15}
+    elif perception is not None and hasattr(perception, "character_affinity"):
+        chars = perception.character_affinity(role, float(valence or 0.0), w)
+    elif role == "verb":
+        chars = {"OPERATOR": 0.55, "COST": 0.2, "MAGNITUDE": 0.25}
+    elif role in ("adjective", "adverb"):
+        if abs(float(valence or 0.0)) >= 0.25:
+            chars = {"MAGNITUDE": 0.55, "POLARITY": 0.3, "DIFFERENCE": 0.15}
+        else:
+            chars = {"POLARITY": 0.55, "MAGNITUDE": 0.3, "DIFFERENCE": 0.15}
+    else:
+        chars = {"MAGNITUDE": 0.45, "POLARITY": 0.3, "OPERATOR": 0.25}
+    out: Dict[str, float] = {}
+    for ax, a_w in acts.items():
+        if a_w <= 0.05:
+            continue
+        for ch, c_w in chars.items():
+            out[f"{ax}:{ch}"] = a_w * c_w
+    return out
+
+
+def derive_noncomp_channel(geom: "ComparisonGeometry",
+                           role: str,
+                           valence: float,
+                           word: str = "") -> str:
+    """FIX-A015: derive a word's concept channel from absorption geometry.
+
+    Axis = the dominant activation in the geometry SHE extracted from the
+    utterance the word arrived in (X/T/N/B/A). Character = the word's
+    functional behavior: OPERATOR for verbs (transformation rules),
+    MAGNITUDE/POLARITY for descriptors (by valence neutrality), DIFFERENCE
+    for negation/contrast words, COST for effort/energy words, MAGNITUDE
+    for nouns. Returns '' when geometry carries no signal (all axes flat),
+    so silent utterances don't mis-crystallize vocabulary.
+    """
+    if geom is None:
+        return ""
+    acts = {
+        "X": float(getattr(geom, "x_activation", 0.0) or 0.0),
+        "T": float(getattr(geom, "t_activation", 0.0) or 0.0),
+        "N": float(getattr(geom, "n_activation", 0.0) or 0.0),
+        "B": float(getattr(geom, "b_activation", 0.0) or 0.0),
+        "A": float(getattr(geom, "a_activation", 0.0) or 0.0),
+    }
+    axis, peak = max(acts.items(), key=lambda kv: kv[1])
+    if peak <= 0.05:
+        return ""
+    w = (word or "").lower()
+    if w in _NEGATION_WORDS:
+        char = "DIFFERENCE"
+    elif w in _COST_WORDS:
+        char = "COST"
+    elif role == "verb":
+        char = "OPERATOR"
+    elif role in ("adjective", "adverb"):
+        char = "MAGNITUDE" if abs(float(valence or 0.0)) >= 0.25 else "POLARITY"
+    else:
+        char = "MAGNITUDE"
+    return f"{axis}:{char}"
+
+
 def physics_absorb_truth(
     systems: Dict[str, Any],
     absorption_field: AbsorptionField,
@@ -1623,13 +1721,118 @@ def physics_absorb_truth(
                 infer_word_valence,
             )
             for w in clean_words[:10]:  # Seed lexicon but don't template
+                _w_role = infer_word_role(w)
+                _w_val = infer_word_valence(w, tone)
                 perception.lexicon.add_word(
                     w,
                     meaning=f"corpus:{w}",
-                    role=infer_word_role(w),
-                    valence=infer_word_valence(w, tone),
+                    role=_w_role,
+                    valence=_w_val,
                     lineage="corpus",
                 )
+                # FIX-A015: crystallize the word into its concept channel.
+                # Axis comes from the geometry SHE extracted from this very
+                # utterance; character comes from the word's functional role:
+                #   verbs → OPERATOR (transformation rules)
+                #   adjectives/adverbs → MAGNITUDE / POLARITY (by valence)
+                #   negation/contrast → DIFFERENCE   effort/cost → COST
+                #   nouns → MAGNITUDE on the dominant axis
+                try:
+                    _ch = derive_noncomp_channel(geom, _w_role, _w_val, w)
+                    if _ch:
+                        perception.lexicon.associate(
+                            w, _ch,
+                            strength=max(0.1, geom.constraint_significance),
+                        )
+                except Exception:
+                    pass
+                # EDIT (representational discovery): every encoding event is
+                # representational evidence — the full-vector profile through
+                # her ACTIVE representation feeds dispersion-collapse
+                # detection; persistent collapse spawns trial
+                # representations.
+                try:
+                    _axes_o = {
+                        "X": float(getattr(geom, "x_activation", 0.0) or 0.0),
+                        "T": float(getattr(geom, "t_activation", 0.0) or 0.0),
+                        "N": float(getattr(geom, "n_activation", 0.0) or 0.0),
+                        "B": float(getattr(geom, "b_activation", 0.0) or 0.0),
+                        "A": float(getattr(geom, "a_activation", 0.0) or 0.0),
+                    }
+                    _prof_o = derive_channel_weights(
+                        geom, _w_role, _w_val, w, perception=perception)
+                    if _prof_o and hasattr(perception, "observe_encoding"):
+                        perception.observe_encoding(
+                            _w_role, _w_val, w, _axes_o, _prof_o,
+                            context_hash)
+                except Exception:
+                    pass
+                # EDIT (one-crystal doctrine): the word also joins its
+                # concept's EXISTING DPS crystal as a "word" facet — words
+                # accumulate ON concept crystals instead of living only in
+                # the flat lexicon. Strictly read-modify: concept_index
+                # lookup only, never _get_or_create — no new crystals, no
+                # pipeline bypass. The concept key is the utterance's
+                # strongest OETS concept when available.
+                # EDIT (constraint-expansive concepts): the utterance's
+                # constraint profile is checked against existing crystal
+                # coverage. Pressure sets POTENCY: the identity field's live
+                # axis pressures act as IVM polarity, so the same magnitudes
+                # under different pressure produce different I-state
+                # combinations — and therefore different concepts. A
+                # persistent gap derives a PROVISIONAL concept through WARP
+                # (genealogy consulted first); it solidifies only through
+                # the trial lifecycle (experiential recurrence).
+                try:
+                    _dps_x = getattr(systems.get("dimensional"), "dps", None)
+                    if _dps_x is not None and hasattr(_dps_x, "check_and_extend"):
+                        _axes_x = {
+                            "X": float(getattr(geom, "x_activation", 0.0) or 0.0),
+                            "T": float(getattr(geom, "t_activation", 0.0) or 0.0),
+                            "N": float(getattr(geom, "n_activation", 0.0) or 0.0),
+                            "B": float(getattr(geom, "b_activation", 0.0) or 0.0),
+                            "A": float(getattr(geom, "a_activation", 0.0) or 0.0),
+                        }
+                        if max(_axes_x.values() or [0.0]) > 0.05:
+                            _pol_x = {}
+                            try:
+                                _if_x = systems.get("identity_field")
+                                if _if_x is not None:
+                                    _ap_x = (_if_x.status() or {}).get(
+                                        "axis_pressures", {}) or {}
+                                    # pressure [0,1] → polarity [-1,+1]:
+                                    # high field pressure pushes the
+                                    # combination toward the negative
+                                    # (pressure) I-states.
+                                    _pol_x = {ax: 1.0 - 2.0 * float(
+                                        _ap_x.get(ax, 0.5) or 0.5)
+                                        for ax in ("X", "T", "N", "B", "A")}
+                            except Exception:
+                                _pol_x = {}
+                            from aurora_warp_protocol import axes_to_istates
+                            _prof_x = axes_to_istates(_axes_x, _pol_x)
+                            _dps_x.check_and_extend(
+                                _prof_x, source="corpus_absorption")
+                except Exception:
+                    pass
+                try:
+                    _dps_w = getattr(systems.get("dimensional"), "dps", None)
+                    if _dps_w is not None:
+                        _wl = w.lower()
+                        for _con, _cid in _dps_w.concept_index.items():
+                            # concept keys are text-derived (envelope.data);
+                            # a word joins crystals whose concept contains it
+                            if _wl in _con.lower():
+                                _cr_w = _dps_w.crystals.get(_cid)
+                                if _cr_w is not None:
+                                    _cr_w.add_facet(
+                                        "word", _wl,
+                                        confidence=max(
+                                            0.1,
+                                            geom.constraint_significance))
+                                break
+                except Exception:
+                    pass
         # FIX-A009: persist vocabulary growth — without this every corpus
         # run's lexical gains evaporated at process exit.
         try:
@@ -2223,6 +2426,51 @@ def run_corpus_ingestion(
                     matched: bool = False,
                     geom: Optional[ComparisonGeometry] = None):
         nonlocal _last_geom
+        # EDIT (constraint-expansive concepts): provisional concepts
+        # validate or dissolve on the same cadence everything else beats to.
+        try:
+            _dps_c = getattr(systems.get("dimensional"), "dps", None)
+            if _dps_c is not None and hasattr(_dps_c, "evaluate_warp_trials"):
+                _pr, _di = _dps_c.evaluate_warp_trials()
+                if verbose and (_pr or _di):
+                    print(f"  [WARP-DPS] concepts promoted={len(_pr)} "
+                          f"dissolved={len(_di)}")
+        except Exception:
+            pass
+        # EDIT (representational discovery + the COMMIT FEEDBACK LOOP):
+        # promotion is commitment — active tables swap, lexicon concept
+        # families re-form under the new lens, understanding registers the
+        # event. Discovery without propagation is a lab; this is an organ.
+        try:
+            _perc_c = systems.get("perception")
+            if _perc_c is not None and hasattr(_perc_c, "evaluate_warp_trials") \
+                    and getattr(_perc_c, "_warp_trials", None):
+                _rp, _rd = _perc_c.evaluate_warp_trials()
+                for _rid in _rp:
+                    _comp = _perc_c._warp_promoted.get(_rid)
+                    if _comp is None:
+                        continue
+                    _perc_c.commit_representation(_comp)
+                    try:
+                        _uc_r = systems.get("understanding_contract")
+                        if _uc_r is not None and hasattr(
+                                _uc_r, "register_meaning_event"):
+                            _uc_r.register_meaning_event({
+                                "kind": "representation_committed",
+                                "component": _rid,
+                                "name": getattr(_comp, "name", ""),
+                                "degrees": _comp.parameters.get("degrees", {}),
+                            })
+                    except Exception:
+                        pass
+                    if verbose:
+                        print(f"  [WARP-REPR] representation COMMITTED: "
+                              f"{getattr(_comp, 'name', _rid)} — all future "
+                              f"encodings perceive through it")
+                if verbose and _rd:
+                    print(f"  [WARP-REPR] representations dissolved={len(_rd)}")
+        except Exception:
+            pass
         if geom is not None:
             _last_geom = geom
 
@@ -2496,8 +2744,24 @@ def run_corpus_ingestion(
                 # accumulate demotion pressure.
                 if resp and getattr(resp, "content", ""):
                     _gf = float(fidelity_result.get("geometry_fidelity", 0.0) or 0.0)
+                    # ACCOMMODATION (template excision aftermath): the gate
+                    # was implicitly calibrated against template-fluent
+                    # output. Until the grammar restructuring gate opens
+                    # (>= 8 promoted motifs) the success floor relaxes to
+                    # 60% of unlock_min, then returns to full strictness —
+                    # prevents motif-success starvation without permanently
+                    # lowering the bar.
+                    _floor = unlock_min
+                    try:
+                        _ge_g = systems.get("grammar_engine")
+                        _gp = (_ge_g.status()["motif_lineage"]["promoted"]
+                               if _ge_g else 0)
+                        if int(_gp or 0) < 8:
+                            _floor = unlock_min * 0.6
+                    except Exception:
+                        pass
                     _weld_observe(content, resp.content,
-                                  success=_gf >= unlock_min, clarity=_gf)
+                                  success=_gf >= _floor, clarity=_gf)
                 # ── end weld ────────────────────────────────────────────────
 
                 # DPME governed by geometry fidelity
