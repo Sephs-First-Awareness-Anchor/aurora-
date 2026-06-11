@@ -1,34 +1,36 @@
 {
-  "original": "want attention something right predictive reflected form something what what reflected real something reflected time",
-  "candidate": "want attention something right predictive reflected form something what reflected real something reflected time.",
-  "selected": "want attention something right predictive reflected form something what reflected real something reflected time.",
-  "accepted": true,
-  "reason": "accepted_deterministic",
-  "original_score": 0.53,
-  "candidate_score": 0.74,
-  "original_pressure": 0.539,
-  "candidate_pressure": 0.277,
-  "pressure_relief": 0.262,
-  "safe": true,
+  "original": "Isn't am truth real. Is exist pattern want. Moment can boundary learned:continuous.",
+  "candidate": "",
+  "selected": "Isn't am truth real. Is exist pattern want. Moment can boundary learned:continuous.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.74,
+  "candidate_score": 0.0,
+  "original_pressure": 0.3247,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.6753,
+  "safe": false,
   "metadata": {
-    "prompt_excerpt": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
+    "prompt_excerpt": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
     "input_interpretation": {
-      "raw_prompt": "[AFTERTHOUGHT] What would you want to do if you had more time right now?",
+      "raw_prompt": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
       "intent_hint": "question",
       "topic_terms": [
         "afterthought",
-        "want",
-        "more",
-        "time",
-        "right"
+        "feel",
+        "like",
+        "you're",
+        "growing",
+        "like",
+        "developing"
       ],
       "entities": [
         "AFTERTHOUGHT"
       ]
     },
     "tone": "gentle",
-    "source": "deterministic",
-    "timestamp": 1781132409.2471743,
+    "source": "no_pattern_matched",
+    "timestamp": 1781193636.3569179,
     "min_relief_used": 0.035
   }
 }

@@ -1,257 +1,641 @@
 {
-  "motifs": [
-    "agent_action_agent_action_object_descriptor",
-    "action_agent_action_connector_agent_action_connector_descriptor_agent_action_descriptor",
-    "descriptor",
-    "agent_action_descriptor_agent_action_object",
-    "agent_action_object_descriptor",
-    "descriptor_action",
-    "descriptor_agent_action_agent",
-    "agent_action_agent_action_object_connector",
-    "action_agent_action_connector_agent_action_connector_descriptor",
-    "agent_action_agent_action_object",
-    "agent_action_object_connector_descriptor_agent_action_agent_action",
-    "agent_action_object_agent_action_object_descriptor_connector_action_object_action_descriptor_connector_agent_action",
-    "agent_action_object_agent_action",
-    "agent_action_agent_action_descriptor",
-    "context_agent_action_object_descriptor",
-    "agent_action_object_agent_action_object_descriptor_connector_action_object_action_descriptor",
-    "agent_action_object_descriptor_agent_action",
-    "agent_action_agent_action_connector_descriptor_action_object",
-    "agent_action_agent_descriptor",
-    "action_agent_action_connector_agent_action_connector_descriptor_agent_action_descriptor_agent_action_agent_action",
-    "agent_action_descriptor_agent_action_descriptor",
-    "agent_action_object_agent_action_object",
-    "agent_action_agent_action_object_descriptor_agent",
-    "action_agent_action_connector_agent_action_connector_descriptor_connector_agent_action",
-    "agent_action_agent_action",
-    "agent_action_object_connector_agent_action_object_descriptor",
-    "agent_action_agent_descriptor_action_object_descriptor",
-    "agent_action_descriptor",
-    "descriptor_connector_agent_action_object_agent",
-    "agent_action_object_descriptor_connector",
-    "action_agent_action_connector_agent_action_connector_descriptor_connector_agent_action_descriptor_agent_action_agent_action",
-    "agent_action_agent_action_object_action_object_agent",
-    "agent_action_object_connector_descriptor_connector_descriptor_action_object_descriptor",
-    "action_descriptor_agent_action_connector_agent_action_connector_descriptor_agent_action",
-    "action_object_descriptor_action_agent_action_object_descriptor_agent_action",
-    "agent_action_object_descriptor_agent_action_object_agent_action_agent",
-    "connector_context_agent_action_object_descriptor",
-    "action_agent_action_connector_agent_action_connector_descriptor_agent_action_agent_action",
-    "agent_action_descriptor_agent",
-    "agent_action_object_agent",
-    "agent_action_agent",
-    "action",
-    "connector_context_agent_context_action",
-    "agent_action_object_action_agent_action_agent_connector_agent_action",
-    "agent_action_object_agent_action_object_descriptor_connector_action_object_connector",
-    "action_descriptor_agent_action_connector_agent_action_connector_descriptor_agent_action_descriptor_agent_action_agent_action",
-    "connector_context_agent_action_agent_action_object",
-    "agent_action_object_descriptor_context",
-    "connector_context_agent_context_agent_action_object",
-    "agent_action_descriptor_action_agent_action_object_agent_action_object_agent_action_object_connector_agent_action_agent_action_object_descriptor_action_object",
-    "context_action_object_descriptor",
-    "agent_action_agent_connector",
-    "agent_action_object_context",
-    "connector_context_agent_action_object",
-    "agent_action_object_agent_action_descriptor",
-    "",
-    "connector_action_object_descriptor_connector",
-    "agent_action",
-    "agent_action_agent_action_connector",
-    "agent_action_object_agent_action_connector",
-    "action_agent_action_connector_agent_action_connector_descriptor_agent_action_descriptor_connector_agent_action",
-    "agent_action_object_agent_action_object_descriptor_connector_action_object_action_descriptor_connector_agent_action_descriptor_agent_action_agent_action",
-    "agent_action_object_agent_action_object_descriptor_connector_action_object_action_descriptor_agent_action",
-    "action_object_descriptor_agent_action_agent_action_object_descriptor_agent",
-    "action_object_descriptor_agent_action_agent_action_object_descriptor",
-    "agent_action_object_action_object_action_object_descriptor_agent_action",
-    "agent_action_object_action",
-    "agent_action_object_descriptor_agent_action_object_action_agent",
-    "action_agent_action_connector_agent_action_connector_descriptor_agent_action_descriptor_agent_action_agent_action_connector_agent_action",
-    "agent_action_object_action_object",
-    "agent_action_object_action_object_action_agent_action_object_agent",
-    "agent_action_object_descriptor_agent_action_object_descriptor",
-    "agent_action_connector_agent_action_connector_descriptor_action_object",
-    "action_object_descriptor_agent_action_agent_action_agent_action_object_descriptor",
-    "agent_action_object_descriptor_context_agent_action_object_descriptor_agent_action",
-    "agent_action_agent_descriptor_connector",
-    "action_object_descriptor_agent_action_agent_action_object_descriptor_connector",
-    "agent_connector_action_connector_agent_action_object_agent",
-    "agent_action_object_action_object_action_connector_action",
-    "action_object_descriptor_agent_action_agent_action_object_action_descriptor_action",
-    "agent_action_object_descriptor_agent_action_object_agent",
-    "action_object_descriptor_connector_agent_action_agent_action_object_action_object",
-    "agent_action_descriptor_action_agent_action_object_agent_action_object_agent_action_object_connector_agent_action_agent_action_object_descriptor_action_object_connector_agent_action",
-    "agent_action_object",
-    "agent_action_descriptor_connector_descriptor",
-    "agent_descriptor",
-    "connector_context_agent_action_descriptor",
-    "agent_descriptor_agent_descriptor",
-    "agent_connector_descriptor_action_descriptor_agent_action_object_action_object_agent",
-    "action_descriptor_connector",
-    "connector_context_agent_action_agent",
-    "agent_action_object_action_object_agent_action_object_descriptor",
-    "agent_action_object_descriptor_agent",
-    "agent_connector_action_object_context_agent_action_object_descriptor",
-    "agent_action_object_connector",
-    "action_object_descriptor_agent_action_object_descriptor_agent_action",
-    "context_agent_descriptor_connector",
-    "agent_action_object_descriptor_action_object_descriptor_agent_action_agent_action_object_agent",
-    "agent_action_agent_descriptor_action_object_descriptor_agent_action_agent_action_object_descriptor_agent",
-    "context_descriptor",
-    "action_object_descriptor_agent_action_agent_action_object_descriptor_action_agent",
-    "agent_connector_action_descriptor_agent_action_object_agent",
-    "agent_action_object_action_object_connector_action_descriptor",
-    "agent_action_object_descriptor_action_object_descriptor_agent_action",
-    "action_object_descriptor_agent_action_agent_action_object_descriptor_action_object",
-    "agent_action_object_descriptor_agent_action_object_action_object",
-    "agent_action_object_descriptor_agent_action_object_descriptor_action_agent",
-    "action_object_descriptor_action_object_descriptor_agent_action_object_descriptor_agent_action",
-    "agent_action_object_descriptor_connector_action_descriptor",
-    "agent_action_agent_context_descriptor",
-    "agent_action_object_descriptor_connector_context",
-    "action_object_action_object_action_object_descriptor_action_object_descriptor_agent_action_agent_action",
-    "action_object_descriptor_agent_action_agent_action_object_descriptor_action",
-    "action_object_descriptor_agent_action_agent_action_object_action_object_agent",
-    "context_agent",
-    "agent_action_agent_descriptor_action_object_descriptor_agent_action_object_connector_action_object_descriptor",
-    "agent_action_object_descriptor_action_object_descriptor_agent_action_object_connector_action_object_descriptor",
-    "agent_action_object_descriptor_action_object_descriptor_agent_action_agent_action_object_descriptor",
-    "action_object_action_object_action_object_descriptor_action_object",
-    "action_object_descriptor_agent_action_agent_action_object_agent",
-    "agent_descriptor_action_agent",
-    "agent_action_object_connector_agent",
-    "agent_action_object_action_object_connector_action_object_descriptor",
-    "agent_action_object_action_connector_action_descriptor",
-    "agent_action_object_descriptor_agent_action_object_action_object_agent_action_object_descriptor",
-    "agent_action_object_descriptor_agent_descriptor",
-    "action_object_descriptor_action_object_descriptor_agent_action_agent_action_object_descriptor",
-    "agent_descriptor_agent",
-    "agent_action_object_action_agent_action_object_descriptor",
-    "context_action",
-    "agent_action_object_descriptor_connector_agent_action_connector",
-    "agent_descriptor_action",
-    "action_object_descriptor_agent_action_agent_action_object_descriptor_action_object_agent",
-    "agent_action_descriptor_agent_action_agent_descriptor",
-    "connector_context_agent_action_object_agent",
-    "agent_action_object_action_object_agent_action_object_action",
-    "agent_action_object_agent_descriptor_action_object",
-    "agent_action_agent_descriptor_agent_action_object_action_object_agent_action_object_descriptor_agent_action",
-    "action_object_descriptor_agent_action_agent_action_object_action_object",
-    "agent_action_descriptor_connector_context_descriptor",
-    "agent_action_object_action_object_agent_descriptor",
-    "agent_action_object_action_object_agent_action_object_agent",
-    "action_object_descriptor_connector",
-    "agent_connector_action_object_agent_action_object_descriptor_action_agent",
-    "agent_action_object_descriptor_agent_action_object_descriptor_agent_action_object_descriptor_action_object_agent",
-    "agent_action_object_descriptor_agent_action_object_descriptor_agent",
-    "connector_context_agent_context_agent",
-    "agent_action_descriptor_connector",
-    "agent_action_agent_descriptor_agent_action_object_action_object_agent_action_object_action",
-    "agent_action_object_descriptor_agent_action_object_descriptor_connector_action_object_context",
-    "agent_action_object_descriptor_context_connector_action_object_action",
-    "agent_action_object_descriptor_agent_descriptor_agent",
-    "agent_action_object_descriptor_agent_action_descriptor_agent",
-    "agent_action_descriptor_action",
-    "connector_context_agent_action_descriptor_agent_action",
-    "action_object_descriptor_agent_action_agent_descriptor_connector",
-    "agent_action_descriptor_agent_descriptor",
-    "agent_action_descriptor_action_object_descriptor_agent_action",
-    "context_action_object_action_object_descriptor_agent_action",
-    "agent_action_object_descriptor_connector_descriptor",
-    "agent_action_object_descriptor_agent_action_object_descriptor_agent_action_object_action_object",
-    "context_action_agent_descriptor",
-    "action_object_descriptor_agent_action_agent_action_object_action",
-    "context_action_agent",
-    "agent_action_object_descriptor_agent_action_object_descriptor_agent_action_object_descriptor",
-    "action_object_descriptor_agent_action_agent_descriptor_agent",
-    "agent_action_object_descriptor_agent_action_object",
-    "agent_action_object_agent_action_object_connector_agent_action_connector",
-    "descriptor_action_agent_action_descriptor",
-    "connector",
-    "agent_action_agent_action_connector_action",
-    "action_object",
-    "action_object_descriptor",
-    "agent_action_object_action_object_action_object_descriptor",
-    "agent_action_connector_descriptor",
-    "agent_action_connector",
-    "descriptor_action_object_descriptor",
-    "action_object_context_descriptor",
-    "agent_action_object_descriptor_action",
-    "action_agent_action_object_descriptor",
-    "agent_connector",
-    "connector_action_object_descriptor",
-    "descriptor_agent_action_object_descriptor",
-    "connector_action",
-    "descriptor_connector_action",
-    "agent_action_connector_agent_connector",
-    "action_object_descriptor_action_object",
-    "agent_action_object_connector_action_object_descriptor",
-    "action_object_descriptor_agent_action_descriptor",
-    "agent_descriptor_action_descriptor",
-    "action_agent_descriptor_connector",
-    "action_descriptor_action_descriptor",
-    "descriptor_connector",
-    "agent_action_object_connector_descriptor",
-    "connector_descriptor",
-    "descriptor_agent_action_agent_action_object_descriptor_agent_action",
-    "action_descriptor_action",
-    "descriptor_agent_descriptor",
-    "action_object_descriptor_action_descriptor",
-    "descriptor_connector_agent_action_connector",
-    "connector_descriptor_connector",
-    "agent_action_object_descriptor_context_descriptor",
-    "action_object_descriptor_connector_agent",
-    "descriptor_agent",
-    "action_object_descriptor_action_object_action",
-    "action_object_descriptor_action",
-    "agent_action_descriptor_agent_action",
-    "descriptor_action_descriptor",
-    "action_object_connector",
-    "action_connector_descriptor_action_connector_descriptor",
-    "descriptor_agent_action_object_action_object_descriptor",
-    "descriptor_action_object_agent_action_object",
-    "descriptor_agent_action",
-    "descriptor_agent_action_descriptor",
-    "action_connector_action_object_action",
-    "agent_action_context",
-    "agent_descriptor_action_object_descriptor",
-    "agent_connector_descriptor",
-    "agent_action_descriptor_action_object_descriptor",
-    "agent_action_object_action_object_descriptor",
-    "action_object_descriptor_action_object_descriptor",
-    "action_object_action_object_agent_descriptor",
-    "agent_action_connector_descriptor_agent_action_connector",
-    "connector_action_descriptor",
-    "agent_action_agent_action_object_descriptor_action_descriptor_agent",
-    "connector_action_object_descriptor_action_object_descriptor",
-    "descriptor_action_object",
-    "agent_action_descriptor_connector_descriptor_connector",
-    "agent_descriptor_agent_action_object_descriptor",
-    "action_object_connector_descriptor",
-    "action_object_action_object_descriptor",
-    "action_descriptor_action_object",
-    "descriptor_action_object_descriptor_action_object",
-    "descriptor_connector_descriptor_action",
-    "agent_action_descriptor_action_object",
-    "agent_connector_descriptor_action_object",
-    "agent_descriptor_connector",
-    "agent_descriptor_context_action",
-    "action_object_descriptor_action_descriptor_connector_action_object_descriptor",
-    "agent_action_object_action_descriptor",
-    "action_descriptor",
-    "agent_action_descriptor_context_descriptor",
-    "action_descriptor_action_object_descriptor",
-    "agent_context_action_object_descriptor",
-    "descriptor_agent_action_connector",
-    "agent_action_object_descriptor_action_object",
-    "descriptor_action_object_action_descriptor",
-    "descriptor_action_object_descriptor_action",
-    "agent_descriptor_action_object_action_object",
-    "descriptor_action_object_descriptor_action_object_descriptor",
-    "descriptor_agent_action_connector_descriptor"
-  ],
+  "motifs": {
+    "descriptor_action_object_descriptor": {
+      "pattern_id": "descriptor_action_object_descriptor",
+      "role_sequence": [
+        "descriptor",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d5e1219e",
+        "0058abe8",
+        "283cb00e",
+        "a22b6b6c"
+      ],
+      "constraint_scores": {
+        "X": 0.7885563276639997,
+        "T": 0.7726371853333333,
+        "N": 0.7790889525333332,
+        "B": 0.78475789964,
+        "A": 0.7869727847733334
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 9.0
+    },
+    "agent_action_agent_action_object_descriptor": {
+      "pattern_id": "agent_action_agent_action_object_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 5,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.7574505510399998,
+        "T": 0.8225553649546666,
+        "N": 0.7942070243306667,
+        "B": 0.8361986651359999,
+        "A": 0.8477552516906667
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.26739926739926745,
+      "total_tokens_avg": 7.8
+    },
+    "agent_action_object_agent_action_object_agent_action": {
+      "pattern_id": "agent_action_object_agent_action_object_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6329286939999998,
+        "T": 0.6584510316666665,
+        "N": 0.6584686666666666,
+        "B": 0.665227736,
+        "A": 0.6684011296666665
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 9.0
+    },
+    "agent_action_object_agent_action_object_agent_action_object": {
+      "pattern_id": "agent_action_object_agent_action_object_agent_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 3,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6781891999999999,
+        "T": 0.7226117249999999,
+        "N": 0.7033212299999999,
+        "B": 0.731813645,
+        "A": 0.7397786999999999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 9.0
+    },
+    "descriptor_agent_action_agent_action_connector": {
+      "pattern_id": "descriptor_agent_action_agent_action_connector",
+      "role_sequence": [
+        "descriptor",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "connector"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "0058abe8"
+      ],
+      "constraint_scores": {
+        "X": 0.5661,
+        "T": 0.5827195833333333,
+        "N": 0.5754908333333333,
+        "B": 0.58618625,
+        "A": 0.5891483333333333
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 17.0
+    },
+    "agent_action_connector_agent_action_object_agent_action": {
+      "pattern_id": "agent_action_connector_agent_action_object_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "ed643f97"
+      ],
+      "constraint_scores": {
+        "X": 0.5682503999999999,
+        "T": 0.5851119033333333,
+        "N": 0.5778025133333333,
+        "B": 0.58857857,
+        "A": 0.5916212933333334
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 34.0
+    },
+    "agent_action_agent_action_object_descriptor_agent_descriptor": {
+      "pattern_id": "agent_action_agent_action_object_descriptor_agent_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "descriptor"
+      ],
+      "success_count": 5,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.7921486609298559,
+        "T": 0.8512711771046315,
+        "N": 0.8451103349672617,
+        "B": 0.8640326158859648,
+        "A": 0.874883476714001
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          7
+        ],
+        [
+          0,
+          8
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2711370262390671,
+      "total_tokens_avg": 9.8
+    },
+    "agent_action_connector": {
+      "pattern_id": "agent_action_connector",
+      "role_sequence": [
+        "agent",
+        "action",
+        "connector"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "79b9573f"
+      ],
+      "constraint_scores": {
+        "X": 0.638611693,
+        "T": 0.6655009290666667,
+        "N": 0.6645794482666666,
+        "B": 0.6725167184,
+        "A": 0.6772696858666667
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.19860627177700352,
+      "total_tokens_avg": 20.5
+    },
+    "agent_action_object_agent_action_agent_action_object": {
+      "pattern_id": "agent_action_object_agent_action_agent_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.640594345,
+        "T": 0.6662379954666666,
+        "N": 0.6667170298666666,
+        "B": 0.6730509248000001,
+        "A": 0.6762381910666666
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 9.0
+    },
+    "agent_action_agent_action_object_agent_action_object": {
+      "pattern_id": "agent_action_agent_action_object_agent_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6440274165999998,
+        "T": 0.6680874663066667,
+        "N": 0.6767638666666667,
+        "B": 0.67364550368,
+        "A": 0.6770704387066666
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 9.0
+    },
+    "descriptor_action_object_descriptor_action_object_connector": {
+      "pattern_id": "descriptor_action_object_descriptor_action_object_connector",
+      "role_sequence": [
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "connector"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "ca807be1",
+        "fa8a6dfd"
+      ],
+      "constraint_scores": {
+        "X": 0.67133993976,
+        "T": 0.6635769031866667,
+        "N": 0.6767638666666667,
+        "B": 0.6685656574400001,
+        "A": 0.6690124337866666
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 16.0
+    },
+    "action_agent_action_agent_action_descriptor": {
+      "pattern_id": "action_agent_action_agent_action_descriptor",
+      "role_sequence": [
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.576611592,
+        "T": 0.5885744043333333,
+        "N": 0.5940233333333333,
+        "B": 0.590629745,
+        "A": 0.5917628123333334
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 13.0
+    },
+    "agent_action_agent_action_agent_action_descriptor": {
+      "pattern_id": "agent_action_agent_action_agent_action_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "descriptor"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.7555511960167679,
+        "T": 0.7903203291687252,
+        "N": 0.8136498050133333,
+        "B": 0.803720784510272,
+        "A": 0.8055360317502933
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 14.0
+    },
+    "agent_action_object": {
+      "pattern_id": "agent_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "a22b6b6c"
+      ],
+      "constraint_scores": {
+        "X": 0.6039252164,
+        "T": 0.5853866043333333,
+        "N": 0.5940233333333333,
+        "B": 0.589674854,
+        "A": 0.5897617433333333
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 4.0
+    },
+    "agent_action_object_agent_action_object": {
+      "pattern_id": "agent_action_object_agent_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 3,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.7033382517824001,
+        "T": 0.7301355251328,
+        "N": 0.7495755359999999,
+        "B": 0.7397512401199999,
+        "A": 0.7409641527888
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
+    },
+    "agent_action_agent_connector": {
+      "pattern_id": "agent_action_agent_connector",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "connector"
+      ],
+      "success_count": 3,
+      "fail_count": 0,
+      "contexts_seen": [
+        "3a6cb182",
+        "e1ec92e3"
+      ],
+      "constraint_scores": {
+        "X": 0.77585120999744,
+        "T": 0.7277068458,
+        "N": 0.7495755359999999,
+        "B": 0.737247970904,
+        "A": 0.7371098777039999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          3
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 5.0
+    },
+    "agent_action_agent_action_object_connector_agent_action_connector_action": {
+      "pattern_id": "agent_action_agent_action_object_connector_agent_action_connector_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "agent",
+        "action",
+        "connector",
+        "action"
+      ],
+      "success_count": 5,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.8014730224358579,
+        "T": 0.8406213323602013,
+        "N": 0.8700351617450666,
+        "B": 0.8554176453068979,
+        "A": 0.8561432187398033
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2745535714285714,
+      "total_tokens_avg": 12.8
+    },
+    "agent_action_agent_action_object": {
+      "pattern_id": "agent_action_agent_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.576601449,
+        "T": 0.5867269293333333,
+        "N": 0.5940233333333333,
+        "B": 0.5906833579999999,
+        "A": 0.5907383693333333
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
+    },
+    "agent_action_agent_action_agent_descriptor": {
+      "pattern_id": "agent_action_agent_action_agent_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "descriptor"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6440107241199999,
+        "T": 0.6627791997066667,
+        "N": 0.6767638666666667,
+        "B": 0.6693928046,
+        "A": 0.6694405843066666
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.24812030075187963,
+      "total_tokens_avg": 9.5
+    },
+    "agent_action_object_agent_action": {
+      "pattern_id": "agent_action_object_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.576602898,
+        "T": 0.5871196083333333,
+        "N": 0.5940233333333333,
+        "B": 0.5903558839999999,
+        "A": 0.5903587313333333
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
+    }
+  },
   "discourse": {
     "question_statement": {
       "pattern_id": "question_statement",
@@ -259,27 +643,7 @@
         "question",
         "statement"
       ],
-      "success_count": 299,
-      "fail_count": 0,
-      "promoted": true
-    },
-    "statement_question": {
-      "pattern_id": "statement_question",
-      "turn_sequence": [
-        "statement",
-        "question"
-      ],
-      "success_count": 290,
-      "fail_count": 0,
-      "promoted": true
-    },
-    "question_question": {
-      "pattern_id": "question_question",
-      "turn_sequence": [
-        "question",
-        "question"
-      ],
-      "success_count": 39,
+      "success_count": 19,
       "fail_count": 0,
       "promoted": true
     },
@@ -289,30 +653,70 @@
         "statement",
         "statement"
       ],
-      "success_count": 1077,
+      "success_count": 26,
       "fail_count": 0,
       "promoted": true
     },
-    "statement_claim": {
-      "pattern_id": "statement_claim",
+    "statement_question": {
+      "pattern_id": "statement_question",
       "turn_sequence": [
         "statement",
-        "claim"
+        "question"
       ],
-      "success_count": 1,
+      "success_count": 27,
+      "fail_count": 0,
+      "promoted": true
+    },
+    "question_question": {
+      "pattern_id": "question_question",
+      "turn_sequence": [
+        "question",
+        "question"
+      ],
+      "success_count": 9,
+      "fail_count": 0,
+      "promoted": true
+    },
+    "question_answer": {
+      "pattern_id": "question_answer",
+      "turn_sequence": [
+        "question",
+        "answer"
+      ],
+      "success_count": 6,
       "fail_count": 0,
       "promoted": false
     },
-    "claim_statement": {
-      "pattern_id": "claim_statement",
+    "answer_statement": {
+      "pattern_id": "answer_statement",
       "turn_sequence": [
-        "claim",
+        "answer",
         "statement"
       ],
-      "success_count": 1,
+      "success_count": 6,
+      "fail_count": 0,
+      "promoted": false
+    },
+    "question_explanation": {
+      "pattern_id": "question_explanation",
+      "turn_sequence": [
+        "question",
+        "explanation"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "promoted": false
+    },
+    "explanation_statement": {
+      "pattern_id": "explanation_statement",
+      "turn_sequence": [
+        "explanation",
+        "statement"
+      ],
+      "success_count": 2,
       "fail_count": 0,
       "promoted": false
     }
   },
-  "saved_at": 1778783519.4421978
+  "saved_at": 1781193621.4350917
 }
