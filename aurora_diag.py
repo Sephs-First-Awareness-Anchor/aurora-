@@ -15,22 +15,21 @@ import time
 import datetime
 import traceback
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-STATE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_state")
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(_ROOT, "aurora_core_ai"))
+sys.path.insert(1, _ROOT)
+STATE_DIR = os.path.join(_ROOT, "aurora_state")
 
 # ─── QAO Journal reader ────────────────────────────────────────────────────────
 
 JOURNAL_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "aurora_state", "quasiarch_observer", "journal.jsonl"
+    _ROOT, "aurora_state", "quasiarch_observer", "journal.jsonl"
 )
 QAO_RUNTIME_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "aurora_state", "quasiarch_observer", "runtime_state.json"
+    _ROOT, "aurora_state", "quasiarch_observer", "runtime_state.json"
 )
 FAIL_POINTS_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    "aurora_state", "fail_points.json"
+    _ROOT, "aurora_state", "fail_points.json"
 )
 
 # QAO issue type → dream trainer dimension name (for pressure feedback)

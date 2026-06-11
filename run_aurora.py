@@ -1,4 +1,7 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_core_ai"))
 from foundational_contract import FoundationalContract
 from aurora_ivm import IVMLattice, RecursionLevel
 from aurora_internal.aurora_evolution_chamber import EvolutionaryChamber
