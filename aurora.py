@@ -6018,26 +6018,6 @@ def _run_understanding_self_audit(
     }
 
 
-def _run_gpt_articulation_check(
-    systems: Dict[str, Any],
-    user_text: str,
-    candidate_text: str,
-    *,
-    tone: str = "",
-    confidence: float = 0.0,
-    response_source: str = "",
-    understood: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
-    # Articulation coach removed — it was doing the work FOR Aurora instead of
-    # letting her own systems grow. She speaks from her own comprehension directly.
-    # Growth happens through corpus training and simulation, not GPT revision.
-    return {"used": False, "changed": False, "text": str(candidate_text or "").strip()}
-
-
-def _run_gpt_articulation_check_DISABLED_ORIGINAL(systems, user_text, candidate_text, **kwargs):
-    return {"used": False, "changed": False, "text": str(candidate_text or "").strip()}
-
-
 
 _LIVE_QUESTION_STOPWORDS = {
     "about", "actually", "adapt", "adjust", "affect", "alongside", "and", "answer", "answers", "apply",

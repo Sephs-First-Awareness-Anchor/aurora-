@@ -1934,10 +1934,6 @@ class PRGovernor:
             budget['used_time'] = 0.0
 
 
-class PTGovernor:
-    """Removed — output-assembly role replaced by ConstraintEmitter (aurora_constraint_emission.py)."""
-
-    def __init__(self): pass
 
 
 # ============================================================================
