@@ -1,36 +1,36 @@
 {
-  "total_fails": 2900,
+  "total_fails": 1125,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 124,
-      "severity_sum": 12.72720509980909,
+      "fail_count": 180,
+      "severity_sum": 14.066439466412566,
       "recent": [
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1024,
-        0.1038301282051282,
-        0.06709490740740741,
-        0.19164847883597885
+        0.05,
+        0.05,
+        0.05,
+        0.05,
+        0.1057875,
+        0.1057875,
+        0.05,
+        0.13420416666666668,
+        0.07104166666666667,
+        0.1057875,
+        0.1045327380952381,
+        0.07319444444444445,
+        0.05,
+        0.05398406862745098,
+        0.05,
+        0.05,
+        0.05,
+        0.1057875,
+        0.1057875,
+        0.05
       ],
       "examples": []
     },
     "context_carryover": {
-      "fail_count": 840,
-      "severity_sum": 394.067499999999,
+      "fail_count": 315,
+      "severity_sum": 157.5,
       "recent": [
         0.5,
         0.5,
@@ -56,26 +56,14 @@
       "examples": []
     },
     "ambiguity_handling": {
-      "fail_count": 11,
-      "severity_sum": 5.5,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
+      "fail_count": 0,
+      "severity_sum": 0.0,
+      "recent": [],
       "examples": []
     },
     "contradiction_handling": {
-      "fail_count": 418,
-      "severity_sum": 209.0,
+      "fail_count": 292,
+      "severity_sum": 146.0,
       "recent": [
         0.5,
         0.5,
@@ -101,8 +89,8 @@
       "examples": []
     },
     "implied_intent_inference": {
-      "fail_count": 499,
-      "severity_sum": 249.2814,
+      "fail_count": 82,
+      "severity_sum": 41.0,
       "recent": [
         0.5,
         0.5,
@@ -125,18 +113,7 @@
         0.5,
         0.5
       ],
-      "examples": [
-        {
-          "conversation_id": "pressure_route_articulation_gap_implied_intent_inference",
-          "source": "",
-          "dimension_score": 0.0,
-          "user_turns": [
-            "[PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on implied_intent_inference."
-          ],
-          "assistant_turns": [],
-          "timestamp": 1777801721.2167306
-        }
-      ]
+      "examples": []
     },
     "misunderstanding_repair": {
       "fail_count": 0,
@@ -145,8 +122,8 @@
       "examples": []
     },
     "uncertainty_signaling": {
-      "fail_count": 371,
-      "severity_sum": 136.03850000000037,
+      "fail_count": 190,
+      "severity_sum": 95.0,
       "recent": [
         0.5,
         0.5,
@@ -172,27 +149,11 @@
       "examples": []
     },
     "boundary_calibration": {
-      "fail_count": 128,
-      "severity_sum": 12.250000000000039,
+      "fail_count": 4,
+      "severity_sum": 2.0,
       "recent": [
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
-        0.05,
+        0.5,
+        0.5,
         0.5,
         0.5
       ],
@@ -211,115 +172,42 @@
       "examples": []
     },
     "semantic_precision": {
-      "fail_count": 313,
-      "severity_sum": 206.64240000000032,
-      "recent": [
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999,
-        0.6609999999999999
-      ],
-      "examples": [
-        {
-          "conversation_id": "pressure_route_articulation_gap_semantic_precision",
-          "source": "",
-          "dimension_score": 0.0,
-          "user_turns": [
-            "[PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on semantic_precision."
-          ],
-          "assistant_turns": [],
-          "timestamp": 1777801721.216675
-        }
-      ]
+      "fail_count": 0,
+      "severity_sum": 0.0,
+      "recent": [],
+      "examples": []
     },
     "adaptive_strategy_selection": {
-      "fail_count": 8,
-      "severity_sum": 4.0,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
+      "fail_count": 0,
+      "severity_sum": 0.0,
+      "recent": [],
       "examples": []
     },
     "compression_elaboration_fit": {
-      "fail_count": 68,
-      "severity_sum": 33.7814,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "examples": [
-        {
-          "conversation_id": "pressure_route_articulation_gap_compression_elaboration_fit",
-          "source": "",
-          "dimension_score": 0.0,
-          "user_turns": [
-            "[PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on compression_elaboration_fit."
-          ],
-          "assistant_turns": [],
-          "timestamp": 1777801721.2167072
-        }
-      ]
+      "fail_count": 0,
+      "severity_sum": 0.0,
+      "recent": [],
+      "examples": []
     },
     "perspective_integration": {
-      "fail_count": 120,
-      "severity_sum": 29.962000000000046,
+      "fail_count": 62,
+      "severity_sum": 31.0,
       "recent": [
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
-        0.2388,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,

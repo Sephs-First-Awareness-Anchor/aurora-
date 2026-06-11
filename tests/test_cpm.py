@@ -45,7 +45,7 @@ def _make_registry(crystal=None):
 # ConstraintHead
 # ---------------------------------------------------------------------------
 
-from aurora_core_ai.aurora_constraint_head import ConstraintHead, HeadPosition
+from aurora_constraint_head import ConstraintHead, HeadPosition
 
 
 class TestConstraintHead:
@@ -131,7 +131,7 @@ class TestConstraintHead:
 # IStateOperations
 # ---------------------------------------------------------------------------
 
-from aurora_core_ai.aurora_istate_operations import (
+from aurora_istate_operations import (
     apply_operation, istate_to_op, read_cell_cpm, cell_symbol,
     IStateOp, FieldOperation,
 )
@@ -239,7 +239,7 @@ class TestWalkLinkSequence:
         g = MagicMock()
         g.links = links
         # Attach the real walk_link_sequence to this mock
-        from aurora_core_ai.aurora_internal.constraint_genealogy import (
+        from aurora_internal.constraint_genealogy import (
             ConstraintGenealogyLogger
         )
         g.walk_link_sequence = lambda lid: ConstraintGenealogyLogger.walk_link_sequence(g, lid)
@@ -311,7 +311,7 @@ class TestWalkLinkSequence:
 # CPMSession integration
 # ---------------------------------------------------------------------------
 
-from aurora_core_ai.aurora_computational_model import CPMSession, CPM_FORMAL_DEFINITION
+from aurora_computational_model import CPMSession, CPM_FORMAL_DEFINITION
 
 
 class TestCPMSession:
@@ -335,7 +335,7 @@ class TestCPMSession:
         result = session.apply_istate('I_IS')
         assert result is not None
         assert result.success
-        from aurora_core_ai.aurora_istate_operations import read_cell_cpm
+        from aurora_istate_operations import read_cell_cpm
         assert read_cell_cpm(crystal)['assert_count'] == 1
 
     def test_apply_istate_before_advance_returns_none(self):
@@ -434,7 +434,7 @@ class TestPipelineIntegration:
     # -- Language Field n_cost modulation --
 
     def test_language_field_set_cpm(self):
-        from aurora_core_ai.aurora_language_field import LanguageField
+        from aurora_language_field import LanguageField
         from unittest.mock import MagicMock
         lf = LanguageField(identity_field=MagicMock())
         session, _, _, _ = self._session()
@@ -442,7 +442,7 @@ class TestPipelineIntegration:
         assert lf._cpm is session
 
     def test_cpm_n_cost_quasi_crystal_cheaper(self):
-        from aurora_core_ai.aurora_language_field import LanguageField
+        from aurora_language_field import LanguageField
         from unittest.mock import MagicMock
         lf = LanguageField(identity_field=MagicMock())
         session, _, _, _ = self._session(crystal=_make_crystal(stage='quasi'))
@@ -453,7 +453,7 @@ class TestPipelineIntegration:
         assert reduced >= 0.08  # N_COST_FLOOR
 
     def test_cpm_n_cost_unmapped_more_expensive(self):
-        from aurora_core_ai.aurora_language_field import LanguageField
+        from aurora_language_field import LanguageField
         from unittest.mock import MagicMock
         lf = LanguageField(identity_field=MagicMock())
         # Registry returns None → no crystal at address
@@ -467,7 +467,7 @@ class TestPipelineIntegration:
         assert increased > 0.50
 
     def test_cpm_n_cost_no_cpm_unchanged(self):
-        from aurora_core_ai.aurora_language_field import LanguageField
+        from aurora_language_field import LanguageField
         from unittest.mock import MagicMock
         lf = LanguageField(identity_field=MagicMock())
         assert lf._cpm is None
@@ -475,7 +475,7 @@ class TestPipelineIntegration:
         assert result == 0.45
 
     def test_cpm_n_cost_base_crystal_unchanged(self):
-        from aurora_core_ai.aurora_language_field import LanguageField
+        from aurora_language_field import LanguageField
         from unittest.mock import MagicMock
         lf = LanguageField(identity_field=MagicMock())
         session, _, _, _ = self._session(crystal=_make_crystal(stage='base'))
@@ -512,7 +512,7 @@ class TestPipelineIntegration:
         polarity = 0.9   # positive → I_DID
         result = session.apply_istate('I_DID', intensity=abs(polarity - 0.5) * 2.0)
         assert result is not None and result.success
-        from aurora_core_ai.aurora_istate_operations import read_cell_cpm
+        from aurora_istate_operations import read_cell_cpm
         assert read_cell_cpm(crystal)['commit_agency'] > 0
 
     def test_synthesis_negative_istate_on_low_polarity(self):
@@ -521,7 +521,7 @@ class TestPipelineIntegration:
         # polarity=0.2 → intensity=0.6 → negative I-state should apply pressure
         result = session.apply_istate('I_ISNT', intensity=abs(0.2 - 0.5) * 2.0)
         assert result is not None and result.success
-        from aurora_core_ai.aurora_istate_operations import read_cell_cpm
+        from aurora_istate_operations import read_cell_cpm
         assert read_cell_cpm(crystal)['negate_pressure'] > 0
 
 

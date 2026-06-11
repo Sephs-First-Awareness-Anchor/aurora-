@@ -20,8 +20,7 @@ import time
 import threading
 import traceback
 
-sys.path.insert(0, '/aurora/aurora_core_ai')
-sys.path.insert(1, '/aurora')
+sys.path.insert(0, '/aurora')
 
 # Prevent Aurora's runtime from trying to pip-install optional media packages
 # at boot — no network yet and the subprocess would hang or fail noisily.

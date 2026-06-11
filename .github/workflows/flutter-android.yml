@@ -7,7 +7,7 @@ on:
       - 'claude/**'
     paths:
       - 'flutter_app/**'
-      - 'aurora_core_ai/**'
+      - '*.py'
       - 'aurora_internal/**'
       - 'aurora_support_stack.py'
       - 'foundational_contract.py'

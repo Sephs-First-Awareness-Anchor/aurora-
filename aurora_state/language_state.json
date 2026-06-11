@@ -1,27 +1,23 @@
 {
   "version": "1.0",
   "dims": {
-    "grammar_complexity": 0.3601603063788683,
-    "sentence_length_budget": 0.06700516137378228,
-    "clause_depth": 0.33676918588852295,
-    "tense_stability": 0.4569379974254827,
-    "pronoun_stability": 0.6686213633457329,
-    "metaphor_allowance": 0.06700516137378228,
-    "uncertainty_tolerance": 0.06700516137378228,
-    "self_reference_capability": 1.0,
-    "dialogue_capability": 1.0,
-    "abstraction_capability": 0.06700516137378228
+    "grammar_complexity": 0.07420798716088038,
+    "sentence_length_budget": 0.07420798716088038,
+    "clause_depth": 0.07420798716088038,
+    "tense_stability": 0.1335764147251144,
+    "pronoun_stability": 0.1346966491422536,
+    "metaphor_allowance": 0.07420798716088038,
+    "uncertainty_tolerance": 0.07420798716088038,
+    "self_reference_capability": 0.07420798716088038,
+    "dialogue_capability": 0.07420798716088038,
+    "abstraction_capability": 0.07420798716088038
   },
   "unlocked": [
     "tense_stability",
-    "self_reference_capability",
-    "pronoun_stability",
-    "dialogue_capability",
-    "clause_depth",
-    "grammar_complexity"
+    "pronoun_stability"
   ],
-  "tier": "semantic",
-  "tier_index": 2,
-  "evolution_cycles": 200,
-  "timestamp": 1779061762.0775855
+  "tier": "nascent",
+  "tier_index": 0,
+  "evolution_cycles": 149,
+  "timestamp": 1771475461.1318178
 }

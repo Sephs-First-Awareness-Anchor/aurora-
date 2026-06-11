@@ -1,16 +1,16 @@
 {
   "total": 500,
-  "accepted": 365,
-  "acceptance_rate": 0.73,
-  "avg_pressure_relief": -0.0967,
+  "accepted": 360,
+  "acceptance_rate": 0.72,
+  "avg_pressure_relief": -0.1015,
   "top_reasons": [
     [
       "accepted_deterministic",
-      365
+      360
     ],
     [
       "no_candidate",
-      114
+      119
     ],
     [
       "candidate_did_not_relieve_pressure",
@@ -23,17 +23,17 @@
   ],
   "source_summary": {
     "deterministic": {
-      "count": 386,
-      "acceptance_rate": 0.9456,
-      "avg_pressure_relief": 0.0851
+      "count": 381,
+      "acceptance_rate": 0.9449,
+      "avg_pressure_relief": 0.0858
     },
     "no_pattern_matched": {
-      "count": 114,
+      "count": 119,
       "acceptance_rate": 0.0,
-      "avg_pressure_relief": -0.7122
+      "avg_pressure_relief": -0.7012
     }
   },
   "suggested_min_relief": 0.035,
   "suggested_mode": "normal",
-  "analyzed_at": 1781132309.8059447
+  "analyzed_at": 1781193576.361048
 }

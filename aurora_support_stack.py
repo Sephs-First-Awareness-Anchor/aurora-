@@ -24,12 +24,8 @@ StatePersistence = EnhancedStatePersistence
 
 # Governance / persistence / device-sync classes
 try:
-    from aurora_governance_persistence_gateway import (
-        AuroraStateSnapshot,
-        DeviceAwareness,
-        RcloneInterface,
-        DriveSync,
-    )
+    from aurora_governance_persistence_gateway import AuroraStateSnapshot
+    from aurora_persistence_utils import DeviceAwareness, RcloneInterface, DriveSync
 except Exception:
     AuroraStateSnapshot = None
     DeviceAwareness     = None

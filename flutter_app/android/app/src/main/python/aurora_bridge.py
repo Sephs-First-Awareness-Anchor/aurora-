@@ -1086,7 +1086,7 @@ class _DevelopmentTracker:
             return
         ConstraintVector = None
         try:
-            from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            from aurora_sedimemory import ConstraintVector  # type: ignore
         except ImportError:
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -1463,12 +1463,12 @@ def _is_confusion_signal(text: str) -> bool:
 
 def _setup_paths() -> None:
     """
-    Ensure aurora_core_ai/ and aurora_internal/ are on sys.path so that
+    Ensure ./ and aurora_internal/ are on sys.path so that
     the root aurora.py's bare imports (e.g. `from foundational_contract import`)
     resolve correctly.  The root aurora.py and support modules are also at the
     Chaquopy srcDir root, so they're importable with bare names by default.
     """
-    for pkg_name in ("aurora_core_ai", "aurora_internal"):
+    for pkg_name in (".", "aurora_internal"):
         try:
             pkg = __import__(pkg_name)
             pkg_path = list(pkg.__path__)[0]
@@ -1489,7 +1489,7 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         return
     try:
         try:
-            from aurora_core_ai.aurora_language_field import LanguageField  # type: ignore
+            from aurora_language_field import LanguageField  # type: ignore
         except ImportError:
             from aurora_language_field import LanguageField  # type: ignore  # Chaquopy flat layout
         if state_dir:
@@ -1501,7 +1501,7 @@ def _init_language_field(systems: dict, state_dir: str = "") -> None:
         systems["language_field"] = lang_field
         try:
             try:
-                from aurora_core_ai.aurora_language_field import get_language_field  # type: ignore
+                from aurora_language_field import get_language_field  # type: ignore
             except ImportError:
                 from aurora_language_field import get_language_field  # type: ignore
             get_language_field(
@@ -1527,7 +1527,7 @@ def _init_cpm(systems: dict) -> None:
     """
     global _cpm
     try:
-        from aurora_core_ai.aurora_computational_model import CPMSession  # type: ignore
+        from aurora_computational_model import CPMSession  # type: ignore
         ivm       = systems.get('lattice')
         genealogy = systems.get('genealogy')
         if ivm is None or _concept_registry is None:
@@ -1548,7 +1548,7 @@ def _init_cpm(systems: dict) -> None:
     # pressure propagation. Subsystems obtain it via systems['pressure_pump']
     # or from aurora_waveform_pressure.get_pump().
     try:
-        from aurora_core_ai.aurora_waveform_pressure import get_pump  # type: ignore
+        from aurora_waveform_pressure import get_pump  # type: ignore
         systems["pressure_pump"] = get_pump()
         log.info("[WaveformPressurePump] online")
     except Exception as exc:
@@ -1566,7 +1566,7 @@ def _start_curiosity_engine(systems: dict) -> None:
     it never blocks app shutdown.
     """
     try:
-        from aurora_core_ai.aurora_curiosity_engine import (  # type: ignore
+        from aurora_curiosity_engine import (  # type: ignore
             CuriosityEngine,
             start_curiosity_background,
         )
@@ -1603,7 +1603,7 @@ def _start_curiosity_engine(systems: dict) -> None:
     # coherence is low.  This is the dream-space substrate: Aurora processes
     # unresolved tensions in recursive self-simulation while not in conversation.
     try:
-        from aurora_core_ai.aurora_quantum_dream_substrate import (  # type: ignore
+        from aurora_quantum_dream_substrate import (  # type: ignore
             start_dream_substrate,
         )
         start_dream_substrate(systems, cycle_interval_s=600.0)
@@ -1641,17 +1641,17 @@ def initialize(state_dir: str = "") -> str:
     _ingested_concepts          = set()
     _dev_tracker                = _DevelopmentTracker()
     try:
-        from aurora_core_ai.concept_crystal import ConceptCrystalRegistry  # type: ignore
+        from concept_crystal import ConceptCrystalRegistry  # type: ignore
         _concept_registry = ConceptCrystalRegistry()
     except Exception as _ccr_exc:
         log.warning("ConceptCrystalRegistry unavailable: %s", _ccr_exc)
     try:
-        from aurora_core_ai.geological_baseline import GeologicalBaseline  # type: ignore
+        from geological_baseline import GeologicalBaseline  # type: ignore
         _geological_baseline = GeologicalBaseline()
     except Exception as _gb_exc:
         log.warning("GeologicalBaseline unavailable: %s", _gb_exc)
     try:
-        from aurora_core_ai.constraint_evolutionary_sim import ConstraintEvolutionarySimulator  # type: ignore
+        from constraint_evolutionary_sim import ConstraintEvolutionarySimulator  # type: ignore
         _evo_sim = ConstraintEvolutionarySimulator()
     except Exception as _evo_exc:
         log.warning("ConstraintEvolutionarySimulator unavailable: %s", _evo_exc)
@@ -1845,7 +1845,7 @@ def _seed_self_identity(systems: dict) -> None:
         sm = systems.get("sedimemory")
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
-                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                from aurora_sedimemory import ConstraintVector  # type: ignore
             except ImportError:
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -2108,7 +2108,7 @@ def _ground_self_identity_in_systems(systems: dict) -> None:
         # Import ConstraintVector once
         ConstraintVector = None
         try:
-            from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+            from aurora_sedimemory import ConstraintVector  # type: ignore
         except ImportError:
             try:
                 from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -2168,7 +2168,7 @@ def _mark_mic_live(systems: dict) -> None:
     """
     try:
         try:
-            from aurora_core_ai.aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
+            from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
                 read_surface_snapshot, write_surface_snapshot,
             )
         except Exception:
@@ -2394,7 +2394,7 @@ def _feed_sensory_crystal_frames(
         return
     try:
         try:
-            from aurora_core_ai.aurora_internal.aurora_sensory_crystal import (  # type: ignore
+            from aurora_internal.aurora_sensory_crystal import (  # type: ignore
                 audio_dict_to_crystal_20d, visual_dict_to_crystal_57d,
             )
         except ImportError:
@@ -3410,7 +3410,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
         _ifield_post = (_systems.get('identity_field') if _systems else None)
         if _pump_post is not None and _ifield_post is not None:
             try:
-                from aurora_core_ai.aurora_waveform_pressure import (  # type: ignore
+                from aurora_waveform_pressure import (  # type: ignore
                     WaveformPressurePump,
                 )
                 _syn_axes = {_dom: max(0.30, _syn_intensity)}
@@ -3589,7 +3589,7 @@ def handle_message(text: str, device_state: "dict | None" = None) -> str:
                     import sys as _sys
                     import importlib.util as _ilu
                     # Load corpus_runner from its canonical location
-                    for _try_mod in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+                    for _try_mod in ("corpus_runner", "corpus_runner"):
                         try:
                             _cr = __import__(_try_mod, fromlist=["evolve_chain"])
                             _evolve_chain = getattr(_cr, "evolve_chain", None)
@@ -3710,7 +3710,7 @@ def _search_for_gap(concept: str, gap_type: str = "semantic_gap") -> None:
 
     def _run():
         try:
-            from aurora_core_ai.aurora_internal.tool_registry import call as _tool_call  # type: ignore
+            from aurora_internal.tool_registry import call as _tool_call  # type: ignore
             subj = concept.strip()
             log.info("Gap search starting: concept=%r type=%s", subj, gap_type)
 
@@ -3814,7 +3814,7 @@ def _ingest_disambiguation(user_text: str, concept: str, existing_def: str) -> N
         sm = _systems.get("sedimemory")
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
-                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                from aurora_sedimemory import ConstraintVector  # type: ignore
             except ImportError:
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -3892,7 +3892,7 @@ def _inject_self_state_context(systems: dict) -> None:
         _pump_inst = systems.get("pressure_pump")
         if _pump_inst is None:
             try:
-                from aurora_core_ai.aurora_waveform_pressure import get_pump  # type: ignore
+                from aurora_waveform_pressure import get_pump  # type: ignore
                 _pump_inst = get_pump()
                 systems["pressure_pump"] = _pump_inst
             except Exception:
@@ -3900,7 +3900,7 @@ def _inject_self_state_context(systems: dict) -> None:
 
         if _pump_inst is not None and ifield is not None:
             try:
-                from aurora_core_ai.aurora_waveform_pressure import (  # type: ignore
+                from aurora_waveform_pressure import (  # type: ignore
                     WaveformPressurePump,
                 )
                 _dist = WaveformPressurePump.from_axis_state(
@@ -4471,7 +4471,7 @@ def _ingest_example(example_text: str, concept: str) -> None:
         sm = _systems.get("sedimemory")
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
-                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                from aurora_sedimemory import ConstraintVector  # type: ignore
             except ImportError:
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -4777,7 +4777,7 @@ def _ingest_correction_teaching(user_explanation: str, context: dict) -> None:
         sm = _systems.get("sedimemory")
         if sm and hasattr(sm, "ingest_event"):
             try:
-                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                from aurora_sedimemory import ConstraintVector  # type: ignore
             except ImportError:
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -5044,7 +5044,7 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
         sm = _systems.get("sedimemory")
         if sm is not None and hasattr(sm, "ingest_event"):
             try:
-                from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                from aurora_sedimemory import ConstraintVector  # type: ignore
             except ImportError:
                 try:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -5145,7 +5145,7 @@ def _ingest_skill_procedure(user_text: str, context: dict) -> None:
             sm = _systems.get("sedimemory")
             if sm is not None and hasattr(sm, "ingest_event"):
                 try:
-                    from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
                 except ImportError:
                     try:
                         from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -5346,18 +5346,18 @@ def _init_file_watch() -> None:
     import os as _os
     try:
         _bridge_dir = _os.path.dirname(_os.path.abspath(__file__))
-        # Walk up to find the repo root (aurora_core_ai lives alongside bridge dir)
+        # Walk up to find the repo root (aurora modules live alongside bridge dir)
         _repo_root = _bridge_dir
         for _ in range(6):
-            if _os.path.isdir(_os.path.join(_repo_root, "aurora_core_ai")):
+            if _os.path.isdir(_os.path.join(_repo_root, ".")):
                 break
             _repo_root = _os.path.dirname(_repo_root)
 
         _watch_rel = [
             "flutter_app/android/app/src/main/python/aurora_bridge.py",
-            "aurora_core_ai/aurora_curiosity_engine.py",
-            "aurora_core_ai/concept_crystal.py",
-            "aurora_core_ai/foundational_contract.py",
+            "./aurora_curiosity_engine.py",
+            "./concept_crystal.py",
+            "./foundational_contract.py",
             "aurora_dream_trainer.py",
         ]
         snap = {}
@@ -5366,7 +5366,7 @@ def _init_file_watch() -> None:
             if _os.path.isfile(p):
                 snap[p] = _os.stat(p).st_mtime
         # Also watch any aurora.py in the core
-        for dirpath, _, fnames in _os.walk(_os.path.join(_repo_root, "aurora_core_ai")):
+        for dirpath, _, fnames in _os.walk(_os.path.join(_repo_root, ".")):
             for fn in fnames:
                 if fn == "aurora.py":
                     p = _os.path.join(dirpath, fn)
@@ -5470,7 +5470,7 @@ def _broadcast_crystal_promotions(systems: dict) -> None:
 
         _CV = None
         try:
-            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
         except ImportError:
             try:
                 from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
@@ -5558,7 +5558,7 @@ def _deposit_gap_resolution_retrospective(
 
         _CV = None
         try:
-            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
         except ImportError:
             try:
                 from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
@@ -5626,7 +5626,7 @@ def _on_attention_window_close(modality: str) -> None:
 
         _CV = None
         try:
-            from aurora_core_ai.aurora_sedimemory import ConstraintVector as _CV  # type: ignore
+            from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
         except ImportError:
             try:
                 from aurora_sedimemory import ConstraintVector as _CV  # type: ignore
@@ -6539,7 +6539,7 @@ def _deposit_curiosity_conclusion(conclusion: dict, identity_delta: str) -> None
         return
     ConstraintVector = None
     try:
-        from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+        from aurora_sedimemory import ConstraintVector  # type: ignore
     except ImportError:
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -6698,7 +6698,7 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                 def _pursue_study(_sys=_systems):
                     try:
                         _cr = __import__(
-                            "aurora_core_ai.corpus_runner",
+                            "corpus_runner",
                             fromlist=["corpus_study_cycle"],
                         )
                         _cr.corpus_study_cycle(_sys, verbose=False)
@@ -6712,7 +6712,7 @@ def _run_curiosity_session(n_cycles: int | None, duration_s: float | None) -> No
                         with _axis_state_lock:
                             _ax = {k: _last_axis_state.get(k, 0.5) for k in "XTNBA"}
                         _cr = __import__(
-                            "aurora_core_ai.corpus_runner",
+                            "corpus_runner",
                             fromlist=["evolve_identity"],
                         )
                         class _GP:
@@ -6821,8 +6821,8 @@ def _init_self_entity(systems: dict) -> None:
         log.debug("_init_self_entity: no simulation engine in systems")
         return
     try:
-        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
-        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+        from foundational_contract import ExistenceMode  # type: ignore
+        from aurora_simulation_engine import EntityDepth  # type: ignore
         entity = engine.spawn_entity(
             "i_is",
             depth=EntityDepth.SURFACE,
@@ -6848,7 +6848,7 @@ def _feed_self_entity(cur_ax: dict) -> dict:
     if _self_entity is None:
         return {}
     try:
-        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        from foundational_contract import ExistenceMode  # type: ignore
         # Map axis dimensions to experience channels so the ImpressionCascade
         # can read Aurora's constraint state natively.
         experience: dict = {
@@ -6901,7 +6901,7 @@ def _deposit_self_state_snapshot() -> None:
 
     ConstraintVector = None
     try:
-        from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+        from aurora_sedimemory import ConstraintVector  # type: ignore
     except ImportError:
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore
@@ -6968,8 +6968,8 @@ def _ensure_entity(label: str, i_state: str = "i_other") -> None:
     if engine is None or not hasattr(engine, "spawn_entity"):
         return
     try:
-        from aurora_core_ai.foundational_contract import ExistenceMode   # type: ignore
-        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+        from foundational_contract import ExistenceMode   # type: ignore
+        from aurora_simulation_engine import EntityDepth  # type: ignore
         entity = engine.spawn_entity(
             i_state,
             depth=EntityDepth.SURFACE,
@@ -6993,7 +6993,7 @@ def _update_entity_model(label: str, channels: dict) -> dict:
     if entity is None:
         return {}
     try:
-        from aurora_core_ai.foundational_contract import ExistenceMode  # type: ignore
+        from foundational_contract import ExistenceMode  # type: ignore
         experience = {
             "channels": {
                 "existence":  float(channels.get("X", 0.5)),
@@ -7032,8 +7032,8 @@ def _predict_self_impact(scenario_channels: dict) -> dict:
     if engine is None or not hasattr(engine, "spawn_entity"):
         return {}
     try:
-        from aurora_core_ai.foundational_contract import ExistenceMode   # type: ignore
-        from aurora_core_ai.aurora_simulation_engine import EntityDepth  # type: ignore
+        from foundational_contract import ExistenceMode   # type: ignore
+        from aurora_simulation_engine import EntityDepth  # type: ignore
 
         # Spawn a throw-away entity seeded with the current self-axis state
         temp = engine.spawn_entity("i_predict", depth=EntityDepth.SURFACE, mode=ExistenceMode.BOUNDED)
@@ -7281,7 +7281,7 @@ def _autonomous_relief(systems: dict) -> None:
             pass
         # Evo chain — processes constraint tension into structural identity change.
         try:
-            for _try_mod in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            for _try_mod in ("corpus_runner", "corpus_runner"):
                 try:
                     _cr = __import__(_try_mod, fromlist=["evolve_chain"])
                     _ec = getattr(_cr, "evolve_chain", None)
@@ -7877,7 +7877,7 @@ def provide_screen_observation(payload_json: str) -> None:
 
         state_dir = str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
         try:
-            from aurora_core_ai.aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
+            from aurora_internal.dual_strata.sensory_snapshot_channel import (  # type: ignore
                 read_surface_snapshot, write_surface_snapshot,
             )
         except Exception:
@@ -8348,7 +8348,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
             return f"crystal {'reseeded' if seeded else 'n/a'}, baseline refreshed"
 
         elif stage_id == "study":
-            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            for _try in ("corpus_runner", "corpus_runner"):
                 try:
                     cr = __import__(_try, fromlist=["corpus_study_cycle"])
                     cr.corpus_study_cycle(_systems, verbose=False)
@@ -8366,7 +8366,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
             return "5 curiosity cycles started"
 
         elif stage_id == "evo_chain":
-            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            for _try in ("corpus_runner", "corpus_runner"):
                 try:
                     cr = __import__(_try, fromlist=["evolve_chain"])
                     with _axis_state_lock:
@@ -8387,7 +8387,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
             return "skipped (corpus_runner.evolve_chain unavailable)"
 
         elif stage_id == "identity":
-            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            for _try in ("corpus_runner", "corpus_runner"):
                 try:
                     cr = __import__(_try, fromlist=["evolve_identity"])
                     with _axis_state_lock:
@@ -8406,7 +8406,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
             return "skipped (corpus_runner.evolve_identity unavailable)"
 
         elif stage_id == "voice":
-            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            for _try in ("corpus_runner", "corpus_runner"):
                 try:
                     cr = __import__(_try, fromlist=["evolve_voice"])
                     cr.evolve_voice(_systems, quality=0.72, matched=True)
@@ -8426,7 +8426,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
             return f"{gens} generations run"
 
         elif stage_id == "consolidate":
-            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            for _try in ("corpus_runner", "corpus_runner"):
                 try:
                     cr = __import__(_try, fromlist=["consolidate"])
                     cr.consolidate(_systems)
@@ -8437,7 +8437,7 @@ def _run_gauntlet_stage(stage_id: str) -> str:
             return "skipped (corpus_runner.consolidate unavailable)"
 
         elif stage_id == "simulation":
-            for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+            for _try in ("corpus_runner", "corpus_runner"):
                 try:
                     cr = __import__(_try, fromlist=["simulation_burst"])
                     res = cr.simulation_burst(_systems, episodes=2, verbose=False)
@@ -8545,7 +8545,7 @@ def trigger_evo_cycle(ticks: int = 20) -> str:
     if _systems is None:
         return _j.dumps({"status": "error"})
     def _go():
-        for _try in ("aurora_core_ai.corpus_runner", "corpus_runner"):
+        for _try in ("corpus_runner", "corpus_runner"):
             try:
                 cr = __import__(_try, fromlist=["evolve_chain"])
                 with _axis_state_lock:
