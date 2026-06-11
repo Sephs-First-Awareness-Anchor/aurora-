@@ -1765,7 +1765,7 @@ _reg("desktop_media_capture", "Listen to the host system internal audio output",
 def _query_curiosity_log(max_entries: int = 5, **_) -> ToolResult:
     """Read the last few entries from Aurora's autonomous curiosity log (thought_chain.jsonl)."""
     try:
-        # Path relative to aurora_core_ai/aurora_internal/tool_registry.py
+        # Path relative to aurora_internal/tool_registry.py
         # Log is in aurora_logs/thought_chain.jsonl at the repo root.
         log_path = Path(__file__).resolve().parents[2] / "aurora_logs" / "thought_chain.jsonl"
         if not log_path.exists():

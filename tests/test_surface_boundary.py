@@ -11,7 +11,6 @@ import sys
 import os
 import types
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "aurora_core_ai"))
 
 PASS = "\033[92mPASS\033[0m"
 FAIL = "\033[91mFAIL\033[0m"

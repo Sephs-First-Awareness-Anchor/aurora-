@@ -81,7 +81,7 @@ class ConstraintHead:
 
         # Bucket key via the registry's own static method
         try:
-            from aurora_core_ai.concept_crystal import ConceptCrystalRegistry
+            from concept_crystal import ConceptCrystalRegistry
             bucket = ConceptCrystalRegistry._to_bucket(axes)
         except Exception:
             bucket = tuple(round(axes.get(k, 0.5) / 0.10) * 0.10 for k in ("X", "T", "N", "B", "A"))

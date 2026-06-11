@@ -54,7 +54,7 @@ DEFAULT_SKIP_SUFFIXES = {
 
 DEFAULT_CANDIDATES = [
     "aurora_state_backup",
-    "aurora_core_ai",
+    
     "Models",
 ]
 

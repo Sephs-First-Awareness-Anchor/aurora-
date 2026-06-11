@@ -1,7 +1,6 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_core_ai"))
 import threading
 import time
 import json

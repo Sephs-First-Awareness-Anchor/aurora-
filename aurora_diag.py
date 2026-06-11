@@ -16,7 +16,6 @@ import datetime
 import traceback
 
 _ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(_ROOT, "aurora_core_ai"))
 sys.path.insert(1, _ROOT)
 STATE_DIR = os.path.join(_ROOT, "aurora_state")
 

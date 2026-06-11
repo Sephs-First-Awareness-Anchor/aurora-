@@ -18,7 +18,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pytest
-from aurora_core_ai.aurora_waveform_pressure import (
+from aurora_waveform_pressure import (
     PressureDisturbance,
     WaveformPressurePump,
     get_pump,
@@ -257,7 +257,7 @@ class TestCouplingPhysics:
 class TestQAOPressureTracing:
     def test_record_and_retrieve(self):
         import tempfile
-        from aurora_core_ai.aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
+        from aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
         with tempfile.TemporaryDirectory() as tmpdir:
             qao = AuroraQuasiArchObserver(state_dir=tmpdir, mode="shadow")
             summary = {
@@ -272,7 +272,7 @@ class TestQAOPressureTracing:
 
     def test_provenance_filtering(self):
         import tempfile
-        from aurora_core_ai.aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
+        from aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
         with tempfile.TemporaryDirectory() as tmpdir:
             qao = AuroraQuasiArchObserver(state_dir=tmpdir, mode="shadow")
             qao.record_observation("target", {"data": "x"})  # OBSERVER provenance
@@ -284,7 +284,7 @@ class TestQAOPressureTracing:
 
     def test_waveform_turn_summary_structure(self):
         import tempfile
-        from aurora_core_ai.aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
+        from aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
         with tempfile.TemporaryDirectory() as tmpdir:
             qao = AuroraQuasiArchObserver(state_dir=tmpdir, mode="shadow")
             qao.record_pressure_disturbance({
@@ -304,7 +304,7 @@ class TestQAOPressureTracing:
 
     def test_empty_summary(self):
         import tempfile
-        from aurora_core_ai.aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
+        from aurora_internal.aurora_quasiarch_observer import AuroraQuasiArchObserver
         with tempfile.TemporaryDirectory() as tmpdir:
             qao = AuroraQuasiArchObserver(state_dir=tmpdir, mode="shadow")
             s = qao.waveform_turn_summary()
@@ -324,7 +324,7 @@ class TestCuriosityManifoldSelfSelection:
         return {"identity_field": mock}
 
     def _make_engine(self, systems: dict):
-        from aurora_core_ai.aurora_curiosity_engine import CuriosityEngine
+        from aurora_curiosity_engine import CuriosityEngine
         return CuriosityEngine(
             pressure_source=None,
             field_map=None,

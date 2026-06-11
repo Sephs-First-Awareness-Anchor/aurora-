@@ -25,8 +25,8 @@ import traceback
 from typing import Any, Dict, List, Optional
 
 # ── path ──────────────────────────────────────────────────────────────────────
-# HERE (aurora_core_ai/) must come first so "import aurora" resolves
-# aurora_core_ai/aurora.py, not the root proxy aurora.py.
+# HERE must come first so "import aurora" resolves
+# aurora.py in this directory.
 # PARENT goes second so aurora_support_stack and friends are findable.
 HERE   = os.path.dirname(os.path.abspath(__file__))
 PARENT = os.path.dirname(HERE)

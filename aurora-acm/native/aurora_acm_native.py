@@ -36,7 +36,7 @@ def _try_load_collective() -> None:
     global _COLLECTIVE
     try:
         _here = os.path.dirname(os.path.abspath(__file__))
-        _ai   = os.path.normpath(os.path.join(_here, '..', '..', 'aurora_core_ai'))
+        _ai   = os.path.normpath(os.path.join(_here, '..', '..'))
         if _ai not in sys.path:
             sys.path.insert(0, _ai)
         from foundational_contract import FoundationalContract

@@ -30,7 +30,7 @@ import traceback
 # ── Path setup ────────────────────────────────────────────────────────────────
 
 _ROOT = os.path.dirname(os.path.abspath(__file__))
-_CORE = os.path.join(_ROOT, "aurora_core_ai")
+_CORE = _ROOT
 _MANIFOLD = os.path.join(_ROOT, "aurora_manifold_directory")
 
 for _p in (_ROOT, _CORE, _MANIFOLD):

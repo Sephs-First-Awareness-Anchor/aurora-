@@ -568,7 +568,7 @@ def _deposit_evo_insight(sedimemory: Any, best: Tuple, generation: int) -> None:
     """Deposit the best-fitness axis configuration as an insight into SediMemory."""
     fit, _, best_axes = best
     try:
-        from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+        from aurora_sedimemory import ConstraintVector  # type: ignore
     except ImportError:
         try:
             from aurora_sedimemory import ConstraintVector  # type: ignore

@@ -81,7 +81,7 @@ def _pressure(
 
 def _get_rel_type():
     try:
-        from aurora_core_ai.aurora_internal.aurora_ontological_scaffolding import RelationType
+        from aurora_internal.aurora_ontological_scaffolding import RelationType
         return RelationType
     except ImportError:
         try:

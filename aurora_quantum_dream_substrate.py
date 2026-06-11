@@ -34,7 +34,7 @@ The dream uses real memory as its content, never generated placeholders.
 
 Wire-up:
   In aurora_bridge._start_curiosity_engine() (or alongside it):
-    from aurora_core_ai.aurora_quantum_dream_substrate import start_dream_substrate
+    from aurora_quantum_dream_substrate import start_dream_substrate
     start_dream_substrate(systems, cycle_interval_s=600.0)  # 10-min cycles
 """
 
@@ -177,7 +177,7 @@ def _temporal_feedback_pass(systems: Dict[str, Any]) -> None:
                 # Attempt to bump the stratum's B-axis weighting
                 # (definitional clarity improves with understanding)
                 try:
-                    from aurora_core_ai.aurora_sedimemory import ConstraintVector  # type: ignore
+                    from aurora_sedimemory import ConstraintVector  # type: ignore
                 except ImportError:
                     from aurora_sedimemory import ConstraintVector  # type: ignore
                 cv = ConstraintVector(X=0.2, T=0.4, N=0.3, B=0.30 + signal * 0.3, A=0.3)

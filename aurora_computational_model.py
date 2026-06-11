@@ -62,8 +62,8 @@ subsystems can call cpm.advance(), cpm.apply_istate(), cpm.snapshot() etc.
 from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
-from aurora_core_ai.aurora_constraint_head import ConstraintHead, HeadPosition
-from aurora_core_ai.aurora_istate_operations import (
+from aurora_constraint_head import ConstraintHead, HeadPosition
+from aurora_istate_operations import (
     FieldOperation, OperationResult, apply_operation, istate_to_op, cell_symbol
 )
 
@@ -258,23 +258,23 @@ CPM_FORMAL_DEFINITION = {
         "type": "crystal_registry",
         "address_format": "5-tuple (X,T,N,B,A) quantised to 0.10 resolution",
         "extensibility": "unbounded — new cells form as IVM dynamics reach new bucket positions",
-        "file": "aurora_core_ai/concept_crystal.py",
+        "file": "concept_crystal.py",
     },
     "head": {
         "type": "ConstraintHead",
         "movement": "automatic — follows IVM global_polarity evolution",
-        "file": "aurora_core_ai/aurora_constraint_head.py",
+        "file": "aurora_constraint_head.py",
     },
     "programs": {
         "type": "genealogy_dag_sequences",
         "source": "ConstraintGenealogyLogger.walk_link_sequence(link_id)",
-        "file": "aurora_core_ai/aurora_internal/constraint_genealogy.py",
+        "file": "aurora_internal/constraint_genealogy.py",
         "note": "Programs are accumulated historical constraint relief patterns",
     },
     "dynamic_compilation": {
         "type": "WARP",
         "trigger": "coverage gap persists for GAP_PERSISTENCE_REQUIRED=3 ticks",
-        "file": "aurora_core_ai/aurora_warp_protocol.py",
+        "file": "aurora_warp_protocol.py",
     },
     "halting_conditions": [
         "curiosity_cycle_settlement",

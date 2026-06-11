@@ -364,7 +364,7 @@ def _ensure_seeded_sensory_crystal_state(state_dir: str, *, verbose: bool = Fals
         return False
 
     # seed_sensory_crystals.py lives at the repo root, which may be aurora.py's
-    # own directory (Chaquopy srcDir) or one level up (aurora_core_ai/ layout).
+    # own directory (Chaquopy srcDir) or one level up.
     # Probe both so the bootstrap subprocess finds the real script.
     _here = Path(__file__).resolve().parent
     script_path = _here / "seed_sensory_crystals.py"
@@ -9470,7 +9470,7 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
     systems["_last_noncomp_output"] = {}
 
     # The semantics file + manifold directory live at the repo root.  aurora.py
-    # may sit at the repo root (Chaquopy srcDir) or one level down (aurora_core_ai/),
+    # may sit at the repo root (Chaquopy srcDir),
     # so probe both candidate roots and use whichever actually holds the data
     # rather than assuming aurora.py's own directory is the root.
     _here = Path(__file__).resolve().parent

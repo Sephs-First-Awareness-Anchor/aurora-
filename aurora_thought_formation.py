@@ -1587,7 +1587,7 @@ class StreamingThoughtThread:
                     _pump = self.systems.get('pressure_pump')
                     _ifield = self.systems.get('identity_field')
                     if _pump is not None and _ifield is not None:
-                        from aurora_core_ai.aurora_waveform_pressure import (  # type: ignore
+                        from aurora_waveform_pressure import (  # type: ignore
                             WaveformPressurePump,
                         )
                         _slice = self.braid.tap()

@@ -18,7 +18,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-AI_DIR="$REPO_ROOT/aurora_core_ai"
+AI_DIR="$REPO_ROOT"
 PORT=4567
 NO_QEMU=0
 NO_AI=0
