@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1781248011.3755982,
-  "generation": 701,
-  "genome_version": 701,
+  "timestamp": 1781265978.73857,
+  "generation": 901,
+  "genome_version": 901,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -21,34 +21,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.5054,
+    "curiosity": 0.492,
     "caution": 0.41,
-    "emotional_expressiveness": 0.411,
-    "verbosity": 0.3971,
-    "introspection": 0.4852,
+    "emotional_expressiveness": 0.4103,
+    "verbosity": 0.412,
+    "introspection": 0.4961,
     "pattern_sensitivity": 0.39,
-    "social_engagement": 0.3989,
-    "energy_conservation": 0.3432
+    "social_engagement": 0.39,
+    "energy_conservation": 0.3197
   },
-  "personality_drift": 0.7592,
+  "personality_drift": 0.7799,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6662202613642838,
-      "precision": 0.8196109412585006,
-      "depth": 0.8761209006407532,
-      "confidence": 0.5504502826574141
+      "warmth": 0.9917133789879746,
+      "precision": 0.6559579389340379,
+      "depth": 0.5326546833581552,
+      "confidence": 0.4580472450510102
     },
     "cognitive": {
-      "curiosity": 0.810662110673513,
-      "pattern_matching": 0.5304000000000001,
-      "abstraction": 0.574259501422697,
-      "risk_assessment": 0.490708601183873
+      "curiosity": 0.964011602031823,
+      "pattern_matching": 0.8153739686626461,
+      "abstraction": 0.9380484469730709,
+      "risk_assessment": 0.8827535941332966
     },
     "social": {
-      "empathy": 0.7609422855456883,
-      "trust_extension": 0.7430343027554989,
-      "boundary_maintenance": 0.7948079964218853,
-      "engagement": 0.6480749340947299
+      "empathy": 0.786955582582119,
+      "trust_extension": 0.8564483555447776,
+      "boundary_maintenance": 0.5386540546783323,
+      "engagement": 0.9423443717862731
     }
   },
   "governance_stats": {
@@ -68,14 +68,9 @@
   },
   "simulation_epochs": 0,
   "total_episodes": 25,
-  "understanding_shards": 28,
-  "what_aurora_learned": [
-    "When I use thoughtful reflection, conversations tend to deepen",
-    "When I use curious inquiry, conversations tend to deepen",
-    "When I use direct clarity, conversations tend to deepen",
-    "When I use thoughtful reflection, conversations tend to deepen"
-  ],
-  "time_dilation": 6939.182296874996,
-  "stability_state": "stable",
-  "_checksum": "196fd0045b8d"
+  "understanding_shards": 27,
+  "what_aurora_learned": [],
+  "time_dilation": 7980.059641406245,
+  "stability_state": "cautious",
+  "_checksum": "2abb5d92b9c9"
 }

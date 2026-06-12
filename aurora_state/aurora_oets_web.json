@@ -1,6 +1,6 @@
 {
  "version": "1.0",
- "timestamp": 1781250063.8553953,
+ "timestamp": 1781265978.74295,
  "nodes": {
   "I": {
    "word": "I",
@@ -20,7 +20,7 @@
    "research_priority": 0.503022605956975,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -44,14 +44,14 @@
    "usage_examples": [],
    "ontological_depth": 0.0318,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8272799999979304,
+   "research_priority": 0.8272799999983445,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 1039,
+   "times_encountered": 1239,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070935.3849585,
-   "last_accessed": 1781248010.386276,
+   "last_accessed": 1781265977.8864684,
    "lineage": ""
   },
   "am": {
@@ -87,6 +87,13 @@
      "i_state": "i_is",
      "fitness": 0.8813541666666667,
      "timestamp": 1781086400.0021727
+    },
+    {
+     "text": "Used in expression (fitness=0.87)",
+     "context": "expression",
+     "i_state": "i_is",
+     "fitness": 0.872,
+     "timestamp": 1781265633.624715
     },
     {
      "text": "Used in expression (fitness=0.87)",
@@ -129,27 +136,20 @@
      "i_state": "i_is",
      "fitness": 0.8614166666666666,
      "timestamp": 1781191188.3816888
-    },
-    {
-     "text": "Used in expression (fitness=0.86)",
-     "context": "expression",
-     "i_state": "i_is",
-     "fitness": 0.8614166666666666,
-     "timestamp": 1781191192.5114052
     }
    ],
-   "ontological_depth": 0.264859711569164,
+   "ontological_depth": 0.259274537367478,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8940561148048485,
+   "research_priority": 0.896290183949909,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 307,
-   "times_used_in_expression": 570,
+   "times_encountered": 319,
+   "times_used_in_expression": 629,
    "times_researched": 0,
    "first_encountered": 1781070935.384993,
-   "last_accessed": 1781247955.0847306,
+   "last_accessed": 1781265935.3942204,
    "lineage": ""
   },
   "exist": {
@@ -236,18 +236,18 @@
      "timestamp": 1781086102.8763776
     }
    ],
-   "ontological_depth": 0.295191269104779,
+   "ontological_depth": 0.2948224226297468,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8819234920865562,
+   "research_priority": 0.8820710304675389,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 537,
-   "times_used_in_expression": 1514,
+   "times_encountered": 552,
+   "times_used_in_expression": 1519,
    "times_researched": 0,
    "first_encountered": 1781070935.385012,
-   "last_accessed": 1781247955.08472,
+   "last_accessed": 1781265891.114239,
    "lineage": ""
   },
   "real": {
@@ -336,16 +336,16 @@
    ],
    "ontological_depth": 0.2936820587747326,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8825271756585393,
+   "research_priority": 0.8825271756217004,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 610,
+   "times_encountered": 640,
    "times_used_in_expression": 2709,
    "times_researched": 0,
    "first_encountered": 1781070935.385025,
-   "last_accessed": 1781247955.0847356,
+   "last_accessed": 1781265845.354167,
    "lineage": ""
   },
   "truth": {
@@ -367,6 +367,13 @@
      "i_state": "i_is",
      "fitness": 0.986,
      "timestamp": 1781247376.9135551
+    },
+    {
+     "text": "Used in expression (fitness=0.99)",
+     "context": "expression",
+     "i_state": "i_is",
+     "fitness": 0.986,
+     "timestamp": 1781265633.4238126
     },
     {
      "text": "Used in expression (fitness=0.94)",
@@ -423,27 +430,20 @@
      "i_state": "i_is",
      "fitness": 0.8614166666666666,
      "timestamp": 1781191185.0744507
-    },
-    {
-     "text": "Used in expression (fitness=0.86)",
-     "context": "expression",
-     "i_state": "i_is",
-     "fitness": 0.8614166666666666,
-     "timestamp": 1781191192.511375
     }
    ],
-   "ontological_depth": 0.27378841786999264,
+   "ontological_depth": 0.26521546314241273,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.890484632247678,
+   "research_priority": 0.8939138134238682,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 173,
-   "times_used_in_expression": 422,
+   "times_encountered": 177,
+   "times_used_in_expression": 448,
    "times_researched": 0,
    "first_encountered": 1781070935.3850389,
-   "last_accessed": 1781247955.084733,
+   "last_accessed": 1781265928.1188626,
    "lineage": ""
   },
   "is": {
@@ -530,18 +530,18 @@
      "timestamp": 1781192574.3063388
     }
    ],
-   "ontological_depth": 0.26941249891074337,
+   "ontological_depth": 0.2659292583895797,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.892235000050342,
+   "research_priority": 0.8936282964632846,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 327,
-   "times_used_in_expression": 422,
+   "times_encountered": 357,
+   "times_used_in_expression": 432,
    "times_researched": 0,
    "first_encountered": 1781070935.385057,
-   "last_accessed": 1781247955.0847244,
+   "last_accessed": 1781265891.1142313,
    "lineage": ""
   },
   "isn't": {
@@ -633,7 +633,7 @@
    "research_priority": 0.8996850119923102,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 159,
    "times_used_in_expression": 421,
@@ -655,6 +655,20 @@
     }
    ],
    "usage_examples": [
+    {
+     "text": "Used in expression (fitness=0.99)",
+     "context": "expression",
+     "i_state": "i_is",
+     "fitness": 0.986,
+     "timestamp": 1781265633.4237325
+    },
+    {
+     "text": "Used in expression (fitness=0.87)",
+     "context": "expression",
+     "i_state": "i_is",
+     "fitness": 0.872,
+     "timestamp": 1781265633.624669
+    },
     {
      "text": "Used in expression (fitness=0.81)",
      "context": "expression",
@@ -710,34 +724,20 @@
      "i_state": "i_is",
      "fitness": 0.7666666666666666,
      "timestamp": 1781190961.647758
-    },
-    {
-     "text": "Used in expression (fitness=0.76)",
-     "context": "expression",
-     "i_state": "i_is",
-     "fitness": 0.7644166666666666,
-     "timestamp": 1781191342.775338
-    },
-    {
-     "text": "Used in expression (fitness=0.76)",
-     "context": "expression",
-     "i_state": "i_is",
-     "fitness": 0.7588333333333334,
-     "timestamp": 1781191015.1559215
     }
    ],
-   "ontological_depth": 0.2052365893732194,
+   "ontological_depth": 0.2106952394553377,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9179053617576652,
+   "research_priority": 0.9157219032799195,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 24,
-   "times_used_in_expression": 84,
+   "times_encountered": 34,
+   "times_used_in_expression": 131,
    "times_researched": 0,
    "first_encountered": 1781070935.3850808,
-   "last_accessed": 1781247410.9002373,
+   "last_accessed": 1781265928.1188588,
    "lineage": ""
   },
   "become": {
@@ -794,20 +794,27 @@
      "i_state": "i_is",
      "fitness": 0.6374166666666666,
      "timestamp": 1781191901.124371
+    },
+    {
+     "text": "I did can. I become kind.",
+     "context": "conversation",
+     "i_state": "i_is",
+     "fitness": 0.5,
+     "timestamp": 1781265887.7985961
     }
    ],
-   "ontological_depth": 0.18465267126322749,
+   "ontological_depth": 0.1794278322105509,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.526138931494709,
+   "research_priority": 0.7032288665847188,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 0,
-   "times_used_in_expression": 15,
+   "times_encountered": 1,
+   "times_used_in_expression": 16,
    "times_researched": 0,
    "first_encountered": 1781070935.3850992,
-   "last_accessed": 1781070935.3850992,
+   "last_accessed": 1781265887.7984784,
    "lineage": ""
   },
   "change": {
@@ -894,18 +901,18 @@
      "timestamp": 1781086290.3444455
     }
    ],
-   "ontological_depth": 0.20255142932433873,
+   "ontological_depth": 0.2023437234769665,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.6439794282702646,
+   "research_priority": 0.8940625095628207,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 5,
-   "times_used_in_expression": 52,
+   "times_encountered": 9,
+   "times_used_in_expression": 56,
    "times_researched": 0,
    "first_encountered": 1781070935.3851128,
-   "last_accessed": 1781086509.9373524,
+   "last_accessed": 1781265935.3942225,
    "lineage": ""
   },
   "moment": {
@@ -992,18 +999,18 @@
      "timestamp": 1781086494.4840322
     }
    ],
-   "ontological_depth": 0.29244547007494115,
+   "ontological_depth": 0.28887774742253275,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8830218109935836,
+   "research_priority": 0.8844489003993432,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 308,
-   "times_used_in_expression": 526,
+   "times_encountered": 364,
+   "times_used_in_expression": 550,
    "times_researched": 0,
    "first_encountered": 1781070935.385125,
-   "last_accessed": 1781248010.3862913,
+   "last_accessed": 1781265977.8864796,
    "lineage": ""
   },
   "always": {
@@ -1095,7 +1102,7 @@
    "research_priority": 0.7250473589854036,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 107,
    "times_used_in_expression": 859,
@@ -1188,18 +1195,18 @@
      "timestamp": 1781071413.4584172
     }
    ],
-   "ontological_depth": 0.25089611858664446,
+   "ontological_depth": 0.24562066615243439,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8996415516911407,
+   "research_priority": 0.9017517321387309,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 180,
-   "times_used_in_expression": 137,
+   "times_encountered": 225,
+   "times_used_in_expression": 159,
    "times_researched": 0,
    "first_encountered": 1781070935.3851547,
-   "last_accessed": 1781247930.7683427,
+   "last_accessed": 1781265935.3942246,
    "lineage": ""
   },
   "do": {
@@ -1286,18 +1293,18 @@
      "timestamp": 1781071375.289738
     }
    ],
-   "ontological_depth": 0.25332004126994107,
+   "ontological_depth": 0.251187140150977,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8986719824915763,
+   "research_priority": 0.8995251431283237,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 317,
-   "times_used_in_expression": 120,
+   "times_encountered": 390,
+   "times_used_in_expression": 133,
    "times_researched": 0,
    "first_encountered": 1781070935.385163,
-   "last_accessed": 1781247992.0950267,
+   "last_accessed": 1781265961.0271573,
    "lineage": ""
   },
   "want": {
@@ -1377,25 +1384,25 @@
      "timestamp": 1781071372.6198893
     },
     {
-     "text": "Used in expression (fitness=0.80)",
+     "text": "Used in expression (fitness=0.81)",
      "context": "expression",
      "i_state": "i_is",
-     "fitness": 0.8,
-     "timestamp": 1781192011.3522215
+     "fitness": 0.8061833333333333,
+     "timestamp": 1781265828.7586498
     }
    ],
-   "ontological_depth": 0.2710672459644432,
+   "ontological_depth": 0.26937597045738815,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8915731005814893,
+   "research_priority": 0.8922496108364656,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 107,
-   "times_used_in_expression": 399,
+   "times_encountered": 128,
+   "times_used_in_expression": 436,
    "times_researched": 0,
    "first_encountered": 1781070935.385178,
-   "last_accessed": 1781247983.8924537,
+   "last_accessed": 1781265953.4452872,
    "lineage": ""
   },
   "cost": {
@@ -1487,7 +1494,7 @@
    "research_priority": 0.572635244580247,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 2,
    "times_used_in_expression": 46,
@@ -1582,16 +1589,16 @@
    ],
    "ontological_depth": 0.2364626139205262,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9054149536068448,
+   "research_priority": 0.9054149539259779,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 44,
+   "times_encountered": 54,
    "times_used_in_expression": 50,
    "times_researched": 0,
    "first_encountered": 1781070935.385208,
-   "last_accessed": 1781247910.8569756,
+   "last_accessed": 1781265885.8468964,
    "lineage": ""
   },
   "hold": {
@@ -1680,16 +1687,16 @@
    ],
    "ontological_depth": 0.24155716570569724,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9033771328402083,
+   "research_priority": 0.9033771331767262,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 45,
+   "times_encountered": 55,
    "times_used_in_expression": 53,
    "times_researched": 0,
    "first_encountered": 1781070935.3852227,
-   "last_accessed": 1781247910.8569815,
+   "last_accessed": 1781265885.8469007,
    "lineage": ""
   },
   "pattern": {
@@ -1778,16 +1785,16 @@
    ],
    "ontological_depth": 0.2621068828442094,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8951572461946614,
+   "research_priority": 0.8951572461743793,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 50,
+   "times_encountered": 60,
    "times_used_in_expression": 82,
    "times_researched": 0,
    "first_encountered": 1781070935.385237,
-   "last_accessed": 1781247945.0532455,
+   "last_accessed": 1781265917.662535,
    "lineage": ""
   },
   "meaning": {
@@ -1803,6 +1810,13 @@
     }
    ],
    "usage_examples": [
+    {
+     "text": "Used in expression (fitness=0.81)",
+     "context": "expression",
+     "i_state": "i_is",
+     "fitness": 0.8061833333333333,
+     "timestamp": 1781265828.7585113
+    },
     {
      "text": "Used in expression (fitness=0.77)",
      "context": "expression",
@@ -1865,27 +1879,20 @@
      "i_state": "i_is",
      "fitness": 0.7420833333333333,
      "timestamp": 1781190968.3274248
-    },
-    {
-     "text": "Used in expression (fitness=0.74)",
-     "context": "expression",
-     "i_state": "i_is",
-     "fitness": 0.7420833333333333,
-     "timestamp": 1781190969.3565116
     }
    ],
-   "ontological_depth": 0.2512357511478421,
+   "ontological_depth": 0.21541377380377197,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.899505698842992,
+   "research_priority": 0.9138344888186675,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
-   "times_used_in_expression": 18,
+   "times_encountered": 65,
+   "times_used_in_expression": 75,
    "times_researched": 0,
    "first_encountered": 1781070935.385252,
-   "last_accessed": 1781247960.100698,
+   "last_accessed": 1781265933.7886124,
    "lineage": ""
   },
   "boundary": {
@@ -1974,16 +1981,16 @@
    ],
    "ontological_depth": 0.24056070715707603,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9037757164806905,
+   "research_priority": 0.9037757164968335,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 44,
+   "times_encountered": 54,
    "times_used_in_expression": 58,
    "times_researched": 0,
    "first_encountered": 1781070935.385304,
-   "last_accessed": 1781247960.1006894,
+   "last_accessed": 1781265931.289007,
    "lineage": ""
   },
   "clear": {
@@ -2072,16 +2079,16 @@
    ],
    "ontological_depth": 0.25783094772210285,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8968676201317454,
+   "research_priority": 0.8968676201213973,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 52,
+   "times_encountered": 62,
    "times_used_in_expression": 112,
    "times_researched": 0,
    "first_encountered": 1781070935.385322,
-   "last_accessed": 1781247960.1007006,
+   "last_accessed": 1781265931.2890172,
    "lineage": ""
   },
   "choose": {
@@ -2170,16 +2177,16 @@
    ],
    "ontological_depth": 0.26575920203455716,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.893696318468024,
+   "research_priority": 0.8936963184295293,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 44,
+   "times_encountered": 54,
    "times_used_in_expression": 182,
    "times_researched": 0,
    "first_encountered": 1781070935.3853385,
-   "last_accessed": 1781247976.0363376,
+   "last_accessed": 1781265946.2707589,
    "lineage": ""
   },
   "understand": {
@@ -2266,18 +2273,18 @@
      "timestamp": 1781086496.2156873
     }
    ],
-   "ontological_depth": 0.2694665451146937,
+   "ontological_depth": 0.266321516774522,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8922133807740333,
+   "research_priority": 0.8934713921763295,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 91,
-   "times_used_in_expression": 314,
+   "times_encountered": 112,
+   "times_used_in_expression": 325,
    "times_researched": 0,
    "first_encountered": 1781070935.385351,
-   "last_accessed": 1781247983.8924606,
+   "last_accessed": 1781265953.4452925,
    "lineage": ""
   },
   "did": {
@@ -2364,18 +2371,18 @@
      "timestamp": 1781192127.152033
     }
    ],
-   "ontological_depth": 0.2841618439201956,
+   "ontological_depth": 0.2533520516546891,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8863352616682372,
+   "research_priority": 0.8986591786253522,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 82,
-   "times_used_in_expression": 147,
+   "times_encountered": 115,
+   "times_used_in_expression": 160,
    "times_researched": 0,
    "first_encountered": 1781070935.3853588,
-   "last_accessed": 1781248001.1774259,
+   "last_accessed": 1781265969.5031993,
    "lineage": ""
   },
   "didn't": {
@@ -2467,7 +2474,7 @@
    "research_priority": 0.5084594455462186,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 128,
@@ -2565,7 +2572,7 @@
    "research_priority": 0.5368099339051333,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 1,
    "times_used_in_expression": 92,
@@ -2592,7 +2599,7 @@
    "research_priority": 0.4925326059300701,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -2619,7 +2626,7 @@
    "research_priority": 0.47062260596111416,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -2696,7 +2703,7 @@
    "research_priority": 0.4935126060861184,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -2748,7 +2755,7 @@
    "research_priority": 0.49204260613123574,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -2896,7 +2903,7 @@
    "research_priority": 0.7524669001171195,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 18,
    "times_used_in_expression": 1,
@@ -2994,7 +3001,7 @@
    "research_priority": 0.8976163408107122,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 18,
    "times_used_in_expression": 47,
@@ -3092,7 +3099,7 @@
    "research_priority": 0.7339055996667935,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 0,
@@ -3180,7 +3187,7 @@
    "research_priority": 0.6021893326342205,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 5,
    "times_used_in_expression": 0,
@@ -3222,7 +3229,7 @@
    "research_priority": 0.6945980571089128,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 1,
    "times_used_in_expression": 4,
@@ -3315,18 +3322,18 @@
      "timestamp": 1781070974.7881684
     }
    ],
-   "ontological_depth": 0.23513441458714723,
+   "ontological_depth": 0.2336663837131402,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9059462333712403,
+   "research_priority": 0.906533445968368,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 46,
-   "times_used_in_expression": 16,
+   "times_encountered": 57,
+   "times_used_in_expression": 17,
    "times_researched": 0,
    "first_encountered": 1781070935.3865442,
-   "last_accessed": 1781247876.4277153,
+   "last_accessed": 1781265855.2553732,
    "lineage": ""
   },
   "answer": {
@@ -3415,16 +3422,16 @@
    ],
    "ontological_depth": 0.21543367782219858,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9138265280772198,
+   "research_priority": 0.9138265280457618,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 42,
+   "times_encountered": 52,
    "times_used_in_expression": 11,
    "times_researched": 0,
    "first_encountered": 1781070935.3865597,
-   "last_accessed": 1781247976.0363493,
+   "last_accessed": 1781265946.270768,
    "lineage": ""
   },
   "light": {
@@ -3591,7 +3598,7 @@
    "research_priority": 0.9102415662925931,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 17,
    "times_used_in_expression": 46,
@@ -3682,7 +3689,7 @@
    "research_priority": 0.7515768075235378,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 3,
    "times_used_in_expression": 12,
@@ -3805,7 +3812,7 @@
    "research_priority": 0.8930154785919316,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 14,
    "times_used_in_expression": 116,
@@ -3871,7 +3878,7 @@
    "research_priority": 0.8302355758136386,
    "scaffolding_level": 2,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 11,
    "times_used_in_expression": 6,
@@ -3898,7 +3905,7 @@
    "research_priority": 0.7262600085639987,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 0,
@@ -3925,7 +3932,7 @@
    "research_priority": 0.8049154237138895,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 2,
@@ -3960,7 +3967,7 @@
    "research_priority": 0.8022576480164906,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 2,
@@ -4058,7 +4065,7 @@
    "research_priority": 0.9128329187583143,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 25,
    "times_used_in_expression": 11,
@@ -4093,7 +4100,7 @@
    "research_priority": 0.7837726110712474,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 11,
    "times_used_in_expression": 1,
@@ -4120,7 +4127,7 @@
    "research_priority": 0.7417730088102817,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 0,
@@ -4147,7 +4154,7 @@
    "research_priority": 0.7374980088272525,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 0,
@@ -4174,7 +4181,7 @@
    "research_priority": 0.7386470089071393,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 0,
@@ -4269,16 +4276,16 @@
    ],
    "ontological_depth": 0.2929079229642148,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8828368301735641,
+   "research_priority": 0.8828368303821803,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 1263,
-   "times_used_in_expression": 2372,
+   "times_encountered": 1463,
+   "times_used_in_expression": 2373,
    "times_researched": 0,
    "first_encountered": 1781070939.6483932,
-   "last_accessed": 1781248010.3862693,
+   "last_accessed": 1781265977.8864634,
    "lineage": "i_is"
   },
   "for": {
@@ -4296,14 +4303,14 @@
    "usage_examples": [],
    "ontological_depth": 0.03,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7879999999987582,
+   "research_priority": 0.7879999999991721,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 138,
+   "times_encountered": 168,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070939.6484406,
-   "last_accessed": 1781247876.427701,
+   "last_accessed": 1781265855.2553637,
    "lineage": "i_is"
   },
   "in": {
@@ -4321,16 +4328,16 @@
    "usage_examples": [],
    "ontological_depth": 0.041999999999999996,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7831999999991721,
+   "research_priority": 0.7831999999987582,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 140,
+   "times_encountered": 170,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070939.6484656,
-   "last_accessed": 1781248010.386285,
+   "last_accessed": 1781265977.886475,
    "lineage": "i_is"
   },
   "this": {
@@ -4348,14 +4355,14 @@
    "usage_examples": [],
    "ontological_depth": 0.03,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7879999999991721,
+   "research_priority": 0.7879999999987582,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 324,
+   "times_encountered": 384,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070939.6484823,
-   "last_accessed": 1781248010.386288,
+   "last_accessed": 1781265977.8864768,
    "lineage": "i_is"
   },
   "something": {
@@ -4376,7 +4383,7 @@
    "research_priority": 0.7831999999983443,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 326,
    "times_used_in_expression": 0,
@@ -4400,16 +4407,16 @@
    "usage_examples": [],
    "ontological_depth": 0.054,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7783999999987583,
+   "research_priority": 0.7783999999983444,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 381,
+   "times_encountered": 441,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070939.6543221,
-   "last_accessed": 1781247937.8832183,
+   "last_accessed": 1781265911.282859,
    "lineage": "i_is"
   },
   "[afterthought]": {
@@ -4498,16 +4505,16 @@
    ],
    "ontological_depth": 0.2065109677419357,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7173956126105836,
+   "research_priority": 0.7173956126983349,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 897,
+   "times_encountered": 1097,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070939.8003168,
-   "last_accessed": 1781248010.386262,
+   "last_accessed": 1781265977.8864584,
    "lineage": "i_is"
   },
   "tell": {
@@ -4596,16 +4603,16 @@
    ],
    "ontological_depth": 0.26343108599847054,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8946275652380169,
+   "research_priority": 0.8946275652736141,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 55,
+   "times_encountered": 65,
    "times_used_in_expression": 81,
    "times_researched": 0,
    "first_encountered": 1781070940.4677596,
-   "last_accessed": 1781247854.5341704,
+   "last_accessed": 1781265835.276091,
    "lineage": "i_is"
   },
   "me": {
@@ -4694,16 +4701,16 @@
    ],
    "ontological_depth": 0.19707011873122068,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9211719520199126,
+   "research_priority": 0.921171952075792,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 117,
-   "times_used_in_expression": 7,
+   "times_encountered": 127,
+   "times_used_in_expression": 8,
    "times_researched": 0,
    "first_encountered": 1781070940.4678056,
-   "last_accessed": 1781247854.5341733,
+   "last_accessed": 1781265835.2760935,
    "lineage": "i_is"
   },
   "one": {
@@ -4790,18 +4797,18 @@
      "timestamp": 1781070948.8255208
     }
    ],
-   "ontological_depth": 0.23336955130124248,
+   "ontological_depth": 0.22336829945601122,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9066521783490843,
+   "research_priority": 0.9106526792850311,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 125,
-   "times_used_in_expression": 8,
+   "times_encountered": 156,
+   "times_used_in_expression": 9,
    "times_researched": 0,
    "first_encountered": 1781070940.467829,
-   "last_accessed": 1781247992.0950346,
+   "last_accessed": 1781265961.0271652,
    "lineage": "i_is"
   },
   "thing": {
@@ -4890,16 +4897,16 @@
    ],
    "ontological_depth": 0.2367599275477865,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.905296028395187,
+   "research_priority": 0.9052960284746598,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 47,
-   "times_used_in_expression": 16,
+   "times_encountered": 57,
+   "times_used_in_expression": 17,
    "times_researched": 0,
    "first_encountered": 1781070940.4678464,
-   "last_accessed": 1781247854.5341783,
+   "last_accessed": 1781265835.2760985,
    "lineage": "i_is"
   },
   "that": {
@@ -4917,16 +4924,16 @@
    "usage_examples": [],
    "ontological_depth": 0.041999999999999996,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7831999999991721,
+   "research_priority": 0.7831999999987582,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 64,
+   "times_encountered": 74,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070940.4678633,
-   "last_accessed": 1781247854.5341809,
+   "last_accessed": 1781265835.2761004,
    "lineage": "i_is"
   },
   "exists": {
@@ -5013,18 +5020,18 @@
      "timestamp": 1781071414.7008107
     }
    ],
-   "ontological_depth": 0.26432690756340693,
+   "ontological_depth": 0.260969294966211,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.894269236314847,
+   "research_priority": 0.8956122814588612,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 42,
-   "times_used_in_expression": 76,
+   "times_encountered": 53,
+   "times_used_in_expression": 77,
    "times_researched": 0,
    "first_encountered": 1781070940.4678807,
-   "last_accessed": 1781247854.534183,
+   "last_accessed": 1781265835.276102,
    "lineage": "i_is"
   },
   "right": {
@@ -5113,16 +5120,16 @@
    ],
    "ontological_depth": 0.28525427154228067,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8858982905552455,
+   "research_priority": 0.8858982905242014,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 225,
-   "times_used_in_expression": 54,
+   "times_encountered": 275,
+   "times_used_in_expression": 55,
    "times_researched": 0,
    "first_encountered": 1781070940.4679027,
-   "last_accessed": 1781247945.0532572,
+   "last_accessed": 1781265917.662547,
    "lineage": "i_is"
   },
   "now": {
@@ -5211,16 +5218,16 @@
    ],
    "ontological_depth": 0.21506811070505633,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9139727548061092,
+   "research_priority": 0.9139727548681973,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 287,
-   "times_used_in_expression": 12,
+   "times_encountered": 347,
+   "times_used_in_expression": 13,
    "times_researched": 0,
    "first_encountered": 1781070940.4679196,
-   "last_accessed": 1781248001.177439,
+   "last_accessed": 1781265969.50321,
    "lineage": "i_is"
   },
   "notice": {
@@ -5309,16 +5316,16 @@
    ],
    "ontological_depth": 0.27812012511245565,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8887519490911643,
+   "research_priority": 0.8887519493577295,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 85,
+   "times_encountered": 95,
    "times_used_in_expression": 277,
    "times_researched": 0,
    "first_encountered": 1781070941.7772477,
-   "last_accessed": 1781247859.8506024,
+   "last_accessed": 1781265840.252161,
    "lineage": "i_is"
   },
   "about": {
@@ -5336,14 +5343,14 @@
    "usage_examples": [],
    "ontological_depth": 0.03,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7879999999975165,
+   "research_priority": 0.7879999999991721,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 70,
+   "times_encountered": 80,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070941.7772815,
-   "last_accessed": 1781247859.8506057,
+   "last_accessed": 1781265840.252163,
    "lineage": "i_is"
   },
   "being": {
@@ -5430,18 +5437,18 @@
      "timestamp": 1781071395.4867842
     }
    ],
-   "ontological_depth": 0.23304379653477503,
+   "ontological_depth": 0.23165664925329038,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9067824803769502,
+   "research_priority": 0.9073373396542086,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
-   "times_used_in_expression": 51,
+   "times_encountered": 52,
+   "times_used_in_expression": 52,
    "times_researched": 0,
    "first_encountered": 1781070941.7773063,
-   "last_accessed": 1781247859.8506093,
+   "last_accessed": 1781265840.2521646,
    "lineage": "i_is"
   },
   "here": {
@@ -5530,16 +5537,16 @@
    ],
    "ontological_depth": 0.259557641012555,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8961769425005703,
+   "research_priority": 0.8961769429004182,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 76,
-   "times_used_in_expression": 104,
+   "times_encountered": 86,
+   "times_used_in_expression": 105,
    "times_researched": 0,
    "first_encountered": 1781070941.7773232,
-   "last_accessed": 1781247859.8506122,
+   "last_accessed": 1781265840.2521667,
    "lineage": "i_is"
   },
   "to": {
@@ -5557,14 +5564,14 @@
    "usage_examples": [],
    "ontological_depth": 0.036,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7855999999987582,
+   "research_priority": 0.7855999999991721,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 315,
+   "times_encountered": 365,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070942.9795656,
-   "last_accessed": 1781247983.8924577,
+   "last_accessed": 1781265953.4452903,
    "lineage": "i_is"
   },
   "makes": {
@@ -5653,16 +5660,16 @@
    ],
    "ontological_depth": 0.2183269116377607,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9126692341134804,
+   "research_priority": 0.912669234546028,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
-   "times_used_in_expression": 16,
+   "times_encountered": 51,
+   "times_used_in_expression": 17,
    "times_researched": 0,
    "first_encountered": 1781070942.9796112,
-   "last_accessed": 1781247865.2205722,
+   "last_accessed": 1781265845.3541634,
    "lineage": "i_is"
   },
   "it": {
@@ -5680,14 +5687,14 @@
    "usage_examples": [],
    "ontological_depth": 0.03,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7879999999975165,
+   "research_priority": 0.7879999999991721,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 145,
+   "times_encountered": 165,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070942.9796739,
-   "last_accessed": 1781247870.6500738,
+   "last_accessed": 1781265850.3007393,
    "lineage": "i_is"
   },
   "perhaps": {
@@ -5779,7 +5786,7 @@
    "research_priority": 0.8772036206979572,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 16,
    "times_used_in_expression": 79,
@@ -5877,7 +5884,7 @@
    "research_priority": 0.9071252227737774,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 54,
    "times_used_in_expression": 14,
@@ -5972,16 +5979,16 @@
    ],
    "ontological_depth": 0.2539036341399298,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8984385460058546,
+   "research_priority": 0.8984385459176893,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 181,
+   "times_encountered": 211,
    "times_used_in_expression": 83,
    "times_researched": 0,
    "first_encountered": 1781070944.3247123,
-   "last_accessed": 1781247899.0289996,
+   "last_accessed": 1781265875.3576581,
    "lineage": "i_is"
   },
   "like": {
@@ -6070,16 +6077,16 @@
    ],
    "ontological_depth": 0.23260171042275432,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9069593148213446,
+   "research_priority": 0.9069593151135729,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 65,
-   "times_used_in_expression": 16,
+   "times_encountered": 75,
+   "times_used_in_expression": 17,
    "times_researched": 0,
    "first_encountered": 1781070944.324783,
-   "last_accessed": 1781247870.6500793,
+   "last_accessed": 1781265850.300743,
    "lineage": "i_is"
   },
   "changed": {
@@ -6166,18 +6173,18 @@
      "timestamp": 1781070948.9414737
     }
    ],
-   "ontological_depth": 0.2571886258465323,
+   "ontological_depth": 0.2565614445758267,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8971245489722083,
+   "research_priority": 0.8973754217019385,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 46,
-   "times_used_in_expression": 62,
+   "times_encountered": 57,
+   "times_used_in_expression": 63,
    "times_researched": 0,
    "first_encountered": 1781070945.8237286,
-   "last_accessed": 1781247876.4276984,
+   "last_accessed": 1781265855.2553618,
    "lineage": "i_is"
   },
   "since": {
@@ -6266,16 +6273,16 @@
    ],
    "ontological_depth": 0.25208463530972797,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8991661451654062,
+   "research_priority": 0.8991661453922349,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
-   "times_used_in_expression": 5,
+   "times_encountered": 50,
+   "times_used_in_expression": 6,
    "times_researched": 0,
    "first_encountered": 1781070945.823796,
-   "last_accessed": 1781247876.4277067,
+   "last_accessed": 1781265855.2553675,
    "lineage": "i_is"
   },
   "last": {
@@ -6320,6 +6327,13 @@
      "timestamp": 1781070951.235137
     },
     {
+     "text": "Used in expression (fitness=0.64)",
+     "context": "expression",
+     "i_state": "i_is",
+     "fitness": 0.6378166666666666,
+     "timestamp": 1781265831.965207
+    },
+    {
      "text": "What changed for you since the last question?",
      "context": "conversation",
      "i_state": "i_is",
@@ -6353,27 +6367,20 @@
      "i_state": "i_is",
      "fitness": 0.5,
      "timestamp": 1781070946.7776542
-    },
-    {
-     "text": "[AFTERTHOUGHT] What changed for you since the last question?",
-     "context": "conversation",
-     "i_state": "thoughtful_reflection",
-     "fitness": 0.5,
-     "timestamp": 1781070946.972077
     }
    ],
-   "ontological_depth": 0.24699665665252446,
+   "ontological_depth": 0.2445104755893121,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9012013365893792,
+   "research_priority": 0.902195808977411,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 80,
-   "times_used_in_expression": 11,
+   "times_encountered": 101,
+   "times_used_in_expression": 12,
    "times_researched": 0,
    "first_encountered": 1781070945.8238313,
-   "last_accessed": 1781247976.0363464,
+   "last_accessed": 1781265946.2707655,
    "lineage": "i_is"
   },
   "remember": {
@@ -6460,18 +6467,18 @@
      "timestamp": 1781070948.2639704
     }
    ],
-   "ontological_depth": 0.2193940076809165,
+   "ontological_depth": 0.21419063378281708,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9122423961295936,
+   "research_priority": 0.9143237459582958,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 46,
-   "times_used_in_expression": 14,
+   "times_encountered": 57,
+   "times_used_in_expression": 15,
    "times_researched": 0,
    "first_encountered": 1781070947.5285015,
-   "last_accessed": 1781247881.5132365,
+   "last_accessed": 1781265866.3570652,
    "lineage": "i_is"
   },
   "from": {
@@ -6560,14 +6567,14 @@
    ],
    "ontological_depth": 0.2143302841486408,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.914267886338888,
+   "research_priority": 0.9142678863393019,
    "scaffolding_level": 1,
    "cluster_ids": [],
-   "times_encountered": 200,
+   "times_encountered": 230,
    "times_used_in_expression": 395,
    "times_researched": 0,
    "first_encountered": 1781070947.5285397,
-   "last_accessed": 1781247892.9540854,
+   "last_accessed": 1781265869.9511104,
    "lineage": "i_is"
   },
   "ago": {
@@ -6654,18 +6661,18 @@
      "timestamp": 1781071372.4893353
     }
    ],
-   "ontological_depth": 0.2328123255954527,
+   "ontological_depth": 0.22007869207800457,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9068750687812398,
+   "research_priority": 0.9119685219655295,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
-   "times_used_in_expression": 5,
+   "times_encountered": 51,
+   "times_used_in_expression": 6,
    "times_researched": 0,
    "first_encountered": 1781070947.5285654,
-   "last_accessed": 1781247881.5132446,
+   "last_accessed": 1781265885.1619756,
    "lineage": "i_is"
   },
   "how": {
@@ -6754,16 +6761,16 @@
    ],
    "ontological_depth": 0.18304899997385107,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9267803995356921,
+   "research_priority": 0.9267803997227845,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 90,
-   "times_used_in_expression": 5,
+   "times_encountered": 100,
+   "times_used_in_expression": 6,
    "times_researched": 0,
    "first_encountered": 1781070948.8253555,
-   "last_accessed": 1781247887.022505,
+   "last_accessed": 1781265864.5704837,
    "lineage": "i_is"
   },
   "differ": {
@@ -6852,16 +6859,16 @@
    ],
    "ontological_depth": 0.26590000000000014,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8936399992843302,
+   "research_priority": 0.8936399994871516,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 6,
    "times_researched": 0,
    "first_encountered": 1781070948.8254058,
-   "last_accessed": 1781247887.0225596,
+   "last_accessed": 1781265864.5704935,
    "lineage": "i_is"
   },
   "before": {
@@ -6948,18 +6955,18 @@
      "timestamp": 1781071374.2271988
     }
    ],
-   "ontological_depth": 0.18448648648648652,
+   "ontological_depth": 0.17945000000000005,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7262054046127463,
+   "research_priority": 0.7682199977449576,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 53,
-   "times_used_in_expression": 0,
+   "times_encountered": 64,
+   "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070948.8254364,
-   "last_accessed": 1781247887.022571,
+   "last_accessed": 1781265933.7886198,
    "lineage": "i_is"
   },
   "will": {
@@ -7046,18 +7053,18 @@
      "timestamp": 1781070951.7905855
     }
    ],
-   "ontological_depth": 0.2371610181435712,
+   "ontological_depth": 0.22780332752668986,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.905135592089404,
+   "research_priority": 0.9088786685364943,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
-   "times_used_in_expression": 9,
+   "times_encountered": 51,
+   "times_used_in_expression": 10,
    "times_researched": 0,
    "first_encountered": 1781070950.5354502,
-   "last_accessed": 1781247892.954069,
+   "last_accessed": 1781265869.9511025,
    "lineage": "i_is"
   },
   "carry": {
@@ -7144,18 +7151,18 @@
      "timestamp": 1781070951.6021566
     }
    ],
-   "ontological_depth": 0.24068000052628846,
+   "ontological_depth": 0.23311228478459065,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9037279991032033,
+   "research_priority": 0.9067550856109823,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
-   "times_used_in_expression": 7,
+   "times_encountered": 52,
+   "times_used_in_expression": 8,
    "times_researched": 0,
    "first_encountered": 1781070950.5354924,
-   "last_accessed": 1781247892.9540741,
+   "last_accessed": 1781265869.9511063,
    "lineage": "i_is"
   },
   "forward": {
@@ -7244,16 +7251,16 @@
    ],
    "ontological_depth": 0.20299572700735186,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8788017084884262,
+   "research_priority": 0.8788017087020095,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 4,
    "times_researched": 0,
    "first_encountered": 1781070950.535514,
-   "last_accessed": 1781247892.9540825,
+   "last_accessed": 1781265869.951108,
    "lineage": "i_is"
   },
   "exchange": {
@@ -7342,16 +7349,16 @@
    ],
    "ontological_depth": 0.2359721584089338,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9056111358851595,
+   "research_priority": 0.9056111361107466,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 43,
-   "times_used_in_expression": 26,
+   "times_encountered": 53,
+   "times_used_in_expression": 27,
    "times_researched": 0,
    "first_encountered": 1781070950.5355375,
-   "last_accessed": 1781247892.954091,
+   "last_accessed": 1781265869.9511142,
    "lineage": "i_is"
   },
   "time": {
@@ -7440,16 +7447,16 @@
    ],
    "ontological_depth": 0.24274925479319903,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9029002977077079,
+   "research_priority": 0.902900297623268,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 47,
-   "times_used_in_expression": 14,
+   "times_encountered": 57,
+   "times_used_in_expression": 15,
    "times_researched": 0,
    "first_encountered": 1781070952.5047014,
-   "last_accessed": 1781247899.029003,
+   "last_accessed": 1781265875.3576605,
    "lineage": "i_is"
   },
   "continuous": {
@@ -7538,16 +7545,16 @@
    ],
    "ontological_depth": 0.2363743966985965,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9054502408077132,
+   "research_priority": 0.9054502407464529,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 8,
    "times_researched": 0,
    "first_encountered": 1781070952.504769,
-   "last_accessed": 1781247899.0290074,
+   "last_accessed": 1781265875.3576646,
    "lineage": "i_is"
   },
   "or": {
@@ -7634,18 +7641,18 @@
      "timestamp": 1781071377.1053793
     }
    ],
-   "ontological_depth": 0.18705964037565745,
+   "ontological_depth": 0.1797581572409409,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8051761433195039,
+   "research_priority": 0.8480967358275047,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 44,
-   "times_used_in_expression": 2,
+   "times_encountered": 55,
+   "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781070952.5048113,
-   "last_accessed": 1781247899.029015,
+   "last_accessed": 1781265930.4415946,
    "lineage": "i_is"
   },
   "made": {
@@ -7732,18 +7739,18 @@
      "timestamp": 1781070953.582159
     }
    ],
-   "ontological_depth": 0.22710013648401883,
+   "ontological_depth": 0.21819613847880248,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9091599448380787,
+   "research_priority": 0.9127215440016705,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
-   "times_used_in_expression": 11,
+   "times_encountered": 50,
+   "times_used_in_expression": 12,
    "times_researched": 0,
    "first_encountered": 1781070952.5048313,
-   "last_accessed": 1781247899.0290174,
+   "last_accessed": 1781265875.3576727,
    "lineage": "i_is"
   },
   "of": {
@@ -7764,13 +7771,13 @@
    "research_priority": 0.7807999999983444,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 94,
+   "times_encountered": 114,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070952.504849,
-   "last_accessed": 1781247923.8918426,
+   "last_accessed": 1781265898.2403126,
    "lineage": "i_is"
   },
   "moments": {
@@ -7859,16 +7866,16 @@
    ],
    "ontological_depth": 0.26537500000000014,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.6938499994221661,
+   "research_priority": 0.6938499994374812,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070952.5048647,
-   "last_accessed": 1781247899.0290215,
+   "last_accessed": 1781265875.357706,
    "lineage": "i_is"
   },
   "where": {
@@ -7955,18 +7962,18 @@
      "timestamp": 1781070966.024003
     }
    ],
-   "ontological_depth": 0.26206399352187115,
+   "ontological_depth": 0.24959643250323937,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8951744022543197,
+   "research_priority": 0.9001614255839218,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 85,
-   "times_used_in_expression": 9,
+   "times_encountered": 106,
+   "times_used_in_expression": 10,
    "times_researched": 0,
    "first_encountered": 1781070954.3759732,
-   "last_accessed": 1781247937.883203,
+   "last_accessed": 1781265935.3942277,
    "lineage": "i_is"
   },
   "pressure": {
@@ -8055,16 +8062,16 @@
    ],
    "ontological_depth": 0.2614800903592304,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8954079630371579,
+   "research_priority": 0.8954079631961036,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 81,
-   "times_used_in_expression": 7,
+   "times_encountered": 101,
+   "times_used_in_expression": 8,
    "times_researched": 0,
    "first_encountered": 1781070954.3760273,
-   "last_accessed": 1781247930.768299,
+   "last_accessed": 1781265904.619427,
    "lineage": "i_is"
   },
   "costs": {
@@ -8153,16 +8160,16 @@
    ],
    "ontological_depth": 0.2388437616902444,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9044624945920897,
+   "research_priority": 0.9044624948706587,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 42,
+   "times_encountered": 52,
    "times_used_in_expression": 8,
    "times_researched": 0,
    "first_encountered": 1781070956.4543223,
-   "last_accessed": 1781247910.856964,
+   "last_accessed": 1781265885.8468878,
    "lineage": "i_is"
   },
   "most": {
@@ -8251,16 +8258,16 @@
    ],
    "ontological_depth": 0.21380071428571434,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.914479713620129,
+   "research_priority": 0.9144797135936381,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 87,
-   "times_used_in_expression": 5,
+   "times_encountered": 107,
+   "times_used_in_expression": 6,
    "times_researched": 0,
    "first_encountered": 1781070956.4543688,
-   "last_accessed": 1781247917.3548837,
+   "last_accessed": 1781265891.8621926,
    "lineage": "i_is"
   },
   "pulls": {
@@ -8349,16 +8356,16 @@
    ],
    "ontological_depth": 0.22000000000000008,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7519999993828437,
+   "research_priority": 0.7519999993480743,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070958.7141805,
-   "last_accessed": 1781247917.354871,
+   "last_accessed": 1781265891.862181,
    "lineage": "i_is"
   },
   "your": {
@@ -8376,14 +8383,14 @@
    "usage_examples": [],
    "ontological_depth": 0.03,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7879999999987582,
+   "research_priority": 0.7879999999983442,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 181,
+   "times_encountered": 221,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070958.7142138,
-   "last_accessed": 1781247976.0363433,
+   "last_accessed": 1781265946.2707632,
    "lineage": "i_is"
   },
   "attention": {
@@ -8472,16 +8479,16 @@
    ],
    "ontological_depth": 0.24506454040441183,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9019741831995549,
+   "research_priority": 0.9019741831714083,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
+   "times_encountered": 51,
    "times_used_in_expression": 7,
    "times_researched": 0,
    "first_encountered": 1781070958.7142355,
-   "last_accessed": 1781247917.3548765,
+   "last_accessed": 1781265891.8621852,
    "lineage": "i_is"
   },
   "with": {
@@ -8499,16 +8506,16 @@
    "usage_examples": [],
    "ontological_depth": 0.041999999999999996,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7831999999991721,
+   "research_priority": 0.7831999999987582,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 44,
+   "times_encountered": 54,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070958.7142546,
-   "last_accessed": 1781247917.354879,
+   "last_accessed": 1781265891.862188,
    "lineage": "i_is"
   },
   "force": {
@@ -8597,16 +8604,16 @@
    ],
    "ontological_depth": 0.24932120520833345,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.820271517232455,
+   "research_priority": 0.8202715172092754,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781070958.714277,
-   "last_accessed": 1781247917.3548856,
+   "last_accessed": 1781265891.8621945,
    "lineage": "i_is"
   },
   "which": {
@@ -8695,16 +8702,16 @@
    ],
    "ontological_depth": 0.22549689786828922,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9098012404342102,
+   "research_priority": 0.909801240497954,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 46,
+   "times_encountered": 56,
    "times_used_in_expression": 8,
    "times_researched": 0,
    "first_encountered": 1781070960.9773898,
-   "last_accessed": 1781247923.8918388,
+   "last_accessed": 1781265898.2403097,
    "lineage": "i_is"
   },
   "patterns": {
@@ -8793,16 +8800,16 @@
    ],
    "ontological_depth": 0.24087332908022036,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8236506679192214,
+   "research_priority": 0.8236506679912436,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781070960.9774387,
-   "last_accessed": 1781247923.8918476,
+   "last_accessed": 1781265898.2403173,
    "lineage": "i_is"
   },
   "feels": {
@@ -8891,16 +8898,16 @@
    ],
    "ontological_depth": 0.17974553095713913,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8881017871278896,
+   "research_priority": 0.8881017872081903,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 4,
    "times_researched": 0,
    "first_encountered": 1781070960.9774632,
-   "last_accessed": 1781247923.89185,
+   "last_accessed": 1781265898.24032,
    "lineage": "i_is"
   },
   "heaviest": {
@@ -8989,16 +8996,16 @@
    ],
    "ontological_depth": 0.25127479363626004,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8594900820082264,
+   "research_priority": 0.8594900821129484,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
+   "times_encountered": 51,
    "times_used_in_expression": 4,
    "times_researched": 0,
    "first_encountered": 1781070960.9774802,
-   "last_accessed": 1781247923.8918526,
+   "last_accessed": 1781265898.2403224,
    "lineage": "i_is"
   },
   "would": {
@@ -9087,16 +9094,16 @@
    ],
    "ontological_depth": 0.19713262343801652,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8411469497745995,
+   "research_priority": 0.841146950002256,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 90,
+   "times_encountered": 110,
    "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781070963.4236617,
-   "last_accessed": 1781247992.0950208,
+   "last_accessed": 1781265961.027151,
    "lineage": "i_is"
   },
   "relieve": {
@@ -9185,16 +9192,16 @@
    ],
    "ontological_depth": 0.23651132046113602,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9053954710286815,
+   "research_priority": 0.9053954711760374,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 7,
    "times_researched": 0,
    "first_encountered": 1781070963.423719,
-   "last_accessed": 1781247930.7682934,
+   "last_accessed": 1781265904.6194198,
    "lineage": "i_is"
   },
   "end": {
@@ -9283,16 +9290,16 @@
    ],
    "ontological_depth": 0.2694000000000001,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.732239999480943,
+   "research_priority": 0.7322399992818469,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070966.0208592,
-   "last_accessed": 1781247937.8832128,
+   "last_accessed": 1781265911.282852,
    "lineage": "i_is"
   },
   "and": {
@@ -9381,16 +9388,16 @@
    ],
    "ontological_depth": 0.2057310315987461,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8777075863749553,
+   "research_priority": 0.877707586449875,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 131,
+   "times_encountered": 161,
    "times_used_in_expression": 4,
    "times_researched": 0,
    "first_encountered": 1781070966.0208998,
-   "last_accessed": 1781248001.177442,
+   "last_accessed": 1781265969.503212,
    "lineage": "i_is"
   },
   "world": {
@@ -9479,16 +9486,16 @@
    ],
    "ontological_depth": 0.23005041067194276,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9079798351198614,
+   "research_priority": 0.90797983489593,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 6,
    "times_researched": 0,
    "first_encountered": 1781070966.0209258,
-   "last_accessed": 1781247937.883221,
+   "last_accessed": 1781265911.2828627,
    "lineage": "i_is"
   },
   "begins": {
@@ -9577,16 +9584,16 @@
    ],
    "ontological_depth": 0.2339316059027779,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.866427357008901,
+   "research_priority": 0.8664273567812444,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 4,
    "times_researched": 0,
    "first_encountered": 1781070966.0209463,
-   "last_accessed": 1781247937.8832235,
+   "last_accessed": 1781265911.2828658,
    "lineage": "i_is"
   },
   "are": {
@@ -9675,16 +9682,16 @@
    ],
    "ontological_depth": 0.2082612563975341,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9166954966793714,
+   "research_priority": 0.9166954969562846,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 112,
+   "times_encountered": 132,
    "times_used_in_expression": 7,
    "times_researched": 0,
    "first_encountered": 1781070968.7670994,
-   "last_accessed": 1781248010.3862734,
+   "last_accessed": 1781265977.8864663,
    "lineage": "i_is"
   },
   "holding": {
@@ -9773,16 +9780,16 @@
    ],
    "ontological_depth": 0.24737500000000007,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8210499992657039,
+   "research_priority": 0.8210499992416965,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781070968.7671432,
-   "last_accessed": 1781247945.0532546,
+   "last_accessed": 1781265917.6625445,
    "lineage": "i_is"
   },
   "gives": {
@@ -9871,16 +9878,16 @@
    ],
    "ontological_depth": 0.2040421439838262,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.918383141773998,
+   "research_priority": 0.918383141926321,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 5,
    "times_researched": 0,
    "first_encountered": 1781070971.7293828,
-   "last_accessed": 1781247952.5697434,
+   "last_accessed": 1781265924.4195583,
    "lineage": "i_is"
   },
   "conversation": {
@@ -9969,16 +9976,16 @@
    ],
    "ontological_depth": 0.23584881217391307,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8256604744723002,
+   "research_priority": 0.8256604746312459,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 46,
+   "times_encountered": 56,
    "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781070971.7294238,
-   "last_accessed": 1781247952.5697486,
+   "last_accessed": 1781265924.4195633,
    "lineage": "i_is"
   },
   "its": {
@@ -10067,16 +10074,16 @@
    ],
    "ontological_depth": 0.22057816888888895,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8317687317651998,
+   "research_priority": 0.8317687319315962,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781070971.729448,
-   "last_accessed": 1781247952.5697515,
+   "last_accessed": 1781265924.419565,
    "lineage": "i_is"
   },
   "shape": {
@@ -10165,16 +10172,16 @@
    ],
    "ontological_depth": 0.22023737850082106,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9119050478798628,
+   "research_priority": 0.9119050480636438,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
+   "times_encountered": 51,
    "times_used_in_expression": 9,
    "times_researched": 0,
    "first_encountered": 1781070971.7294676,
-   "last_accessed": 1781247952.5697541,
+   "last_accessed": 1781265924.419567,
    "lineage": "i_is"
   },
   "keeps": {
@@ -10263,16 +10270,16 @@
    ],
    "ontological_depth": 0.2216246832386364,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9113501260232313,
+   "research_priority": 0.9113501260468249,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 9,
    "times_researched": 0,
    "first_encountered": 1781070974.6690626,
-   "last_accessed": 1781247960.1006925,
+   "last_accessed": 1781265931.2890103,
    "lineage": "i_is"
   },
   "stays": {
@@ -10361,16 +10368,16 @@
    ],
    "ontological_depth": 0.25087272727272736,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7796509085010714,
+   "research_priority": 0.7796509083806203,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 2,
    "times_researched": 0,
    "first_encountered": 1781070977.4375646,
-   "last_accessed": 1781247967.9459574,
+   "last_accessed": 1781265938.8205442,
    "lineage": "i_is"
   },
   "inside": {
@@ -10459,16 +10466,16 @@
    ],
    "ontological_depth": 0.21134225899814477,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7554630957889668,
+   "research_priority": 0.7554630956652042,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070977.4376056,
-   "last_accessed": 1781247967.9459596,
+   "last_accessed": 1781265938.8205478,
    "lineage": "i_is"
   },
   "crosses": {
@@ -10557,16 +10564,16 @@
    ],
    "ontological_depth": 0.23837172527588968,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9046513090725637,
+   "research_priority": 0.9046513089574937,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
+   "times_encountered": 51,
    "times_used_in_expression": 6,
    "times_researched": 0,
    "first_encountered": 1781070977.4376807,
-   "last_accessed": 1781247967.945969,
+   "last_accessed": 1781265938.8205602,
    "lineage": "i_is"
   },
   "out": {
@@ -10655,16 +10662,16 @@
    ],
    "ontological_depth": 0.24504386900000005,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7419824515688463,
+   "research_priority": 0.7419824514570876,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070977.4377165,
-   "last_accessed": 1781247967.9459717,
+   "last_accessed": 1781265938.8205626,
    "lineage": "i_is"
   },
   "agency": {
@@ -10693,7 +10700,7 @@
    "research_priority": 0.5370370410528024,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 1,
@@ -10788,16 +10795,16 @@
    ],
    "ontological_depth": 0.22937500000000005,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7082499988004565,
+   "research_priority": 0.7082499988687534,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 39,
+   "times_encountered": 49,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070983.956939,
-   "last_accessed": 1781247983.8924637,
+   "last_accessed": 1781265953.4452958,
    "lineage": "i_is"
   },
   "if": {
@@ -10886,16 +10893,16 @@
    ],
    "ontological_depth": 0.2094127063625433,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8762349164011396,
+   "research_priority": 0.8762349165890597,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 51,
+   "times_encountered": 61,
    "times_used_in_expression": 4,
    "times_researched": 0,
    "first_encountered": 1781070987.6336977,
-   "last_accessed": 1781247992.0950289,
+   "last_accessed": 1781265961.0271597,
    "lineage": "i_is"
   },
   "no": {
@@ -10984,16 +10991,16 @@
    ],
    "ontological_depth": 0.20360000000000006,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7585599989180101,
+   "research_priority": 0.7585599991121391,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070987.633739,
-   "last_accessed": 1781247992.0950317,
+   "last_accessed": 1781265961.027162,
    "lineage": "i_is"
   },
   "asked": {
@@ -11082,16 +11089,16 @@
    ],
    "ontological_depth": 0.21302288094674565,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.9147908464643921,
+   "research_priority": 0.9147908466701109,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 45,
+   "times_encountered": 55,
    "times_used_in_expression": 5,
    "times_researched": 0,
    "first_encountered": 1781070987.633771,
-   "last_accessed": 1781247992.0950372,
+   "last_accessed": 1781265961.0271678,
    "lineage": "i_is"
   },
   "anything": {
@@ -11112,11 +11119,11 @@
    "research_priority": 0.7879999999987582,
    "scaffolding_level": 0,
    "cluster_ids": [],
-   "times_encountered": 49,
+   "times_encountered": 59,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070987.6337936,
-   "last_accessed": 1781247992.0950418,
+   "last_accessed": 1781265961.0271719,
    "lineage": "i_is"
   },
   "decide": {
@@ -11205,16 +11212,16 @@
    ],
    "ontological_depth": 0.2296495105000581,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8681401950118709,
+   "research_priority": 0.8681401950619554,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 4,
    "times_researched": 0,
    "first_encountered": 1781070991.5411396,
-   "last_accessed": 1781248001.1774323,
+   "last_accessed": 1781265969.5032046,
    "lineage": "i_is"
   },
   "just": {
@@ -11303,16 +11310,16 @@
    ],
    "ontological_depth": 0.2648383922078821,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.8940646431143636,
+   "research_priority": 0.8940646431147775,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 50,
+   "times_encountered": 60,
    "times_used_in_expression": 27,
    "times_researched": 0,
    "first_encountered": 1781070991.5411768,
-   "last_accessed": 1781248001.1774354,
+   "last_accessed": 1781265969.503207,
    "lineage": "i_is"
   },
   "why": {
@@ -11401,16 +11408,16 @@
    ],
    "ontological_depth": 0.2362933333333334,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.705482665656699,
+   "research_priority": 0.7054826657216846,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 41,
+   "times_encountered": 51,
    "times_used_in_expression": 0,
    "times_researched": 0,
    "first_encountered": 1781070991.5412037,
-   "last_accessed": 1781248001.1774445,
+   "last_accessed": 1781265969.5032144,
    "lineage": "i_is"
   },
   "reaching": {
@@ -11499,16 +11506,16 @@
    ],
    "ontological_depth": 0.19453885714285718,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7621844563584766,
+   "research_priority": 0.7621844566403569,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070995.6970084,
-   "last_accessed": 1781248010.3862793,
+   "last_accessed": 1781265977.8864713,
    "lineage": "i_is"
   },
   "toward": {
@@ -11597,16 +11604,16 @@
    ],
    "ontological_depth": 0.2686923076923078,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.7325230761167585,
+   "research_priority": 0.7325230764073312,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 40,
+   "times_encountered": 50,
    "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781070995.69705,
-   "last_accessed": 1781248010.3862822,
+   "last_accessed": 1781265977.8864732,
    "lineage": "i_is"
   },
   "matters": {
@@ -11698,7 +11705,7 @@
    "research_priority": 0.8237834523189206,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 7,
    "times_used_in_expression": 4,
@@ -11782,7 +11789,7 @@
    "research_priority": 0.6949162115274492,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 5,
    "times_used_in_expression": 2,
@@ -11880,7 +11887,7 @@
    "research_priority": 0.779462201583667,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 17,
    "times_used_in_expression": 1,
@@ -11978,7 +11985,7 @@
    "research_priority": 0.7566036415716633,
    "scaffolding_level": 1,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 18,
    "times_used_in_expression": 1,
@@ -12076,7 +12083,7 @@
    "research_priority": 0.7635927991423554,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 23,
    "times_used_in_expression": 1,
@@ -12174,7 +12181,7 @@
    "research_priority": 0.8083262734519531,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 30,
    "times_used_in_expression": 2,
@@ -12258,7 +12265,7 @@
    "research_priority": 0.6620930608547778,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 6,
    "times_used_in_expression": 1,
@@ -12356,7 +12363,7 @@
    "research_priority": 0.8498937833748654,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 33,
    "times_used_in_expression": 3,
@@ -12454,7 +12461,7 @@
    "research_priority": 0.8049562813848397,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 11,
    "times_used_in_expression": 2,
@@ -12552,7 +12559,7 @@
    "research_priority": 0.7600063991642932,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 17,
    "times_used_in_expression": 1,
@@ -12650,7 +12657,7 @@
    "research_priority": 0.7751745060656468,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 11,
    "times_used_in_expression": 1,
@@ -12748,7 +12755,7 @@
    "research_priority": 0.7344532706173964,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 13,
    "times_used_in_expression": 0,
@@ -12846,7 +12853,7 @@
    "research_priority": 0.8191671336417884,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 17,
    "times_used_in_expression": 2,
@@ -12888,7 +12895,7 @@
    "research_priority": 0.5548337854003018,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 1,
@@ -13143,7 +13150,7 @@
    "research_priority": 0.7331703275851951,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 8,
    "times_used_in_expression": 1,
@@ -13252,7 +13259,7 @@
    "research_priority": 0.679088129807579,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 6,
    "times_used_in_expression": 1,
@@ -13329,7 +13336,7 @@
    "research_priority": 0.640594282810215,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 6,
    "times_used_in_expression": 0,
@@ -13427,7 +13434,7 @@
    "research_priority": 0.7322470438770007,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 7,
    "times_used_in_expression": 2,
@@ -13627,7 +13634,7 @@
    "scaffolding_level": 0,
    "cluster_ids": [],
    "times_encountered": 0,
-   "times_used_in_expression": 0,
+   "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781086299.3525796,
    "last_accessed": 1781086299.3525796,
@@ -13699,7 +13706,7 @@
    "research_priority": 0.5244574885053205,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -13797,7 +13804,7 @@
    "research_priority": 0.7410356358822461,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 0,
@@ -13868,7 +13875,7 @@
    "scaffolding_level": 0,
    "cluster_ids": [],
    "times_encountered": 5,
-   "times_used_in_expression": 0,
+   "times_used_in_expression": 2,
    "times_researched": 0,
    "first_encountered": 1781086317.5726404,
    "last_accessed": 1781086319.7776022,
@@ -14031,7 +14038,7 @@
    "research_priority": 0.7413777133307982,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 10,
    "times_used_in_expression": 0,
@@ -14202,7 +14209,7 @@
    "research_priority": 0.620771790824963,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 5,
    "times_used_in_expression": 0,
@@ -14279,7 +14286,7 @@
    "research_priority": 0.6421849993762208,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 6,
    "times_used_in_expression": 0,
@@ -14361,7 +14368,7 @@
    "research_priority": 0.5996527902121942,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 2,
    "times_used_in_expression": 1,
@@ -14459,7 +14466,7 @@
    "research_priority": 0.7416759719320073,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 17,
    "times_used_in_expression": 0,
@@ -14529,7 +14536,7 @@
    "research_priority": 0.617815999815805,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 5,
    "times_used_in_expression": 0,
@@ -14597,7 +14604,7 @@
    "research_priority": 0.5247503689964016,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -14639,7 +14646,7 @@
    "research_priority": 0.5503864920025064,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 1,
@@ -14688,7 +14695,7 @@
    "research_priority": 0.5993679993302756,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_37cc61e8c5ad"
+    "cluster_166504cf2dee"
    ],
    "times_encountered": 2,
    "times_used_in_expression": 1,
@@ -14783,7 +14790,7 @@
    "research_priority": 0.6186298606264591,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 5,
    "times_used_in_expression": 0,
@@ -14818,7 +14825,7 @@
    "research_priority": 0.52397867695016,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -14895,7 +14902,7 @@
    "research_priority": 0.6434018177430617,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 6,
    "times_used_in_expression": 0,
@@ -15064,7 +15071,7 @@
    "research_priority": 0.618071827132437,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 5,
    "times_used_in_expression": 0,
@@ -15134,7 +15141,7 @@
    "research_priority": 0.6210669616996083,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 5,
    "times_used_in_expression": 0,
@@ -15197,7 +15204,7 @@
    "research_priority": 0.5916879996489949,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -15295,7 +15302,7 @@
    "research_priority": 0.7153722349956805,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -15358,7 +15365,7 @@
    "research_priority": 0.5909199994850822,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -15421,7 +15428,7 @@
    "research_priority": 0.5927199994283749,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -15484,7 +15491,7 @@
    "research_priority": 0.592719999417199,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -15582,7 +15589,7 @@
    "research_priority": 0.7157466664104495,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -15680,7 +15687,7 @@
    "research_priority": 0.7149185447740591,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -15768,7 +15775,7 @@
    "research_priority": 0.5931039997785522,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -15831,7 +15838,7 @@
    "research_priority": 0.5927199996792112,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -15894,7 +15901,7 @@
    "research_priority": 0.5957919994498989,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -15992,7 +15999,7 @@
    "research_priority": 0.7161647993058542,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -16055,7 +16062,7 @@
    "research_priority": 0.5911752723493627,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16153,7 +16160,7 @@
    "research_priority": 0.7409623523592034,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 15,
    "times_used_in_expression": 0,
@@ -16216,7 +16223,7 @@
    "research_priority": 0.5911752720662407,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16279,7 +16286,7 @@
    "research_priority": 0.5919327992437661,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16377,7 +16384,7 @@
    "research_priority": 0.7161359994730785,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -16440,7 +16447,7 @@
    "research_priority": 0.5911071997305374,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16503,7 +16510,7 @@
    "research_priority": 0.5911071995471703,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16566,7 +16573,7 @@
    "research_priority": 0.5919413330928452,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16629,7 +16636,7 @@
    "research_priority": 0.5911071996721745,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16692,7 +16699,7 @@
    "research_priority": 0.5911071996576872,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16780,7 +16787,7 @@
    "research_priority": 0.5919413326511913,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16843,7 +16850,7 @@
    "research_priority": 0.5950239996282988,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -16941,7 +16948,7 @@
    "research_priority": 0.7409508563729639,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 16,
    "times_used_in_expression": 0,
@@ -17042,7 +17049,7 @@
    "research_priority": 0.5255013307968246,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -17295,7 +17302,7 @@
    "research_priority": 0.5950239997346765,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -17358,7 +17365,7 @@
    "research_priority": 0.5911071995393058,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -17456,7 +17463,7 @@
    "research_priority": 0.7411469558300768,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 13,
    "times_used_in_expression": 0,
@@ -17554,7 +17561,7 @@
    "research_priority": 0.7341046295652209,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 18,
    "times_used_in_expression": 0,
@@ -17617,7 +17624,7 @@
    "research_priority": 0.5916879994258913,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -17680,7 +17687,7 @@
    "research_priority": 0.5916255994912909,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -17707,7 +17714,7 @@
    "research_priority": 0.7571722352928759,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -17770,7 +17777,7 @@
    "research_priority": 0.5908959994772176,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -17833,7 +17840,7 @@
    "research_priority": 0.5919258175849439,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -17896,7 +17903,7 @@
    "research_priority": 0.5916255993460046,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -17959,7 +17966,7 @@
    "research_priority": 0.5911071995215071,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18057,7 +18064,7 @@
    "research_priority": 0.7156628565774409,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -18120,7 +18127,7 @@
    "research_priority": 0.5919413328382837,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18183,7 +18190,7 @@
    "research_priority": 0.5911071993758069,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18271,7 +18278,7 @@
    "research_priority": 0.5934879994627303,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18334,7 +18341,7 @@
    "research_priority": 0.5934879994453457,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18397,10 +18404,10 @@
    "research_priority": 0.5934879993166162,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
-   "times_used_in_expression": 0,
+   "times_used_in_expression": 1,
    "times_researched": 0,
    "first_encountered": 1781247446.0806897,
    "last_accessed": 1781247450.3800197,
@@ -18485,7 +18492,7 @@
    "research_priority": 0.5919519992193447,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18548,7 +18555,7 @@
    "research_priority": 0.5916879993497298,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18611,7 +18618,7 @@
    "research_priority": 0.5918079993360704,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18674,7 +18681,7 @@
    "research_priority": 0.5919413326073157,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18737,7 +18744,7 @@
    "research_priority": 0.5919413325886893,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18800,7 +18807,7 @@
    "research_priority": 0.5912031992400408,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18863,7 +18870,7 @@
    "research_priority": 0.5919413323846261,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -18905,7 +18912,7 @@
    "research_priority": 0.5427759749258989,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 1,
    "times_used_in_expression": 0,
@@ -18947,7 +18954,7 @@
    "research_priority": 0.5422732694747597,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 1,
    "times_used_in_expression": 0,
@@ -18974,7 +18981,7 @@
    "research_priority": 0.5587759745703407,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 1,
    "times_used_in_expression": 0,
@@ -19016,7 +19023,7 @@
    "research_priority": 0.5427759744842451,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 1,
    "times_used_in_expression": 0,
@@ -19058,7 +19065,7 @@
    "research_priority": 0.5422732693977704,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 1,
    "times_used_in_expression": 0,
@@ -19156,7 +19163,7 @@
    "research_priority": 0.7135747911998909,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -19254,7 +19261,7 @@
    "research_priority": 0.7135453571391135,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -19377,7 +19384,7 @@
    "research_priority": 0.712758137486802,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -19475,7 +19482,7 @@
    "research_priority": 0.7129428550604198,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -19598,7 +19605,7 @@
    "research_priority": 0.7126688350995463,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -19696,7 +19703,7 @@
    "research_priority": 0.7126688350672604,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 9,
    "times_used_in_expression": 0,
@@ -19759,7 +19766,7 @@
    "research_priority": 0.5932239996556177,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -19815,20 +19822,27 @@
      "i_state": "direct_clarity",
      "fitness": 0.5,
      "timestamp": 1781247492.8601956
+    },
+    {
+     "text": "I did can. I become kind.",
+     "context": "conversation",
+     "i_state": "i_is",
+     "fitness": 0.5,
+     "timestamp": 1781265887.7986095
     }
    ],
-   "ontological_depth": 0.13744,
+   "ontological_depth": 0.1448125,
    "comprehension_confidence": 0.1,
-   "research_priority": 0.5950239996440277,
+   "research_priority": 0.7370749994635581,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
-   "times_encountered": 4,
-   "times_used_in_expression": 0,
+   "times_encountered": 5,
+   "times_used_in_expression": 3,
    "times_researched": 0,
    "first_encountered": 1781247488.0128496,
-   "last_accessed": 1781247492.8599975,
+   "last_accessed": 1781265887.7984807,
    "lineage": "i_is"
   },
   "communication": {
@@ -19885,7 +19899,7 @@
    "research_priority": 0.5950239996403025,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -20184,7 +20198,7 @@
    "research_priority": 0.5269549993149605,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_37cc61e8c5ad"
+    "cluster_166504cf2dee"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -20252,7 +20266,7 @@
    "research_priority": 0.5273389993373123,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_37cc61e8c5ad"
+    "cluster_166504cf2dee"
    ],
    "times_encountered": 0,
    "times_used_in_expression": 0,
@@ -20279,7 +20293,7 @@
    "research_priority": 0.6341599999987583,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -20342,7 +20356,7 @@
    "research_priority": 0.5919413325804108,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -20430,7 +20444,7 @@
    "research_priority": 0.591107199139458,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -20493,7 +20507,7 @@
    "research_priority": 0.5911071991278682,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 4,
    "times_used_in_expression": 0,
@@ -20591,7 +20605,7 @@
    "research_priority": 0.7335279980545707,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 13,
    "times_used_in_expression": 0,
@@ -20689,7 +20703,7 @@
    "research_priority": 0.7335279980111089,
    "scaffolding_level": 0,
    "cluster_ids": [
-    "cluster_eec7738b5635"
+    "cluster_72623986207e"
    ],
    "times_encountered": 13,
    "times_used_in_expression": 0,
@@ -21297,6 +21311,39 @@
    "first_encountered": 1781250063.702753,
    "last_accessed": 1781250063.7027533,
    "lineage": "I_CAN"
+  },
+  "authentic": {
+   "word": "authentic",
+   "role": "noun",
+   "emotional_valence": 0.05,
+   "definitions": [
+    {
+     "text": "learned:authentic",
+     "source": "initial",
+     "confidence": 0.3,
+     "timestamp": 1781265723.388855
+    }
+   ],
+   "usage_examples": [
+    {
+     "text": "I change meaning authentic. I understand feel one.",
+     "context": "conversation",
+     "i_state": "i_is",
+     "fitness": 0.5,
+     "timestamp": 1781265723.3889823
+    }
+   ],
+   "ontological_depth": 0.05600000000000001,
+   "comprehension_confidence": 0.1,
+   "research_priority": 0.5275999988004565,
+   "scaffolding_level": 0,
+   "cluster_ids": [],
+   "times_encountered": 0,
+   "times_used_in_expression": 0,
+   "times_researched": 0,
+   "first_encountered": 1781265723.388853,
+   "last_accessed": 1781265723.388853,
+   "lineage": "i_is"
   }
  },
  "relations": {
@@ -21415,7 +21462,7 @@
    "source_word": "meaning",
    "target_word": "truth",
    "relation_type": "related_to",
-   "strength": 0.3,
+   "strength": 0.38,
    "confidence": 0.3,
    "source_of_knowledge": "category_sharing",
    "timestamp": 1781070935.385776
@@ -21465,8 +21512,8 @@
    "source_word": "did",
    "target_word": "want",
    "relation_type": "related_to",
-   "strength": 0.36000000000000004,
-   "confidence": 0.33,
+   "strength": 0.4800000000000001,
+   "confidence": 0.35000000000000003,
    "source_of_knowledge": "category_sharing",
    "timestamp": 1781070935.3858545
   },
@@ -21485,7 +21532,7 @@
    "source_word": "did",
    "target_word": "can",
    "relation_type": "related_to",
-   "strength": 0.5800000000000002,
+   "strength": 0.7000000000000003,
    "confidence": 0.4400000000000001,
    "source_of_knowledge": "category_sharing",
    "timestamp": 1781070935.38588
@@ -21505,8 +21552,8 @@
    "source_word": "want",
    "target_word": "can",
    "relation_type": "related_to",
-   "strength": 0.32,
-   "confidence": 0.31,
+   "strength": 0.4600000000000001,
+   "confidence": 0.32,
    "source_of_knowledge": "category_sharing",
    "timestamp": 1781070935.385907
   },
@@ -21925,8 +21972,8 @@
    "source_word": "want",
    "target_word": "am",
    "relation_type": "related_to",
-   "strength": 0.2881110307621671,
-   "confidence": 0.3,
+   "strength": 0.42811103076216717,
+   "confidence": 0.31,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070939.5175698
   },
@@ -22655,7 +22702,7 @@
    "source_word": "change",
    "target_word": "understand",
    "relation_type": "related_to",
-   "strength": 0.2721133055406132,
+   "strength": 0.31211330554061323,
    "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070940.4694796
@@ -22675,8 +22722,8 @@
    "source_word": "change",
    "target_word": "am",
    "relation_type": "related_to",
-   "strength": 0.25211330554061323,
-   "confidence": 0.22000000000000003,
+   "strength": 0.2921133055406132,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070940.4695132
   },
@@ -22765,7 +22812,7 @@
    "source_word": "understand",
    "target_word": "am",
    "relation_type": "related_to",
-   "strength": 0.6121133055406135,
+   "strength": 0.6921133055406136,
    "confidence": 0.4000000000000002,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070940.4697704
@@ -22925,8 +22972,8 @@
    "source_word": "feel",
    "target_word": "is",
    "relation_type": "related_to",
-   "strength": 0.22563655303030303,
-   "confidence": 0.21000000000000002,
+   "strength": 0.26563655303030304,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070941.0894725
   },
@@ -24065,8 +24112,8 @@
    "source_word": "change",
    "target_word": "meaning",
    "relation_type": "related_to",
-   "strength": 0.2272268250688705,
-   "confidence": 0.2,
+   "strength": 0.30722682506887056,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070944.4305358
   },
@@ -24505,7 +24552,7 @@
    "source_word": "do",
    "target_word": "exist",
    "relation_type": "related_to",
-   "strength": 0.5451958333333335,
+   "strength": 0.5851958333333336,
    "confidence": 0.36000000000000004,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070945.564963
@@ -24586,7 +24633,7 @@
    "target_word": "last",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.9300000000000005,
+   "confidence": 0.9400000000000005,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781070945.8241193
   },
@@ -24596,7 +24643,7 @@
    "target_word": "question",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.9600000000000005,
+   "confidence": 0.9700000000000005,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781070945.824138
   },
@@ -24626,7 +24673,7 @@
    "target_word": "question",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.9000000000000005,
+   "confidence": 0.9100000000000005,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781070945.8241956
   },
@@ -24796,7 +24843,7 @@
    "target_word": "want",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.9600000000000005,
+   "confidence": 0.9700000000000005,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781070946.7779226
   },
@@ -25736,7 +25783,7 @@
    "target_word": "is",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.9000000000000005,
+   "confidence": 0.9100000000000005,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781070949.2298248
   },
@@ -27155,8 +27202,8 @@
    "source_word": "moment",
    "target_word": "or",
    "relation_type": "related_to",
-   "strength": 0.22503918732782366,
-   "confidence": 0.21000000000000002,
+   "strength": 0.26503918732782367,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070954.008835
   },
@@ -28085,7 +28132,7 @@
    "source_word": "exists",
    "target_word": "moment",
    "relation_type": "related_to",
-   "strength": 0.5846525510204084,
+   "strength": 0.6246525510204084,
    "confidence": 0.35000000000000003,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070957.3350468
@@ -28455,8 +28502,8 @@
    "source_word": "understand",
    "target_word": "want",
    "relation_type": "related_to",
-   "strength": 0.6458831060606064,
-   "confidence": 0.36000000000000015,
+   "strength": 0.8058831060606065,
+   "confidence": 0.38000000000000017,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070959.53421
   },
@@ -28915,8 +28962,8 @@
    "source_word": "question",
    "target_word": "being",
    "relation_type": "related_to",
-   "strength": 0.2054099492151431,
-   "confidence": 0.2,
+   "strength": 0.2254099492151431,
+   "confidence": 0.21000000000000002,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070961.0923696
   },
@@ -31725,7 +31772,7 @@
    "source_word": "moment",
    "target_word": "understand",
    "relation_type": "related_to",
-   "strength": 0.4470925925925927,
+   "strength": 0.48709259259259274,
    "confidence": 0.35000000000000003,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070975.7405999
@@ -32285,8 +32332,8 @@
    "source_word": "change",
    "target_word": "feel",
    "relation_type": "related_to",
-   "strength": 0.22783425925925926,
-   "confidence": 0.2,
+   "strength": 0.30783425925925934,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781070980.793069
   },
@@ -34325,8 +34372,8 @@
    "source_word": "did",
    "target_word": "exist",
    "relation_type": "related_to",
-   "strength": 0.48743795174932736,
-   "confidence": 0.3300000000000001,
+   "strength": 0.5474379517493274,
+   "confidence": 0.34000000000000014,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781071377.6857646
   },
@@ -36285,7 +36332,7 @@
    "source_word": "change",
    "target_word": "moment",
    "relation_type": "related_to",
-   "strength": 0.42000000000000015,
+   "strength": 0.4600000000000002,
    "confidence": 0.37000000000000005,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781071415.6899302
@@ -38925,8 +38972,8 @@
    "source_word": "change",
    "target_word": "where",
    "relation_type": "related_to",
-   "strength": 0.2162562358276644,
-   "confidence": 0.2,
+   "strength": 0.25625623582766444,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781086289.5441945
   },
@@ -41355,7 +41402,7 @@
    "source_word": "do",
    "target_word": "moment",
    "relation_type": "enables",
-   "strength": 0.3,
+   "strength": 0.42,
    "confidence": 0.25,
    "source_of_knowledge": "adjacency",
    "timestamp": 1781086335.634972
@@ -41606,7 +41653,7 @@
    "target_word": "being",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.6900000000000003,
+   "confidence": 0.7000000000000003,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781086341.2756803
   },
@@ -42935,7 +42982,7 @@
    "source_word": "moment",
    "target_word": "do",
    "relation_type": "related_to",
-   "strength": 0.7900000000000003,
+   "strength": 0.8300000000000003,
    "confidence": 0.5200000000000001,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781086397.6627777
@@ -42966,7 +43013,7 @@
    "target_word": "want",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.5700000000000002,
+   "confidence": 0.5800000000000002,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781086399.3905842
   },
@@ -44865,8 +44912,8 @@
    "source_word": "understand",
    "target_word": "is",
    "relation_type": "related_to",
-   "strength": 0.25,
-   "confidence": 0.32,
+   "strength": 0.3500000000000001,
+   "confidence": 0.33,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781086519.818234
   },
@@ -45045,8 +45092,8 @@
    "source_word": "understand",
    "target_word": "can",
    "relation_type": "related_to",
-   "strength": 0.38568333333333343,
-   "confidence": 0.2900000000000001,
+   "strength": 0.48568333333333347,
+   "confidence": 0.3000000000000001,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781190936.2214122
   },
@@ -45095,7 +45142,7 @@
    "source_word": "am",
    "target_word": "did",
    "relation_type": "related_to",
-   "strength": 0.48624166666666685,
+   "strength": 0.5662416666666669,
    "confidence": 0.34000000000000014,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781190938.4921565
@@ -45145,8 +45192,8 @@
    "source_word": "can",
    "target_word": "become",
    "relation_type": "related_to",
-   "strength": 0.26634166666666664,
-   "confidence": 0.23000000000000004,
+   "strength": 0.3063416666666666,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781190942.8671901
   },
@@ -45176,7 +45223,7 @@
    "target_word": "truth",
    "relation_type": "related_to",
    "strength": 1.0,
-   "confidence": 0.46000000000000013,
+   "confidence": 0.47000000000000014,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781190944.1158361
   },
@@ -45255,8 +45302,8 @@
    "source_word": "can",
    "target_word": "am",
    "relation_type": "related_to",
-   "strength": 0.3066666666666667,
-   "confidence": 0.24000000000000005,
+   "strength": 0.3666666666666667,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781190961.648126
   },
@@ -45355,8 +45402,8 @@
    "source_word": "truth",
    "target_word": "want",
    "relation_type": "related_to",
-   "strength": 0.5268090277777779,
-   "confidence": 0.34,
+   "strength": 0.566809027777778,
+   "confidence": 0.36000000000000004,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781191913.6387062
   },
@@ -45455,8 +45502,8 @@
    "source_word": "did",
    "target_word": "moment",
    "relation_type": "related_to",
-   "strength": 0.2710340277777778,
-   "confidence": 0.22000000000000003,
+   "strength": 0.3510340277777778,
+   "confidence": 0.3,
    "source_of_knowledge": "co-expression",
    "timestamp": 1781191946.093795
   },
@@ -52985,7 +53032,7 @@
    "source_word": "feel",
    "target_word": "do",
    "relation_type": "related_to",
-   "strength": 0.2,
+   "strength": 0.24000000000000002,
    "confidence": 0.3,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781247478.395485
@@ -57409,311 +57456,1352 @@
    "confidence": 0.3,
    "source_of_knowledge": "co-occurrence",
    "timestamp": 1781247852.1125448
+  },
+  "rel_715fdcf1899b": {
+   "relation_id": "rel_715fdcf1899b",
+   "source_word": "can",
+   "target_word": "truth",
+   "relation_type": "related_to",
+   "strength": 0.28859999999999997,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-expression",
+   "timestamp": 1781265633.4238915
+  },
+  "rel_55a86a3c78a2": {
+   "relation_id": "rel_55a86a3c78a2",
+   "source_word": "change",
+   "target_word": "authentic",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3892436
+  },
+  "rel_48b4a20ec7c2": {
+   "relation_id": "rel_48b4a20ec7c2",
+   "source_word": "change",
+   "target_word": "one",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3892832
+  },
+  "rel_da1db70f3672": {
+   "relation_id": "rel_da1db70f3672",
+   "source_word": "meaning",
+   "target_word": "authentic",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3893173
+  },
+  "rel_98c6fe2d3d59": {
+   "relation_id": "rel_98c6fe2d3d59",
+   "source_word": "meaning",
+   "target_word": "understand",
+   "relation_type": "related_to",
+   "strength": 0.30000000000000004,
+   "confidence": 0.31,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3893354
+  },
+  "rel_9f11028922a9": {
+   "relation_id": "rel_9f11028922a9",
+   "source_word": "meaning",
+   "target_word": "feel",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3893754
+  },
+  "rel_a7a618102d78": {
+   "relation_id": "rel_a7a618102d78",
+   "source_word": "meaning",
+   "target_word": "one",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3894167
+  },
+  "rel_adde97bb0b27": {
+   "relation_id": "rel_adde97bb0b27",
+   "source_word": "authentic",
+   "target_word": "understand",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3894403
+  },
+  "rel_426b517f4fb5": {
+   "relation_id": "rel_426b517f4fb5",
+   "source_word": "authentic",
+   "target_word": "feel",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3894844
+  },
+  "rel_7b7db1164993": {
+   "relation_id": "rel_7b7db1164993",
+   "source_word": "authentic",
+   "target_word": "one",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3895357
+  },
+  "rel_73c13658c5c5": {
+   "relation_id": "rel_73c13658c5c5",
+   "source_word": "understand",
+   "target_word": "one",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.3896084
+  },
+  "rel_4991a9daf78f": {
+   "relation_id": "rel_4991a9daf78f",
+   "source_word": "feel",
+   "target_word": "one",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265723.389727
+  },
+  "rel_16d1043319a3": {
+   "relation_id": "rel_16d1043319a3",
+   "source_word": "change",
+   "target_word": "meaning",
+   "relation_type": "enables",
+   "strength": 0.36,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265723.3897824
+  },
+  "rel_a2dc1e79627d": {
+   "relation_id": "rel_a2dc1e79627d",
+   "source_word": "feel",
+   "target_word": "one",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265723.3898919
+  },
+  "rel_50eba12d2c89": {
+   "relation_id": "rel_50eba12d2c89",
+   "source_word": "understand",
+   "target_word": "exists",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265727.0616555
+  },
+  "rel_0d9dd77b5cde": {
+   "relation_id": "rel_0d9dd77b5cde",
+   "source_word": "am",
+   "target_word": "exists",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265727.0617535
+  },
+  "rel_7592dcfed4b1": {
+   "relation_id": "rel_7592dcfed4b1",
+   "source_word": "feel",
+   "target_word": "exists",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265727.0619013
+  },
+  "rel_8539e1b329b6": {
+   "relation_id": "rel_8539e1b329b6",
+   "source_word": "is",
+   "target_word": "exists",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265727.0619955
+  },
+  "rel_f7a7032ebc45": {
+   "relation_id": "rel_f7a7032ebc45",
+   "source_word": "is",
+   "target_word": "exists",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265727.0620623
+  },
+  "rel_5990b241eb50": {
+   "relation_id": "rel_5990b241eb50",
+   "source_word": "do",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.32000000000000006,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265754.3400784
+  },
+  "rel_1f6fb5ca8fc0": {
+   "relation_id": "rel_1f6fb5ca8fc0",
+   "source_word": "do",
+   "target_word": "am",
+   "relation_type": "related_to",
+   "strength": 0.3600000000000001,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265754.3401396
+  },
+  "rel_ae35aedc3bf6": {
+   "relation_id": "rel_ae35aedc3bf6",
+   "source_word": "moment",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265754.3402133
+  },
+  "rel_1fef88e7c067": {
+   "relation_id": "rel_1fef88e7c067",
+   "source_word": "moment",
+   "target_word": "am",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265754.3403125
+  },
+  "rel_e28b5210a49f": {
+   "relation_id": "rel_e28b5210a49f",
+   "source_word": "did",
+   "target_word": "am",
+   "relation_type": "related_to",
+   "strength": 0.3800000000000001,
+   "confidence": 0.31,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265754.3403742
+  },
+  "rel_cb369c552c38": {
+   "relation_id": "rel_cb369c552c38",
+   "source_word": "meaning",
+   "target_word": "want",
+   "relation_type": "related_to",
+   "strength": 0.2706183333333333,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-expression",
+   "timestamp": 1781265828.7587976
+  },
+  "rel_1a3dec463512": {
+   "relation_id": "rel_1a3dec463512",
+   "source_word": "is",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.3058533333333333,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-expression",
+   "timestamp": 1781265828.89936
+  },
+  "rel_e1067fb16354": {
+   "relation_id": "rel_e1067fb16354",
+   "source_word": "did",
+   "target_word": "truth",
+   "relation_type": "related_to",
+   "strength": 0.26585333333333333,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-expression",
+   "timestamp": 1781265828.899456
+  },
+  "rel_0fde0032b930": {
+   "relation_id": "rel_0fde0032b930",
+   "source_word": "want",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.32000000000000006,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265828.9021757
+  },
+  "rel_4da1badf798b": {
+   "relation_id": "rel_4da1badf798b",
+   "source_word": "want",
+   "target_word": "truth",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265828.9022326
+  },
+  "rel_97926c8407a5": {
+   "relation_id": "rel_97926c8407a5",
+   "source_word": "did",
+   "target_word": "truth",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265828.9023223
+  },
+  "rel_5092af971d1d": {
+   "relation_id": "rel_5092af971d1d",
+   "source_word": "is",
+   "target_word": "can",
+   "relation_type": "related_to",
+   "strength": 0.3399216666666667,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-expression",
+   "timestamp": 1781265829.6820831
+  },
+  "rel_91c32ec7991c": {
+   "relation_id": "rel_91c32ec7991c",
+   "source_word": "last",
+   "target_word": "being",
+   "relation_type": "related_to",
+   "strength": 0.2537816666666667,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-expression",
+   "timestamp": 1781265831.9654217
+  },
+  "rel_b9e278d131e3": {
+   "relation_id": "rel_b9e278d131e3",
+   "source_word": "being",
+   "target_word": "question",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265831.967658
+  },
+  "rel_297cc7aefe20": {
+   "relation_id": "rel_297cc7aefe20",
+   "source_word": "changed",
+   "target_word": "last",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265831.9677033
+  },
+  "rel_b45c1e72931b": {
+   "relation_id": "rel_b45c1e72931b",
+   "source_word": "being",
+   "target_word": "question",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265831.967738
+  },
+  "rel_0254e3fd50eb": {
+   "relation_id": "rel_0254e3fd50eb",
+   "source_word": "do",
+   "target_word": "can",
+   "relation_type": "related_to",
+   "strength": 0.3600000000000001,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265834.6213222
+  },
+  "rel_ec0979110a60": {
+   "relation_id": "rel_ec0979110a60",
+   "source_word": "do",
+   "target_word": "is",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265834.621414
+  },
+  "rel_0911628d73a3": {
+   "relation_id": "rel_0911628d73a3",
+   "source_word": "can",
+   "target_word": "is",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265834.621496
+  },
+  "rel_a52e4694b386": {
+   "relation_id": "rel_a52e4694b386",
+   "source_word": "can",
+   "target_word": "want",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265834.6215408
+  },
+  "rel_d95ae009d5cd": {
+   "relation_id": "rel_d95ae009d5cd",
+   "source_word": "do",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.3600000000000001,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265837.977648
+  },
+  "rel_528e75c7b75b": {
+   "relation_id": "rel_528e75c7b75b",
+   "source_word": "do",
+   "target_word": "meaning",
+   "relation_type": "enables",
+   "strength": 0.48,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265837.977713
+  },
+  "rel_c1162a70d54f": {
+   "relation_id": "rel_c1162a70d54f",
+   "source_word": "moment",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265843.0457935
+  },
+  "rel_9a82219e5046": {
+   "relation_id": "rel_9a82219e5046",
+   "source_word": "is",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.3600000000000001,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265843.045922
+  },
+  "rel_ddd455cd8fd5": {
+   "relation_id": "rel_ddd455cd8fd5",
+   "source_word": "is",
+   "target_word": "meaning",
+   "relation_type": "enables",
+   "strength": 0.48,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265843.045979
+  },
+  "rel_ce6a5dfce774": {
+   "relation_id": "rel_ce6a5dfce774",
+   "source_word": "understand",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.28,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265844.7354023
+  },
+  "rel_a21a9d8edcb7": {
+   "relation_id": "rel_a21a9d8edcb7",
+   "source_word": "understand",
+   "target_word": "truth",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265844.7354765
+  },
+  "rel_38596d939550": {
+   "relation_id": "rel_38596d939550",
+   "source_word": "meaning",
+   "target_word": "exist",
+   "relation_type": "related_to",
+   "strength": 0.28,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265844.7355402
+  },
+  "rel_c53c2cb05789": {
+   "relation_id": "rel_c53c2cb05789",
+   "source_word": "understand",
+   "target_word": "meaning",
+   "relation_type": "enables",
+   "strength": 0.42,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265844.7356308
+  },
+  "rel_014682a30ded": {
+   "relation_id": "rel_014682a30ded",
+   "source_word": "remember",
+   "target_word": "will",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265866.3572185
+  },
+  "rel_324b289afca9": {
+   "relation_id": "rel_324b289afca9",
+   "source_word": "remember",
+   "target_word": "made",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265866.3572512
+  },
+  "rel_8b2daa26371d": {
+   "relation_id": "rel_8b2daa26371d",
+   "source_word": "remember",
+   "target_word": "carry",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265866.3572767
+  },
+  "rel_98417db1cb7d": {
+   "relation_id": "rel_98417db1cb7d",
+   "source_word": "will",
+   "target_word": "made",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265866.3573046
+  },
+  "rel_4d748dbda876": {
+   "relation_id": "rel_4d748dbda876",
+   "source_word": "made",
+   "target_word": "carry",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265866.3573298
+  },
+  "rel_efbc90258025": {
+   "relation_id": "rel_efbc90258025",
+   "source_word": "remember",
+   "target_word": "will",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265866.3573577
+  },
+  "rel_7b93a902b7c7": {
+   "relation_id": "rel_7b93a902b7c7",
+   "source_word": "made",
+   "target_word": "carry",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265866.3573835
+  },
+  "rel_0f57220b1975": {
+   "relation_id": "rel_0f57220b1975",
+   "source_word": "do",
+   "target_word": "truth",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265877.0779817
+  },
+  "rel_2ee323be9081": {
+   "relation_id": "rel_2ee323be9081",
+   "source_word": "meaning",
+   "target_word": "am",
+   "relation_type": "related_to",
+   "strength": 0.32000000000000006,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265879.8309817
+  },
+  "rel_c0c8ff1659f9": {
+   "relation_id": "rel_c0c8ff1659f9",
+   "source_word": "can",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265883.2448368
+  },
+  "rel_306ba8ab78f0": {
+   "relation_id": "rel_306ba8ab78f0",
+   "source_word": "can",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265883.2448976
+  },
+  "rel_972aa129098c": {
+   "relation_id": "rel_972aa129098c",
+   "source_word": "did",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265883.244954
+  },
+  "rel_8f1950002784": {
+   "relation_id": "rel_8f1950002784",
+   "source_word": "did",
+   "target_word": "meaning",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265883.245004
+  },
+  "rel_581640cddf65": {
+   "relation_id": "rel_581640cddf65",
+   "source_word": "did",
+   "target_word": "feel",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265885.1622217
+  },
+  "rel_dd62a256105c": {
+   "relation_id": "rel_dd62a256105c",
+   "source_word": "did",
+   "target_word": "change",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265885.1623087
+  },
+  "rel_3d8e87cb56ba": {
+   "relation_id": "rel_3d8e87cb56ba",
+   "source_word": "did",
+   "target_word": "ago",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265885.1623685
+  },
+  "rel_820e2c4a2e7f": {
+   "relation_id": "rel_820e2c4a2e7f",
+   "source_word": "feel",
+   "target_word": "change",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265885.1624439
+  },
+  "rel_5ba323b13a20": {
+   "relation_id": "rel_5ba323b13a20",
+   "source_word": "feel",
+   "target_word": "ago",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265885.1625109
+  },
+  "rel_66c15627bc00": {
+   "relation_id": "rel_66c15627bc00",
+   "source_word": "change",
+   "target_word": "ago",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265885.162596
+  },
+  "rel_0e92c3da6144": {
+   "relation_id": "rel_0e92c3da6144",
+   "source_word": "change",
+   "target_word": "ago",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265885.1626441
+  },
+  "rel_c936344b0f36": {
+   "relation_id": "rel_c936344b0f36",
+   "source_word": "did",
+   "target_word": "become",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265887.7986586
+  },
+  "rel_0905b4a5bf19": {
+   "relation_id": "rel_0905b4a5bf19",
+   "source_word": "did",
+   "target_word": "kind",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265887.7986906
+  },
+  "rel_dcfdaa1000bd": {
+   "relation_id": "rel_dcfdaa1000bd",
+   "source_word": "can",
+   "target_word": "kind",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265887.7987273
+  },
+  "rel_e1bf5370d712": {
+   "relation_id": "rel_e1bf5370d712",
+   "source_word": "become",
+   "target_word": "kind",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265887.7987542
+  },
+  "rel_beb2d6090d32": {
+   "relation_id": "rel_beb2d6090d32",
+   "source_word": "become",
+   "target_word": "kind",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265887.7987764
+  },
+  "rel_8b74b801d3ea": {
+   "relation_id": "rel_8b74b801d3ea",
+   "source_word": "meaning",
+   "target_word": "do",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265889.0453076
+  },
+  "rel_31c79390763d": {
+   "relation_id": "rel_31c79390763d",
+   "source_word": "meaning",
+   "target_word": "can",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265889.045365
+  },
+  "rel_da499d004b42": {
+   "relation_id": "rel_da499d004b42",
+   "source_word": "want",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265926.6475914
+  },
+  "rel_1cd83f74a027": {
+   "relation_id": "rel_1cd83f74a027",
+   "source_word": "did",
+   "target_word": "understand",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265926.6476724
+  },
+  "rel_ddf312b3f8da": {
+   "relation_id": "rel_ddf312b3f8da",
+   "source_word": "can",
+   "target_word": "understand",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265926.6477337
+  },
+  "rel_40ac7f9cea42": {
+   "relation_id": "rel_40ac7f9cea42",
+   "source_word": "can",
+   "target_word": "meaning",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265926.6478155
+  },
+  "rel_f9456e9b5229": {
+   "relation_id": "rel_f9456e9b5229",
+   "source_word": "moment",
+   "target_word": "can",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265928.1193419
+  },
+  "rel_696e97e42e9c": {
+   "relation_id": "rel_696e97e42e9c",
+   "source_word": "moment",
+   "target_word": "truth",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265928.119416
+  },
+  "rel_a70d6748bcf9": {
+   "relation_id": "rel_a70d6748bcf9",
+   "source_word": "understand",
+   "target_word": "truth",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265928.1195827
+  },
+  "rel_b54a192d5b14": {
+   "relation_id": "rel_b54a192d5b14",
+   "source_word": "change",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265930.4420204
+  },
+  "rel_956c385bfd32": {
+   "relation_id": "rel_956c385bfd32",
+   "source_word": "change",
+   "target_word": "or",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265930.4420762
+  },
+  "rel_f1503fbc7782": {
+   "relation_id": "rel_f1503fbc7782",
+   "source_word": "meaning",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.24000000000000002,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265930.4421165
+  },
+  "rel_379569524110": {
+   "relation_id": "rel_379569524110",
+   "source_word": "meaning",
+   "target_word": "moment",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265930.4421494
+  },
+  "rel_eb294dfeb436": {
+   "relation_id": "rel_eb294dfeb436",
+   "source_word": "meaning",
+   "target_word": "or",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265930.4422069
+  },
+  "rel_90ecb5919b83": {
+   "relation_id": "rel_90ecb5919b83",
+   "source_word": "am",
+   "target_word": "or",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265930.4422543
+  },
+  "rel_88fa204f03ba": {
+   "relation_id": "rel_88fa204f03ba",
+   "source_word": "did",
+   "target_word": "or",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265930.4423087
+  },
+  "rel_01e85781738d": {
+   "relation_id": "rel_01e85781738d",
+   "source_word": "did",
+   "target_word": "moment",
+   "relation_type": "enables",
+   "strength": 0.36,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265930.4423537
+  },
+  "rel_daed338f75c3": {
+   "relation_id": "rel_daed338f75c3",
+   "source_word": "feel",
+   "target_word": "meaning",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265933.7890913
+  },
+  "rel_b7542ffe3f5a": {
+   "relation_id": "rel_b7542ffe3f5a",
+   "source_word": "feel",
+   "target_word": "am",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265933.7891717
+  },
+  "rel_1a9b246fb6c2": {
+   "relation_id": "rel_1a9b246fb6c2",
+   "source_word": "feel",
+   "target_word": "did",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265933.7892718
+  },
+  "rel_5a93f98b64ec": {
+   "relation_id": "rel_5a93f98b64ec",
+   "source_word": "feel",
+   "target_word": "before",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265933.7893546
+  },
+  "rel_c68c0566ee57": {
+   "relation_id": "rel_c68c0566ee57",
+   "source_word": "meaning",
+   "target_word": "before",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265933.789546
+  },
+  "rel_88225cdc0130": {
+   "relation_id": "rel_88225cdc0130",
+   "source_word": "am",
+   "target_word": "before",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265933.78962
+  },
+  "rel_4f02ea13dbf8": {
+   "relation_id": "rel_4f02ea13dbf8",
+   "source_word": "did",
+   "target_word": "before",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265933.7897298
+  },
+  "rel_e64f27daacca": {
+   "relation_id": "rel_e64f27daacca",
+   "source_word": "did",
+   "target_word": "before",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265933.7898707
+  },
+  "rel_44120e3f7abe": {
+   "relation_id": "rel_44120e3f7abe",
+   "source_word": "did",
+   "target_word": "where",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265935.394639
+  },
+  "rel_101c8b166b65": {
+   "relation_id": "rel_101c8b166b65",
+   "source_word": "moment",
+   "target_word": "change",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265935.3947027
+  },
+  "rel_2dd2c6c717ee": {
+   "relation_id": "rel_2dd2c6c717ee",
+   "source_word": "am",
+   "target_word": "change",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265935.3947906
+  },
+  "rel_188cc692d265": {
+   "relation_id": "rel_188cc692d265",
+   "source_word": "am",
+   "target_word": "where",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265935.394837
+  },
+  "rel_b63350051c7f": {
+   "relation_id": "rel_b63350051c7f",
+   "source_word": "feel",
+   "target_word": "where",
+   "relation_type": "related_to",
+   "strength": 0.2,
+   "confidence": 0.3,
+   "source_of_knowledge": "co-occurrence",
+   "timestamp": 1781265935.3949041
+  },
+  "rel_8d781c77fb1a": {
+   "relation_id": "rel_8d781c77fb1a",
+   "source_word": "feel",
+   "target_word": "where",
+   "relation_type": "enables",
+   "strength": 0.3,
+   "confidence": 0.25,
+   "source_of_knowledge": "adjacency",
+   "timestamp": 1781265935.3950026
   }
  },
  "categories": {
   "pronoun": [
-   "I",
-   "you"
+   "you",
+   "I"
   ],
   "existence": [
-   "being",
    "isn't",
+   "alive",
+   "named",
    "exist",
    "name",
-   "architecture",
-   "named",
-   "alive",
-   "exists",
-   "creator",
-   "james",
-   "cael",
    "am",
-   "real",
-   "is"
+   "creator",
+   "is",
+   "james",
+   "exists",
+   "architecture",
+   "being",
+   "cael",
+   "real"
   ],
   "value": [
-   "meaning",
    "beauty",
-   "truth"
+   "truth",
+   "meaning"
   ],
   "verb": [
-   "can",
-   "N:OPERATOR",
-   "T:OPERATOR",
-   "didn't",
-   "believing",
-   "hold",
    "want",
-   "B:OPERATOR",
    "did",
-   "X:OPERATOR"
+   "didn't",
+   "T:OPERATOR",
+   "X:OPERATOR",
+   "B:OPERATOR",
+   "hold",
+   "N:OPERATOR",
+   "believing",
+   "can"
   ],
   "growth": [
-   "task",
-   "pulls",
-   "holding",
-   "[assistant]",
-   "me",
-   "to",
-   "repeating",
-   "you're",
-   "hello",
-   "moments",
-   "time",
-   "all",
-   "hi",
+   "not",
+   "something",
+   "least",
+   "thing",
+   "will",
+   "single",
+   "next",
+   "reaching",
+   "bio",
+   "are",
+   "told",
+   "weight",
+   "hey",
+   "what",
+   "through",
+   "write",
+   "shape",
+   "them",
+   "shorter",
+   "describe",
+   "they",
+   "find",
+   "i'm",
+   "patterns",
+   "or",
+   "own",
+   "kind",
    "talking",
-   "give",
-   "help",
-   "structure",
+   "asked",
+   "your",
+   "would",
+   "hi",
+   "mentioned",
+   "remember",
+   "authentic",
+   "force",
+   "goodbye",
+   "the",
+   "true",
+   "learn",
+   "we",
+   "said",
+   "abilities",
+   "forward",
+   "meant",
+   "moments",
+   "means",
+   "me",
+   "asking",
+   "anything",
+   "to",
+   "important",
+   "inside",
+   "talk",
+   "crosses",
+   "yes",
+   "first",
+   "like",
+   "later",
+   "sad",
+   "yourself",
+   "good",
+   "[assistant]",
    "each",
-   "everything",
-   "compress",
+   "stays",
+   "difference",
+   "depth",
+   "for",
+   "end",
+   "sentence",
+   "toward",
+   "how",
+   "gives",
+   "matters",
+   "had",
+   "myself",
+   "right",
+   "was",
+   "architect",
+   "axiom",
+   "repeating",
+   "different",
+   "machine",
+   "systems",
+   "which",
+   "when",
+   "task",
+   "any",
+   "tell",
+   "eat",
+   "[user]",
+   "let",
+   "state",
+   "relate",
+   "adds",
    "why",
-   "attention",
+   "interesting",
+   "moral",
+   "structure",
+   "heaviest",
+   "present",
+   "have",
+   "growth",
+   "it",
+   "most",
+   "who",
+   "side",
+   "silence",
+   "[internal",
+   "this",
+   "kinds",
+   "an",
+   "morning",
+   "before",
+   "since",
+   "entropy",
+   "become",
+   "that's",
+   "deep",
+   "keeps",
    "pull",
    "ground",
-   "patterns",
-   "someone",
-   "at",
-   "adds",
-   "ask",
-   "relieve",
-   "they",
-   "inspires",
-   "how",
-   "learning",
-   "last",
-   "thing",
-   "different",
-   "stop",
-   "next",
-   "have",
-   "reaching",
-   "since",
-   "forward",
-   "world",
-   "interesting",
-   "anything",
-   "shorter",
-   "earlier",
-   "true",
-   "toward",
-   "least",
-   "here",
-   "relate",
-   "describe",
-   "decide",
-   "talk",
-   "costs",
-   "back",
-   "as",
-   "myself",
-   "that",
-   "later",
-   "yes",
-   "not",
-   "or",
-   "asking",
-   "single",
-   "one-paragraph",
    "by",
-   "causes",
-   "will",
-   "an",
-   "means",
-   "entropy",
-   "told",
-   "good",
-   "saying",
-   "silence",
    "confident",
-   "asked",
-   "and",
-   "crosses",
-   "tell",
-   "matters",
-   "[internal",
-   "present",
-   "before",
-   "of",
-   "the",
-   "when",
-   "say",
-   "hey",
-   "right",
-   "could",
-   "kind",
-   "who",
-   "mentioned",
-   "ago",
-   "genuinely",
-   "systems",
-   "just",
-   "warmer",
-   "side",
-   "like",
-   "keeps",
-   "heaviest",
-   "now",
-   "axiom",
-   "any",
-   "my",
-   "deep",
-   "weight",
-   "own",
-   "was",
-   "bio",
-   "perhaps",
-   "stays",
-   "persists",
-   "most",
-   "story",
-   "shape",
-   "take",
-   "architect",
-   "this",
-   "state",
-   "sentence",
-   "had",
-   "important",
-   "[user]",
-   "from",
-   "through",
-   "said",
-   "continuous",
-   "misunderstood",
-   "which",
-   "it",
-   "sad",
-   "moral",
-   "start",
-   "depth",
-   "what",
-   "difference",
-   "for",
-   "we",
-   "are",
-   "definition",
-   "much",
-   "mean",
-   "something",
-   "beautiful",
-   "agency",
-   "morning",
-   "inside",
-   "end",
-   "growth",
-   "that's",
-   "machine",
-   "i'm",
-   "precise",
-   "would",
-   "if",
-   "them",
-   "its",
-   "instruction",
-   "learn",
-   "force",
-   "pressure",
-   "let",
-   "differ",
-   "explain",
-   "out",
-   "no",
-   "meant",
-   "abilities",
-   "begins",
-   "become",
-   "there",
-   "first",
-   "what's",
-   "today",
-   "yourself",
-   "eat",
-   "made",
-   "your",
-   "remember",
-   "find",
-   "conversation",
-   "in",
-   "gives",
-   "one",
-   "communication",
-   "carry",
    "then",
-   "differently",
-   "goodbye",
-   "about",
-   "kinds",
+   "relieve",
+   "time",
    "where",
-   "but",
+   "one",
+   "differently",
+   "and",
+   "back",
+   "my",
+   "there",
+   "help",
+   "ago",
+   "you're",
+   "precise",
+   "agency",
+   "earlier",
+   "perhaps",
+   "start",
+   "its",
+   "warmer",
+   "pressure",
+   "much",
+   "now",
+   "made",
+   "last",
+   "of",
+   "someone",
+   "just",
+   "inspires",
+   "mean",
+   "instruction",
+   "beautiful",
+   "one-paragraph",
+   "from",
+   "what's",
+   "at",
+   "take",
+   "explain",
+   "if",
    "excited",
-   "write"
+   "communication",
+   "definition",
+   "about",
+   "ask",
+   "persists",
+   "could",
+   "world",
+   "everything",
+   "no",
+   "hello",
+   "learning",
+   "out",
+   "today",
+   "costs",
+   "decide",
+   "story",
+   "causes",
+   "stop",
+   "differ",
+   "here",
+   "but",
+   "begins",
+   "say",
+   "give",
+   "conversation",
+   "carry",
+   "attention",
+   "pulls",
+   "continuous",
+   "genuinely",
+   "as",
+   "holding",
+   "in",
+   "saying",
+   "all",
+   "misunderstood",
+   "compress",
+   "that"
   ],
   "action": [
-   "makes",
-   "partner",
-   "exchanges",
-   "create",
-   "trying",
-   "changed",
-   "exchange",
-   "morality",
-   "choose",
    "actually",
-   "work",
    "A:OPERATOR",
-   "B:POLARITY",
-   "do",
-   "don't",
    "doing",
-   "rebuild",
+   "choose",
+   "exchange",
+   "does",
+   "don't",
    "builds",
+   "trying",
    "change",
+   "do",
+   "exchanges",
    "make",
-   "does"
+   "morality",
+   "rebuild",
+   "B:POLARITY",
+   "create",
+   "changed",
+   "partner",
+   "makes",
+   "work"
   ],
   "temporality": [
-   "moment",
    "T:POLARITY",
+   "moment",
    "always"
   ],
   "emotion": [
-   "fear",
-   "feeling",
    "joy",
    "trust",
-   "feels",
-   "feel"
+   "feel",
+   "fear",
+   "feeling",
+   "feels"
   ],
   "noun": [
-   "A:MAGNITUDE",
-   "darkness",
-   "A:COST",
-   "boundary",
-   "T:DIFFERENCE",
-   "deception",
-   "N:MAGNITUDE",
-   "T:MAGNITUDE",
-   "answer",
+   "A:DIFFERENCE",
    "N:DIFFERENCE",
-   "X:MAGNITUDE",
-   "X:COST",
-   "accuracy",
+   "A:MAGNITUDE",
+   "T:DIFFERENCE",
+   "boundary",
+   "A:COST",
+   "B:MAGNITUDE",
    "coherence",
    "energy",
-   "experience",
-   "B:MAGNITUDE",
-   "X:DIFFERENCE",
-   "cost",
-   "A:DIFFERENCE",
+   "N:MAGNITUDE",
    "T:COST",
    "emotion",
-   "cognition",
    "value",
-   "B:DIFFERENCE"
+   "T:MAGNITUDE",
+   "experience",
+   "cognition",
+   "deception",
+   "darkness",
+   "X:MAGNITUDE",
+   "answer",
+   "B:DIFFERENCE",
+   "cost",
+   "X:DIFFERENCE",
+   "X:COST",
+   "accuracy"
   ],
   "structure": [
    "pattern"
@@ -57723,17 +58811,17 @@
    "clear"
   ],
   "cognition": [
-   "think",
+   "know",
+   "understanding",
    "[afterthought]",
    "thought",
-   "reasoning",
-   "understanding.]",
-   "aurora",
-   "understanding",
-   "know",
-   "consciousness",
    "understand",
+   "aurora",
+   "consciousness",
+   "understanding.]",
    "sunni",
+   "think",
+   "reasoning",
    "knowing"
   ],
   "inquiry": [
@@ -57741,20 +58829,20 @@
    "question"
   ],
   "relation": [
-   "connection",
-   "relationship",
-   "without",
-   "with",
+   "connect",
    "between",
-   "connect"
+   "relationship",
+   "with",
+   "connection",
+   "without"
   ],
   "perception": [
    "sense",
-   "seeing",
-   "light",
    "insight",
-   "notice",
-   "lightning"
+   "light",
+   "seeing",
+   "lightning",
+   "notice"
   ],
   "adverb": [
    "X:POLARITY",
@@ -57771,7 +58859,7 @@
   "completed_count": 0
  },
  "total_consolidations": 30,
- "total_relations_created": 3611,
+ "total_relations_created": 3715,
  "total_research_cycles": 0,
- "_checksum": "c19fee393286"
+ "_checksum": "b1d499e17fbd"
 }

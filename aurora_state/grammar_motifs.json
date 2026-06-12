@@ -8,22 +8,22 @@
         "action",
         "object"
       ],
-      "success_count": 30,
+      "success_count": 38,
       "fail_count": 0,
       "contexts_seen": [
-        "144e6297",
         "f656b356",
         "97567db9",
-        "a1d3c7bb",
-        "75b735ca",
-        "c3f9e19b",
-        "72f16252",
-        "f8fc4211",
         "0314917f",
-        "441169a2"
+        "a1d3c7bb",
+        "144e6297",
+        "f8fc4211",
+        "c3f9e19b",
+        "441169a2",
+        "72f16252",
+        "75b735ca"
       ],
       "constraint_scores": {
-        "X": 0.9250633263591593,
+        "X": 0.9365355476267102,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -46,15 +46,15 @@
         "agent",
         "descriptor"
       ],
-      "success_count": 40,
+      "success_count": 50,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8574427108111249,
+        "X": 0.9078742263842079,
         "T": 1.0,
-        "N": 0.996457989376,
+        "N": 0.9936023039042507,
         "B": 1.0,
         "A": 1.0
       },
@@ -72,8 +72,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.26948051948051954,
-      "total_tokens_avg": 8.8
+      "compression_score": 0.26948051948051965,
+      "total_tokens_avg": 8.800000000000002
     },
     "agent_action_agent_action_object": {
       "pattern_id": "agent_action_agent_action_object",
@@ -84,17 +84,17 @@
         "action",
         "object"
       ],
-      "success_count": 111,
+      "success_count": 126,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7832582979286328,
+        "X": 0.8001772074091318,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
-        "A": 1.0
+        "A": 0.9958739624242336
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -110,8 +110,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.030736989172197027,
-      "total_tokens_avg": 7.36936936936937
+      "compression_score": 0.42917547568710357,
+      "total_tokens_avg": 7.507936507936508
     },
     "agent_action_object": {
       "pattern_id": "agent_action_object",
@@ -120,184 +120,189 @@
         "action",
         "object"
       ],
-      "success_count": 1091,
-      "fail_count": 541,
+      "success_count": 1186,
+      "fail_count": 585,
       "contexts_seen": [
-        "cb7fee3b",
-        "e634f9a0",
+        "72fa0e7e",
+        "8d75e95c",
+        "d41d8cd9",
+        "3c064f15",
         "61a5f172",
-        "12e748f0",
-        "cb6a33bc",
-        "bbcde8a4",
-        "1c50bc34",
-        "8f8acdbb",
-        "2b5106bc",
-        "823e5762",
-        "9d097201",
-        "b851823b",
-        "37670533",
-        "4ec420e9",
-        "e17adea5",
-        "d715ab1b",
-        "8e576542",
-        "390ae41d",
-        "45248042",
-        "3cf05aa0",
-        "233958a3",
-        "91c33537",
-        "97355b6e",
-        "46d43394",
-        "19e8b68a",
-        "5f46a5eb",
-        "ae6d2e1b",
-        "b2d79f62",
-        "303b2a02",
-        "063b846b",
-        "1256fbe2",
-        "96865d42",
-        "584530ca",
-        "97fbfb67",
-        "3b7f8f9c",
-        "9788830e",
+        "98587929",
+        "dff16761",
+        "cee1937c",
+        "2dee62c6",
+        "1bd45d42",
+        "96bc798f",
         "144e6297",
-        "e3ca7992",
-        "1e86dd4a",
-        "00bb40ae",
-        "8720ad58",
-        "5a236322",
-        "6b83268d",
-        "9a5c590a",
-        "100fcf63",
-        "65ffbc4f",
-        "08cb4418",
-        "1272b2cd",
-        "814d8801",
+        "7b2901b1",
+        "e17adea5",
+        "71b6a7b1",
+        "5f46a5eb",
+        "1e28fe71",
+        "967e8f1f",
+        "d852a382",
+        "20a336b5",
+        "e30f0e3e",
+        "d715ab1b",
+        "1c50bc34",
+        "162badc9",
+        "acd790be",
+        "01b207ee",
+        "2c530f4f",
+        "303b2a02",
+        "5c26e8a7",
+        "8f8acdbb",
+        "ae6d2e1b",
+        "97355b6e",
+        "96865d42",
+        "c4a0db31",
+        "2b5106bc",
+        "f2bbf743",
+        "e396d6ae",
+        "ad45ebd2",
         "3492a780",
+        "97fbfb67",
+        "a16b3cd3",
+        "03bb779f",
+        "9788830e",
+        "135616c1",
+        "f2082e1d",
+        "390ae41d",
+        "1272b2cd",
+        "d9c60f9a",
+        "3e06c267",
+        "814d8801",
+        "34ceeffa",
+        "bbcde8a4",
+        "78126088",
+        "19e8b68a",
+        "00afa86d",
+        "1d01f96e",
+        "233958a3",
+        "3cf05aa0",
+        "7f3d730c",
+        "89a4ebd8",
+        "ff56fc2a",
+        "7ae8b767",
+        "823e5762",
+        "5742eb5e",
+        "37ee7b99",
+        "cb6a33bc",
+        "526bf901",
+        "4ec420e9",
+        "fc0a9e19",
+        "2edf6d47",
+        "6bb20a81",
+        "de446a5e",
+        "9a5c590a",
+        "120a8aef",
+        "70bfc2c7",
+        "25323563",
+        "46d43394",
+        "5f75fd43",
         "4f6acdef",
+        "7f52f3be",
+        "6b83268d",
+        "f3ff7b11",
+        "d560e376",
+        "3861aae8",
+        "de56f796",
+        "9ed9c331",
+        "9823f549",
+        "5a236322",
+        "f8fc4211",
+        "d607700f",
+        "65ffbc4f",
+        "9d097201",
+        "664e45c0",
+        "00bb40ae",
+        "4fad70fd",
+        "4e2dd0a4",
+        "b9744ac9",
+        "3d6eead4",
+        "8e576542",
+        "063b846b",
+        "84ba6674",
+        "ac798e2b",
+        "58057cb4",
+        "c4fb6c0f",
+        "f8b7a325",
+        "2dcc151c",
+        "37670533",
+        "743c22a2",
+        "1256fbe2",
+        "8720ad58",
+        "722cc575",
+        "6d96d862",
+        "a505c1d4",
+        "100fcf63",
+        "b851823b",
+        "d1d35373",
+        "7f640a76",
+        "70c9150f",
+        "e4d0841e",
+        "a53fa037",
+        "e634f9a0",
+        "f974ef96",
+        "8d500cfc",
+        "79ce24ae",
+        "6d72b7ff",
+        "31c9b174",
+        "759fd2ba",
+        "952852bf",
+        "0c4abc10",
+        "91c33537",
+        "8a7d1e60",
+        "b708fc09",
+        "584530ca",
+        "cb7fee3b",
+        "5f889565",
+        "dca444a5",
         "3c1ac389",
         "9130e539",
-        "135616c1",
-        "f8fc4211",
-        "70c9150f",
-        "c64120a2",
-        "acd790be",
-        "e7adb2f1",
-        "58057cb4",
-        "7f640a76",
-        "d560e376",
-        "e396d6ae",
-        "9ed9c331",
-        "1e28fe71",
-        "beb56c42",
-        "2dcc151c",
-        "20a336b5",
-        "7f3d730c",
-        "8d75e95c",
-        "9c3f727e",
-        "5f889565",
-        "1bd45d42",
-        "d1d35373",
-        "a53fa037",
-        "fc0a9e19",
-        "3e06c267",
-        "7ae8b767",
-        "18cfac04",
-        "25323563",
         "7c8530b5",
-        "8d500cfc",
-        "c4a0db31",
-        "d41d8cd9",
-        "b708fc09",
-        "5c26e8a7",
-        "f2082e1d",
-        "722cc575",
-        "03bb779f",
-        "f9b478dd",
-        "2edf6d47",
-        "c4fb6c0f",
-        "120a8aef",
-        "967e8f1f",
-        "84ba6674",
-        "125047d0",
-        "1d01f96e",
-        "3d6eead4",
-        "ac798e2b",
-        "37ee7b99",
-        "526bf901",
-        "3861aae8",
-        "dca444a5",
-        "162badc9",
-        "de446a5e",
-        "ad45ebd2",
-        "2dee62c6",
-        "00afa86d",
-        "3ee1348b",
-        "6d72b7ff",
-        "a16b3cd3",
-        "b9744ac9",
-        "f8b7a325",
-        "8d42f0cd",
-        "7b2901b1",
-        "d607700f",
-        "4fe03bb8",
-        "3c3024e8",
-        "413ec0f1",
-        "4e2dd0a4",
-        "31484eec",
-        "70bfc2c7",
-        "cee1937c",
-        "72fa0e7e",
-        "5300ddcd",
-        "952852bf",
-        "4fad70fd",
-        "664e45c0",
         "4531d874",
-        "743c22a2",
-        "7f52f3be",
-        "ebd9202e",
-        "315b5966",
-        "3c064f15",
-        "9823f549",
-        "d9c60f9a",
-        "a505c1d4",
-        "0f50c23f",
-        "d852a382",
-        "98587929",
-        "9d1020d4",
-        "5742eb5e",
-        "31c9b174",
-        "8c02b95e",
+        "f435959e",
+        "18cfac04",
         "16a6f4a8",
-        "71b6a7b1",
-        "34ceeffa",
-        "f3ff7b11",
-        "e4d0841e",
-        "5f75fd43",
+        "1e86dd4a",
+        "c64120a2",
         "4aebdc16",
-        "24c2a447",
-        "0c4abc10",
-        "5f3aef9d",
-        "79ce24ae",
-        "01b207ee",
-        "4157c1b9",
-        "e30f0e3e",
-        "f974ef96",
-        "6bb20a81",
-        "78126088",
-        "ff56fc2a",
-        "82d5d3a3",
-        "dff16761",
-        "de56f796",
-        "759fd2ba",
-        "627d57f0",
+        "4fe03bb8",
+        "9d1020d4",
+        "3b7f8f9c",
+        "8d42f0cd",
         "5b8a8ea7",
-        "6d96d862",
-        "89a4ebd8",
+        "627d57f0",
+        "24c2a447",
+        "e3ca7992",
+        "beb56c42",
+        "8c02b95e",
+        "4157c1b9",
+        "5300ddcd",
+        "b2d79f62",
+        "53dac8b5",
+        "08cb4418",
         "81b864ce",
-        "f2bbf743"
+        "413ec0f1",
+        "f9b478dd",
+        "e7adb2f1",
+        "82d5d3a3",
+        "31484eec",
+        "ebd9202e",
+        "5f3aef9d",
+        "45248042",
+        "3c3024e8",
+        "125047d0",
+        "3ee1348b",
+        "0f50c23f",
+        "315b5966",
+        "9c3f727e",
+        "12e748f0"
       ],
       "constraint_scores": {
-        "X": 0.9666576701845697,
+        "X": 0.9591640076862702,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -308,8 +313,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.2883235485975213,
-      "total_tokens_avg": 4.014665444546289
+      "compression_score": 0.28721677985455907,
+      "total_tokens_avg": 4.00843170320405
     },
     "agent_action_object_agent_action": {
       "pattern_id": "agent_action_object_agent_action",
@@ -320,13 +325,13 @@
         "agent",
         "action"
       ],
-      "success_count": 101,
+      "success_count": 113,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.77126988455203,
+        "X": 0.8013675750573686,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -337,8 +342,8 @@
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.137305146273756,
-      "total_tokens_avg": 6.623762376237623
+      "compression_score": 0.14925654056088833,
+      "total_tokens_avg": 6.716814159292035
     },
     "agent_action_object_descriptor_connector_agent_action_object": {
       "pattern_id": "agent_action_object_descriptor_connector_agent_action_object",
@@ -352,15 +357,15 @@
         "action",
         "object"
       ],
-      "success_count": 43,
+      "success_count": 53,
       "fail_count": 0,
       "contexts_seen": [
-        "f4fc0000",
+        "d41d8cd9",
         "df17d45c",
-        "d41d8cd9"
+        "f4fc0000"
       ],
       "constraint_scores": {
-        "X": 0.8074567259858326,
+        "X": 0.8332182263463892,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -380,8 +385,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.268707482993197,
-      "total_tokens_avg": 10.744186046511626
+      "compression_score": 0.269423558897243,
+      "total_tokens_avg": 10.754716981132075
     },
     "agent_action_object_agent_action_object": {
       "pattern_id": "agent_action_object_agent_action_object",
@@ -393,26 +398,26 @@
         "action",
         "object"
       ],
-      "success_count": 144,
+      "success_count": 150,
       "fail_count": 0,
       "contexts_seen": [
-        "144e6297",
-        "25323563",
-        "34ceeffa",
-        "4fad70fd",
-        "5b8a8ea7",
-        "d41d8cd9",
         "e4d0841e",
-        "125047d0",
+        "d41d8cd9",
+        "144e6297",
+        "34ceeffa",
         "96865d42",
+        "5b8a8ea7",
+        "25323563",
+        "4fad70fd",
+        "125047d0",
         "d560e376"
       ],
       "constraint_scores": {
-        "X": 0.6984777192240306,
+        "X": 0.7741042873229191,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
-        "A": 0.9430657796518099
+        "A": 0.998020211871203
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -433,13 +438,13 @@
         "action",
         "object"
       ],
-      "success_count": 40,
+      "success_count": 50,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7827003459082641,
+        "X": 0.795030526807456,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -459,25 +464,25 @@
         "agent",
         "action"
       ],
-      "success_count": 2,
+      "success_count": 4,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.5687520710924,
-        "T": 0.671919281,
-        "N": 0.622952,
-        "B": 0.640608488,
-        "A": 0.61485695953808
+        "X": 0.6222030449547546,
+        "T": 0.8022574758027637,
+        "N": 0.7181660287999999,
+        "B": 0.7365368720890182,
+        "A": 0.701289743303889
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.1071428571428571,
-      "total_tokens_avg": 4.0
+      "compression_score": 0.3877551020408163,
+      "total_tokens_avg": 3.5
     },
     "action_agent_descriptor_agent_action_object_agent_action": {
       "pattern_id": "action_agent_descriptor_agent_action_object_agent_action",
@@ -491,17 +496,17 @@
         "agent",
         "action"
       ],
-      "success_count": 8,
+      "success_count": 10,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.663586219240792,
-        "T": 0.9948018615110241,
-        "N": 0.8477275163406661,
-        "B": 0.8896934736843527,
-        "A": 0.801643721816725
+        "X": 0.6938557089119094,
+        "T": 1.0,
+        "N": 0.8922321886542117,
+        "B": 0.9254833258029809,
+        "A": 0.8413290453539118
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -529,13 +534,13 @@
         "agent",
         "action"
       ],
-      "success_count": 32,
+      "success_count": 40,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7738421473268434,
+        "X": 0.7902007153286892,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -565,17 +570,17 @@
         "action",
         "object"
       ],
-      "success_count": 6,
+      "success_count": 8,
       "fail_count": 0,
       "contexts_seen": [
         "048550f5"
       ],
       "constraint_scores": {
-        "X": 0.7272583823847992,
-        "T": 0.9120178212595451,
-        "N": 0.7918997727027198,
-        "B": 0.8191078854890386,
-        "A": 0.8470301185922339
+        "X": 0.7791755920202286,
+        "T": 0.9905165895797554,
+        "N": 0.8489991839809862,
+        "B": 0.8767220231045295,
+        "A": 0.9194628406378259
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -593,16 +598,16 @@
         "agent",
         "connector"
       ],
-      "success_count": 63,
+      "success_count": 79,
       "fail_count": 0,
       "contexts_seen": [
-        "f4fc0000",
         "3c064f15",
         "df17d45c",
+        "f4fc0000",
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8748372678922611,
+        "X": 0.880085652416364,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -618,8 +623,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.5182012847965739,
-      "total_tokens_avg": 7.412698412698413
+      "compression_score": 0.5177045177045176,
+      "total_tokens_avg": 7.405063291139241
     },
     "agent_action_agent_action_descriptor": {
       "pattern_id": "agent_action_agent_action_descriptor",
@@ -630,25 +635,25 @@
         "action",
         "descriptor"
       ],
-      "success_count": 45,
+      "success_count": 56,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7892925899376234,
+        "X": 0.7979125021441902,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
-        "A": 1.0
+        "A": 0.9979825575879999
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.26948051948051954,
-      "total_tokens_avg": 8.8
+      "compression_score": 0.5102040816326532,
+      "total_tokens_avg": 8.750000000000002
     },
     "agent_action_agent_descriptor": {
       "pattern_id": "agent_action_agent_descriptor",
@@ -658,13 +663,13 @@
         "agent",
         "descriptor"
       ],
-      "success_count": 44,
+      "success_count": 54,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7883215990072562,
+        "X": 0.7966228527146145,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -684,8 +689,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.25876010781671155,
-      "total_tokens_avg": 9.636363636363637
+      "compression_score": 0.26108374384236444,
+      "total_tokens_avg": 9.666666666666666
     },
     "agent_action_agent_action_object_agent_action": {
       "pattern_id": "agent_action_agent_action_object_agent_action",
@@ -698,13 +703,13 @@
         "agent",
         "action"
       ],
-      "success_count": 40,
+      "success_count": 50,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7827837005313848,
+        "X": 0.7951508226659874,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -724,8 +729,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.26948051948051954,
-      "total_tokens_avg": 8.8
+      "compression_score": 0.26948051948051965,
+      "total_tokens_avg": 8.800000000000002
     },
     "action_object_descriptor_agent_action_object": {
       "pattern_id": "action_object_descriptor_agent_action_object",
@@ -737,17 +742,17 @@
         "action",
         "object"
       ],
-      "success_count": 8,
+      "success_count": 10,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6636260544974009,
+        "X": 0.6939045588336673,
         "T": 1.0,
-        "N": 0.8460523707370554,
-        "B": 0.8934528660712681,
-        "A": 0.8221898929514864
+        "N": 0.8909349558987756,
+        "B": 0.9290868432674082,
+        "A": 0.8737703781256311
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -768,13 +773,13 @@
         "action",
         "object"
       ],
-      "success_count": 36,
+      "success_count": 44,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7745962519833822,
+        "X": 0.7904396935682665,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -785,8 +790,8 @@
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2633928571428569,
-      "total_tokens_avg": 10.666666666666664
+      "compression_score": 0.2675544794188861,
+      "total_tokens_avg": 10.727272727272727
     },
     "descriptor_action_object_descriptor_action_object_connector": {
       "pattern_id": "descriptor_action_object_descriptor_action_object_connector",
@@ -803,10 +808,10 @@
       "fail_count": 0,
       "contexts_seen": [
         "f2283f98",
-        "ef1c4160",
+        "4758d48b",
         "c51e12e3",
-        "8ad5e185",
-        "4758d48b"
+        "ef1c4160",
+        "8ad5e185"
       ],
       "constraint_scores": {
         "X": 0.8004215791741769,
@@ -833,17 +838,17 @@
         "object",
         "descriptor"
       ],
-      "success_count": 48,
+      "success_count": 60,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7905257415791975,
+        "X": 0.798241486010418,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
-        "A": 0.998713279468
+        "A": 0.998586884332
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -861,56 +866,61 @@
         "object",
         "descriptor"
       ],
-      "success_count": 102,
+      "success_count": 119,
       "fail_count": 8,
       "contexts_seen": [
-        "ddeaaabf",
-        "9823f549",
-        "a505c1d4",
-        "cb6a33bc",
-        "b08acef1",
-        "75b735ca",
-        "f8fc4211",
-        "13698c3b",
-        "357ef88d",
-        "7f706ba5",
+        "5aa55dc7",
         "f471bc65",
-        "2006e019",
-        "7eb95c7f",
-        "9d097201",
-        "6efae46d",
-        "d715ab1b",
-        "a76f8e90",
-        "52e01d90",
-        "ea447147",
-        "00df52b2",
+        "357ef88d",
         "d073a146",
+        "a99078f9",
+        "0b8797ec",
+        "d320d037",
+        "00df52b2",
+        "f8fc4211",
+        "9823f549",
+        "5a236322",
+        "dff16761",
+        "9d097201",
+        "315b5966",
+        "7eb95c7f",
+        "21740bf4",
+        "ea447147",
+        "919000a9",
+        "a6cfd3fb",
+        "144e6297",
+        "34ceeffa",
+        "7f706ba5",
+        "5b8a8ea7",
+        "5300ddcd",
+        "2006e019",
+        "6df1677a",
+        "2dcc151c",
+        "75b735ca",
+        "092cd684",
+        "08cb4418",
+        "a505c1d4",
+        "6d96d862",
+        "cb6a33bc",
+        "d715ab1b",
+        "048550f5",
+        "d1aeda47",
         "bdfe6412",
         "842d11ca",
-        "d1aeda47",
-        "d320d037",
-        "5aa55dc7",
-        "2dcc151c",
-        "a99078f9",
-        "99b30fcb",
-        "21740bf4",
-        "6df1677a",
-        "691b27d8",
-        "919000a9",
-        "048550f5",
-        "144e6297",
-        "0b8797ec",
+        "6efae46d",
         "70bfc2c7",
-        "092cd684",
-        "dff16761",
-        "5300ddcd",
+        "a76f8e90",
+        "b08acef1",
         "8bac9324",
-        "6d96d862",
-        "5a236322",
-        "a6cfd3fb"
+        "ddeaaabf",
+        "52e01d90",
+        "99b30fcb",
+        "691b27d8",
+        "125047d0",
+        "13698c3b"
       ],
       "constraint_scores": {
-        "X": 0.9779682635593729,
+        "X": 0.9669507484220348,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -921,8 +931,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.2506122448979591,
-      "total_tokens_avg": 8.57843137254902
+      "compression_score": 0.2558365758754866,
+      "total_tokens_avg": 8.638655462184877
     },
     "agent_action_agent": {
       "pattern_id": "agent_action_agent",
@@ -931,17 +941,17 @@
         "action",
         "agent"
       ],
-      "success_count": 16,
+      "success_count": 20,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7278740525119091,
+        "X": 0.7560423411529281,
         "T": 1.0,
-        "N": 0.9745098581730584,
+        "N": 1.0,
         "B": 1.0,
-        "A": 0.9427108822137775
+        "A": 0.9715285766265316
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -959,13 +969,13 @@
         "object",
         "agent"
       ],
-      "success_count": 60,
+      "success_count": 76,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7923750648507087,
+        "X": 0.8000124461197009,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -986,26 +996,28 @@
         "action",
         "object"
       ],
-      "success_count": 68,
-      "fail_count": 0,
+      "success_count": 86,
+      "fail_count": 6,
       "contexts_seen": [
         "5217f7e9",
-        "902fdfe1",
+        "ebd9202e",
+        "5df5fe5c",
+        "6d72b7ff",
         "34ceeffa",
         "a76f8e90",
-        "4fad70fd",
-        "5df5fe5c",
-        "5f889565",
-        "f2d524c2",
-        "3d6319ee",
-        "4e2dd0a4",
-        "96865d42",
         "98937236",
-        "ebd9202e",
-        "6d72b7ff"
+        "3d6319ee",
+        "96865d42",
+        "5f889565",
+        "4fad70fd",
+        "902fdfe1",
+        "0f50c23f",
+        "4e2dd0a4",
+        "f2d524c2",
+        "d560e376"
       ],
       "constraint_scores": {
-        "X": 0.9277545525490888,
+        "X": 0.9615169216222972,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1016,8 +1028,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.2960662525879917,
-      "total_tokens_avg": 4.0588235294117645
+      "compression_score": 0.2939244663382591,
+      "total_tokens_avg": 4.046511627906975
     },
     "connector_agent_action_object_descriptor": {
       "pattern_id": "connector_agent_action_object_descriptor",
@@ -1028,17 +1040,17 @@
         "object",
         "descriptor"
       ],
-      "success_count": 7,
+      "success_count": 9,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6392119723224846,
-        "T": 0.9549997416575753,
-        "N": 0.8222717999783934,
-        "B": 0.8592024228872678,
-        "A": 0.7730218591969209
+        "X": 0.6749566294596522,
+        "T": 1.0,
+        "N": 0.8725192819032678,
+        "B": 0.9057618856657184,
+        "A": 0.8220584865646556
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -1058,13 +1070,13 @@
         "object",
         "descriptor"
       ],
-      "success_count": 28,
+      "success_count": 36,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7570626978391926,
+        "X": 0.7841385822110227,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1092,13 +1104,13 @@
         "action",
         "connector"
       ],
-      "success_count": 70,
+      "success_count": 90,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7937910485942699,
+        "X": 0.801320686383671,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1109,8 +1121,8 @@
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.26948051948051965,
-      "total_tokens_avg": 8.800000000000002
+      "compression_score": 0.2694805194805192,
+      "total_tokens_avg": 8.799999999999997
     },
     "agent_action_object_action_agent_action_object_descriptor": {
       "pattern_id": "agent_action_object_action_agent_action_object_descriptor",
@@ -1124,13 +1136,13 @@
         "object",
         "descriptor"
       ],
-      "success_count": 34,
+      "success_count": 42,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7932562067582033,
+        "X": 0.7971399899871109,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1153,17 +1165,17 @@
         "action",
         "agent"
       ],
-      "success_count": 12,
+      "success_count": 14,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7107546941550578,
+        "X": 0.7303754276992768,
         "T": 1.0,
-        "N": 0.9261573872662615,
-        "B": 0.9626156701127901,
-        "A": 0.9362736918457732
+        "N": 0.9529682806989929,
+        "B": 0.9856264691171629,
+        "A": 0.9663159274513669
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -1179,8 +1191,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.40199335548172754,
-      "total_tokens_avg": 7.166666666666667
+      "compression_score": 0.3877551020408163,
+      "total_tokens_avg": 7.0
     },
     "agent_action_object_agent_action_agent": {
       "pattern_id": "agent_action_object_agent_action_agent",
@@ -1192,13 +1204,13 @@
         "action",
         "agent"
       ],
-      "success_count": 28,
+      "success_count": 36,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.757020098747602,
+        "X": 0.7840910345314716,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1225,24 +1237,24 @@
       "success_count": 30,
       "fail_count": 0,
       "contexts_seen": [
-        "2dcc151c",
-        "3c064f15",
-        "d9c60f9a",
-        "6d72b7ff",
-        "dff16761",
-        "3492a780",
-        "0f50c23f",
-        "5b8a8ea7",
-        "3861aae8",
-        "6d96d862",
         "e4d0841e",
-        "9130e539",
-        "5a236322",
+        "3861aae8",
+        "3492a780",
         "ebd9202e",
-        "315b5966",
-        "441169a2",
+        "6d72b7ff",
+        "3c064f15",
+        "5a236322",
         "f9b478dd",
-        "08cb4418"
+        "5b8a8ea7",
+        "6d96d862",
+        "dff16761",
+        "9130e539",
+        "441169a2",
+        "0f50c23f",
+        "315b5966",
+        "2dcc151c",
+        "08cb4418",
+        "d9c60f9a"
       ],
       "constraint_scores": {
         "X": 0.8291422612067728,
@@ -1267,35 +1279,36 @@
         "object",
         "descriptor"
       ],
-      "success_count": 81,
-      "fail_count": 32,
+      "success_count": 98,
+      "fail_count": 38,
       "contexts_seen": [
-        "3c064f15",
-        "b030497f",
-        "d9c60f9a",
-        "a505c1d4",
         "3492a780",
-        "0f50c23f",
+        "d41d8cd9",
+        "3c064f15",
+        "f1126c40",
+        "5a236322",
+        "dff16761",
         "9130e539",
-        "34597e6c",
+        "d9c60f9a",
+        "5cd1cd70",
+        "5b8a8ea7",
+        "b030497f",
+        "2dcc151c",
         "08e4cca0",
+        "f9b478dd",
+        "a505c1d4",
+        "6d96d862",
+        "441169a2",
+        "cc934b7e",
         "442bdf4d",
         "e4d0841e",
         "6d72b7ff",
-        "cc934b7e",
-        "2dcc151c",
-        "441169a2",
-        "5cd1cd70",
-        "dff16761",
-        "5b8a8ea7",
-        "d41d8cd9",
-        "6d96d862",
-        "5a236322",
+        "0f50c23f",
         "315b5966",
-        "f9b478dd"
+        "34597e6c"
       ],
       "constraint_scores": {
-        "X": 0.8535558146506061,
+        "X": 0.8489498567663301,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1306,8 +1319,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.1252699784017277,
-      "total_tokens_avg": 5.716049382716049
+      "compression_score": 0.13884007029876977,
+      "total_tokens_avg": 5.8061224489795915
     },
     "agent_action_object_agent_connector": {
       "pattern_id": "agent_action_object_agent_connector",
@@ -1318,17 +1331,17 @@
         "agent",
         "connector"
       ],
-      "success_count": 7,
+      "success_count": 9,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6392242259755709,
-        "T": 0.9618553580506363,
-        "N": 0.819000737649459,
-        "B": 0.8709349483051687,
-        "A": 0.7846183582810128
+        "X": 0.6749820840276421,
+        "T": 1.0,
+        "N": 0.869377591235741,
+        "B": 0.9277024261493407,
+        "A": 0.8412290283105762
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -1348,13 +1361,13 @@
         "agent",
         "connector"
       ],
-      "success_count": 28,
+      "success_count": 36,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7570238018642748,
+        "X": 0.7840965638747118,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1378,13 +1391,13 @@
         "agent",
         "action"
       ],
-      "success_count": 35,
+      "success_count": 45,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7689149374571171,
+        "X": 0.7911798598459455,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1406,13 +1419,13 @@
         "agent",
         "action"
       ],
-      "success_count": 35,
+      "success_count": 46,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7688954969126636,
+        "X": 0.7928914337696795,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1423,8 +1436,8 @@
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.26739926739926745,
-      "total_tokens_avg": 7.8
+      "compression_score": 0.26370548219287715,
+      "total_tokens_avg": 7.760869565217392
     },
     "agent_action_agent_action_connector_action_agent_action": {
       "pattern_id": "agent_action_agent_action_connector_action_agent_action",
@@ -1438,13 +1451,13 @@
         "agent",
         "action"
       ],
-      "success_count": 35,
+      "success_count": 45,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7688808372958378,
+        "X": 0.7911454512104569,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1465,60 +1478,60 @@
         "action",
         "descriptor"
       ],
-      "success_count": 107,
-      "fail_count": 13,
+      "success_count": 112,
+      "fail_count": 14,
       "contexts_seen": [
-        "465275be",
-        "9823f549",
-        "5fe61608",
-        "2a0cb272",
-        "38e7cc64",
-        "cb6a33bc",
-        "d4af0008",
-        "125047d0",
-        "01b7899c",
-        "72f16252",
-        "f8fc4211",
-        "95601cae",
-        "ce2f2585",
-        "7efc2abb",
-        "1ebe5b2b",
-        "0026e7e7",
-        "06ceb616",
-        "d715ab1b",
-        "5a1e067f",
-        "34ceeffa",
-        "c3f9e19b",
         "3861aae8",
-        "e4d0841e",
-        "4f9523d6",
-        "1be8123f",
-        "805a4535",
-        "d560e376",
-        "a851d4e4",
-        "cfdec021",
-        "d4983fcb",
-        "0185ead0",
-        "41972184",
-        "96865d42",
-        "a9d68759",
-        "fa209039",
-        "144e6297",
-        "119cd20d",
-        "25323563",
-        "471a184c",
-        "7632c1a0",
-        "cd01ae0a",
-        "4fad70fd",
-        "89770348",
-        "5b8a8ea7",
         "d114d0c9",
+        "38e7cc64",
+        "9823f549",
+        "f8fc4211",
+        "4fad70fd",
+        "01b7899c",
+        "4f9523d6",
+        "5a1e067f",
+        "72f16252",
+        "1ebe5b2b",
+        "d4983fcb",
+        "ce2f2585",
+        "7632c1a0",
+        "805a4535",
+        "b53a5f1f",
+        "95601cae",
+        "06ceb616",
+        "144e6297",
+        "34ceeffa",
+        "5b8a8ea7",
+        "1be8123f",
+        "41972184",
+        "cfdec021",
+        "119cd20d",
         "efae7a31",
+        "cd01ae0a",
+        "0026e7e7",
+        "cb6a33bc",
+        "465275be",
+        "d715ab1b",
+        "c3f9e19b",
+        "2a0cb272",
+        "a9d68759",
+        "7efc2abb",
+        "a851d4e4",
+        "e4d0841e",
         "86208bae",
-        "b53a5f1f"
+        "471a184c",
+        "89770348",
+        "0185ead0",
+        "96865d42",
+        "5fe61608",
+        "25323563",
+        "d4af0008",
+        "fa209039",
+        "125047d0",
+        "d560e376"
       ],
       "constraint_scores": {
-        "X": 0.951548474326667,
+        "X": 0.9555848810868788,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1529,8 +1542,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.407530454042082,
-      "total_tokens_avg": 4.822429906542056
+      "compression_score": 0.4029850746268656,
+      "total_tokens_avg": 4.785714285714286
     },
     "agent_action_agent_action_object_agent_descriptor": {
       "pattern_id": "agent_action_agent_action_object_agent_descriptor",
@@ -1543,13 +1556,13 @@
         "agent",
         "descriptor"
       ],
-      "success_count": 35,
+      "success_count": 45,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7688868091266068,
+        "X": 0.7911480374193827,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1733,17 +1746,17 @@
         "action",
         "descriptor"
       ],
-      "success_count": 1,
+      "success_count": 5,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.53463573731,
-        "T": 0.594928928,
-        "N": 0.5654,
-        "B": 0.5761526857142857,
-        "A": 0.5564584287542857
+        "X": 0.6431557804441174,
+        "T": 0.8602902501695295,
+        "N": 0.7573861053439999,
+        "B": 0.7780919171749335,
+        "A": 0.7389938698704588
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -1897,8 +1910,8 @@
       "success_count": 4,
       "fail_count": 0,
       "contexts_seen": [
-        "10fa8e66",
         "0644439a",
+        "10fa8e66",
         "d41d8cd9"
       ],
       "constraint_scores": {
@@ -2567,25 +2580,25 @@
         "object",
         "descriptor"
       ],
-      "success_count": 4,
+      "success_count": 5,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6155402051043569,
-        "T": 0.804804733419392,
-        "N": 0.7181660287999999,
-        "B": 0.73335845220608,
-        "A": 0.7235464492398388
+        "X": 0.6363160551118341,
+        "T": 0.8592619400454286,
+        "N": 0.7573861053439999,
+        "B": 0.7758567361231686,
+        "A": 0.7584528261330581
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2857142857142857,
-      "total_tokens_avg": 9.0
+      "compression_score": 0.35064935064935066,
+      "total_tokens_avg": 8.8
     },
     "agent_action_object_descriptor_connector_action_object": {
       "pattern_id": "agent_action_object_descriptor_connector_action_object",
@@ -3228,17 +3241,17 @@
         "agent",
         "action"
       ],
-      "success_count": 2,
+      "success_count": 4,
       "fail_count": 0,
       "contexts_seen": [
         "8ad5e185"
       ],
       "constraint_scores": {
-        "X": 0.60315916935872,
-        "T": 0.6695866133163637,
-        "N": 0.622952,
-        "B": 0.6262015373818182,
-        "A": 0.6435895976
+        "X": 0.6830458090462408,
+        "T": 0.7994080097885558,
+        "N": 0.7181660287999999,
+        "B": 0.7230664167302983,
+        "A": 0.7559767947814401
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -3247,6 +3260,185 @@
       "generation": 0,
       "compression_score": 0.2857142857142856,
       "total_tokens_avg": 23.0
+    },
+    "agent_action_descriptor_agent_action_object_descriptor": {
+      "pattern_id": "agent_action_descriptor_agent_action_object_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.56716306933904,
+        "T": 0.6746709998763636,
+        "N": 0.622952,
+        "B": 0.636592080581818,
+        "A": 0.61718339362544
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_descriptor_agent_action_object": {
+      "pattern_id": "agent_action_descriptor_agent_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5671712396931199,
+        "T": 0.6715576784763636,
+        "N": 0.622952,
+        "B": 0.6307428581818182,
+        "A": 0.61493529813776
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
+    },
+    "agent_action_descriptor_agent_action": {
+      "pattern_id": "agent_action_descriptor_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "agent",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.53669134352,
+        "T": 0.5897615526363635,
+        "N": 0.5654,
+        "B": 0.5672189981818182,
+        "A": 0.558804125972
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
+    },
+    "descriptor_action_descriptor_action_object_descriptor": {
+      "pattern_id": "descriptor_action_descriptor_action_object_descriptor",
+      "role_sequence": [
+        "descriptor",
+        "action",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5366821808,
+        "T": 0.5934927276363636,
+        "N": 0.5654,
+        "B": 0.5722514381818182,
+        "A": 0.5626986761
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
+    },
+    "agent_action_descriptor_agent_action_descriptor": {
+      "pattern_id": "agent_action_descriptor_agent_action_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "agent",
+        "action",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.53668116272,
+        "T": 0.5962067046363636,
+        "N": 0.5654,
+        "B": 0.5752073981818182,
+        "A": 0.5638075959259999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_descriptor_action_object": {
+      "pattern_id": "agent_action_descriptor_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.53668116272,
+        "T": 0.5987612916363636,
+        "N": 0.56414756,
+        "B": 0.5771818181818181,
+        "A": 0.565135732316
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
     }
   },
   "discourse": {
@@ -3256,7 +3448,7 @@
         "question",
         "question"
       ],
-      "success_count": 774,
+      "success_count": 988,
       "fail_count": 0,
       "promoted": true
     },
@@ -3266,7 +3458,7 @@
         "question",
         "statement"
       ],
-      "success_count": 1098,
+      "success_count": 1349,
       "fail_count": 0,
       "promoted": true
     },
@@ -3276,7 +3468,7 @@
         "statement",
         "question"
       ],
-      "success_count": 1132,
+      "success_count": 1391,
       "fail_count": 0,
       "promoted": true
     },
@@ -3286,7 +3478,7 @@
         "statement",
         "statement"
       ],
-      "success_count": 936,
+      "success_count": 1066,
       "fail_count": 0,
       "promoted": true
     },
@@ -3296,7 +3488,7 @@
         "question",
         "explanation"
       ],
-      "success_count": 12,
+      "success_count": 14,
       "fail_count": 0,
       "promoted": true
     },
@@ -3306,7 +3498,7 @@
         "explanation",
         "statement"
       ],
-      "success_count": 12,
+      "success_count": 14,
       "fail_count": 0,
       "promoted": true
     },
@@ -3316,7 +3508,7 @@
         "question",
         "answer"
       ],
-      "success_count": 23,
+      "success_count": 29,
       "fail_count": 0,
       "promoted": true
     },
@@ -3326,10 +3518,10 @@
         "answer",
         "statement"
       ],
-      "success_count": 23,
+      "success_count": 29,
       "fail_count": 0,
       "promoted": true
     }
   },
-  "saved_at": 1781248011.9605503
+  "saved_at": 1781265979.2454998
 }

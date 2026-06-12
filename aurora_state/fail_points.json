@@ -1,22 +1,15 @@
 {
-  "total_fails": 1583,
+  "total_fails": 2033,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 209,
-      "severity_sum": 17.966133139195,
+      "fail_count": 227,
+      "severity_sum": 20.270622891743184,
       "recent": [
-        0.11336274509803922,
-        0.05,
-        0.13654903846153849,
-        0.19359404024767804,
-        0.19181250000000002,
-        0.13654903846153849,
-        0.19359404024767804,
+        0.05683333333333333,
+        0.09235416666666668,
         0.07805357142857143,
         0.16795972222222225,
-        0.12055555555555555,
-        0.1807084249084249,
-        0.10205822649572652,
+        0.05,
         0.05,
         0.07577777777777778,
         0.1937930555555556,
@@ -24,13 +17,20 @@
         0.18690416666666668,
         0.10656250000000002,
         0.05683333333333333,
-        0.09235416666666668
+        0.09235416666666668,
+        0.07805357142857143,
+        0.16795972222222225,
+        0.10871527777777779,
+        0.1807084249084249,
+        0.1792398097826087,
+        0.19181250000000002,
+        0.14560312500000003
       ],
       "examples": []
     },
     "context_carryover": {
-      "fail_count": 445,
-      "severity_sum": 222.5,
+      "fail_count": 558,
+      "severity_sum": 279.0,
       "recent": [
         0.5,
         0.5,
@@ -70,8 +70,8 @@
       "examples": []
     },
     "contradiction_handling": {
-      "fail_count": 436,
-      "severity_sum": 218.0,
+      "fail_count": 573,
+      "severity_sum": 286.5,
       "recent": [
         0.5,
         0.5,
@@ -97,8 +97,8 @@
       "examples": []
     },
     "implied_intent_inference": {
-      "fail_count": 92,
-      "severity_sum": 46.0,
+      "fail_count": 111,
+      "severity_sum": 55.5,
       "recent": [
         0.5,
         0.5,
@@ -130,8 +130,8 @@
       "examples": []
     },
     "uncertainty_signaling": {
-      "fail_count": 302,
-      "severity_sum": 151.0,
+      "fail_count": 423,
+      "severity_sum": 211.5,
       "recent": [
         0.5,
         0.5,
@@ -157,9 +157,17 @@
       "examples": []
     },
     "boundary_calibration": {
-      "fail_count": 8,
-      "severity_sum": 4.0,
+      "fail_count": 16,
+      "severity_sum": 8.0,
       "recent": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -228,8 +236,8 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 82,
-      "severity_sum": 41.0,
+      "fail_count": 116,
+      "severity_sum": 58.0,
       "recent": [
         0.5,
         0.5,

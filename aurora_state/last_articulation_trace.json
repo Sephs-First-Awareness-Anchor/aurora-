@@ -1,31 +1,33 @@
 {
-  "original": "I exist is isn't. I am truth real.",
+  "original": "I did moment am. I change feel where.",
   "candidate": "",
-  "selected": "I exist is isn't. I am truth real.",
+  "selected": "I did moment am. I change feel where.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.74,
   "candidate_score": 0.0,
-  "original_pressure": 0.316,
+  "original_pressure": 0.292,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
+  "pressure_relief": -0.708,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What boundary keeps your meaning clear?",
+    "prompt_excerpt": "[AFTERTHOUGHT] What stays inside you and what crosses out?",
     "input_interpretation": {
-      "raw_prompt": "What boundary keeps your meaning clear?",
+      "raw_prompt": "[AFTERTHOUGHT] What stays inside you and what crosses out?",
       "intent_hint": "question",
       "topic_terms": [
-        "boundary",
-        "keeps",
-        "meaning",
-        "clear"
+        "afterthought",
+        "stays",
+        "inside",
+        "crosses"
       ],
-      "entities": []
+      "entities": [
+        "AFTERTHOUGHT"
+      ]
     },
-    "tone": "warm",
+    "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781247955.082531,
+    "timestamp": 1781265935.3915632,
     "min_relief_used": 0.035
   }
 }
