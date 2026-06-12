@@ -2,20 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1",
-      "change_id": "MC:b182c0ea6152",
-      "dominant_axis": "X",
-      "file": "aurora_os/build/rootfs/usr/local/lib/python3.11/site-packages/wheel/vendored/packaging/_musllinux.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_os.build.rootfs.usr.local.lib.python3.11.site-packages.wheel.vendored.packaging._musllinux",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781247346.328463
-    },
-    {
-      "axis_signature": "X^1",
       "change_id": "MC:b7aa1814230e",
       "dominant_axis": "X",
       "file": "aurora_os/build/rootfs/usr/local/lib/python3.11/site-packages/wheel/vendored/packaging/_parser.py",
@@ -3359,10 +3345,24 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1781266341.6857762
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:683d2118018f",
+      "dominant_axis": "T",
+      "file": "aurora_simulation_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_simulation_engine",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781293991.3963835
     }
   ],
   "initialized": true,
-  "last_run_at": 1781266668.2710922,
+  "last_run_at": 1781294386.7053957,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781202531418552329,
@@ -16745,8 +16745,8 @@
       "size": 4867
     },
     "aurora_simulation_engine.py": {
-      "mtime_ns": 1781190763788575295,
-      "size": 179715
+      "mtime_ns": 1781293962735927993,
+      "size": 183695
     },
     "aurora_streaming_expression.py": {
       "mtime_ns": 1781190763829521606,

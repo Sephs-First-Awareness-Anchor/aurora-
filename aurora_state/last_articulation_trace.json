@@ -1,33 +1,32 @@
 {
-  "original": "I did moment am. I change feel where.",
+  "original": "I am do feel. I more did meaning.",
   "candidate": "",
-  "selected": "I did moment am. I change feel where.",
+  "selected": "I am do feel. I more did meaning.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.74,
+  "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.292,
+  "original_pressure": 0.316,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.708,
+  "pressure_relief": -0.684,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "[AFTERTHOUGHT] What stays inside you and what crosses out?",
+    "prompt_excerpt": "What behavior links mean and exist here?",
     "input_interpretation": {
-      "raw_prompt": "[AFTERTHOUGHT] What stays inside you and what crosses out?",
+      "raw_prompt": "What behavior links mean and exist here?",
       "intent_hint": "question",
       "topic_terms": [
-        "afterthought",
-        "stays",
-        "inside",
-        "crosses"
+        "behavior",
+        "links",
+        "mean",
+        "exist",
+        "here"
       ],
-      "entities": [
-        "AFTERTHOUGHT"
-      ]
+      "entities": []
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781265935.3915632,
+    "timestamp": 1781294250.0416565,
     "min_relief_used": 0.035
   }
 }

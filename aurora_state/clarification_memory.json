@@ -2,5 +2,17 @@
   "total_gaps_asked": 0,
   "total_gaps_resolved": 0,
   "last_ask_turn": -10,
-  "resolved_gaps": []
+  "resolved_gaps": [
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "what i",
+      "question": "",
+      "answer": "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    }
+  ]
 }

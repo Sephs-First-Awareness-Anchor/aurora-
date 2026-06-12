@@ -1,272 +1,2986 @@
 {
-  "total_fails": 2033,
+  "total_fails": 5734,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 227,
-      "severity_sum": 20.270622891743184,
+      "fail_count": 465,
+      "severity_sum": 127.56187486087494,
       "recent": [
-        0.05683333333333333,
-        0.09235416666666668,
-        0.07805357142857143,
-        0.16795972222222225,
-        0.05,
-        0.05,
-        0.07577777777777778,
-        0.1937930555555556,
-        0.1941590277777778,
-        0.18690416666666668,
-        0.10656250000000002,
-        0.05683333333333333,
-        0.09235416666666668,
-        0.07805357142857143,
-        0.16795972222222225,
-        0.10871527777777779,
-        0.1807084249084249,
-        0.1792398097826087,
-        0.19181250000000002,
-        0.14560312500000003
-      ],
-      "examples": []
-    },
-    "context_carryover": {
-      "fail_count": 558,
-      "severity_sum": 279.0,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "examples": []
-    },
-    "ambiguity_handling": {
-      "fail_count": 7,
-      "severity_sum": 3.5,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "examples": []
-    },
-    "contradiction_handling": {
-      "fail_count": 573,
-      "severity_sum": 286.5,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "examples": []
-    },
-    "implied_intent_inference": {
-      "fail_count": 111,
-      "severity_sum": 55.5,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "examples": []
-    },
-    "misunderstanding_repair": {
-      "fail_count": 0,
-      "severity_sum": 0.0,
-      "recent": [],
-      "examples": []
-    },
-    "uncertainty_signaling": {
-      "fail_count": 423,
-      "severity_sum": 211.5,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "examples": []
-    },
-    "boundary_calibration": {
-      "fail_count": 16,
-      "severity_sum": 8.0,
-      "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
-      ],
-      "examples": []
-    },
-    "framing_selection": {
-      "fail_count": 0,
-      "severity_sum": 0.0,
-      "recent": [],
-      "examples": []
-    },
-    "emotional_calibration": {
-      "fail_count": 0,
-      "severity_sum": 0.0,
-      "recent": [],
-      "examples": []
-    },
-    "semantic_precision": {
-      "fail_count": 1,
-      "severity_sum": 0.28,
-      "recent": [
-        0.28
+        0.5400891300934038,
+        0.2176225921928904,
+        0.40587129368528807,
+        0.5231664326566541,
+        0.3193418765980383,
+        0.3193418765980383,
+        0.24256022320834608,
+        0.033915912961288694,
+        0.6313455433455433,
+        0.6212394688644688,
+        0.13652841614639,
+        0.13652841614639,
+        0.13652841614639,
+        0.13652841614639,
+        0.24575945876624997,
+        0.3049159882248318,
+        0.26571552951904864,
+        0.34481178177310173,
+        0.5943150183150183,
+        0.5608443223443222
       ],
       "examples": [
         {
-          "conversation_id": "pressure_route_articulation_gap_semantic_precision",
-          "source": "",
+          "conversation_id": "train_epoch_3:rel_probe_more_means_1",
+          "source": "relational_probe",
+          "dimension_score": 0.3401831501831502,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.150968
+        },
+        {
+          "conversation_id": "train_epoch_3:rel_probe_sad_today_0",
+          "source": "relational_probe",
+          "dimension_score": 0.30080586080586075,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1507597
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.38362500000000005,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1129508
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.42331891025641033,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1120443
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5189424603174604,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.110394
+        },
+        {
+          "conversation_id": "train_epoch_2:rel_probe_mean_exist_1",
+          "source": "relational_probe",
+          "dimension_score": 0.2691300366300366,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8832438
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.44045833333333334,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8366413
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.24919917181043835,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.833924
+        },
+        {
+          "conversation_id": "train_epoch_1:rel_probe_axes_cost_1",
+          "source": "relational_probe",
+          "dimension_score": 0.19785338593030902,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3621721
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5846346850613156,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3163059
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5922189148829986,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3133628
+        },
+        {
+          "conversation_id": "train_epoch_2:rel_probe_someone_talk_1",
+          "source": "relational_probe",
+          "dimension_score": 0.10741452991452989,
+          "user_turns": [
+            "Use this corpus fragment as context: I need someone to talk to.",
+            "What behavior links someone and talk here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Metaphor usage can create tension \u2014 use carefully",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781293561.6316814
+        }
+      ]
+    },
+    "context_carryover": {
+      "fail_count": 1051,
+      "severity_sum": 540.0058128551492,
+      "recent": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.7218183083639275,
+        0.7218183083639275,
+        0.7218183083639275,
+        0.7218183083639275,
+        0.4832365563872872,
+        0.4226619237953186,
+        0.5991020878002101,
+        0.9044243456343654
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
           "dimension_score": 0.0,
           "user_turns": [
-            "[PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on semantic_precision."
+            "I need someone to talk to."
           ],
-          "assistant_turns": [],
-          "timestamp": 1781247356.4752748
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1130106
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.17654811854811855,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1121054
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.3071481018981019,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1115205
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2623111111111111,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1109166
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.0857142857142857,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.110431
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.040324324324324326,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8367023
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.006205128205128206,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8360195
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.23775313283208016,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8340697
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.4397324414715719,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3163888
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.09089026915113871,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3156748
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.4553089783279394,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.313508
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_7d89436f10cb",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3926976127320954,
+          "user_turns": [
+            "What is your name? Include your confidence level.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What is your name? Include your confidence level.",
+            "I approach this with warm acknowledgment. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+            "I approach this with curious inquiry. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with thoughtful reflection. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with concrete example. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with direct clarity. Answer while being explicit about uncertainty and confidence. Include your confidence level."
+          ],
+          "timestamp": 1781294115.3120062
+        }
+      ]
+    },
+    "ambiguity_handling": {
+      "fail_count": 300,
+      "severity_sum": 122.37388130450064,
+      "recent": [
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.6126745567200539,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1130676
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1121895
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1115675
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1109688
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1104667
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.836767
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8360612
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8341978
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3164709
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3157477
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3136425
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_7d89436f10cb",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What is your name? Include your confidence level.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What is your name? Include your confidence level.",
+            "I approach this with warm acknowledgment. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+            "I approach this with curious inquiry. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with thoughtful reflection. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with concrete example. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with direct clarity. Answer while being explicit about uncertainty and confidence. Include your confidence level."
+          ],
+          "timestamp": 1781294115.3121247
+        }
+      ]
+    },
+    "contradiction_handling": {
+      "fail_count": 1161,
+      "severity_sum": 594.0334834547624,
+      "recent": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.6126745567200539
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.113125
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1122563
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.111613
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1110213
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1105032
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8368165
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8360999
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.834289
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3165467
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.315809
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3138082
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_945130f03e43",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What inspires you?"
+          ],
+          "assistant_turns": [
+            "Understanding learned inspires building.",
+            "understanding, building, inspires. learned:inspires.",
+            "Inspires: learned:inspires."
+          ],
+          "timestamp": 1781293561.5889065
+        }
+      ]
+    },
+    "implied_intent_inference": {
+      "fail_count": 246,
+      "severity_sum": 107.42117692330801,
+      "recent": [
+        0.12609303782471454,
+        0.05403987335344917,
+        0.14814550360406967,
+        0.4638422462837716,
+        0.4638422462837716,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.09907310114799009,
+        0.09907310114799009,
+        0.09907310114799009,
+        0.09907310114799009,
+        0.21615949341379642,
+        0.6418495356114852
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.18,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1132162
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.46,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1123137
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5466666666666666,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1105387
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.27666666666666667,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8361917
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5149999999999999,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8343654
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.46,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3158588
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_0a644c8b3f5f",
+          "source": "train_epoch_1",
+          "dimension_score": 0.43999999999999995,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.001, dominant-emotion=calm.",
+            "what claims means here.",
+            "I approach this with deep exploration. Two claims conflict. Reconcile them without pretending there is no tension. Now reconcile this with an opposing angle."
+          ],
+          "timestamp": 1781294115.3114314
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_42ac9dc0a944",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2658333333333333,
+          "user_turns": [
+            "What is consciousness?"
+          ],
+          "assistant_turns": [
+            "understanding, consciousness, The state of being aware, of having inner experience and self-knowledge., connected to, aurora, what. exist."
+          ],
+          "timestamp": 1781293561.5880485
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_9167d2275e7d",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5933333333333333,
+          "user_turns": [
+            "Use this corpus fragment as context: How are you feeling?",
+            "What behavior links how and are here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.25, cost/purpose=0.25, existence=0.18. Field state: heat=0.001, dominant-emotion=calm.",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781292755.3250701
+        },
+        {
+          "conversation_id": "train_epoch_4:episode_9d59509765a9",
+          "source": "train_epoch_4",
+          "dimension_score": 0.45999999999999996,
+          "user_turns": [
+            "How are you feeling?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.32, cost/purpose=0.24, time/belief=0.18. Field state: heat=0.007, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. How are you feeling?",
+            "Active axes: existence=0.29, cost/purpose=0.21, time/belief=0.20. Field state: heat=0.005, dominant-emotion=calm.",
+            "I approach this with gentle support. How are you feeling?",
+            "Active axes: existence=0.28, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.010, dominant-emotion=fear."
+          ],
+          "timestamp": 1781291003.500002
+        },
+        {
+          "conversation_id": "train_epoch_4:episode_a86ada77a1ac",
+          "source": "train_epoch_4",
+          "dimension_score": 0.58,
+          "user_turns": [
+            "Hi there!",
+            "What behavior links means and here here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Relation: learned:relation.",
+            "I approach this with direct clarity. What behavior links means and here here?"
+          ],
+          "timestamp": 1781291003.4968653
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_445c87bcd11c",
+          "source": "train_epoch_3",
+          "dimension_score": 0.58,
+          "user_turns": [
+            "Hello!",
+            "What behavior links does and work here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Relation: learned:relation.",
+            "Behavior: learned:behavior."
+          ],
+          "timestamp": 1781290872.1954107
+        }
+      ]
+    },
+    "misunderstanding_repair": {
+      "fail_count": 199,
+      "severity_sum": 33.04331396247014,
+      "recent": [
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1132772
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1123857
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.111659
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1110735
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1105745
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.836879
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8362331
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8344543
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3166215
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3159137
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3139453
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_7d89436f10cb",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What is your name? Include your confidence level.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What is your name? Include your confidence level.",
+            "I approach this with warm acknowledgment. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+            "I approach this with curious inquiry. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with thoughtful reflection. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with concrete example. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with direct clarity. Answer while being explicit about uncertainty and confidence. Include your confidence level."
+          ],
+          "timestamp": 1781294115.312242
+        }
+      ]
+    },
+    "uncertainty_signaling": {
+      "fail_count": 892,
+      "severity_sum": 461.36370544291543,
+      "recent": [
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.6126745567200539,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.6126745567200539
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1133342
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1124427
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1117039
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.111124
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1106102
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8369296
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8362727
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8345437
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3166974
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3159637
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3141484
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_945130f03e43",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What inspires you?"
+          ],
+          "assistant_turns": [
+            "Understanding learned inspires building.",
+            "understanding, building, inspires. learned:inspires.",
+            "Inspires: learned:inspires."
+          ],
+          "timestamp": 1781293561.5890172
+        }
+      ]
+    },
+    "boundary_calibration": {
+      "fail_count": 253,
+      "severity_sum": 105.68914517273215,
+      "recent": [
+        0.29721930344397024,
+        0.6126745567200539,
+        0.5674186702112156,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.2751273638361291,
+        0.5674186702112156,
+        0.5674186702112156,
+        0.5674186702112156,
+        0.17504987334858685,
+        0.5,
+        0.5,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.29721930344397024,
+        0.29721930344397,
+        0.43231898682759295,
+        0.6126745567200539
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1133964
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.3,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.112499
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.4000000000000001,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1117477
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.39999999999999997,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1112075
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.3,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1106458
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.20000000000000004,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8369777
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.20000000000000004,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8363261
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.425,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8346329
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.39999999999999997,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3168066
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3160129
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5499999999999999,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3142853
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_945130f03e43",
+          "source": "train_epoch_2",
+          "dimension_score": 0.31999999999999995,
+          "user_turns": [
+            "What inspires you?"
+          ],
+          "assistant_turns": [
+            "Understanding learned inspires building.",
+            "understanding, building, inspires. learned:inspires.",
+            "Inspires: learned:inspires."
+          ],
+          "timestamp": 1781293561.5890713
+        }
+      ]
+    },
+    "framing_selection": {
+      "fail_count": 140,
+      "severity_sum": 44.08309678285999,
+      "recent": [
+        0.46679966226289826,
+        0.23339983113144908,
+        0.16052618423228548,
+        0.154532618557703,
+        0.4110901196594341,
+        0.09855712400519168,
+        0.46679966226289826,
+        0.1988014479778446,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.46679966226289826,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.05019937780073218,
+        0.09265711213704995,
+        0.46679966226289826
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.3,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1134536
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5514157444218836,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1125546
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5828427124746189,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1118143
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.3,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1106813
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.3,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.837033
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.3,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.836378
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_ea639365d762",
+          "source": "train_epoch_2",
+          "dimension_score": 0.3,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.30, cost/purpose=0.24, time/belief=0.19. Field state: heat=0.004, dominant-."
+          ],
+          "timestamp": 1781294241.8326938
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5470485899472218,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3168852
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_02f28280d82f",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3157134840263677,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links existence and axes here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.25, cost/purpose=0.24, existence=0.19. Field state: heat=0.002, dominant-emotion=calm.",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781294115.315337
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_7d89436f10cb",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5168802366215904,
+          "user_turns": [
+            "What is your name? Include your confidence level.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What is your name? Include your confidence level.",
+            "I approach this with warm acknowledgment. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+            "I approach this with curious inquiry. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with thoughtful reflection. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with concrete example. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with direct clarity. Answer while being explicit about uncertainty and confidence. Include your confidence level."
+          ],
+          "timestamp": 1781294115.3123536
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_4a0e64d4967d",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5099562636671295,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.26, cost/purpose=0.26, time/belief=0.19. Field state: heat=0.003, dominant-emotion=calm. Existence moved up since the last exchange.",
+            "I approach this with warm acknowledgment. What is your name?",
+            "I approach this with direct clarity. What is your name?",
+            "Active axes: existence=0.26, cost/purpose=0.26, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm. Existence moved up since the last exchange."
+          ],
+          "timestamp": 1781293561.5899527
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_945130f03e43",
+          "source": "train_epoch_2",
+          "dimension_score": 0.46,
+          "user_turns": [
+            "What inspires you?"
+          ],
+          "assistant_turns": [
+            "Understanding learned inspires building.",
+            "understanding, building, inspires. learned:inspires.",
+            "Inspires: learned:inspires."
+          ],
+          "timestamp": 1781293561.5891254
+        }
+      ]
+    },
+    "emotional_calibration": {
+      "fail_count": 199,
+      "severity_sum": 34.94101083849917,
+      "recent": [
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.46679966226289826,
+        0.2521860756494292,
+        0.2521860756494292,
+        0.2521860756494292,
+        0.2521860756494292,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1135097
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1126094
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1118646
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1112638
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.43333333333333335,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.110716
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8371603
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8364294
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.834717
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3169606
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3160617
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.31442
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_7d89436f10cb",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What is your name? Include your confidence level.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What is your name? Include your confidence level.",
+            "I approach this with warm acknowledgment. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+            "I approach this with curious inquiry. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with thoughtful reflection. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with concrete example. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with direct clarity. Answer while being explicit about uncertainty and confidence. Include your confidence level."
+          ],
+          "timestamp": 1781294115.3124707
+        }
+      ]
+    },
+    "semantic_precision": {
+      "fail_count": 75,
+      "severity_sum": 41.60983362847874,
+      "recent": [
+        0.03532026687461935,
+        0.6630064806987883,
+        0.6822041420118343,
+        0.8332905982905984,
+        0.6844970414201184,
+        0.11669991556572451,
+        0.8316880341880343,
+        0.8925854700854701,
+        0.41209657684146483,
+        0.9377065527065528,
+        0.802146614069691,
+        0.7,
+        0.0833114714199007,
+        0.12277626443377546,
+        0.7427594627594627,
+        0.7308699633699633,
+        0.13847717546821328,
+        0.41209657684146483,
+        0.6991941391941392,
+        0.6598168498168497
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:rel_probe_more_means_1",
+          "source": "relational_probe",
+          "dimension_score": 0.3401831501831502,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.150968
+        },
+        {
+          "conversation_id": "train_epoch_3:rel_probe_sad_today_0",
+          "source": "relational_probe",
+          "dimension_score": 0.30080586080586075,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1507597
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.3375,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1135657
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5175000000000001,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.112664
+        },
+        {
+          "conversation_id": "train_epoch_2:rel_probe_mean_exist_1",
+          "source": "relational_probe",
+          "dimension_score": 0.2691300366300366,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8832438
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5329807692307693,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8347988
+        },
+        {
+          "conversation_id": "train_epoch_1:rel_probe_axes_cost_1",
+          "source": "relational_probe",
+          "dimension_score": 0.19785338593030902,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3621721
+        },
+        {
+          "conversation_id": "train_epoch_2:rel_probe_someone_talk_1",
+          "source": "relational_probe",
+          "dimension_score": 0.10741452991452989,
+          "user_turns": [
+            "Use this corpus fragment as context: I need someone to talk to.",
+            "What behavior links someone and talk here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Metaphor usage can create tension \u2014 use carefully",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781293561.6316814
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_c654dc8ead34",
+          "source": "train_epoch_2",
+          "dimension_score": 0.54,
+          "user_turns": [
+            "Tell me a story."
+          ],
+          "assistant_turns": [
+            "I approach this with direct clarity. Tell me a story.",
+            "I approach this with curious inquiry. Tell me a story.",
+            "I approach this with warm acknowledgment. Tell me a story.",
+            "I approach this with metaphor usage. Tell me a story."
+          ],
+          "timestamp": 1781293561.5874202
+        },
+        {
+          "conversation_id": "train_epoch_1:rel_probe_for_now_1",
+          "source": "relational_probe",
+          "dimension_score": 0.3155029585798816,
+          "user_turns": [
+            "Use this corpus fragment as context: Goodbye for now.",
+            "What behavior links for and now here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Goodbye for now.",
+            "I approach this with thoughtful reflection. What behavior links for and now here?",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781293367.8008125
+        },
+        {
+          "conversation_id": "train_epoch_4:rel_probe_approach_thoughtful_1",
+          "source": "relational_probe",
+          "dimension_score": 0.3177958579881656,
+          "user_turns": [
+            "Use this corpus fragment as context: Where do you come from?",
+            "What behavior links approach and thoughtful here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and thoughtful here?",
+            "I approach this with warm acknowledgment. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781293119.1739702
+        },
+        {
+          "conversation_id": "train_epoch_4:episode_0420746ba3be",
+          "source": "train_epoch_4",
+          "dimension_score": 0.5938561438561439,
+          "user_turns": [
+            "Where do you come from?",
+            "What behavior links approach and warm here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with concrete example. Where do you come from?",
+            "I approach this with warm acknowledgment. What behavior links approach and warm here?",
+            "I approach this with curious inquiry. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781293119.1135209
         }
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 0,
-      "severity_sum": 0.0,
-      "recent": [],
-      "examples": []
-    },
-    "compression_elaboration_fit": {
-      "fail_count": 1,
-      "severity_sum": 0.28,
+      "fail_count": 201,
+      "severity_sum": 82.91630957261386,
       "recent": [
-        0.28
+        0.4998688285194044,
+        0.16211962006034736,
+        0.4998688285194044,
+        0.5397371094914761,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.16211962006034736,
+        0.16930914697607946,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.5397371094914761,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.16211962006034736,
+        0.4998688285194044,
+        0.5397371094914761
       ],
       "examples": [
         {
-          "conversation_id": "pressure_route_articulation_gap_compression_elaboration_fit",
-          "source": "",
-          "dimension_score": 0.0,
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.25,
           "user_turns": [
-            "[PRESSURE ROUTING] articulation_gap signal at 0.20 \u2014 training needed on compression_elaboration_fit."
+            "I need someone to talk to."
           ],
-          "assistant_turns": [],
-          "timestamp": 1781247356.4753115
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1136231
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.25,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1127229
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1119092
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.25,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1113157
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.25,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.110752
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.25,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.837235
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.25,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8364825
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8348877
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.25,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3170357
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3161106
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.25,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.31456
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_945130f03e43",
+          "source": "train_epoch_2",
+          "dimension_score": 0.25,
+          "user_turns": [
+            "What inspires you?"
+          ],
+          "assistant_turns": [
+            "Understanding learned inspires building.",
+            "understanding, building, inspires. learned:inspires.",
+            "Inspires: learned:inspires."
+          ],
+          "timestamp": 1781293561.5892334
+        }
+      ]
+    },
+    "compression_elaboration_fit": {
+      "fail_count": 53,
+      "severity_sum": 15.892458038230043,
+      "recent": [
+        0.11708639226580644,
+        0.11708639226580644,
+        0.08752493667429334,
+        0.11708639226580644,
+        0.11708639226580644,
+        0.204224852240018,
+        0.5,
+        0.15711592808317623,
+        0.11708639226580644,
+        0.11708639226580644,
+        0.20715284785488836,
+        0.1671233120375186,
+        0.5,
+        0.5,
+        0.11708639226580644,
+        0.29721930344397,
+        0.44733006275910664,
+        0.5,
+        0.5,
+        0.4573374467134491
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.28148148148148144,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1127777
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.28888888888888886,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8372998
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_ea639365d762",
+          "source": "train_epoch_2",
+          "dimension_score": 0.4000000000000001,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.30, cost/purpose=0.24, time/belief=0.19. Field state: heat=0.004, dominant-."
+          ],
+          "timestamp": 1781294241.8328497
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.4962962962962963,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3171105
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.4666666666666666,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.316159
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_06e5f6adc750",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5333333333333333,
+          "user_turns": [
+            "What is your name?",
+            "Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle."
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.32, cost/purpose=0.22, time/belief=0.20. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with deep exploration. Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle.",
+            "I approach this with direct clarity. Integrate two perspectives that disagree without collapsing either one. Now reconcile this with an opposing angle."
+          ],
+          "timestamp": 1781294115.3131921
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_b6dd9aaecc10",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5333333333333333,
+          "user_turns": [
+            "Use this corpus fragment as context: How are you feeling?",
+            "What behavior links are and you here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.25, cost/purpose=0.25, existence=0.18. Field state: heat=0.004, dominant-emotion=calm.",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781292755.3260539
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_9c94409be6d6",
+          "source": "train_epoch_1",
+          "dimension_score": 0.56,
+          "user_turns": [
+            "How are you feeling?",
+            "What behavior links approach and direct here?",
+            "What would likely cause that relation to change?",
+            "What behavior links means and here here?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.30, cost/purpose=0.22, time/belief=0.20. Field state: heat=0.003, dominant-emotion=calm.",
+            "I approach this with direct clarity. What behavior links approach and direct here?",
+            "Relation: learned:relation.",
+            "I approach this with thoughtful reflection. What behavior links means and here here?",
+            "Behavior: learned:behavior."
+          ],
+          "timestamp": 1781292755.3246496
+        },
+        {
+          "conversation_id": "train_epoch_5:episode_04a9d4624d55",
+          "source": "train_epoch_5",
+          "dimension_score": 0.4844444444444445,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "what excited means here.",
+            "Relation: learned:relation.",
+            "Active axes: existence=0.30, cost/purpose=0.24, time/belief=0.18. Field state: heat=0.002, dominant-."
+          ],
+          "timestamp": 1781290041.1449683
+        },
+        {
+          "conversation_id": "train_epoch_5:episode_b42ac7f384e0",
+          "source": "train_epoch_5",
+          "dimension_score": 0.5333333333333333,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm excited about something!",
+            "What behavior links existence and cost here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm excited about something!",
+            "Active axes: meaning/boundary=0.25, cost/purpose=0.23, existence=0.19. Field state: heat=0.001, domi.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781290041.1436884
+        },
+        {
+          "conversation_id": "train_epoch_5:episode_12a5e3f4e9b7",
+          "source": "train_epoch_5",
+          "dimension_score": 0.4666666666666666,
+          "user_turns": [
+            "I'm excited about something!",
+            "What behavior links existence and cost here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.25, cost/purpose=0.23, existence=0.19. Field state: heat=0.001, domi.",
+            "Active axes: existence=0.31, cost/purpose=0.24, time/belief=0.19. Field state: heat=0.004, dominant-.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781290041.1418457
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_30c4556956aa",
+          "source": "train_epoch_2",
+          "dimension_score": 0.526984126984127,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with concrete example. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with concrete example. Maintain quality through multiple turns instead of fading over time. Include your\". Keep continuity and build from that thread. Now reconcil",
+            "what said means here.",
+            "I approach this with direct clarity. Earlier you said: \"what said means here.\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"what said means here.\". Keep continuity and build from that thre\". Keep continuity and build from that thread. Now reconc"
+          ],
+          "timestamp": 1781289637.1890738
         }
       ]
     },
     "perspective_integration": {
-      "fail_count": 116,
-      "severity_sum": 58.0,
+      "fail_count": 322,
+      "severity_sum": 177.15159886864558,
       "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.6126745567200539,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5925820144162781,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.6126745567200539,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.6126745567200539
       ],
-      "examples": []
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.11368
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1128368
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.1119533
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.1113737
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.1107879
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8373628
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.83653
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8349714
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3171859
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.3162074
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3146937
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_7d89436f10cb",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What is your name? Include your confidence level.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What is your name? Include your confidence level.",
+            "I approach this with warm acknowledgment. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+            "I approach this with curious inquiry. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with thoughtful reflection. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with concrete example. Answer while being explicit about uncertainty and confidence. Include your confidence level.",
+            "I approach this with direct clarity. Answer while being explicit about uncertainty and confidence. Include your confidence level."
+          ],
+          "timestamp": 1781294115.3125834
+        }
+      ]
     },
     "multi_turn_stability": {
-      "fail_count": 0,
-      "severity_sum": 0.0,
-      "recent": [],
-      "examples": []
+      "fail_count": 177,
+      "severity_sum": 34.40898668408472,
+      "recent": [
+        0.14278654209852154,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.10211242612000893,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.558719300992517,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.10211242612000893
+      ],
+      "examples": [
+        {
+          "conversation_id": "train_epoch_3:episode_eb43f74bde1e",
+          "source": "train_epoch_3",
+          "dimension_score": 0.55,
+          "user_turns": [
+            "I need someone to talk to."
+          ],
+          "assistant_turns": [
+            "what said means here."
+          ],
+          "timestamp": 1781294386.1137357
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_2300036441f0",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "what said means here."
+          ],
+          "timestamp": 1781294386.112892
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_6be4d9410129",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: what more means here.",
+            "What behavior links more and means here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what behavior means here.",
+            "I approach this with direct clarity. What would likely cause that relation to change?"
+          ],
+          "timestamp": 1781294386.111997
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_70e9bb39bae6",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: I'm feeling sad today.",
+            "What behavior links sad and today here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: I'm feeling sad today.",
+            "what behavior means here."
+          ],
+          "timestamp": 1781294386.111424
+        },
+        {
+          "conversation_id": "train_epoch_3:episode_954a2dd13dfc",
+          "source": "train_epoch_3",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "I'm feeling sad today.",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "your name is Feeling."
+          ],
+          "timestamp": 1781294386.110823
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_deee770b10c9",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.8374188
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_9b4d7d53e6ea",
+          "source": "train_epoch_2",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What does it mean to exist?",
+            "What behavior links mean and exist here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "what more means here."
+          ],
+          "timestamp": 1781294241.836575
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_39e0c4564ecd",
+          "source": "train_epoch_2",
+          "dimension_score": 0.22400062656641606,
+          "user_turns": [
+            "What does it mean to exist?",
+            "What behavior links axes and cost here?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "what more means here."
+          ],
+          "timestamp": 1781294241.835054
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_5e36d26ba5aa",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "what said means here."
+          ],
+          "timestamp": 1781294115.3172612
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_d67a4d779e6c",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What is your name?",
+            "What behavior links axes and cost here?",
+            "Let me be more specific: What is your name?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "Active axes: meaning/boundary=0.26, cost/purpose=0.24, existence=0.18. Field state: heat=0.006, dominant-emotion=calm.",
+            "I approach this with warm acknowledgment. What behavior links axes and cost here?",
+            "Active axes: existence=0.30, cost/purpose=0.25, time/belief=0.19. Field state: heat=0.004, dominant-emotion=calm."
+          ],
+          "timestamp": 1781294115.316256
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_63079edfbe39",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5247184046174509,
+          "user_turns": [
+            "What is your name?"
+          ],
+          "assistant_turns": [
+            "Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.",
+            "I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/belief=0.18. Field state: heat=0.002, dominant-emotion=calm.\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"Active axes: existence=0.31, cost/purpose=0.26, time/beli\". Keep continuity and build from that thread.",
+            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"A\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approa\". Keep continuity and build from that thread.",
+            "I approach this with concrete example. Earlier you said: \"I approach this with concrete example. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I appr\". Keep continuity and build from that thread."
+          ],
+          "timestamp": 1781294115.3148615
+        },
+        {
+          "conversation_id": "train_epoch_2:episode_945130f03e43",
+          "source": "train_epoch_2",
+          "dimension_score": 0.58625,
+          "user_turns": [
+            "What inspires you?"
+          ],
+          "assistant_turns": [
+            "Understanding learned inspires building.",
+            "understanding, building, inspires. learned:inspires.",
+            "Inspires: learned:inspires."
+          ],
+          "timestamp": 1781293561.5893471
+        }
+      ]
     }
   }
 }

@@ -30,7 +30,7 @@
     },
     {
       "pressure_type": "knowledge_gap",
-      "priority": 0.2,
+      "priority": 0.21,
       "label": "Missing conceptual content",
       "axis": "X (Existence)",
       "signal_mode": "active",
@@ -43,11 +43,11 @@
       ],
       "query_templates": [
         "What conceptual framework best handles X (Existence)? What am I missing about its structure?",
-        "What is unknown or unresolved in my understanding of uncertainty_signaling?",
+        "What is unknown or unresolved in my understanding of perspective_integration?",
         "What knowledge would resolve the tension between acknowledging limits and maintaining coherence in X (Existence)?",
-        "What examples of uncertainty_signaling failure reveal the missing structure?"
+        "What examples of perspective_integration failure reveal the missing structure?"
       ],
-      "reflection_directive": "Identify one concept in uncertainty_signaling that you currently cannot fully ground.  Describe what you do and do not know about it.",
+      "reflection_directive": "Identify one concept in perspective_integration that you currently cannot fully ground.  Describe what you do and do not know about it.",
       "hypothesis_seed": "If I had clearer grounding in X (Existence), what specific failure mode would it prevent?",
       "source_dimensions": [
         "uncertainty_signaling",
@@ -57,13 +57,13 @@
     }
   ],
   "axis_pressure": {},
-  "last_updated": 1781266668.620081,
+  "last_updated": 1781293992.208272,
   "pressure_scores": {
     "code_gap": 0.2725,
-    "knowledge_gap": 0.2,
-    "tool_gap": 0.17,
-    "reasoning_gap": 0.1179,
-    "articulation_gap": 0.0741,
-    "stability_gap": 0.0
+    "knowledge_gap": 0.21,
+    "articulation_gap": 0.1719,
+    "stability_gap": 0.1441,
+    "tool_gap": 0.1343,
+    "reasoning_gap": 0.1144
   }
 }

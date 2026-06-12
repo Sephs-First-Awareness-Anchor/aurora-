@@ -1,7 +1,7 @@
 {
   "level": "CONVERSANT",
   "quotas": {
-    "date": "2026-06-11",
+    "date": "2026-06-12",
     "inquiries_used": 0,
     "study_cycles_used": 0,
     "observations_used": 0,
@@ -122,7 +122,12 @@
       "timing_credit": 0.0
     }
   },
-  "study_topics": [],
+  "study_topics": [
+    "multi turn stability",
+    "semantic precision",
+    "relational reasoning",
+    "cause and effect reasoning"
+  ],
   "pending_thoughts": [],
   "curiosity_queue": [],
   "last_dream_time": 0.0
