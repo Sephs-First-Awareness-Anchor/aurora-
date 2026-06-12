@@ -1945,6 +1945,19 @@ except Exception:
     _aurora_native_inspect = None
 
 try:
+    from aurora_crystal_state_bridge import (
+        pack_state_bundle as crystal_pack_state,
+        restore_state_bundle as crystal_restore_state,
+        inspect_state_bundle as crystal_inspect_state,
+        PROFILE_SPECS as CRYSTAL_PROFILE_SPECS,
+    )
+except Exception:
+    crystal_pack_state = None
+    crystal_restore_state = None
+    crystal_inspect_state = None
+    CRYSTAL_PROFILE_SPECS = {}
+
+try:
     from aurora_internal.aurora_evolved_surfaces import AuroraEvolvedSurfaceEngine as _AuroraEvolvedSurfaceEngine
 except Exception:
     _AuroraEvolvedSurfaceEngine = None

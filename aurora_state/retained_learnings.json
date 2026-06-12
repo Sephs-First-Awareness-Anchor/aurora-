@@ -15,11 +15,14 @@
       "tags": [
         "semantic_frame",
         "speaker_identity",
-        "generative"
+        "generative",
+        "sedimemory_recall",
+        "chain",
+        "learned_hint"
       ],
-      "sightings": 3,
+      "sightings": 24,
       "first_seen": 1780968004.8146133,
-      "last_seen": 1780968005.783382
+      "last_seen": 1781292361.5531712
     },
     {
       "text": "what want means here",
@@ -64,6 +67,72 @@
       "sightings": 5,
       "first_seen": 1781190935.8167007,
       "last_seen": 1781192669.2282383
+    },
+    {
+      "text": "user name is Reasoning",
+      "confidence": 0.94,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "user"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "sedimemory_recall"
+      ],
+      "sightings": 2,
+      "first_seen": 1781247519.2033806,
+      "last_seen": 1781247522.487774
+    },
+    {
+      "text": "user name is Feeling",
+      "confidence": 0.94,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "user"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "generative",
+        "learned_hint",
+        "chain"
+      ],
+      "sightings": 24,
+      "first_seen": 1781291332.6106157,
+      "last_seen": 1781294309.8122072
+    },
+    {
+      "text": "user name is Working",
+      "confidence": 0.94,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "behavior",
+        "user"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "learned_hint"
+      ],
+      "sightings": 2,
+      "first_seen": 1781294156.679874,
+      "last_seen": 1781294169.9402869
     }
   ]
 }

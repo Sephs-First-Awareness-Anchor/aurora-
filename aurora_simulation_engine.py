@@ -1218,6 +1218,49 @@ class EpisodeResult:
     timestamp: float = field(default_factory=time.time)
 
 
+# ── Clarifying-question detection ────────────────────────────────────────────
+# When Aurora asks a genuine outward question the avatar must answer it so she
+# learns that asking for context → receiving context → better response.
+# Without this, adaptive_strategy_selection never earns a win and context
+# carryover stays broken (she can't build what she's never taught to gather).
+
+_CLARIFY_STARTERS = (
+    "could you", "can you", "what do you mean", "can i ask",
+    "what specifically", "how do you define", "what exactly",
+    "could you clarify", "do you mean", "are you saying",
+    "i want to make sure", "just to confirm", "what are you",
+    "which part", "tell me more", "what kind", "what part",
+    "help me understand", "i'm not sure what", "i need to know",
+)
+_RHETORICAL = ("i wonder", "isn't it", "don't you think", "right?", "isn't that")
+
+
+def _aurora_asked_for_context(text: str) -> bool:
+    """
+    Return True if Aurora's last response contains a genuine outward clarifying
+    question — one seeking information from the other party, not rhetorical.
+    """
+    if "?" not in text:
+        return False
+    # Split into sentences; check the final question-bearing sentence
+    sentences = [s.strip() for s in text.replace("?", "?.").split(".") if s.strip()]
+    for s in reversed(sentences):
+        if "?" not in s:
+            continue
+        low = s.lower()
+        if any(tok in low for tok in _RHETORICAL):
+            continue
+        if any(low.startswith(st) or st in low for st in _CLARIFY_STARTERS):
+            return True
+        # Plain wh-/modal starters directed outward
+        if any(low.startswith(w) for w in (
+            "what ", "how ", "why ", "could ", "can ", "would ", "which ",
+            "when ", "where ", "is there ", "are you ", "do you ",
+        )):
+            return True
+    return False
+
+
 class SimulationSession:
     """
     Runs simulation episodes. The bridge between all systems.
@@ -1709,6 +1752,31 @@ class SimulationSession:
             topic["expected_tone"] = topic_override.get("expected_tone") or topic["expected_tone"]
         return topic
 
+    def _answer_clarifying_question(
+        self,
+        spec: Dict[str, Any],
+        base_topic: Dict[str, Any],
+    ) -> str:
+        """
+        Generate a context-provision reply when Aurora asked for clarification.
+
+        Uses the spec's own description/context to build a grounded answer so
+        Aurora learns that asking → receiving → responding better.  Template-
+        based (no LLM) — the semantics come from the spec being run.
+        """
+        import random as _rnd
+        topic_text  = str(base_topic.get("topic") or base_topic.get("prompt") or "")
+        description = str((spec or {}).get("description", "") or "")
+        context     = str((spec or {}).get("context", "")     or "")
+        core = (description or context or topic_text)[:160] or "what I was exploring"
+        options = [
+            f"To clarify — {core}. Does that help frame it?",
+            f"What I mean is: {core}. With that in mind, what's your sense?",
+            f"Let me be more specific: {core}. How does that land for you?",
+            f"Sure — {core}. That's the core of what I'm working through with you.",
+        ]
+        return _rnd.choice(options)
+
     def _shape_topic_for_turn(
         self,
         base_topic: Dict[str, Any],
@@ -1766,6 +1834,19 @@ class SimulationSession:
         code_hint = str(topic.get("code_focus_hint", "") or "").strip()
         if code_hint and turn_index == 0 and not callable(self._live_response_bridge):
             prompt = f"{prompt} Evolution hint: {code_hint}"
+
+        # ── Clarification answer ─────────────────────────────────────────────
+        # If Aurora's last response contained a genuine outward question, reply
+        # to it instead of firing the next canned spec prompt.  This teaches
+        # her that asking for context → receiving context → better response —
+        # the foundation of adaptive_strategy_selection and context carryover.
+        if turn_index > 0 and trace:
+            prev_assistant = str(
+                (trace[-1] or {}).get("assistant_text", "") or ""
+            ).strip()
+            if _aurora_asked_for_context(prev_assistant):
+                prompt = self._answer_clarifying_question(spec or {}, base_topic)
+                topic["_answered_clarification"] = True
 
         topic["prompt"] = prompt
         topic["topic"] = prompt

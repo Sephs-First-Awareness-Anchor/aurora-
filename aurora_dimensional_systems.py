@@ -271,6 +271,44 @@ class CrystalFacet:
     def get_facet_points(self) -> Dict[str, float]:
         return self.get_points()
 
+    def to_dict(self) -> Dict[str, Any]:
+        content = self.content
+        if not isinstance(content, (str, int, float, bool, list, dict, type(None))):
+            content = str(content)[:200]
+        return {
+            "facet_id":     self.facet_id,
+            "role":         self.role,
+            "content":      content,
+            "confidence":   round(self.confidence, 4),
+            "state":        self.state.value,
+            "access_count": self.access_count,
+            "last_accessed":self.last_accessed,
+            "resonance":    round(self.resonance,    4),
+            "sensitivity":  round(self.sensitivity,  4),
+            "abstractness": round(self.abstractness, 4),
+            "potential":    round(self.potential,    4),
+            "stability":    round(self.stability,    4),
+            "coherence":    round(self.coherence,    4),
+            "complexity":   round(self.complexity,   4),
+            "frequency":    round(self.frequency,    4),
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "CrystalFacet":
+        f = cls(
+            facet_id     = d["facet_id"],
+            role         = d.get("role", ""),
+            content      = d.get("content", ""),
+            confidence   = float(d.get("confidence", 0.5)),
+            state        = FacetState(d.get("state", FacetState.ACTIVE.value)),
+            access_count = int(d.get("access_count", 0)),
+            last_accessed= float(d.get("last_accessed", time.time())),
+        )
+        for k in ("resonance", "sensitivity", "abstractness", "potential",
+                  "stability", "coherence", "complexity", "frequency"):
+            setattr(f, k, float(d.get(k, random.uniform(0.3, 0.7))))
+        return f
+
 
 @dataclass
 class Crystal:
@@ -381,6 +419,36 @@ class Crystal:
         law_facet = next((f for f in self.facets.values() if f.role == f"LAW_{law_name}"), None)
         outcome = 'positive' if law_facet and law_facet.stability > 0.5 else 'neutral'
         return {'law': law_name, 'outcome': outcome, 'crystal': self.concept}
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "crystal_id":          self.crystal_id,
+            "concept":             self.concept,
+            "level":               self.level.value,
+            "facets":              {fid: f.to_dict() for fid, f in self.facets.items()},
+            "connections":         self.connections,
+            "usage_count":         self.usage_count,
+            "created_at":          self.created_at,
+            "constraint_signature":self.constraint_signature,
+        }
+
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any]) -> "Crystal":
+        c = cls(
+            crystal_id          = d["crystal_id"],
+            concept             = d.get("concept", ""),
+            level               = CrystalLevel(int(d.get("level", CrystalLevel.BASE.value))),
+            usage_count         = int(d.get("usage_count", 0)),
+            created_at          = float(d.get("created_at", time.time())),
+            constraint_signature= d.get("constraint_signature"),
+        )
+        c.connections = dict(d.get("connections") or {})
+        for fid, fd in (d.get("facets") or {}).items():
+            try:
+                c.facets[fid] = CrystalFacet.from_dict(fd)
+            except Exception:
+                pass
+        return c
 
 
 class CrystalProcessingSystem(WarpCapable):
@@ -641,6 +709,44 @@ class CrystalProcessingSystem(WarpCapable):
             'total_crystals': len(self.crystals),
             'levels': dict(levels),
         }
+
+    # ── Persistence ──────────────────────────────────────────────────────────
+
+    def save_crystals(self, path: str) -> bool:
+        """Persist the full crystal registry to a JSON file."""
+        import json, os
+        try:
+            payload = {
+                "version":       1,
+                "crystals":      {cid: c.to_dict() for cid, c in self.crystals.items()},
+                "concept_index": self.concept_index,
+            }
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump(payload, fh, ensure_ascii=True)
+            os.replace(tmp, path)
+            return True
+        except Exception:
+            return False
+
+    def load_crystals(self, path: str) -> int:
+        """Load persisted crystals into the registry. Returns count loaded."""
+        import json
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                payload = json.load(fh)
+        except Exception:
+            return 0
+        loaded = 0
+        for cid, cd in (payload.get("crystals") or {}).items():
+            try:
+                c = Crystal.from_dict(cd)
+                self.crystals[cid] = c
+                self.concept_index[c.concept] = cid
+                loaded += 1
+            except Exception:
+                pass
+        return loaded
 
 
 # ============================================================================
@@ -2101,6 +2207,24 @@ class DimensionalSystems:
         promotions are sedimented as self-observation events (Section 9).
         """
         self.dps._sedimemory = sedimemory
+
+    # ── Unified crystal state persistence ────────────────────────────────────
+
+    _DPS_CRYSTALS_FILE = "dps_crystals.json"
+
+    def save_state(self, state_dir: str) -> bool:
+        """Persist the DPS crystal registry so it survives across restarts."""
+        import os
+        path = os.path.join(state_dir, self._DPS_CRYSTALS_FILE)
+        return self.dps.save_crystals(path)
+
+    def load_state(self, state_dir: str) -> int:
+        """Load persisted DPS crystals. Returns count loaded."""
+        import os
+        path = os.path.join(state_dir, self._DPS_CRYSTALS_FILE)
+        if not os.path.exists(path):
+            return 0
+        return self.dps.load_crystals(path)
 
     def set_genealogy(self, genealogy: Optional['ConstraintGenealogyLogger']) -> None:
         """Attach/detach genealogy logger for Layer-3 semantic observations."""

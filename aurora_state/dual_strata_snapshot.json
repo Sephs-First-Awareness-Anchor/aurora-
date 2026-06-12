@@ -3,20 +3,20 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.4751,
+      "intensity": 0.6791,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "[AFTERTHOUGHT] What are you reaching toward in this moment?",
+      "present_anchor": "I need someone to talk to.",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.62
+        "maturity": 0.419
       },
       "present_tone": "neutral",
-      "reinforcement_hint": 0.155
+      "reinforcement_hint": 0.1047
     },
     "processing_mode": "blended",
     "readiness": 0.5613,
@@ -25,31 +25,31 @@
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4859,
+      "intensity": 0.7773,
       "label": "steady"
     },
-    "timestamp": 1781194035.1193337
+    "timestamp": 1781294383.5107388
   },
-  "saved_at": 1781194035.1194973,
+  "saved_at": 1781294383.5109153,
   "subsurface_state": {
     "dominant_axis": "N",
-    "frame_request": "observation",
+    "frame_request": "action",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "[AFTERTHOUGHT] What are you reaching toward in this moment?",
+      "present_anchor": "I need someone to talk to.",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.62
+        "maturity": 0.419
       },
       "present_tone": "neutral",
-      "reinforcement_hint": 0.155
+      "reinforcement_hint": 0.1047
     },
     "sub_crests": [
       {
         "axis": "X",
-        "intensity": 0.6,
-        "label": "perceptually_steady"
+        "intensity": 0.581,
+        "label": "attentional_drift"
       },
       {
         "axis": "T",
@@ -89,7 +89,7 @@
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4859,
+      "intensity": 0.7773,
       "label": "steady"
     }
   }

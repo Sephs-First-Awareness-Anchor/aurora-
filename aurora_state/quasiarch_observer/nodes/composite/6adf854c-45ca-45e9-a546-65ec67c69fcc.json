@@ -1,0 +1,78 @@
+{
+  "node_id": "6adf854c-45ca-45e9-a546-65ec67c69fcc",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.articulation",
+    "issue": "unbound_surface_fragment",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "bind_fragment_after_response_build",
+    "intended_effect": "ensure every live response leaves as bound surface language",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "periodic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.4,
+    "target__recurrence_pattern": 0.36000000000000004,
+    "logic_tier__recurrence_pattern": 0.34,
+    "intervention__recurrence_pattern": 0.32000000000000006,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "cc557eec-73d3-4781-968a-5b742886826d",
+    "17efa5e4-a875-4549-93e3-8cbbccc668d0",
+    "d9ada74c-3115-4791-9e0c-b104d2e09463",
+    "c8c1e789-ee70-433a-95d1-7cc353048a1c"
+  ],
+  "parent_ids": [
+    "cc557eec-73d3-4781-968a-5b742886826d",
+    "17efa5e4-a875-4549-93e3-8cbbccc668d0",
+    "d9ada74c-3115-4791-9e0c-b104d2e09463",
+    "c8c1e789-ee70-433a-95d1-7cc353048a1c"
+  ],
+  "child_ids": [],
+  "tags": [
+    "response_boundary",
+    "runtime",
+    "binding",
+    "phase:runtime_dialogue",
+    "dialogue",
+    "articulation",
+    "composite",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::32cb15f0_faac_4193_aa58_cf0e4851ce28",
+    "ghost_relic_match": 0.9375,
+    "family_key": "issue_family::unbound_surface_fragment",
+    "issue_category": "unbound_surface_fragment",
+    "stage": "COMPOSITE",
+    "version": 14,
+    "signature": "7ddf117fc5e8cf31af3f",
+    "is_active_version": false,
+    "supersedes": "00f4b5a6-6cb4-4744-a23f-4d27e6590202",
+    "superseded_by": "2b4aaec5-6daf-4751-b28a-241b189d9c5a"
+  },
+  "created_at": "2026-06-12T07:04:25.883477+00:00",
+  "persisted_at": "2026-06-12T07:04:53.701392+00:00",
+  "is_relic": false,
+  "checksum": "fbd24af0323a9106"
+}

@@ -1,0 +1,80 @@
+{
+  "node_id": "f355673f-4c12-464b-a228-c9f4cf281341",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.dialogue.self_repair",
+    "issue": "coherence_maintenance",
+    "logic_tier": "runtime_orchestration",
+    "intervention": "active_self_repair_orientation",
+    "intended_effect": "turn low coherence into focused repair and learning pressure",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "periodic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.5,
+    "target__recurrence_pattern": 0.45,
+    "logic_tier__recurrence_pattern": 0.425,
+    "intervention__recurrence_pattern": 0.4,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "ca135a96-c97c-4563-8c00-3ec0cfe78b34",
+    "a6591f3a-35e4-4853-9bf7-ae3cc2fa886e",
+    "b12799d4-3d8a-4c88-94b8-dd411c54fe0f",
+    "5235fe9c-4d65-4287-a85a-eaa448b39861",
+    "7211e4e7-7939-4820-903d-694e5704244f"
+  ],
+  "parent_ids": [
+    "ca135a96-c97c-4563-8c00-3ec0cfe78b34",
+    "a6591f3a-35e4-4853-9bf7-ae3cc2fa886e",
+    "b12799d4-3d8a-4c88-94b8-dd411c54fe0f",
+    "5235fe9c-4d65-4287-a85a-eaa448b39861",
+    "7211e4e7-7939-4820-903d-694e5704244f"
+  ],
+  "child_ids": [],
+  "tags": [
+    "learning",
+    "coherence",
+    "self_repair",
+    "runtime",
+    "dialogue",
+    "phase:runtime_dialogue",
+    "composite",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::04cf01df_8b04_4463_8ef5_b6b992bc5b50",
+    "ghost_relic_match": 1.0,
+    "family_key": "issue_family::coherence_maintenance",
+    "issue_category": "coherence_maintenance",
+    "stage": "COMPOSITE",
+    "version": 1,
+    "signature": "8e966de30fef037368f0",
+    "is_active_version": false,
+    "supersedes": "",
+    "superseded_by": "6aba67b5-5772-4f1b-b394-fa57aacf3bef"
+  },
+  "created_at": "2026-06-12T06:56:51.471500+00:00",
+  "persisted_at": "2026-06-12T06:57:08.784495+00:00",
+  "is_relic": false,
+  "checksum": "0c9731671038d741"
+}

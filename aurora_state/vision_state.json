@@ -1,0 +1,51 @@
+{
+  "percept_templates": {
+    "face_detected": {
+      "name": "face_detected",
+      "feature_signature": {},
+      "confidence": 1.0,
+      "stability": 0.0,
+      "usage_count": 0
+    },
+    "object_detected": {
+      "name": "object_detected",
+      "feature_signature": {},
+      "confidence": 1.0,
+      "stability": 0.0,
+      "usage_count": 0
+    },
+    "text_detected": {
+      "name": "text_detected",
+      "feature_signature": {},
+      "confidence": 1.0,
+      "stability": 0.0,
+      "usage_count": 0
+    },
+    "motion_detected": {
+      "name": "motion_detected",
+      "feature_signature": {},
+      "confidence": 1.0,
+      "stability": 0.0,
+      "usage_count": 0
+    },
+    "color_blob": {
+      "name": "color_blob",
+      "feature_signature": {},
+      "confidence": 1.0,
+      "stability": 0.0,
+      "usage_count": 0
+    },
+    "edge_pattern": {
+      "name": "edge_pattern",
+      "feature_signature": {},
+      "confidence": 1.0,
+      "stability": 0.0,
+      "usage_count": 0
+    }
+  },
+  "hybrids": {},
+  "concept_memory": {
+    "concepts": {},
+    "grounding": []
+  }
+}

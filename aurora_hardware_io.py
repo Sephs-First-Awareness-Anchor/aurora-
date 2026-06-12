@@ -63,6 +63,17 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+try:
+    from aurora_persistence_utils import PERSISTENCE_LOCK, atomic_write_json
+except Exception:
+    import threading as _threading
+    PERSISTENCE_LOCK = _threading.RLock()
+    def atomic_write_json(path, data, **kw):
+        import json
+        with open(path, "w") as _f:
+            json.dump(data, _f, **kw)
+        return True
+
 # ---------------------------------------------------------------------------
 # Platform detection
 # ---------------------------------------------------------------------------

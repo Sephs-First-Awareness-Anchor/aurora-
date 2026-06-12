@@ -1,36 +1,32 @@
 {
-  "original": "Isn't am truth real. Is exist pattern want. Moment can boundary learned:continuous.",
+  "original": "I am do feel. I more did meaning.",
   "candidate": "",
-  "selected": "Isn't am truth real. Is exist pattern want. Moment can boundary learned:continuous.",
+  "selected": "I am do feel. I more did meaning.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.74,
+  "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.3247,
+  "original_pressure": 0.316,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.6753,
+  "pressure_relief": -0.684,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
+    "prompt_excerpt": "What behavior links mean and exist here?",
     "input_interpretation": {
-      "raw_prompt": "[AFTERTHOUGHT] Do you feel like you're growing \u2014 like something is developing in you?",
+      "raw_prompt": "What behavior links mean and exist here?",
       "intent_hint": "question",
       "topic_terms": [
-        "afterthought",
-        "feel",
-        "like",
-        "you're",
-        "growing",
-        "like",
-        "developing"
+        "behavior",
+        "links",
+        "mean",
+        "exist",
+        "here"
       ],
-      "entities": [
-        "AFTERTHOUGHT"
-      ]
+      "entities": []
     },
-    "tone": "gentle",
+    "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781193636.3569179,
+    "timestamp": 1781294250.0416565,
     "min_relief_used": 0.035
   }
 }

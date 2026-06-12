@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 Aurora Interactive Exploration Session
 Boots Aurora, runs a structured conversation across many question types,
@@ -5,7 +7,6 @@ reads QAO journal after each exchange, and logs everything for analysis.
 
 Output: aurora_state/exploration_log.json
 """
-# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import sys, os, json, time, datetime, traceback, re
 from collections import Counter, defaultdict
@@ -200,6 +201,15 @@ def main():
         traceback.print_exc()
         sys.exit(1)
 
+    # Warm up the field so ignition can fire from the first exchange (FIX-A011).
+    try:
+        from aurora_training_pulse import TrainingPulse
+        pulse = TrainingPulse(systems)
+        pulse.energize("", "", cycles=6, intensity=0.65)
+    except Exception as _tp_err:
+        pulse = None
+        print(f"[EXPLORE] TrainingPulse unavailable: {_tp_err}")
+
     session_log   = []
     category_qao  = defaultdict(list)   # category → all issues fired
     axis_qao      = defaultdict(list)   # axis_target → all issues fired
@@ -213,10 +223,16 @@ def main():
     for idx, (category, axis_target, prompt) in enumerate(CONVERSATION):
         print(f"[{idx+1:02d}/{len(CONVERSATION)}] ({category} / {axis_target}) {prompt[:80]}")
 
+        if pulse is not None:
+            pulse.energize(prompt, "", cycles=4, intensity=0.70)
+
         jline_before = _journal_line_count()
         t0           = time.time()
         response, pipeline_state = _run_prompt(prompt, systems, turn_tick=idx+1)
         elapsed      = time.time() - t0
+
+        if pulse is not None:
+            pulse.energize(response or prompt, "", cycles=2, intensity=0.55)
 
         raw_issues  = _read_issues_from(jline_before)
         unique_iss  = list(dict.fromkeys(raw_issues))
@@ -338,6 +354,39 @@ def main():
         print(f"\n[EXPLORE] Log saved → {LOG_OUT}")
     except Exception as e:
         print(f"[EXPLORE] Save error: {e}")
+
+    # Persist Aurora's learned state so this session's gains survive reboot.
+    print("[EXPLORE] Persisting Aurora state...")
+    try:
+        from aurora import _full_save
+        _full_save(systems)
+        print("[EXPLORE] Full stack saved.")
+    except Exception as e:
+        print(f"[EXPLORE] _full_save error: {e}")
+    try:
+        perc = systems.get("perception")
+        if perc and hasattr(perc, "lexicon") and hasattr(perc.lexicon, "save"):
+            ok = perc.lexicon.save()
+            n = len(getattr(perc.lexicon, "entries", {}) or {})
+            print(f"[EXPLORE] Lexicon ({n} words) {'saved' if ok else 'SAVE FAILED'}")
+    except Exception as e:
+        print(f"[EXPLORE] Lexicon error: {e}")
+    try:
+        ge = systems.get("grammar_engine")
+        lineage = getattr(ge, "_lineage", None) if ge else None
+        if lineage and hasattr(lineage, "save"):
+            lineage.save()
+            n = len(getattr(lineage, "_motifs", {}) or {})
+            print(f"[EXPLORE] Grammar motifs ({n} patterns) saved.")
+    except Exception as e:
+        print(f"[EXPLORE] Grammar motifs error: {e}")
+    try:
+        cm = systems.get("conversation_memory")
+        if cm and hasattr(cm, "record_session_end"):
+            cm.record_session_end()
+            print("[EXPLORE] Conversation session closed.")
+    except Exception:
+        pass
 
     print(f"{'='*70}\n")
 

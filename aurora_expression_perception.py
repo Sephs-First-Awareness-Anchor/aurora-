@@ -3650,6 +3650,7 @@ class ExpressionPerceptionEngine(WarpCapable):
         # typos, slang) from becoming vocabulary that fills expression slots.
         text = interaction.get('input', '')
         tone = interaction.get('tone', 'neutral')
+        i_state = interaction.get('i_state', 'i_is')
         _LEXICON_NOISE = {
             'ya', 'yo', 'hey', 'hm', 'hmm', 'uh', 'um', 'ah', 'oh',
             'ok', 'okay', 'yep', 'yup', 'nope', 'yeah', 'haha', 'lol',
@@ -3657,6 +3658,9 @@ class ExpressionPerceptionEngine(WarpCapable):
             'bye', 'hey', 'sup', 'nah', 'yah', 'ugh',
         }
         context_words = []
+        # Collect new words first so concept assignment can batch over the
+        # full sentence geometry in one geometry extraction call.
+        new_words: list = []   # [(clean, role, valence)]
         for word in text.lower().split():
             clean = word.strip(".,!;:'\"()-")
             # Minimum 4 chars, not noise, must have recognizable role
@@ -3676,11 +3680,28 @@ class ExpressionPerceptionEngine(WarpCapable):
                 self.lexicon.add_word(
                     clean, f"learned:{clean}", role,
                     valence=valence,
-                    lineage=interaction.get('i_state', 'i_is')
+                    lineage=i_state,
                 )
+                new_words.append((clean, role, valence))
             # Collect content words as context for expression
             if role in ('noun', 'verb', 'adjective'):
                 context_words.append(clean)
+
+        # Concept assignment: derive constraint channels for all new words
+        # in one pass (single geometry extraction for the whole sentence).
+        # Words sharing the same channel are compounded under the same concept;
+        # genuinely new channels become new concept nodes in the OETS web.
+        if new_words and text:
+            try:
+                from aurora_concept_derivation import assign_batch
+                assign_batch(
+                    new_words, text, self.lexicon,
+                    oets=self.oets,
+                    i_state=i_state,
+                    perception=self,
+                )
+            except Exception:
+                pass
 
         # Feed context keywords to composer -- shapes next expression.
         # set_context already filters noise, but we also filtered here.
@@ -3697,7 +3718,7 @@ class ExpressionPerceptionEngine(WarpCapable):
         if self.oets and not getattr(self, '_sim_speed_run', False):
             self.oets.process_interaction(
                 text, tone=tone,
-                i_state=interaction.get('i_state', 'i_is')
+                i_state=i_state,
             )
 
         return result
