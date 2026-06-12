@@ -9455,7 +9455,7 @@ def _boot_noncomp_manifold_runtime(systems: Dict[str, Any], *, verbose: bool = F
     # rather than assuming aurora.py's own directory is the root.
     _here = Path(__file__).resolve().parent
     repo_root = _here
-    for _cand in (_here, _here.parent):
+    for _cand in (_here, _here.parent, _here / "aurora_state"):
         if (_cand / "aurora_full_noncomp_rich_semantics.json").exists():
             repo_root = _cand
             break
@@ -19930,11 +19930,59 @@ def boot_aurora(
             _atexit_ccr.register(_save_ccr)
         except Exception:
             pass
+        # ── DPS → CCR bridge: seed CCR nodes from COMPOSITE+ crystals ──────
+        # With all concept crystals unified under DPS, the CCR is only
+        # populated from live sensory/IVM signals — not from the saved DPS
+        # state.  Seed it at boot so systems that query CCR axis-coordinates
+        # find the evolved concept structure rather than starting at 0.
+        try:
+            _dim = systems.get('dimensional')
+            _dps = getattr(_dim, 'dps', None) if _dim else None
+            if _dps is not None:
+                from aurora_dimensional_systems import CrystalLevel as _CL
+                _seeded_ccr = 0
+                for _dc in _dps.crystals.values():
+                    if _dc.level < _CL.COMPOSITE:
+                        continue
+                    _sig = getattr(_dc, 'constraint_signature', None) or {}
+                    if not _sig:
+                        continue
+                    _axes = ("X", "T", "N", "B", "A")
+                    _bucket = tuple(
+                        round(float(_sig.get(ax, 0.5)), 1) for ax in _axes
+                    )
+                    if _bucket not in _ccr._ax_index:
+                        import uuid as _uuid_ccr, time as _time_ccr
+                        from concept_crystal import ConceptCrystalNode as _CCN
+                        _nid = _uuid_ccr.uuid4().hex[:12]
+                        _node = _CCN(
+                            node_id=_nid,
+                            stage="composite",
+                            generation=1,
+                            axis_bucket=_bucket,
+                            dim_links={},
+                            lsa_keys=[_dc.concept],
+                            is_grounded=True,
+                            sedi_resonance=0.0,
+                            cross_hits=max(0, len(_dc.facets) - 1),
+                            active_dims=set(),
+                            function_class=None,
+                            current_overlay={},
+                            first_seen=_dc.created_at,
+                            last_seen=_time_ccr.time(),
+                        )
+                        _ccr._nodes[_nid] = _node
+                        _ccr._ax_index[_bucket] = _nid
+                        _seeded_ccr += 1
+        except Exception:
+            _seeded_ccr = 0
+
         if verbose:
             _cc_stats = _ccr.stats()
             print(f"  [CCR]  ConceptCrystalRegistry online "
                   f"({_cc_stats['total']} nodes, "
-                  f"{_cc_stats['grounded']} grounded)")
+                  f"{_cc_stats['grounded']} grounded"
+                  f"{f', +{_seeded_ccr} from DPS' if _seeded_ccr else ''})")
     except Exception as _ccr_e:
         systems['_concept_crystal_registry'] = None
         if verbose:
