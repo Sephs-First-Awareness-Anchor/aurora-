@@ -19935,45 +19935,97 @@ def boot_aurora(
         # populated from live sensory/IVM signals — not from the saved DPS
         # state.  Seed it at boot so systems that query CCR axis-coordinates
         # find the evolved concept structure rather than starting at 0.
+        #
+        # Bucket derivation: IVM training signatures converge (X≈1e-9 due to
+        # the admissibility floor; T/N/B/A ≈ 0.7 due to uniform training mode).
+        # Instead derive each crystal's CCR position from its FACET ROLES,
+        # which carry genuine semantic differentiation (noun↔verb, I_IS↔I_DO).
+        _CCR_ROLE_AX = {
+            "lexicon:noun":         (0.5, 0.4, 0.4, 0.8, 0.3),
+            "lexicon:proper_noun":  (0.7, 0.3, 0.3, 0.8, 0.2),
+            "lexicon:verb":         (0.4, 0.5, 0.8, 0.3, 0.7),
+            "lexicon:adjective":    (0.4, 0.7, 0.4, 0.6, 0.4),
+            "lexicon:adverb":       (0.3, 0.8, 0.5, 0.3, 0.6),
+            "lexicon:word":         (0.5, 0.5, 0.5, 0.5, 0.5),
+            "oets:i_is":            (0.8, 0.4, 0.4, 0.5, 0.3),
+            "oets:i_isnt":          (0.2, 0.4, 0.4, 0.5, 0.3),
+            "oets:i_can":           (0.4, 0.8, 0.5, 0.4, 0.5),
+            "oets:i_cannot":        (0.4, 0.2, 0.5, 0.4, 0.5),
+            "oets:i_do":            (0.4, 0.5, 0.8, 0.3, 0.6),
+            "oets:i_donot":         (0.4, 0.5, 0.2, 0.3, 0.6),
+            "oets:i_saw":           (0.5, 0.5, 0.4, 0.8, 0.4),
+            "oets:i_sought":        (0.5, 0.5, 0.4, 0.2, 0.4),
+            "oets:i_did":           (0.5, 0.4, 0.5, 0.3, 0.8),
+            "oets:i_didnt":         (0.5, 0.4, 0.5, 0.3, 0.2),
+            "oets:semantic":        (0.5, 0.5, 0.5, 0.5, 0.5),
+            "topic":                (0.5, 0.5, 0.5, 0.6, 0.4),
+            "entity":               (0.7, 0.4, 0.4, 0.6, 0.3),
+            "action":               (0.4, 0.5, 0.8, 0.3, 0.7),
+            "emotion":              (0.5, 0.6, 0.6, 0.4, 0.5),
+            "user_input":           (0.6, 0.5, 0.5, 0.5, 0.5),
+            "pressure":             (0.5, 0.5, 0.6, 0.5, 0.7),
+            "genome":               (0.4, 0.5, 0.6, 0.5, 0.6),
+            "warp":                 (0.5, 0.5, 0.5, 0.5, 0.5),
+        }
+
+        def _ccr_bucket_from_facets(_crystal):
+            _acc = [0.0]*5; _wt = 0.0
+            for _f in _crystal.facets.values():
+                _role = str(getattr(_f, 'role', '') or '').lower()
+                _conf = float(getattr(_f, 'confidence', 0.5) or 0.5)
+                _row = _CCR_ROLE_AX.get(_role)
+                if _row is None:
+                    _row = _CCR_ROLE_AX.get(_role.split(':')[0])
+                if _row:
+                    for _i, _v in enumerate(_row):
+                        _acc[_i] += _v * _conf
+                    _wt += _conf
+            if _wt > 0:
+                return tuple(round(_acc[_i] / _wt, 1) for _i in range(5))
+            # Hash-spread fallback so concepts don't pile on one bucket
+            _h = int(_crystal.crystal_id, 16) if _crystal.crystal_id else 0
+            return (round(0.3 + 0.4 * ((_h % 11) / 10.0), 1), 0.5, 0.5, 0.5, 0.5)
+
         try:
             _dim = systems.get('dimensional')
             _dps = getattr(_dim, 'dps', None) if _dim else None
             if _dps is not None:
                 from aurora_dimensional_systems import CrystalLevel as _CL
                 _seeded_ccr = 0
+                import uuid as _uuid_ccr, time as _time_ccr
+                from concept_crystal import ConceptCrystalNode as _CCN
                 for _dc in _dps.crystals.values():
                     if _dc.level < _CL.COMPOSITE:
                         continue
-                    _sig = getattr(_dc, 'constraint_signature', None) or {}
-                    if not _sig:
+                    _bucket = _ccr_bucket_from_facets(_dc)
+                    _nid_existing = _ccr._ax_index.get(_bucket)
+                    if _nid_existing:
+                        # Bucket occupied — append concept to existing node's lsa_keys
+                        _existing_node = _ccr._nodes.get(_nid_existing)
+                        if _existing_node and hasattr(_existing_node, 'lsa_keys'):
+                            if _dc.concept not in _existing_node.lsa_keys:
+                                _existing_node.lsa_keys.append(_dc.concept)
                         continue
-                    _axes = ("X", "T", "N", "B", "A")
-                    _bucket = tuple(
-                        round(float(_sig.get(ax, 0.5)), 1) for ax in _axes
+                    _nid = _uuid_ccr.uuid4().hex[:12]
+                    _node = _CCN(
+                        node_id=_nid,
+                        stage="composite",
+                        generation=1,
+                        axis_bucket=_bucket,
+                        dim_links={},
+                        lsa_keys=[_dc.concept],
+                        is_grounded=True,
+                        sedi_resonance=0.0,
+                        cross_hits=max(0, len(_dc.facets) - 1),
+                        active_dims=set(),
+                        function_class=None,
+                        current_overlay={},
+                        first_seen=_dc.created_at,
+                        last_seen=_time_ccr.time(),
                     )
-                    if _bucket not in _ccr._ax_index:
-                        import uuid as _uuid_ccr, time as _time_ccr
-                        from concept_crystal import ConceptCrystalNode as _CCN
-                        _nid = _uuid_ccr.uuid4().hex[:12]
-                        _node = _CCN(
-                            node_id=_nid,
-                            stage="composite",
-                            generation=1,
-                            axis_bucket=_bucket,
-                            dim_links={},
-                            lsa_keys=[_dc.concept],
-                            is_grounded=True,
-                            sedi_resonance=0.0,
-                            cross_hits=max(0, len(_dc.facets) - 1),
-                            active_dims=set(),
-                            function_class=None,
-                            current_overlay={},
-                            first_seen=_dc.created_at,
-                            last_seen=_time_ccr.time(),
-                        )
-                        _ccr._nodes[_nid] = _node
-                        _ccr._ax_index[_bucket] = _nid
-                        _seeded_ccr += 1
+                    _ccr._nodes[_nid] = _node
+                    _ccr._ax_index[_bucket] = _nid
+                    _seeded_ccr += 1
         except Exception:
             _seeded_ccr = 0
 
