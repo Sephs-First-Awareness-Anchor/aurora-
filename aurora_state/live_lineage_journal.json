@@ -1,14 +1,6 @@
 {
-  "updated_at": 1781294769.1404276,
+  "updated_at": 1781297287.469772,
   "events": [
-    {
-      "timestamp": 1781247346.3312604,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:b7aa1814230e",
-      "axis": "X",
-      "summary": "Manual code change in aurora_os/build/rootfs/usr/local/lib/python3.11/site-packages/wheel/vendored/packaging/_parser.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781247346.3339734,
       "source": "aurora.boot",
@@ -1920,6 +1912,14 @@
       "id": "MC:683d2118018f",
       "axis": "T",
       "summary": "Manual code change in aurora_simulation_engine.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781297287.4696822,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:2afa1efd24d6",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {
