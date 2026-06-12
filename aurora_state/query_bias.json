@@ -1,18 +1,69 @@
 {
-  "dominant_type": "knowledge_gap",
-  "dominant_score": 0.0,
-  "classification_mode": "idle",
+  "dominant_type": "code_gap",
+  "dominant_score": 0.2725,
+  "classification_mode": "active",
   "min_score": 0.2,
-  "fallback_min_score": 0.1,
-  "active_biases": [],
+  "fallback_min_score": 0.2,
+  "active_biases": [
+    {
+      "pressure_type": "code_gap",
+      "priority": 0.2725,
+      "label": "Code structure bottleneck",
+      "axis": "multi-axis (evolutionary budget)",
+      "signal_mode": "active",
+      "retrieval_domains": [
+        "architectural patterns",
+        "code refactoring",
+        "module boundary design",
+        "evolutionary operator theory",
+        "pressure-relief code structures"
+      ],
+      "query_templates": [
+        "What code structure would best implement the missing capability in the high-pressure axis cluster?",
+        "How should the evolutionary operator be modified to generate ops that relieve the current axis imbalance?",
+        "What architectural boundary change would reduce code-level pressure?",
+        "Which module is the structural bottleneck for the current evolutionary budget allocation?"
+      ],
+      "reflection_directive": "Identify the code module whose structure is most limiting Aurora's ability to express the currently pressured capability. What change would create the most relief?",
+      "hypothesis_seed": "If the evolutionary operator budget were reallocated toward the highest-bias axis, which surface would be produced next and would it actually relieve pressure?",
+      "source_dimensions": []
+    },
+    {
+      "pressure_type": "knowledge_gap",
+      "priority": 0.2,
+      "label": "Missing conceptual content",
+      "axis": "X (Existence)",
+      "signal_mode": "active",
+      "retrieval_domains": [
+        "epistemology",
+        "self-modeling",
+        "constraint satisfaction",
+        "epistemic limits",
+        "grounding mechanisms"
+      ],
+      "query_templates": [
+        "What conceptual framework best handles X (Existence)? What am I missing about its structure?",
+        "What is unknown or unresolved in my understanding of uncertainty_signaling?",
+        "What knowledge would resolve the tension between acknowledging limits and maintaining coherence in X (Existence)?",
+        "What examples of uncertainty_signaling failure reveal the missing structure?"
+      ],
+      "reflection_directive": "Identify one concept in uncertainty_signaling that you currently cannot fully ground.  Describe what you do and do not know about it.",
+      "hypothesis_seed": "If I had clearer grounding in X (Existence), what specific failure mode would it prevent?",
+      "source_dimensions": [
+        "uncertainty_signaling",
+        "contradiction_handling",
+        "perspective_integration"
+      ]
+    }
+  ],
   "axis_pressure": {},
-  "last_updated": 1781193573.1738737,
+  "last_updated": 1781247844.576994,
   "pressure_scores": {
-    "knowledge_gap": 0.0,
-    "reasoning_gap": 0.0,
-    "articulation_gap": 0.0,
-    "stability_gap": 0.0,
-    "tool_gap": 0.0,
-    "code_gap": 0.0
+    "code_gap": 0.2725,
+    "knowledge_gap": 0.2,
+    "reasoning_gap": 0.1167,
+    "tool_gap": 0.11,
+    "articulation_gap": 0.0741,
+    "stability_gap": 0.0
   }
 }

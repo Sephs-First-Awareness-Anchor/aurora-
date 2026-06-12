@@ -1,0 +1,30 @@
+{
+  "prov_1779291237116_7608": {
+    "uid": "prov_1779291237116_7608",
+    "question": "What is the speed of light?",
+    "answer": "299792458 m/s",
+    "source": "user",
+    "source_trust_at_receipt": 0.5,
+    "confidence": 0.5,
+    "absorbed": false,
+    "verify_status": "pending",
+    "contradiction_note": "",
+    "created_at": 1779291237.1168203,
+    "verified_at": null,
+    "verify_attempts": 0
+  },
+  "prov_1779291253577_9473": {
+    "uid": "prov_1779291253577_9473",
+    "question": "What is the capital of France?",
+    "answer": "Paris",
+    "source": "user",
+    "source_trust_at_receipt": 1.0,
+    "confidence": 1.0,
+    "absorbed": true,
+    "verify_status": "pending",
+    "contradiction_note": "",
+    "created_at": 1779291253.577372,
+    "verified_at": null,
+    "verify_attempts": 0
+  }
+}

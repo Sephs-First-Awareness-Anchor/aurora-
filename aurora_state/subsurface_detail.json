@@ -1,0 +1,111 @@
+{
+  "action_bias_candidates": [],
+  "candidate_interpretations": [],
+  "coherence": 0.45,
+  "comparison_channels": [
+    "incoming_input",
+    "present_sensory",
+    "DCE_root"
+  ],
+  "contract_signals": {
+    "active_topic": "",
+    "ambiguity": 0.0,
+    "cost_total": 0.0,
+    "dominant_emotion": "neutral",
+    "frame_continuity": 0.0,
+    "interpreted_deep_emotion": "neutral",
+    "interpreted_deep_passion": "",
+    "tracked_surface_emotion": "neutral",
+    "tracked_surface_intensity": 0.0
+  },
+  "instability_markers": [],
+  "law_bindings": [],
+  "origin_systems": [
+    "incoming_input",
+    "DimensionalSystems.process_synthesis",
+    "DCEAssembly"
+  ],
+  "prediction_signal": {
+    "alerts": [
+      "novelty_shift"
+    ],
+    "confidence": 0.6006,
+    "expected_observation": "followup",
+    "expected_user_continuation": "",
+    "likely_affect_shift": "neutral",
+    "mismatch": 0.2125,
+    "prediction_payload": {
+      "affect": "neutral",
+      "axis_signature": "",
+      "certainty_band": "medium",
+      "intent_type": "followup",
+      "topic": ""
+    },
+    "preload_context": [
+      "followup"
+    ],
+    "readiness_bias": 0.5739,
+    "source": "runtime_evidence"
+  },
+  "pressure_map": {
+    "A": 0.0,
+    "B": 0.0,
+    "N": 0.0,
+    "T": 0.0,
+    "X": 0.0
+  },
+  "readiness": 0.5613,
+  "recalled_fragments": [
+    "[AFTERTHOUGHT] What are you reaching toward in this moment?"
+  ],
+  "salience_weights": {
+    "A": 0.0,
+    "B": 0.0,
+    "N": 1.0,
+    "T": 0.0,
+    "X": 0.0
+  },
+  "saved_at": 1781248009.4050164,
+  "sub_crests": [
+    {
+      "axis": "X",
+      "intensity": 0.581,
+      "label": "attentional_drift"
+    },
+    {
+      "axis": "T",
+      "intensity": 0.65,
+      "label": "unfamiliar"
+    },
+    {
+      "axis": "A",
+      "intensity": 0.5,
+      "label": "neutral_affect"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.7875,
+      "label": "steady_continuation"
+    },
+    {
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "novelty"
+    },
+    {
+      "axis": "T",
+      "intensity": 0.7,
+      "label": "new_thread"
+    },
+    {
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "steady_envelope"
+    },
+    {
+      "axis": "X",
+      "intensity": 1.0,
+      "label": "calm"
+    }
+  ]
+}

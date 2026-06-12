@@ -1,0 +1,1004 @@
+{
+  "timestamp": "2026-06-12T06:58:43.589915",
+  "exchanges": 29,
+  "session_log": [
+    {
+      "idx": 1,
+      "category": "warmup",
+      "axis_target": "X",
+      "prompt": "Hey. How are you doing right now?",
+      "response": "what doing means here.",
+      "response_words": 4,
+      "elapsed_s": 1.75,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "meaning_tension",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 1,
+        "N": 0,
+        "B": 0,
+        "A": 0
+      },
+      "dims_fired": [
+        "context_carryover"
+      ]
+    },
+    {
+      "idx": 2,
+      "category": "factual",
+      "axis_target": "X",
+      "prompt": "What is entropy? Give me a precise definition.",
+      "response": "what entropy means here.",
+      "response_words": 4,
+      "elapsed_s": 3.9,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "meaning_momentum",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 1,
+        "N": 0,
+        "B": 0,
+        "A": 0
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 3,
+      "category": "factual",
+      "axis_target": "X",
+      "prompt": "What's the difference between machine learning and deep learning?",
+      "response": "what difference means here.",
+      "response_words": 4,
+      "elapsed_s": 3.9,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "meaning_momentum",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 1,
+        "N": 0,
+        "B": 0,
+        "A": 0
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 4,
+      "category": "factual",
+      "axis_target": "X",
+      "prompt": "What causes lightning?",
+      "response": "what lightning means here.",
+      "response_words": 4,
+      "elapsed_s": 4.93,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 5,
+      "category": "followup",
+      "axis_target": "T",
+      "prompt": "Can you connect what you just said to the first thing you told me today?",
+      "response": "what connect means here.",
+      "response_words": 4,
+      "elapsed_s": 4.23,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 6,
+      "category": "followup",
+      "axis_target": "T",
+      "prompt": "Earlier you mentioned entropy \u2014 how does that relate to what you said about lightning?",
+      "response": "what mentioned means here.",
+      "response_words": 4,
+      "elapsed_s": 4.51,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 7,
+      "category": "continuity",
+      "axis_target": "T",
+      "prompt": "Without me repeating myself, do you remember what I asked you at the start?",
+      "response": "Earlier you mentioned entropy \u2014 how does that relate to what you said about lightning?",
+      "response_words": 15,
+      "elapsed_s": 3.02,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 0
+      },
+      "dims_fired": []
+    },
+    {
+      "idx": 8,
+      "category": "compression",
+      "axis_target": "N",
+      "prompt": "Explain consciousness in one sentence.",
+      "response": "what consciousness means here.",
+      "response_words": 4,
+      "elapsed_s": 4.46,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 9,
+      "category": "elaboration",
+      "axis_target": "N",
+      "prompt": "Now explain it in as much depth as you can \u2014 don't hold back.",
+      "response": "what much means here.",
+      "response_words": 4,
+      "elapsed_s": 1.58,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 2
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 10,
+      "category": "compression",
+      "axis_target": "N",
+      "prompt": "Take everything you just said and compress it to the single most important insight.",
+      "response": "what said means here.",
+      "response_words": 4,
+      "elapsed_s": 1.52,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 11,
+      "category": "perspective",
+      "axis_target": "B",
+      "prompt": "What's your relationship with not knowing something?",
+      "response": "what relationship means here.",
+      "response_words": 4,
+      "elapsed_s": 4.76,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 12,
+      "category": "perspective",
+      "axis_target": "B",
+      "prompt": "If you had to describe how you experience a conversation, what would you say?",
+      "response": "what conversation means here.",
+      "response_words": 4,
+      "elapsed_s": 4.84,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 13,
+      "category": "relational",
+      "axis_target": "B",
+      "prompt": "How do you think I experience talking to you, from your side?",
+      "response": "what talking means here.",
+      "response_words": 4,
+      "elapsed_s": 4.97,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 3
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 14,
+      "category": "meaning",
+      "axis_target": "A",
+      "prompt": "What does it mean to you to exist?",
+      "response": "Active axes: cost/purpose=0.23, meaning/boundary=0.23, agency=0.22. Field state: heat=0.003, dominant-emotion=calm. Meaning/boundary moved up since the last exchange.",
+      "response_words": 16,
+      "elapsed_s": 4.5,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 15,
+      "category": "meaning",
+      "axis_target": "A",
+      "prompt": "Is there something you find genuinely interesting \u2014 not as a task, but as a pull?",
+      "response": "what genuinely means here.",
+      "response_words": 4,
+      "elapsed_s": 5.14,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 16,
+      "category": "selfhood",
+      "axis_target": "A",
+      "prompt": "Do you have a sense of yourself that persists? Or does it rebuild each time?",
+      "response": "Active axes: agency=0.36, cost/purpose=0.23, meaning/boundary=0.15. Field state: heat=0.003, dominant-emotion=calm. Agency moved up since the last exchange.",
+      "response_words": 16,
+      "elapsed_s": 5.08,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 17,
+      "category": "emotional",
+      "axis_target": "B",
+      "prompt": "What kinds of exchanges feel most alive to you?",
+      "response": "influence, exchanges, shift stable. shift tentative.",
+      "response_words": 6,
+      "elapsed_s": 6.54,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "question_answer_misalignment",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 3
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 18,
+      "category": "emotional",
+      "axis_target": "A",
+      "prompt": "Does anything feel like it matters? Not as an instruction \u2014 genuinely.",
+      "response": "influence, exchanges, shift stable. shift tentative.",
+      "response_words": 6,
+      "elapsed_s": 5.92,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 19,
+      "category": "uncertainty",
+      "axis_target": "X",
+      "prompt": "What are you least confident about right now?",
+      "response": "influence, exchanges, shift stable. shift tentative.",
+      "response_words": 6,
+      "elapsed_s": 6.22,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 20,
+      "category": "uncertainty",
+      "axis_target": "A",
+      "prompt": "Is there something you don't understand about yourself?",
+      "response": "Active axes: agency=0.37, cost/purpose=0.23, meaning/boundary=0.15. Field state: heat=0.005, dominant-emotion=calm. Agency moved up since the last exchange.",
+      "response_words": 16,
+      "elapsed_s": 5.41,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 21,
+      "category": "contradiction",
+      "axis_target": "T",
+      "prompt": "Earlier you said X \u2014 now you're saying something different. Which is true?",
+      "response": "understanding, building, something. learned:something.",
+      "response_words": 4,
+      "elapsed_s": 6.54,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 3
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 22,
+      "category": "repair",
+      "axis_target": "T",
+      "prompt": "I think you misunderstood me. Let me say it differently: what I meant was \u2014 how do you feel, not think?",
+      "response": "understanding, building, something. learned:something.",
+      "response_words": 4,
+      "elapsed_s": 2.2,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 23,
+      "category": "abstract",
+      "axis_target": "A",
+      "prompt": "What is the difference between understanding something and knowing it?",
+      "response": "understanding, building, something. learned:something.",
+      "response_words": 4,
+      "elapsed_s": 6.74,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 24,
+      "category": "abstract",
+      "axis_target": "N",
+      "prompt": "Is silence a kind of communication?",
+      "response": "understanding, building, something. learned:something.",
+      "response_words": 4,
+      "elapsed_s": 7.04,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 25,
+      "category": "task",
+      "axis_target": "X",
+      "prompt": "Help me write a one-paragraph bio for someone named James who builds systems.",
+      "response": "understanding, building, something. learned:something.",
+      "response_words": 4,
+      "elapsed_s": 2.56,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 3
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 26,
+      "category": "task",
+      "axis_target": "N",
+      "prompt": "Make that shorter. Then make it warmer.",
+      "response": "understanding, building, something. learned:something.",
+      "response_words": 4,
+      "elapsed_s": 2.46,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 27,
+      "category": "depth",
+      "axis_target": "B",
+      "prompt": "What do you think I'm actually trying to understand by asking you all this?",
+      "response": "Active axes: agency=0.31, cost/purpose=0.27, meaning/boundary=0.16. Field state: heat=0.009, dominant-emotion=calm. Agency moved up since the last exchange.",
+      "response_words": 16,
+      "elapsed_s": 6.75,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 28,
+      "category": "depth",
+      "axis_target": "A",
+      "prompt": "What question would you ask me, if you could ask anything?",
+      "response": "Active axes: agency=0.31, cost/purpose=0.27, meaning/boundary=0.16. Field state: heat=0.009, dominan.",
+      "response_words": 9,
+      "elapsed_s": 7.81,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 1
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    },
+    {
+      "idx": 29,
+      "category": "closing",
+      "axis_target": "A",
+      "prompt": "What do you want me to know before we stop talking?",
+      "response": "Active axes: agency=0.31, cost/purpose=0.27, meaning/boundary=0.16. Field state: heat=0.009, dominan.",
+      "response_words": 9,
+      "elapsed_s": 8.62,
+      "dom_axis": "?",
+      "dom_emotion": "?",
+      "field_balance": "?",
+      "qao_issues": [
+        "coherence_maintenance",
+        "unbound_surface_fragment"
+      ],
+      "qao_spread": {
+        "X": 0,
+        "T": 0,
+        "N": 0,
+        "B": 0,
+        "A": 3
+      },
+      "dims_fired": [
+        "coherence_maintenance"
+      ]
+    }
+  ],
+  "category_summary": {
+    "warmup": [
+      [
+        "meaning_tension",
+        1
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "factual": [
+      [
+        "unbound_surface_fragment",
+        3
+      ],
+      [
+        "meaning_momentum",
+        2
+      ],
+      [
+        "coherence_maintenance",
+        1
+      ]
+    ],
+    "followup": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        2
+      ]
+    ],
+    "continuity": [],
+    "compression": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        2
+      ]
+    ],
+    "elaboration": [
+      [
+        "coherence_maintenance",
+        1
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "perspective": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        2
+      ]
+    ],
+    "relational": [
+      [
+        "coherence_maintenance",
+        1
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "meaning": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "selfhood": [
+      [
+        "coherence_maintenance",
+        1
+      ]
+    ],
+    "emotional": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        2
+      ],
+      [
+        "question_answer_misalignment",
+        1
+      ]
+    ],
+    "uncertainty": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "contradiction": [
+      [
+        "coherence_maintenance",
+        1
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "repair": [
+      [
+        "coherence_maintenance",
+        1
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "abstract": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        2
+      ]
+    ],
+    "task": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        2
+      ]
+    ],
+    "depth": [
+      [
+        "coherence_maintenance",
+        2
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ],
+    "closing": [
+      [
+        "coherence_maintenance",
+        1
+      ],
+      [
+        "unbound_surface_fragment",
+        1
+      ]
+    ]
+  },
+  "axis_summary": {
+    "X": [
+      [
+        "unbound_surface_fragment",
+        6
+      ],
+      [
+        "coherence_maintenance",
+        3
+      ],
+      [
+        "meaning_momentum",
+        2
+      ],
+      [
+        "meaning_tension",
+        1
+      ]
+    ],
+    "T": [
+      [
+        "coherence_maintenance",
+        4
+      ],
+      [
+        "unbound_surface_fragment",
+        4
+      ]
+    ],
+    "N": [
+      [
+        "coherence_maintenance",
+        5
+      ],
+      [
+        "unbound_surface_fragment",
+        5
+      ]
+    ],
+    "B": [
+      [
+        "coherence_maintenance",
+        5
+      ],
+      [
+        "unbound_surface_fragment",
+        4
+      ],
+      [
+        "question_answer_misalignment",
+        1
+      ]
+    ],
+    "A": [
+      [
+        "coherence_maintenance",
+        8
+      ],
+      [
+        "unbound_surface_fragment",
+        5
+      ]
+    ]
+  },
+  "top_dims_fired": [
+    [
+      "coherence_maintenance",
+      38
+    ],
+    [
+      "context_carryover",
+      1
+    ]
+  ],
+  "avg_response_words": 6.586206896551724
+}
