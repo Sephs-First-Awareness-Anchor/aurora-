@@ -106,6 +106,11 @@ try:
 except Exception:
     _enqueue_recommendation = None
 
+try:
+    from aurora_emergence_surface import EmergenceMonitor as _EmergenceMonitor
+except Exception:
+    _EmergenceMonitor = None
+
 # =============================================================================
 # PATH SETUP
 # =============================================================================
@@ -1056,6 +1061,22 @@ def boot_stack(state_dir:  str = "aurora_state",
              f"K_MIN={gen_config.K_MIN}  RELIEF_EPS={gen_config.RELIEF_EPS}")
     except Exception as e:
         _log("GEN    ConstraintGenealogyLogger", False, str(e))
+
+    # — Emergence Monitor: promoted genealogy links → operational capabilities —
+    try:
+        if _EmergenceMonitor is not None and systems.genealogy is not None:
+            systems.emergence_monitor = _EmergenceMonitor(
+                genealogy=systems.genealogy,
+                oets=getattr(systems, "oets", None),
+                state_dir=output_dir,
+            )
+            _log("AUX    EmergenceMonitor", True, "promoted-link → capability surface active")
+        else:
+            systems.emergence_monitor = None
+            _log("AUX    EmergenceMonitor", False, "genealogy unavailable")
+    except Exception as e:
+        systems.emergence_monitor = None
+        _log("AUX    EmergenceMonitor", False, str(e))
 
     # — Evolutionary Chain: Chamber —
     try:
@@ -2371,6 +2392,19 @@ class UniverseSteerer:
                 )
                 lang.update_lsv(metrics)
                 self._last_language_status = lang.status()
+            except Exception:
+                pass
+
+        # EmergenceMonitor: surface newly promoted genealogy links as capabilities
+        emergence_monitor = getattr(self._s, "emergence_monitor", None)
+        if emergence_monitor is not None and (int(tick) % 30 == 0):
+            try:
+                emerged = emergence_monitor.tick()
+                if emerged:
+                    autonomy = getattr(self._s, "autonomy", None)
+                    if autonomy is not None and hasattr(autonomy, "study_scheduler"):
+                        for ability_id in emerged:
+                            autonomy.study_scheduler.add_topic(f"emerged:{ability_id}")
             except Exception:
                 pass
 

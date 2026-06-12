@@ -57,6 +57,19 @@ _ROOM_STATE     = _STATE_DIR / "aurora_room_state.json" # Aurora's room command 
 _ROOM_MSGS      = _STATE_DIR / "aurora_room_messages.json"  # bidirectional Aurora↔Sunni messages
 _ROOM_OPERATOR_ENABLED = str(os.environ.get("AURORA_ENABLE_ROOM_OPERATOR", "0") or "0").strip().lower() in {"1", "true", "yes", "on"}
 
+# ACM hardware bridge — wired when the kernel socket is reachable
+_ACM_BRIDGE_ENABLED = str(os.environ.get("AURORA_ACM_BRIDGE", "0") or "0").strip().lower() in {"1", "true", "yes", "on"}
+try:
+    from aurora_acm_bridge import (
+        _read_axes_from_collective as _acm_read_axes,
+        get_axes as _acm_get_axes,
+        run as _acm_run,
+    )
+except Exception:
+    _acm_read_axes = None
+    _acm_get_axes = None
+    _acm_run = None
+
 
 def _resolve_oets_web_paths() -> List[Path]:
     env_web = os.environ.get("AURORA_OETS_WEB_FILE", "").strip()

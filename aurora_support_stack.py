@@ -54,6 +54,22 @@ except Exception:
     ExpressionEvolutionOrchestra = None
     LSVMetrics = None
 
+# Relational comparison engine (differential meaning formation)
+try:
+    from aurora_internal.aurora_relational_comparison import (
+        RelationalComparisonEngine,
+        RelationalDelta,
+    )
+except Exception:
+    RelationalComparisonEngine = None
+    RelationalDelta = None
+
+# Noncomp manifold compiler compatibility re-export
+try:
+    from aurora_noncomp_manifold_compiler import *  # noqa: F401,F403
+except Exception:
+    pass
+
 __all__ = [
     "UtteranceParser",
     "parse_utterance",
@@ -73,4 +89,6 @@ __all__ = [
     "DeviceAwareness",
     "RcloneInterface",
     "DriveSync",
+    "RelationalComparisonEngine",
+    "RelationalDelta",
 ]

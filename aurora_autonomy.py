@@ -872,6 +872,36 @@ class AutonomyEngine:
         except Exception as e:
             logger.error(f"[AUTONOMY] Study error: {e}")
 
+    # ── Training tools: experiential sim, conversation trainer, exploration ──
+
+    TRAINING_TOOLS = {
+        "experiential_sim": "aurora_experiential_sim",
+        "conversation_trainer": "aurora_conversation_trainer",
+        "exploration": "aurora_explore",
+        "backfill_associations": "backfill_concept_associations",
+    }
+
+    def run_training_tool(self, tool_name: str, **kwargs) -> Dict[str, Any]:
+        """
+        Launch one of Aurora's training tools by name within the autonomy engine.
+        Each tool runs as a subprocess so it uses the same live sys.path but
+        doesn't block the daemon loop.
+        """
+        module = self.TRAINING_TOOLS.get(tool_name)
+        if not module:
+            return {"error": f"Unknown training tool: {tool_name}"}
+        try:
+            result = subprocess.run(
+                [sys.executable, f"{module}.py"] + [str(v) for v in kwargs.get("args", [])],
+                capture_output=True, text=True, timeout=kwargs.get("timeout", 300),
+            )
+            self.action_log.log("training_tool", f"{tool_name} completed (rc={result.returncode})")
+            return {"tool": tool_name, "returncode": result.returncode,
+                    "stdout": result.stdout[-2000:], "stderr": result.stderr[-500:]}
+        except Exception as e:
+            logger.error(f"[AUTONOMY] Training tool {tool_name} failed: {e}")
+            return {"error": str(e)}
+
     def _build_dream_seed(self) -> str:
         """Create an adaptive dream seed from memory + ontology context.
 

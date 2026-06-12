@@ -19457,6 +19457,22 @@ def boot_aurora(
         if verbose:
             print(f"  [TRACE] Stack instrumentation unavailable: {_trace_e}")
 
+    # Relational Comparison Engine — differential meaning formation
+    systems['relational_comparison'] = None
+    try:
+        from aurora_internal.aurora_relational_comparison import RelationalComparisonEngine as _RCE
+        _oets_web = None
+        _perc = systems.get('perception')
+        if _perc is not None and hasattr(_perc, 'oets') and _perc.oets is not None:
+            _oets_web = getattr(_perc.oets, 'web', None)
+        if _oets_web is not None:
+            systems['relational_comparison'] = _RCE(_oets_web)
+            if verbose:
+                print(f"  [RELATIONAL] RelationalComparisonEngine active")
+    except Exception as _rce_e:
+        if verbose:
+            print(f"  [RELATIONAL] RelationalComparisonEngine unavailable: {_rce_e}")
+
     # Dream Trainer — fail-point ledger + lesson plan engine + OETS bridge
     systems['dream_trainer'] = None
     try:
