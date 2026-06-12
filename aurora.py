@@ -18920,7 +18920,10 @@ def boot_aurora(
     _register_layer(systems, 'L3', 'Dimensional Systems', 'dimensional', dimensional, {
         'state': 'get_system_state',
     })
-    if verbose: print("  (DPS + DMC + DER + DMM)")
+    # Load persisted DPS crystal registry
+    _dps_loaded = dimensional.load_state(state_dir)
+    if verbose:
+        print(f"  (DPS + DMC + DER + DMM, {_dps_loaded} crystals restored)")
 
     # Layer 3.5: SediMemory — stratigraphic constraint-native memory
     systems['sedimemory'] = None
@@ -23140,6 +23143,18 @@ def _full_save(systems: Dict[str, Any], verbose: bool = True):
                                list(sensory_crystal._audio.values()) +
                                list(sensory_crystal._visual.values()))
                 print(f"  [SAVE] Saved: sensory_crystal ({sc_nodes} nodes)")
+        except Exception:
+            pass
+    # Persist DPS crystal registry (concept + sensory + behavioral crystals)
+    dimensional = systems.get('dimensional')
+    if dimensional is not None and hasattr(dimensional, 'save_state'):
+        try:
+            state_dir = str(getattr(aurora, 'state_dir',
+                                    systems.get('_state_dir', 'aurora_state')))
+            ok = dimensional.save_state(state_dir)
+            if verbose:
+                n = len(getattr(dimensional.dps, 'crystals', {}) or {})
+                print(f"  [SAVE] Saved: dps_crystals ({n} crystals) {'OK' if ok else 'FAILED'}")
         except Exception:
             pass
     # Save autonomy state

@@ -944,9 +944,6 @@ class AuroraSensoryCrystal:
         # ladder (BASE → COMPOSITE → FULL_CONCEPT → QUASI).
         self._dps_ref: Optional[Any] = None
         self._evolution_hook: Optional[Callable[[Dict[str, Any]], None]] = None
-        # SensoryCompetencyEngine ref — set via wire_crystallization_loops().
-        # When set, end_session() syncs the behavioral genome → AGB wisdom fields.
-        self._sensory_engine_ref: Optional[Any] = None
 
     # ------------------------------------------------------------------
     # Boot  —  Operation: sensory.crystal_boot (X, T)
@@ -1167,6 +1164,52 @@ class AuroraSensoryCrystal:
             if node.stage in {"concept", "promoted"}:
                 self._inject_semantic_to_dps(node, count_use=count_use)
 
+    # Axis affinity for each sensory facet — maps observation domain to the
+    # constraint axis that governs it.
+    _FACET_AXIS: Dict[str, str] = {
+        "tone":   "T",   # temporal / tonal coherence
+        "timbre": "B",   # boundary / textural edge
+        "rhythm": "N",   # energy / onset pattern
+        "hue":    "X",   # existence / colour identity
+        "shape":  "B",   # boundary / form
+        "motion": "A",   # agency / movement
+    }
+
+    def _dps_route_observation(
+        self,
+        domain:     str,
+        facet_name: str,
+        confidence: float,
+    ) -> None:
+        """
+        Route a live sensory observation into the unified DPS crystal registry.
+
+        Every observation on a given facet (e.g. "audio:tone") lands on the
+        same DPS Crystal, not a per-node one-shot.  Accumulated observations
+        drive the crystal from BASE → COMPOSITE → FULL_CONCEPT → QUASI just
+        as concept crystals do — sensory learning IS concept crystallization.
+        """
+        if self._dps_ref is None:
+            return
+        try:
+            concept = f"sensory:{domain}:{facet_name}"
+            crystal = self._dps_ref._get_or_create(concept)
+            crystal.add_facet(
+                role=f"{domain}_{facet_name}",
+                content=f"observation@{domain}:{facet_name}",
+                confidence=confidence,
+            )
+            crystal.use()
+            # Stamp constraint_signature from the facet's dominant axis
+            axis = self._FACET_AXIS.get(facet_name, "N")
+            sig = crystal.constraint_signature or {}
+            old = sig.get(axis, confidence)
+            sig[axis] = round(old * 0.85 + confidence * 0.15, 4)
+            crystal.constraint_signature = sig
+            crystal.evolve()
+        except Exception:
+            pass
+
     # ------------------------------------------------------------------
     # Core observe  —  Operations: sensory.intake (N), sensory.cluster (B)
     # ------------------------------------------------------------------
@@ -1195,12 +1238,16 @@ class AuroraSensoryCrystal:
         for name, facet in self._audio.items():
             vec = _extract_audio_facet(audio_20d, name)
             audio_hits[name] = facet.observe(vec, self._session_id, audio_conf)
+            if audio_hits[name] is not None:
+                self._dps_route_observation("audio", name, audio_conf)
 
         # Route to visual facets
         visual_hits: Dict[str, Optional[str]] = {}
         for name, facet in self._visual.items():
             vec = _extract_visual_facet(vision_57d, name)
             visual_hits[name] = facet.observe(vec, self._session_id, visual_conf)
+            if visual_hits[name] is not None:
+                self._dps_route_observation("visual", name, visual_conf)
 
         # Check pairing lanes for co-occurrence
         sem_hits: Dict[str, Optional[str]] = {}
@@ -1433,14 +1480,6 @@ class AuroraSensoryCrystal:
         self._sync_to_dps(count_use=True)
         self._cull_semantic(wisdom)
         self._compute_semantic_maturity()
-
-        # Propagate behavioral genome into AGB wisdom fields before save
-        if self._sensory_engine_ref is not None:
-            try:
-                from aurora_crystal_ingestion import sync_sensory_genome_to_agb
-                sync_sensory_genome_to_agb(self._sensory_engine_ref, self)
-            except Exception:
-                pass
 
         self._save()
 
