@@ -29,9 +29,9 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 DEFAULT_CORPORA = [
-    "../fast_corpus.json",
-    "../batch_corpus.json",
-    "../intensive_corpus.json",
+    "fast_corpus.json",
+    "batch_corpus.json",
+    "intensive_corpus.json",
 ]
 
 

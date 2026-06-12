@@ -49,7 +49,7 @@ def _make_partner(provider: str):
         except ImportError:
             print("google-generativeai not found — install with: pip install google-generativeai")
             sys.exit(1)
-        api_key = "AIzaSyARHDXdCAbNdJxdiYsVUN1684x8WMBbECQ" or os.environ.get("GEMINI_API_KEY") or os.environ.get("AIzaSyARHDXdCAbNdJxdiYsVUN1684x8WMBbECQ")
+        api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
         if not api_key:
             print("Set GEMINI_API_KEY (or GOOGLE_API_KEY) before running.")
             sys.exit(1)
@@ -240,6 +240,43 @@ def _aurora_turn(systems: dict, user_text: str) -> str:
     return response or "[no response]"
 
 
+# ── Persistence ───────────────────────────────────────────────────────────────
+
+def _persist_training_state(systems: dict) -> None:
+    """Persist full Aurora stack — same write-paths as /save and /quit."""
+    from aurora import _full_save
+    print("\n  Saving Aurora state...")
+    try:
+        _full_save(systems)
+        print("  [SAVE] Full stack saved.")
+    except Exception as e:
+        print(f"  [SAVE] _full_save error: {e}")
+    try:
+        perc = systems.get("perception")
+        if perc and hasattr(perc, "lexicon") and hasattr(perc.lexicon, "save"):
+            ok = perc.lexicon.save()
+            n = len(getattr(perc.lexicon, "entries", {}) or {})
+            print(f"  [SAVE] Lexicon ({n} words) {'OK' if ok else 'FAILED'}")
+    except Exception as e:
+        print(f"  [SAVE] Lexicon error: {e}")
+    try:
+        ge = systems.get("grammar_engine")
+        lineage = getattr(ge, "_lineage", None) if ge else None
+        if lineage and hasattr(lineage, "save"):
+            lineage.save()
+            n = len(getattr(lineage, "_motifs", {}) or {})
+            print(f"  [SAVE] Grammar motifs ({n} patterns) saved.")
+    except Exception as e:
+        print(f"  [SAVE] Grammar error: {e}")
+    try:
+        cm = systems.get("conversation_memory")
+        if cm and hasattr(cm, "record_session_end"):
+            cm.record_session_end()
+            print("  [SAVE] Conversation session closed.")
+    except Exception:
+        pass
+
+
 # ── Training loop ─────────────────────────────────────────────────────────────
 
 def run_training(
@@ -250,8 +287,12 @@ def run_training(
     verbose: bool = True,
 ) -> None:
     import random
+    from aurora_training_pulse import TrainingPulse
 
     history: list[dict] = []
+    pulse = TrainingPulse(systems)
+    # Warm up the field so ignition can fire from the first turn (FIX-A011).
+    pulse.energize("", "", cycles=6, intensity=0.65)
 
     deadline = time.time() + duration_minutes * 60 if duration_minutes > 0 else None
     opening = random.choice(_OPENING_MESSAGES)
@@ -277,8 +318,14 @@ def run_training(
         if verbose:
             print(f"[{turn}] Partner: {opening}")
 
+        # Energize the field before Aurora's turn (mirrors daemon cadence).
+        pulse.energize(opening, "", cycles=4, intensity=0.70)
+
         # Aurora's turn
         aurora_response = _aurora_turn(systems, opening)
+
+        # Settle pulse — keeps field moving between turns the way wall-clock time would.
+        pulse.energize(aurora_response or opening, "", cycles=2, intensity=0.55)
 
         if verbose:
             print(f"[{turn}] Aurora:  {aurora_response}\n")
@@ -341,6 +388,9 @@ def run_training(
             print("LSA saved.")
     except Exception:
         pass
+
+    # Persist full stack — same write-paths as _full_save / /quit.
+    _persist_training_state(systems)
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
