@@ -944,6 +944,9 @@ class AuroraSensoryCrystal:
         # ladder (BASE → COMPOSITE → FULL_CONCEPT → QUASI).
         self._dps_ref: Optional[Any] = None
         self._evolution_hook: Optional[Callable[[Dict[str, Any]], None]] = None
+        # SensoryCompetencyEngine ref — set via wire_crystallization_loops().
+        # When set, end_session() syncs the behavioral genome → AGB wisdom fields.
+        self._sensory_engine_ref: Optional[Any] = None
 
     # ------------------------------------------------------------------
     # Boot  —  Operation: sensory.crystal_boot (X, T)
@@ -1430,6 +1433,15 @@ class AuroraSensoryCrystal:
         self._sync_to_dps(count_use=True)
         self._cull_semantic(wisdom)
         self._compute_semantic_maturity()
+
+        # Propagate behavioral genome into AGB wisdom fields before save
+        if self._sensory_engine_ref is not None:
+            try:
+                from aurora_crystal_ingestion import sync_sensory_genome_to_agb
+                sync_sensory_genome_to_agb(self._sensory_engine_ref, self)
+            except Exception:
+                pass
+
         self._save()
 
         return wisdom

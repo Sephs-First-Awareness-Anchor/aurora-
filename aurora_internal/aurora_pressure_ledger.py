@@ -170,6 +170,14 @@ class PressureExperienceLedger:
         if oets and exp.anchor:
             self._bridge_to_oets(exp, oets)
 
+        # Crystallize into DPS if a hook is installed
+        hook = getattr(self, "_crystal_hook", None)
+        if hook is not None:
+            try:
+                hook(exp)
+            except Exception:
+                pass
+
         return exp
 
     def flush_to_oets(self, oets: Any) -> int:

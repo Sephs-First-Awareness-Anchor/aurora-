@@ -519,6 +519,19 @@ class DualStrataBridge:
         with (self.state_dir / "dual_strata_frame_log.jsonl").open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(log_entry, ensure_ascii=True) + "\n")
 
+        # Sediment high-coherence frames into geological memory
+        _sedi = getattr(self, "_sedimemory_ref", None)
+        if _sedi is not None:
+            try:
+                from aurora_crystal_ingestion import maybe_sediment_frame
+                cf = payload.get("conscious_frame", {})
+                frame_for_sedi = dict(log_entry)
+                frame_for_sedi["coherence"] = float(cf.get("coherence", 0.0))
+                frame_for_sedi["conscious_crest"] = log_entry["conscious_crest"]
+                maybe_sediment_frame(frame_for_sedi, _sedi)
+            except Exception:
+                pass
+
     def persist_subsurface_detail(self, detail: Dict[str, Any]) -> None:
         """Write subsurface detail to a private file for downward traversal only.
         The surface daemon never reads this file inline."""

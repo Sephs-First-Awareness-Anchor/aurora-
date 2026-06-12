@@ -19986,6 +19986,17 @@ def boot_aurora(
     except Exception:
         pass
 
+    # ---- CRYSTALLIZATION LOOPS — wire pressure→DPS, genome→AGB, frame→sedi ----
+    try:
+        from aurora_crystal_ingestion import wire_crystallization_loops
+        wire_crystallization_loops(systems)
+        if verbose:
+            print("  [CRYSTAL] Crystallization loops active "
+                  "(pressure→DPS, genome→AGB, frame→sedi)")
+    except Exception as _ci_e:
+        if verbose:
+            print(f"  [CRYSTAL] Crystallization loops unavailable: {_ci_e}")
+
     return systems
 
 
