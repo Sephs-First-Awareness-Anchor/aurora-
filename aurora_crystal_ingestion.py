@@ -92,6 +92,7 @@ def _crystallize_pressure_exp(exp: Any, dps: Any) -> None:
         crystal = dps._get_or_create(anchor)
         crystal.add_facet(role=role, content=pursuing[:120], confidence=worth)
         crystal.use()
+        crystal.evolve()
     except Exception:
         pass
 
@@ -136,6 +137,7 @@ def _route_behavioral_to_dps(sensory_engine: Any, dps: Any) -> None:
                     confidence=value,
                 )
                 crystal.use()
+                crystal.evolve()
     except Exception:
         pass
 
@@ -232,6 +234,7 @@ def seed_dps_from_lexicon_and_oets(dps: Any, systems: Dict[str, Any]) -> int:
                     content=nid or word,
                     confidence=conf,
                 )
+                crystal.evolve()
                 seeded += 1
 
         # ── OETS semantic nodes: one facet per concept node ──────────────────
@@ -248,6 +251,7 @@ def seed_dps_from_lexicon_and_oets(dps: Any, systems: Dict[str, Any]) -> int:
                     content=meaning[:80],
                     confidence=max(0.35, conf),
                 )
+                crystal.evolve()
                 seeded += 1
 
     except Exception:
