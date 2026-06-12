@@ -660,8 +660,26 @@ class SlotFiller:
 
     def _agree_verb(self, verb: str, agent: str) -> str:
         """Normalize verb form for subject-verb agreement."""
-        if agent.lower() in ("i",):
-            return self._I_AGREEMENT.get(verb.lower(), verb)
+        if agent.lower() not in ("i",):
+            return verb
+        vl = verb.lower()
+        explicit = self._I_AGREEMENT.get(vl)
+        if explicit is not None:
+            return explicit
+        # Fallback: strip regular 3rd-person -s for verbs not in the explicit map.
+        # Handles: "relates"→"relate", "connects"→"connect", "discusses"→"discuss"
+        if len(vl) <= 3 or not vl.endswith("s") or vl.endswith("ss"):
+            return verb
+        if vl.endswith("ies") and len(vl) > 4:
+            return verb[:-3] + "y"   # "carries"→"carry"
+        # Sibilant stems (s/x/z/sh/ch before -es): strip "es"
+        if vl.endswith("es") and len(vl) > 4:
+            stem = vl[:-2]
+            if stem[-1] in ('s', 'x', 'z') or stem[-2:] in ('sh', 'ch'):
+                return verb[:-2]     # "discusses"→"discuss", "fixes"→"fix"
+        # Silent-e or regular -s: strip just "s"
+        if not vl.endswith("us") and not vl.endswith("as"):
+            return verb[:-1]         # "relates"→"relate", "keeps"→"keep"
         return verb
 
     def fill(
