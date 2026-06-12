@@ -29,9 +29,9 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 DEFAULT_CORPORA = [
-    "fast_corpus.json",
-    "batch_corpus.json",
-    "intensive_corpus.json",
+    "aurora_state/fast_corpus.json",
+    "aurora_state/batch_corpus.json",
+    "aurora_state/intensive_corpus.json",
 ]
 
 
