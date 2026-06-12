@@ -42,9 +42,8 @@ def main(paths):
     from aurora_expression_perception import (
         ExpressionPerceptionEngine, infer_word_role, infer_word_valence,
     )
-    from corpus_runner import (
-        AbsorptionField, derive_noncomp_channel,
-    )
+    from corpus_runner import AbsorptionField
+    from aurora_concept_derivation import assign_batch
 
     perception = ExpressionPerceptionEngine()
     try:
@@ -54,14 +53,29 @@ def main(paths):
     except Exception:
         print(f"  Lexicon: {perception.lexicon.size} words (seeds only)")
 
+    # Load OETS web if available so new concepts get ontological nodes too.
+    oets = None
+    oets_persist = None
+    try:
+        from aurora_internal.aurora_ontological_scaffolding import (
+            OntologicalScaffoldingEngine,
+        )
+        from aurora_internal.aurora_identity_persistence import OETSPersistence
+        oets = OntologicalScaffoldingEngine()
+        oets_persist = OETSPersistence(state_dir=os.path.join(HERE, "aurora_state"))
+        oets_persist.load_web(oets)
+        print(f"  OETS loaded: {len(getattr(oets.web, 'nodes', {}) or {})} concept nodes")
+    except Exception as e:
+        print(f"  OETS unavailable ({e}) — channels only, no concept nodes")
+        oets = None
+
     before = perception.lexicon.concept_coverage()
     print(f"  Coverage before: {before['mapped_words']}/{before['total_words']} "
           f"words across {before['channels_populated']} channels")
 
     field = AbsorptionField()
-    known = set(perception.lexicon.entries.keys())
-    votes_cast = 0
     sentences_seen = 0
+    words_assigned = 0
 
     for path in paths:
         full = path if os.path.isabs(path) else os.path.join(HERE, path)
@@ -77,31 +91,47 @@ def main(paths):
         for item in data:
             if not isinstance(item, dict):
                 continue
-            for k in ("user", "assistant"):
-                text = str(item.get(k, "") or "")
+            for role_key, i_state in (("user", "i_do"), ("assistant", "i_did")):
+                text = str(item.get(role_key, "") or "")
                 if len(text.split()) < 3:
                     continue
                 sentences_seen += 1
-                try:
-                    geom = field.extractor.extract(text)
-                except Exception:
-                    continue
-                for w in set(t.strip(".,!?;:'\"").lower()
-                             for t in text.split()):
-                    if w not in known:
+
+                # Build the word batch for this sentence
+                batch = []
+                for raw in set(t.strip(".,!?;:'\"").lower() for t in text.split()):
+                    if raw not in perception.lexicon.entries:
                         continue
-                    role = infer_word_role(w)
-                    val = infer_word_valence(w, "neutral")
-                    ch = derive_noncomp_channel(geom, role, val, w)
-                    if ch and perception.lexicon.associate(
-                            w, ch,
-                            strength=max(0.1, geom.constraint_significance)):
-                        votes_cast += 1
+                    r = infer_word_role(raw)
+                    v = infer_word_valence(raw, "neutral")
+                    if r in ("verb", "noun", "adjective", "adverb"):
+                        batch.append((raw, r, v))
+
+                if not batch:
+                    continue
+
+                assigned = assign_batch(
+                    batch, text, perception.lexicon,
+                    oets=oets,
+                    i_state=i_state,
+                    perception=perception,
+                )
+                words_assigned += len(assigned)
 
     after = perception.lexicon.concept_coverage()
     ok = perception.lexicon.save()
+
+    # Save OETS with new concept nodes if we created any
+    if oets is not None and oets_persist is not None:
+        try:
+            ok = oets_persist.save_web(oets)
+            node_count = len(getattr(oets.web, 'nodes', {}) or {})
+            print(f"  OETS saved: {node_count} concept nodes {'[OK]' if ok else '[FAILED]'}")
+        except Exception as e:
+            print(f"  OETS save error: {e}")
+
     print(f"\n  Sentences replayed: {sentences_seen}")
-    print(f"  Association votes:  {votes_cast}")
+    print(f"  Words assigned:     {words_assigned}")
     print(f"  Coverage after:     {after['mapped_words']}/{after['total_words']} "
           f"words across {after['channels_populated']} channels "
           f"{'[SAVED]' if ok else '[SAVE FAILED]'}")
