@@ -8,48 +8,78 @@
         "action",
         "object"
       ],
-      "success_count": 90,
-      "fail_count": 37,
+      "success_count": 150,
+      "fail_count": 68,
       "contexts_seen": [
-        "eb3eb56d",
-        "a1d3c7bb",
+        "91e230a5",
+        "c3f9e19b",
         "96e6e251",
-        "f8fc4211",
-        "4a8ecaa3",
-        "f986b9e3",
-        "72f16252",
-        "5a6c9c0a",
-        "ef690536",
-        "441169a2",
-        "0314917f",
-        "f656b356",
-        "9529a883",
-        "f757c18e",
-        "50368e67",
-        "144e6297",
-        "d81705e2",
-        "1dc52894",
+        "66c9805f",
+        "97567db9",
+        "b09e2529",
+        "5477e0dd",
         "e17e37e9",
-        "390fc5f1",
-        "5886c892",
+        "1d65ccbf",
+        "f986b9e3",
+        "eb3eb56d",
+        "1dc52894",
+        "99595b30",
+        "8c37b21c",
+        "78374da3",
+        "e3bccf9b",
+        "537a9b92",
+        "9bbfcbc9",
+        "a1d3c7bb",
+        "f757c18e",
+        "f656b356",
+        "628df693",
+        "f79262b5",
+        "29965bbb",
+        "ef690536",
+        "be3d65a2",
+        "0314917f",
+        "f8fc4211",
+        "71073b31",
+        "9331ec68",
+        "96233aee",
         "75b735ca",
         "084536ff",
         "57b65436",
-        "f79262b5",
-        "20391bf7",
-        "c3f9e19b",
-        "3d46c38d",
-        "4b400f3e",
-        "b09e2529",
-        "7873ce1c",
-        "67aa485a",
-        "62f096fa",
+        "5886c892",
         "d9dd2df7",
-        "97567db9",
-        "71073b31"
+        "f2cdb728",
+        "4a8ecaa3",
+        "3d46c38d",
+        "50368e67",
+        "7982b687",
+        "5a6c9c0a",
+        "144e6297",
+        "7873ce1c",
+        "4ebd34b9",
+        "9529a883",
+        "41580838",
+        "72f16252",
+        "7361f1ff",
+        "2558281a",
+        "d81705e2",
+        "b485287c",
+        "4b400f3e",
+        "62f096fa",
+        "48dc3bd9",
+        "390fc5f1",
+        "20391bf7",
+        "441169a2",
+        "691e1bad",
+        "f02f7b95",
+        "67aa485a",
+        "07885ab5",
+        "e43d74fd",
+        "0c41e509",
+        "f1d59daa",
+        "49938308"
       ],
       "constraint_scores": {
-        "X": 0.9999176564685156,
+        "X": 0.9999999615771286,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -60,8 +90,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.1687192118226606,
-      "total_tokens_avg": 5.1555555555555586
+      "compression_score": 0.21983356449375901,
+      "total_tokens_avg": 5.493333333333337
     },
     "agent_action_object_agent_descriptor": {
       "pattern_id": "agent_action_object_agent_descriptor",
@@ -72,15 +102,15 @@
         "agent",
         "descriptor"
       ],
-      "success_count": 50,
+      "success_count": 51,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.9078742263842079,
+        "X": 0.899870938838103,
         "T": 1.0,
-        "N": 0.9936023039042507,
+        "N": 0.9997700274357406,
         "B": 1.0,
         "A": 1.0
       },
@@ -98,8 +128,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.26948051948051965,
-      "total_tokens_avg": 8.800000000000002
+      "compression_score": 0.3494897959183675,
+      "total_tokens_avg": 8.784313725490199
     },
     "agent_action_agent_action_object": {
       "pattern_id": "agent_action_agent_action_object",
@@ -146,340 +176,340 @@
         "action",
         "object"
       ],
-      "success_count": 1649,
-      "fail_count": 874,
+      "success_count": 1660,
+      "fail_count": 902,
       "contexts_seen": [
-        "509f661d",
-        "65ffbc4f",
-        "6b83268d",
-        "beb56c42",
-        "3effd0a6",
-        "79ce24ae",
-        "acd790be",
-        "587169f0",
-        "55e1d005",
-        "144e6297",
-        "8e576542",
-        "712b0566",
-        "e4d0841e",
-        "9221c03e",
-        "5c025073",
-        "8c92f534",
-        "37ee7b99",
-        "edc17461",
-        "9f260dee",
-        "413ec0f1",
-        "967e8f1f",
-        "de56f796",
-        "4fe5a7f1",
-        "0f50c23f",
-        "4d40d43a",
-        "ad96a7d1",
-        "6bb20a81",
-        "30e8de28",
-        "f1b7af15",
-        "c6687be8",
-        "4f36b869",
-        "759fd2ba",
-        "952d2c56",
-        "84ba6674",
-        "80749258",
-        "3c1ac389",
-        "d56bf970",
-        "2d3b3c91",
-        "a9efdd94",
-        "a811e459",
-        "3b1725cd",
-        "5da15944",
-        "5742f1b3",
-        "5c5bd04f",
-        "9130e539",
-        "91d874c9",
-        "c992cf0c",
-        "4531d874",
-        "f8b7a325",
-        "44c1cdcb",
-        "8d42f0cd",
-        "9a5c590a",
-        "1e4e9005",
-        "42b6c074",
-        "584530ca",
-        "d5be311a",
-        "7ae8b767",
-        "5742eb5e",
-        "00afa86d",
-        "1d01f96e",
-        "336fc7a2",
-        "cb6a33bc",
-        "4fe03bb8",
-        "6539be8c",
-        "1bd45d42",
-        "efa7719d",
-        "ae6d2e1b",
-        "4f6acdef",
-        "a53fa037",
-        "8d75e95c",
-        "2dee62c6",
-        "08ebd9fd",
-        "b43aba66",
-        "73eccd6d",
-        "b8bd49bc",
-        "992f6eab",
-        "3b7f8f9c",
-        "d15187a1",
-        "938272b5",
-        "b54f0cb9",
-        "5f75fd43",
-        "3ca2bd9b",
-        "3c3024e8",
-        "b2d79f62",
-        "bd95f356",
-        "e7adb2f1",
-        "e396d6ae",
-        "03bb779f",
-        "91c33537",
-        "9ed9c331",
-        "1e86dd4a",
-        "2c530f4f",
-        "de446a5e",
-        "02818ca0",
-        "162badc9",
-        "315b5966",
-        "96e0c5b6",
-        "37670533",
-        "db5465b2",
-        "19e8b68a",
-        "3861aae8",
-        "32a2e3f0",
-        "95dc41ab",
-        "c4fb6c0f",
-        "3022cb84",
-        "d714c1ef",
-        "dff16761",
-        "31c9b174",
-        "58057cb4",
-        "1cd5dace",
-        "a16b3cd3",
-        "12f92bf3",
-        "dcf20c76",
-        "81b864ce",
-        "3cf05aa0",
-        "70c9150f",
-        "89a4ebd8",
-        "d765dfe3",
-        "ca29cd33",
-        "e17adea5",
-        "9d31305d",
-        "9d7889ad",
-        "59234d9b",
-        "24c2a447",
-        "2dcc151c",
-        "4157c1b9",
-        "b4c06750",
-        "b65d7d06",
-        "4bc2612f",
-        "5b8a8ea7",
-        "664e45c0",
-        "4fad70fd",
-        "ac798e2b",
-        "fc0a9e19",
-        "ebd9202e",
         "527b0d2d",
-        "b708fc09",
-        "72f8dd44",
-        "70bfc2c7",
-        "8d500cfc",
+        "5300ddcd",
+        "952d2c56",
         "1256fbe2",
-        "95a124b3",
-        "f435959e",
+        "7a095ba6",
+        "9d097201",
+        "91d874c9",
+        "c0a14a4f",
+        "100fcf63",
+        "288548d9",
+        "9f260dee",
+        "00bb40ae",
+        "46d43394",
+        "4aebdc16",
+        "952852bf",
+        "9d7889ad",
+        "e7adb2f1",
         "8616f4c3",
-        "b5ff64fc",
-        "d6781e6f",
-        "5a236322",
-        "71b49563",
-        "9d92a65d",
-        "3492a780",
-        "c4a0db31",
-        "9788830e",
-        "94d7b939",
-        "97355b6e",
-        "ca6adb23",
-        "96865d42",
-        "814d8801",
-        "8f8acdbb",
+        "233958a3",
+        "c64120a2",
+        "135616c1",
+        "f435959e",
+        "b65d7d06",
+        "d1d35373",
+        "9823f549",
+        "68c38326",
+        "42b6c074",
+        "db5465b2",
+        "303b2a02",
+        "25323563",
+        "8e576542",
+        "162badc9",
+        "80409184",
+        "3c3024e8",
+        "ebd9202e",
+        "edc17461",
         "4ec420e9",
         "96f62af4",
-        "8a7d1e60",
-        "71b6a7b1",
-        "722cc575",
-        "61a5f172",
-        "e7921397",
-        "2b5106bc",
-        "44b2cdc4",
-        "78126088",
-        "d715ab1b",
-        "53dac8b5",
-        "6eca266e",
-        "bbcde8a4",
-        "12e748f0",
-        "0a1fd75c",
-        "eac5be71",
-        "3e3a394e",
-        "46d43394",
-        "d1289a65",
-        "e35f3e10",
-        "120a8aef",
-        "3e06c267",
-        "2bf9531d",
-        "00bb40ae",
-        "29714f0e",
-        "3ee1348b",
-        "57001e64",
-        "217102af",
-        "d852a382",
-        "7f3d730c",
-        "45248042",
-        "0c4abc10",
-        "b9744ac9",
-        "6d72b7ff",
-        "5f46a5eb",
-        "bcd1f83c",
-        "18cfac04",
-        "f7573db5",
-        "faf98e57",
-        "1bd3b4a8",
-        "526bf901",
-        "7f52f3be",
-        "31484eec",
-        "cb7fee3b",
-        "72f159b3",
-        "390ae41d",
-        "b9bf2d57",
-        "70d86c2c",
-        "68bad1c4",
-        "72fa0e7e",
-        "3d6eead4",
-        "2353d558",
-        "100fcf63",
-        "5ada5db1",
-        "16a6f4a8",
-        "fb18f023",
-        "49c4a9ff",
-        "39619933",
-        "cee1937c",
-        "7c8530b5",
-        "411a739c",
-        "ff1c5190",
-        "c40c36f7",
-        "627d57f0",
-        "125047d0",
-        "952852bf",
-        "063b846b",
-        "e30f0e3e",
-        "7a095ba6",
-        "3282cb0c",
-        "78d4eb74",
-        "08cb4418",
-        "103e8dbe",
-        "23a2330a",
-        "2c78da38",
-        "45f0c530",
-        "9823f549",
-        "8720ad58",
-        "e634f9a0",
-        "c0a14a4f",
-        "dca444a5",
-        "5f3aef9d",
-        "34ceeffa",
-        "a2de9a93",
-        "3c064f15",
-        "f9b478dd",
-        "d9c60f9a",
-        "d21769b5",
-        "9d097201",
-        "f3ff7b11",
-        "e4086f46",
-        "a505c1d4",
-        "5c26e8a7",
-        "ef08de22",
-        "e3ca7992",
-        "5ef4f925",
-        "d1d35373",
-        "96bc798f",
-        "f974ef96",
-        "b851823b",
-        "80409184",
-        "b0eeb7e5",
-        "d5177136",
-        "005f90b0",
-        "82d5d3a3",
-        "1e28fe71",
-        "5a06d0a1",
-        "d560e376",
-        "823e5762",
-        "98587929",
-        "5300ddcd",
-        "01b207ee",
-        "194fc796",
-        "2edf6d47",
-        "3b4f917c",
-        "f8fc4211",
-        "233958a3",
-        "ad4d8ed8",
-        "d607700f",
-        "f2bbf743",
-        "19823255",
-        "f2082e1d",
-        "9d1020d4",
-        "ad45ebd2",
-        "efcec35b",
-        "d6ce9b94",
-        "ff56fc2a",
+        "95dc41ab",
         "e24bf2fa",
-        "a66aad40",
-        "9f9a2ff3",
-        "1600c72b",
-        "5f889565",
-        "7f640a76",
-        "4aebdc16",
-        "dc147d79",
-        "8c02b95e",
-        "433e7d27",
-        "1c50bc34",
-        "1542fcbf",
-        "135616c1",
-        "c65ba0a4",
-        "32b5e2cd",
-        "1f6fac19",
-        "97fbfb67",
-        "e5109a63",
-        "288548d9",
-        "6d96d862",
-        "d41d8cd9",
-        "303b2a02",
-        "c64120a2",
-        "25323563",
-        "497ac3e8",
-        "61607eb9",
+        "120a8aef",
+        "1e4e9005",
+        "ff1c5190",
+        "70d86c2c",
+        "d6781e6f",
+        "78126088",
         "77ab501e",
-        "743c22a2",
-        "53d31bd0",
-        "9c3f727e",
-        "b7aa50f7",
-        "20a336b5",
-        "4e2dd0a4",
-        "57ac5ad7",
-        "7b2901b1",
-        "da9de121",
+        "5c025073",
+        "45248042",
+        "6bb20a81",
+        "65ffbc4f",
+        "01b207ee",
+        "584530ca",
+        "f8fc4211",
+        "3282cb0c",
+        "49c4a9ff",
+        "44c1cdcb",
+        "411a739c",
+        "e4086f46",
         "1272b2cd",
-        "68c38326",
+        "f3ff7b11",
+        "217102af",
+        "cb7fee3b",
+        "70c9150f",
+        "8c92f534",
+        "71b6a7b1",
+        "37670533",
+        "e35f3e10",
+        "3e06c267",
+        "a811e459",
+        "d714c1ef",
+        "f2082e1d",
+        "cee1937c",
+        "b2d79f62",
+        "5742f1b3",
+        "61a5f172",
+        "005f90b0",
+        "d6ce9b94",
+        "fb18f023",
+        "79ce24ae",
+        "78d4eb74",
+        "7c8530b5",
+        "efcec35b",
+        "dcf20c76",
+        "d5177136",
+        "30e8de28",
+        "1bd3b4a8",
+        "beb56c42",
+        "4f36b869",
+        "1bd45d42",
+        "d41d8cd9",
+        "71b49563",
+        "e30f0e3e",
+        "45f0c530",
+        "3b4f917c",
+        "9c3f727e",
+        "4f6acdef",
+        "9d31305d",
+        "8720ad58",
+        "c4fb6c0f",
+        "1c50bc34",
+        "6d72b7ff",
+        "b0eeb7e5",
+        "d852a382",
+        "7f52f3be",
+        "d15187a1",
+        "bd95f356",
+        "2353d558",
+        "53d31bd0",
+        "5ada5db1",
+        "497ac3e8",
+        "a505c1d4",
+        "fc0a9e19",
+        "3effd0a6",
+        "3e3a394e",
+        "6d96d862",
+        "89a4ebd8",
+        "d715ab1b",
+        "2dcc151c",
+        "413ec0f1",
+        "7f640a76",
+        "b4c06750",
+        "8d500cfc",
+        "b708fc09",
+        "bbcde8a4",
+        "f974ef96",
+        "97fbfb67",
+        "91c33537",
+        "103e8dbe",
+        "336fc7a2",
+        "efa7719d",
+        "d765dfe3",
+        "e17adea5",
+        "29714f0e",
+        "1f6fac19",
+        "faf98e57",
+        "2c530f4f",
+        "938272b5",
+        "c65ba0a4",
+        "03bb779f",
+        "61607eb9",
+        "4fad70fd",
+        "96bc798f",
+        "5c26e8a7",
+        "ad96a7d1",
+        "57ac5ad7",
+        "a16b3cd3",
+        "02818ca0",
+        "57001e64",
+        "743c22a2",
+        "e7921397",
+        "cb6a33bc",
+        "e396d6ae",
+        "9ed9c331",
+        "2bf9531d",
+        "19e8b68a",
+        "dc147d79",
+        "c992cf0c",
+        "0f50c23f",
+        "1542fcbf",
+        "72f159b3",
+        "e5109a63",
+        "125047d0",
+        "da9de121",
+        "a53fa037",
+        "759fd2ba",
+        "70bfc2c7",
+        "509f661d",
+        "24c2a447",
+        "34ceeffa",
+        "39619933",
+        "96e0c5b6",
+        "823e5762",
+        "5f75fd43",
+        "b5ff64fc",
+        "1e28fe71",
+        "d5be311a",
+        "4fe03bb8",
+        "433e7d27",
+        "712b0566",
+        "d21769b5",
+        "9d92a65d",
+        "12e748f0",
+        "722cc575",
+        "4157c1b9",
+        "98587929",
+        "526bf901",
+        "ac798e2b",
+        "992f6eab",
+        "3861aae8",
+        "d56bf970",
+        "a66aad40",
+        "8c02b95e",
+        "37ee7b99",
+        "3492a780",
+        "18cfac04",
+        "2edf6d47",
+        "664e45c0",
+        "81b864ce",
+        "5a06d0a1",
+        "a2de9a93",
+        "ad4d8ed8",
+        "2d3b3c91",
+        "5f889565",
+        "5b8a8ea7",
+        "9a5c590a",
+        "3cf05aa0",
+        "53dac8b5",
+        "b7aa50f7",
+        "dff16761",
+        "9788830e",
+        "4d40d43a",
+        "12f92bf3",
         "e5ad2643",
-        "135fbc98"
+        "b8bd49bc",
+        "9d1020d4",
+        "6539be8c",
+        "f1b7af15",
+        "d9c60f9a",
+        "7ae8b767",
+        "ae6d2e1b",
+        "08cb4418",
+        "3ca2bd9b",
+        "9f9a2ff3",
+        "4bc2612f",
+        "19823255",
+        "5742eb5e",
+        "55e1d005",
+        "3b7f8f9c",
+        "814d8801",
+        "4fe5a7f1",
+        "ca29cd33",
+        "97355b6e",
+        "de56f796",
+        "144e6297",
+        "627d57f0",
+        "31c9b174",
+        "94d7b939",
+        "3c1ac389",
+        "6eca266e",
+        "2dee62c6",
+        "3c064f15",
+        "58057cb4",
+        "390ae41d",
+        "ff56fc2a",
+        "1cd5dace",
+        "c40c36f7",
+        "5ef4f925",
+        "2b5106bc",
+        "3ee1348b",
+        "f7573db5",
+        "4e2dd0a4",
+        "96865d42",
+        "82d5d3a3",
+        "ca6adb23",
+        "3022cb84",
+        "b9bf2d57",
+        "f8b7a325",
+        "c6687be8",
+        "31484eec",
+        "9130e539",
+        "44b2cdc4",
+        "a9efdd94",
+        "73eccd6d",
+        "84ba6674",
+        "3d6eead4",
+        "b851823b",
+        "2c78da38",
+        "32b5e2cd",
+        "dca444a5",
+        "7b2901b1",
+        "32a2e3f0",
+        "7f3d730c",
+        "16a6f4a8",
+        "acd790be",
+        "f9b478dd",
+        "9221c03e",
+        "135fbc98",
+        "063b846b",
+        "1e86dd4a",
+        "80749258",
+        "95a124b3",
+        "ef08de22",
+        "e634f9a0",
+        "8f8acdbb",
+        "20a336b5",
+        "194fc796",
+        "72fa0e7e",
+        "0c4abc10",
+        "6b83268d",
+        "59234d9b",
+        "d1289a65",
+        "00afa86d",
+        "f2bbf743",
+        "5da15944",
+        "b9744ac9",
+        "e3ca7992",
+        "587169f0",
+        "8a7d1e60",
+        "8d75e95c",
+        "68bad1c4",
+        "b43aba66",
+        "d607700f",
+        "de446a5e",
+        "08ebd9fd",
+        "5f3aef9d",
+        "d560e376",
+        "5f46a5eb",
+        "5c5bd04f",
+        "c4a0db31",
+        "3b1725cd",
+        "4531d874",
+        "e4d0841e",
+        "23a2330a",
+        "bcd1f83c",
+        "72f8dd44",
+        "967e8f1f",
+        "b54f0cb9",
+        "1d01f96e",
+        "ad45ebd2",
+        "1600c72b",
+        "5a236322",
+        "315b5966",
+        "0a1fd75c",
+        "8d42f0cd",
+        "eac5be71"
       ],
       "constraint_scores": {
-        "X": 0.8758797882279916,
+        "X": 0.8737831566910486,
         "T": 1.0,
-        "N": 1.0,
+        "N": 0.9925835502928029,
         "B": 1.0,
         "A": 1.0
       },
@@ -489,7 +519,7 @@
       "promoted": true,
       "generation": 0,
       "compression_score": 0.0,
-      "total_tokens_avg": 4.031534263189824
+      "total_tokens_avg": 4.040963855421698
     },
     "agent_action_object_agent_action": {
       "pattern_id": "agent_action_object_agent_action",
@@ -536,8 +566,8 @@
       "fail_count": 0,
       "contexts_seen": [
         "f4fc0000",
-        "df17d45c",
-        "d41d8cd9"
+        "d41d8cd9",
+        "df17d45c"
       ],
       "constraint_scores": {
         "X": 0.8332182263463892,
@@ -576,47 +606,47 @@
       "success_count": 226,
       "fail_count": 114,
       "contexts_seen": [
-        "17ac404a",
-        "ba8117fc",
-        "400eea38",
         "7749f8a6",
-        "33f4c44c",
-        "008937af",
-        "da335cc2",
-        "aacdd028",
-        "1a17d79e",
-        "74e6c257",
-        "5155ecde",
-        "f62084bd",
-        "5b8a8ea7",
-        "715e88cd",
-        "96865d42",
-        "d72474b0",
-        "4fad70fd",
-        "29768c06",
-        "98fcdb9d",
-        "c15c9f4f",
-        "4bbf2a2c",
-        "144e6297",
-        "450085da",
-        "5cc8dc18",
-        "d36fa888",
-        "e4d0841e",
-        "34ceeffa",
-        "98cfc4a9",
-        "be25f8a1",
         "d560e376",
-        "9fac0e38",
-        "125047d0",
-        "d41d8cd9",
-        "a82164ba",
-        "1923b64f",
-        "f5c3c556",
-        "109006e4",
-        "0ed2c006",
-        "1a1abec0",
         "25323563",
-        "5afe2380"
+        "33f4c44c",
+        "29768c06",
+        "d41d8cd9",
+        "5b8a8ea7",
+        "5155ecde",
+        "9fac0e38",
+        "5afe2380",
+        "be25f8a1",
+        "ba8117fc",
+        "17ac404a",
+        "da335cc2",
+        "e4d0841e",
+        "5cc8dc18",
+        "1a1abec0",
+        "d36fa888",
+        "1923b64f",
+        "aacdd028",
+        "715e88cd",
+        "f62084bd",
+        "98fcdb9d",
+        "4bbf2a2c",
+        "c15c9f4f",
+        "a82164ba",
+        "96865d42",
+        "125047d0",
+        "1a17d79e",
+        "0ed2c006",
+        "144e6297",
+        "008937af",
+        "450085da",
+        "d72474b0",
+        "34ceeffa",
+        "4fad70fd",
+        "109006e4",
+        "f5c3c556",
+        "400eea38",
+        "98cfc4a9",
+        "74e6c257"
       ],
       "constraint_scores": {
         "X": 0.923802589005085,
@@ -670,19 +700,19 @@
         "agent",
         "action"
       ],
-      "success_count": 97,
+      "success_count": 116,
       "fail_count": 23,
       "contexts_seen": [
-        "d41d8cd9",
-        "1e4e9005",
-        "1cd5dace",
         "33e504b1",
-        "96e0c5b6"
+        "96e0c5b6",
+        "1cd5dace",
+        "d41d8cd9",
+        "1e4e9005"
       ],
       "constraint_scores": {
-        "X": 0.9466559455241549,
+        "X": 0.8505480244913258,
         "T": 1.0,
-        "N": 0.9976284053280318,
+        "N": 1.0,
         "B": 1.0,
         "A": 1.0
       },
@@ -691,8 +721,8 @@
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2820133234641007,
-      "total_tokens_avg": 3.979381443298969
+      "compression_score": 0.28262213976499684,
+      "total_tokens_avg": 3.9827586206896552
     },
     "action_agent_descriptor_agent_action_object_agent_action": {
       "pattern_id": "action_agent_descriptor_agent_action_object_agent_action",
@@ -783,8 +813,8 @@
       "success_count": 9,
       "fail_count": 0,
       "contexts_seen": [
-        "048550f5",
-        "d15187a1"
+        "d15187a1",
+        "048550f5"
       ],
       "constraint_scores": {
         "X": 0.8016858077618011,
@@ -812,11 +842,11 @@
       "success_count": 87,
       "fail_count": 0,
       "contexts_seen": [
+        "f4fc0000",
         "d41d8cd9",
-        "f6c20937",
-        "3c064f15",
         "df17d45c",
-        "f4fc0000"
+        "f6c20937",
+        "3c064f15"
       ],
       "constraint_scores": {
         "X": 0.9243975959857398,
@@ -989,25 +1019,25 @@
         "action",
         "object"
       ],
-      "success_count": 46,
+      "success_count": 47,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7827244577344655,
+        "X": 0.7942643228063296,
         "T": 1.0,
-        "N": 1.0,
+        "N": 0.9991,
         "B": 1.0,
-        "A": 0.98853853715968
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.46135831381733017,
-      "total_tokens_avg": 10.608695652173912
+      "compression_score": 0.4585253456221198,
+      "total_tokens_avg": 10.553191489361701
     },
     "descriptor_action_object_descriptor_action_object_connector": {
       "pattern_id": "descriptor_action_object_descriptor_action_object_connector",
@@ -1024,13 +1054,13 @@
       "fail_count": 0,
       "contexts_seen": [
         "8ad5e185",
-        "ef1c4160",
         "7c722b8f",
-        "f2283f98",
+        "f6429fe0",
+        "ef1c4160",
         "4758d48b",
-        "f1cf822d",
         "c51e12e3",
-        "f6429fe0"
+        "f1cf822d",
+        "f2283f98"
       ],
       "constraint_scores": {
         "X": 0.9093856533447441,
@@ -1057,25 +1087,25 @@
         "object",
         "descriptor"
       ],
-      "success_count": 60,
+      "success_count": 61,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.798241486010418,
+        "X": 0.8127325076891678,
         "T": 1.0,
-        "N": 1.0,
+        "N": 0.9991,
         "B": 1.0,
-        "A": 0.998586884332
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.34782608695652173,
-      "total_tokens_avg": 7.666666666666667
+      "compression_score": 0.25518925518925517,
+      "total_tokens_avg": 7.672131147540983
     },
     "descriptor_action_object_descriptor": {
       "pattern_id": "descriptor_action_object_descriptor",
@@ -1085,90 +1115,91 @@
         "object",
         "descriptor"
       ],
-      "success_count": 211,
+      "success_count": 212,
       "fail_count": 20,
       "contexts_seen": [
-        "ddeaaabf",
-        "7dcccb46",
-        "a505c1d4",
-        "357ef88d",
-        "6df1677a",
-        "a939e6b2",
-        "144e6297",
-        "0a1f19a4",
-        "f471bc65",
-        "7c722b8f",
-        "315b5966",
-        "26a31cbf",
-        "52e01d90",
-        "96e0c5b6",
-        "d073a146",
-        "7f706ba5",
-        "6efae46d",
-        "5300ddcd",
-        "5aa55dc7",
-        "dff16761",
-        "092cd684",
-        "f8fc4211",
-        "f7573db5",
-        "11e270c2",
-        "a6cfd3fb",
-        "8d41d5c0",
-        "b5c8bc19",
-        "75b735ca",
-        "a99078f9",
-        "0b8797ec",
-        "00df52b2",
-        "ea447147",
-        "13698c3b",
-        "078e4742",
-        "2dcc151c",
-        "11e3cbde",
-        "15cdf335",
-        "f1cf822d",
         "bdfe6412",
-        "1e4e9005",
-        "5b8a8ea7",
-        "efd4872e",
-        "f6429fe0",
+        "d41d8cd9",
+        "53d0178d",
+        "5300ddcd",
+        "9d097201",
+        "245d719b",
+        "99b30fcb",
         "39cb7937",
-        "1f6fac19",
-        "93cb4088",
-        "d1aeda47",
-        "70bfc2c7",
-        "691b27d8",
+        "f1cf822d",
+        "f6429fe0",
+        "11e270c2",
+        "a77f78bb",
+        "d15187a1",
+        "1c9ba7cf",
+        "a939e6b2",
         "a73b6b64",
-        "336fc7a2",
+        "b5c8bc19",
+        "357ef88d",
+        "9823f549",
+        "a505c1d4",
+        "7eb95c7f",
+        "5b8a8ea7",
+        "6d96d862",
+        "2006e019",
+        "d715ab1b",
+        "a6cfd3fb",
+        "2dcc151c",
+        "dff16761",
+        "0a1f19a4",
+        "d320d037",
+        "00df52b2",
+        "efd4872e",
+        "e5ad2643",
+        "691b27d8",
         "8bac9324",
         "dbb99a11",
-        "6d96d862",
-        "919000a9",
-        "125047d0",
-        "cb6a33bc",
-        "d41d8cd9",
-        "5a236322",
-        "7eb95c7f",
-        "b08acef1",
+        "26a31cbf",
+        "d1aeda47",
+        "092cd684",
         "08cb4418",
-        "048550f5",
-        "a76f8e90",
-        "99b30fcb",
-        "9823f549",
-        "d15187a1",
-        "34ceeffa",
-        "53d0178d",
-        "2006e019",
-        "a77f78bb",
-        "d320d037",
-        "21740bf4",
-        "e5ad2643",
+        "1e4e9005",
+        "336fc7a2",
         "842d11ca",
-        "d715ab1b",
-        "1c9ba7cf",
-        "9d097201"
+        "048550f5",
+        "13698c3b",
+        "0b8797ec",
+        "a76f8e90",
+        "078e4742",
+        "1f6fac19",
+        "93cb4088",
+        "f8fc4211",
+        "7f706ba5",
+        "6efae46d",
+        "144e6297",
+        "ea447147",
+        "b08acef1",
+        "7dcccb46",
+        "15cdf335",
+        "6df1677a",
+        "cb6a33bc",
+        "5aa55dc7",
+        "a99078f9",
+        "8d41d5c0",
+        "f7573db5",
+        "75b735ca",
+        "d073a146",
+        "125047d0",
+        "11e3cbde",
+        "ddeaaabf",
+        "52e01d90",
+        "21740bf4",
+        "70bfc2c7",
+        "f471bc65",
+        "7c722b8f",
+        "34ceeffa",
+        "96e0c5b6",
+        "5a236322",
+        "315b5966",
+        "919000a9"
       ],
       "constraint_scores": {
-        "X": 0.965079654166591,
+        "X": 0.9703870556666,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1179,8 +1210,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.33679082193933685,
-      "total_tokens_avg": 8.61611374407583
+      "compression_score": 0.25404644616467287,
+      "total_tokens_avg": 8.617924528301888
     },
     "agent_action_agent": {
       "pattern_id": "agent_action_agent",
@@ -1252,30 +1283,30 @@
       "success_count": 131,
       "fail_count": 9,
       "contexts_seen": [
-        "0f50c23f",
         "289e4087",
-        "5df5fe5c",
-        "f2d524c2",
-        "5217f7e9",
-        "5f889565",
-        "39619933",
-        "a76f8e90",
-        "96865d42",
-        "4fad70fd",
-        "3d6319ee",
-        "4e2dd0a4",
-        "902fdfe1",
-        "8d41d5c0",
-        "ebd9202e",
-        "ae923c79",
-        "d56bf970",
-        "d15187a1",
-        "34ceeffa",
-        "96e0c5b6",
         "d560e376",
+        "5f889565",
         "d41d8cd9",
         "98937236",
-        "6d72b7ff"
+        "a76f8e90",
+        "8d41d5c0",
+        "6d72b7ff",
+        "5df5fe5c",
+        "4e2dd0a4",
+        "ebd9202e",
+        "0f50c23f",
+        "96865d42",
+        "3d6319ee",
+        "d15187a1",
+        "d56bf970",
+        "34ceeffa",
+        "4fad70fd",
+        "5217f7e9",
+        "902fdfe1",
+        "39619933",
+        "f2d524c2",
+        "96e0c5b6",
+        "ae923c79"
       ],
       "constraint_scores": {
         "X": 0.9638209920463141,
@@ -1498,24 +1529,24 @@
       "success_count": 30,
       "fail_count": 0,
       "contexts_seen": [
-        "2dcc151c",
-        "441169a2",
         "6d96d862",
-        "0f50c23f",
-        "3861aae8",
         "9130e539",
-        "5b8a8ea7",
-        "dff16761",
-        "3c064f15",
-        "08cb4418",
-        "3492a780",
-        "5a236322",
-        "e4d0841e",
-        "f9b478dd",
         "6d72b7ff",
+        "ebd9202e",
+        "0f50c23f",
         "d9c60f9a",
+        "3492a780",
+        "e4d0841e",
+        "5a236322",
+        "f9b478dd",
+        "441169a2",
+        "2dcc151c",
+        "5b8a8ea7",
         "315b5966",
-        "ebd9202e"
+        "08cb4418",
+        "3861aae8",
+        "dff16761",
+        "3c064f15"
       ],
       "constraint_scores": {
         "X": 0.8291422612067728,
@@ -1540,57 +1571,60 @@
         "object",
         "descriptor"
       ],
-      "success_count": 193,
-      "fail_count": 114,
+      "success_count": 235,
+      "fail_count": 144,
       "contexts_seen": [
-        "2dcc151c",
-        "442bdf4d",
-        "0f50c23f",
-        "31ad0f18",
         "9130e539",
-        "dff16761",
-        "3492a780",
         "a505c1d4",
-        "91a6295f",
         "a40551e1",
-        "b030497f",
-        "34597e6c",
-        "21296108",
-        "5cd1cd70",
-        "f2cb9adc",
-        "fe608fd6",
-        "2fd21f2a",
-        "f1126c40",
-        "e2374148",
-        "441169a2",
-        "1f992da0",
-        "bb1f2cbc",
-        "5b8a8ea7",
-        "f1d72f2d",
         "0842e3c6",
-        "357d1665",
-        "c508c40f",
-        "6d2fdb75",
-        "15116f41",
-        "e4d0841e",
-        "315b5966",
-        "d15187a1",
-        "7098aea9",
-        "6d96d862",
-        "18e2c0a3",
         "08e4cca0",
-        "cc934b7e",
         "d41d8cd9",
-        "3c064f15",
-        "f9b478dd",
-        "5a236322",
+        "5b8a8ea7",
+        "6d96d862",
+        "5cd1cd70",
         "7e78db80",
+        "6d2fdb75",
+        "91a6295f",
+        "bb1f2cbc",
+        "e4d0841e",
+        "7098aea9",
+        "b030497f",
+        "2dcc151c",
+        "dff16761",
+        "2fd21f2a",
+        "21296108",
+        "f1126c40",
         "6d72b7ff",
+        "442bdf4d",
+        "fe608fd6",
+        "b0a5df8b",
+        "0f50c23f",
+        "1f992da0",
+        "31ad0f18",
+        "357d1665",
+        "f45ca098",
+        "c508c40f",
+        "d15187a1",
+        "f2cb9adc",
+        "34597e6c",
+        "cc934b7e",
+        "15116f41",
         "d9c60f9a",
-        "27664936"
+        "3492a780",
+        "f9b478dd",
+        "18e2c0a3",
+        "5a236322",
+        "441169a2",
+        "315b5966",
+        "27664936",
+        "39c2c757",
+        "e2374148",
+        "3c064f15",
+        "f1d72f2d"
       ],
       "constraint_scores": {
-        "X": 0.8820728546491611,
+        "X": 0.8770796435384777,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1601,8 +1635,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.0,
-      "total_tokens_avg": 5.414507772020727
+      "compression_score": 0.45896166685852424,
+      "total_tokens_avg": 5.280851063829788
     },
     "agent_action_object_agent_connector": {
       "pattern_id": "agent_action_object_agent_connector",
@@ -1701,13 +1735,13 @@
         "agent",
         "action"
       ],
-      "success_count": 231,
+      "success_count": 249,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8013813822592822,
+        "X": 0.8371159173731927,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1723,8 +1757,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.1659646166807076,
-      "total_tokens_avg": 5.138528138528138
+      "compression_score": 0.4349256779757176,
+      "total_tokens_avg": 5.056224899598393
     },
     "agent_action_agent_action_connector_action_agent_action": {
       "pattern_id": "agent_action_agent_action_connector_action_agent_action",
@@ -1765,75 +1799,75 @@
         "action",
         "descriptor"
       ],
-      "success_count": 116,
-      "fail_count": 18,
+      "success_count": 123,
+      "fail_count": 21,
       "contexts_seen": [
-        "465275be",
-        "7efc2abb",
-        "5fe61608",
-        "f8fc4211",
-        "ce2f2585",
-        "119cd20d",
-        "72f16252",
-        "86208bae",
-        "1ebe5b2b",
-        "89770348",
-        "01b7899c",
-        "5a1e067f",
-        "5b8a8ea7",
+        "d560e376",
         "38e7cc64",
-        "96865d42",
-        "88c8bdd5",
-        "4fad70fd",
-        "9823f549",
-        "41972184",
-        "144e6297",
-        "cd01ae0a",
-        "cfdec021",
+        "c3f9e19b",
+        "25323563",
         "1be8123f",
-        "06ceb616",
-        "efae7a31",
-        "7632c1a0",
+        "b53a5f1f",
+        "88c8bdd5",
+        "89770348",
+        "5b8a8ea7",
+        "d41d8cd9",
+        "2a0cb272",
+        "cb6a33bc",
+        "ce2f2585",
+        "5fe61608",
+        "465275be",
+        "805a4535",
+        "a851d4e4",
+        "cfdec021",
         "e4d0841e",
         "a9d68759",
-        "2a0cb272",
-        "c3f9e19b",
-        "34ceeffa",
-        "d560e376",
-        "3861aae8",
-        "d4af0008",
-        "4f9523d6",
-        "125047d0",
-        "cb6a33bc",
-        "b53a5f1f",
-        "d41d8cd9",
-        "805a4535",
-        "95601cae",
-        "471a184c",
-        "d4983fcb",
         "d715ab1b",
+        "119cd20d",
+        "06ceb616",
         "0185ead0",
         "725f2aac",
-        "d114d0c9",
+        "95601cae",
+        "471a184c",
+        "d4af0008",
+        "f8fc4211",
+        "efae7a31",
         "0026e7e7",
-        "25323563",
-        "a851d4e4",
-        "fa209039"
+        "96865d42",
+        "d114d0c9",
+        "125047d0",
+        "4f9523d6",
+        "144e6297",
+        "7632c1a0",
+        "3861aae8",
+        "72f16252",
+        "7efc2abb",
+        "01b7899c",
+        "34ceeffa",
+        "4fad70fd",
+        "41972184",
+        "fa209039",
+        "cd01ae0a",
+        "d4983fcb",
+        "5a1e067f",
+        "1ebe5b2b",
+        "86208bae",
+        "9823f549"
       ],
       "constraint_scores": {
-        "X": 0.9249516536399492,
+        "X": 0.974902025226538,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
-        "A": 0.99187767451
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.0,
-      "total_tokens_avg": 4.793103448275862
+      "compression_score": 0.39823874755381594,
+      "total_tokens_avg": 4.747967479674797
     },
     "agent_action_agent_action_object_agent_descriptor": {
       "pattern_id": "agent_action_agent_action_object_agent_descriptor",
@@ -1918,17 +1952,17 @@
         "object",
         "action"
       ],
-      "success_count": 7,
+      "success_count": 8,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6392500113603221,
-        "T": 0.9716551380439363,
-        "N": 0.816163619262464,
-        "B": 0.8851064491402638,
-        "A": 0.7869628533134153
+        "X": 0.6657052099970834,
+        "T": 1.0,
+        "N": 0.8373239849509683,
+        "B": 0.918423675243432,
+        "A": 0.8284472909158054
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -2200,9 +2234,9 @@
       "success_count": 4,
       "fail_count": 0,
       "contexts_seen": [
-        "0644439a",
+        "d41d8cd9",
         "10fa8e66",
-        "d41d8cd9"
+        "0644439a"
       ],
       "constraint_scores": {
         "X": 0.6657818789347512,
@@ -2439,15 +2473,15 @@
         "agent",
         "descriptor"
       ],
-      "success_count": 95,
+      "success_count": 96,
       "fail_count": 4,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8011846154704305,
+        "X": 0.8059732616139789,
         "T": 1.0,
-        "N": 0.99841797599104,
+        "N": 0.9977078188721151,
         "B": 1.0,
         "A": 1.0
       },
@@ -2456,8 +2490,8 @@
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2222677036430617,
-      "total_tokens_avg": 3.6736842105263157
+      "compression_score": 0.4155844155844155,
+      "total_tokens_avg": 3.6666666666666665
     },
     "connector_agent_action_agent_action_agent_action": {
       "pattern_id": "connector_agent_action_agent_action_agent_action",
@@ -2870,25 +2904,25 @@
         "object",
         "descriptor"
       ],
-      "success_count": 18,
+      "success_count": 21,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7618334995130549,
+        "X": 0.7871248256428838,
         "T": 1.0,
-        "N": 0.9807907998138548,
+        "N": 0.9964113436427471,
         "B": 1.0,
-        "A": 0.9504208111346445
+        "A": 0.9883514920663484
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.30501930501930496,
-      "total_tokens_avg": 8.222222222222221
+      "compression_score": 0.3023255813953487,
+      "total_tokens_avg": 8.19047619047619
     },
     "agent_action_object_descriptor_connector_action_object": {
       "pattern_id": "agent_action_object_descriptor_connector_action_object",
@@ -3562,17 +3596,17 @@
         "object",
         "descriptor"
       ],
-      "success_count": 16,
+      "success_count": 22,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7666913297511635,
+        "X": 0.8065730304921971,
         "T": 1.0,
-        "N": 0.9588162138380462,
+        "N": 1.0,
         "B": 1.0,
-        "A": 0.9575487214189387
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -3592,25 +3626,25 @@
         "action",
         "object"
       ],
-      "success_count": 19,
+      "success_count": 20,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7498534319210564,
+        "X": 0.7608018200905295,
         "T": 1.0,
-        "N": 0.990816966622449,
+        "N": 0.9934570306277551,
         "B": 1.0,
-        "A": 0.9436417595150941
+        "A": 0.9612725483732828
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.3099273607748184,
-      "total_tokens_avg": 6.2105263157894735
+      "compression_score": 0.09297052154194996,
+      "total_tokens_avg": 6.3
     },
     "agent_action_descriptor_agent_action": {
       "pattern_id": "agent_action_descriptor_agent_action",
@@ -3681,25 +3715,25 @@
         "action",
         "descriptor"
       ],
-      "success_count": 15,
+      "success_count": 16,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7394023896575483,
+        "X": 0.7516211323286426,
         "T": 1.0,
-        "N": 0.9541965696818393,
+        "N": 0.9650929813200185,
         "B": 1.0,
-        "A": 0.9240307132693516
+        "A": 0.9381907082570293
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.15966386554621848,
-      "total_tokens_avg": 6.8
+      "compression_score": 0.16883116883116878,
+      "total_tokens_avg": 6.875
     },
     "agent_action_descriptor_action_object": {
       "pattern_id": "agent_action_descriptor_action_object",
@@ -4250,9 +4284,9 @@
       "success_count": 5,
       "fail_count": 0,
       "contexts_seen": [
-        "5ada5db1",
+        "336fc7a2",
         "96e0c5b6",
-        "336fc7a2"
+        "5ada5db1"
       ],
       "constraint_scores": {
         "X": 0.7094038466856473,
@@ -4277,13 +4311,13 @@
         "context",
         "connector"
       ],
-      "success_count": 278,
+      "success_count": 310,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8016231100304093,
+        "X": 0.8408929305461712,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -4341,25 +4375,25 @@
         "action",
         "descriptor"
       ],
-      "success_count": 14,
+      "success_count": 15,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7455943845156098,
+        "X": 0.7689230583737366,
         "T": 1.0,
-        "N": 0.9420982348684114,
+        "N": 0.948146446684202,
         "B": 1.0,
-        "A": 0.9378617258749375
+        "A": 0.972318318769945
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.09090909090909083,
-      "total_tokens_avg": 6.285714285714286
+      "compression_score": 0.1071428571428571,
+      "total_tokens_avg": 6.4
     },
     "agent_action_descriptor_connector_agent_action_descriptor_connector_action_object": {
       "pattern_id": "agent_action_descriptor_connector_agent_action_descriptor_connector_action_object",
@@ -4524,17 +4558,17 @@
         "agent",
         "action"
       ],
-      "success_count": 10,
+      "success_count": 14,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7038882940987324,
+        "X": 0.7588691615191084,
         "T": 1.0,
-        "N": 0.8932169680748756,
-        "B": 0.935517543192625,
-        "A": 0.950791020306736
+        "N": 0.942313104027771,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -4977,17 +5011,17 @@
         "agent",
         "action"
       ],
-      "success_count": 12,
+      "success_count": 14,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7233231151511175,
+        "X": 0.7499086790435054,
         "T": 1.0,
-        "N": 0.9274592200771836,
-        "B": 0.9843080251476067,
-        "A": 0.9810745317999647
+        "N": 0.9539764200277709,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -5403,15 +5437,15 @@
         "agent",
         "action"
       ],
-      "success_count": 14,
+      "success_count": 16,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7231054732798918,
+        "X": 0.7497238644699482,
         "T": 1.0,
-        "N": 0.9461147495533498,
+        "N": 0.9684232620541141,
         "B": 1.0,
         "A": 1.0
       },
@@ -5445,8 +5479,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.28308823529411753,
-      "total_tokens_avg": 38.857142857142854
+      "compression_score": 0.2995391705069125,
+      "total_tokens_avg": 38.75
     },
     "agent_action_object_context_action_object_descriptor_connector_agent_descriptor_agent_action": {
       "pattern_id": "agent_action_object_context_action_object_descriptor_connector_agent_descriptor_agent_action",
@@ -5560,17 +5594,17 @@
         "descriptor",
         "action"
       ],
-      "success_count": 1,
+      "success_count": 2,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.534641662082,
-        "T": 0.597870398,
-        "N": 0.56158724,
-        "B": 0.5773978861538461,
-        "A": 0.5627823430769231
+        "X": 0.57141546263216,
+        "T": 0.68111345024,
+        "N": 0.6132967712,
+        "B": 0.6476401398153846,
+        "A": 0.6261162619076923
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -5590,25 +5624,25 @@
         "action",
         "connector"
       ],
-      "success_count": 2,
+      "success_count": 3,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.56122719175616,
-        "T": 0.6738193581199999,
-        "N": 0.6185168,
-        "B": 0.6414108510153845,
-        "A": 0.6095458679276924
+        "X": 0.5948312860234208,
+        "T": 0.7479485351455999,
+        "N": 0.663441404,
+        "B": 0.7039740688935383,
+        "A": 0.6672681637763693
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.3877551020408163,
-      "total_tokens_avg": 7.0
+      "compression_score": 0.22077922077922074,
+      "total_tokens_avg": 7.333333333333333
     },
     "agent_action_object_descriptor_agent_action_descriptor": {
       "pattern_id": "agent_action_object_descriptor_agent_action_descriptor",
@@ -5621,17 +5655,17 @@
         "action",
         "descriptor"
       ],
-      "success_count": 3,
+      "success_count": 6,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.5957716549371008,
-        "T": 0.7502148997456,
-        "N": 0.66597719936,
-        "B": 0.7068865905255384,
-        "A": 0.6658187084627691
+        "X": 0.673933926157856,
+        "T": 0.9209044658218335,
+        "N": 0.7780343165622577,
+        "B": 0.8511032102666196,
+        "A": 0.79947839303594
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -5901,9 +5935,9 @@
       "success_count": 6,
       "fail_count": 0,
       "contexts_seen": [
-        "f7f5bd99",
+        "a77f78bb",
         "7be8a648",
-        "a77f78bb"
+        "f7f5bd99"
       ],
       "constraint_scores": {
         "X": 0.745576491038392,
@@ -5928,17 +5962,17 @@
         "descriptor",
         "connector"
       ],
-      "success_count": 12,
+      "success_count": 20,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7188453951675021,
+        "X": 0.7971936208809204,
         "T": 1.0,
-        "N": 0.9260727248846199,
-        "B": 0.9997694560770669,
-        "A": 0.9476350252497441
+        "N": 0.9824890247306637,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -5950,8 +5984,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.1964285714285714,
-      "total_tokens_avg": 8.0
+      "compression_score": 0.18831168831168832,
+      "total_tokens_avg": 8.8
     },
     "agent_action_connector_action_object": {
       "pattern_id": "agent_action_connector_action_object",
@@ -6272,8 +6306,8 @@
       "fail_count": 0,
       "contexts_seen": [
         "eb03ab93",
-        "68bad1c4",
-        "d41d8cd9"
+        "d41d8cd9",
+        "68bad1c4"
       ],
       "constraint_scores": {
         "X": 0.8944224801226422,
@@ -6301,13 +6335,13 @@
         "agent",
         "action"
       ],
-      "success_count": 28,
+      "success_count": 32,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7766000491836694,
+        "X": 0.8024192850155591,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -6327,8 +6361,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.17808219178082185,
-      "total_tokens_avg": 10.428571428571429
+      "compression_score": 0.3115318416523235,
+      "total_tokens_avg": 10.375
     },
     "agent_action_agent_action_agent_action_agent_action_agent_descriptor_connector_agent_descriptor_agent_action": {
       "pattern_id": "agent_action_agent_action_agent_action_agent_action_agent_descriptor_connector_agent_descriptor_agent_action",
@@ -6349,17 +6383,17 @@
         "agent",
         "action"
       ],
-      "success_count": 2,
+      "success_count": 4,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.5689520340416001,
-        "T": 0.66723148024,
-        "N": 0.622952,
-        "B": 0.6408934159999999,
-        "A": 0.6435921752
+        "X": 0.6303483932503751,
+        "T": 0.793897224657856,
+        "N": 0.7181660287999999,
+        "B": 0.7465666661503999,
+        "A": 0.7570633988748798
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -6394,13 +6428,13 @@
         "object",
         "connector"
       ],
-      "success_count": 34,
+      "success_count": 70,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7802088735150741,
+        "X": 0.84065877838045,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -6416,8 +6450,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.5618556701030928,
-      "total_tokens_avg": 11.411764705882353
+      "compression_score": 0.453125,
+      "total_tokens_avg": 9.142857142857142
     },
     "descriptor_action_object_descriptor_connector_action_agent_action_object": {
       "pattern_id": "descriptor_action_object_descriptor_connector_action_agent_action_object",
@@ -6994,13 +7028,13 @@
         "object",
         "descriptor"
       ],
-      "success_count": 26,
+      "success_count": 44,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7469785024336376,
+        "X": 0.8317423324169615,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -7892,17 +7926,17 @@
         "action",
         "object"
       ],
-      "success_count": 4,
+      "success_count": 8,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.602551395360816,
-        "T": 0.79322332606688,
-        "N": 0.7181660287999999,
-        "B": 0.744178471904,
-        "A": 0.6805514122263365
+        "X": 0.6980395056170069,
+        "T": 0.984780548698811,
+        "N": 0.8411974081653062,
+        "B": 0.9049385697301591,
+        "A": 0.8360085285535812
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -8414,17 +8448,17 @@
         "connector",
         "agent"
       ],
-      "success_count": 3,
+      "success_count": 9,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.61615107392,
-        "T": 0.7384194036560001,
-        "N": 0.65942402,
-        "B": 0.711275792,
-        "A": 0.7169809470080001
+        "X": 0.7432652165780087,
+        "T": 1.0,
+        "N": 0.854540873678414,
+        "B": 0.9361260918632304,
+        "A": 0.9212556419594456
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -8811,17 +8845,17 @@
         "descriptor",
         "agent"
       ],
-      "success_count": 2,
+      "success_count": 4,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.568952929952,
-        "T": 0.6609909143599999,
-        "N": 0.622952,
-        "B": 0.6351075439999999,
-        "A": 0.6424884152
+        "X": 0.6303490870433888,
+        "T": 0.7865792056403839,
+        "N": 0.7181660287999999,
+        "B": 0.7394584828735999,
+        "A": 0.75311837113088
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -8852,17 +8886,17 @@
         "descriptor",
         "agent"
       ],
-      "success_count": 2,
+      "success_count": 8,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.5689491019712001,
-        "T": 0.66100291208,
-        "N": 0.622952,
-        "B": 0.6366655088,
-        "A": 0.6434526175999999
+        "X": 0.7147480974886496,
+        "T": 0.9740052242155227,
+        "N": 0.8386799351809862,
+        "B": 0.8987313711524828,
+        "A": 0.9261295102233588
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -8898,17 +8932,17 @@
         "connector",
         "agent"
       ],
-      "success_count": 2,
+      "success_count": 12,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.5689520340416001,
-        "T": 0.66151417724,
-        "N": 0.622952,
-        "B": 0.6362583776,
-        "A": 0.6300436463936
+        "X": 0.7654173295058898,
+        "T": 1.0,
+        "N": 0.9065168243976953,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -8955,6 +8989,2184 @@
       "generation": 0,
       "compression_score": 0.2857142857142857,
       "total_tokens_avg": 8.0
+    },
+    "agent_descriptor_action_agent_action_object_descriptor": {
+      "pattern_id": "agent_descriptor_action_agent_action_object_descriptor",
+      "role_sequence": [
+        "agent",
+        "descriptor",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5528,
+        "T": 0.58097,
+        "N": 0.5590999999999999,
+        "B": 0.57953,
+        "A": 0.587
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_connector_action_object": {
+      "pattern_id": "agent_action_object_connector_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object"
+      ],
+      "success_count": 8,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.735149118801453,
+        "T": 0.9856522012213367,
+        "N": 0.8153799965332766,
+        "B": 0.9244022186851351,
+        "A": 0.9467148549199463
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 7.0
+    },
+    "agent_descriptor_agent_action_object_descriptor": {
+      "pattern_id": "agent_descriptor_agent_action_object_descriptor",
+      "role_sequence": [
+        "agent",
+        "descriptor",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5478356,
+        "T": 0.58569857,
+        "N": 0.5590999999999999,
+        "B": 0.57953,
+        "A": 0.5812909399999999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_connector_action_object_descriptor_connector_agent_descriptor_action_object_agent_connector_agent_action_object_connector_action_object_descriptor_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor": {
+      "pattern_id": "agent_action_object_connector_action_object_descriptor_connector_agent_descriptor_action_object_agent_connector_agent_action_object_connector_action_object_descriptor_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "action",
+        "object",
+        "agent",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "connector",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5454668,
+        "T": 0.588156305,
+        "N": 0.5590999999999999,
+        "B": 0.57953,
+        "A": 0.587
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          38
+        ],
+        [
+          0,
+          44
+        ],
+        [
+          0,
+          50
+        ],
+        [
+          0,
+          53
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 59.0
+    },
+    "agent_action_object_action": {
+      "pattern_id": "agent_action_object_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5409308,
+        "T": 0.5949875,
+        "N": 0.5590999999999999,
+        "B": 0.57953,
+        "A": 0.5708678
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 4.0
+    },
+    "agent_action_object_descriptor_action_object_descriptor_connector_descriptor_action_connector_agent": {
+      "pattern_id": "agent_action_object_descriptor_action_object_descriptor_connector_descriptor_action_connector_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "descriptor",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6365795094668,
+        "T": 0.81691645088,
+        "N": 0.7014529855999999,
+        "B": 0.76552270256,
+        "A": 0.790220864
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          8
+        ],
+        [
+          0,
+          16
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 20.0
+    },
+    "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent"
+      ],
+      "success_count": 24,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.8253640003421431,
+        "T": 1.0,
+        "N": 1.0,
+        "B": 1.0,
+        "A": 1.0
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          18
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 24.0
+    },
+    "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_descriptor_connector_action_object_descriptor_agent_connector_agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_action_descriptor_connector_action_descriptor_agent_descriptor": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_descriptor_connector_action_object_descriptor_agent_connector_agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_action_descriptor_connector_action_descriptor_agent_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "connector",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "action",
+        "descriptor",
+        "agent",
+        "descriptor"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6365665847815327,
+        "T": 0.793057688535296,
+        "N": 0.7162048614195199,
+        "B": 0.74555608421504,
+        "A": 0.7616795435840001
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          0,
+          25
+        ],
+        [
+          0,
+          43
+        ],
+        [
+          0,
+          50
+        ],
+        [
+          0,
+          60
+        ],
+        [
+          0,
+          65
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 66.0
+    },
+    "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_descriptor_action_object_agent_connector_agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_descriptor_action_object_agent_connector_agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "action",
+        "object",
+        "agent",
+        "connector",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "connector",
+        "descriptor"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.576970461278,
+        "T": 0.6782161047199999,
+        "N": 0.6138526328,
+        "B": 0.6496811071999999,
+        "A": 0.66356
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          0,
+          41
+        ],
+        [
+          0,
+          48
+        ],
+        [
+          0,
+          54
+        ],
+        [
+          0,
+          60
+        ],
+        [
+          0,
+          63
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 69.0
+    },
+    "action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent": {
+      "pattern_id": "action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent",
+      "role_sequence": [
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.63656981508728,
+        "T": 0.8003228492489599,
+        "N": 0.710851851776,
+        "B": 0.7516701820812799,
+        "A": 0.7466046465103999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          16
+        ],
+        [
+          3,
+          19
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 21.0
+    },
+    "action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent_descriptor_connector_action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent_action_object_descriptor": {
+      "pattern_id": "action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent_descriptor_connector_action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent_action_object_descriptor",
+      "role_sequence": [
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.576973707164,
+        "T": 0.66874584644,
+        "N": 0.618538976,
+        "B": 0.6412405184,
+        "A": 0.6518079800000001
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          16
+        ],
+        [
+          3,
+          19
+        ],
+        [
+          3,
+          24
+        ],
+        [
+          3,
+          35
+        ],
+        [
+          3,
+          42
+        ],
+        [
+          3,
+          45
+        ],
+        [
+          3,
+          46
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 55.0
+    },
+    "agent_action_connector": {
+      "pattern_id": "agent_action_connector",
+      "role_sequence": [
+        "agent",
+        "action",
+        "connector"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.576949904,
+        "T": 0.67670404424,
+        "N": 0.6192445256,
+        "B": 0.6500513456,
+        "A": 0.66356
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 7.0
+    },
+    "agent_action_object_descriptor_action_object_descriptor_agent_action": {
+      "pattern_id": "agent_action_object_descriptor_action_object_descriptor_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "action"
+      ],
+      "success_count": 10,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.7461515735383955,
+        "T": 1.0,
+        "N": 0.8816245648748756,
+        "B": 0.9490704431109277,
+        "A": 0.980773050383202
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 14.0
+    },
+    "agent_action_agent_action_agent_descriptor_action_object_descriptor_connector_agent_descriptor_agent_action": {
+      "pattern_id": "agent_action_agent_action_agent_descriptor_action_object_descriptor_connector_agent_descriptor_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "agent",
+        "action"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.63654194374616,
+        "T": 0.792459134873408,
+        "N": 0.7181660287999999,
+        "B": 0.7440392523468798,
+        "A": 0.7592158374809601
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          25
+        ],
+        [
+          0,
+          29
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 38.0
+    },
+    "agent_action_object_agent_action_object_action": {
+      "pattern_id": "agent_action_object_agent_action_object_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540931881962,
+        "T": 0.591922865,
+        "N": 0.5654,
+        "B": 0.5766761,
+        "A": 0.5672415011
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_agent_descriptor_action": {
+      "pattern_id": "agent_action_object_agent_descriptor_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "descriptor",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540931881962,
+        "T": 0.595254116,
+        "N": 0.56237474,
+        "B": 0.57968876,
+        "A": 0.5708678
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_descriptor_action_object_agent_action_object": {
+      "pattern_id": "agent_descriptor_action_object_agent_action_object",
+      "role_sequence": [
+        "agent",
+        "descriptor",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540931881962,
+        "T": 0.5897711,
+        "N": 0.5654,
+        "B": 0.57582434,
+        "A": 0.56697175904
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_connector_descriptor": {
+      "pattern_id": "agent_action_object_connector_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "descriptor"
+      ],
+      "success_count": 8,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.7184466834110458,
+        "T": 0.9618665077090032,
+        "N": 0.8489991839809862,
+        "B": 0.8845482176127306,
+        "A": 0.9065913203736985
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 7.0
+    },
+    "agent_descriptor_agent_action": {
+      "pattern_id": "agent_descriptor_agent_action",
+      "role_sequence": [
+        "agent",
+        "descriptor",
+        "agent",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5409308,
+        "T": 0.585924005,
+        "N": 0.5654,
+        "B": 0.57188432,
+        "A": 0.56194951874
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_descriptor_action_object_descriptor_action_connector_agent": {
+      "pattern_id": "agent_action_object_descriptor_action_object_descriptor_action_connector_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 6,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6827300780251654,
+        "T": 0.9002747345019229,
+        "N": 0.7882420431027198,
+        "B": 0.8362138891582607,
+        "A": 0.860181179687297
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          18
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 22.0
+    },
+    "agent_descriptor_action_descriptor_agent_action_object_descriptor": {
+      "pattern_id": "agent_descriptor_action_descriptor_agent_action_object_descriptor",
+      "role_sequence": [
+        "agent",
+        "descriptor",
+        "action",
+        "descriptor",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5409308,
+        "T": 0.5860602109999999,
+        "N": 0.5654,
+        "B": 0.5721867199999999,
+        "A": 0.56187080024
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_connector_action_object_descriptor_connector_agent_descriptor_connector_agent_action_object_agent_action_object_connector_action_object_descriptor_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action": {
+      "pattern_id": "agent_action_object_connector_action_object_descriptor_connector_agent_descriptor_connector_agent_action_object_agent_action_object_connector_action_object_descriptor_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "action",
+        "agent",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540931881962,
+        "T": 0.585413957,
+        "N": 0.5654,
+        "B": 0.57265418,
+        "A": 0.57593468
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          13
+        ],
+        [
+          0,
+          37
+        ],
+        [
+          0,
+          48
+        ],
+        [
+          0,
+          57
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 62.0
+    },
+    "agent_action_connector_agent_action": {
+      "pattern_id": "agent_action_connector_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "action"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.636569009969061,
+        "T": 0.7865634398712319,
+        "N": 0.7181660287999999,
+        "B": 0.73853826701312,
+        "A": 0.75213039815552
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 7.0
+    },
+    "agent_action_agent_action_agent_action_object_descriptor_agent_action_object_connector_agent_descriptor_agent_action": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_descriptor_agent_action_object_connector_agent_descriptor_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "action",
+        "object",
+        "connector",
+        "agent",
+        "descriptor",
+        "agent",
+        "action"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6365801325384208,
+        "T": 0.803578826530496,
+        "N": 0.706535876,
+        "B": 0.7545018260864,
+        "A": 0.7741895852288
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          27
+        ],
+        [
+          0,
+          31
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 40.0
+    },
+    "agent_action_object_context_action": {
+      "pattern_id": "agent_action_object_context_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "context",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540944865506,
+        "T": 0.586707914,
+        "N": 0.5654,
+        "B": 0.57180242,
+        "A": 0.56167452878
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "action_object_descriptor_connector_descriptor_action_connector_agent": {
+      "pattern_id": "action_object_descriptor_connector_descriptor_action_connector_agent",
+      "role_sequence": [
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "descriptor",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5769779484550399,
+        "T": 0.6628791932,
+        "N": 0.622952,
+        "B": 0.6348835664,
+        "A": 0.6301720695584
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 17.0
+    },
+    "action_object_descriptor_connector_descriptor_action_connector_agent_descriptor_agent_action_object_descriptor_connector_descriptor": {
+      "pattern_id": "action_object_descriptor_connector_descriptor_action_connector_agent_descriptor_agent_action_object_descriptor_connector_descriptor",
+      "role_sequence": [
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540951357278,
+        "T": 0.585563204,
+        "N": 0.5654,
+        "B": 0.57143576,
+        "A": 0.5753828
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          15,
+          23
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 30.0
+    },
+    "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_descriptor_connector_agent_action_object_agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_descriptor_connector_agent_action_object_agent_action_agent_action_agent_action_object_agent_action_object_descriptor_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "action",
+        "agent",
+        "action"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.57695600626568,
+        "T": 0.66082781492,
+        "N": 0.622952,
+        "B": 0.6352844984,
+        "A": 0.6431564168
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          11
+        ],
+        [
+          0,
+          18
+        ],
+        [
+          0,
+          40
+        ],
+        [
+          0,
+          47
+        ],
+        [
+          0,
+          58
+        ],
+        [
+          0,
+          67
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 72.0
+    },
+    "agent_action_descriptor_connector_action_agent_action_object_descriptor": {
+      "pattern_id": "agent_action_descriptor_connector_action_agent_action_object_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5769824494169599,
+        "T": 0.6607401794,
+        "N": 0.622952,
+        "B": 0.6344680184,
+        "A": 0.641834324
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          1
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 12.0
+    },
+    "agent_action_agent_action_object_descriptor_agent": {
+      "pattern_id": "agent_action_agent_action_object_descriptor_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5769874697206401,
+        "T": 0.66086125784,
+        "N": 0.622952,
+        "B": 0.6345597968,
+        "A": 0.6413978599999999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 18.0
+    },
+    "agent_action_descriptor_connector_agent_action_agent_action_object_descriptor_agent_action": {
+      "pattern_id": "agent_action_descriptor_connector_agent_action_agent_action_object_descriptor_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "action"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5769772992778399,
+        "T": 0.66154819976,
+        "N": 0.622952,
+        "B": 0.6350567408000001,
+        "A": 0.6422471504
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          8
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 26.0
+    },
+    "agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 3,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.608674223321888,
+        "T": 0.7302436108448,
+        "N": 0.6735977599999999,
+        "B": 0.6925533975679998,
+        "A": 0.679735126294976
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          25
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 31.0
+    },
+    "agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent_descriptor_action_object_agent_connector_agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent_descriptor_action_object_agent_connector_agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "action",
+        "object",
+        "agent",
+        "connector",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "connector",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540938373734,
+        "T": 0.585908066,
+        "N": 0.5654,
+        "B": 0.57205064,
+        "A": 0.57611864
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          6
+        ],
+        [
+          0,
+          25
+        ],
+        [
+          0,
+          43
+        ],
+        [
+          0,
+          62
+        ],
+        [
+          0,
+          68
+        ],
+        [
+          0,
+          74
+        ],
+        [
+          0,
+          77
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 83.0
+    },
+    "agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent_descriptor_agent_action": {
+      "pattern_id": "agent_action_agent_action_agent_action_object_descriptor_agent_action_connector_agent_descriptor_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "agent",
+        "action"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5769722789741599,
+        "T": 0.6619800597200001,
+        "N": 0.622952,
+        "B": 0.635456312,
+        "A": 0.6434770616000001
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          26
+        ],
+        [
+          0,
+          30
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 39.0
+    },
+    "context_action_connector_agent_action_object_descriptor": {
+      "pattern_id": "context_action_connector_agent_action_object_descriptor",
+      "role_sequence": [
+        "context",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540953521202,
+        "T": 0.59427749,
+        "N": 0.5654,
+        "B": 0.57902852,
+        "A": 0.56996306204
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "context_descriptor_agent_descriptor_action_object": {
+      "pattern_id": "context_descriptor_agent_descriptor_action_object",
+      "role_sequence": [
+        "context",
+        "descriptor",
+        "agent",
+        "descriptor",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540954603164,
+        "T": 0.595170074,
+        "N": 0.5646188,
+        "B": 0.57978326,
+        "A": 0.5708678
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_descriptor_connector_action_object_descriptor_connector_action_connector_agent": {
+      "pattern_id": "agent_action_object_descriptor_connector_action_object_descriptor_connector_action_connector_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 6,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6827909977356319,
+        "T": 0.9231514845805378,
+        "N": 0.7889197819827198,
+        "B": 0.8553302639683542,
+        "A": 0.8870242687530598
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          15
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 19.0
+    },
+    "agent_action_connector_action_object_descriptor_connector_descriptor_agent": {
+      "pattern_id": "agent_action_connector_action_object_descriptor_connector_descriptor_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "descriptor",
+        "agent"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6366005139326781,
+        "T": 0.8065214066731519,
+        "N": 0.7148864751564801,
+        "B": 0.7583078056332799,
+        "A": 0.7798371535999999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 20.0
+    },
+    "action_object_descriptor_action_connector_agent": {
+      "pattern_id": "action_object_descriptor_action_connector_agent",
+      "role_sequence": [
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5769885516826401,
+        "T": 0.67858467236,
+        "N": 0.6117925832,
+        "B": 0.6495517807999999,
+        "A": 0.649363664
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 12.0
+    },
+    "action_object_descriptor_action_connector_agent_descriptor_connector_action_object_descriptor_action_connector_agent_action_object_descriptor": {
+      "pattern_id": "action_object_descriptor_action_connector_agent_descriptor_connector_action_object_descriptor_action_connector_agent_action_object_descriptor",
+      "role_sequence": [
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540951357278,
+        "T": 0.594991847,
+        "N": 0.5594654,
+        "B": 0.5795489,
+        "A": 0.587
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          10,
+          15
+        ],
+        [
+          10,
+          24
+        ],
+        [
+          10,
+          27
+        ],
+        [
+          10,
+          28
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 37.0
+    },
+    "agent_action_object_descriptor_connector_agent": {
+      "pattern_id": "agent_action_object_descriptor_connector_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent"
+      ],
+      "success_count": 3,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6087012827587233,
+        "T": 0.7521410634512,
+        "N": 0.6573547996160001,
+        "B": 0.711128668352,
+        "A": 0.70424368832
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          9
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 15.0
+    },
+    "agent_action_descriptor_action": {
+      "pattern_id": "agent_action_descriptor_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "descriptor",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "be40bebc"
+      ],
+      "constraint_scores": {
+        "X": 0.5611416287336,
+        "T": 0.594988949,
+        "N": 0.55927766,
+        "B": 0.57953882,
+        "A": 0.6457999999999999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 6.0
+    },
+    "agent_action_object_descriptor_connector_agent_descriptor_connector_agent_action_object_agent_action_object_descriptor_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action": {
+      "pattern_id": "agent_action_object_descriptor_connector_agent_descriptor_connector_agent_action_object_agent_action_object_descriptor_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "action",
+        "agent",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540951357278,
+        "T": 0.594988949,
+        "N": 0.55926254,
+        "B": 0.57953882,
+        "A": 0.5708678
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          9
+        ],
+        [
+          0,
+          29
+        ],
+        [
+          0,
+          40
+        ],
+        [
+          0,
+          49
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 54.0
+    },
+    "agent_action_connector_agent_descriptor": {
+      "pattern_id": "agent_action_connector_agent_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540943783544,
+        "T": 0.590891177,
+        "N": 0.5654,
+        "B": 0.5776715,
+        "A": 0.5668584044
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "context_agent_action_descriptor": {
+      "pattern_id": "context_agent_action_descriptor",
+      "role_sequence": [
+        "context",
+        "agent",
+        "action",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540945947468,
+        "T": 0.5926705489999999,
+        "N": 0.5654,
+        "B": 0.57901592,
+        "A": 0.5685828643399999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "action_object_descriptor_action_object_descriptor_action_connector_agent": {
+      "pattern_id": "action_object_descriptor_action_object_descriptor_action_connector_agent",
+      "role_sequence": [
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 3,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6086961568555519,
+        "T": 0.7459794448159999,
+        "N": 0.6735977599999999,
+        "B": 0.7093350533120001,
+        "A": 0.6988136887533439
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 19.0
+    },
+    "action_object_descriptor_action_object_descriptor_action_connector_agent_descriptor_connector_descriptor_action_object_descriptor_action_object_descriptor_action_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action": {
+      "pattern_id": "action_object_descriptor_action_object_descriptor_action_connector_agent_descriptor_connector_descriptor_action_object_descriptor_action_object_descriptor_action_connector_agent_action_descriptor_connector_action_object_agent_action_object_action_agent_action",
+      "role_sequence": [
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "action",
+        "agent",
+        "action"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540950275316,
+        "T": 0.589074131,
+        "N": 0.5654,
+        "B": 0.57586592,
+        "A": 0.5817521
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          17,
+          39
+        ],
+        [
+          17,
+          42
+        ],
+        [
+          17,
+          48
+        ],
+        [
+          17,
+          57
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 64.0
+    },
+    "agent_descriptor_context_action_object": {
+      "pattern_id": "agent_descriptor_context_action_object",
+      "role_sequence": [
+        "agent",
+        "descriptor",
+        "context",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540951357278,
+        "T": 0.589710242,
+        "N": 0.5654,
+        "B": 0.57636362,
+        "A": 0.56705992376
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_descriptor_context_action_object": {
+      "pattern_id": "agent_action_object_descriptor_context_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "context",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540960012974,
+        "T": 0.587183186,
+        "N": 0.5654,
+        "B": 0.57413846,
+        "A": 0.5635469795
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
     }
   },
   "discourse": {
@@ -8964,7 +11176,7 @@
         "question",
         "question"
       ],
-      "success_count": 1308,
+      "success_count": 1338,
       "fail_count": 0,
       "promoted": true
     },
@@ -8974,7 +11186,7 @@
         "question",
         "statement"
       ],
-      "success_count": 2640,
+      "success_count": 2870,
       "fail_count": 0,
       "promoted": true
     },
@@ -8984,7 +11196,7 @@
         "statement",
         "question"
       ],
-      "success_count": 2702,
+      "success_count": 2930,
       "fail_count": 0,
       "promoted": true
     },
@@ -8994,7 +11206,7 @@
         "statement",
         "statement"
       ],
-      "success_count": 3440,
+      "success_count": 3775,
       "fail_count": 0,
       "promoted": true
     },
@@ -9034,7 +11246,7 @@
         "answer",
         "statement"
       ],
-      "success_count": 39,
+      "success_count": 51,
       "fail_count": 0,
       "promoted": true
     },
@@ -9054,9 +11266,9 @@
         "statement",
         "answer"
       ],
-      "success_count": 4,
+      "success_count": 18,
       "fail_count": 0,
-      "promoted": false
+      "promoted": true
     },
     "answer_question": {
       "pattern_id": "answer_question",
@@ -9064,10 +11276,10 @@
         "answer",
         "question"
       ],
-      "success_count": 2,
+      "success_count": 4,
       "fail_count": 0,
       "promoted": false
     }
   },
-  "saved_at": 1781294379.5484064
+  "saved_at": 1781299559.6922686
 }

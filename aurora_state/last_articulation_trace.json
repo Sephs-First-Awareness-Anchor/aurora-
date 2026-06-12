@@ -1,32 +1,28 @@
 {
-  "original": "I am do feel. I more did meaning.",
+  "original": "I understand meaning kinds. I did am feel.",
   "candidate": "",
-  "selected": "I am do feel. I more did meaning.",
+  "selected": "I understand meaning kinds. I did am feel.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.74,
   "candidate_score": 0.0,
-  "original_pressure": 0.316,
+  "original_pressure": 0.292,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
+  "pressure_relief": -0.708,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What behavior links mean and exist here?",
+    "prompt_excerpt": "Tell me about yourself.",
     "input_interpretation": {
-      "raw_prompt": "What behavior links mean and exist here?",
-      "intent_hint": "question",
+      "raw_prompt": "Tell me about yourself.",
+      "intent_hint": "self_description_request",
       "topic_terms": [
-        "behavior",
-        "links",
-        "mean",
-        "exist",
-        "here"
+        "yourself"
       ],
       "entities": []
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781294250.0416565,
+    "timestamp": 1781299559.690014,
     "min_relief_used": 0.035
   }
 }
