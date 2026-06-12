@@ -2,20 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1",
-      "change_id": "MC:898cafe4fdd1",
-      "dominant_axis": "X",
-      "file": "aurora_os/build/rootfs/usr/local/lib/python3.11/site-packages/wheel/vendored/packaging/markers.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_os.build.rootfs.usr.local.lib.python3.11.site-packages.wheel.vendored.packaging.markers",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781247346.3394008
-    },
-    {
-      "axis_signature": "X^1",
       "change_id": "MC:2af23849118c",
       "dominant_axis": "X",
       "file": "aurora_os/build/rootfs/usr/local/lib/python3.11/site-packages/wheel/vendored/packaging/requirements.py",
@@ -3359,10 +3345,24 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1781298678.430531
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:d0cb88a7cba4",
+      "dominant_axis": "X",
+      "file": "aurora_grammar_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_grammar_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.save",
+      "timestamp": 1781300495.3502111
     }
   ],
   "initialized": true,
-  "last_run_at": 1781298678.4339995,
+  "last_run_at": 1781300495.353478,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781202531418552329,
@@ -3521,8 +3521,8 @@
       "size": 575894
     },
     "aurora_grammar_engine.py": {
-      "mtime_ns": 1781297865442621820,
-      "size": 57761
+      "mtime_ns": 1781299492446401502,
+      "size": 58707
     },
     "aurora_hardware_io.py": {
       "mtime_ns": 1781248090992876985,

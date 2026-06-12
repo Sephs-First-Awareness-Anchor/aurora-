@@ -8,18 +8,21 @@
         "action",
         "object"
       ],
-      "success_count": 150,
-      "fail_count": 68,
+      "success_count": 168,
+      "fail_count": 76,
       "contexts_seen": [
         "91e230a5",
         "c3f9e19b",
         "96e6e251",
+        "7645ad07",
         "66c9805f",
         "97567db9",
         "b09e2529",
         "5477e0dd",
         "e17e37e9",
         "1d65ccbf",
+        "10a4ed9b",
+        "20bcf324",
         "f986b9e3",
         "eb3eb56d",
         "1dc52894",
@@ -32,6 +35,7 @@
         "a1d3c7bb",
         "f757c18e",
         "f656b356",
+        "3a7e8a65",
         "628df693",
         "f79262b5",
         "29965bbb",
@@ -52,6 +56,7 @@
         "3d46c38d",
         "50368e67",
         "7982b687",
+        "93b657a4",
         "5a6c9c0a",
         "144e6297",
         "7873ce1c",
@@ -62,12 +67,14 @@
         "7361f1ff",
         "2558281a",
         "d81705e2",
+        "ec968394",
         "b485287c",
         "4b400f3e",
         "62f096fa",
         "48dc3bd9",
         "390fc5f1",
         "20391bf7",
+        "b3b6d68f",
         "441169a2",
         "691e1bad",
         "f02f7b95",
@@ -75,11 +82,13 @@
         "07885ab5",
         "e43d74fd",
         "0c41e509",
+        "a68e1ed1",
         "f1d59daa",
+        "8b166edd",
         "49938308"
       ],
       "constraint_scores": {
-        "X": 0.9999999615771286,
+        "X": 0.9999999961516203,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -90,8 +99,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.21983356449375901,
-      "total_tokens_avg": 5.493333333333337
+      "compression_score": 0.22746781115879877,
+      "total_tokens_avg": 5.547619047619051
     },
     "agent_action_object_agent_descriptor": {
       "pattern_id": "agent_action_object_agent_descriptor",
@@ -102,15 +111,15 @@
         "agent",
         "descriptor"
       ],
-      "success_count": 51,
+      "success_count": 52,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.899870938838103,
+        "X": 0.8928388654175305,
         "T": 1.0,
-        "N": 0.9997700274357406,
+        "N": 1.0,
         "B": 1.0,
         "A": 1.0
       },
@@ -128,8 +137,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.3494897959183675,
-      "total_tokens_avg": 8.784313725490199
+      "compression_score": 0.3483709273182959,
+      "total_tokens_avg": 8.769230769230772
     },
     "agent_action_agent_action_object": {
       "pattern_id": "agent_action_agent_action_object",
@@ -177,7 +186,7 @@
         "object"
       ],
       "success_count": 1660,
-      "fail_count": 902,
+      "fail_count": 908,
       "contexts_seen": [
         "527b0d2d",
         "5300ddcd",
@@ -700,7 +709,7 @@
         "agent",
         "action"
       ],
-      "success_count": 116,
+      "success_count": 134,
       "fail_count": 23,
       "contexts_seen": [
         "33e504b1",
@@ -710,7 +719,7 @@
         "1e4e9005"
       ],
       "constraint_scores": {
-        "X": 0.8505480244913258,
+        "X": 0.842097495849937,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -721,8 +730,8 @@
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.28262213976499684,
-      "total_tokens_avg": 3.9827586206896552
+      "compression_score": 0.28303905831995724,
+      "total_tokens_avg": 3.985074626865672
     },
     "action_agent_descriptor_agent_action_object_agent_action": {
       "pattern_id": "action_agent_descriptor_agent_action_object_agent_action",
@@ -839,7 +848,7 @@
         "agent",
         "connector"
       ],
-      "success_count": 87,
+      "success_count": 89,
       "fail_count": 0,
       "contexts_seen": [
         "f4fc0000",
@@ -849,7 +858,7 @@
         "3c064f15"
       ],
       "constraint_scores": {
-        "X": 0.9243975959857398,
+        "X": 0.9056124908121569,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -865,8 +874,8 @@
       ],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.5028571428571428,
-      "total_tokens_avg": 7.183908045977011
+      "compression_score": 0.3035993740219093,
+      "total_tokens_avg": 7.179775280898877
     },
     "agent_action_agent_action_descriptor": {
       "pattern_id": "agent_action_agent_action_descriptor",
@@ -1115,7 +1124,7 @@
         "object",
         "descriptor"
       ],
-      "success_count": 212,
+      "success_count": 213,
       "fail_count": 20,
       "contexts_seen": [
         "bdfe6412",
@@ -1199,7 +1208,7 @@
         "919000a9"
       ],
       "constraint_scores": {
-        "X": 0.9703870556666,
+        "X": 0.975075745948208,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1210,8 +1219,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.25404644616467287,
-      "total_tokens_avg": 8.617924528301888
+      "compression_score": 0.2542016806722689,
+      "total_tokens_avg": 8.619718309859156
     },
     "agent_action_agent": {
       "pattern_id": "agent_action_agent",
@@ -1571,7 +1580,7 @@
         "object",
         "descriptor"
       ],
-      "success_count": 235,
+      "success_count": 240,
       "fail_count": 144,
       "contexts_seen": [
         "9130e539",
@@ -1624,7 +1633,7 @@
         "f1d72f2d"
       ],
       "constraint_scores": {
-        "X": 0.8770796435384777,
+        "X": 0.8981176010241767,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1635,8 +1644,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.45896166685852424,
-      "total_tokens_avg": 5.280851063829788
+      "compression_score": 0.0,
+      "total_tokens_avg": 5.2875000000000005
     },
     "agent_action_object_agent_connector": {
       "pattern_id": "agent_action_object_agent_connector",
@@ -1735,13 +1744,13 @@
         "agent",
         "action"
       ],
-      "success_count": 249,
+      "success_count": 267,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8371159173731927,
+        "X": 0.840833353120119,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -1757,8 +1766,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.4349256779757176,
-      "total_tokens_avg": 5.056224899598393
+      "compression_score": 0.2931271841575771,
+      "total_tokens_avg": 5.0524344569288395
     },
     "agent_action_agent_action_connector_action_agent_action": {
       "pattern_id": "agent_action_agent_action_connector_action_agent_action",
@@ -1800,7 +1809,7 @@
         "descriptor"
       ],
       "success_count": 123,
-      "fail_count": 21,
+      "fail_count": 22,
       "contexts_seen": [
         "d560e376",
         "38e7cc64",
@@ -1983,17 +1992,17 @@
         "object",
         "descriptor"
       ],
-      "success_count": 8,
+      "success_count": 9,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6928718634328881,
-        "T": 0.9791687728281591,
-        "N": 0.8371490048059691,
-        "B": 0.9121849906971096,
-        "A": 0.8578566873482711
+        "X": 0.7106634496309415,
+        "T": 1.0,
+        "N": 0.8620911242292527,
+        "B": 0.9389629318134564,
+        "A": 0.8815424312464786
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -2904,25 +2913,25 @@
         "object",
         "descriptor"
       ],
-      "success_count": 21,
+      "success_count": 22,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7871248256428838,
+        "X": 0.7936168759957377,
         "T": 1.0,
-        "N": 0.9964113436427471,
+        "N": 1.0,
         "B": 1.0,
-        "A": 0.9883514920663484
+        "A": 0.9921910847783866
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.3023255813953487,
-      "total_tokens_avg": 8.19047619047619
+      "compression_score": 0.3015873015873015,
+      "total_tokens_avg": 8.181818181818182
     },
     "agent_action_object_descriptor_connector_action_object": {
       "pattern_id": "agent_action_object_descriptor_connector_action_object",
@@ -4311,13 +4320,13 @@
         "context",
         "connector"
       ],
-      "success_count": 310,
+      "success_count": 318,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8408929305461712,
+        "X": 0.8411458678001933,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -4375,25 +4384,25 @@
         "action",
         "descriptor"
       ],
-      "success_count": 15,
+      "success_count": 16,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7689230583737366,
+        "X": 0.7775895831408882,
         "T": 1.0,
-        "N": 0.948146446684202,
+        "N": 0.9597688730820977,
         "B": 1.0,
-        "A": 0.972318318769945
+        "A": 0.9839500940575515
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.1071428571428571,
-      "total_tokens_avg": 6.4
+      "compression_score": 0.1208791208791209,
+      "total_tokens_avg": 6.5
     },
     "agent_action_descriptor_connector_agent_action_descriptor_connector_action_object": {
       "pattern_id": "agent_action_descriptor_connector_agent_action_descriptor_connector_action_object",
@@ -5437,15 +5446,15 @@
         "agent",
         "action"
       ],
-      "success_count": 16,
+      "success_count": 20,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7497238644699482,
+        "X": 0.786364174094342,
         "T": 1.0,
-        "N": 0.9684232620541141,
+        "N": 0.9990772855699162,
         "B": 1.0,
         "A": 1.0
       },
@@ -5479,8 +5488,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2995391705069125,
-      "total_tokens_avg": 38.75
+      "compression_score": 0.2820324005891015,
+      "total_tokens_avg": 38.8
     },
     "agent_action_object_context_action_object_descriptor_connector_agent_descriptor_agent_action": {
       "pattern_id": "agent_action_object_context_action_object_descriptor_connector_agent_descriptor_agent_action",
@@ -5962,15 +5971,15 @@
         "descriptor",
         "connector"
       ],
-      "success_count": 20,
+      "success_count": 24,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7971936208809204,
+        "X": 0.8148166182980946,
         "T": 1.0,
-        "N": 0.9824890247306637,
+        "N": 1.0,
         "B": 1.0,
         "A": 1.0
       },
@@ -5984,8 +5993,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.18831168831168832,
-      "total_tokens_avg": 8.8
+      "compression_score": 0.20634920634920606,
+      "total_tokens_avg": 8.999999999999998
     },
     "agent_action_connector_action_object": {
       "pattern_id": "agent_action_connector_action_object",
@@ -6335,13 +6344,13 @@
         "agent",
         "action"
       ],
-      "success_count": 32,
+      "success_count": 36,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8024192850155591,
+        "X": 0.8179159870727135,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -6361,8 +6370,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.3115318416523235,
-      "total_tokens_avg": 10.375
+      "compression_score": 0.24772036474164127,
+      "total_tokens_avg": 10.444444444444445
     },
     "agent_action_agent_action_agent_action_agent_action_agent_descriptor_connector_agent_descriptor_agent_action": {
       "pattern_id": "agent_action_agent_action_agent_action_agent_action_agent_descriptor_connector_agent_descriptor_agent_action",
@@ -6428,13 +6437,13 @@
         "object",
         "connector"
       ],
-      "success_count": 70,
+      "success_count": 78,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.84065877838045,
+        "X": 0.8410818055030479,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -6450,8 +6459,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.453125,
-      "total_tokens_avg": 9.142857142857142
+      "compression_score": 0.43965517241379315,
+      "total_tokens_avg": 8.923076923076923
     },
     "descriptor_action_object_descriptor_connector_action_agent_action_object": {
       "pattern_id": "descriptor_action_object_descriptor_connector_action_agent_action_object",
@@ -8719,17 +8728,17 @@
         "connector",
         "agent"
       ],
-      "success_count": 6,
+      "success_count": 10,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6637309038534042,
-        "T": 0.8947361217407435,
-        "N": 0.7918997727027198,
-        "B": 0.8259071957982739,
-        "A": 0.811392097487208
+        "X": 0.7347607437855297,
+        "T": 1.0,
+        "N": 0.8932169680748756,
+        "B": 0.9354055440945164,
+        "A": 0.9404271780120663
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -8737,12 +8746,16 @@
         [
           0,
           11
+        ],
+        [
+          0,
+          12
         ]
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2857142857142857,
-      "total_tokens_avg": 15.0
+      "compression_score": 0.2578849721706864,
+      "total_tokens_avg": 15.4
     },
     "agent_action_object_descriptor_agent_descriptor": {
       "pattern_id": "agent_action_object_descriptor_agent_descriptor",
@@ -8886,17 +8899,17 @@
         "descriptor",
         "agent"
       ],
-      "success_count": 8,
+      "success_count": 14,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7147480974886496,
-        "T": 0.9740052242155227,
-        "N": 0.8386799351809862,
-        "B": 0.8987313711524828,
-        "A": 0.9261295102233588
+        "X": 0.782455938217337,
+        "T": 1.0,
+        "N": 0.94918411871251,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -8932,15 +8945,15 @@
         "connector",
         "agent"
       ],
-      "success_count": 12,
+      "success_count": 14,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7654173295058898,
+        "X": 0.782519595297761,
         "T": 1.0,
-        "N": 0.9065168243976953,
+        "N": 0.9305350488135753,
         "B": 1.0,
         "A": 1.0
       },
@@ -9203,17 +9216,17 @@
         "connector",
         "agent"
       ],
-      "success_count": 4,
+      "success_count": 6,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6365795094668,
-        "T": 0.81691645088,
-        "N": 0.7014529855999999,
-        "B": 0.76552270256,
-        "A": 0.790220864
+        "X": 0.6827566759402898,
+        "T": 0.907922205001472,
+        "N": 0.7789571920486398,
+        "B": 0.840252649662464,
+        "A": 0.8677037186816001
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -9249,13 +9262,13 @@
         "connector",
         "agent"
       ],
-      "success_count": 24,
+      "success_count": 33,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.8253640003421431,
+        "X": 0.8362721403601278,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -9322,17 +9335,17 @@
         "agent",
         "descriptor"
       ],
-      "success_count": 4,
+      "success_count": 5,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6365665847815327,
-        "T": 0.793057688535296,
-        "N": 0.7162048614195199,
-        "B": 0.74555608421504,
-        "A": 0.7616795435840001
+        "X": 0.6611472632777488,
+        "T": 0.8498715909110605,
+        "N": 0.7556602780491775,
+        "B": 0.7927994741092352,
+        "A": 0.8132485183539201
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -9416,17 +9429,17 @@
         "connector",
         "descriptor"
       ],
-      "success_count": 2,
+      "success_count": 3,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.576970461278,
-        "T": 0.6782161047199999,
-        "N": 0.6138526328,
-        "B": 0.6496811071999999,
-        "A": 0.66356
+        "X": 0.60869510086064,
+        "T": 0.7432077141535999,
+        "N": 0.6655903168639999,
+        "B": 0.7043874143359999,
+        "A": 0.7217915
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -9482,17 +9495,17 @@
         "connector",
         "agent"
       ],
-      "success_count": 4,
+      "success_count": 18,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.63656981508728,
-        "T": 0.8003228492489599,
-        "N": 0.710851851776,
-        "B": 0.7516701820812799,
-        "A": 0.7466046465103999
+        "X": 0.8070442948911103,
+        "T": 1.0,
+        "N": 0.9825123012574688,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -9550,17 +9563,17 @@
         "object",
         "descriptor"
       ],
-      "success_count": 2,
+      "success_count": 5,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.576973707164,
-        "T": 0.66874584644,
-        "N": 0.618538976,
-        "B": 0.6412405184,
-        "A": 0.6518079800000001
+        "X": 0.6611488010833231,
+        "T": 0.8595655731403596,
+        "N": 0.750999483452672,
+        "B": 0.8017762779150848,
+        "A": 0.82507221126656
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -9643,17 +9656,17 @@
         "agent",
         "action"
       ],
-      "success_count": 10,
+      "success_count": 14,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7461515735383955,
+        "X": 0.7842283690447933,
         "T": 1.0,
-        "N": 0.8816245648748756,
-        "B": 0.9490704431109277,
-        "A": 0.980773050383202
+        "N": 0.9470245096174817,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -9681,17 +9694,17 @@
         "agent",
         "action"
       ],
-      "success_count": 4,
+      "success_count": 8,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.63654194374616,
-        "T": 0.792459134873408,
-        "N": 0.7181660287999999,
-        "B": 0.7440392523468798,
-        "A": 0.7592158374809601
+        "X": 0.7184780823215161,
+        "T": 0.961527958944845,
+        "N": 0.8489991839809862,
+        "B": 0.885536572113333,
+        "A": 0.908645553297766
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -9707,12 +9720,20 @@
         [
           0,
           29
+        ],
+        [
+          0,
+          26
+        ],
+        [
+          0,
+          30
         ]
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2857142857142857,
-      "total_tokens_avg": 38.0
+      "compression_score": 0.29038281979458447,
+      "total_tokens_avg": 38.25
     },
     "agent_action_object_agent_action_object_action": {
       "pattern_id": "agent_action_object_agent_action_object_action",
@@ -9815,17 +9836,17 @@
         "connector",
         "descriptor"
       ],
-      "success_count": 8,
+      "success_count": 20,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7184466834110458,
-        "T": 0.9618665077090032,
-        "N": 0.8489991839809862,
-        "B": 0.8845482176127306,
-        "A": 0.9065913203736985
+        "X": 0.814717352665207,
+        "T": 1.0,
+        "N": 1.0,
+        "B": 1.0,
+        "A": 1.0
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -10132,17 +10153,17 @@
         "connector",
         "agent"
       ],
-      "success_count": 2,
+      "success_count": 8,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.5769779484550399,
-        "T": 0.6628791932,
-        "N": 0.622952,
-        "B": 0.6348835664,
-        "A": 0.6301720695584
+        "X": 0.7185157821161412,
+        "T": 0.9766985986398441,
+        "N": 0.8476020959809861,
+        "B": 0.8975284584822316,
+        "A": 0.8878699790392613
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -10171,17 +10192,17 @@
         "connector",
         "descriptor"
       ],
-      "success_count": 1,
+      "success_count": 4,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.540951357278,
-        "T": 0.585563204,
-        "N": 0.5654,
-        "B": 0.57143576,
-        "A": 0.5753828
+        "X": 0.6366064277811676,
+        "T": 0.7929517512874878,
+        "N": 0.7181660287999999,
+        "B": 0.74495604294272,
+        "A": 0.7611379746175999
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -10242,17 +10263,17 @@
         "agent",
         "action"
       ],
-      "success_count": 2,
+      "success_count": 3,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.57695600626568,
-        "T": 0.66082781492,
-        "N": 0.622952,
-        "B": 0.6352844984,
-        "A": 0.6431564168
+        "X": 0.6086693969057984,
+        "T": 0.7366058151296,
+        "N": 0.6713940199999999,
+        "B": 0.698953318592,
+        "A": 0.712977646784
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -10705,17 +10726,17 @@
         "descriptor",
         "agent"
       ],
-      "success_count": 4,
+      "success_count": 6,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6366005139326781,
-        "T": 0.8065214066731519,
-        "N": 0.7148864751564801,
-        "B": 0.7583078056332799,
-        "A": 0.7798371535999999
+        "X": 0.6827455465208259,
+        "T": 0.9115447312476889,
+        "N": 0.7893600863611782,
+        "B": 0.8461307782824119,
+        "A": 0.8745408549478398
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -11015,17 +11036,17 @@
         "connector",
         "agent"
       ],
-      "success_count": 3,
+      "success_count": 6,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.6086961568555519,
-        "T": 0.7459794448159999,
-        "N": 0.6735977599999999,
-        "B": 0.7093350533120001,
-        "A": 0.6988136887533439
+        "X": 0.682777372471681,
+        "T": 0.898833079035249,
+        "N": 0.7918997727027198,
+        "B": 0.8359607019306354,
+        "A": 0.8163873246241669
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -11167,6 +11188,428 @@
       "generation": 0,
       "compression_score": 0.2857142857142857,
       "total_tokens_avg": 8.0
+    },
+    "action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent_descriptor_agent_action_object_descriptor_connector_descriptor": {
+      "pattern_id": "action_agent_action_agent_action_object_agent_action_object_descriptor_action_connector_agent_descriptor_agent_action_object_descriptor_connector_descriptor",
+      "role_sequence": [
+        "action",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "descriptor"
+      ],
+      "success_count": 4,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.6365863275931619,
+        "T": 0.789662153125568,
+        "N": 0.7181660287999999,
+        "B": 0.74317291860224,
+        "A": 0.7580051074726399
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          16
+        ],
+        [
+          3,
+          19
+        ],
+        [
+          3,
+          27
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 34.0
+    },
+    "action_object_descriptor_action_object_descriptor_action_connector_agent_descriptor_connector_action_object_descriptor_connector_action_object_descriptor_action_object_descriptor_action_connector_agent_action_descriptor_connector_action_descriptor_agent_descriptor": {
+      "pattern_id": "action_object_descriptor_action_object_descriptor_action_connector_agent_descriptor_connector_action_object_descriptor_connector_action_object_descriptor_action_object_descriptor_action_connector_agent_action_descriptor_connector_action_descriptor_agent_descriptor",
+      "role_sequence": [
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "descriptor",
+        "connector",
+        "action",
+        "descriptor",
+        "agent",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540945947468,
+        "T": 0.585996455,
+        "N": 0.5654,
+        "B": 0.5723543,
+        "A": 0.57627992
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          17,
+          19
+        ],
+        [
+          17,
+          42
+        ],
+        [
+          17,
+          45
+        ],
+        [
+          17,
+          50
+        ],
+        [
+          17,
+          55
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 58.0
+    },
+    "action_object_connector_action_object_descriptor_connector_action_connector_agent": {
+      "pattern_id": "action_object_connector_action_object_descriptor_connector_action_connector_agent",
+      "role_sequence": [
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "action",
+        "connector",
+        "agent"
+      ],
+      "success_count": 2,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.57695994460736,
+        "T": 0.6629852599999999,
+        "N": 0.622952,
+        "B": 0.636520004,
+        "A": 0.6306980380112001
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 16.0
+    },
+    "action_object_connector_action_object_descriptor_connector_action_connector_agent_descriptor_connector_action_object_connector_action_object_descriptor_connector_action_connector_agent_action_object_descriptor": {
+      "pattern_id": "action_object_connector_action_object_descriptor_connector_action_connector_agent_descriptor_connector_action_object_connector_action_object_descriptor_connector_action_connector_agent_action_object_descriptor",
+      "role_sequence": [
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "action",
+        "connector",
+        "agent",
+        "descriptor",
+        "connector",
+        "action",
+        "object",
+        "connector",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.540935127848,
+        "T": 0.585668981,
+        "N": 0.5654,
+        "B": 0.57242612,
+        "A": 0.57544076
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          14,
+          19
+        ],
+        [
+          14,
+          32
+        ],
+        [
+          14,
+          35
+        ],
+        [
+          14,
+          36
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 45.0
+    },
+    "agent_action_object_descriptor_agent_descriptor_action_descriptor": {
+      "pattern_id": "agent_action_object_descriptor_agent_descriptor_action_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "agent",
+        "descriptor",
+        "action",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.54093620981,
+        "T": 0.5891915,
+        "N": 0.5654,
+        "B": 0.57476342,
+        "A": 0.5649219293
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 8.0
+    },
+    "agent_action_object_descriptor_action_object_descriptor_connector_agent": {
+      "pattern_id": "agent_action_object_descriptor_action_object_descriptor_connector_agent",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent"
+      ],
+      "success_count": 3,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.608662157281664,
+        "T": 0.7472895077407999,
+        "N": 0.6735977599999999,
+        "B": 0.7078638894079999,
+        "A": 0.697797622503488
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          16
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 22.0
+    },
+    "agent_action_agent_action_object_descriptor_connector_agent_action_object_descriptor_action_object": {
+      "pattern_id": "agent_action_agent_action_object_descriptor_connector_agent_action_object_descriptor_action_object",
+      "role_sequence": [
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "463b74e6"
+      ],
+      "constraint_scores": {
+        "X": 0.561123451772,
+        "T": 0.59321972,
+        "N": 0.5654,
+        "B": 0.5783582,
+        "A": 0.6419615359999999
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 22.0
+    },
+    "agent_action_object_descriptor_action_object_descriptor_connector_agent_descriptor_action_object_agent_connector_agent_action_object_descriptor_action_object_descriptor_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor": {
+      "pattern_id": "agent_action_object_descriptor_action_object_descriptor_connector_agent_descriptor_action_object_agent_connector_agent_action_object_descriptor_action_object_descriptor_connector_agent_connector_action_object_agent_action_object_agent_action_connector_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "descriptor",
+        "action",
+        "object",
+        "agent",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "descriptor",
+        "action",
+        "object",
+        "descriptor",
+        "connector",
+        "agent",
+        "connector",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "connector",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.54093620981,
+        "T": 0.593825402,
+        "N": 0.5654,
+        "B": 0.57886724,
+        "A": 0.56919686864
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [
+        [
+          0,
+          16
+        ],
+        [
+          0,
+          44
+        ],
+        [
+          0,
+          50
+        ],
+        [
+          0,
+          56
+        ],
+        [
+          0,
+          59
+        ]
+      ],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142857,
+      "total_tokens_avg": 65.0
     }
   },
   "discourse": {
@@ -11176,7 +11619,7 @@
         "question",
         "question"
       ],
-      "success_count": 1338,
+      "success_count": 1344,
       "fail_count": 0,
       "promoted": true
     },
@@ -11186,7 +11629,7 @@
         "question",
         "statement"
       ],
-      "success_count": 2870,
+      "success_count": 2972,
       "fail_count": 0,
       "promoted": true
     },
@@ -11196,7 +11639,7 @@
         "statement",
         "question"
       ],
-      "success_count": 2930,
+      "success_count": 3032,
       "fail_count": 0,
       "promoted": true
     },
@@ -11206,7 +11649,7 @@
         "statement",
         "statement"
       ],
-      "success_count": 3775,
+      "success_count": 3897,
       "fail_count": 0,
       "promoted": true
     },
@@ -11246,7 +11689,7 @@
         "answer",
         "statement"
       ],
-      "success_count": 51,
+      "success_count": 58,
       "fail_count": 0,
       "promoted": true
     },
@@ -11266,7 +11709,7 @@
         "statement",
         "answer"
       ],
-      "success_count": 18,
+      "success_count": 26,
       "fail_count": 0,
       "promoted": true
     },
@@ -11276,10 +11719,10 @@
         "answer",
         "question"
       ],
-      "success_count": 4,
+      "success_count": 5,
       "fail_count": 0,
       "promoted": false
     }
   },
-  "saved_at": 1781299559.6922686
+  "saved_at": 1781300305.3300493
 }

@@ -1,14 +1,6 @@
 {
-  "updated_at": 1781298678.4305766,
+  "updated_at": 1781300495.6098173,
   "events": [
-    {
-      "timestamp": 1781247346.3394008,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:898cafe4fdd1",
-      "axis": "X",
-      "summary": "Manual code change in aurora_os/build/rootfs/usr/local/lib/python3.11/site-packages/wheel/vendored/packaging/markers.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781247346.3421082,
       "source": "aurora.boot",
@@ -1918,6 +1910,14 @@
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "MC:8a69a3718ec9",
+      "axis": "X",
+      "summary": "Manual code change in aurora_grammar_engine.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781300495.3502111,
+      "source": "aurora.save",
+      "kind": "manual_code_assimilation",
+      "id": "MC:d0cb88a7cba4",
       "axis": "X",
       "summary": "Manual code change in aurora_grammar_engine.py formed a new lineage branch"
     }

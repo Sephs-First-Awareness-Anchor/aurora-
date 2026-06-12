@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1781294386.1927924,
-  "generation": 1533,
-  "genome_version": 1533,
+  "timestamp": 1781300494.5816152,
+  "generation": 1834,
+  "genome_version": 1834,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -39,70 +39,96 @@
     "frame:action",
     "axis:agency",
     "frame:action",
-    "axis:agency"
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.4415,
-    "emotional_expressiveness": 0.4312,
-    "verbosity": 0.39,
-    "introspection": 0.468,
-    "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "curiosity": 0.5393,
+    "caution": 0.41,
+    "emotional_expressiveness": 0.39,
+    "verbosity": 0.3978,
+    "introspection": 0.4865,
+    "pattern_sensitivity": 0.4165,
+    "social_engagement": 0.3959,
+    "energy_conservation": 0.3217
   },
-  "personality_drift": 0.7853,
+  "personality_drift": 0.7423,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.7104421173272762,
-      "precision": 0.5857184615447929,
-      "depth": 0.7538563057897488,
-      "confidence": 0.6349476666223074
+      "warmth": 0.6158017489520119,
+      "precision": 0.6942622185107095,
+      "depth": 0.969521659861812,
+      "confidence": 0.9928311044337498
     },
     "cognitive": {
-      "curiosity": 0.908735153729651,
-      "pattern_matching": 0.7597294595071534,
-      "abstraction": 1.0,
-      "risk_assessment": 0.541353656255131
+      "curiosity": 0.6607493310565192,
+      "pattern_matching": 0.7772738038290401,
+      "abstraction": 0.6311381087596181,
+      "risk_assessment": 0.9929351689756013
     },
     "social": {
-      "empathy": 0.6559876176252513,
-      "trust_extension": 0.5345811365962899,
-      "boundary_maintenance": 0.6907051962583319,
-      "engagement": 0.7508949682823117
+      "empathy": 0.9991811894856164,
+      "trust_extension": 0.9243053405919895,
+      "boundary_maintenance": 0.6545405288051908,
+      "engagement": 0.9635824984787779
     }
   },
   "governance_stats": {
-    "total_nodes": 170,
+    "total_nodes": 474,
     "layers": {
       "DNA": 0,
-      "ENERGY": 170,
+      "ENERGY": 474,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 170,
+    "total_ingested": 474,
     "total_promoted": 0,
     "violations_blocked": 0,
-    "axis_conflicts": {}
+    "axis_conflicts": {
+      "existence": 2
+    }
   },
-  "simulation_epochs": 18,
-  "total_episodes": 24,
-  "understanding_shards": 18,
+  "simulation_epochs": 26,
+  "total_episodes": 64,
+  "understanding_shards": 30,
   "what_aurora_learned": [
-    "When I use direct clarity, conversations tend to deepen",
     "",
-    "When I use curious inquiry, conversations tend to deepen",
-    "When I use thoughtful reflection, conversations tend to deepen",
-    "Warm acknowledgment can create tension \u2014 use carefully",
-    "When I use metaphor usage, conversations tend to deepen",
+    "",
     "When I use warm acknowledgment, conversations tend to deepen",
-    "When I use concrete example, conversations tend to deepen",
-    ""
+    "",
+    "When I use thoughtful reflection, conversations tend to deepen",
+    "Metaphor usage can create tension \u2014 use carefully",
+    "Curious inquiry can create tension \u2014 use carefully",
+    "Warm acknowledgment can create tension \u2014 use carefully",
+    "Direct clarity can create tension \u2014 use carefully",
+    "Direct clarity can create tension \u2014 use carefully"
   ],
-  "time_dilation": 3000.0,
-  "stability_state": "stable",
-  "_checksum": "e8f20b0ae5b2"
+  "time_dilation": 3967.499999999999,
+  "stability_state": "optimal",
+  "_checksum": "c5f727875310"
 }

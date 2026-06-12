@@ -1,28 +1,38 @@
 {
-  "original": "I understand meaning kinds. I did am feel.",
+  "original": "I am do work. I meaning is moment.",
   "candidate": "",
-  "selected": "I understand meaning kinds. I did am feel.",
+  "selected": "I am do work. I meaning is moment.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.74,
+  "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.292,
+  "original_pressure": 0.316,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.708,
+  "pressure_relief": -0.684,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Tell me about yourself.",
+    "prompt_excerpt": "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
     "input_interpretation": {
-      "raw_prompt": "Tell me about yourself.",
-      "intent_hint": "self_description_request",
+      "raw_prompt": "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
+      "intent_hint": "statement_or_context",
       "topic_terms": [
-        "yourself"
+        "sure",
+        "answer",
+        "while",
+        "being",
+        "explicit",
+        "uncertainty",
+        "confidence",
+        "that's"
       ],
-      "entities": []
+      "entities": [
+        "Sure",
+        "Answer"
+      ]
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781299559.690014,
+    "timestamp": 1781300132.9401124,
     "min_relief_used": 0.035
   }
 }
