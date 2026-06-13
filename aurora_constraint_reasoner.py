@@ -721,13 +721,21 @@ class ConstraintReasoner:
         Read the IVM lattice's current global polarity as a 5D axis profile.
         Falls back to dimensional pressure vector, then to neutral (0.5).
         """
-        # IVM global polarity — signed [-1, +1]; normalise to [0, 1]
+        # IVM global polarity — signed [-1, +1]; normalise to [0, 1].
+        # IVM uses long axis names (existence/temporal/energy/boundary/agency),
+        # not the short constraint names (X/T/N/B/A). Map explicitly.
+        _IVM_LONG = ("existence", "temporal", "energy", "boundary", "agency")
         if self._lattice is not None and hasattr(self._lattice, "get_global_polarity"):
             try:
                 pol = self._lattice.get_global_polarity()
                 if pol:
-                    return {ax: round(min(1.0, max(0.0, (float(pol.get(ax, 0.0)) + 1.0) / 2.0)), 3)
-                            for ax in _AXES}
+                    profile = {
+                        ax: round(min(1.0, max(0.0, (float(pol.get(long, 0.0)) + 1.0) / 2.0)), 3)
+                        for ax, long in zip(_AXES, _IVM_LONG)
+                    }
+                    # Only return if any axis has a non-neutral value
+                    if any(abs(v - 0.5) > 0.01 for v in profile.values()):
+                        return profile
             except Exception:
                 pass
         # Dimensional pressure vector — unsigned [0, 1]

@@ -38,6 +38,7 @@ import hashlib
 import subprocess
 import importlib.util
 import shutil
+import math
 from pathlib import Path
 import signal
 import threading
@@ -19056,6 +19057,8 @@ def boot_aurora(
                             decision.action_taken = True
                             decision.resolved = True
                             decision.notes = "resolved internally via working memory"
+                            _tc = systems.get('_seek_stats')
+                            if _tc is not None: _tc['internal'] = _tc.get('internal', 0) + 1
                             return
                     except Exception:
                         pass
@@ -19081,6 +19084,8 @@ def boot_aurora(
                 decision.action_taken = True
                 decision.resolved = True
                 decision.notes = "resolved via self-relation — structural ground, no external needed"
+                _tc = systems.get('_seek_stats')
+                if _tc is not None: _tc['self_relation'] = _tc.get('self_relation', 0) + 1
                 return
 
             # ── Step 2c: External — Poedex internal Observer first ────────────
@@ -19111,8 +19116,12 @@ def boot_aurora(
                 decision.action_taken = True
                 decision.resolved = True
                 decision.notes = f"external retrieval seeded to OETS ({len(_result)} chars)"
+                _tc = systems.get('_seek_stats')
+                if _tc is not None: _tc['external'] = _tc.get('external', 0) + 1
             else:
                 decision.notes = "seek exhausted — no internal, self-relational, or external resolution"
+                _tc = systems.get('_seek_stats')
+                if _tc is not None: _tc['exhausted'] = _tc.get('exhausted', 0) + 1
 
         _warp_field.register_pathway_handler(_WarpPathway.REVISE_MODEL,       _h_revise_model)
         _warp_field.register_pathway_handler(_WarpPathway.GENERATE_FORM,      _h_generate_form)
@@ -20340,6 +20349,133 @@ def boot_aurora(
 # TRAINING  Warm Up Aurora's Expression Ecology
 # ============================================================================
 
+def _update_ivm_from_epoch(
+    systems: Dict[str, Any],
+    epoch_result: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Bridge training outcomes to IVM axis state.
+
+    Uses direct phase-setting (EMA blend per epoch) rather than inject_stimulus.
+    IVM axes boot at phase=0.0 (polarity=1.0 max positive). Velocity injections
+    barely move the phase from that starting point; directly targeting the correct
+    phase lets axes converge to an honest reflection of training scores within a
+    few epochs.
+
+    score [0, 1] → target_polarity = score*2 - 1 → target_phase = acos(target_polarity)
+    new_phase = current_phase + α*(target_phase - current_phase)   [α = 0.35/epoch]
+
+    At fitness=0.25 this gives:  polarity≈-0.50 → normalized ≈ 0.25 (honest failure)
+    At fitness=0.80 this gives:  polarity≈+0.60 → normalized ≈ 0.80 (honest progress)
+    """
+    lattice = systems.get('lattice')
+    if lattice is None or not hasattr(lattice, 'vertices'):
+        return
+
+    # Map training dimensions to IVM long-name axes
+    _DIM_TO_AXIS: Dict[str, str] = {
+        'contradiction_handling':      'existence',
+        'self_expression':             'existence',
+        'context_carryover':           'temporal',
+        'multi_turn_stability':        'temporal',
+        'semantic_precision':          'energy',
+        'coherence_maintenance':       'boundary',
+        'uncertainty_signaling':       'boundary',
+        'relational_depth':            'boundary',
+        'adaptive_strategy_selection': 'agency',
+        'perspective_integration':     'agency',
+    }
+
+    # Accumulate per-axis score samples
+    axis_scores: Dict[str, List[float]] = {}
+
+    fitness = float(epoch_result.get('avg_fitness', 0.5) or 0.5)
+    axis_scores.setdefault('existence', []).append(fitness)
+
+    for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+        ax = _DIM_TO_AXIS.get(dim)
+        if ax is not None:
+            axis_scores.setdefault(ax, []).append(float(score or 0.0))
+
+    # Seed axes with no dimension-specific data from overall fitness so they
+    # don't stay permanently at boot-time 1.0 (phase=0.0). Uses half the EMA
+    # weight so dimension scores dominate when present.
+    _ALL_AXES = ('existence', 'temporal', 'energy', 'boundary', 'agency')
+    for ax_long in _ALL_AXES:
+        if ax_long not in axis_scores:
+            axis_scores[ax_long] = [fitness]
+
+    _ALPHA = 0.35   # EMA convergence rate per epoch
+    try:
+        axes = lattice.vertices.axes
+        for ax_long, scores in axis_scores.items():
+            if ax_long not in axes:
+                continue
+            avg_score = sum(scores) / len(scores)
+            # score [0,1] → polarity [-1,+1]; clamp away from ±1 (acos undefined)
+            target_polarity = max(-0.995, min(0.995, avg_score * 2.0 - 1.0))
+            target_phase = math.acos(target_polarity)
+            current_phase = float(getattr(axes[ax_long], 'phase', 0.0))
+            axes[ax_long].phase = current_phase + _ALPHA * (target_phase - current_phase)
+            # Zero velocity — phase moved directly, no residual drift
+            if hasattr(axes[ax_long], 'angular_velocity'):
+                axes[ax_long].angular_velocity = 0.0
+
+        # Refresh polarity cache so get_global_polarity() returns updated values
+        if hasattr(lattice, 'compute_global_polarity'):
+            lattice.compute_global_polarity()
+        elif hasattr(lattice, 'vertices') and hasattr(lattice.vertices, 'compute_global_polarity'):
+            lattice.vertices.compute_global_polarity()
+    except Exception:
+        pass
+
+
+def _seed_oets_from_failpoints(
+    systems: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Seed failing-dimension concepts into the OETS relational web.
+
+    When Aurora consistently fails context_carryover, she needs to have
+    'continuity' and 'context' in her relational web so she can build
+    understanding of those concepts from her existing knowledge base.
+    Without seeding, seeks for these concepts always go external and
+    never compound internally.
+    """
+    try:
+        perc = systems.get('perception')
+        oets = getattr(perc, 'oets', None) if perc else None
+        web  = getattr(oets, 'web', None) if oets else None
+        if web is None or not hasattr(web, 'add_node'):
+            return
+    except Exception:
+        return
+
+    _DIM_CONCEPTS = {
+        'contradiction_handling':      ['contradiction', 'existence_clarity', 'consistency'],
+        'context_carryover':           ['continuity', 'context', 'carryover'],
+        'coherence_maintenance':       ['coherence', 'boundary_clarity', 'structure'],
+        'adaptive_strategy_selection': ['adaptation', 'strategy', 'flexibility'],
+        'semantic_precision':          ['precision', 'clarity', 'meaning'],
+        'perspective_integration':     ['perspective', 'integration', 'viewpoint'],
+        'multi_turn_stability':        ['stability', 'continuity', 'consistency'],
+        'uncertainty_signaling':       ['uncertainty', 'boundary', 'signal'],
+        'relational_depth':            ['relation', 'depth', 'connection'],
+        'self_expression':             ['expression', 'self', 'voice'],
+    }
+
+    for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+        score = float(score or 0)
+        valence = round((score - 0.5) * 2.0, 3)   # -1.0 (complete fail) → +1.0 (mastered)
+        for concept in _DIM_CONCEPTS.get(dim, [dim[:32]]):
+            try:
+                web.add_node(concept[:40], role="training_gap", valence=valence)
+            except Exception:
+                pass
+
+
 def train(systems: Dict[str, Any], epochs: int = 10,
           episodes_per_epoch: int = 8,
           turns_per_episode: int = 5,
@@ -20353,6 +20489,15 @@ def train(systems: Dict[str, Any], epochs: int = 10,
     perception = systems['perception']
     identity = systems['identity']
     ExistenceMode = systems['ExistenceMode']
+
+    # ── Temporary dev telemetry ───────────────────────────────────────────────
+    _dev_telem = None
+    try:
+        from aurora_dev_telemetry import DevTelemetry as _DevTelemetry
+        _dev_telem = _DevTelemetry(systems)
+    except Exception:
+        pass
+    # ─────────────────────────────────────────────────────────────────────────
 
     if verbose:
         print(f"  [TRAIN] Running {epochs} epochs ({episodes_per_epoch} episodes each)")
@@ -20407,6 +20552,10 @@ def train(systems: Dict[str, Any], epochs: int = 10,
         result['response_pressure_specs'] = int(queued_specs or 0)
         result['dream_lesson_specs'] = int(queued_lesson_specs or 0)
         result['failpoint_update'] = dict(failpoint_update or {})
+
+        # Bridge: push epoch scores into IVM axis state + seed OETS with gap concepts
+        _update_ivm_from_epoch(systems, result, failpoint_update)
+        _seed_oets_from_failpoints(systems, failpoint_update)
         quasiarch = systems.get('quasiarch_observer')
         if quasiarch is not None and hasattr(quasiarch, 'record_training_epoch'):
             try:
@@ -20433,6 +20582,13 @@ def train(systems: Dict[str, Any], epochs: int = 10,
             result['lineage_emergence'] = []
         except Exception:
             result['social_api_reward'] = {}
+
+        # Record telemetry snapshot for this epoch
+        if _dev_telem is not None:
+            try:
+                _dev_telem.record(epoch + 1, result)
+            except Exception:
+                pass
 
         if verbose:
             fitness = result.get('avg_fitness', 0)
@@ -20473,6 +20629,13 @@ def train(systems: Dict[str, Any], epochs: int = 10,
                     f"           social_api_reward=+{float(social_reward.get('added_minutes', 0.0) or 0.0):.1f}m  "
                     f"time_left={float(social_reward.get('time_remaining_minutes', 0.0) or 0.0):.1f}m"
                 )
+
+    # Print telemetry diagnostic report
+    if _dev_telem is not None:
+        try:
+            print(_dev_telem.report())
+        except Exception:
+            pass
 
     if verbose:
         print()
