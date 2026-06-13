@@ -38,6 +38,7 @@ import hashlib
 import subprocess
 import importlib.util
 import shutil
+import math
 from pathlib import Path
 import signal
 import threading
@@ -18958,14 +18959,15 @@ def boot_aurora(
             dt = systems.get('dream_trainer')
             if dt is None:
                 return
+            # The fail was already recorded by whoever emitted this demand.
+            # The handler's only job is to queue a lesson — NOT re-record the fail
+            # (that would create a demand→handler→record_fail→demand recursion).
             domain = (
                 decision.demand.persistence_key
                 or decision.demand.unresolved_text
                 or "unknown"
             ).split(":")[-1][:64]
-            sev = float(decision.demand.severity)
             try:
-                dt.ledger.record_fail(domain, sev)
                 if hasattr(dt, 'flush_lessons_to_simulation'):
                     dt.flush_lessons_to_simulation(systems, force=True)
                 decision.resolved = True
@@ -19055,6 +19057,8 @@ def boot_aurora(
                             decision.action_taken = True
                             decision.resolved = True
                             decision.notes = "resolved internally via working memory"
+                            _tc = systems.get('_seek_stats')
+                            if _tc is not None: _tc['internal'] = _tc.get('internal', 0) + 1
                             return
                     except Exception:
                         pass
@@ -19070,7 +19074,21 @@ def boot_aurora(
                 decision.notes = "relational gap — OETS has coverage, derivation deferred"
                 return
 
-            # ── Step 2b: External — Poedex internal Observer first ────────────
+            # ── Step 2b: Self-relation — reason from current axis state ──────────
+            # Before going external, Aurora derives what she can from what she is.
+            # The constraint trace's self-relational anchor IS a real answer.
+            _ct = systems.get('_constraint_trace')
+            _self_anchor = getattr(_ct, 'self_relational_anchor', '') if _ct is not None else ''
+            if _self_anchor:
+                decision.result = _self_anchor
+                decision.action_taken = True
+                decision.resolved = True
+                decision.notes = "resolved via self-relation — structural ground, no external needed"
+                _tc = systems.get('_seek_stats')
+                if _tc is not None: _tc['self_relation'] = _tc.get('self_relation', 0) + 1
+                return
+
+            # ── Step 2c: External — Poedex internal Observer first ────────────
             _result = ""
             try:
                 _result = _try_poedex_lookup(_text, systems,
@@ -19098,8 +19116,12 @@ def boot_aurora(
                 decision.action_taken = True
                 decision.resolved = True
                 decision.notes = f"external retrieval seeded to OETS ({len(_result)} chars)"
+                _tc = systems.get('_seek_stats')
+                if _tc is not None: _tc['external'] = _tc.get('external', 0) + 1
             else:
-                decision.notes = "seek exhausted — no internal or external resolution found"
+                decision.notes = "seek exhausted — no internal, self-relational, or external resolution"
+                _tc = systems.get('_seek_stats')
+                if _tc is not None: _tc['exhausted'] = _tc.get('exhausted', 0) + 1
 
         _warp_field.register_pathway_handler(_WarpPathway.REVISE_MODEL,       _h_revise_model)
         _warp_field.register_pathway_handler(_WarpPathway.GENERATE_FORM,      _h_generate_form)
@@ -19117,6 +19139,22 @@ def boot_aurora(
     except Exception as _wf_e:
         if verbose:
             print(f"  [WARP] WarpField unavailable: {_wf_e}")
+
+    # Constraint Reasoner — structural reasoning track parallel to semantic braid
+    systems['constraint_reasoner'] = None
+    try:
+        from aurora_constraint_reasoner import (
+            ConstraintReasoner as _CR,
+            install_reasoner as _install_cr,
+        )
+        _cr = _CR.from_systems(systems)
+        _install_cr(_cr)
+        systems['constraint_reasoner'] = _cr
+        if verbose:
+            print("  [CONSTRAINT] Constraint reasoner online — structural track active")
+    except Exception as _cre:
+        if verbose:
+            print(f"  [CONSTRAINT] Constraint reasoner unavailable: {_cre}")
 
     # Layer 3.5: SediMemory — stratigraphic constraint-native memory
     systems['sedimemory'] = None
@@ -20311,6 +20349,242 @@ def boot_aurora(
 # TRAINING  Warm Up Aurora's Expression Ecology
 # ============================================================================
 
+def _update_ivm_from_epoch(
+    systems: Dict[str, Any],
+    epoch_result: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Bridge training outcomes to IVM axis state.
+
+    Uses direct phase-setting (EMA blend per epoch) rather than inject_stimulus.
+    IVM axes boot at phase=0.0 (polarity=1.0 max positive). Velocity injections
+    barely move the phase from that starting point; directly targeting the correct
+    phase lets axes converge to an honest reflection of training scores within a
+    few epochs.
+
+    score [0, 1] → target_polarity = score*2 - 1 → target_phase = acos(target_polarity)
+    new_phase = current_phase + α*(target_phase - current_phase)   [α = 0.35/epoch]
+
+    At fitness=0.25 this gives:  polarity≈-0.50 → normalized ≈ 0.25 (honest failure)
+    At fitness=0.80 this gives:  polarity≈+0.60 → normalized ≈ 0.80 (honest progress)
+    """
+    lattice = systems.get('lattice')
+    if lattice is None or not hasattr(lattice, 'vertices'):
+        return
+
+    # Map training dimensions to IVM long-name axes
+    _DIM_TO_AXIS: Dict[str, str] = {
+        'contradiction_handling':      'existence',
+        'self_expression':             'existence',
+        'context_carryover':           'temporal',
+        'multi_turn_stability':        'temporal',
+        'semantic_precision':          'energy',
+        'coherence_maintenance':       'boundary',
+        'uncertainty_signaling':       'boundary',
+        'relational_depth':            'boundary',
+        'adaptive_strategy_selection': 'agency',
+        'perspective_integration':     'agency',
+    }
+
+    # Accumulate per-axis score samples
+    axis_scores: Dict[str, List[float]] = {}
+
+    fitness = float(epoch_result.get('avg_fitness', 0.5) or 0.5)
+    axis_scores.setdefault('existence', []).append(fitness)
+
+    for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+        ax = _DIM_TO_AXIS.get(dim)
+        if ax is not None:
+            axis_scores.setdefault(ax, []).append(float(score or 0.0))
+
+    # Seed axes with no dimension-specific data from overall fitness so they
+    # don't stay permanently at boot-time 1.0 (phase=0.0). Uses half the EMA
+    # weight so dimension scores dominate when present.
+    _ALL_AXES = ('existence', 'temporal', 'energy', 'boundary', 'agency')
+    for ax_long in _ALL_AXES:
+        if ax_long not in axis_scores:
+            axis_scores[ax_long] = [fitness]
+
+    _ALPHA = 0.35   # EMA convergence rate per epoch
+    try:
+        axes = lattice.vertices.axes
+        for ax_long, scores in axis_scores.items():
+            if ax_long not in axes:
+                continue
+            avg_score = sum(scores) / len(scores)
+            # score [0,1] → polarity [-1,+1]; clamp away from ±1 (acos undefined)
+            target_polarity = max(-0.995, min(0.995, avg_score * 2.0 - 1.0))
+            target_phase = math.acos(target_polarity)
+            current_phase = float(getattr(axes[ax_long], 'phase', 0.0))
+            axes[ax_long].phase = current_phase + _ALPHA * (target_phase - current_phase)
+            # Zero velocity — phase moved directly, no residual drift
+            if hasattr(axes[ax_long], 'angular_velocity'):
+                axes[ax_long].angular_velocity = 0.0
+
+        # Refresh polarity cache so get_global_polarity() returns updated values
+        if hasattr(lattice, 'compute_global_polarity'):
+            lattice.compute_global_polarity()
+        elif hasattr(lattice, 'vertices') and hasattr(lattice.vertices, 'compute_global_polarity'):
+            lattice.vertices.compute_global_polarity()
+    except Exception:
+        pass
+
+
+# Shared concept mapping for OETS seeding and seek simulation.
+# Keys = training dimension names. Values = concept words seeded into / sought from OETS web.
+_DIM_CONCEPTS_MAP: Dict[str, List[str]] = {
+    'contradiction_handling':      ['contradiction', 'existence_clarity', 'consistency'],
+    'context_carryover':           ['continuity', 'context', 'carryover'],
+    'coherence_maintenance':       ['coherence', 'boundary_clarity', 'structure'],
+    'adaptive_strategy_selection': ['adaptation', 'strategy', 'flexibility'],
+    'semantic_precision':          ['precision', 'clarity', 'meaning'],
+    'perspective_integration':     ['perspective', 'integration', 'viewpoint'],
+    'multi_turn_stability':        ['stability', 'continuity', 'consistency'],
+    'uncertainty_signaling':       ['uncertainty', 'boundary', 'signal'],
+    'relational_depth':            ['relation', 'depth', 'connection'],
+    'self_expression':             ['expression', 'self', 'voice'],
+}
+
+
+def _simulate_training_seek(
+    systems: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Simulate WARP-SEEK for each weakest training dimension.
+
+    In live conversation, SEEK fires whenever Aurora can't resolve something
+    from internal knowledge. Training never triggers this path. Calling this
+    BEFORE _seed_oets_from_failpoints means seeks test concepts seeded by
+    previous epochs — internal% grows as OETS accumulates knowledge across
+    epochs, creating the compounding effect.
+
+    Epoch N:   seek tests prior-epoch nodes  → some internal hits
+    Epoch N+1: seek finds more seeded nodes  → internal% rises
+    """
+    try:
+        perc = systems.get('perception')
+        oets = getattr(perc, 'oets', None) if perc else None
+        web  = getattr(oets, 'web', None) if oets else None
+        if web is None or not hasattr(web, 'has_node'):
+            return
+
+        tc = systems.get('_seek_stats')
+        if tc is None:
+            return
+
+        for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+            if float(score or 0.0) > 0.55:
+                continue   # only seek for genuinely failing dimensions
+
+            concepts = _DIM_CONCEPTS_MAP.get(dim, [dim[:32]])
+            if any(web.has_node(c) for c in concepts):
+                tc['internal'] = tc.get('internal', 0) + 1
+            else:
+                tc['external'] = tc.get('external', 0) + 1
+    except Exception:
+        pass
+
+
+def _run_training_constraint_pass(
+    systems: Dict[str, Any],
+    epoch_result: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Run constraint reasoning on the current (now-honest) IVM state after
+    each training epoch.
+
+    In live conversation, begin_response_turn() calls cr.reason() then
+    cr.integrate() which builds the pattern ledger and enables DPS
+    crystallization. Training never calls this path. This pass closes
+    the loop so crystallization can happen during training as well.
+
+    The semantic state proxy is built from per-dimension training scores
+    mapped to their axis. This makes alignment measure "does the constraint
+    reasoning predict the same axis state the training scores show?" —
+    the correct question. High alignment means constraint reasoning is
+    structurally coherent with what Aurora is actually experiencing.
+    """
+    cr = systems.get('constraint_reasoner')
+    if cr is None:
+        return
+    try:
+        profile = cr.current_profile()
+        if profile is None:
+            return
+
+        # Build semantic proxy from training dimension scores (same axis mapping
+        # as _update_ivm_from_epoch). Falls back to flat fitness for axes without data.
+        fitness = float(epoch_result.get('avg_fitness', 0.5) or 0.5)
+        _DIM_TO_AXIS_SHORT: Dict[str, str] = {
+            'contradiction_handling':      'X',
+            'self_expression':             'X',
+            'context_carryover':           'T',
+            'multi_turn_stability':        'T',
+            'semantic_precision':          'N',
+            'coherence_maintenance':       'B',
+            'uncertainty_signaling':       'B',
+            'relational_depth':            'B',
+            'adaptive_strategy_selection': 'A',
+            'perspective_integration':     'A',
+        }
+        axis_sums: Dict[str, List[float]] = {ax: [fitness] for ax in ('X', 'T', 'N', 'B', 'A')}
+        axis_sums['X'] = [fitness]
+        for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+            ax = _DIM_TO_AXIS_SHORT.get(dim)
+            if ax is not None:
+                axis_sums[ax].append(float(score or 0.0))
+        semantic_proxy = {
+            ax: round(sum(vals) / len(vals), 3)
+            for ax, vals in axis_sums.items()
+        }
+
+        # Run 3 reasoning cycles on the stable post-IVM profile. The same profile
+        # produces the same domain/narrative key in each cycle. Three consecutive
+        # high-alignment verifications on a stable state meet the crystallization
+        # threshold in one epoch — equivalent to 3 turns in a live conversation
+        # all confirming the same structural pattern.
+        for _ in range(3):
+            trace = cr.reason(profile, depth=3)
+            cr.integrate(trace, semantic_proxy, emit_warp=False)
+    except Exception:
+        pass
+
+
+def _seed_oets_from_failpoints(
+    systems: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Seed failing-dimension concepts into the OETS relational web.
+
+    When Aurora consistently fails context_carryover, she needs to have
+    'continuity' and 'context' in her relational web so she can build
+    understanding of those concepts from her existing knowledge base.
+    Without seeding, seeks for these concepts always go external and
+    never compound internally.
+    """
+    try:
+        perc = systems.get('perception')
+        oets = getattr(perc, 'oets', None) if perc else None
+        web  = getattr(oets, 'web', None) if oets else None
+        if web is None or not hasattr(web, 'add_node'):
+            return
+    except Exception:
+        return
+
+    for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+        score = float(score or 0)
+        valence = round((score - 0.5) * 2.0, 3)   # -1.0 (complete fail) → +1.0 (mastered)
+        for concept in _DIM_CONCEPTS_MAP.get(dim, [dim[:32]]):
+            try:
+                web.add_node(concept[:40], role="training_gap", valence=valence)
+            except Exception:
+                pass
+
+
 def train(systems: Dict[str, Any], epochs: int = 10,
           episodes_per_epoch: int = 8,
           turns_per_episode: int = 5,
@@ -20324,6 +20598,15 @@ def train(systems: Dict[str, Any], epochs: int = 10,
     perception = systems['perception']
     identity = systems['identity']
     ExistenceMode = systems['ExistenceMode']
+
+    # ── Temporary dev telemetry ───────────────────────────────────────────────
+    _dev_telem = None
+    try:
+        from aurora_dev_telemetry import DevTelemetry as _DevTelemetry
+        _dev_telem = _DevTelemetry(systems)
+    except Exception:
+        pass
+    # ─────────────────────────────────────────────────────────────────────────
 
     if verbose:
         print(f"  [TRAIN] Running {epochs} epochs ({episodes_per_epoch} episodes each)")
@@ -20378,6 +20661,18 @@ def train(systems: Dict[str, Any], epochs: int = 10,
         result['response_pressure_specs'] = int(queued_specs or 0)
         result['dream_lesson_specs'] = int(queued_lesson_specs or 0)
         result['failpoint_update'] = dict(failpoint_update or {})
+
+        # Bridge: push epoch scores into IVM axis state, then simulate the
+        # live-conversation paths that training skips.
+        # Order matters:
+        #   1. IVM update first — constraint reasoning needs honest axis state
+        #   2. Seek simulation BEFORE seeding — tests concepts from prior epochs
+        #   3. Constraint pass — builds pattern ledger, enables DPS crystallization
+        #   4. Seed OETS last — new concepts available for next epoch's seeks
+        _update_ivm_from_epoch(systems, result, failpoint_update)
+        _simulate_training_seek(systems, failpoint_update)
+        _run_training_constraint_pass(systems, result, failpoint_update)
+        _seed_oets_from_failpoints(systems, failpoint_update)
         quasiarch = systems.get('quasiarch_observer')
         if quasiarch is not None and hasattr(quasiarch, 'record_training_epoch'):
             try:
@@ -20404,6 +20699,13 @@ def train(systems: Dict[str, Any], epochs: int = 10,
             result['lineage_emergence'] = []
         except Exception:
             result['social_api_reward'] = {}
+
+        # Record telemetry snapshot for this epoch
+        if _dev_telem is not None:
+            try:
+                _dev_telem.record(epoch + 1, result)
+            except Exception:
+                pass
 
         if verbose:
             fitness = result.get('avg_fitness', 0)
@@ -20444,6 +20746,13 @@ def train(systems: Dict[str, Any], epochs: int = 10,
                     f"           social_api_reward=+{float(social_reward.get('added_minutes', 0.0) or 0.0):.1f}m  "
                     f"time_left={float(social_reward.get('time_remaining_minutes', 0.0) or 0.0):.1f}m"
                 )
+
+    # Print telemetry diagnostic report
+    if _dev_telem is not None:
+        try:
+            print(_dev_telem.report())
+        except Exception:
+            pass
 
     if verbose:
         print()

@@ -18,7 +18,12 @@
     "tracked_surface_emotion": "neutral",
     "tracked_surface_intensity": 0.0
   },
-  "instability_markers": [],
+  "instability_markers": [
+    {
+      "label": "paradox_active",
+      "severity": 0.8
+    }
+  ],
   "law_bindings": [],
   "origin_systems": [
     "incoming_input",
@@ -54,9 +59,9 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.5613,
+  "readiness": 0.4813,
   "recalled_fragments": [
-    "What are you?"
+    "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -65,7 +70,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1781300491.8489966,
+  "saved_at": 1781347006.2569773,
   "sub_crests": [
     {
       "axis": "X",
@@ -88,9 +93,9 @@
       "label": "steady_continuation"
     },
     {
-      "axis": "N",
-      "intensity": 1.0,
-      "label": "novelty"
+      "axis": "B",
+      "intensity": 0.65,
+      "label": "contradiction"
     },
     {
       "axis": "T",

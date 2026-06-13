@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1781294386.1927924,
-  "generation": 1533,
-  "genome_version": 1533,
+  "timestamp": 1781346895.9920912,
+  "generation": 2768,
+  "genome_version": 2768,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -39,70 +39,89 @@
     "frame:action",
     "axis:agency",
     "frame:action",
-    "axis:agency"
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action",
+    "axis:agency",
+    "frame:action"
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.4415,
-    "emotional_expressiveness": 0.4312,
+    "curiosity": 0.5404,
+    "caution": 0.4139,
+    "emotional_expressiveness": 0.4129,
     "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
+    "pattern_sensitivity": 0.429,
+    "social_engagement": 0.4026,
     "energy_conservation": 0.312
   },
-  "personality_drift": 0.7853,
+  "personality_drift": 0.7311,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.7104421173272762,
-      "precision": 0.5857184615447929,
-      "depth": 0.7538563057897488,
-      "confidence": 0.6349476666223074
+      "warmth": 0.6043467031831938,
+      "precision": 0.7143744152126381,
+      "depth": 0.6224301182051164,
+      "confidence": 0.6406629084942014
     },
     "cognitive": {
-      "curiosity": 0.908735153729651,
-      "pattern_matching": 0.7597294595071534,
-      "abstraction": 1.0,
-      "risk_assessment": 0.541353656255131
+      "curiosity": 1.0,
+      "pattern_matching": 0.702955130182408,
+      "abstraction": 0.9661073126875421,
+      "risk_assessment": 0.7662184874227392
     },
     "social": {
-      "empathy": 0.6559876176252513,
-      "trust_extension": 0.5345811365962899,
-      "boundary_maintenance": 0.6907051962583319,
-      "engagement": 0.7508949682823117
+      "empathy": 0.6771705940907459,
+      "trust_extension": 0.8268858065501633,
+      "boundary_maintenance": 1.0,
+      "engagement": 0.7510864333539065
     }
   },
   "governance_stats": {
-    "total_nodes": 170,
+    "total_nodes": 114,
     "layers": {
       "DNA": 0,
-      "ENERGY": 170,
+      "ENERGY": 114,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 170,
+    "total_ingested": 114,
     "total_promoted": 0,
     "violations_blocked": 0,
-    "axis_conflicts": {}
+    "axis_conflicts": {
+      "existence": 4
+    }
   },
-  "simulation_epochs": 18,
-  "total_episodes": 24,
-  "understanding_shards": 18,
+  "simulation_epochs": 59,
+  "total_episodes": 16,
+  "understanding_shards": 14,
   "what_aurora_learned": [
-    "When I use direct clarity, conversations tend to deepen",
+    "Direct clarity can create tension \u2014 use carefully",
     "",
-    "When I use curious inquiry, conversations tend to deepen",
-    "When I use thoughtful reflection, conversations tend to deepen",
-    "Warm acknowledgment can create tension \u2014 use carefully",
-    "When I use metaphor usage, conversations tend to deepen",
-    "When I use warm acknowledgment, conversations tend to deepen",
-    "When I use concrete example, conversations tend to deepen",
-    ""
+    "When I use metaphor usage, conversations tend to deepen"
   ],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "e8f20b0ae5b2"
+  "_checksum": "3bda4974517f"
 }

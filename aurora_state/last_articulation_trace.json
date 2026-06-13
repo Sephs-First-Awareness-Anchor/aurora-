@@ -1,38 +1,41 @@
 {
-  "original": "I am do work. I meaning is moment.",
+  "original": "I am change sunni. I meaning did mind.",
   "candidate": "",
-  "selected": "I am do work. I meaning is moment.",
+  "selected": "I am change sunni. I meaning did mind.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.74,
   "candidate_score": 0.0,
-  "original_pressure": 0.316,
+  "original_pressure": 0.232,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
+  "pressure_relief": -0.768,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
+    "prompt_excerpt": "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Integrate two perspectives that disagree without colla",
     "input_interpretation": {
-      "raw_prompt": "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Integrate two perspectives that disagree without colla",
+      "intent_hint": "question",
       "topic_terms": [
-        "sure",
-        "answer",
-        "while",
-        "being",
-        "explicit",
-        "uncertainty",
-        "confidence",
-        "that's"
+        "mean",
+        "integrate",
+        "perspectives",
+        "disagree",
+        "without",
+        "collapsing",
+        "either",
+        "mind"
       ],
       "entities": [
-        "Sure",
-        "Answer"
+        "Integrate",
+        "With",
+        "Internal",
+        "Integrate",
+        "With"
       ]
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781300132.9401124,
+    "timestamp": 1781346955.8135247,
     "min_relief_used": 0.035
   }
 }

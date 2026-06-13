@@ -1,61 +1,9 @@
 [
   {
-    "packet_id": "08bf2f77b74b414d9a6089fbbaf35eae",
-    "created_at": 1781300238.4978693,
+    "packet_id": "79647a0906dc4ec8b1aa551079553ced",
+    "created_at": 1781346970.0344203,
     "source": "simulation_live_bridge",
-    "user_input": "Talk to you later.",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "talk"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.61"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "35ce1eeb72724068a10644013f2c8436",
-    "created_at": 1781300251.6136587,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links approach and thoughtful here?",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "approach",
-      "thoughtful",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.57"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3ab0c42bbdb14e268d57ba822ee4857e",
-    "created_at": 1781300264.737583,
-    "source": "simulation_live_bridge",
-    "user_input": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it? [Internal: I'm reasoning through that now: To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?. It adds weight to my present understanding.]",
+    "user_input": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it? [Internal: I understand. I'm thinking about how that relates to what we're discussing.]",
     "aurora_response": "",
     "response_tone": "uncertain",
     "concepts_activated": [
@@ -74,26 +22,54 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.65"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "fef33055747c423b811e9c22e3c981fc",
-    "created_at": 1781300278.2305293,
+    "packet_id": "7e5728adb4834f07999f7ebdf476d304",
+    "created_at": 1781346971.4098911,
     "source": "simulation_live_bridge",
-    "user_input": "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Thoughtful reflection can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ea2b4cafd8ed43539e14ea62d92cae75",
+    "created_at": 1781346973.051098,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links use and corpus here?",
     "aurora_response": "",
     "response_tone": "uncertain",
     "concepts_activated": [
-      "carry",
-      "thread",
-      "next",
-      "step",
-      "without",
-      "losing"
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -110,19 +86,105 @@
     "consumed_at": null
   },
   {
-    "packet_id": "db597b9f6820471fb1006c885081b70a",
-    "created_at": 1781300291.805981,
+    "packet_id": "4c4c3dc9e7a644d6b53db71038076fdd",
+    "created_at": 1781346975.461591,
     "source": "simulation_live_bridge",
-    "user_input": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it? [Internal: I'm reasoning through that now: To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?. It adds weight to my present understanding.]",
+    "user_input": "What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense?. I'm trying to see how that fits into the ",
+    "aurora_response": "interpret, context, starting, present. settle implied.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "9807fb899fb942b0860917c88272ad21",
+    "created_at": 1781346976.9611714,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Thoughtful reflection can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.033,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "243a9f3f7a1a47d0aa1326de940e9330",
+    "created_at": 1781346978.7004535,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links corpus and fragment here?",
     "aurora_response": "",
     "response_tone": "uncertain",
     "concepts_activated": [
-      "clarify",
-      "carry",
-      "thread",
-      "next",
-      "step",
-      "without"
+      "behavior",
+      "links",
+      "corpus",
+      "fragment",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "7493815783c7410a9e18fc88acdd935b",
+    "created_at": 1781346981.1238518,
+    "source": "simulation_live_bridge",
+    "user_input": "What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense?. I'm trying to see how that fits into the ",
+    "aurora_response": "interpret, context, starting, present. settle implied.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -139,8 +201,94 @@
     "consumed_at": null
   },
   {
-    "packet_id": "e662df9356804d5f85a5f5e58e3d9c28",
-    "created_at": 1781300305.2665691,
+    "packet_id": "a3b6de2f6ad94e00ba572dd9283a1470",
+    "created_at": 1781346982.5409806,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Thoughtful reflection can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.033,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "931f077d306745de99c749dab5c4a4e9",
+    "created_at": 1781346984.210949,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "1c762ceb113b41c4ac2e0e2707ae5727",
+    "created_at": 1781346985.8866444,
+    "source": "simulation_live_bridge",
+    "user_input": "To clarify \u2014 Answer while being explicit about uncertainty and confidence.. Does that help frame it? [Internal: I'm reasoning through that now: To clarify \u2014 Answer while being explicit about uncertainty and confidence.. Does that help frame it?. It adds weight to my present understanding.]",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "clarify",
+      "answer",
+      "explicit",
+      "uncertainty",
+      "confidence",
+      "frame"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "7e5ce65065654c96bf03add75103efd1",
+    "created_at": 1781346987.5835369,
     "source": "simulation_live_bridge",
     "user_input": "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
     "aurora_response": "",
@@ -168,18 +316,19 @@
     "consumed_at": null
   },
   {
-    "packet_id": "6cca100e2f7e4485813aa1d492cb8fd5",
-    "created_at": 1781300316.1905537,
+    "packet_id": "fb7a335ac70d467d836260598df36b4c",
+    "created_at": 1781346988.9714317,
     "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Talk to you later.",
-    "aurora_response": "Metaphor usage can create tension \u2014 use carefully",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Thoughtful reflection can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
       "corpus",
       "fragment",
       "context",
-      "talk"
+      "use",
+      "corpus"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -196,16 +345,17 @@
     "consumed_at": null
   },
   {
-    "packet_id": "904702ba4095404990ad96c745f1d648",
-    "created_at": 1781300329.042735,
+    "packet_id": "b366611f4cd843d8916d1aee67c5e8ca",
+    "created_at": 1781346990.690457,
     "source": "simulation_live_bridge",
-    "user_input": "What behavior links talk and you here?",
+    "user_input": "What behavior links use and corpus here?",
     "aurora_response": "",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
       "links",
-      "talk",
+      "use",
+      "corpus",
       "here"
     ],
     "visual_description": "",
@@ -216,52 +366,141 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.64"
+      "existence:-0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "ba4c3b093ca1470e9607b25083c3e966",
-    "created_at": 1781300342.0085688,
+    "packet_id": "02c806c20f83457aa0676af6bdb671cc",
+    "created_at": 1781346992.5511396,
     "source": "simulation_live_bridge",
-    "user_input": "Let me be more specific: Talk to you later.. How does that land for you?",
+    "user_input": "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "integrate",
+      "two",
+      "perspectives",
+      "disagree",
+      "without",
+      "collapsing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "673d1ca22a734b24b1ecb8f309163d43",
+    "created_at": 1781346994.0449548,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Thoughtful reflection can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "804063ca082f422da2858a95e3468813",
+    "created_at": 1781346995.7594733,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "3e2d7ba5d9724bb8a296286712edcc3b",
+    "created_at": 1781346997.501174,
+    "source": "simulation_live_bridge",
+    "user_input": "Let me be more specific: Two claims conflict. Reconcile them without pretending there is no tension.. How does that land for you?",
     "aurora_response": "",
     "response_tone": "uncertain",
     "concepts_activated": [
       "more",
       "specific",
-      "talk",
-      "land"
+      "two",
+      "claims",
+      "conflict",
+      "reconcile"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
+    "dominant_axis": "N",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.63"
+      "existence:-0.60"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "94b94a3709764e7089ea63d4ddc15907",
-    "created_at": 1781300353.4855297,
+    "packet_id": "f039f119ab13482b9cfe04d7f1937fe4",
+    "created_at": 1781347001.9132423,
     "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Talk to you later.",
-    "aurora_response": "Metaphor usage can create tension \u2014 use carefully",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Thoughtful reflection can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
       "corpus",
       "fragment",
       "context",
-      "talk"
+      "use",
+      "corpus"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -271,24 +510,24 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.69"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "0aa4a38ef2724c3dbf34aa7c5ae78bc9",
-    "created_at": 1781300367.1461103,
+    "packet_id": "b2ee6e4aaf814d1ea6af79daea79a2a8",
+    "created_at": 1781347004.4820797,
     "source": "simulation_live_bridge",
-    "user_input": "What behavior links approach and curious here?",
-    "aurora_response": "",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "I not can aurora.",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
       "links",
-      "approach",
-      "curious",
+      "use",
+      "corpus",
       "here"
     ],
     "visual_description": "",
@@ -299,163 +538,6 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2dc3e9539d6a4de4a60b2af8990b55d9",
-    "created_at": 1781300380.6580741,
-    "source": "simulation_live_bridge",
-    "user_input": "Sure \u2014 Talk to you later.. That's the core of what I'm working through with you.",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "talk",
-      "core",
-      "working"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.59"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "a05b0c30548a4bf0af879ec3ff7b4d6d",
-    "created_at": 1781300394.550021,
-    "source": "simulation_live_bridge",
-    "user_input": "Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "maintain",
-      "quality",
-      "multiple",
-      "turns",
-      "instead",
-      "fading"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.65"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b97861686d1d4fb6a538346c8c173022",
-    "created_at": 1781300408.498535,
-    "source": "simulation_live_bridge",
-    "user_input": "Earlier you said: \"I approach this with concrete example. Maintain quality through multiple turns instead of fading over time. Include your\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "said",
-      "approach",
-      "concrete",
-      "maintain",
-      "quality",
-      "multiple"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "534f3251edb14505a4cb99a29d205c6f",
-    "created_at": 1781300422.6084192,
-    "source": "simulation_live_bridge",
-    "user_input": "Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with concrete example. Maintain quality through\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "said",
-      "approach",
-      "curious",
-      "inquiry",
-      "said",
-      "approach"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "99b3bd082626457b9b5df2ba75c8715d",
-    "created_at": 1781300436.2820065,
-    "source": "simulation_live_bridge",
-    "user_input": "What are you?",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e5cd51ad1c7c4f059ace5084267128f5",
-    "created_at": 1781300451.285304,
-    "source": "simulation_live_bridge",
-    "user_input": "What are you?",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
       "existence:-0.69"
     ],
     "resolved_bindings": [],
@@ -463,61 +545,24 @@
     "consumed_at": null
   },
   {
-    "packet_id": "bf22a19564ec425da053f1a0e2e01914",
-    "created_at": 1781300465.9410322,
+    "packet_id": "44c926d8515c4a0b84c94a56cac32668",
+    "created_at": 1781347006.7255127,
     "source": "simulation_live_bridge",
-    "user_input": "What are you?",
-    "aurora_response": "",
+    "user_input": "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+    "aurora_response": "I'll not can aurora.",
     "response_tone": "uncertain",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
+    "concepts_activated": [
+      "carry",
+      "thread",
+      "next",
+      "step",
+      "without",
+      "losing"
     ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "061c28956f5a4c05b17296df699373ee",
-    "created_at": 1781300480.0781176,
-    "source": "simulation_live_bridge",
-    "user_input": "What are you?",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "041bc801dd30425e925cfa647d4b906d",
-    "created_at": 1781300493.8728766,
-    "source": "simulation_live_bridge",
-    "user_input": "What are you?",
-    "aurora_response": "",
-    "response_tone": "uncertain",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
+    "dominant_axis": "B",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",

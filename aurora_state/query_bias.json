@@ -30,7 +30,7 @@
     },
     {
       "pressure_type": "knowledge_gap",
-      "priority": 0.2105,
+      "priority": 0.214,
       "label": "Missing conceptual content",
       "axis": "X (Existence)",
       "signal_mode": "active",
@@ -54,16 +54,42 @@
         "contradiction_handling",
         "perspective_integration"
       ]
+    },
+    {
+      "pressure_type": "articulation_gap",
+      "priority": 0.2022,
+      "label": "Expression precision failure",
+      "axis": "N (Energy / Resource)",
+      "signal_mode": "active",
+      "retrieval_domains": [
+        "lexical precision",
+        "vocabulary anchoring",
+        "semantic consistency",
+        "concision techniques",
+        "implied meaning extraction"
+      ],
+      "query_templates": [
+        "What vocabulary best captures the distinction required in semantic_precision?",
+        "How can the idea behind N (Energy / Resource) be expressed more precisely without losing meaning?",
+        "What is the minimum words needed to convey semantic_precision unambiguously?",
+        "What paraphrase drift patterns cause semantic_precision failures?"
+      ],
+      "reflection_directive": "Find one recent response where semantic_precision was imprecise. Rewrite the critical sentence using anchored vocabulary.",
+      "hypothesis_seed": "If semantic_precision were expressed with a fixed canonical vocabulary, how much of the current N (Energy / Resource) pressure would dissolve?",
+      "source_dimensions": [
+        "semantic_precision",
+        "compression_elaboration_fit"
+      ]
     }
   ],
   "axis_pressure": {},
-  "last_updated": 1781298680.9539099,
+  "last_updated": 1781346918.7144995,
   "pressure_scores": {
     "code_gap": 0.2725,
-    "knowledge_gap": 0.2105,
-    "articulation_gap": 0.1722,
-    "stability_gap": 0.1455,
-    "tool_gap": 0.1335,
-    "reasoning_gap": 0.1149
+    "knowledge_gap": 0.214,
+    "articulation_gap": 0.2022,
+    "stability_gap": 0.1722,
+    "reasoning_gap": 0.1399,
+    "tool_gap": 0.1345
   }
 }
