@@ -1112,23 +1112,24 @@ class ConstraintReasoner:
         Push a crystallized reasoning pattern into DPS as a new concept.
         The pattern becomes part of Aurora's permanent reasoning vocabulary —
         the same path by which all concepts develop.
+
+        DPS uses _get_or_create(concept) + crystal.constraint_signature — no
+        add_crystal() method exists on CrystalProcessingSystem.
         """
         if self._dps is None:
             return
         try:
             concept_name = f"reasoning_{candidate['domain']}_{uuid.uuid4().hex[:6]}"
             sig = candidate.get("exit_profile", {})
-            if hasattr(self._dps, "add_crystal"):
-                self._dps.add_crystal(
-                    concept=concept_name,
-                    constraint_signature=sig,
-                    source="constraint_reasoner",
-                    narrative=candidate.get("narrative", ""),
-                    domain=candidate.get("domain", "neutral"),
-                    mean_alignment=candidate.get("mean_alignment", 0.0),
+            # CrystalProcessingSystem._get_or_create creates/retrieves by concept name
+            if hasattr(self._dps, "_get_or_create"):
+                crystal = self._dps._get_or_create(concept_name)
+                crystal.constraint_signature = dict(sig)
+                crystal.add_facet(
+                    role="constraint_pattern",
+                    content=candidate.get("narrative", ""),
+                    confidence=min(1.0, float(candidate.get("mean_alignment", 0.5))),
                 )
-            elif hasattr(self._dps, "form_crystal"):
-                self._dps.form_crystal(concept_name, sig)
         except Exception:
             pass
 

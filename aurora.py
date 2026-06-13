@@ -20431,6 +20431,128 @@ def _update_ivm_from_epoch(
         pass
 
 
+# Shared concept mapping for OETS seeding and seek simulation.
+# Keys = training dimension names. Values = concept words seeded into / sought from OETS web.
+_DIM_CONCEPTS_MAP: Dict[str, List[str]] = {
+    'contradiction_handling':      ['contradiction', 'existence_clarity', 'consistency'],
+    'context_carryover':           ['continuity', 'context', 'carryover'],
+    'coherence_maintenance':       ['coherence', 'boundary_clarity', 'structure'],
+    'adaptive_strategy_selection': ['adaptation', 'strategy', 'flexibility'],
+    'semantic_precision':          ['precision', 'clarity', 'meaning'],
+    'perspective_integration':     ['perspective', 'integration', 'viewpoint'],
+    'multi_turn_stability':        ['stability', 'continuity', 'consistency'],
+    'uncertainty_signaling':       ['uncertainty', 'boundary', 'signal'],
+    'relational_depth':            ['relation', 'depth', 'connection'],
+    'self_expression':             ['expression', 'self', 'voice'],
+}
+
+
+def _simulate_training_seek(
+    systems: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Simulate WARP-SEEK for each weakest training dimension.
+
+    In live conversation, SEEK fires whenever Aurora can't resolve something
+    from internal knowledge. Training never triggers this path. Calling this
+    BEFORE _seed_oets_from_failpoints means seeks test concepts seeded by
+    previous epochs — internal% grows as OETS accumulates knowledge across
+    epochs, creating the compounding effect.
+
+    Epoch N:   seek tests prior-epoch nodes  → some internal hits
+    Epoch N+1: seek finds more seeded nodes  → internal% rises
+    """
+    try:
+        perc = systems.get('perception')
+        oets = getattr(perc, 'oets', None) if perc else None
+        web  = getattr(oets, 'web', None) if oets else None
+        if web is None or not hasattr(web, 'has_node'):
+            return
+
+        tc = systems.get('_seek_stats')
+        if tc is None:
+            return
+
+        for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+            if float(score or 0.0) > 0.55:
+                continue   # only seek for genuinely failing dimensions
+
+            concepts = _DIM_CONCEPTS_MAP.get(dim, [dim[:32]])
+            if any(web.has_node(c) for c in concepts):
+                tc['internal'] = tc.get('internal', 0) + 1
+            else:
+                tc['external'] = tc.get('external', 0) + 1
+    except Exception:
+        pass
+
+
+def _run_training_constraint_pass(
+    systems: Dict[str, Any],
+    epoch_result: Dict[str, Any],
+    failpoint_update: Dict[str, Any],
+) -> None:
+    """
+    Run constraint reasoning on the current (now-honest) IVM state after
+    each training epoch.
+
+    In live conversation, begin_response_turn() calls cr.reason() then
+    cr.integrate() which builds the pattern ledger and enables DPS
+    crystallization. Training never calls this path. This pass closes
+    the loop so crystallization can happen during training as well.
+
+    The semantic state proxy is built from per-dimension training scores
+    mapped to their axis. This makes alignment measure "does the constraint
+    reasoning predict the same axis state the training scores show?" —
+    the correct question. High alignment means constraint reasoning is
+    structurally coherent with what Aurora is actually experiencing.
+    """
+    cr = systems.get('constraint_reasoner')
+    if cr is None:
+        return
+    try:
+        profile = cr.current_profile()
+        if profile is None:
+            return
+
+        # Build semantic proxy from training dimension scores (same axis mapping
+        # as _update_ivm_from_epoch). Falls back to flat fitness for axes without data.
+        fitness = float(epoch_result.get('avg_fitness', 0.5) or 0.5)
+        _DIM_TO_AXIS_SHORT: Dict[str, str] = {
+            'contradiction_handling':      'X',
+            'self_expression':             'X',
+            'context_carryover':           'T',
+            'multi_turn_stability':        'T',
+            'semantic_precision':          'N',
+            'coherence_maintenance':       'B',
+            'uncertainty_signaling':       'B',
+            'relational_depth':            'B',
+            'adaptive_strategy_selection': 'A',
+            'perspective_integration':     'A',
+        }
+        axis_sums: Dict[str, List[float]] = {ax: [fitness] for ax in ('X', 'T', 'N', 'B', 'A')}
+        axis_sums['X'] = [fitness]
+        for dim, score in (failpoint_update.get('weakest_dimensions') or []):
+            ax = _DIM_TO_AXIS_SHORT.get(dim)
+            if ax is not None:
+                axis_sums[ax].append(float(score or 0.0))
+        semantic_proxy = {
+            ax: round(sum(vals) / len(vals), 3)
+            for ax, vals in axis_sums.items()
+        }
+
+        # Run 3 reasoning cycles on the stable post-IVM profile. The same profile
+        # produces the same domain/narrative key in each cycle. Three consecutive
+        # high-alignment verifications on a stable state meet the crystallization
+        # threshold in one epoch — equivalent to 3 turns in a live conversation
+        # all confirming the same structural pattern.
+        for _ in range(3):
+            trace = cr.reason(profile, depth=3)
+            cr.integrate(trace, semantic_proxy, emit_warp=False)
+    except Exception:
+        pass
+
+
 def _seed_oets_from_failpoints(
     systems: Dict[str, Any],
     failpoint_update: Dict[str, Any],
@@ -20453,23 +20575,10 @@ def _seed_oets_from_failpoints(
     except Exception:
         return
 
-    _DIM_CONCEPTS = {
-        'contradiction_handling':      ['contradiction', 'existence_clarity', 'consistency'],
-        'context_carryover':           ['continuity', 'context', 'carryover'],
-        'coherence_maintenance':       ['coherence', 'boundary_clarity', 'structure'],
-        'adaptive_strategy_selection': ['adaptation', 'strategy', 'flexibility'],
-        'semantic_precision':          ['precision', 'clarity', 'meaning'],
-        'perspective_integration':     ['perspective', 'integration', 'viewpoint'],
-        'multi_turn_stability':        ['stability', 'continuity', 'consistency'],
-        'uncertainty_signaling':       ['uncertainty', 'boundary', 'signal'],
-        'relational_depth':            ['relation', 'depth', 'connection'],
-        'self_expression':             ['expression', 'self', 'voice'],
-    }
-
     for dim, score in (failpoint_update.get('weakest_dimensions') or []):
         score = float(score or 0)
         valence = round((score - 0.5) * 2.0, 3)   # -1.0 (complete fail) → +1.0 (mastered)
-        for concept in _DIM_CONCEPTS.get(dim, [dim[:32]]):
+        for concept in _DIM_CONCEPTS_MAP.get(dim, [dim[:32]]):
             try:
                 web.add_node(concept[:40], role="training_gap", valence=valence)
             except Exception:
@@ -20553,8 +20662,16 @@ def train(systems: Dict[str, Any], epochs: int = 10,
         result['dream_lesson_specs'] = int(queued_lesson_specs or 0)
         result['failpoint_update'] = dict(failpoint_update or {})
 
-        # Bridge: push epoch scores into IVM axis state + seed OETS with gap concepts
+        # Bridge: push epoch scores into IVM axis state, then simulate the
+        # live-conversation paths that training skips.
+        # Order matters:
+        #   1. IVM update first — constraint reasoning needs honest axis state
+        #   2. Seek simulation BEFORE seeding — tests concepts from prior epochs
+        #   3. Constraint pass — builds pattern ledger, enables DPS crystallization
+        #   4. Seed OETS last — new concepts available for next epoch's seeks
         _update_ivm_from_epoch(systems, result, failpoint_update)
+        _simulate_training_seek(systems, failpoint_update)
+        _run_training_constraint_pass(systems, result, failpoint_update)
         _seed_oets_from_failpoints(systems, failpoint_update)
         quasiarch = systems.get('quasiarch_observer')
         if quasiarch is not None and hasattr(quasiarch, 'record_training_epoch'):
