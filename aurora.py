@@ -179,6 +179,11 @@ _SUPPORT_CONSTRAINT_SPECS: Dict[str, Dict[str, str]] = {
         "operational_role": "active_context_holding",
         "genealogy": "XTNB",
     },
+    "warp_field": {
+        "unit_kind": "warp_field",
+        "operational_role": "universal_accommodation_primitive",
+        "genealogy": "XTNBAA",
+    },
 }
 
 
@@ -18925,6 +18930,27 @@ def boot_aurora(
     if verbose:
         print(f"  (DPS + DMC + DER + DMM, {_dps_loaded} crystals restored)")
 
+    # ---- WARP FIELD — Universal Accommodation Primitive ----
+    # Installed immediately after DPS so every subsequent boot step can route
+    # unresolved states to the field. Doctrine: nothing silently disappears.
+    systems['warp_field'] = None
+    try:
+        from aurora_warp_protocol import (
+            WarpField as _WarpField,
+            install_warp_field as _install_wf,
+        )
+        _warp_field = _WarpField()
+        _dps_sys = getattr(dimensional, 'dps', None)
+        if _dps_sys is not None:
+            _warp_field.register_warp_capable('dps', _dps_sys)
+        _install_wf(_warp_field)
+        systems['warp_field'] = _warp_field
+        if verbose:
+            print("  [WARP] WarpField installed — universal accommodation primitive")
+    except Exception as _wf_e:
+        if verbose:
+            print(f"  [WARP] WarpField unavailable: {_wf_e}")
+
     # Layer 3.5: SediMemory — stratigraphic constraint-native memory
     systems['sedimemory'] = None
     try:
@@ -19299,7 +19325,12 @@ def boot_aurora(
     if verbose: print("  [L5+] Comprehension Gaps...", end=" ", flush=True)
     try:
         from aurora_internal.aurora_comprehension_gap import ComprehensionGapSystem
-        systems['comprehension_gap_system'] = ComprehensionGapSystem()
+        _cgs = ComprehensionGapSystem()
+        systems['comprehension_gap_system'] = _cgs
+        # Wire: comprehension gap boundary → WarpField
+        _wf_cgs = systems.get('warp_field')
+        if _wf_cgs is not None and hasattr(_cgs, 'set_warp_field'):
+            _cgs.set_warp_field(_wf_cgs)
         if verbose: print("[OK]")
     except Exception as e:
         if verbose: print(f"[SKIP] {e}")
@@ -19757,6 +19788,12 @@ def boot_aurora(
     if verbose:
         print()
         print("  All 9 layers online.")
+        _wf_status = systems.get('warp_field')
+        if _wf_status is not None:
+            _wfs = _wf_status.status()
+            print(f"  [WARP] Field live — "
+                  f"{len(_wfs.get('registered_systems', []))} actuator(s) registered, "
+                  f"{len(_wfs.get('registered_handlers', []))} pathway handler(s)")
         print(f"  Aurora knows who she is. She knows who made her.")
         print()
 
