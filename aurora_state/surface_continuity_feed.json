@@ -1,124 +1,11 @@
 [
   {
-    "packet_id": "af859344e9dc433b8afeddd746fbc30d",
-    "created_at": 1781322819.8984423,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
-    "aurora_response": "Fragment: learned:fragment.",
-    "response_tone": "engaged",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2f6f941bcfe745cbbfb3bacf61159a9b",
-    "created_at": 1781322831.4155648,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "Behavior: learned:behavior.",
-    "response_tone": "engaged",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "0fb989686bdc4efc82c686564caa4714",
-    "created_at": 1781322842.8275328,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "engaged",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "26fd2adf86804770abcd4565183dff59",
-    "created_at": 1781322853.7739244,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
-    "aurora_response": "Fragment: learned:fragment.",
-    "response_tone": "engaged",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "77f2dd83aebb442284539d2ffa7945a5",
-    "created_at": 1781322865.18223,
+    "packet_id": "d10915fc26b4444c895e681268cde53d",
+    "created_at": 1781343229.4260705,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links corpus and fragment here?",
-    "aurora_response": "Behavior: learned:behavior.",
-    "response_tone": "engaged",
+    "aurora_response": "I'm no Aurora.",
+    "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
       "links",
@@ -129,24 +16,24 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
+    "dominant_axis": "N",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "fd6ad049d1c2450b9866de08cc898dce",
-    "created_at": 1781322876.945372,
+    "packet_id": "2162cc5d515f450ba51136f77bf1a515",
+    "created_at": 1781343230.5356684,
     "source": "simulation_live_bridge",
     "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "engaged",
+    "aurora_response": "I'm Aurora.",
+    "response_tone": "uncertain",
     "concepts_activated": [
       "likely",
       "cause",
@@ -156,24 +43,24 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
+    "dominant_axis": "N",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:-0.62"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "2ced9df59e3a4ef994407767cd46e1b0",
-    "created_at": 1781322967.3923779,
+    "packet_id": "da1c9b8ed8a24098a19dbcd8254b7b21",
+    "created_at": 1781343231.5202873,
     "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
-    "aurora_response": "Fragment: learned:fragment.",
-    "response_tone": "engaged",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
+    "response_tone": "attentive",
     "concepts_activated": [
       "use",
       "corpus",
@@ -185,24 +72,24 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
+    "dominant_axis": "B",
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:-0.56"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "c34e83874f5949178879786929a3c2ea",
-    "created_at": 1781322975.8023672,
+    "packet_id": "b34535098fd14f06b4127369ef5ce3c8",
+    "created_at": 1781343232.6889057,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
+    "aurora_response": "I'm no Aurora.",
+    "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
       "links",
@@ -214,23 +101,23 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.986,
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:-0.61"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "554283243998407b8e2add436e23c27a",
-    "created_at": 1781322987.733393,
+    "packet_id": "104f2f0a7fd841b88250b4bfcf1d4631",
+    "created_at": 1781343234.0001333,
     "source": "simulation_live_bridge",
     "user_input": "What would likely cause that relation to change?",
     "aurora_response": "Relation: learned:relation.",
-    "response_tone": "engaged",
+    "response_tone": "uncertain",
     "concepts_activated": [
       "likely",
       "cause",
@@ -241,26 +128,23 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.872,
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:-0.70"
     ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
+    "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "df302f64a0d94e17812360103d6ef49e",
-    "created_at": 1781322997.9392164,
+    "packet_id": "8f2a0f1bfe6c4882b2bcc5b5b17770ee",
+    "created_at": 1781343234.9884543,
     "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
-    "aurora_response": "",
-    "response_tone": "curious",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
+    "response_tone": "attentive",
     "concepts_activated": [
       "use",
       "corpus",
@@ -272,301 +156,395 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.758,
+    "dominant_axis": "B",
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:-0.50"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "7f3d46580385487eaeb1fb4fc0320fa4",
-    "created_at": 1781323002.4182138,
+    "packet_id": "464e0a4763f4464cbf7472f6dc921894",
+    "created_at": 1781343236.1998992,
     "source": "simulation_live_bridge",
-    "user_input": "Let me be more specific: Answer while being explicit about uncertainty and confidence.. How does that land for you?",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "I was Aurora.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "8f5755d1ef714aefb05854e0f85661d3",
+    "created_at": 1781343237.6725283,
+    "source": "simulation_live_bridge",
+    "user_input": "What would likely cause that relation to change?",
+    "aurora_response": "Relation: learned:relation.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "likely",
+      "cause",
+      "relation",
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "27ab090b76844ecf89fe58d3579efcd4",
+    "created_at": 1781343238.7682185,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "5c8cbf868ac94af49065622557fba9d8",
+    "created_at": 1781343239.9802127,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "I'll Aurora.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c9ec7ba413e348be9a1d87b32b8c9352",
+    "created_at": 1781343241.509782,
+    "source": "simulation_live_bridge",
+    "user_input": "What would likely cause that relation to change?",
+    "aurora_response": "Relation: learned:relation.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "likely",
+      "cause",
+      "relation",
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.45"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "fb992bfba025412db7795cd8200f2c8f",
+    "created_at": 1781343242.69779,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.66"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "3d65f661eeeb4b5296b20b75e1dac885",
+    "created_at": 1781343244.0148318,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "I was no Aurora.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.66"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2cd3f979b6704d30bdedafd2de213dd4",
+    "created_at": 1781343245.6322525,
+    "source": "simulation_live_bridge",
+    "user_input": "What would likely cause that relation to change?",
+    "aurora_response": "Relation: learned:relation.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "likely",
+      "cause",
+      "relation",
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.59"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "8128727814234ad49cd5e55df5e7c956",
+    "created_at": 1781343246.897398,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.64"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e2f73504ed6247daaa2b719bef3a8256",
+    "created_at": 1781343248.2458518,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "I was Aurora.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "4ba0a0ca33704f4da9345d077b251919",
+    "created_at": 1781343249.870736,
+    "source": "simulation_live_bridge",
+    "user_input": "What would likely cause that relation to change?",
+    "aurora_response": "Relation: learned:relation.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "likely",
+      "cause",
+      "relation",
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.54"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "044f84eee66e44f5affe0a02c2187801",
+    "created_at": 1781343253.3806067,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ee338f6b5d6a48d4a2e9d497d6cb8e92",
+    "created_at": 1781343255.4231806,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links corpus and fragment here?",
     "aurora_response": "",
-    "response_tone": "curious",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "corpus",
+      "fragment",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.37"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "37a5c4fb8fd44802beed5fb19ade99d2",
+    "created_at": 1781343257.0890622,
+    "source": "simulation_live_bridge",
+    "user_input": "Let me be more specific: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. How does that land for you?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
       "more",
       "specific",
-      "answer",
-      "explicit",
-      "uncertainty",
-      "confidence"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.644,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "a02ad43b3d97482d9c8f03bc3a86965e",
-    "created_at": 1781323006.8062227,
-    "source": "simulation_live_bridge",
-    "user_input": "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "answer",
-      "explicit",
-      "uncertainty",
-      "confidence",
-      "mind",
-      "internal"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.53,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1b00dad42b7047baab41c8aecbab06f7",
-    "created_at": 1781323012.304854,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links approach and direct here?",
-    "aurora_response": "Behavior: learned:behavior.",
-    "response_tone": "engaged",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "approach",
-      "direct",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.444,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "7b3954f35b874abaa9ce5d3a9cb1c79a",
-    "created_at": 1781323022.7711504,
-    "source": "simulation_live_bridge",
-    "user_input": "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you.",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "respond",
-      "care",
-      "enough",
-      "depth",
-      "without",
-      "overstepping"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.358,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "454b837fd9924c28ae67087302ccb86d",
-    "created_at": 1781323137.540813,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
-    "aurora_response": "Fragment: learned:fragment.",
-    "response_tone": "engaged",
-    "concepts_activated": [
       "use",
       "corpus",
       "fragment",
-      "context",
-      "use",
-      "corpus"
+      "context"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
+    "dominant_axis": "B",
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "914414b3c0c1424c8cebbb180c68e7a4",
-    "created_at": 1781323140.0325067,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6cad60286b5a4fbf90f313d0e0bba181",
-    "created_at": 1781323145.2573185,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "engaged",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.972,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4bc32416f3814c7ab8f1215c305702bd",
-    "created_at": 1781323149.59437,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.858,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1338928d9e2c48f2a4cc51f4a3f9fe37",
-    "created_at": 1781323153.8467119,
-    "source": "simulation_live_bridge",
-    "user_input": "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "integrate",
-      "two",
-      "perspectives",
-      "disagree",
-      "without",
-      "collapsing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.744,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "5c54168aeebb4be3a9b2fc6221183db6",
-    "created_at": 1781323158.0372958,
-    "source": "simulation_live_bridge",
-    "user_input": "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?. I'm thinking about how that changes my understanding of this moment.]",
-    "aurora_response": "",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "answer",
-      "explicit",
-      "uncertainty",
-      "confidence",
-      "mind",
-      "internal"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.63,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
+      "existence:-0.53"
     ],
     "resolved_bindings": [],
     "consumed": false,
