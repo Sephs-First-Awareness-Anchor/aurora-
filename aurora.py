@@ -18958,14 +18958,15 @@ def boot_aurora(
             dt = systems.get('dream_trainer')
             if dt is None:
                 return
+            # The fail was already recorded by whoever emitted this demand.
+            # The handler's only job is to queue a lesson — NOT re-record the fail
+            # (that would create a demand→handler→record_fail→demand recursion).
             domain = (
                 decision.demand.persistence_key
                 or decision.demand.unresolved_text
                 or "unknown"
             ).split(":")[-1][:64]
-            sev = float(decision.demand.severity)
             try:
-                dt.ledger.record_fail(domain, sev)
                 if hasattr(dt, 'flush_lessons_to_simulation'):
                     dt.flush_lessons_to_simulation(systems, force=True)
                 decision.resolved = True
