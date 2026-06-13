@@ -19000,23 +19000,106 @@ def boot_aurora(
                     except Exception:
                         pass
 
-        # seek: ambiguity / no memory / no comprehension → OETS + working memory
+        # seek: resolve ambiguity / no memory / no comprehension
+        #
+        # Resolution order — relation before retrieval:
+        #   1. OETS resonance check — does Aurora hold any coverage of this concept?
+        #      YES → internal: working memory synthesis + OETS relational derivation
+        #      NO  → external: Poedex internal Observer first, internet only if that fails
+        #   2. External result seeds back into OETS so future seeks resolve internally.
+        #
+        # Severity governs urgency (how long to wait, whether to escalate), not direction.
+        # The direction is always: internal → external → defer if both fail.
         def _h_seek(decision):
-            _perc = systems.get('perception')
-            _oets = getattr(_perc, 'oets', None) if _perc is not None else None
-            if _oets is not None and hasattr(_oets, 'flag_unknown'):
+            _text = (decision.demand.unresolved_text or "").strip()
+            if not _text:
+                return
+
+            # ── Step 1: OETS resonance check ─────────────────────────────────
+            _perc  = systems.get('perception')
+            _oets  = getattr(_perc, 'oets', None) if _perc is not None else None
+            _web   = getattr(_oets, 'web', None)  if _oets is not None else None
+            _has_coverage = False
+
+            if _web is not None:
+                _tl = _text.lower()
+                # Direct node match (exact word or phrase key)
                 try:
-                    _oets.flag_unknown(decision.demand.unresolved_text)
-                    decision.action_taken = True
+                    if _web.get_node(_tl) is not None:
+                        _has_coverage = True
                 except Exception:
                     pass
-            _wm = systems.get('working_memory')
-            if _wm is not None and hasattr(_wm, 'note_gap'):
+                # Substring scan over node keys — concept space has related coverage
+                if not _has_coverage:
+                    try:
+                        _tl_words = set(_tl.split())
+                        for _nk in list(_web.nodes.keys())[:500]:
+                            if _tl in str(_nk).lower() or str(_nk).lower() in _tl:
+                                _has_coverage = True
+                                break
+                            # Word-level overlap
+                            if _tl_words & set(str(_nk).lower().split()):
+                                _has_coverage = True
+                                break
+                    except Exception:
+                        pass
+
+            # ── Step 2a: Internal — working memory synthesis ──────────────────
+            if _has_coverage:
+                _wm = systems.get('working_memory')
+                if _wm is not None and hasattr(_wm, 'answer_from_meanings'):
+                    try:
+                        _wm_result = _wm.answer_from_meanings(_text)
+                        if _wm_result:
+                            decision.result = _wm_result
+                            decision.action_taken = True
+                            decision.resolved = True
+                            decision.notes = "resolved internally via working memory"
+                            return
+                    except Exception:
+                        pass
+                # Has coverage but working memory couldn't synthesize — flag in OETS
+                # for relational derivation on the next processing pass
+                if _web is not None and hasattr(_web, 'add_node'):
+                    try:
+                        _web.add_node(_text.split()[0][:32], role="gap_flagged",
+                                      valence=0.0)
+                    except Exception:
+                        pass
+                decision.action_taken = True
+                decision.notes = "relational gap — OETS has coverage, derivation deferred"
+                return
+
+            # ── Step 2b: External — Poedex internal Observer first ────────────
+            _result = ""
+            try:
+                _result = _try_poedex_lookup(_text, systems,
+                                             timeout=2.0, use_researcher=False) or ""
+            except Exception:
+                pass
+
+            # If internal Observer found nothing → internet (Researcher)
+            if not _result:
                 try:
-                    _wm.note_gap(decision.demand.unresolved_text)
-                    decision.action_taken = True
+                    _result = _try_poedex_lookup(_text, systems,
+                                                 timeout=8.0, use_researcher=True) or ""
                 except Exception:
                     pass
+
+            if _result:
+                # Seed into OETS so the next seek for this concept resolves internally
+                if _web is not None and hasattr(_web, 'add_node'):
+                    try:
+                        _web.add_node(_text.split()[0][:32], role="retrieved",
+                                      valence=0.0)
+                    except Exception:
+                        pass
+                decision.result = _result
+                decision.action_taken = True
+                decision.resolved = True
+                decision.notes = f"external retrieval seeded to OETS ({len(_result)} chars)"
+            else:
+                decision.notes = "seek exhausted — no internal or external resolution found"
 
         _warp_field.register_pathway_handler(_WarpPathway.REVISE_MODEL,       _h_revise_model)
         _warp_field.register_pathway_handler(_WarpPathway.GENERATE_FORM,      _h_generate_form)
