@@ -1,16 +1,16 @@
 {
   "conscious_frame": {
-    "coherence": 0.45,
+    "coherence": 0.516,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.6791,
+      "intensity": 0.6781,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "What are you?",
+      "present_anchor": "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense? [Internal: That make...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -19,25 +19,25 @@
       "reinforcement_hint": 0.1047
     },
     "processing_mode": "blended",
-    "readiness": 0.5613,
+    "readiness": 0.574,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.7773,
+      "intensity": 0.7476,
       "label": "steady"
     },
-    "timestamp": 1781300491.8483965
+    "timestamp": 1781323156.881145
   },
-  "saved_at": 1781300491.8485835,
+  "saved_at": 1781323156.881365,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "action",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "What are you?",
+      "present_anchor": "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense? [Internal: That make...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -63,8 +63,8 @@
       },
       {
         "axis": "X",
-        "intensity": 0.7875,
-        "label": "steady_continuation"
+        "intensity": 0.55,
+        "label": "expectation"
       },
       {
         "axis": "N",
@@ -89,7 +89,7 @@
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.7773,
+      "intensity": 0.7476,
       "label": "steady"
     }
   }

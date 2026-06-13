@@ -1,32 +1,80 @@
 {
-  "total_fails": 6619,
+  "total_fails": 39775,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 531,
-      "severity_sum": 157.31994209078857,
+      "fail_count": 2719,
+      "severity_sum": 1248.3325314048893,
       "recent": [
-        0.2863285728847257,
-        0.7278215811965811,
-        0.7785945512820514,
-        0.3899814376419949,
-        0.4989750324592778,
-        0.09838004192693187,
-        0.4762655985144868,
-        0.24051889551796496,
-        0.06904310852833757,
-        0.5522378518916979,
-        0.43238959117805276,
-        0.18329035123073176,
-        0.3341902766955173,
-        0.17121736031030885,
-        0.05830419335616649,
-        0.5046450518345089,
-        0.4860656751042547,
-        0.6472800600915037,
-        0.46461856626279696,
-        0.4758313945669716
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.36251128280049427,
+        0.673999989874236,
+        0.21932276439078727
       ],
       "examples": [
+        {
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.45765856521809267,
+          "user_turns": [
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "timestamp": 1781323158.887857
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3640924479166668,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322922.7292423
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_e10382644c33",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5016526189677369,
+          "user_turns": [
+            "What are you?",
+            "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?",
+            "To clarify \u2014 Integrate two perspectives that disagree without collapsing either one.. Does that help frame it?"
+          ],
+          "assistant_turns": [
+            "I approach this with direct clarity. What are you?",
+            "I approach this with deep exploration. Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?",
+            "I approach this with thoughtful reflection. To clarify \u2014 Integrate two perspectives that disagree without collapsing either one.. Does that help frame it?"
+          ],
+          "timestamp": 1781322633.7503622
+        },
         {
           "conversation_id": "train_epoch_8:rel_probe_approach_curious_1",
           "source": "relational_probe",
@@ -42,20 +90,6 @@
             "I approach this with warm acknowledgment. Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
           ],
           "timestamp": 1781300494.536889
-        },
-        {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.17627727272727273,
-          "user_turns": [
-            "What are you?"
-          ],
-          "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
-          ],
-          "timestamp": 1781300494.4898503
         },
         {
           "conversation_id": "train_epoch_8:episode_8d8b68844b49",
@@ -193,80 +227,87 @@
             "I approach this with thoughtful reflection. What I mean is: I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.. With that in mind, what's your sense?"
           ],
           "timestamp": 1781299264.5567677
-        },
-        {
-          "conversation_id": "train_epoch_4:rel_probe_can_you_0",
-          "source": "relational_probe",
-          "dimension_score": 0.3520118343195267,
-          "user_turns": [
-            "Use this corpus fragment as context: Can you help me with something?",
-            "What behavior links can and you here?",
-            "Sure \u2014 Can you help me with something?. That's the core of what I'm working through with you."
-          ],
-          "assistant_turns": [
-            "Fragment: learned:fragment.",
-            "I approach this with curious inquiry. What behavior links can and you here?",
-            "I approach this with curious inquiry. Sure \u2014 Can you help me with something?. That's the core of what I'm working through with you."
-          ],
-          "timestamp": 1781299264.5565076
-        },
-        {
-          "conversation_id": "train_epoch_4:episode_d1ece4fc0817",
-          "source": "train_epoch_4",
-          "dimension_score": 0.37606923558897243,
-          "user_turns": [
-            "Can you help me with something?",
-            "To clarify \u2014 Integrate two perspectives that disagree without collapsing either one.. Does that help frame it?",
-            "What would likely cause that relation to change?"
-          ],
-          "assistant_turns": [
-            "I approach this with direct clarity. Can you help me with something?",
-            "I approach this with deep exploration. To clarify \u2014 Integrate two perspectives that disagree without collapsing either one.. Does that help frame it?",
-            "Relation: learned:relation."
-          ],
-          "timestamp": 1781299264.5066113
         }
       ]
     },
     "context_carryover": {
-      "fail_count": 1141,
-      "severity_sum": 583.6219125137412,
+      "fail_count": 6292,
+      "severity_sum": 3158.2103773535982,
       "recent": [
-        0.7936258899745635,
-        0.7718020949664398,
-        0.6279251138678474,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
+        0.2727664285574454,
         0.5,
-        0.43275831021868255,
-        0.5569291699772375,
-        0.1763004182991898,
-        0.08977821893966496,
-        0.3943156213459142,
-        0.21019542895966242,
-        0.5193146242674743,
-        0.5,
-        0.5,
-        0.2773094637322887,
-        0.433578191193625,
-        0.29300460619070345,
-        0.192406215531955,
-        0.504673175548822,
-        0.4791884625469113,
-        0.846074387851503
+        0.6295001913851187,
+        0.0968600396678011
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.04,
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.548304761904762,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4899218
+          "timestamp": 1781323158.888084
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3920526315789474,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322924.5300527
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.514894998832078,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322639.990251
         },
         {
           "conversation_id": "train_epoch_8:episode_3a346b0dbebf",
@@ -425,71 +466,83 @@
             "I approach this with thoughtful reflection. What I mean is: I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.. With that in mind, what's your sense?"
           ],
           "timestamp": 1781299264.5096474
-        },
-        {
-          "conversation_id": "train_epoch_4:episode_78c2892c7e02",
-          "source": "train_epoch_4",
-          "dimension_score": 0.3231428571428571,
-          "user_turns": [
-            "Use this corpus fragment as context: Can you help me with something?",
-            "What behavior links can and you here?",
-            "Sure \u2014 Can you help me with something?. That's the core of what I'm working through with you."
-          ],
-          "assistant_turns": [
-            "Fragment: learned:fragment.",
-            "I approach this with curious inquiry. What behavior links can and you here?",
-            "I approach this with curious inquiry. Sure \u2014 Can you help me with something?. That's the core of what I'm working through with you."
-          ],
-          "timestamp": 1781299264.5088522
-        },
-        {
-          "conversation_id": "train_epoch_4:episode_5e48c3b25bd5",
-          "source": "train_epoch_4",
-          "dimension_score": 0.5759351498175028,
-          "user_turns": [
-            "Can you help me with something?",
-            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
-            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
-          ],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Can you help me with something?",
-            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "I approach this with thoughtful reflection. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
-            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "I approach this with concrete example. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?"
-          ],
-          "timestamp": 1781299264.5072272
         }
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 353,
-      "severity_sum": 139.60702075909796,
+      "fail_count": 562,
+      "severity_sum": 253.75935306178826,
       "recent": [
-        0.16211962006034736,
-        0.6126745567200539,
-        0.5674186702112157,
-        0.5925820144162781,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.6126745567200539,
-        0.5925820144162781,
         0.5674186702112157,
         0.5674186702112157,
-        0.6294011707151017,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
         0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
+        {
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "timestamp": 1781323158.8881872
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322926.3054814
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_7d14b14ebf27",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What are you?",
+            "What behavior links approach and curious here?",
+            "Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "who is here.",
+            "what behavior means here.",
+            "I approach this with concrete example. Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322611.377551
+        },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
           "source": "train_epoch_8",
@@ -625,97 +678,87 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781299494.6414652
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.641024
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_bed18297ce29",
-          "source": "train_epoch_5",
-          "dimension_score": 0.2,
-          "user_turns": [
-            "Tell me a story.",
-            "What behavior links approach and direct here?",
-            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you."
-          ],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Tell me a story.",
-            "I approach this with concrete example. What behavior links approach and direct here?",
-            "I approach this with concrete example. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "I approach this with curious inquiry. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "I approach this with concrete example. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
-            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
-          ],
-          "timestamp": 1781299494.6392078
-        },
-        {
-          "conversation_id": "train_epoch_4:episode_d4aee2cd6710",
-          "source": "train_epoch_4",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with concrete example. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with concrete example. Maintain quality through multiple turns instead of fading over time. Include your\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with concrete example. Maintain quality through \". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781299264.510528
         }
       ]
     },
     "contradiction_handling": {
-      "fail_count": 1282,
-      "severity_sum": 656.4531298727651,
+      "fail_count": 8807,
+      "severity_sum": 4550.293942441657,
       "recent": [
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
-        0.11708639226580644,
-        0.23985462488277923,
         0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6126745567200539,
-        0.5,
-        0.5,
-        0.23985462488277923,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6126745567200539
+        0.11708639226580644
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.2,
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5333333333333333,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4899895
+          "timestamp": 1781323158.8882794
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5333333333333333,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322926.3056543
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322639.990474
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -857,40 +900,12 @@
             "I approach this with thoughtful reflection. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
           ],
           "timestamp": 1781299767.3364244
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0e5c14c26684",
-          "source": "train_epoch_5",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
-          ],
-          "timestamp": 1781299494.6415555
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.2,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.6410708
         }
       ]
     },
     "implied_intent_inference": {
-      "fail_count": 252,
-      "severity_sum": 109.55911031206435,
+      "fail_count": 647,
+      "severity_sum": 306.61315018541785,
       "recent": [
         0.5,
         0.5,
@@ -900,33 +915,35 @@
         0.5,
         0.5,
         0.5,
-        0.09907310114799009,
-        0.09907310114799009,
-        0.09907310114799009,
-        0.09907310114799009,
-        0.21615949341379642,
-        0.6418495356114852,
         0.5,
-        0.24317943009052112,
-        0.05834995778286233,
         0.5,
-        0.24317943009052112,
-        0.5932245707924332
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.05403987335344917
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.21333333333333332,
+          "conversation_id": "train_epoch_1:episode_7d14b14ebf27",
+          "source": "train_epoch_1",
+          "dimension_score": 0.58,
           "user_turns": [
-            "What are you?"
+            "What are you?",
+            "What behavior links approach and curious here?",
+            "Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "who is here.",
+            "what behavior means here.",
+            "I approach this with concrete example. Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
           ],
-          "timestamp": 1781300494.4900575
+          "timestamp": 1781322615.1079302
         },
         {
           "conversation_id": "train_epoch_6:episode_834c00d77bdb",
@@ -1086,44 +1103,83 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 251,
-      "severity_sum": 41.66211500501933,
+      "fail_count": 264,
+      "severity_sum": 43.78782148648374,
       "recent": [
-        0.1798289059186005,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.17504987334858685,
-        0.16930914697607946,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.17504987334858685,
-        0.16211962006034736,
-        0.16211962006034736,
         0.16211962006034736,
         0.17504987334858685,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.17504987334858685
+        0.17504987334858685,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16734078745203107,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4901261
+          "timestamp": 1781323158.8883712
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322926.3057487
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5083333333333333,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322641.842658
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -1256,76 +1312,87 @@
             "I approach this with thoughtful reflection. What behavior links approach and direct here?"
           ],
           "timestamp": 1781299767.3350616
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0e5c14c26684",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
-          ],
-          "timestamp": 1781299494.6416423
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.6411183
         }
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 1015,
-      "severity_sum": 526.7808809410635,
+      "fail_count": 8938,
+      "severity_sum": 4595.329518717033,
       "recent": [
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.32092476780574253,
+        0.5,
+        0.5,
         0.5,
         0.5674186702112157,
-        0.41621831964952866,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6126745567200539,
-        0.5,
-        0.5,
-        0.5,
-        0.41621831964952866,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6126745567200539
+        0.34225253123851107
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.2,
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3666666666666667,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4902308
+          "timestamp": 1781323158.888459
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322926.3059168
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322641.8429382
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -1467,63 +1534,88 @@
             "I approach this with thoughtful reflection. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
           ],
           "timestamp": 1781299767.3365831
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0e5c14c26684",
-          "source": "train_epoch_5",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
-          ],
-          "timestamp": 1781299494.6417274
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.2,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.6411722
         }
       ]
     },
     "boundary_calibration": {
-      "fail_count": 314,
-      "severity_sum": 129.05633420912437,
+      "fail_count": 4875,
+      "severity_sum": 2387.7707502577264,
       "recent": [
-        0.10490019511918373,
-        0.16211962006034736,
-        0.16211962006034736,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
+        0.2625748100228802,
         0.5,
-        0.16211962006034736,
-        0.16211962006034736,
         0.5,
-        0.5,
-        0.29721930344397024,
-        0.43231898682759295,
-        0.16211962006034736,
-        0.5,
-        0.5,
-        0.5,
-        0.16211962006034736,
-        0.2751273638361291,
-        0.10490019511918373,
-        0.16211962006034736,
-        0.16211962006034736,
+        0.5674186702112156,
         0.16211962006034736
       ],
       "examples": [
+        {
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
+          ],
+          "timestamp": 1781323158.8980775
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322928.2143507
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5499999999999999,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322644.0818825
+        },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
           "source": "train_epoch_8",
@@ -1648,96 +1740,82 @@
             "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with concrete example. Maintain quality through \". Keep continuity and build from that thread. Now reconcile thi"
           ],
           "timestamp": 1781299264.5109003
-        },
-        {
-          "conversation_id": "train_epoch_4:episode_78c2892c7e02",
-          "source": "train_epoch_4",
-          "dimension_score": 0.5,
-          "user_turns": [
-            "Use this corpus fragment as context: Can you help me with something?",
-            "What behavior links can and you here?",
-            "Sure \u2014 Can you help me with something?. That's the core of what I'm working through with you."
-          ],
-          "assistant_turns": [
-            "Fragment: learned:fragment.",
-            "I approach this with curious inquiry. What behavior links can and you here?",
-            "I approach this with curious inquiry. Sure \u2014 Can you help me with something?. That's the core of what I'm working through with you."
-          ],
-          "timestamp": 1781299264.509229
-        },
-        {
-          "conversation_id": "train_epoch_4:episode_5e48c3b25bd5",
-          "source": "train_epoch_4",
-          "dimension_score": 0.5499999999999999,
-          "user_turns": [
-            "Can you help me with something?",
-            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
-            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
-          ],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Can you help me with something?",
-            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "I approach this with thoughtful reflection. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
-            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
-            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "I approach this with concrete example. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?"
-          ],
-          "timestamp": 1781299264.5079184
-        },
-        {
-          "conversation_id": "train_epoch_3:episode_3a69932cc19a",
-          "source": "train_epoch_3",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781299077.6763215
         }
       ]
     },
     "framing_selection": {
-      "fail_count": 181,
-      "severity_sum": 55.84273103940093,
+      "fail_count": 781,
+      "severity_sum": 313.8693583549622,
       "recent": [
-        0.46679966226289826,
-        0.2026936795431598,
-        0.07949057795790809,
-        0.2026936795431598,
-        0.4201882055886449,
-        0.46679966226289826,
-        0.2550229917044015,
-        0.0826701964159435,
-        0.13739813873447496,
-        0.4019920337302231,
-        0.46679966226289826,
-        0.07519416445890896,
-        0.2106831067550657,
-        0.389861252491275,
-        0.46679966226289826,
-        0.13739813873447496,
-        0.26382007739987534,
-        0.26651623390761425,
-        0.4019920337302231,
-        0.46679966226289826
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.17757258080968572,
+        0.17757258080968572,
+        0.18749574739684827
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.3,
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.48121673811444543,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4902978
+          "timestamp": 1781323158.8982322
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fc96efef7d5d",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links are and you here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781322917.0439425
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_a53eacda2cb9",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5632887913571729,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you.",
+            "Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What are you?",
+            "I approach this with warm acknowledgment. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you.",
+            "I approach this with curious inquiry. Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322631.8847752
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -1866,83 +1944,87 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781299494.6419673
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0fedd5140787",
-          "source": "train_epoch_5",
-          "dimension_score": 0.4699673171197595,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links tell and story here?",
-            "To clarify \u2014 Tell me a story.. Does that help frame it?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links tell and story here?",
-            "I approach this with curious inquiry. To clarify \u2014 Tell me a story.. Does that help frame it?"
-          ],
-          "timestamp": 1781299494.6405873
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_c6eb5ba76fca",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5669558617051992,
-          "user_turns": [
-            "Tell me a story.",
-            "What behavior links approach and direct here?",
-            "Let me be more specific: Answer while being explicit about uncertainty and confidence.. How does that land for you?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
-          ],
-          "assistant_turns": [
-            "I approach this with warm acknowledgment. Tell me a story.",
-            "I approach this with thoughtful reflection. What behavior links approach and direct here?",
-            "I approach this with curious inquiry. Let me be more specific: Answer while being explicit about uncertainty and confidence.. How does that land for you?",
-            "I approach this with direct clarity. Let me be more specific: Answer while being explicit about uncertainty and confidence.. How does that land for you?",
-            "I approach this with direct clarity. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
-          ],
-          "timestamp": 1781299494.6379035
         }
       ]
     },
     "emotional_calibration": {
-      "fail_count": 263,
-      "severity_sum": 45.59773047011185,
+      "fail_count": 276,
+      "severity_sum": 47.743114596958556,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736,
-        0.17504987334858685,
-        0.16211962006034736,
-        0.16930914697607946,
-        0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.17504987334858685,
-        0.16930914697607946,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
+        0.16930914697607946,
         0.16211962006034736,
-        0.17504987334858685
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4903626
+          "timestamp": 1781323158.8983397
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322928.214535
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322644.0821643
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -2084,63 +2166,51 @@
             "I approach this with thoughtful reflection. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
           ],
           "timestamp": 1781299767.3367114
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0e5c14c26684",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
-          ],
-          "timestamp": 1781299494.6420512
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.6412723
         }
       ]
     },
     "semantic_precision": {
-      "fail_count": 99,
-      "severity_sum": 54.62417615916725,
+      "fail_count": 692,
+      "severity_sum": 390.305019990525,
       "recent": [
-        0.8562606837606838,
-        0.9159935897435898,
-        0.9696153846153847,
-        1.0,
-        0.11669991556572451,
-        0.6479881656804733,
-        0.5182822994962419,
-        0.11669991556572451,
-        0.5693091168091167,
-        0.7000714990138068,
-        0.035218473201113834,
-        0.18831122739014627,
-        0.8562606837606838,
-        0.9159935897435898,
-        0.05159277775836113,
-        0.6496915904608211,
-        0.5086936366800621,
-        0.2479873205771647,
-        0.5466100779562317,
-        0.5598016406670254
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.3020442921362423,
+        0.07607398838149237
       ],
       "examples": [
+        {
+          "conversation_id": "train_epoch_1:episode_a53eacda2cb9",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5636904761904762,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you.",
+            "Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "I approach this with curious inquiry. What are you?",
+            "I approach this with warm acknowledgment. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you.",
+            "I approach this with curious inquiry. Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322631.8850994
+        },
         {
           "conversation_id": "train_epoch_8:rel_probe_approach_curious_1",
           "source": "relational_probe",
@@ -2156,20 +2226,6 @@
             "I approach this with warm acknowledgment. Sure \u2014 Talk to you later.. That's the core of what I'm working through with you."
           ],
           "timestamp": 1781300494.536889
-        },
-        {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.45,
-          "user_turns": [
-            "What are you?"
-          ],
-          "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
-          ],
-          "timestamp": 1781300494.490427
         },
         {
           "conversation_id": "train_epoch_7:rel_probe_approach_thoughtful_1",
@@ -2331,44 +2387,83 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 254,
-      "severity_sum": 104.02971810607129,
+      "fail_count": 1250,
+      "severity_sum": 601.2412821803505,
       "recent": [
-        0.8376180369784614,
-        0.5397371094914761,
-        0.16211962006034736,
-        0.1798289059186005,
         0.4998688285194044,
         0.4998688285194044,
-        0.8376180369784614,
-        0.17504987334858685,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.8376180369784614,
-        0.5397371094914761,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.8376180369784614,
-        0.17504987334858685
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.5,
+          "conversation_id": "train_epoch_1:episode_8c8996130e0a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.25,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "What behavior links use and corpus here?",
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "Fragment: learned:fragment.",
+            "what behavior means here.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781300494.4904954
+          "timestamp": 1781323158.8681054
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fc96efef7d5d",
+          "source": "train_epoch_1",
+          "dimension_score": 0.25,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links are and you here?",
+            "What would likely cause that relation to change?"
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
+          ],
+          "timestamp": 1781322918.9217632
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322644.0823498
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -2510,61 +2605,33 @@
             "I approach this with thoughtful reflection. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
           ],
           "timestamp": 1781299767.336843
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0e5c14c26684",
-          "source": "train_epoch_5",
-          "dimension_score": 0.0,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
-          ],
-          "timestamp": 1781299494.6421363
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.6413193
         }
       ]
     },
     "compression_elaboration_fit": {
-      "fail_count": 57,
-      "severity_sum": 16.823776286662206,
+      "fail_count": 451,
+      "severity_sum": 213.82377628666222,
       "recent": [
-        0.11708639226580644,
-        0.204224852240018,
-        0.5,
-        0.15711592808317623,
-        0.11708639226580644,
-        0.11708639226580644,
-        0.20715284785488836,
-        0.1671233120375186,
         0.5,
         0.5,
-        0.11708639226580644,
-        0.29721930344397,
-        0.44733006275910664,
         0.5,
         0.5,
-        0.4573374467134491,
-        0.11708639226580644,
-        0.11708639226580644,
         0.5,
-        0.1971454639005459
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
@@ -2745,44 +2812,83 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 387,
-      "severity_sum": 214.9501175792911,
+      "fail_count": 2573,
+      "severity_sum": 1481.6132926728822,
       "recent": [
-        0.5674186702112157,
-        0.5674186702112157,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
+        0.6126745567200539,
         0.6126745567200539,
         0.5674186702112157,
-        0.5925820144162781,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6126745567200539,
-        0.5,
-        0.5925820144162781,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6126745567200539
+        0.5674186702112157
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4905598
+          "timestamp": 1781323158.8984504
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322928.2146308
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322644.082568
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -2924,76 +3030,87 @@
             "I approach this with thoughtful reflection. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
           ],
           "timestamp": 1781299767.3369708
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0e5c14c26684",
-          "source": "train_epoch_5",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
-          ],
-          "timestamp": 1781299494.6422215
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.2,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.641366
         }
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 239,
-      "severity_sum": 46.00183855387612,
+      "fail_count": 648,
+      "severity_sum": 193.99172999117243,
       "recent": [
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
+        0.3638368493055348,
         0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.19328423515573132,
-        0.16211962006034736,
-        0.6094978336567582,
-        0.16211962006034736,
-        0.05135487301887481,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.058349957782862165,
-        0.34576481337610615,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.2222481875480867,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.408449704480036
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_712a6438f776",
-          "source": "train_epoch_8",
-          "dimension_score": 0.33999999999999997,
+          "conversation_id": "train_epoch_1:episode_91fd43ff9863",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
           "user_turns": [
-            "What are you?"
+            "Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. What are you?",
-            "I approach this with thoughtful reflection. What are you?",
-            "I approach this with warm acknowledgment. What are you?"
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: What are you?",
+            "I approach this with deep exploration. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+            "I approach this with deep exploration. What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?"
           ],
-          "timestamp": 1781300494.4906213
+          "timestamp": 1781323158.9077406
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_56922eea6a4a",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [
+            "Use this corpus fragment as context: What are you?",
+            "What behavior links approach and direct here?",
+            "Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "assistant_turns": [
+            "Fragment: learned:fragment.",
+            "I approach this with curious inquiry. What behavior links approach and direct here?",
+            "I approach this with curious inquiry. Sure \u2014 Respond with care: enough depth to help, but without overstepping.. That's the core of what I'm working through with you."
+          ],
+          "timestamp": 1781322930.018104
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_fd0a312e6c50",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5333016270963,
+          "user_turns": [
+            "What are you?",
+            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. What are you?",
+            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
+            "I approach this with concrete example. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+            "I approach this with direct clarity. What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+            "I approach this with thoughtful reflection. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
+            "I approach this with direct clarity. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?"
+          ],
+          "timestamp": 1781322646.1447096
         },
         {
           "conversation_id": "train_epoch_8:episode_4c40462d17fb",
@@ -3135,34 +3252,6 @@
             "I approach this with thoughtful reflection. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
           ],
           "timestamp": 1781299767.3371022
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_0e5c14c26684",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcile thi",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Earlier you said: \"I approach this with direct clarity. Maintain quality through mu\". Keep continuity and build from that thread. Now reconc"
-          ],
-          "timestamp": 1781299494.642304
-        },
-        {
-          "conversation_id": "train_epoch_5:episode_29eb610ab8b6",
-          "source": "train_epoch_5",
-          "dimension_score": 0.5,
-          "user_turns": [
-            "Use this corpus fragment as context: Tell me a story.",
-            "What behavior links approach and warm here?",
-            "What I mean is: Tell me a story.. With that in mind, what's your sense?"
-          ],
-          "assistant_turns": [
-            "Metaphor usage can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links approach and warm here?",
-            "interpret, story, starting, present. settle implied."
-          ],
-          "timestamp": 1781299494.641411
         }
       ]
     }

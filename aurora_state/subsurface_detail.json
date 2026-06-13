@@ -1,7 +1,7 @@
 {
   "action_bias_candidates": [],
   "candidate_interpretations": [],
-  "coherence": 0.45,
+  "coherence": 0.516,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
@@ -29,11 +29,11 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6006,
+    "confidence": 0.577,
     "expected_observation": "followup",
     "expected_user_continuation": "",
     "likely_affect_shift": "neutral",
-    "mismatch": 0.2125,
+    "mismatch": 0.28,
     "prediction_payload": {
       "affect": "neutral",
       "axis_signature": "",
@@ -44,7 +44,7 @@
     "preload_context": [
       "followup"
     ],
-    "readiness_bias": 0.5739,
+    "readiness_bias": 0.5331,
     "source": "runtime_evidence"
   },
   "pressure_map": {
@@ -54,9 +54,9 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.5613,
+  "readiness": 0.574,
   "recalled_fragments": [
-    "What are you?"
+    "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense? [Internal: That make..."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -65,7 +65,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1781300491.8489966,
+  "saved_at": 1781323156.881713,
   "sub_crests": [
     {
       "axis": "X",
@@ -84,8 +84,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.7875,
-      "label": "steady_continuation"
+      "intensity": 0.55,
+      "label": "expectation"
     },
     {
       "axis": "N",
