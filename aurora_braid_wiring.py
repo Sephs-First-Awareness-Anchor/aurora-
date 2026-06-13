@@ -290,8 +290,30 @@ def begin_response_turn(
         for ctx in turn_contexts:
             space.register(ctx)
 
+        # Structural reasoning track — runs parallel with semantic braid
+        _cr = systems.get('constraint_reasoner')
+        _constraint_trace = None
+        if _cr is not None:
+            try:
+                _cr_profile = getattr(self_state, 'pressure_vec', None) or _cr.current_profile()
+                _constraint_trace = _cr.reason(_cr_profile, depth=3, user_text=user_text)
+                systems['_constraint_trace'] = _constraint_trace
+                _cr_ctx = _cr.to_process_context(_constraint_trace, tick=turn_tick)
+                if _cr_ctx is not None:
+                    space.register(_cr_ctx)
+            except Exception:
+                _constraint_trace = None
+                systems['_constraint_trace'] = None
+
         # Integrate — emotion firewall fires internally
         thought_state = space.integrate()
+
+        # Alignment check: structural vs semantic — emit WarpDemand if divergent
+        if _cr is not None and _constraint_trace is not None:
+            try:
+                _cr.integrate(_constraint_trace, thought_state)
+            except Exception:
+                pass
 
         # Carry forward through continuity
         thought_state = continuity.carry_forward(thought_state)

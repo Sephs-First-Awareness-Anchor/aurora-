@@ -19119,6 +19119,22 @@ def boot_aurora(
         if verbose:
             print(f"  [WARP] WarpField unavailable: {_wf_e}")
 
+    # Constraint Reasoner — structural reasoning track parallel to semantic braid
+    systems['constraint_reasoner'] = None
+    try:
+        from aurora_constraint_reasoner import (
+            ConstraintReasoner as _CR,
+            install_reasoner as _install_cr,
+        )
+        _cr = _CR.from_systems(systems)
+        _install_cr(_cr)
+        systems['constraint_reasoner'] = _cr
+        if verbose:
+            print("  [CONSTRAINT] Constraint reasoner online — structural track active")
+    except Exception as _cre:
+        if verbose:
+            print(f"  [CONSTRAINT] Constraint reasoner unavailable: {_cre}")
+
     # Layer 3.5: SediMemory — stratigraphic constraint-native memory
     systems['sedimemory'] = None
     try:
