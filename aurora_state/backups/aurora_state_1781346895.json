@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1781341327.5354285,
-  "generation": 1999,
-  "genome_version": 1999,
+  "timestamp": 1781346732.8155375,
+  "generation": 2695,
+  "genome_version": 2695,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -69,56 +69,60 @@
     "curiosity": 0.492,
     "caution": 0.41,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.3972,
-    "introspection": 0.4757,
+    "verbosity": 0.39,
+    "introspection": 0.4734,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3368
   },
-  "personality_drift": 0.8431,
+  "personality_drift": 0.8277,
   "crystal_genomes": {
     "response": {
-      "warmth": 1.0,
-      "precision": 1.0,
-      "depth": 0.8231885319982494,
-      "confidence": 0.8061656684000189
+      "warmth": 0.5616,
+      "precision": 0.6390016787825011,
+      "depth": 0.5348863011240756,
+      "confidence": 0.9955767892637704
     },
     "cognitive": {
-      "curiosity": 0.9279205047262765,
-      "pattern_matching": 0.8502140313545132,
-      "abstraction": 0.6152990000766809,
-      "risk_assessment": 0.7601711367446075
+      "curiosity": 0.8981431839946286,
+      "pattern_matching": 0.5460838621585911,
+      "abstraction": 0.6589116575039377,
+      "risk_assessment": 0.7527469536930764
     },
     "social": {
-      "empathy": 0.8713457581151995,
-      "trust_extension": 0.8813866938044875,
-      "boundary_maintenance": 0.5400103188181845,
-      "engagement": 0.5047240529674891
+      "empathy": 0.9956580774133926,
+      "trust_extension": 1.0,
+      "boundary_maintenance": 0.9929046917804918,
+      "engagement": 0.6723130002213731
     }
   },
   "governance_stats": {
-    "total_nodes": 108,
+    "total_nodes": 104,
     "layers": {
       "DNA": 0,
-      "ENERGY": 108,
+      "ENERGY": 104,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 108,
+    "total_ingested": 104,
     "total_promoted": 0,
     "violations_blocked": 0,
-    "axis_conflicts": {}
+    "axis_conflicts": {
+      "existence": 10
+    }
   },
-  "simulation_epochs": 34,
-  "total_episodes": 18,
+  "simulation_epochs": 57,
+  "total_episodes": 16,
   "understanding_shards": 14,
   "what_aurora_learned": [
-    "Direct clarity can create tension \u2014 use carefully",
+    "",
+    "When I use direct clarity, conversations tend to deepen",
+    "Warm acknowledgment can create tension \u2014 use carefully",
     ""
   ],
   "time_dilation": 3000.0,
-  "stability_state": "critical",
-  "_checksum": "8ece347071ec"
+  "stability_state": "cautious",
+  "_checksum": "a88a4d928ce5"
 }

@@ -4,14 +4,24 @@
   "last_ask_turn": -10,
   "resolved_gaps": [
     {
+      "gap_type": "intent",
+      "unclear_element": "behavior",
+      "question": "",
+      "answer": "To clarify \u2014 Integrate two perspectives that disagree without collapsing either one.. Does that help frame it?",
+      "systems_updated": [
+        "working_memory",
+        "composer"
+      ]
+    },
+    {
       "gap_type": "vocabulary",
       "unclear_element": "what i",
       "question": "",
-      "answer": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?",
+      "answer": "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
       "systems_updated": [
         "composer",
-        "lexicon",
-        "oets"
+        "oets",
+        "lexicon"
       ]
     },
     {
@@ -21,8 +31,114 @@
       "answer": "What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense?",
       "systems_updated": [
         "composer",
-        "lexicon",
-        "oets"
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "what i",
+      "question": "",
+      "answer": "What I mean is: Answer while being explicit about uncertainty and confidence.. With that in mind, what's your sense?",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "what i",
+      "question": "",
+      "answer": "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense?",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "them without pretending there",
+      "question": "",
+      "answer": "To clarify \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. Does that help frame it?",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "intent",
+      "unclear_element": "behavior",
+      "question": "",
+      "answer": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+      "systems_updated": [
+        "working_memory",
+        "composer"
+      ]
+    },
+    {
+      "gap_type": "intent",
+      "unclear_element": "clarify",
+      "question": "",
+      "answer": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+      "systems_updated": [
+        "working_memory",
+        "composer"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "what i",
+      "question": "",
+      "answer": "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "intent",
+      "unclear_element": "carry",
+      "question": "",
+      "answer": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?",
+      "systems_updated": [
+        "working_memory",
+        "composer"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "what i",
+      "question": "",
+      "answer": "What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense?",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "what i",
+      "question": "",
+      "answer": "What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense?",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "intent",
+      "unclear_element": "behavior",
+      "question": "",
+      "answer": "To clarify \u2014 Answer while being explicit about uncertainty and confidence.. Does that help frame it?",
+      "systems_updated": [
+        "working_memory",
+        "composer"
       ]
     }
   ]

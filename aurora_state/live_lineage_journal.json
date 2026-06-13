@@ -1,38 +1,6 @@
 {
-  "updated_at": 1781343261.9113133,
+  "updated_at": 1781347011.3299756,
   "events": [
-    {
-      "timestamp": 1781247346.3868613,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:b4047a293e1f",
-      "axis": "X",
-      "summary": "Manual code change in aurora_os/build/rootfs/usr/local/lib/python3.11/sre_parse.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781247346.3894713,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:f9fa9cde5167",
-      "axis": "X",
-      "summary": "Manual code change in aurora_os/build/rootfs/usr/local/lib/python3.11/ssl.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781247346.3921628,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:3d5869285115",
-      "axis": "X",
-      "summary": "Manual code change in aurora_os/build/rootfs/usr/local/lib/python3.11/stat.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781247346.3949676,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:eec72ad78848",
-      "axis": "X",
-      "summary": "Manual code change in aurora_os/build/rootfs/usr/local/lib/python3.11/statistics.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781247346.3976133,
       "source": "aurora.boot",
@@ -1918,6 +1886,38 @@
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "MC:d7c7962fb785",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781345441.9337368,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:8d06eb07bc64",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781345816.0247052,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:72a72a250426",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781346662.2472723,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:b5fce27a2538",
+      "axis": "B",
+      "summary": "Manual code change in aurora_constraint_reasoner.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781346817.4551132,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:f016c9da375f",
       "axis": "X",
       "summary": "Manual code change in aurora.py formed a new lineage branch"
     }

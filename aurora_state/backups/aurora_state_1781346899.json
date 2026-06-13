@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1781341711.807755,
-  "generation": 2071,
-  "genome_version": 2071,
+  "timestamp": 1781346895.9920912,
+  "generation": 2768,
+  "genome_version": 2768,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,60 +66,62 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.4203,
-    "emotional_expressiveness": 0.39,
+    "curiosity": 0.5404,
+    "caution": 0.4139,
+    "emotional_expressiveness": 0.4129,
     "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
+    "pattern_sensitivity": 0.429,
+    "social_engagement": 0.4026,
     "energy_conservation": 0.312
   },
-  "personality_drift": 0.8477,
+  "personality_drift": 0.7311,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9367468120186039,
-      "precision": 0.6531499473363708,
-      "depth": 0.8921595207627622,
-      "confidence": 0.8230974752898398
+      "warmth": 0.6043467031831938,
+      "precision": 0.7143744152126381,
+      "depth": 0.6224301182051164,
+      "confidence": 0.6406629084942014
     },
     "cognitive": {
-      "curiosity": 0.9624534471704103,
-      "pattern_matching": 0.6686834290502129,
-      "abstraction": 0.549849498222284,
-      "risk_assessment": 0.5152053289141628
+      "curiosity": 1.0,
+      "pattern_matching": 0.702955130182408,
+      "abstraction": 0.9661073126875421,
+      "risk_assessment": 0.7662184874227392
     },
     "social": {
-      "empathy": 0.6644854286562043,
-      "trust_extension": 0.48360000000000003,
-      "boundary_maintenance": 0.5148,
-      "engagement": 0.7310846335527244
+      "empathy": 0.6771705940907459,
+      "trust_extension": 0.8268858065501633,
+      "boundary_maintenance": 1.0,
+      "engagement": 0.7510864333539065
     }
   },
   "governance_stats": {
-    "total_nodes": 108,
+    "total_nodes": 114,
     "layers": {
       "DNA": 0,
-      "ENERGY": 108,
+      "ENERGY": 114,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 108,
+    "total_ingested": 114,
     "total_promoted": 0,
     "violations_blocked": 0,
-    "axis_conflicts": {}
+    "axis_conflicts": {
+      "existence": 4
+    }
   },
-  "simulation_epochs": 37,
-  "total_episodes": 18,
-  "understanding_shards": 12,
+  "simulation_epochs": 59,
+  "total_episodes": 16,
+  "understanding_shards": 14,
   "what_aurora_learned": [
     "Direct clarity can create tension \u2014 use carefully",
-    "When I use direct clarity, conversations tend to deepen",
-    "Curious inquiry can create tension \u2014 use carefully"
+    "",
+    "When I use metaphor usage, conversations tend to deepen"
   ],
   "time_dilation": 3000.0,
-  "stability_state": "critical",
-  "_checksum": "9569e1fe9fae"
+  "stability_state": "stable",
+  "_checksum": "3bda4974517f"
 }
