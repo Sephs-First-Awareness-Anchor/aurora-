@@ -533,8 +533,9 @@ class MotifLineage:
                 if m.role_sequence and m.role_sequence[0] is TokenRole.AGENT
                 else 0.0
             )
-            economy = m.compression_score * 0.15
-            return m.composability_score() * 0.45 + axis_fit * 0.30 + agent_bonus + economy
+            economy = m.compression_score * 0.05
+            clause_bonus = min(0.15, max(0.0, (len(m.role_sequence) - 2) * 0.05))
+            return m.composability_score() * 0.45 + axis_fit * 0.30 + agent_bonus + economy + clause_bonus
 
         return max(candidates, key=_score)
 
