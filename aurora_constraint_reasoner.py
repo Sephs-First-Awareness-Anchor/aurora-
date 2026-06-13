@@ -61,6 +61,7 @@ from __future__ import annotations
 import math
 import time
 import uuid
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -73,6 +74,41 @@ _ISTATE_NAMES: Dict[str, str] = {
     "I_DO":    "energy",      "I_DONOT":  "withdrawal",
     "I_SAW":   "boundary",    "I_SOUGHT": "seeking",
     "I_DID":   "agency",      "I_DIDNT":  "failure",
+}
+
+# Reasoning domains — classified from active rule patterns
+_DOMAINS: Tuple[str, ...] = (
+    "expression",    # identity + momentum forward
+    "decision",      # grounded, boundary clear
+    "self_formation",# existence blocked or contradicted
+    "becoming",      # potential inert, temporal flow
+    "exploration",   # energy unstructured, seeking
+    "will",          # agency patterns
+    "crisis",        # compression or contradiction
+    "neutral",       # no clear pattern
+)
+
+# Which domain each rule belongs to
+_RULE_DOMAIN: Dict[str, str] = {
+    "momentum_forward":         "expression",
+    "identity_anchor":          "expression",
+    "grounded_decision":        "decision",
+    "boundary_unacted":         "decision",
+    "exists_blocked":           "self_formation",
+    "dual_absence":             "self_formation",
+    "contradiction_existence":  "self_formation",
+    "potential_inert":          "becoming",
+    "temporal_energy_flow":     "becoming",
+    "contradiction_continuity": "becoming",
+    "energy_unstructured":      "exploration",
+    "existence_seeking":        "exploration",
+    "withdrawal_action":        "exploration",
+    "agency_detached":          "will",
+    "blocked_agency":           "will",
+    "contradiction_agency":     "will",
+    "action_collapse":          "will",
+    "compression_full":         "crisis",
+    "contradiction_energy":     "crisis",
 }
 
 # I-state activation thresholds (continuous, not binary)
@@ -406,6 +442,7 @@ class ConstraintFrame:
     next_profile:       Dict[str, float]        # where physics says this wants to go
     warp_signals:       List[Tuple[str, float]] # [(warp_trigger, severity), ...]
     frame_confidence:   float                   # how well this profile fits known patterns
+    domain:             str = "neutral"         # classified reasoning domain for this frame
 
 
 @dataclass
@@ -431,6 +468,8 @@ class ConstraintReasoningTrace:
     confidence:           float                 # overall pattern confidence [0,1]
     reasoning_depth:      int                   # how many steps were taken
     self_relational_anchor: str = ""            # first-person axis grounding (when no crystal resonates)
+    domain:               str = "neutral"       # dominant reasoning domain for this trace
+    reasoning_depth_used: int = 0               # actual depth after adaptive adjustment
     computed_at:          float = field(default_factory=time.time)
     trace_id:             str  = field(default_factory=lambda: uuid.uuid4().hex[:8])
 
@@ -470,6 +509,168 @@ def _best_crystal_match(
     return best_concept, round(best_score, 4)
 
 
+# ── Domain classification ──────────────────────────────────────────────────────
+
+def _classify_domain(activations: List[Tuple[Any, float]]) -> str:
+    """
+    Classify the reasoning domain from the set of active rules.
+    The domain with the highest combined activation weight wins.
+    """
+    if not activations:
+        return "neutral"
+    domain_weight: Dict[str, float] = {}
+    for rule, w in activations:
+        d = _RULE_DOMAIN.get(rule.rule_id, "neutral")
+        domain_weight[d] = domain_weight.get(d, 0.0) + w
+    return max(domain_weight, key=lambda d: domain_weight[d])
+
+
+# ── Reasoning pattern ledger ──────────────────────────────────────────────────
+
+class ReasoningPatternLedger:
+    """
+    Dynamic memory of constraint reasoning outcomes.
+
+    Tracks which rules and patterns produced good structural-semantic
+    alignment across domains, and adapts rule weights accordingly.
+    Aurora develops different reasoning styles per domain and learns
+    which patterns work better — and why.
+
+    Two tiers of learning:
+      Global weights  — overall rule effectiveness across all contexts
+      Domain weights  — rule effectiveness per reasoning domain
+
+    Crystallization: when a pattern succeeds ≥3 times with alignment
+    > 0.75 in the same domain, it is flagged for DPS crystallization —
+    becoming a permanent reasoning pattern in Aurora's vocabulary.
+    """
+
+    _MAX_HISTORY      = 48
+    _LR               = 0.04    # learning rate
+    _CRYSTAL_THRESH   = 0.75    # min alignment to count toward crystallization
+    _CRYSTAL_MIN_HITS = 3       # consecutive successes before flagging
+
+    def __init__(self) -> None:
+        self._history: deque = deque(maxlen=self._MAX_HISTORY)
+        self._global_weights: Dict[str, float] = {r.rule_id: 1.0 for r in _RULES}
+        self._domain_weights: Dict[str, Dict[str, float]] = {
+            d: {r.rule_id: 1.0 for r in _RULES} for d in _DOMAINS
+        }
+        self._cand: Dict[str, List[float]] = defaultdict(list)
+        self._pending_crystals: List[Dict] = []
+
+    def record(
+        self,
+        trace:     "ConstraintReasoningTrace",
+        alignment: float,
+    ) -> None:
+        domain = trace.domain
+        rules_fired = [
+            (rid, w)
+            for frame in trace.frames
+            for rid, w in frame.active_rules
+            if w >= 0.25
+        ]
+        self._history.append({
+            "domain":           domain,
+            "alignment":        round(alignment, 3),
+            "rules_fired":      rules_fired,
+            "dominant_pattern": trace.structural_narrative[:80],
+            "confidence":       trace.confidence,
+            "resonance_score":  trace.resonance_score,
+            "tension_axes":     list(trace.tension_axes),
+            "tick":             time.time(),
+        })
+        self._update_weights(rules_fired, domain, alignment)
+        self._check_crystallization(trace, domain, alignment)
+
+    def _update_weights(
+        self,
+        rules_fired: List[Tuple[str, float]],
+        domain:      str,
+        alignment:   float,
+    ) -> None:
+        signal = alignment - 0.50   # +0.5 = perfect, -0.5 = complete divergence
+        for rule_id, activation in rules_fired:
+            delta = self._LR * signal * activation
+            # Global weight
+            self._global_weights[rule_id] = max(
+                0.10, min(3.0, self._global_weights.get(rule_id, 1.0) + delta)
+            )
+            # Domain weight — more aggressive update (1.5×) so domain specialisation develops faster
+            d_w = self._domain_weights.setdefault(domain, {})
+            d_w[rule_id] = max(
+                0.10, min(3.0, d_w.get(rule_id, 1.0) + delta * 1.5)
+            )
+
+    def _check_crystallization(
+        self,
+        trace: "ConstraintReasoningTrace",
+        domain: str,
+        alignment: float,
+    ) -> None:
+        if alignment < self._CRYSTAL_THRESH or trace.confidence < 0.50:
+            return
+        key = f"{domain}:{trace.structural_narrative[:60]}"
+        self._cand[key].append(alignment)
+        if len(self._cand[key]) >= self._CRYSTAL_MIN_HITS:
+            mean_a = sum(self._cand[key]) / len(self._cand[key])
+            self._pending_crystals.append({
+                "pattern_key":    key,
+                "domain":         domain,
+                "narrative":      trace.structural_narrative[:120],
+                "mean_alignment": round(mean_a, 3),
+                "exit_profile":   dict(trace.exit_profile),
+                "tension_axes":   list(trace.tension_axes),
+            })
+            self._cand[key] = []   # reset after flagging
+
+    def get_weight(self, rule_id: str, domain: str) -> float:
+        g = self._global_weights.get(rule_id, 1.0)
+        d = self._domain_weights.get(domain, {}).get(rule_id, 1.0)
+        return round(g * d, 4)
+
+    def recent_alignment(self, n: int = 8) -> float:
+        recent = list(self._history)[-n:]
+        if not recent:
+            return 0.5
+        return round(sum(e["alignment"] for e in recent) / len(recent), 3)
+
+    def pattern_effectiveness(self) -> Dict[str, Dict]:
+        """Per-rule summary: mean alignment, hit count, dominant domain."""
+        rule_data: Dict[str, Dict] = {}
+        for entry in self._history:
+            a = entry["alignment"]
+            d = entry["domain"]
+            for rid, _ in entry.get("rules_fired", []):
+                if rid not in rule_data:
+                    rule_data[rid] = {"alignments": [], "domains": {}}
+                rule_data[rid]["alignments"].append(a)
+                rule_data[rid]["domains"][d] = rule_data[rid]["domains"].get(d, 0) + 1
+        return {
+            rid: {
+                "mean_alignment": round(sum(v["alignments"]) / len(v["alignments"]), 3),
+                "hit_count":      len(v["alignments"]),
+                "top_domain":     max(v["domains"], key=lambda k: v["domains"][k])
+                                  if v["domains"] else "unknown",
+            }
+            for rid, v in rule_data.items()
+            if v["alignments"]
+        }
+
+    def domain_effectiveness(self) -> Dict[str, float]:
+        """Mean alignment per domain across recent history."""
+        d_scores: Dict[str, List[float]] = {}
+        for entry in self._history:
+            d_scores.setdefault(entry["domain"], []).append(entry["alignment"])
+        return {d: round(sum(s) / len(s), 3) for d, s in d_scores.items()}
+
+    def drain_pending_crystals(self) -> List[Dict]:
+        out = list(self._pending_crystals)
+        self._pending_crystals.clear()
+        return out
+
+
 # ── Main reasoning engine ──────────────────────────────────────────────────────
 
 class ConstraintReasoner:
@@ -504,6 +705,7 @@ class ConstraintReasoner:
         self._lattice     = lattice
         self._dimensional = dimensional
         self._dps         = getattr(dimensional, "dps", None) if dimensional else None
+        self._ledger      = ReasoningPatternLedger()
 
     @classmethod
     def from_systems(cls, systems: Dict[str, Any]) -> "ConstraintReasoner":
@@ -561,6 +763,9 @@ class ConstraintReasoner:
             else "neutral constraint state"
         )
 
+        # Classify domain from active rule set
+        domain = _classify_domain(activations)
+
         # Collect warp signals from active rules that have triggers
         warp_signals: List[Tuple[str, float]] = [
             (rule.warp_trigger, rule.severity * weight)
@@ -568,11 +773,13 @@ class ConstraintReasoner:
             if rule.warp_trigger is not None
         ]
 
-        # Compute predicted next profile by summing deltas weighted by activation
+        # Compute predicted next profile — delta contributions weighted by
+        # activation AND by learned effectiveness (global × domain weights)
         next_profile = dict(profile)
         total_rule_weight = sum(w for _, w in activations) or 1.0
         for rule, weight in activations:
-            norm_w = weight / total_rule_weight
+            ledger_w = self._ledger.get_weight(rule.rule_id, domain)
+            norm_w = (weight / total_rule_weight) * ledger_w
             for ax, delta in rule.next_delta.items():
                 next_profile[ax] = round(
                     min(1.0, max(0.0, next_profile.get(ax, 0.5) + delta * norm_w)), 3
@@ -591,6 +798,7 @@ class ConstraintReasoner:
             next_profile=next_profile,
             warp_signals=warp_signals,
             frame_confidence=frame_confidence,
+            domain=domain,
         )
 
     # ── Multi-step reasoning trace ────────────────────────────────────────────
@@ -613,10 +821,22 @@ class ConstraintReasoner:
         if not profile:
             profile = self.current_profile()
 
+        # Crystal resonance check first — guides adaptive depth
+        resonant_concept, resonance_score = _best_crystal_match(profile, self._dps)
+
+        # Adaptive depth: how far to project depends on how familiar the territory is
+        # Strong match → less exploration needed. Unknown territory → explore further.
+        # Contradicted (near-neutral axes) → stay shallow, diagnose current state.
+        effective_depth = max(2, min(5, depth))
+        if resonance_score >= 0.78:
+            effective_depth = max(2, effective_depth - 1)   # known — trust the crystal
+        elif resonance_score < 0.40:
+            effective_depth = min(5, effective_depth + 1)   # unknown — look further
+
         frames: List[ConstraintFrame] = []
         current = {ax: float(profile.get(ax, 0.5)) for ax in _AXES}
 
-        for i in range(max(1, depth)):
+        for i in range(max(1, effective_depth)):
             frame = self.step(current, step_index=i)
             frames.append(frame)
             current = frame.next_profile
@@ -627,8 +847,11 @@ class ConstraintReasoner:
         narrative    = self._narrative(frames)
         confidence   = self._confidence(frames)
 
-        # DPS crystal resonance: what established pattern matches entry?
-        resonant_concept, resonance_score = _best_crystal_match(profile, self._dps)
+        # Dominant domain across all frames
+        domain_counts: Dict[str, int] = {}
+        for f in frames:
+            domain_counts[f.domain] = domain_counts.get(f.domain, 0) + 1
+        trace_domain = max(domain_counts, key=lambda d: domain_counts[d]) if domain_counts else "neutral"
 
         # Compute entry I-states for self-relation (uses entry profile, not exit)
         entry_istates = _istates(profile)
@@ -659,6 +882,8 @@ class ConstraintReasoner:
             confidence=confidence,
             reasoning_depth=len(frames),
             self_relational_anchor=self_relational_anchor,
+            domain=trace_domain,
+            reasoning_depth_used=effective_depth,
         )
 
     # ── Self-relation ─────────────────────────────────────────────────────────
@@ -781,24 +1006,28 @@ class ConstraintReasoner:
             what_triggered_it="ivm_axis_state",
             what_it_is_operating_on=_profile_str(trace.entry_profile),
             current_output_state={
-                "structural_narrative": trace.structural_narrative,
-                "tension_axes":         trace.tension_axes,
-                "warp_signals":         [
+                "structural_narrative":  trace.structural_narrative,
+                "domain":                trace.domain,
+                "tension_axes":          trace.tension_axes,
+                "warp_signals":          [
                     {"trigger": t, "severity": round(s, 3)}
                     for t, s in trace.warp_signals
                 ],
-                "resonant_concept":     trace.resonant_concept,
-                "resonance_score":      trace.resonance_score,
-                "exit_profile":         trace.exit_profile,
+                "resonant_concept":      trace.resonant_concept,
+                "resonance_score":       trace.resonance_score,
+                "exit_profile":          trace.exit_profile,
                 "constraint_confidence": trace.confidence,
-                "frames":               len(trace.frames),
+                "frames":                len(trace.frames),
+                "depth_used":            trace.reasoning_depth_used,
+                "recent_alignment":      self._ledger.recent_alignment(),
+                "domain_effectiveness":  self._ledger.domain_effectiveness(),
             },
             self_relevance=trace.confidence,
             axis_signature=dominant_axes,
             active_axis_intensity=trace.confidence,
             unresolved_tension_weight=tension_weight,
             tick=tick,
-            relevance_weight=0.85,          # structural truth is always relevant
+            relevance_weight=0.85,
             continuity_weight=1.0,
             self_pressure_weight=trace.confidence,
             relevance_decay=1.0,
@@ -823,6 +1052,16 @@ class ConstraintReasoner:
         not an error.
         """
         alignment = self._compute_alignment(trace, semantic_state)
+
+        # Record outcome into pattern ledger — this is what makes reasoning dynamic.
+        # Every alignment score is feedback that shifts rule weights per domain.
+        self._ledger.record(trace, alignment)
+
+        # Flush any crystallization candidates to DPS
+        pending = self._ledger.drain_pending_crystals()
+        if pending and self._dps is not None:
+            for candidate in pending:
+                self._flush_crystal_to_dps(candidate)
 
         if emit_warp and alignment < self._DIVERGENCE_THRESHOLD and trace.confidence > 0.4:
             try:
@@ -850,9 +1089,54 @@ class ConstraintReasoner:
             "alignment":            round(alignment, 3),
             "structural_grounded":  alignment >= 0.5,
             "structural_narrative": trace.structural_narrative,
+            "domain":               trace.domain,
             "tension_axes":         trace.tension_axes,
             "resonant_concept":     trace.resonant_concept,
             "confidence":           trace.confidence,
+            "recent_alignment":     self._ledger.recent_alignment(),
+            "pending_crystals":     len(self._ledger._pending_crystals),
+        }
+
+    # ── Crystallization ────────────────────────────────────────────────────────
+
+    def _flush_crystal_to_dps(self, candidate: Dict) -> None:
+        """
+        Push a crystallized reasoning pattern into DPS as a new concept.
+        The pattern becomes part of Aurora's permanent reasoning vocabulary —
+        the same path by which all concepts develop.
+        """
+        if self._dps is None:
+            return
+        try:
+            concept_name = f"reasoning_{candidate['domain']}_{uuid.uuid4().hex[:6]}"
+            sig = candidate.get("exit_profile", {})
+            if hasattr(self._dps, "add_crystal"):
+                self._dps.add_crystal(
+                    concept=concept_name,
+                    constraint_signature=sig,
+                    source="constraint_reasoner",
+                    narrative=candidate.get("narrative", ""),
+                    domain=candidate.get("domain", "neutral"),
+                    mean_alignment=candidate.get("mean_alignment", 0.0),
+                )
+            elif hasattr(self._dps, "form_crystal"):
+                self._dps.form_crystal(concept_name, sig)
+        except Exception:
+            pass
+
+    # ── Public reporting ───────────────────────────────────────────────────────
+
+    def reasoning_report(self) -> Dict:
+        """
+        Snapshot of how Aurora's constraint reasoning has been performing.
+        Useful for diagnostics and for meta-reasoning about reasoning itself.
+        """
+        return {
+            "recent_alignment":      self._ledger.recent_alignment(),
+            "pattern_effectiveness": self._ledger.pattern_effectiveness(),
+            "domain_effectiveness":  self._ledger.domain_effectiveness(),
+            "pending_crystals":      len(self._ledger._pending_crystals),
+            "history_depth":         len(self._ledger._history),
         }
 
     # ── Private helpers ────────────────────────────────────────────────────────
