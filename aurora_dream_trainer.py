@@ -705,6 +705,21 @@ class FailPointLedger:
                     pass
             rec.examples.appendleft(normalized_example)
         self._total_fails += 1
+        # Every recorded fail IS a WarpDemand — route automatically.
+        # WARP does not require manual calls; the fail-point and the demand
+        # are the same event. No subsystem author needs to remember to call it.
+        try:
+            from aurora_warp_protocol import warp_guard as _wg, WarpTrigger as _WT
+            _wg(
+                source="dream_trainer",
+                layer="evaluation",
+                trigger=_WT.FAILED_PREDICTION,
+                unresolved_text=dimension,
+                severity=max(0.0, min(1.0, severity)),
+                persistence_key=f"fail:{dimension}",
+            )
+        except Exception:
+            pass
 
     def record(
         self,

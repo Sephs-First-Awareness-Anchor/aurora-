@@ -18933,11 +18933,17 @@ def boot_aurora(
     # ---- WARP FIELD — Universal Accommodation Primitive ----
     # Installed immediately after DPS so every subsequent boot step can route
     # unresolved states to the field. Doctrine: nothing silently disappears.
+    #
+    # Handlers use late-bound closures over the `systems` dict. They are
+    # registered now but resolved at call-time, so they see fully-booted
+    # modules even though they are registered at Layer 3.
     systems['warp_field'] = None
     try:
         from aurora_warp_protocol import (
             WarpField as _WarpField,
+            WarpPathway as _WarpPathway,
             install_warp_field as _install_wf,
+            seal_warp as _seal_warp,
         )
         _warp_field = _WarpField()
         _dps_sys = getattr(dimensional, 'dps', None)
@@ -18945,8 +18951,86 @@ def boot_aurora(
             _warp_field.register_warp_capable('dps', _dps_sys)
         _install_wf(_warp_field)
         systems['warp_field'] = _warp_field
+
+        # ── Pathway handlers ──────────────────────────────────────────────────
+        # revise_model: failed prediction/comprehension → DreamTrainer lesson
+        def _h_revise_model(decision):
+            dt = systems.get('dream_trainer')
+            if dt is None:
+                return
+            domain = (
+                decision.demand.persistence_key
+                or decision.demand.unresolved_text
+                or "unknown"
+            ).split(":")[-1][:64]
+            sev = float(decision.demand.severity)
+            try:
+                dt.ledger.record_fail(domain, sev)
+                if hasattr(dt, 'flush_lessons_to_simulation'):
+                    dt.flush_lessons_to_simulation(systems, force=True)
+                decision.resolved = True
+                decision.notes = f"lesson queued: {domain}"
+            except Exception:
+                pass
+
+        # generate_form: no language / representation → grammar + language field
+        def _h_generate_form(decision):
+            for _sys_key, _method in (('grammar_engine', 'flag_missing_form'),
+                                       ('language_field',  'flag_missing_form')):
+                _s = systems.get(_sys_key)
+                if _s is not None and hasattr(_s, _method):
+                    try:
+                        getattr(_s, _method)(decision.demand.unresolved_text)
+                        decision.resolved = True
+                    except Exception:
+                        pass
+
+        # surface_emergence: architecture-level failure → quasiarch + understanding contract
+        def _h_surface_emergence(decision):
+            for _sys_key, _method in (
+                ('quasiarch_observer',    'record_warp_emergence'),
+                ('understanding_contract','record_structural_gap'),
+            ):
+                _s = systems.get(_sys_key)
+                if _s is not None and hasattr(_s, _method):
+                    try:
+                        getattr(_s, _method)(decision)
+                        decision.action_taken = True
+                        decision.resolved = True
+                    except Exception:
+                        pass
+
+        # seek: ambiguity / no memory / no comprehension → OETS + working memory
+        def _h_seek(decision):
+            _perc = systems.get('perception')
+            _oets = getattr(_perc, 'oets', None) if _perc is not None else None
+            if _oets is not None and hasattr(_oets, 'flag_unknown'):
+                try:
+                    _oets.flag_unknown(decision.demand.unresolved_text)
+                    decision.action_taken = True
+                except Exception:
+                    pass
+            _wm = systems.get('working_memory')
+            if _wm is not None and hasattr(_wm, 'note_gap'):
+                try:
+                    _wm.note_gap(decision.demand.unresolved_text)
+                    decision.action_taken = True
+                except Exception:
+                    pass
+
+        _warp_field.register_pathway_handler(_WarpPathway.REVISE_MODEL,       _h_revise_model)
+        _warp_field.register_pathway_handler(_WarpPathway.GENERATE_FORM,      _h_generate_form)
+        _warp_field.register_pathway_handler(_WarpPathway.SURFACE_EMERGENCE,  _h_surface_emergence)
+        _warp_field.register_pathway_handler(_WarpPathway.SEEK,               _h_seek)
+
+        # Seal: install sys.excepthook + threading.excepthook.
+        # After this call, no unhandled Python exception exits the process
+        # without WarpField receiving it.
+        _seal_warp()
+
         if verbose:
-            print("  [WARP] WarpField installed — universal accommodation primitive")
+            print("  [WARP] WarpField sealed — "
+                  "exception hooks installed, 4 pathway handlers registered")
     except Exception as _wf_e:
         if verbose:
             print(f"  [WARP] WarpField unavailable: {_wf_e}")
@@ -20166,6 +20250,14 @@ def train(systems: Dict[str, Any], epochs: int = 10,
 
     for epoch in range(epochs):
         phase_name = f"{phase_prefix}_epoch_{epoch + 1}"
+        # Re-evaluate deferred WARP demands — decayed severity may now route
+        # differently; anything still above noise floor gets re-classified.
+        _wf_epoch = systems.get('warp_field')
+        if _wf_epoch is not None:
+            try:
+                _wf_epoch.flush_deferred()
+            except Exception:
+                pass
         dream_trainer = systems.get('dream_trainer')
         queued_lesson_specs = 0
         if dream_trainer is not None and hasattr(dream_trainer, 'flush_lessons_to_simulation'):

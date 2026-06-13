@@ -1285,3 +1285,96 @@ def warp_guard(
         persistence_key=persistence_key,
     )
     return get_warp_field().submit(demand)
+
+
+# ── Exception-hook sealing ─────────────────────────────────────────────────────
+# After seal_warp() is called it is structurally impossible for an unhandled
+# Python exception to exit the Aurora process without WARP seeing it.
+
+def _warp_excepthook(
+    exc_type: type,
+    exc_value: BaseException,
+    exc_tb: Any,
+    *,
+    original_hook: Optional[Callable] = None,
+) -> None:
+    """Route unhandled exceptions to WarpField, then fall through to default."""
+    try:
+        source_module = "unknown"
+        if exc_tb is not None:
+            frame = exc_tb
+            while frame.tb_next is not None:
+                frame = frame.tb_next
+            source_module = frame.tb_frame.f_globals.get("__name__", "unknown")
+        get_warp_field().submit(WarpDemand(
+            source=source_module,
+            layer="exception",
+            trigger=WarpTrigger.NO_STABLE_PATH,
+            unresolved_text=f"{exc_type.__name__}: {exc_value}",
+            severity=0.75,
+            persistence_key=exc_type.__name__,
+        ))
+    except Exception:
+        pass
+    if original_hook is not None:
+        original_hook(exc_type, exc_value, exc_tb)
+    else:
+        import sys as _sys
+        _sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+
+def seal_warp(warp_field: Optional[WarpField] = None) -> None:
+    """
+    Seal WARP as a primitive.
+
+    Installs sys.excepthook and threading.excepthook so unhandled Python
+    exceptions auto-route to WarpField before the process sees them.
+    After this call, no unresolved state in the Aurora process can exit
+    without WARP receiving it.
+
+    Call once at boot after install_warp_field().
+    """
+    import sys as _sys
+    import threading as _threading
+
+    if warp_field is not None:
+        install_warp_field(warp_field)
+
+    _prev_hook = getattr(_sys, "excepthook", None)
+    _sys.excepthook = lambda et, ev, tb: _warp_excepthook(
+        et, ev, tb,
+        original_hook=_prev_hook if (
+            _prev_hook is not None and _prev_hook is not _sys.__excepthook__
+        ) else None,
+    )
+
+    _prev_thread_hook = getattr(_threading, "excepthook", None)
+
+    def _thread_warp_hook(args: Any) -> None:
+        try:
+            get_warp_field().submit(WarpDemand(
+                source=(
+                    getattr(args.thread, "name", "thread")
+                    if getattr(args, "thread", None) is not None else "thread"
+                ),
+                layer="exception",
+                trigger=WarpTrigger.NO_STABLE_PATH,
+                unresolved_text=(
+                    f"{args.exc_type.__name__}: {args.exc_value}"
+                    if getattr(args, "exc_type", None) is not None
+                    else "thread_exception"
+                ),
+                severity=0.75,
+                persistence_key=getattr(
+                    getattr(args, "exc_type", None), "__name__", "thread_error"
+                ),
+            ))
+        except Exception:
+            pass
+        if _prev_thread_hook is not None:
+            try:
+                _prev_thread_hook(args)
+            except Exception:
+                pass
+
+    _threading.excepthook = _thread_warp_hook
