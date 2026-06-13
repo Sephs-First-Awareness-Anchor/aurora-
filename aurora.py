@@ -19071,7 +19071,19 @@ def boot_aurora(
                 decision.notes = "relational gap — OETS has coverage, derivation deferred"
                 return
 
-            # ── Step 2b: External — Poedex internal Observer first ────────────
+            # ── Step 2b: Self-relation — reason from current axis state ──────────
+            # Before going external, Aurora derives what she can from what she is.
+            # The constraint trace's self-relational anchor IS a real answer.
+            _ct = systems.get('_constraint_trace')
+            _self_anchor = getattr(_ct, 'self_relational_anchor', '') if _ct is not None else ''
+            if _self_anchor:
+                decision.result = _self_anchor
+                decision.action_taken = True
+                decision.resolved = True
+                decision.notes = "resolved via self-relation — structural ground, no external needed"
+                return
+
+            # ── Step 2c: External — Poedex internal Observer first ────────────
             _result = ""
             try:
                 _result = _try_poedex_lookup(_text, systems,
@@ -19100,7 +19112,7 @@ def boot_aurora(
                 decision.resolved = True
                 decision.notes = f"external retrieval seeded to OETS ({len(_result)} chars)"
             else:
-                decision.notes = "seek exhausted — no internal or external resolution found"
+                decision.notes = "seek exhausted — no internal, self-relational, or external resolution"
 
         _warp_field.register_pathway_handler(_WarpPathway.REVISE_MODEL,       _h_revise_model)
         _warp_field.register_pathway_handler(_WarpPathway.GENERATE_FORM,      _h_generate_form)

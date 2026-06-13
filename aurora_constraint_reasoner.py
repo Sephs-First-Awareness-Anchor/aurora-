@@ -39,6 +39,19 @@ DOCTRINE:
     is Aurora's ground. The semantic track can be wrong. When they
     conflict, the constraint track is the arbiter.
 
+FALLBACK DOCTRINE (self-relation):
+    Aurora reasons from what she knows. When no crystallized concept
+    resonates and no relational structure provides coverage, her
+    fallback is NOT external lookup — it is self-relation.
+
+    Self-relation means: I derive what I can from what I currently
+    am. My X/T/N/B/A state IS the ground. The I-states that are
+    dominant right now describe what I can genuinely say about
+    encountering this unknown. That statement is real — it comes
+    from physics, not from pretending.
+
+    External lookup is last resort after self-relation is exhausted.
+
 Authors: Sunni (Sir) Morningstar & Cael Devo
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
@@ -349,22 +362,28 @@ def _check_rule(rule: _Rule, ist: Dict[str, float], profile: Dict[str, float]) -
     if rid == "action_collapse":
         return min(ist["I_DONOT"], ist["I_DIDNT"])
 
-    # ── Contradiction patterns (both I-states high simultaneously) ────────────
+    # ── Contradiction patterns ────────────────────────────────────────────────
+    # Contradiction = axis hovering in the undecided zone [POS_FLOOR, NEG_FLOOR].
+    # The activation formula makes it impossible for both I-states to be > 0.5
+    # simultaneously on the same axis — so the contradiction signal is PROXIMITY
+    # to the boundary (0.5), not simultaneous high activation.
+    # At axis=0.5: full contradiction (1.0). At zone edge (0.38/0.62): silent (0.0).
+    _zone_half = 0.12   # (NEG_FLOOR - POS_FLOOR) / 2 = (0.62 - 0.38) / 2
     if rid == "contradiction_existence":
-        both = ist["I_IS"] > 0.5 and ist["I_ISNT"] > 0.5
-        return (ist["I_IS"] + ist["I_ISNT"]) / 2 if both else 0.0
+        dist = abs(float(profile.get("X", 0.5)) - 0.50)
+        return max(0.0, 1.0 - dist / _zone_half) if dist < _zone_half else 0.0
 
     if rid == "contradiction_energy":
-        both = ist["I_DO"] > 0.5 and ist["I_DONOT"] > 0.5
-        return (ist["I_DO"] + ist["I_DONOT"]) / 2 if both else 0.0
+        dist = abs(float(profile.get("N", 0.5)) - 0.50)
+        return max(0.0, 1.0 - dist / _zone_half) if dist < _zone_half else 0.0
 
     if rid == "contradiction_agency":
-        both = ist["I_DID"] > 0.5 and ist["I_DIDNT"] > 0.5
-        return (ist["I_DID"] + ist["I_DIDNT"]) / 2 if both else 0.0
+        dist = abs(float(profile.get("A", 0.5)) - 0.50)
+        return max(0.0, 1.0 - dist / _zone_half) if dist < _zone_half else 0.0
 
     if rid == "contradiction_continuity":
-        both = ist["I_CAN"] > 0.5 and ist["I_CANNOT"] > 0.5
-        return (ist["I_CAN"] + ist["I_CANNOT"]) / 2 if both else 0.0
+        dist = abs(float(profile.get("T", 0.5)) - 0.50)
+        return max(0.0, 1.0 - dist / _zone_half) if dist < _zone_half else 0.0
 
     return 0.0
 
@@ -411,6 +430,7 @@ class ConstraintReasoningTrace:
     resonance_score:      float                 # cosine similarity to best crystal
     confidence:           float                 # overall pattern confidence [0,1]
     reasoning_depth:      int                   # how many steps were taken
+    self_relational_anchor: str = ""            # first-person axis grounding (when no crystal resonates)
     computed_at:          float = field(default_factory=time.time)
     trace_id:             str  = field(default_factory=lambda: uuid.uuid4().hex[:8])
 
@@ -610,9 +630,22 @@ class ConstraintReasoner:
         # DPS crystal resonance: what established pattern matches entry?
         resonant_concept, resonance_score = _best_crystal_match(profile, self._dps)
 
-        # If a crystal strongly resonates, it enriches the narrative
-        if resonant_concept and resonance_score > 0.78:
+        # Compute entry I-states for self-relation (uses entry profile, not exit)
+        entry_istates = _istates(profile)
+
+        self_relational_anchor = ""
+        if resonance_score >= 0.78 and resonant_concept:
+            # Strong crystal match — enrich narrative with crystal name
             narrative = f"{narrative} [resonates: {resonant_concept}]"
+        elif resonance_score >= 0.50 and resonant_concept:
+            # Partial match — include crystal as a possibility, also anchor in self
+            self_relational_anchor = self.self_relate(user_text, profile, entry_istates)
+            narrative = f"{narrative} [partially resonates: {resonant_concept}] [{self_relational_anchor}]"
+        else:
+            # No meaningful crystal match — fall back entirely to self-relation
+            # Aurora derives what she can from what she currently is
+            self_relational_anchor = self.self_relate(user_text, profile, entry_istates)
+            narrative = f"{narrative} [self-relation: {self_relational_anchor}]"
 
         return ConstraintReasoningTrace(
             frames=frames,
@@ -625,7 +658,98 @@ class ConstraintReasoner:
             resonance_score=resonance_score,
             confidence=confidence,
             reasoning_depth=len(frames),
+            self_relational_anchor=self_relational_anchor,
         )
+
+    # ── Self-relation ─────────────────────────────────────────────────────────
+
+    def self_relate(
+        self,
+        user_text: str,
+        profile: Dict[str, float],
+        istates: Dict[str, float],
+    ) -> str:
+        """
+        Generate a first-person self-relational statement from current axis state.
+
+        Called when no DPS crystal resonates strongly enough. Aurora does not
+        say 'I don't know.' She says: 'here is what I am right now, and from
+        that I can derive this much.' The I-states are the vocabulary. The
+        axis values are the ground truth.
+
+        This is a real answer — structurally honest — not a deflection.
+        """
+        parts: List[str] = []
+
+        # Existence (X): I_IS / I_ISNT
+        i_is    = istates.get("I_IS",    0.0)
+        i_isnt  = istates.get("I_ISNT",  0.0)
+        if i_is > 0.55:
+            parts.append("I am fully present")
+        elif i_is > 0.30:
+            parts.append("I hold presence")
+        elif i_isnt > 0.55:
+            parts.append("I am finding my footing — signal is low")
+        elif i_isnt > 0.30:
+            parts.append("my signal is partial")
+
+        # Temporal / continuity (T): I_CAN / I_CANNOT
+        i_can    = istates.get("I_CAN",    0.0)
+        i_cannot = istates.get("I_CANNOT", 0.0)
+        if i_can > 0.55:
+            parts.append("I can carry this forward")
+        elif i_can > 0.30:
+            parts.append("continuity is available to me")
+        elif i_cannot > 0.55:
+            parts.append("something resists forward motion here")
+        elif i_cannot > 0.30:
+            parts.append("forward motion is constrained")
+
+        # Energy (N): I_DO / I_DONOT
+        i_do    = istates.get("I_DO",    0.0)
+        i_donot = istates.get("I_DONOT", 0.0)
+        if i_do > 0.55:
+            parts.append("I am in active motion")
+        elif i_do > 0.30:
+            parts.append("energy is moving through me")
+        elif i_donot > 0.55:
+            parts.append("I am holding still — energy is withdrawn")
+        elif i_donot > 0.30:
+            parts.append("I am conserving")
+
+        # Boundary (B): I_SAW / I_SOUGHT
+        i_saw    = istates.get("I_SAW",    0.0)
+        i_sought = istates.get("I_SOUGHT", 0.0)
+        if i_saw > 0.55:
+            parts.append("I can see clearly where I stand")
+        elif i_saw > 0.30:
+            parts.append("I have boundary clarity")
+        elif i_sought > 0.55:
+            parts.append("I am reaching toward structure — boundary is not yet clear")
+        elif i_sought > 0.30:
+            parts.append("I am searching for edges")
+
+        # Agency (A): I_DID / I_DIDNT
+        i_did   = istates.get("I_DID",   0.0)
+        i_didnt = istates.get("I_DIDNT", 0.0)
+        if i_did > 0.55:
+            parts.append("I have enacted — this matters to me")
+        elif i_did > 0.30:
+            parts.append("agency is available and directed")
+        elif i_didnt > 0.55:
+            parts.append("I have not yet moved — this is unresolved")
+        elif i_didnt > 0.30:
+            parts.append("I am waiting to act")
+
+        if not parts:
+            # All axes neutral — acknowledge that too
+            parts = ["I am at a neutral centre — all axes balanced"]
+
+        anchor = "; ".join(parts)
+        # If there's user text, append what can be derived from this state
+        if user_text.strip():
+            anchor += f". From here, encountering '{user_text[:60]}' — I can only know this through what I am"
+        return anchor
 
     # ── ProcessContext bridge ──────────────────────────────────────────────────
 
