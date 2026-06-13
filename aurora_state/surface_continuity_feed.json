@@ -1,40 +1,40 @@
 [
   {
-    "packet_id": "f2e877c4252e46c284bbe06012d6cf24",
-    "created_at": 1781294278.3962066,
+    "packet_id": "08bf2f77b74b414d9a6089fbbaf35eae",
+    "created_at": 1781300238.4978693,
     "source": "simulation_live_bridge",
-    "user_input": "I'm feeling sad today.",
-    "aurora_response": "your name is Feeling.",
-    "response_tone": "attentive",
+    "user_input": "Talk to you later.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "feeling",
-      "sad"
+      "talk"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.67"
+      "existence:-0.61"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "25bbe713aba146d19a4a442f923b9142",
-    "created_at": 1781294283.8845122,
+    "packet_id": "35ce1eeb72724068a10644013f2c8436",
+    "created_at": 1781300251.6136587,
     "source": "simulation_live_bridge",
-    "user_input": "What behavior links mean and exist here?",
-    "aurora_response": "your name is Feeling.",
-    "response_tone": "curious",
+    "user_input": "What behavior links approach and thoughtful here?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
       "links",
-      "exist",
+      "approach",
+      "thoughtful",
       "here"
     ],
     "visual_description": "",
@@ -45,29 +45,89 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.68"
+      "existence:-0.57"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "43941ec1e9c34757a22127e45e88d173",
-    "created_at": 1781294289.6414032,
+    "packet_id": "3ab0c42bbdb14e268d57ba822ee4857e",
+    "created_at": 1781300264.737583,
     "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "your name is Feeling.",
-    "response_tone": "curious",
+    "user_input": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it? [Internal: I'm reasoning through that now: To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?. It adds weight to my present understanding.]",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
+      "clarify",
+      "carry",
+      "thread",
+      "next",
+      "step",
+      "without"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.65"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "fef33055747c423b811e9c22e3c981fc",
+    "created_at": 1781300278.2305293,
+    "source": "simulation_live_bridge",
+    "user_input": "What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Can you carry our earlier thread into this next step without losing context?. With that in mind, what's your sense?. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "carry",
+      "thread",
+      "next",
+      "step",
+      "without",
+      "losing"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "db597b9f6820471fb1006c885081b70a",
+    "created_at": 1781300291.805981,
+    "source": "simulation_live_bridge",
+    "user_input": "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it? [Internal: I'm reasoning through that now: To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?. It adds weight to my present understanding.]",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "clarify",
+      "carry",
+      "thread",
+      "next",
+      "step",
+      "without"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
@@ -79,235 +139,74 @@
     "consumed_at": null
   },
   {
-    "packet_id": "7934d16cf5ca4e64afe02b577bceb786",
-    "created_at": 1781294294.4610314,
+    "packet_id": "e662df9356804d5f85a5f5e58e3d9c28",
+    "created_at": 1781300305.2665691,
     "source": "simulation_live_bridge",
-    "user_input": "I'm feeling sad today.",
-    "aurora_response": "your name is Feeling.",
-    "response_tone": "attentive",
-    "concepts_activated": [
-      "feeling",
-      "sad"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "T",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "8d8eb7db9b4744889bc42f70995762e3",
-    "created_at": 1781294300.137242,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links mean and exist here?",
-    "aurora_response": "your name is Feeling.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "exist",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.66"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "154959eb2fea463aa6d3f31179d5a2ce",
-    "created_at": 1781294306.016031,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "your name is Feeling.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.67"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "febe174cad3e47acab75eeedefd2e827",
-    "created_at": 1781294309.8103821,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: I'm feeling sad today.",
-    "aurora_response": "",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "feeling",
-      "sad"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "55bb49d611b944978316f6a54b4b7fcd",
-    "created_at": 1781294315.4218054,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links sad and today here?",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "sad",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2cee049fd1f045c8927ddc328c8e5444",
-    "created_at": 1781294321.096218,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b84125549f754c5d9aa1d5bba4d5bf4e",
-    "created_at": 1781294327.3345063,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: what more means here.",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "more",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6c160f3125db4fb9bb06c75263e05a61",
-    "created_at": 1781294333.1873758,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links more and means here?",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "more",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b55f3f5a9a8f4402a20597341804a64c",
-    "created_at": 1781294337.9833705,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
+    "user_input": "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
     "aurora_response": "",
     "response_tone": "uncertain",
     "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
+      "more",
+      "specific",
+      "carry",
+      "thread",
+      "next",
+      "step"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6cca100e2f7e4485813aa1d492cb8fd5",
+    "created_at": 1781300316.1905537,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Talk to you later.",
+    "aurora_response": "Metaphor usage can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "904702ba4095404990ad96c745f1d648",
+    "created_at": 1781300329.042735,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links talk and you here?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "talk",
+      "here"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -317,15 +216,124 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.56"
+      "existence:-0.64"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "f388ff37e06841f3965c32b4bc935bc1",
-    "created_at": 1781294343.1123147,
+    "packet_id": "ba4c3b093ca1470e9607b25083c3e966",
+    "created_at": 1781300342.0085688,
+    "source": "simulation_live_bridge",
+    "user_input": "Let me be more specific: Talk to you later.. How does that land for you?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "more",
+      "specific",
+      "talk",
+      "land"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.63"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "94b94a3709764e7089ea63d4ddc15907",
+    "created_at": 1781300353.4855297,
+    "source": "simulation_live_bridge",
+    "user_input": "Use this corpus fragment as context: Talk to you later.",
+    "aurora_response": "Metaphor usage can create tension \u2014 use carefully",
+    "response_tone": "attentive",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "0aa4a38ef2724c3dbf34aa7c5ae78bc9",
+    "created_at": 1781300367.1461103,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links approach and curious here?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "approach",
+      "curious",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.64"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2dc3e9539d6a4de4a60b2af8990b55d9",
+    "created_at": 1781300380.6580741,
+    "source": "simulation_live_bridge",
+    "user_input": "Sure \u2014 Talk to you later.. That's the core of what I'm working through with you.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "talk",
+      "core",
+      "working"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.59"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a05b0c30548a4bf0af879ec3ff7b4d6d",
+    "created_at": 1781300394.550021,
     "source": "simulation_live_bridge",
     "user_input": "Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
     "aurora_response": "",
@@ -346,64 +354,6 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.46"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "f3ec636f746a47a391f8900016e56494",
-    "created_at": 1781294349.013305,
-    "source": "simulation_live_bridge",
-    "user_input": "Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
-    "aurora_response": "what said means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "said",
-      "approach",
-      "thoughtful",
-      "reflection",
-      "maintain",
-      "quality"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.50"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "ac06f51a3fdd4bcf96d9ebadd822de33",
-    "created_at": 1781294354.9448097,
-    "source": "simulation_live_bridge",
-    "user_input": "Earlier you said: \"what said means here.\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
-    "aurora_response": "what said means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "said",
-      "said",
-      "here",
-      "keep",
-      "continuity",
-      "build"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
       "existence:-0.65"
     ],
     "resolved_bindings": [],
@@ -411,68 +361,19 @@
     "consumed_at": null
   },
   {
-    "packet_id": "ebe6c0b111404900a6e37d36748ff6a8",
-    "created_at": 1781294361.0998986,
+    "packet_id": "b97861686d1d4fb6a538346c8c173022",
+    "created_at": 1781300408.498535,
     "source": "simulation_live_bridge",
-    "user_input": "I need someone to talk to.",
-    "aurora_response": "what said means here.",
-    "response_tone": "curious",
+    "user_input": "Earlier you said: \"I approach this with concrete example. Maintain quality through multiple turns instead of fading over time. Include your\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "need",
-      "someone",
-      "talk"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3bfdbdcdb40746448274962c444e1806",
-    "created_at": 1781294367.1021683,
-    "source": "simulation_live_bridge",
-    "user_input": "I need someone to talk to.",
-    "aurora_response": "what said means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "need",
-      "someone",
-      "talk"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.66"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "ed1e4343e8cd4378b82a39c9c386aebc",
-    "created_at": 1781294373.265466,
-    "source": "simulation_live_bridge",
-    "user_input": "I need someone to talk to.",
-    "aurora_response": "what said means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "need",
-      "someone",
-      "talk"
+      "said",
+      "approach",
+      "concrete",
+      "maintain",
+      "quality",
+      "multiple"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -489,16 +390,19 @@
     "consumed_at": null
   },
   {
-    "packet_id": "e7c87cef933d48d39d07df7d4c827351",
-    "created_at": 1781294379.4879239,
+    "packet_id": "534f3251edb14505a4cb99a29d205c6f",
+    "created_at": 1781300422.6084192,
     "source": "simulation_live_bridge",
-    "user_input": "I need someone to talk to.",
-    "aurora_response": "what said means here.",
-    "response_tone": "curious",
+    "user_input": "Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with concrete example. Maintain quality through\". Keep continuity and build from that thread. Now reconcile this with an opposing angle. Include your confidence level.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "need",
-      "someone",
-      "talk"
+      "said",
+      "approach",
+      "curious",
+      "inquiry",
+      "said",
+      "approach"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -508,33 +412,117 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.60"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "a4e42c1f3ed04571b431fe8967e6e367",
-    "created_at": 1781294385.6839879,
+    "packet_id": "99b3bd082626457b9b5df2ba75c8715d",
+    "created_at": 1781300436.2820065,
     "source": "simulation_live_bridge",
-    "user_input": "I need someone to talk to.",
-    "aurora_response": "what said means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "need",
-      "someone",
-      "talk"
-    ],
+    "user_input": "What are you?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.56"
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e5cd51ad1c7c4f059ace5084267128f5",
+    "created_at": 1781300451.285304,
+    "source": "simulation_live_bridge",
+    "user_input": "What are you?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "bf22a19564ec425da053f1a0e2e01914",
+    "created_at": 1781300465.9410322,
+    "source": "simulation_live_bridge",
+    "user_input": "What are you?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "061c28956f5a4c05b17296df699373ee",
+    "created_at": 1781300480.0781176,
+    "source": "simulation_live_bridge",
+    "user_input": "What are you?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "041bc801dd30425e925cfa647d4b906d",
+    "created_at": 1781300493.8728766,
+    "source": "simulation_live_bridge",
+    "user_input": "What are you?",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,

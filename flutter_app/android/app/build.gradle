@@ -16,6 +16,11 @@ task preparePythonSources {
     def repoRoot = file("../../..")
     def destDir  = file("src/main/python")
 
+    // Gradle 8 strict validation: exclude Flutter/Gradle build output dirs from
+    // the input declaration so there is no apparent overlap with the outputs of
+    // compileFlutterBuildRelease and buildKotlinToolingMetadata, which also
+    // write into the repo root tree.  The Python sources we actually copy never
+    // live in those subdirectories, so the exclusion is semantically correct.
     inputs.files fileTree(repoRoot) {
         include "**/*.py"
         include "aurora_manifold_directory/**"
@@ -23,6 +28,11 @@ task preparePythonSources {
         exclude "**/__pycache__/**"
         exclude "**/*.pyc"
         exclude "aurora_mobile.py"
+        exclude "flutter_app/**"
+        exclude ".dart_tool/**"
+        exclude "build/**"
+        exclude ".gradle/**"
+        exclude ".idea/**"
     }
     outputs.dir destDir
 

@@ -115,6 +115,17 @@ class RoleTagger:
         "can", "shall", "must", "need", "dare",
         "seems", "feels", "looks", "appears", "becomes", "remains",
         "means", "works", "runs", "grows", "moves", "shifts",
+        # 3rd-person singular forms that appear in constraint expression
+        "keeps", "tells", "costs", "fits", "gives", "decides",
+        "describes", "links", "connects", "notices", "chooses",
+        "understands", "carries", "causes", "holds", "builds",
+        "creates", "knows", "sees", "finds", "takes", "makes",
+        "brings", "shows", "allows", "follows", "forms", "pulls",
+        "pushes", "draws", "drives", "reaches", "helps", "wants",
+        "learns", "reads", "lives", "stands", "stays", "plays",
+        "starts", "stops", "lets", "sets", "gets", "puts",
+        "sits", "leads", "loses", "cuts", "opens", "turns",
+        "waits", "changes", "calls", "comes", "goes", "says",
     ])
 
     # Possessives are NOT skipped -- "my systems" = the systems are the agent
@@ -605,6 +616,72 @@ class SlotFiller:
         TokenRole.OBJECT: "that",
     }
 
+    # Subject-verb agreement: when agent is first-person singular "I",
+    # map 3rd-person or plural verb forms to their 1st-person equivalent.
+    _I_AGREEMENT: Dict[str, str] = {
+        "is":         "am",   "are":        "am",
+        "has":        "have", "does":       "do",
+        "keeps":      "keep", "tells":      "tell",
+        "costs":      "cost", "fits":       "fit",
+        "means":      "mean", "gives":      "give",
+        "decides":    "decide", "describes": "describe",
+        "links":      "link", "connects":  "connect",
+        "notices":    "notice", "chooses":  "choose",
+        "understands":"understand", "carries": "carry",
+        "causes":     "cause", "holds":    "hold",
+        "builds":     "build", "creates":  "create",
+        "knows":      "know", "sees":      "see",
+        "finds":      "find", "takes":     "take",
+        "makes":      "make", "brings":    "bring",
+        "shows":      "show", "allows":    "allow",
+        "follows":    "follow", "forms":   "form",
+        "pulls":      "pull", "pushes":    "push",
+        "draws":      "draw", "drives":    "drive",
+        "reaches":    "reach", "helps":    "help",
+        "wants":      "want", "learns":    "learn",
+        "reads":      "read", "lives":     "live",
+        "stands":     "stand", "stays":    "stay",
+        "starts":     "start", "stops":    "stop",
+        "lets":       "let", "sets":       "set",
+        "gets":       "get", "puts":       "put",
+        "sits":       "sit", "leads":      "lead",
+        "loses":      "lose", "cuts":      "cut",
+        "opens":      "open", "turns":     "turn",
+        "waits":      "wait", "changes":   "change",
+        "calls":      "call", "comes":     "come",
+        "goes":       "go",  "says":       "say",
+        "plays":      "play", "runs":      "run",
+        "moves":      "move", "grows":     "grow",
+        "shifts":     "shift", "works":    "work",
+        "seems":      "seem", "feels":     "feel",
+        "looks":      "look", "appears":   "appear",
+        "becomes":    "become", "remains": "remain",
+    }
+
+    def _agree_verb(self, verb: str, agent: str) -> str:
+        """Normalize verb form for subject-verb agreement."""
+        if agent.lower() not in ("i",):
+            return verb
+        vl = verb.lower()
+        explicit = self._I_AGREEMENT.get(vl)
+        if explicit is not None:
+            return explicit
+        # Fallback: strip regular 3rd-person -s for verbs not in the explicit map.
+        # Handles: "relates"→"relate", "connects"→"connect", "discusses"→"discuss"
+        if len(vl) <= 3 or not vl.endswith("s") or vl.endswith("ss"):
+            return verb
+        if vl.endswith("ies") and len(vl) > 4:
+            return verb[:-3] + "y"   # "carries"→"carry"
+        # Sibilant stems (s/x/z/sh/ch before -es): strip "es"
+        if vl.endswith("es") and len(vl) > 4:
+            stem = vl[:-2]
+            if stem[-1] in ('s', 'x', 'z') or stem[-2:] in ('sh', 'ch'):
+                return verb[:-2]     # "discusses"→"discuss", "fixes"→"fix"
+        # Silent-e or regular -s: strip just "s"
+        if not vl.endswith("us") and not vl.endswith("as"):
+            return verb[:-1]         # "relates"→"relate", "keeps"→"keep"
+        return verb
+
     def fill(
         self,
         motif:      StructuralMotif,
@@ -626,6 +703,8 @@ class SlotFiller:
 
         parts: List[str] = []
         use_idx: Dict[TokenRole, int] = defaultdict(int)
+        # Track most recently placed agent to apply agreement on next ACTION slot
+        _current_agent: str = ""
 
         for idx, role in enumerate(motif.role_sequence):
             if idx in anchor_map:
@@ -633,7 +712,12 @@ class SlotFiller:
                 continue
             pool = token_pool.get(role, [])
             if pool:
-                parts.append(pool[use_idx[role] % len(pool)])
+                token = pool[use_idx[role] % len(pool)]
+                if role is TokenRole.AGENT:
+                    _current_agent = token
+                elif role is TokenRole.ACTION and _current_agent:
+                    token = self._agree_verb(token, _current_agent)
+                parts.append(token)
                 use_idx[role] += 1
 
         sentence = " ".join(parts).strip()
