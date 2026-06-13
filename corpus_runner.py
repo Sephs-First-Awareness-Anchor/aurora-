@@ -653,9 +653,11 @@ class ComparisonGeometry:
 
 # Axis detection vocabulary â words that signal each constraint axis
 _X_MARKERS = frozenset({
-    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'exist', 'exists',
-    'there', 'here', 'presence', 'present', 'real', 'true', 'fact', 'actual',
-    'indeed', 'certainly', 'definitely', 'absolutely', 'has', 'have', 'had',
+    'exist', 'exists', 'existence', 'being', 'entity', 'entities',
+    'there', 'here', 'presence', 'present', 'appear', 'appears', 'apparent',
+    'real', 'reality', 'true', 'truth', 'fact', 'actual', 'genuine', 'authentic',
+    'indeed', 'certainly', 'definitely', 'absolutely', 'known', 'aware',
+    'alive', 'occur', 'occurs', 'happen', 'happens', 'manifest', 'emerge', 'inherent',
 })
 _T_MARKERS = frozenset({
     'when', 'before', 'after', 'during', 'while', 'since', 'until', 'always',
