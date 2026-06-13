@@ -55,6 +55,8 @@ from __future__ import annotations
 import hashlib
 import math
 import time
+import uuid
+from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -893,3 +895,486 @@ class WarpCapable:
             r for r in _RECURSION_DIMS if gap.axis_profile.get(r, 0.0) > _DOMINANCE_FLOOR
         )
         return ":".join(dominant_istates + dominant_rec)
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# WARP AS UNIVERSAL ACCOMMODATION PRIMITIVE
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# DOCTRINE:
+#   WARP is Aurora's universal accommodation function: whenever the existing
+#   architecture cannot resolve tension, gap, ambiguity, contradiction, or
+#   prediction failure, WARP receives the unresolved relation and attempts to
+#   generate a viable new relation.
+#
+#   Every unresolved state must either resolve locally, route to WARP, or be
+#   consciously deferred.  Nothing silently disappears.
+#
+#   WarpCapable is ONE ACTUATOR within this system (the structural-gap /
+#   derive-component pathway).  It is not the root primitive.
+#   The root primitive is: unresolved → WarpField.
+#
+# AUTHORS: Sunni (Sir) Morningstar & Cael Devo
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class WarpTrigger:
+    """Standard trigger-type constants. Any string is valid; these are canonical."""
+    GAP                     = "gap"
+    AMBIGUITY               = "ambiguity"
+    CONTRADICTION           = "contradiction"
+    TENSION                 = "tension"
+    FAILED_PREDICTION       = "failed_prediction"
+    MISSING_REPRESENTATION  = "missing_representation"
+    FAILED_COMPREHENSION    = "failed_comprehension"
+    CONFLICTING_OUTPUTS     = "conflicting_outputs"
+    NO_ACTION               = "no_action"
+    NO_MEMORY               = "no_memory"
+    NO_LANGUAGE_FORM        = "no_language_form"
+    NO_STABLE_PATH          = "no_stable_path"
+    NO_ORGAN_ALIGNMENT      = "no_organ_alignment"
+
+
+class WarpPathway:
+    """Resolution pathways. WarpField selects one per demand."""
+    IGNORE              = "ignore"           # noise — below severity floor
+    DEFER               = "defer"            # low-severity, may self-resolve
+    SEEK                = "seek"             # answerable — ask or retrieve info
+    DERIVE_LOCAL        = "derive_local"     # structural gap in one system
+    DERIVE_MEDIATOR     = "derive_mediator"  # cross-system tension / contradiction
+    REVISE_MODEL        = "revise_model"     # prediction or expectation failed
+    GENERATE_FORM       = "generate_form"    # no language / representation exists
+    SURFACE_EMERGENCE   = "surface_emergence"  # architecture-level failure
+    ANOMALY             = "anomaly"          # possible new primitive — accumulate
+
+
+@dataclass
+class WarpDemand:
+    """
+    The universal primitive: an unresolved state emitted by any layer.
+
+    Any process in Aurora that cannot resolve what is happening through its
+    existing architecture constructs a WarpDemand and submits it to WarpField.
+    The submitting system does NOT need to know what WARP will do.
+    It only confesses: "I cannot resolve this."
+
+    Fields
+    ------
+    source          system/module name emitting the demand
+    layer           architectural layer (e.g. "perception", "memory", "expression")
+    trigger         WarpTrigger constant or custom string describing the failure kind
+    unresolved_text the raw text / content that could not be accommodated
+    expected        what the system predicted or required
+    actual          what actually arrived or was found
+    participants    other subsystem names involved in a cross-system conflict
+    profile         axis / I-state profile of the unresolved content (5D or 10D dict)
+    local_attempts  list of resolution strategies already tried and failed
+    severity        0.0–1.0; governs pathway selection and escalation
+    persistence_key stable key to track a recurring unresolved state across ticks
+    """
+    source:           str
+    layer:            str
+    trigger:          str
+    unresolved_text:  str             = ""
+    expected:         Dict[str, Any]  = field(default_factory=dict)
+    actual:           Dict[str, Any]  = field(default_factory=dict)
+    participants:     List[str]       = field(default_factory=list)
+    profile:          Dict[str, float]= field(default_factory=dict)
+    local_attempts:   List[str]       = field(default_factory=list)
+    severity:         float           = 0.0
+    persistence_key:  str             = ""
+    timestamp:        float           = field(default_factory=time.time)
+    demand_id:        str             = field(
+        default_factory=lambda: uuid.uuid4().hex[:12]
+    )
+
+
+@dataclass
+class WarpDecision:
+    """
+    What WarpField decided to do with a WarpDemand.
+
+    The caller receives this immediately from warp_guard() / WarpField.submit().
+    action_taken=True means a handler ran; resolved=True means the handler
+    reported a successful resolution.  Most pathways will have action_taken=False
+    on first pass — the decision records the intent, handlers fill in the result.
+    """
+    demand:       WarpDemand
+    pathway:      str
+    action_taken: bool       = False
+    resolved:     bool       = False
+    result:       Any        = None
+    notes:        str        = ""
+    decided_at:   float      = field(default_factory=time.time)
+
+
+class WarpField:
+    """
+    The universal accommodation field.
+
+    Every unresolved state in Aurora routes here.  WarpField classifies the
+    demand by trigger type and severity, selects a resolution pathway, and
+    dispatches to the appropriate actuator — which may be a WarpCapable
+    structural-gap resolver, a registered pathway handler, or the deferral /
+    anomaly ledger.
+
+    WarpCapable is ONE ACTUATOR (derive_local / derive_mediator).
+    The field is the root primitive.
+
+    Lifecycle
+    ---------
+    1. Any subsystem calls warp_guard() or WarpField.submit(WarpDemand).
+    2. _classify() maps trigger + severity → WarpPathway.
+    3. _route() dispatches to registered handler or WarpCapable registry.
+    4. WarpDecision is returned immediately; long-running work is async.
+
+    Registration
+    ------------
+    register_warp_capable(name, system)    — for derive_local / derive_mediator
+    register_pathway_handler(pathway, fn)  — for seek / revise_model / generate_form
+                                             / surface_emergence handlers
+    """
+
+    # Maps canonical trigger → default pathway (severity may override)
+    _TRIGGER_PATHWAY: Dict[str, str] = {
+        WarpTrigger.GAP:                    WarpPathway.DERIVE_LOCAL,
+        WarpTrigger.AMBIGUITY:              WarpPathway.SEEK,
+        WarpTrigger.CONTRADICTION:          WarpPathway.DERIVE_MEDIATOR,
+        WarpTrigger.TENSION:                WarpPathway.DERIVE_MEDIATOR,
+        WarpTrigger.FAILED_PREDICTION:      WarpPathway.REVISE_MODEL,
+        WarpTrigger.MISSING_REPRESENTATION: WarpPathway.GENERATE_FORM,
+        WarpTrigger.FAILED_COMPREHENSION:   WarpPathway.SEEK,
+        WarpTrigger.CONFLICTING_OUTPUTS:    WarpPathway.DERIVE_MEDIATOR,
+        WarpTrigger.NO_ACTION:              WarpPathway.SURFACE_EMERGENCE,
+        WarpTrigger.NO_MEMORY:              WarpPathway.SEEK,
+        WarpTrigger.NO_LANGUAGE_FORM:       WarpPathway.GENERATE_FORM,
+        WarpTrigger.NO_STABLE_PATH:         WarpPathway.DEFER,
+        WarpTrigger.NO_ORGAN_ALIGNMENT:     WarpPathway.SURFACE_EMERGENCE,
+    }
+
+    # Severity below this → IGNORE
+    _NOISE_FLOOR: float = 0.08
+    # Severity below this → downgrade to DEFER (unless already IGNORE/ANOMALY)
+    _DEFER_CEILING: float = 0.25
+    # Severity above this with a persistence_key → escalate to ANOMALY
+    _ANOMALY_FLOOR: float = 0.90
+
+    def __init__(self) -> None:
+        self._demands:   deque = deque(maxlen=2000)
+        self._decisions: deque = deque(maxlen=2000)
+        self._deferred:  List[WarpDecision] = []
+        self._anomaly_ledger: List[WarpDecision] = []
+        self._warp_capable_registry: Dict[str, Any] = {}
+        self._pathway_handlers: Dict[str, Callable] = {}
+        self._demand_count:    int = 0
+        self._pathway_counts:  Dict[str, int] = {}
+
+    def register_warp_capable(self, name: str, system: Any) -> None:
+        """Register a WarpCapable system for derive_local / derive_mediator routing."""
+        self._warp_capable_registry[name] = system
+
+    def register_pathway_handler(
+        self, pathway: str, handler: Callable[["WarpDecision"], Any]
+    ) -> None:
+        """
+        Register a handler for a resolution pathway.
+        Handler receives WarpDecision, sets decision.result / decision.resolved,
+        returns any result object or None.
+        """
+        self._pathway_handlers[pathway] = handler
+
+    def submit(self, demand: WarpDemand) -> WarpDecision:
+        """
+        The law: every unresolved state enters here.
+        Returns a WarpDecision synchronously.
+        """
+        self._demands.append(demand)
+        self._demand_count += 1
+
+        pathway = self._classify(demand)
+        decision = WarpDecision(demand=demand, pathway=pathway)
+        self._pathway_counts[pathway] = self._pathway_counts.get(pathway, 0) + 1
+
+        self._route(decision)
+        self._decisions.append(decision)
+        return decision
+
+    def _classify(self, demand: WarpDemand) -> str:
+        sev = float(demand.severity)
+
+        if sev < self._NOISE_FLOOR:
+            return WarpPathway.IGNORE
+
+        # High-severity + recurring = possible new primitive
+        if sev >= self._ANOMALY_FLOOR and demand.persistence_key:
+            return WarpPathway.ANOMALY
+
+        # Canonical trigger lookup
+        trigger = demand.trigger.lower()
+        for key, pathway in self._TRIGGER_PATHWAY.items():
+            if trigger == key or trigger.startswith(key):
+                # Low severity downgrades non-terminal pathways to defer
+                if sev < self._DEFER_CEILING and pathway not in (
+                    WarpPathway.IGNORE, WarpPathway.ANOMALY, WarpPathway.DEFER
+                ):
+                    return WarpPathway.DEFER
+                return pathway
+
+        # Unknown trigger — severity-based fallback
+        if sev < self._DEFER_CEILING:
+            return WarpPathway.DEFER
+        if sev >= 0.70:
+            return WarpPathway.SURFACE_EMERGENCE
+        return WarpPathway.SEEK
+
+    def _route(self, decision: WarpDecision) -> None:
+        pathway = decision.pathway
+
+        if pathway == WarpPathway.IGNORE:
+            return
+
+        if pathway == WarpPathway.DEFER:
+            self._deferred.append(decision)
+            decision.notes = "deferred — severity below action threshold"
+            return
+
+        if pathway == WarpPathway.ANOMALY:
+            self._anomaly_ledger.append(decision)
+            decision.notes = "logged to anomaly ledger — possible new primitive"
+            return
+
+        # Registered pathway handler takes precedence
+        handler = self._pathway_handlers.get(pathway)
+        if handler:
+            try:
+                result = handler(decision)
+                if result is not None:
+                    decision.result = result
+                decision.action_taken = True
+                decision.resolved = True
+            except Exception:
+                decision.notes = f"handler for '{pathway}' raised exception"
+            return
+
+        # derive_local / derive_mediator → WarpCapable structural actuator
+        if pathway in (WarpPathway.DERIVE_LOCAL, WarpPathway.DERIVE_MEDIATOR):
+            self._route_to_warp_capable(decision)
+            return
+
+        # All other pathways without a registered handler: record intent
+        decision.notes = f"pathway '{pathway}' awaiting handler registration"
+
+    def _route_to_warp_capable(self, decision: WarpDecision) -> None:
+        """Route derive_local / derive_mediator to the best WarpCapable system."""
+        demand = decision.demand
+        profile = demand.profile
+
+        # Prefer the named source system; fall back to any registered system
+        system = self._warp_capable_registry.get(demand.source)
+        if system is None and self._warp_capable_registry:
+            system = next(iter(self._warp_capable_registry.values()))
+
+        if system is None or not profile:
+            decision.notes = "no warp_capable system or profile for derive pathway"
+            return
+
+        try:
+            comp = system.check_and_extend(
+                profile, source=demand.source, tick=0
+            )
+            if comp is not None:
+                decision.result = comp
+                decision.action_taken = True
+                decision.resolved = True
+                decision.notes = f"derived component: {comp.component_id}"
+            else:
+                decision.notes = "gap below persistence threshold — monitoring"
+        except Exception as exc:
+            decision.notes = f"warp_capable error: {exc}"
+
+    def flush_deferred(self) -> List[WarpDecision]:
+        """
+        Re-submit deferred demands with decayed severity.
+        Call periodically (e.g. once per epoch or on idle tick).
+        Demands that decay below noise floor are silently dropped.
+        """
+        pending = list(self._deferred)
+        self._deferred.clear()
+        results: List[WarpDecision] = []
+        for dec in pending:
+            dec.demand.severity *= 0.80
+            if dec.demand.severity >= self._NOISE_FLOOR:
+                results.append(self.submit(dec.demand))
+        return results
+
+    def status(self) -> Dict[str, Any]:
+        return {
+            "total_demands":      self._demand_count,
+            "pending_deferred":   len(self._deferred),
+            "anomaly_ledger":     len(self._anomaly_ledger),
+            "pathway_counts":     dict(self._pathway_counts),
+            "registered_systems": list(self._warp_capable_registry.keys()),
+            "registered_handlers": list(self._pathway_handlers.keys()),
+        }
+
+
+# ── Module-level field singleton + helpers ────────────────────────────────────
+
+_global_warp_field: Optional[WarpField] = None
+
+
+def get_warp_field() -> WarpField:
+    """Return the global WarpField, creating it lazily if not yet installed."""
+    global _global_warp_field
+    if _global_warp_field is None:
+        _global_warp_field = WarpField()
+    return _global_warp_field
+
+
+def install_warp_field(field: WarpField) -> None:
+    """
+    Install the system's WarpField as the global singleton.
+    Call once at boot after creating WarpField with registered systems.
+    """
+    global _global_warp_field
+    _global_warp_field = field
+
+
+def warp_guard(
+    source: str,
+    layer: str,
+    trigger: str,
+    *,
+    unresolved_text: str = "",
+    expected: Optional[Dict] = None,
+    actual: Optional[Dict] = None,
+    participants: Optional[List[str]] = None,
+    profile: Optional[Dict] = None,
+    local_attempts: Optional[List[str]] = None,
+    severity: float = 0.5,
+    persistence_key: str = "",
+) -> WarpDecision:
+    """
+    The universal confession: "I cannot resolve this."
+
+    Every subsystem that hits an unresolved state calls this.
+    Returns the WarpDecision so the caller can inspect what WARP chose.
+
+    Example
+    -------
+    if not response_found:
+        warp_guard(
+            source="memory",
+            layer="comprehension",
+            trigger=WarpTrigger.NO_MEMORY,
+            unresolved_text=query,
+            severity=0.6,
+        )
+    """
+    demand = WarpDemand(
+        source=source,
+        layer=layer,
+        trigger=trigger,
+        unresolved_text=unresolved_text,
+        expected=expected or {},
+        actual=actual or {},
+        participants=participants or [],
+        profile=profile or {},
+        local_attempts=local_attempts or [],
+        severity=severity,
+        persistence_key=persistence_key,
+    )
+    return get_warp_field().submit(demand)
+
+
+# ── Exception-hook sealing ─────────────────────────────────────────────────────
+# After seal_warp() is called it is structurally impossible for an unhandled
+# Python exception to exit the Aurora process without WARP seeing it.
+
+def _warp_excepthook(
+    exc_type: type,
+    exc_value: BaseException,
+    exc_tb: Any,
+    *,
+    original_hook: Optional[Callable] = None,
+) -> None:
+    """Route unhandled exceptions to WarpField, then fall through to default."""
+    try:
+        source_module = "unknown"
+        if exc_tb is not None:
+            frame = exc_tb
+            while frame.tb_next is not None:
+                frame = frame.tb_next
+            source_module = frame.tb_frame.f_globals.get("__name__", "unknown")
+        get_warp_field().submit(WarpDemand(
+            source=source_module,
+            layer="exception",
+            trigger=WarpTrigger.NO_STABLE_PATH,
+            unresolved_text=f"{exc_type.__name__}: {exc_value}",
+            severity=0.75,
+            persistence_key=exc_type.__name__,
+        ))
+    except Exception:
+        pass
+    if original_hook is not None:
+        original_hook(exc_type, exc_value, exc_tb)
+    else:
+        import sys as _sys
+        _sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+
+def seal_warp(warp_field: Optional[WarpField] = None) -> None:
+    """
+    Seal WARP as a primitive.
+
+    Installs sys.excepthook and threading.excepthook so unhandled Python
+    exceptions auto-route to WarpField before the process sees them.
+    After this call, no unresolved state in the Aurora process can exit
+    without WARP receiving it.
+
+    Call once at boot after install_warp_field().
+    """
+    import sys as _sys
+    import threading as _threading
+
+    if warp_field is not None:
+        install_warp_field(warp_field)
+
+    _prev_hook = getattr(_sys, "excepthook", None)
+    _sys.excepthook = lambda et, ev, tb: _warp_excepthook(
+        et, ev, tb,
+        original_hook=_prev_hook if (
+            _prev_hook is not None and _prev_hook is not _sys.__excepthook__
+        ) else None,
+    )
+
+    _prev_thread_hook = getattr(_threading, "excepthook", None)
+
+    def _thread_warp_hook(args: Any) -> None:
+        try:
+            get_warp_field().submit(WarpDemand(
+                source=(
+                    getattr(args.thread, "name", "thread")
+                    if getattr(args, "thread", None) is not None else "thread"
+                ),
+                layer="exception",
+                trigger=WarpTrigger.NO_STABLE_PATH,
+                unresolved_text=(
+                    f"{args.exc_type.__name__}: {args.exc_value}"
+                    if getattr(args, "exc_type", None) is not None
+                    else "thread_exception"
+                ),
+                severity=0.75,
+                persistence_key=getattr(
+                    getattr(args, "exc_type", None), "__name__", "thread_error"
+                ),
+            ))
+        except Exception:
+            pass
+        if _prev_thread_hook is not None:
+            try:
+                _prev_thread_hook(args)
+            except Exception:
+                pass
+
+    _threading.excepthook = _thread_warp_hook

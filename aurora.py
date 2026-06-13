@@ -179,6 +179,11 @@ _SUPPORT_CONSTRAINT_SPECS: Dict[str, Dict[str, str]] = {
         "operational_role": "active_context_holding",
         "genealogy": "XTNB",
     },
+    "warp_field": {
+        "unit_kind": "warp_field",
+        "operational_role": "universal_accommodation_primitive",
+        "genealogy": "XTNBAA",
+    },
 }
 
 
@@ -18925,6 +18930,194 @@ def boot_aurora(
     if verbose:
         print(f"  (DPS + DMC + DER + DMM, {_dps_loaded} crystals restored)")
 
+    # ---- WARP FIELD — Universal Accommodation Primitive ----
+    # Installed immediately after DPS so every subsequent boot step can route
+    # unresolved states to the field. Doctrine: nothing silently disappears.
+    #
+    # Handlers use late-bound closures over the `systems` dict. They are
+    # registered now but resolved at call-time, so they see fully-booted
+    # modules even though they are registered at Layer 3.
+    systems['warp_field'] = None
+    try:
+        from aurora_warp_protocol import (
+            WarpField as _WarpField,
+            WarpPathway as _WarpPathway,
+            install_warp_field as _install_wf,
+            seal_warp as _seal_warp,
+        )
+        _warp_field = _WarpField()
+        _dps_sys = getattr(dimensional, 'dps', None)
+        if _dps_sys is not None:
+            _warp_field.register_warp_capable('dps', _dps_sys)
+        _install_wf(_warp_field)
+        systems['warp_field'] = _warp_field
+
+        # ── Pathway handlers ──────────────────────────────────────────────────
+        # revise_model: failed prediction/comprehension → DreamTrainer lesson
+        def _h_revise_model(decision):
+            dt = systems.get('dream_trainer')
+            if dt is None:
+                return
+            domain = (
+                decision.demand.persistence_key
+                or decision.demand.unresolved_text
+                or "unknown"
+            ).split(":")[-1][:64]
+            sev = float(decision.demand.severity)
+            try:
+                dt.ledger.record_fail(domain, sev)
+                if hasattr(dt, 'flush_lessons_to_simulation'):
+                    dt.flush_lessons_to_simulation(systems, force=True)
+                decision.resolved = True
+                decision.notes = f"lesson queued: {domain}"
+            except Exception:
+                pass
+
+        # generate_form: no language / representation → grammar + language field
+        def _h_generate_form(decision):
+            for _sys_key, _method in (('grammar_engine', 'flag_missing_form'),
+                                       ('language_field',  'flag_missing_form')):
+                _s = systems.get(_sys_key)
+                if _s is not None and hasattr(_s, _method):
+                    try:
+                        getattr(_s, _method)(decision.demand.unresolved_text)
+                        decision.resolved = True
+                    except Exception:
+                        pass
+
+        # surface_emergence: architecture-level failure → quasiarch + understanding contract
+        def _h_surface_emergence(decision):
+            for _sys_key, _method in (
+                ('quasiarch_observer',    'record_warp_emergence'),
+                ('understanding_contract','record_structural_gap'),
+            ):
+                _s = systems.get(_sys_key)
+                if _s is not None and hasattr(_s, _method):
+                    try:
+                        getattr(_s, _method)(decision)
+                        decision.action_taken = True
+                        decision.resolved = True
+                    except Exception:
+                        pass
+
+        # seek: resolve ambiguity / no memory / no comprehension
+        #
+        # Resolution order — relation before retrieval:
+        #   1. OETS resonance check — does Aurora hold any coverage of this concept?
+        #      YES → internal: working memory synthesis + OETS relational derivation
+        #      NO  → external: Poedex internal Observer first, internet only if that fails
+        #   2. External result seeds back into OETS so future seeks resolve internally.
+        #
+        # Severity governs urgency (how long to wait, whether to escalate), not direction.
+        # The direction is always: internal → external → defer if both fail.
+        def _h_seek(decision):
+            _text = (decision.demand.unresolved_text or "").strip()
+            if not _text:
+                return
+
+            # ── Step 1: OETS resonance check ─────────────────────────────────
+            _perc  = systems.get('perception')
+            _oets  = getattr(_perc, 'oets', None) if _perc is not None else None
+            _web   = getattr(_oets, 'web', None)  if _oets is not None else None
+            _has_coverage = False
+
+            if _web is not None:
+                _tl = _text.lower()
+                # Direct node match (exact word or phrase key)
+                try:
+                    if _web.get_node(_tl) is not None:
+                        _has_coverage = True
+                except Exception:
+                    pass
+                # Substring scan over node keys — concept space has related coverage
+                if not _has_coverage:
+                    try:
+                        _tl_words = set(_tl.split())
+                        for _nk in list(_web.nodes.keys())[:500]:
+                            if _tl in str(_nk).lower() or str(_nk).lower() in _tl:
+                                _has_coverage = True
+                                break
+                            # Word-level overlap
+                            if _tl_words & set(str(_nk).lower().split()):
+                                _has_coverage = True
+                                break
+                    except Exception:
+                        pass
+
+            # ── Step 2a: Internal — working memory synthesis ──────────────────
+            if _has_coverage:
+                _wm = systems.get('working_memory')
+                if _wm is not None and hasattr(_wm, 'answer_from_meanings'):
+                    try:
+                        _wm_result = _wm.answer_from_meanings(_text)
+                        if _wm_result:
+                            decision.result = _wm_result
+                            decision.action_taken = True
+                            decision.resolved = True
+                            decision.notes = "resolved internally via working memory"
+                            return
+                    except Exception:
+                        pass
+                # Has coverage but working memory couldn't synthesize — flag in OETS
+                # for relational derivation on the next processing pass
+                if _web is not None and hasattr(_web, 'add_node'):
+                    try:
+                        _web.add_node(_text.split()[0][:32], role="gap_flagged",
+                                      valence=0.0)
+                    except Exception:
+                        pass
+                decision.action_taken = True
+                decision.notes = "relational gap — OETS has coverage, derivation deferred"
+                return
+
+            # ── Step 2b: External — Poedex internal Observer first ────────────
+            _result = ""
+            try:
+                _result = _try_poedex_lookup(_text, systems,
+                                             timeout=2.0, use_researcher=False) or ""
+            except Exception:
+                pass
+
+            # If internal Observer found nothing → internet (Researcher)
+            if not _result:
+                try:
+                    _result = _try_poedex_lookup(_text, systems,
+                                                 timeout=8.0, use_researcher=True) or ""
+                except Exception:
+                    pass
+
+            if _result:
+                # Seed into OETS so the next seek for this concept resolves internally
+                if _web is not None and hasattr(_web, 'add_node'):
+                    try:
+                        _web.add_node(_text.split()[0][:32], role="retrieved",
+                                      valence=0.0)
+                    except Exception:
+                        pass
+                decision.result = _result
+                decision.action_taken = True
+                decision.resolved = True
+                decision.notes = f"external retrieval seeded to OETS ({len(_result)} chars)"
+            else:
+                decision.notes = "seek exhausted — no internal or external resolution found"
+
+        _warp_field.register_pathway_handler(_WarpPathway.REVISE_MODEL,       _h_revise_model)
+        _warp_field.register_pathway_handler(_WarpPathway.GENERATE_FORM,      _h_generate_form)
+        _warp_field.register_pathway_handler(_WarpPathway.SURFACE_EMERGENCE,  _h_surface_emergence)
+        _warp_field.register_pathway_handler(_WarpPathway.SEEK,               _h_seek)
+
+        # Seal: install sys.excepthook + threading.excepthook.
+        # After this call, no unhandled Python exception exits the process
+        # without WarpField receiving it.
+        _seal_warp()
+
+        if verbose:
+            print("  [WARP] WarpField sealed — "
+                  "exception hooks installed, 4 pathway handlers registered")
+    except Exception as _wf_e:
+        if verbose:
+            print(f"  [WARP] WarpField unavailable: {_wf_e}")
+
     # Layer 3.5: SediMemory — stratigraphic constraint-native memory
     systems['sedimemory'] = None
     try:
@@ -19299,7 +19492,12 @@ def boot_aurora(
     if verbose: print("  [L5+] Comprehension Gaps...", end=" ", flush=True)
     try:
         from aurora_internal.aurora_comprehension_gap import ComprehensionGapSystem
-        systems['comprehension_gap_system'] = ComprehensionGapSystem()
+        _cgs = ComprehensionGapSystem()
+        systems['comprehension_gap_system'] = _cgs
+        # Wire: comprehension gap boundary → WarpField
+        _wf_cgs = systems.get('warp_field')
+        if _wf_cgs is not None and hasattr(_cgs, 'set_warp_field'):
+            _cgs.set_warp_field(_wf_cgs)
         if verbose: print("[OK]")
     except Exception as e:
         if verbose: print(f"[SKIP] {e}")
@@ -19757,6 +19955,12 @@ def boot_aurora(
     if verbose:
         print()
         print("  All 9 layers online.")
+        _wf_status = systems.get('warp_field')
+        if _wf_status is not None:
+            _wfs = _wf_status.status()
+            print(f"  [WARP] Field live — "
+                  f"{len(_wfs.get('registered_systems', []))} actuator(s) registered, "
+                  f"{len(_wfs.get('registered_handlers', []))} pathway handler(s)")
         print(f"  Aurora knows who she is. She knows who made her.")
         print()
 
@@ -20129,6 +20333,14 @@ def train(systems: Dict[str, Any], epochs: int = 10,
 
     for epoch in range(epochs):
         phase_name = f"{phase_prefix}_epoch_{epoch + 1}"
+        # Re-evaluate deferred WARP demands — decayed severity may now route
+        # differently; anything still above noise floor gets re-classified.
+        _wf_epoch = systems.get('warp_field')
+        if _wf_epoch is not None:
+            try:
+                _wf_epoch.flush_deferred()
+            except Exception:
+                pass
         dream_trainer = systems.get('dream_trainer')
         queued_lesson_specs = 0
         if dream_trainer is not None and hasattr(dream_trainer, 'flush_lessons_to_simulation'):
