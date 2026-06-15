@@ -1,5 +1,5 @@
 {
-  "total_reformations": 208,
+  "total_reformations": 209,
   "relics": {
     "relic::composite::34e1f39d_1a02_4f91_b122_6a796a19dd17": {
       "relic_id": "relic::composite::34e1f39d_1a02_4f91_b122_6a796a19dd17",
@@ -14021,9 +14021,9 @@
       ],
       "created_at": 1781546034.199178,
       "dissolution_reason": "superseded_composite",
-      "reformation_count": 1,
-      "last_reformed": 1781546110.6867497,
-      "last_match_score": 0.8235294117647058
+      "reformation_count": 2,
+      "last_reformed": 1781549267.4939165,
+      "last_match_score": 0.9375
     },
     "relic::composite::a2472f56_e39f_4766_9c22_34cc753d19cd": {
       "relic_id": "relic::composite::a2472f56_e39f_4766_9c22_34cc753d19cd",
@@ -15007,6 +15007,82 @@
         "ghost_relic_rehydrated"
       ],
       "created_at": 1781548699.7501078,
+      "dissolution_reason": "superseded_composite",
+      "reformation_count": 0,
+      "last_reformed": null,
+      "last_match_score": 0.0
+    },
+    "relic::composite::598a3aa9_7445_4e72_86a7_7ea48c0933c8": {
+      "relic_id": "relic::composite::598a3aa9_7445_4e72_86a7_7ea48c0933c8",
+      "original_order": "COMPOSITE",
+      "original_id": "598a3aa9-7445-4e72-86a7-7ea48c0933c8",
+      "anchor_refs": [
+        "family_issue_family__context_carryover_instability",
+        "stage_composite",
+        "issue_context_carryover_instability",
+        "target_aurora_gateway_simulation_run_epoch",
+        "logic_tier_evolutionary_pipeline",
+        "intervention_context_thread_reinforcement",
+        "recurrence_pattern_periodic__single_target",
+        "distribution_context_single_module__isolated",
+        "tag_aurora",
+        "tag_dim_semantic_precision",
+        "tag_train",
+        "tag_dim_multi_turn_stability",
+        "tag_prove_ep_epoch_1",
+        "tag_dim_coherence_maintenance",
+        "tag_composite",
+        "tag_train_epoch_1"
+      ],
+      "facet_template": {
+        "target": "aurora.gateway.simulation.run_epoch",
+        "issue": "context_carryover_instability",
+        "logic_tier": "evolutionary_pipeline",
+        "intervention": "context_thread_reinforcement",
+        "intended_effect": "carry context, referents, and claims across turns",
+        "observed_effect": "resolved_partially",
+        "recurrence_pattern": "periodic__single_target",
+        "distribution_context": "single_module__isolated"
+      },
+      "point_template": {
+        "target__issue": 0.7,
+        "issue__logic_tier": 0.7,
+        "logic_tier__intervention": 0.7,
+        "intervention__intended_effect": 0.7,
+        "intended_effect__observed_effect": 0.5,
+        "observed_effect__issue": 0.5,
+        "target__logic_tier": 0.7,
+        "target__intervention": 0.2,
+        "issue__intervention": 0.7,
+        "issue__intended_effect": 0.7,
+        "logic_tier__observed_effect": 0.7,
+        "target__observed_effect": 0.7,
+        "issue__recurrence_pattern": 1.0,
+        "target__recurrence_pattern": 0.9,
+        "logic_tier__recurrence_pattern": 0.85,
+        "intervention__recurrence_pattern": 0.8,
+        "target__distribution_context": 0.2,
+        "issue__distribution_context": 0.2,
+        "logic_tier__distribution_context": 0.2,
+        "observed_effect__distribution_context": 0.18000000000000002
+      },
+      "tag_template": [
+        "aurora",
+        "dim:semantic_precision",
+        "train",
+        "dim:multi_turn_stability",
+        "prove_ep_epoch_1",
+        "dim:coherence_maintenance",
+        "composite",
+        "train_epoch_1",
+        "train_epoch_3",
+        "train_epoch_2",
+        "train_epoch_4",
+        "dim:contradiction_handling",
+        "dim:context_carryover",
+        "ghost_relic_rehydrated"
+      ],
+      "created_at": 1781549267.513119,
       "dissolution_reason": "superseded_composite",
       "reformation_count": 0,
       "last_reformed": null,

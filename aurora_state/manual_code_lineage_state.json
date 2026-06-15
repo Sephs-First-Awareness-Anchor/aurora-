@@ -1,20 +1,6 @@
 {
   "history": [
     {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:1d76f49aee8e",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_code_evolution_stack.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_code_evolution_stack",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781482056.010828
-    },
-    {
       "axis_signature": "B^1*A^1",
       "change_id": "MC:28f1c2237fcf",
       "dominant_axis": "B",
@@ -3359,10 +3345,24 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1781545803.8348675
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:40c863a0e95e",
+      "dominant_axis": "T",
+      "file": "aurora_simulation_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_simulation_engine",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781549064.3977385
     }
   ],
   "initialized": true,
-  "last_run_at": 1781548700.8876748,
+  "last_run_at": 1781549268.4855192,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781481721990951321,
@@ -4097,8 +4097,8 @@
       "size": 4867
     },
     "aurora_simulation_engine.py": {
-      "mtime_ns": 1781533719962802628,
-      "size": 181418
+      "mtime_ns": 1781548925345193600,
+      "size": 182038
     },
     "aurora_streaming_expression.py": {
       "mtime_ns": 1781481724253773717,

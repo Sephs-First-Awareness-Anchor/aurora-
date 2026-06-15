@@ -1,14 +1,6 @@
 {
-  "updated_at": 1781548701.2730548,
+  "updated_at": 1781549268.9442086,
   "events": [
-    {
-      "timestamp": 1781482056.0188997,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:06988366443b",
-      "axis": "B",
-      "summary": "Manual code change in aurora_internal/aurora_constraint_manifold.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781482056.021698,
       "source": "aurora.boot",
@@ -1920,6 +1912,14 @@
       "id": "MC:c136ed0cf0cc",
       "axis": "X",
       "summary": "Manual code change in scripts/prove_learning.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781549064.3977385,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:40c863a0e95e",
+      "axis": "T",
+      "summary": "Manual code change in aurora_simulation_engine.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {

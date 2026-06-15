@@ -54,16 +54,42 @@
         "contradiction_handling",
         "perspective_integration"
       ]
+    },
+    {
+      "pressure_type": "articulation_gap",
+      "priority": 0.2002,
+      "label": "Expression precision failure",
+      "axis": "N (Energy / Resource)",
+      "signal_mode": "active",
+      "retrieval_domains": [
+        "lexical precision",
+        "vocabulary anchoring",
+        "semantic consistency",
+        "concision techniques",
+        "implied meaning extraction"
+      ],
+      "query_templates": [
+        "What vocabulary best captures the distinction required in semantic_precision?",
+        "How can the idea behind N (Energy / Resource) be expressed more precisely without losing meaning?",
+        "What is the minimum words needed to convey semantic_precision unambiguously?",
+        "What paraphrase drift patterns cause semantic_precision failures?"
+      ],
+      "reflection_directive": "Find one recent response where semantic_precision was imprecise. Rewrite the critical sentence using anchored vocabulary.",
+      "hypothesis_seed": "If semantic_precision were expressed with a fixed canonical vocabulary, how much of the current N (Energy / Resource) pressure would dissolve?",
+      "source_dimensions": [
+        "semantic_precision",
+        "implied_intent_inference"
+      ]
     }
   ],
   "axis_pressure": {},
-  "last_updated": 1781545804.7086997,
+  "last_updated": 1781549065.23812,
   "pressure_scores": {
     "code_gap": 0.2725,
     "knowledge_gap": 0.213,
-    "articulation_gap": 0.1994,
-    "stability_gap": 0.1549,
-    "reasoning_gap": 0.1363,
-    "tool_gap": 0.1254
+    "articulation_gap": 0.2002,
+    "stability_gap": 0.1545,
+    "reasoning_gap": 0.1362,
+    "tool_gap": 0.1244
   }
 }
