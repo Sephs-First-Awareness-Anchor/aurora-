@@ -2,34 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1*T^1",
-      "change_id": "MC:6402c40bebb9",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_attention_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_attention_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781482055.9937284
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:2e2322e65343",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_axis_emergence.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_internal.aurora_axis_emergence",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781482055.9965189
-    },
-    {
-      "axis_signature": "X^1*T^1",
       "change_id": "MC:4c008f1cea1e",
       "dominant_axis": "X",
       "file": "aurora_internal/aurora_braided_substrate.py",
@@ -3359,10 +3331,38 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1781531239.933902
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:89e7d32d47c5",
+      "dominant_axis": "X",
+      "file": "aurora_articulation.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_articulation",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781533785.0867972
+    },
+    {
+      "axis_signature": "T^1*A^1",
+      "change_id": "MC:f8db39292090",
+      "dominant_axis": "T",
+      "file": "aurora_simulation_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_simulation_engine",
+      "purpose_lane": "continuity_memory",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781533785.0894983
     }
   ],
   "initialized": true,
-  "last_run_at": 1781531239.9365938,
+  "last_run_at": 1781533785.091865,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781481721990951321,
@@ -3381,8 +3381,8 @@
       "size": 16963
     },
     "aurora_articulation.py": {
-      "mtime_ns": 1781531215026703677,
-      "size": 35629
+      "mtime_ns": 1781533761530801678,
+      "size": 33724
     },
     "aurora_autonomy.py": {
       "mtime_ns": 1781481722001773769,
@@ -4097,8 +4097,8 @@
       "size": 4867
     },
     "aurora_simulation_engine.py": {
-      "mtime_ns": 1781531173018704917,
-      "size": 180485
+      "mtime_ns": 1781533719962802628,
+      "size": 181418
     },
     "aurora_streaming_expression.py": {
       "mtime_ns": 1781481724253773717,
