@@ -348,7 +348,27 @@ class ConsciousLearner:
         return None
 
     def what_have_i_learned(self) -> List[str]:
-        """Return what Aurora has learned, in her own words."""
+        """Return genuine understanding — reads from DPS crystal understanding facets.
+
+        Crystals are the persistent store; in-memory shards are session-only fallback.
+        """
+        if self._dps is not None:
+            try:
+                results = []
+                for crystal in self._dps.crystals.values():
+                    best = None
+                    for facet in crystal.facets.values():
+                        if facet.role == "understanding":
+                            if best is None or facet.confidence > best.confidence:
+                                best = facet
+                    if best is not None and best.confidence >= 0.5:
+                        results.append((best.confidence, str(best.content)))
+                results.sort(reverse=True)
+                if results:
+                    return [text for _, text in results[:10]]
+            except Exception:
+                pass
+        # Session-only fallback (shards not persisted to disk)
         confident = [s for s in self.shards.values() if s.confidence > 0.5]
         confident.sort(key=lambda s: s.confidence, reverse=True)
         return [s.understanding for s in confident[:10]]

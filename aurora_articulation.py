@@ -111,103 +111,79 @@ def _load_lexicon_familiar() -> frozenset:
 
 def analyze_articulation_feedback(n_lines: int = 500) -> Dict[str, Any]:
     """
-    Read back logged decisions and produce insights for self-improvement.
+    Aggregate articulation outcomes from DPS crystal facets.
 
-    Computes per-source acceptance rates, rejection patterns, and average
-    pressure relief. Derives an adaptive min_relief suggestion and an
-    operating mode recommendation. Persists results to INSIGHTS_FILE.
+    Reads expression_flow (accepted) and expression_friction (rejected) facets
+    across all crystals. Each facet's access_count reflects how many times that
+    outcome was stamped. Content format: "{reason}:{pressure_relief}".
     """
     empty = {"total": 0, "accepted": 0, "acceptance_rate": 0.0,
              "avg_pressure_relief": 0.0, "top_reasons": [],
              "source_summary": {}, "suggested_min_relief": 0.035,
              "suggested_mode": "normal", "analyzed_at": time.time()}
 
-    if not DECISION_LOG.exists():
-        return empty
-
-    records: list = []
-    try:
-        with DECISION_LOG.open("r", encoding="utf-8", errors="replace") as fh:
-            lines = fh.readlines()
-        for line in lines[-n_lines:]:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                records.append(json.loads(line))
-            except Exception:
-                continue
-    except Exception:
-        return empty
-
-    if not records:
+    if _dps_ref is None:
         return empty
 
     reason_counts: Counter = Counter()
-    source_stats: Dict[str, Dict[str, Any]] = {}
-    pressure_reliefs: list = []
+    accepted_total = 0
+    rejected_total = 0
+    relief_sum = 0.0
+    relief_count = 0
 
-    for r in records:
-        meta = r.get("metadata") or {}
-        source = str(meta.get("source", "unknown") or "unknown")
-        accepted = bool(r.get("accepted", False))
-        relief = float(r.get("pressure_relief", 0.0) or 0.0)
-        reason = str(r.get("reason", "") or "")
+    try:
+        for crystal in _dps_ref.crystals.values():
+            for facet in crystal.facets.values():
+                if facet.role not in ("expression_flow", "expression_friction"):
+                    continue
+                # access_count is increments beyond the first stamp
+                stamps = facet.access_count + 1
+                content = str(facet.content or "")
+                parts = content.split(":", 1)
+                reason = parts[0]
+                try:
+                    relief = float(parts[1]) if len(parts) > 1 else 0.0
+                except ValueError:
+                    relief = 0.0
+                reason_counts[reason] += stamps
+                if facet.role == "expression_flow":
+                    accepted_total += stamps
+                    relief_sum += relief * stamps
+                    relief_count += stamps
+                else:
+                    rejected_total += stamps
+    except Exception:
+        return empty
 
-        if source not in source_stats:
-            source_stats[source] = {"count": 0, "accepted": 0, "relief_sum": 0.0}
-        source_stats[source]["count"] += 1
-        if accepted:
-            source_stats[source]["accepted"] += 1
-        source_stats[source]["relief_sum"] += relief
-        reason_counts[reason] += 1
-        pressure_reliefs.append(relief)
+    total = accepted_total + rejected_total
+    if total == 0:
+        return empty
 
-    total = len(records)
-    accepted_total = sum(1 for r in records if r.get("accepted"))
-    avg_relief = sum(pressure_reliefs) / max(1, len(pressure_reliefs))
-    acceptance_rate = accepted_total / max(1, total)
-
-    source_summary: Dict[str, Any] = {}
-    for src, stats in source_stats.items():
-        cnt = stats["count"]
-        acc = stats["accepted"]
-        source_summary[src] = {
-            "count": cnt,
-            "acceptance_rate": round(acc / max(1, cnt), 4),
-            "avg_pressure_relief": round(stats["relief_sum"] / max(1, cnt), 4),
-        }
+    avg_relief = relief_sum / max(1, relief_count)
+    acceptance_rate = accepted_total / total
 
     base_relief = float(os.environ.get("AURORA_ARTICULATOR_MIN_RELIEF", "0.035") or 0.035)
     if avg_relief < -0.30 and acceptance_rate < 0.02:
-        # Candidates consistently terrible — keep threshold, flag deterministic-preferred
         suggested_min_relief = base_relief
         suggested_mode = "deterministic_preferred"
     elif avg_relief < 0.0 and acceptance_rate < 0.05:
-        # Most candidates worse — lower threshold slightly to allow borderline wins
         suggested_min_relief = max(0.010, round(base_relief * 0.75, 4))
         suggested_mode = "lower_threshold"
     else:
         suggested_min_relief = base_relief
         suggested_mode = "normal"
 
-    insights: Dict[str, Any] = {
+    return {
         "total": total,
         "accepted": accepted_total,
         "acceptance_rate": round(acceptance_rate, 4),
         "avg_pressure_relief": round(avg_relief, 4),
         "top_reasons": reason_counts.most_common(5),
-        "source_summary": source_summary,
+        "source_summary": {},
         "suggested_min_relief": suggested_min_relief,
         "suggested_mode": suggested_mode,
         "analyzed_at": time.time(),
     }
-
-    try:
-        INSIGHTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-        INSIGHTS_FILE.write_text(json.dumps(insights, indent=2, ensure_ascii=True), encoding="utf-8")
-    except Exception:
-        pass
 
     return insights
 
@@ -745,30 +721,11 @@ def decide_articulation(
 
 
 def record_decision(decision: ArticulationDecision) -> None:
-    """Persist Aurora's articulation choice as learning feedback."""
+    """Record Aurora's articulation choice — writes to last-trace and stamps crystals."""
     try:
-        DECISION_LOG.parent.mkdir(parents=True, exist_ok=True)
-        with DECISION_LOG.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(asdict(decision), ensure_ascii=True) + "\n")
-        TRACE_FILE.write_text(json.dumps(asdict(decision), indent=2, ensure_ascii=True), encoding="utf-8")
-    except Exception:
-        return
-
-    try:
-        summary = json.loads(SUMMARY_FILE.read_text(encoding="utf-8") or "{}") if SUMMARY_FILE.exists() else {}
-        total = int(summary.get("total", 0)) + 1
-        accepted = int(summary.get("accepted", 0)) + (1 if decision.accepted else 0)
-        prev_gain = float(summary.get("avg_pressure_relief", 0.0) or 0.0)
-        summary.update({
-            "total": total,
-            "accepted": accepted,
-            "rejected": total - accepted,
-            "acceptance_rate": round(accepted / max(1, total), 4),
-            "avg_pressure_relief": round(prev_gain + ((decision.pressure_relief - prev_gain) / total), 4),
-            "last_reason": decision.reason,
-            "last_updated": time.time(),
-        })
-        SUMMARY_FILE.write_text(json.dumps(summary, indent=2, ensure_ascii=True), encoding="utf-8")
+        TRACE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        TRACE_FILE.write_text(json.dumps(asdict(decision), indent=2, ensure_ascii=True),
+                              encoding="utf-8")
     except Exception:
         pass
 
