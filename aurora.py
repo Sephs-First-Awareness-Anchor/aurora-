@@ -8630,17 +8630,6 @@ def _normalize_poedex_concept(value: str) -> str:
     return concept
 
 
-def _current_axis_state(systems: Dict[str, Any]) -> Dict[str, float]:
-    crest = dict(systems.get("_live_conscious_crest") or {})
-    return {
-        "X": float(crest.get("X", crest.get("existence", 0.5)) or 0.5),
-        "T": float(crest.get("T", crest.get("temporal", 0.5)) or 0.5),
-        "N": float(crest.get("N", crest.get("energy", 0.5)) or 0.5),
-        "B": float(crest.get("B", crest.get("boundary", 0.5)) or 0.5),
-        "A": float(crest.get("A", crest.get("agency", 0.5)) or 0.5),
-    }
-
-
 def _queue_warp_poedex_study_target(
     systems: Dict[str, Any],
     concept: str,
@@ -8723,11 +8712,8 @@ def _deposit_poedex_result_into_crystals(
 
     distilled = _compose_grounded_prefetch_response(concept_clean, learned_clean) or learned_clean[:400]
 
-    # All crystal paths converge on the same DPS Crystal.
-    # sensory_crystal.ingest() also calls dps._get_or_create() internally,
-    # so we write to DPS directly once here with the richer Poedex facets
-    # and let sensory_crystal track novelty/recognitions separately without
-    # re-evolving the same crystal a second time through the ingest path.
+    # Single crystal write — everything goes into the DPS Crystal.
+    # CCR and separate logs are not needed; the DPS Crystal IS the record.
     dim = systems.get("dimensional")
     dps = getattr(dim, "dps", None) if dim is not None else None
     if dps is not None:
@@ -8740,44 +8726,16 @@ def _deposit_poedex_result_into_crystals(
         except Exception:
             pass
 
-    # Sensory crystal: update novelty/recognition tracking only — the DPS
-    # crystal write already happened above, so we use observe_semantic (the
-    # lightweight path) to avoid a second _get_or_create + evolve call.
+    # Sensory crystal novelty/recognition tracking only (no DPS re-write).
     sensory_crystal = systems.get("sensory_crystal")
     if sensory_crystal is not None:
         try:
             if hasattr(sensory_crystal, "observe_semantic"):
                 sensory_crystal.observe_semantic(concept_clean, weight=1.0, source=source)
-            elif hasattr(sensory_crystal, "ingest"):
-                sensory_crystal.ingest(
-                    concept_clean,
-                    modality="semantic",
-                    data=distilled,
-                    source=source,
-                )
         except Exception:
             pass
 
-    ccr = systems.get("_concept_crystal_registry")
-    if ccr is not None and hasattr(ccr, "observe_lsa"):
-        try:
-            ax = _current_axis_state(systems)
-            ccr.observe_lsa(ax, f"poedex:{concept_clean}")
-            ccr.observe_sedi(ax, delta=0.05)
-            systems["_ccr_needs_overlay_clear"] = True
-        except Exception:
-            pass
-
-    systems["_last_poedex_crystal_write"] = {
-        "concept": concept_clean,
-        "request": str(request_text or "").strip(),
-        "understanding": distilled,
-        "source": source,
-        "updated": True,
-    }
-
-    # Immediately deepen OETS with the researched definition — don't wait
-    # for the next scheduled study cycle; the knowledge is already here.
+    # Deepen OETS immediately with the definition — knowledge is here now.
     try:
         _perc = systems.get("perception")
         _oets = getattr(_perc, "oets", None) if _perc is not None else None
