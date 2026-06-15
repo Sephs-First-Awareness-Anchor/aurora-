@@ -19954,5 +19954,182 @@
       "dominant_dimension:OPERATOR",
       "nc_dim:POLARITY"
     ]
+  },
+  "L:122a51bc5c": {
+    "id": "L:122a51bc5c",
+    "parents": [
+      "L:22ba18f29c",
+      "B:PARTITION_SHIFT"
+    ],
+    "depth": 3,
+    "created_at_tick": 36750,
+    "stats": {
+      "count": 11,
+      "mean_pos_relief": {
+        "X": 6.77505662895063e-05,
+        "T": 0.00032092403047468397,
+        "N": 2.9915767008983715e-05,
+        "B": -0.0003384117411232,
+        "A": 3.9438000498810985e-05
+      },
+      "mean_relief": {
+        "X": 6.77505662895063e-05,
+        "T": 0.00032092403047468397,
+        "N": 2.9915767008983715e-05,
+        "B": -0.0003384117411232,
+        "A": 3.9438000498810985e-05
+      },
+      "stdev_relief": {
+        "X": 0.00039518085052324414,
+        "T": 0.0003986912889491337,
+        "N": 4.807882694938402e-05,
+        "B": 0.00045087675897830545,
+        "A": 5.320757877534646e-05
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0033458420604925944,
+        "B": 0.001349751177178676,
+        "A": 0.0
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "signature:N^1*B^3",
+      "dominant_axis:B",
+      "purpose_family:N+B",
+      "origin_signature:N^1*B^3",
+      "operator_action:dream_evidence:leverage_hit",
+      "purpose_lane:communication",
+      "operator_grade:0.865",
+      "purpose_grade:0.973",
+      "overall_grade:0.919",
+      "complexity_axes:3",
+      "complexity_slots:3",
+      "generation:337",
+      "generation_role:PRIMARY",
+      "seed_influence:0.432",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.432",
+      "artificial_seed:true",
+      "seed_lineage_id:episode_62eebb558cb4",
+      "steering_target_generation:337",
+      "ontological_status:native_closed",
+      "depth_score:0.5667",
+      "leverage_grade:0.8846",
+      "viable_band_alignment:0.2308",
+      "energetic_footprint:0.5667",
+      "dominant_constraint:A",
+      "dominant_dimension:OPERATOR",
+      "nc_dim:POLARITY",
+      "signature:N^3*B^1",
+      "dominant_axis:N",
+      "origin_signature:N^3*B^1",
+      "signature:N^4*B^4",
+      "origin_signature:N^4*B^4",
+      "operator_grade:0.848",
+      "overall_grade:0.911",
+      "generation:254",
+      "generation_role:ADJACENT",
+      "steering_target_generation:254",
+      "signature:N^4*B^5",
+      "origin_signature:N^4*B^5",
+      "operator_action:operator_on_b",
+      "purpose_lane:meaning",
+      "operator_grade:0.681",
+      "purpose_grade:0.817",
+      "overall_grade:0.568",
+      "complexity_axes:3",
+      "complexity_slots:3",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.432",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.432",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3",
+      "ontological_status:native_closed",
+      "depth_score:0.0900",
+      "leverage_grade:0.4103",
+      "viable_band_alignment:0.8205",
+      "energetic_footprint:0.0900",
+      "dominant_constraint:B",
+      "dominant_dimension:OPERATOR",
+      "nc_dim:DIFFERENCE"
+    ]
+  },
+  "L:1878c1feea": {
+    "id": "L:1878c1feea",
+    "parents": [
+      "NC:X>B",
+      "NC:X>N"
+    ],
+    "depth": 1,
+    "created_at_tick": 37212,
+    "stats": {
+      "count": 8,
+      "mean_pos_relief": {
+        "X": -2.5305264473797415e-05,
+        "T": 0.0006280633123957601,
+        "N": 7.998154604341681e-05,
+        "B": -0.0007813157340410664,
+        "A": 9.004365303616376e-05
+      },
+      "mean_relief": {
+        "X": -2.5305264473797415e-05,
+        "T": 0.0006280633123957601,
+        "N": 7.998154604341681e-05,
+        "B": -0.0007813157340410664,
+        "A": 9.004365303616376e-05
+      },
+      "stdev_relief": {
+        "X": 0.000151388605015053,
+        "T": 0.00026571831424729373,
+        "N": 6.005847699284271e-05,
+        "B": 0.00031011153660538476,
+        "A": 3.841395196752099e-05
+      },
+      "mean_cost": {
+        "X": 0.021498708375148494,
+        "T": 0.052154399653990026,
+        "N": 0.17178716555161186,
+        "B": 0.1708121770896394,
+        "A": 1.1578269554727258
+      },
+      "mean_x_risk": 0.02540451530123649
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "signature:X^2*N^1*B^1",
+      "dominant_axis:X",
+      "purpose_family:X+N+B",
+      "origin_signature:X^2*N^1*B^1",
+      "operator_action:operator_on_b",
+      "purpose_lane:meaning",
+      "operator_grade:0.673",
+      "purpose_grade:0.816",
+      "overall_grade:0.557",
+      "complexity_axes:4",
+      "complexity_slots:4",
+      "generation:4",
+      "generation_role:BRIDGE",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:4",
+      "ontological_status:native_closed",
+      "depth_score:0.0667",
+      "leverage_grade:0.2644",
+      "viable_band_alignment:0.5288",
+      "energetic_footprint:0.0667",
+      "dominant_constraint:B",
+      "dominant_dimension:OPERATOR",
+      "nc_dim:DIFFERENCE"
+    ]
   }
 }

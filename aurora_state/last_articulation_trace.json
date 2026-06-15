@@ -1,43 +1,30 @@
 {
-  "original": "I understand am I exist meaning. I is relationship I did feel.",
+  "original": "[curious] nc:Existential_Operator_of_Existence anchor:teach resp:existence.",
   "candidate": "",
-  "selected": "I understand am I exist meaning. I is relationship I did feel.",
+  "selected": "[curious] nc:Existential_Operator_of_Existence anchor:teach resp:existence.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.92,
   "candidate_score": 0.0,
-  "original_pressure": 0.256,
+  "original_pressure": 0.1585,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.744,
+  "pressure_relief": -0.8415,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Let me be more specific: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. How does that land for you?",
+    "prompt_excerpt": "Teach me something",
     "input_interpretation": {
-      "raw_prompt": "Let me be more specific: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. How does that land for you?",
-      "intent_hint": "question",
+      "raw_prompt": "Teach me something",
+      "intent_hint": "statement_or_context",
       "topic_terms": [
-        "more",
-        "specific",
-        "corpus",
-        "fragment",
-        "context",
-        "corpus",
-        "fragment",
-        "context"
+        "teach"
       ],
       "entities": [
-        "Let",
-        "Use",
-        "Use",
-        "Use",
-        "Use",
-        "Use",
-        "How"
+        "Teach"
       ]
     },
-    "tone": "curious",
+    "tone": "neutral",
     "source": "no_pattern_matched",
-    "timestamp": 1781499761.254432,
+    "timestamp": 1781501724.8429642,
     "min_relief_used": 0.035
   }
 }

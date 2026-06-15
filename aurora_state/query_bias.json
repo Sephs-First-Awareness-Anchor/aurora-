@@ -30,7 +30,7 @@
     },
     {
       "pressure_type": "knowledge_gap",
-      "priority": 0.2135,
+      "priority": 0.2134,
       "label": "Missing conceptual content",
       "axis": "X (Existence)",
       "signal_mode": "active",
@@ -57,13 +57,13 @@
     }
   ],
   "axis_pressure": {},
-  "last_updated": 1781499607.3579383,
+  "last_updated": 1781500971.3180282,
   "pressure_scores": {
     "code_gap": 0.2725,
-    "knowledge_gap": 0.2135,
-    "articulation_gap": 0.1997,
-    "stability_gap": 0.1633,
-    "reasoning_gap": 0.1379,
-    "tool_gap": 0.1287
+    "knowledge_gap": 0.2134,
+    "articulation_gap": 0.199,
+    "stability_gap": 0.1612,
+    "reasoning_gap": 0.1375,
+    "tool_gap": 0.1275
   }
 }
