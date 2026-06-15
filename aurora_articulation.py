@@ -364,6 +364,16 @@ def _pressure_score(text: str, prompt: str = "") -> float:
     if any(phrase in lower for phrase in native_phrases):
         pressure += 0.18
 
+    # Template artifact patterns — grammatically broken placeholder outputs
+    _TEMPLATE_ARTIFACT = re.compile(
+        r"\b(?:identity|self|action|follow|consciousness|awareness)\s+\w+\s+the\s+meaning\s+and\s+\w+\b"
+        r"|\bunderstanding;\s*building;\s*\w"
+        r"|\b(?:identity|self|consciousness|awareness|follow)\s+\w+\s+this\s*\.",
+        re.IGNORECASE,
+    )
+    if _TEMPLATE_ARTIFACT.search(t):
+        pressure += 0.20
+
     if re.search(r"\b(\w+)\s+\1\b", " ".join(lower_words)):
         pressure += 0.16
     if not re.search(r"[.!?]$", t):
@@ -638,11 +648,12 @@ def _deterministic_candidate(draft_text: str) -> str:
         (r"\bunderstanding;\s*building;\s*(\w[\w\s]*?);\s*\S[^.]*",
          r"I'm still building my understanding of \1."),
         # Template artifact: "Identity/Self did the meaning and X. Action Y the meaning and X."
-        (r"\b(?:Identity|Self|Action|Follow|Consciousness|Awareness)\s+\w+\s+the\s+meaning\s+and\s+\w+\.",
-         "I'm working to understand what this means."),
+        # Preserve the capitalized concept so is_safe_revision guard tokens pass.
+        (r"\b(Identity|Self|Action|Follow|Consciousness|Awareness)\s+\w+\s+the\s+meaning\s+and\s+\w+\.",
+         r"\1 is helping me understand meaning."),
         # Short template stubs: "Awareness grounded this." / "Identity grounded this."
-        (r"^(?:Identity|Self|Consciousness|Awareness|Follow)\s+\w+\s+this\.$",
-         "I'm grounding this in what I know."),
+        (r"^(Identity|Self|Consciousness|Awareness|Follow)\s+\w+\s+this\.$",
+         r"\1 is grounding what I know."),
     )
     for pattern, replacement in phrase_replacements:
         text = re.sub(pattern, replacement, text)
