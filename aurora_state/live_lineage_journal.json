@@ -1,14 +1,6 @@
 {
-  "updated_at": 1781498562.5106757,
+  "updated_at": 1781499606.395342,
   "events": [
-    {
-      "timestamp": 1781482055.931107,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:7497d190499f",
-      "axis": "X",
-      "summary": "Manual code change in aurora_dev_telemetry.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781482055.9338346,
       "source": "aurora.boot",
@@ -1920,6 +1912,14 @@
       "id": "MC:03ad5d3631b6",
       "axis": "T",
       "summary": "Manual code change in aurora_runtime.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781499606.3952715,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:1e486382c544",
+      "axis": "B",
+      "summary": "Manual code change in aurora_constraint_emission.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {

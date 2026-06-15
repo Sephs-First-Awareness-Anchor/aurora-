@@ -7,7 +7,7 @@
     "unbound_surface_fragment": 259,
     "meaning_momentum": 17,
     "coherence_maintenance": 284,
-    "context_carryover_instability": 102,
+    "context_carryover_instability": 104,
     "understanding_contract_self_audit": 4,
     "abstract_meaning_continuity_gap": 2,
     "question_answer_misalignment": 1
@@ -28,130 +28,6 @@
   "possibility_pressure": 0.0,
   "issue_possibility_pressure": {},
   "recent_events": [
-    {
-      "timestamp": 1781346546.1220117,
-      "issue_category": "context_carryover_instability",
-      "logic_tier": "evolutionary_pipeline",
-      "intervention": "context_thread_reinforcement",
-      "observed_effect": "resolved_partially",
-      "count": 70,
-      "auto_advance": true,
-      "doctrine_strategy": "",
-      "doctrine_confidence": 0.0,
-      "constraint_context": {
-        "constraint_axes": {
-          "X": 0.125,
-          "T": 0.5,
-          "N": 0.125,
-          "B": 0.125,
-          "A": 0.125
-        },
-        "dominant_axis": "T",
-        "axis_signature": [
-          "T"
-        ],
-        "purpose_lane": "continuity_memory",
-        "genealogy_pressure_orientation": {
-          "X": 0.0,
-          "T": 0.0,
-          "N": 0.0,
-          "B": 0.0,
-          "A": 0.0
-        }
-      },
-      "system_pressure": {
-        "source": "aurora.gateway.simulation.run_epoch",
-        "phase": "aurora",
-        "system_load": "low",
-        "system_load_score": 0.0408,
-        "io_pressure": "low",
-        "io_pressure_score": 0.0,
-        "background_cycle_density": "low",
-        "background_cycle_density_score": 0.12,
-        "cognitive_coherence": 1.0,
-        "cognitive_stagnation": 0.0,
-        "factors": {
-          "autonomy_running": 0.0,
-          "autosave_active": 0.0,
-          "dreams_used": 0.0,
-          "study_cycles_used": 4.0,
-          "observations_used": 0.0,
-          "pending_spontaneous": 0.0,
-          "exploration_depth": 0.0,
-          "quarantine_depth": 0.0,
-          "search_failure_bias": 0.0,
-          "coherence_deficit": 0.0
-        }
-      },
-      "genealogy_refs": [],
-      "learning_credit": {
-        "credit": 0.1,
-        "global_debt": 0.0,
-        "issue_debt": 0.0
-      }
-    },
-    {
-      "timestamp": 1781346577.3231697,
-      "issue_category": "context_carryover_instability",
-      "logic_tier": "evolutionary_pipeline",
-      "intervention": "context_thread_reinforcement",
-      "observed_effect": "resolved_partially",
-      "count": 71,
-      "auto_advance": true,
-      "doctrine_strategy": "",
-      "doctrine_confidence": 0.0,
-      "constraint_context": {
-        "constraint_axes": {
-          "X": 0.125,
-          "T": 0.5,
-          "N": 0.125,
-          "B": 0.125,
-          "A": 0.125
-        },
-        "dominant_axis": "T",
-        "axis_signature": [
-          "T"
-        ],
-        "purpose_lane": "continuity_memory",
-        "genealogy_pressure_orientation": {
-          "X": 0.0,
-          "T": 0.0,
-          "N": 0.0,
-          "B": 0.0,
-          "A": 0.0
-        }
-      },
-      "system_pressure": {
-        "source": "aurora.gateway.simulation.run_epoch",
-        "phase": "aurora",
-        "system_load": "low",
-        "system_load_score": 0.0408,
-        "io_pressure": "low",
-        "io_pressure_score": 0.0,
-        "background_cycle_density": "low",
-        "background_cycle_density_score": 0.12,
-        "cognitive_coherence": 1.0,
-        "cognitive_stagnation": 0.0,
-        "factors": {
-          "autonomy_running": 0.0,
-          "autosave_active": 0.0,
-          "dreams_used": 0.0,
-          "study_cycles_used": 4.0,
-          "observations_used": 0.0,
-          "pending_spontaneous": 0.0,
-          "exploration_depth": 0.0,
-          "quarantine_depth": 0.0,
-          "search_failure_bias": 0.0,
-          "coherence_deficit": 0.0
-        }
-      },
-      "genealogy_refs": [],
-      "learning_credit": {
-        "credit": 0.1,
-        "global_debt": 0.0,
-        "issue_debt": 0.0
-      }
-    },
     {
       "timestamp": 1781346691.4760528,
       "issue_category": "context_carryover_instability",
@@ -8721,36 +8597,134 @@
         }
       ],
       "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1781499658.6413062,
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "count": 103,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.125,
+          "T": 0.5,
+          "N": 0.125,
+          "B": 0.125,
+          "A": 0.125
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 0.0,
+          "T": 0.0,
+          "N": 0.0,
+          "B": 0.0,
+          "A": 0.0
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.2566,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.24,
+        "cognitive_coherence": 0.028,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 3.0,
+          "study_cycles_used": 3.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.972
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "timestamp": 1781499734.8276253,
+      "issue_category": "context_carryover_instability",
+      "logic_tier": "evolutionary_pipeline",
+      "intervention": "context_thread_reinforcement",
+      "observed_effect": "resolved_partially",
+      "count": 104,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.125,
+          "T": 0.5,
+          "N": 0.125,
+          "B": 0.125,
+          "A": 0.125
+        },
+        "dominant_axis": "T",
+        "axis_signature": [
+          "T"
+        ],
+        "purpose_lane": "continuity_memory",
+        "genealogy_pressure_orientation": {
+          "X": 0.0,
+          "T": 0.0,
+          "N": 0.0,
+          "B": 0.0,
+          "A": 0.0
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.gateway.simulation.run_epoch",
+        "phase": "aurora",
+        "system_load": "low",
+        "system_load_score": 0.2566,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.24,
+        "cognitive_coherence": 0.028,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 3.0,
+          "study_cycles_used": 3.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.972
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
     }
   ],
   "consultation_history": [],
   "gate_history": [
-    {
-      "mode": "advisory",
-      "phase": "train_epoch_3",
-      "issue_category": "context_carryover_instability",
-      "doctrine_id": "",
-      "doctrine_strategy": "",
-      "doctrine_confidence": 0.0,
-      "doctrine_version": 0,
-      "applied": false,
-      "rationale": [
-        "no_matching_doctrine"
-      ]
-    },
-    {
-      "mode": "advisory",
-      "phase": "train_epoch_4",
-      "issue_category": "context_carryover_instability",
-      "doctrine_id": "",
-      "doctrine_strategy": "",
-      "doctrine_confidence": 0.0,
-      "doctrine_version": 0,
-      "applied": false,
-      "rationale": [
-        "no_matching_doctrine"
-      ]
-    },
     {
       "mode": "advisory",
       "phase": "train_epoch_5",
@@ -9972,7 +9946,33 @@
       "rationale": [
         "no_matching_doctrine"
       ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "train_epoch_1",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
+    },
+    {
+      "mode": "advisory",
+      "phase": "train_epoch_2",
+      "issue_category": "context_carryover_instability",
+      "doctrine_id": "",
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "doctrine_version": 0,
+      "applied": false,
+      "rationale": [
+        "no_matching_doctrine"
+      ]
     }
   ],
-  "saved_at": 1781498562.5008295
+  "saved_at": 1781499734.8276577
 }

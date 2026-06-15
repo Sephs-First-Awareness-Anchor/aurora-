@@ -1,38 +1,43 @@
 {
-  "original": "I change meaning feel. I exist or where.",
+  "original": "I understand am I exist meaning. I is relationship I did feel.",
   "candidate": "",
-  "selected": "I change meaning feel. I exist or where.",
+  "selected": "I understand am I exist meaning. I is relationship I did feel.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.74,
+  "original_score": 0.92,
   "candidate_score": 0.0,
-  "original_pressure": 0.292,
+  "original_pressure": 0.256,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.708,
+  "pressure_relief": -0.744,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
+    "prompt_excerpt": "Let me be more specific: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. How does that land for you?",
     "input_interpretation": {
-      "raw_prompt": "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
-      "intent_hint": "statement_or_context",
+      "raw_prompt": "Let me be more specific: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. How does that land for you?",
+      "intent_hint": "question",
       "topic_terms": [
-        "sure",
-        "integrate",
-        "perspectives",
-        "disagree",
-        "without",
-        "collapsing",
-        "either",
-        "that's"
+        "more",
+        "specific",
+        "corpus",
+        "fragment",
+        "context",
+        "corpus",
+        "fragment",
+        "context"
       ],
       "entities": [
-        "Sure",
-        "Integrate"
+        "Let",
+        "Use",
+        "Use",
+        "Use",
+        "Use",
+        "Use",
+        "How"
       ]
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781498558.8185756,
+    "timestamp": 1781499761.254432,
     "min_relief_used": 0.035
   }
 }

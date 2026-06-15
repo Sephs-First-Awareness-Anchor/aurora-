@@ -1,47 +1,47 @@
 {
-  "total_fails": 49556,
+  "total_fails": 49820,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 3407,
-      "severity_sum": 1560.1058063737012,
+      "fail_count": 3426,
+      "severity_sum": 1567.9804241383893,
       "recent": [
-        0.5130143766489921,
         0.05,
-        0.05209722222222224,
-        0.11414425770308124,
-        0.09472222222222224,
-        0.06745480769230769,
-        0.09722957516339871,
-        0.07025231481481481,
-        0.06922008547008549,
-        0.07319444444444445,
-        0.07814583333333333,
-        0.14500496031746032,
-        0.13756250000000003,
-        0.07907152777777778,
-        0.05,
-        0.07104166666666667,
-        0.07340972222222221,
-        0.0786923076923077,
-        0.09763675213675214,
-        0.05
+        0.35982099225846975,
+        0.23439137588083345,
+        0.5423261895436673,
+        0.18465761038916675,
+        0.6417167946990247,
+        0.29493299037040555,
+        0.5475361876229372,
+        0.7703514194139194,
+        0.5276791709892672,
+        0.43392045531645423,
+        0.3175106396928021,
+        0.17363451465278773,
+        0.2806853418310987,
+        0.29572599968580626,
+        0.3379873978136765,
+        0.4092533990195778,
+        0.5494381635856548,
+        0.4599238053613054,
+        0.5131253165611749
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
+          "conversation_id": "train_epoch_2:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.3964536745305976,
+          "dimension_score": 0.39632315698685305,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links corpus and fragment here?",
-            "What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense?"
+            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links corpus and fragment here?",
-            "I approach this with thoughtful reflection. What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind,"
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with direct clarity. What behavior links corpus and fragment here?",
+            "I approach this with direct clarity. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
           ],
-          "timestamp": 1781497916.260472
+          "timestamp": 1781499734.8094616
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -228,46 +228,46 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 7778,
-      "severity_sum": 3900.7950162588613,
+      "fail_count": 7817,
+      "severity_sum": 3919.382117667407,
       "recent": [
         0.5,
         0.5,
         0.5,
         0.5,
         0.5,
+        0.5044112823918173,
+        0.42064673004068714,
+        0.30027280127460376,
+        0.3993911680688374,
+        0.3978323255682571,
+        0.4170706464491557,
+        0.5001318692099772,
+        0.5361981551435718,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.035,
         0.5,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
-          "dimension_score": 0.3116806722689075,
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
+          "dimension_score": 0.223109243697479,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.2169914
+          "timestamp": 1781499734.7707589
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -454,10 +454,18 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 1084,
-      "severity_sum": 347.0617800223335,
+      "fail_count": 1100,
+      "severity_sum": 349.71842182213555,
       "recent": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
         0.1798289059186005,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
@@ -465,35 +473,39 @@
         0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
-        0.4077,
         0.16211962006034736,
         0.16211962006034736,
         0.16930914697607946,
-        0.16211962006034736,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.2232313
+          "timestamp": 1781499734.777508
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5356858
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -614,24 +626,12 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0358756
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.8374996
         }
       ]
     },
     "contradiction_handling": {
-      "fail_count": 10526,
-      "severity_sum": 5395.80976031895,
+      "fail_count": 10566,
+      "severity_sum": 5414.406461778419,
       "recent": [
         0.5,
         0.5,
@@ -639,13 +639,13 @@
         0.5,
         0.5,
         0.5,
-        0.035,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
+        0.23985462488277923,
+        0.11708639226580644,
+        0.6294011707151017,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.23985462488277923,
         0.5,
         0.5,
         0.5,
@@ -656,20 +656,32 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
-          "dimension_score": 0.5333333333333333,
+          "conversation_id": "train_epoch_2:episode_ef942e23833f",
+          "source": "train_epoch_2",
+          "dimension_score": 0.45,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with concrete example. What behavior links use and corpus here?",
+            "I approach this with concrete example. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
           ],
-          "timestamp": 1781497916.2233474
+          "timestamp": 1781499734.7438548
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.535792
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -790,26 +802,13 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0360103
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.8376133
         }
       ]
     },
     "implied_intent_inference": {
-      "fail_count": 773,
-      "severity_sum": 351.24352769550035,
+      "fail_count": 774,
+      "severity_sum": 351.45968718891413,
       "recent": [
-        0.24317943009052112,
         0.24317943009052112,
         0.24317943009052112,
         0.46834556906322566,
@@ -828,12 +827,13 @@
         0.21615949341379642,
         0.5,
         0.5,
-        0.5
+        0.5,
+        0.21615949341379642
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_7:episode_77868ac5952d",
-          "source": "train_epoch_7",
+          "conversation_id": "train_epoch_1:episode_2281d4192423",
+          "source": "train_epoch_1",
           "dimension_score": 0.46,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
@@ -841,11 +841,11 @@
             "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "influence, integrate, shift stable. shift tentative."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "interpret, integrate, starting, present. settle implied."
           ],
-          "timestamp": 1781497634.9030447
+          "timestamp": 1781499658.591792
         },
         {
           "conversation_id": "train_epoch_3:episode_25b2bedd6ea9",
@@ -1009,21 +1009,9 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 681,
-      "severity_sum": 113.34501019071153,
+      "fail_count": 693,
+      "severity_sum": 115.3459839833562,
       "recent": [
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16930914697607946,
-        0.16734078745203107,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.17504987334858685,
-        0.16211962006034736,
-        0.16734078745203107,
-        0.16211962006034736,
-        0.16211962006034736,
         0.4078,
         0.16211962006034736,
         0.1798289059186005,
@@ -1031,24 +1019,48 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
+        0.1798289059186005,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.1798289059186005,
+        0.16211962006034736,
+        0.16930914697607946,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.2234313
+          "timestamp": 1781499734.777616
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5431979
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -1169,38 +1181,26 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0441656
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.8452532
         }
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 10625,
-      "severity_sum": 5461.711540123373,
+      "fail_count": 10668,
+      "severity_sum": 5483.400309244227,
       "recent": [
         0.5,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.035,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
+        0.41621831964952866,
+        0.5674186702112157,
+        0.6294011707151017,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.41621831964952866,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
@@ -1211,20 +1211,32 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.2235105
+          "timestamp": 1781499734.7776868
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5433183
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -1345,28 +1357,25 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0443203
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.84543
         }
       ]
     },
     "boundary_calibration": {
-      "fail_count": 5618,
-      "severity_sum": 2672.8505984381345,
+      "fail_count": 5635,
+      "severity_sum": 2676.653776651227,
       "recent": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.29721930344397024,
+        0.0875249366742935,
+        0.43231898682759295,
+        0.1798289059186005,
+        0.5674186702112156,
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736,
+        0.29721930344397024,
         0.06349093011602985,
         0.16211962006034736,
         0.1798289059186005,
@@ -1374,33 +1383,36 @@
         0.16211962006034736,
         0.16211962006034736,
         0.06349093011602985,
-        0.16211962006034736,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.2297533
+          "timestamp": 1781499734.7843194
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5505426
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -1521,32 +1533,13 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0525384
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.853446
         }
       ]
     },
     "framing_selection": {
-      "fail_count": 1006,
-      "severity_sum": 370.79905526787405,
+      "fail_count": 1013,
+      "severity_sum": 372.2438225542119,
       "recent": [
-        0.15471552681203316,
-        0.22978137978487834,
-        0.26685634247687345,
-        0.05723931253860743,
-        0.15471552681203316,
-        0.22350849973393,
-        0.06990300571964347,
         0.18749574739684827,
         0.2139995911036028,
         0.22350849973393,
@@ -1559,24 +1552,43 @@
         0.03485449312409394,
         0.15471552681203316,
         0.18441018977432785,
-        0.26685634247687345
+        0.26685634247687345,
+        0.05723931253860743,
+        0.389861252491275,
+        0.2739554991520006,
+        0.22350849973393,
+        0.05723931253860743,
+        0.2585532201089912,
+        0.18441018977432785
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
-          "dimension_score": 0.4224744871391589,
+          "conversation_id": "train_epoch_2:episode_ef942e23833f",
+          "source": "train_epoch_2",
+          "dimension_score": 0.4892969448600091,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with concrete example. What behavior links use and corpus here?",
+            "I approach this with concrete example. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
           ],
-          "timestamp": 1781497916.2298748
+          "timestamp": 1781499734.7507973
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.33142696805273547,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5507057
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -1697,34 +1709,22 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0527046
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.33591653491741197,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.853599
         }
       ]
     },
     "emotional_calibration": {
-      "fail_count": 781,
-      "severity_sum": 132.45964155749596,
+      "fail_count": 798,
+      "severity_sum": 135.52438335729764,
       "recent": [
         0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.4068,
+        0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
         0.17504987334858685,
         0.16211962006034736,
         0.1798289059186005,
+        0.4081,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
@@ -1739,20 +1739,32 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.2360091
+          "timestamp": 1781499734.7844265
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5576966
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -1873,31 +1885,13 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0608146
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.8617983
         }
       ]
     },
     "semantic_precision": {
-      "fail_count": 848,
-      "severity_sum": 495.866283934879,
+      "fail_count": 854,
+      "severity_sum": 498.65153979169787,
       "recent": [
-        0.5984797847555821,
-        0.6083847562693718,
-        0.6325969756738987,
-        0.6034815754046523,
-        0.6122062552831784,
-        0.616421630277165,
         0.6752380952380952,
         0.6935140500525117,
         0.6037484451133608,
@@ -1911,24 +1905,30 @@
         0.6087377686416149,
         0.5735806180998488,
         0.5401286533978842,
-        0.6035463254694025
+        0.6035463254694025,
+        0.06880154165690812,
+        0.044595830072944105,
+        0.9062957875457875,
+        0.6207990246932555,
+        0.5410868298368299,
+        0.603676843013147
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
+          "conversation_id": "train_epoch_2:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.3964536745305976,
+          "dimension_score": 0.39632315698685305,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links corpus and fragment here?",
-            "What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind, what's your sense?"
+            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links corpus and fragment here?",
-            "I approach this with thoughtful reflection. What I mean is: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. With that in mind,"
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with direct clarity. What behavior links corpus and fragment here?",
+            "I approach this with direct clarity. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
           ],
-          "timestamp": 1781497916.260472
+          "timestamp": 1781499734.8094616
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2109,24 +2109,24 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 1630,
-      "severity_sum": 730.2276589442093,
+      "fail_count": 1642,
+      "severity_sum": 733.468140961967,
       "recent": [
+        0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
+        0.16211962006034736,
+        0.1798289059186005,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.1798289059186005,
         0.4085,
+        0.4998688285194044,
         0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
+        0.8376180369784614,
         0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
@@ -2135,20 +2135,32 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_585066ae373f",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_017b254a7ee4",
+          "source": "train_epoch_2",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you."
+            "To clarify \u2014 Integrate two perspectives that disagree without collapsing either one.. Does that help frame it?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with warm acknowledgment. Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with warm acknowledgment. To clarify \u2014 Integrate two perspectives that disagree without collapsing either one.. Does that help frame it?"
           ],
-          "timestamp": 1781497916.1710787
+          "timestamp": 1781499734.7240047
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.0,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5578234
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -2269,27 +2281,13 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0609713
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.0,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.861959
         }
       ]
     },
     "compression_elaboration_fit": {
-      "fail_count": 532,
-      "severity_sum": 244.05192333530763,
+      "fail_count": 534,
+      "severity_sum": 244.74906879920817,
       "recent": [
-        0.1971454639005459,
-        0.1971454639005459,
         0.5,
         0.5,
         0.5,
@@ -2305,14 +2303,16 @@
         0.1971454639005459,
         0.1971454639005459,
         0.1971454639005459,
+        0.1971454639005459,
+        0.5,
         0.1971454639005459,
         0.5,
         0.1971454639005459
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_3:episode_106269e4913f",
-          "source": "train_epoch_3",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.47407407407407404,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
@@ -2320,11 +2320,11 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781496965.658478
+          "timestamp": 1781499734.7844963
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2487,13 +2487,11 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 3121,
-      "severity_sum": 1792.6037870347814,
+      "fail_count": 3138,
+      "severity_sum": 1802.402033334088,
       "recent": [
+        0.5674186702112157,
         0.5925820144162781,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
         0.6126745567200539,
@@ -2502,6 +2500,8 @@
         0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
+        0.5674186702112157,
+        0.5,
         0.5925820144162781,
         0.5674186702112157,
         0.6294011707151017,
@@ -2513,20 +2513,32 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.236134
+          "timestamp": 1781499734.7845647
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5652525
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -2647,62 +2659,62 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0687907
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.869982
         }
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 1146,
-      "severity_sum": 290.71442931334235,
+      "fail_count": 1162,
+      "severity_sum": 294.1852489923664,
       "recent": [
-        0.46505541409461343,
-        0.16211962006034736,
-        0.2836370686246549,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.46399197856244884,
-        0.16211962006034736,
-        0.3166980605300608,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.4749663166167031,
-        0.16211962006034736,
-        0.28090467246081385,
-        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.49233135733219846,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.2463507612961948,
+        0.16211962006034736,
+        0.2742602788532509,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.4517278062474373,
+        0.16211962006034736,
+        0.26931067536945597,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.44585433659366686,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_f6ddfdf0da47",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_2:episode_892b550f9c67",
+          "source": "train_epoch_2",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Deep exploration can create tension \u2014 use carefully",
-            "I approach this with deep exploration. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. That's the core of what I'm working through with you."
+            "Thoughtful reflection can create tension \u2014 use carefully",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781497916.2423651
+          "timestamp": 1781499734.7909985
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_cbc774db17d7",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconcile th",
+            "I approach this with curious inquiry. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality th\". Keep continuity and build from that thread. Now reconcile th"
+          ],
+          "timestamp": 1781499658.5721664
         },
         {
           "conversation_id": "train_epoch_1:episode_3870519a1263",
@@ -2823,18 +2835,6 @@
             "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with concrete example. Maintain quality t\". Keep continuity and build from that thread. Now reconc"
           ],
           "timestamp": 1781345838.0771108
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_5cfdd6670b41",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain quality through multiple turns instead of fading over time. Include\". Keep continuity and build from that thread. Now reconc",
-            "I approach this with curious inquiry. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with thoughtful reflection. Maintain qual\". Keep continuity and build from that thread. Now reconcile th"
-          ],
-          "timestamp": 1781345566.8785543
         }
       ]
     }
