@@ -1,47 +1,47 @@
 {
-  "total_fails": 46503,
+  "total_fails": 47660,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 3184,
-      "severity_sum": 1474.4206080401075,
+      "fail_count": 3267,
+      "severity_sum": 1515.3825107248501,
       "recent": [
-        0.16159275578652518,
-        0.1328651122291022,
-        0.07036507936507937,
-        0.05,
-        0.05,
-        0.09722957516339871,
-        0.07025231481481481,
-        0.050275641025641034,
-        0.06770486111111111,
-        0.06296875,
-        0.14500496031746032,
-        0.13756250000000003,
-        0.07907152777777778,
-        0.05,
-        0.07104166666666667,
-        0.07340972222222221,
-        0.050275641025641034,
-        0.10319194393569395,
-        0.1223792658730159,
-        0.05
+        0.6946496012025245,
+        0.535805856040673,
+        0.6923889843413611,
+        0.6917240970292542,
+        0.2757890482414878,
+        0.30178262241472753,
+        0.4597493074526067,
+        0.77536423992674,
+        0.4931188040058233,
+        0.4596356460339223,
+        0.5361627955450672,
+        0.6923889843413611,
+        0.6946496012025245,
+        0.739750512866221,
+        0.7393935733618268,
+        0.6917240970292542,
+        0.5096600373437955,
+        0.686851872794273,
+        0.6345304487179487,
+        0.6863321886446887
       ],
       "examples": [
         {
           "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.429610140571679,
+          "dimension_score": 0.19255036630036626,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links corpus and fragment here?",
-            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links corpus and fragment here?",
-            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I'll not can aurora.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781483134.7147837
+          "timestamp": 1781490781.9335504
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -228,12 +228,20 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 7226,
-      "severity_sum": 3631.604623609312,
+      "fail_count": 7390,
+      "severity_sum": 3715.0898851545794,
       "recent": [
         0.5,
         0.5,
         0.5,
+        0.8094401030155914,
+        0.6697084304873874,
+        0.6697084304873874,
+        0.7891751505080481,
+        0.7891751505080481,
+        0.6697084304873874,
+        0.8078961066340643,
+        0.6697084304873874,
         0.5,
         0.5,
         0.5,
@@ -242,32 +250,24 @@
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.035
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
-          "dimension_score": 0.223109243697479,
+          "dimension_score": 0.12428571428571429,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.669652
+          "timestamp": 1781490781.8869376
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -454,33 +454,33 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 928,
-      "severity_sum": 315.09300848616107,
+      "fail_count": 995,
+      "severity_sum": 326.88054778527163,
       "recent": [
         0.16211962006034736,
-        0.16930914697607946,
-        0.16211962006034736,
-        0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.17504987334858685,
         0.16211962006034736,
         0.16211962006034736,
-        0.1798289059186005,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
-        0.5,
-        0.5,
-        0.5,
-        0.5
+        0.16211962006034736,
+        0.16211962006034736,
+        0.4119,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
@@ -489,11 +489,23 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.6775813
+          "timestamp": 1781490781.8939302
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.5260174
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -614,29 +626,22 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0243585
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3285666
         }
       ]
     },
     "contradiction_handling": {
-      "fail_count": 9963,
-      "severity_sum": 5122.1757740847615,
+      "fail_count": 10122,
+      "severity_sum": 5200.868497909429,
       "recent": [
         0.5,
         0.5,
         0.5,
         0.5,
+        0.035,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
@@ -647,16 +652,11 @@
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.035
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_845c3ddc5fa4",
+          "conversation_id": "train_epoch_8:episode_5e1e8d8c4727",
           "source": "train_epoch_8",
           "dimension_score": 0.2,
           "user_turns": [
@@ -665,11 +665,22 @@
             "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with metaphor usage. Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I was can that aurora."
           ],
-          "timestamp": 1781483134.6377773
+          "timestamp": 1781490781.839837
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.5261128
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -790,62 +801,50 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0244722
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3286753
         }
       ]
     },
     "implied_intent_inference": {
-      "fail_count": 714,
-      "severity_sum": 329.6692011234195,
+      "fail_count": 749,
+      "severity_sum": 343.08682959858356,
       "recent": [
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
         0.5,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
         0.5,
-        0.21615949341379642,
-        0.21615949341379642,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.46834556906322566,
+        0.24317943009052112,
+        0.24317943009052112,
+        0.24317943009052112,
+        0.24317943009052112,
+        0.24317943009052112,
+        0.46834556906322566,
+        0.24317943009052112,
+        0.5,
         0.5,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_5:episode_4951ffe6b0c9",
-          "source": "train_epoch_5",
-          "dimension_score": 0.46,
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
+          "source": "train_epoch_8",
+          "dimension_score": 0.43999999999999995,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "influence, integrate, shift stable. shift tentative."
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482484.9168618
+          "timestamp": 1781490781.894054
         },
         {
           "conversation_id": "train_epoch_3:episode_25b2bedd6ea9",
@@ -1009,33 +1008,33 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 565,
-      "severity_sum": 93.05079175239977,
+      "fail_count": 622,
+      "severity_sum": 102.84784197403056,
       "recent": [
+        0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.4115,
+        0.16211962006034736,
         0.16211962006034736,
         0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
-        0.16734078745203107,
-        0.16211962006034736,
-        0.16930914697607946,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.17504987334858685,
-        0.16211962006034736,
-        0.16734078745203107,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.4114
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
@@ -1044,11 +1043,23 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.6777146
+          "timestamp": 1781490781.89413
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.5332754
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1169,28 +1180,24 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0333633
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3344498
         }
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 10095,
-      "severity_sum": 5193.882232887822,
+      "fail_count": 10270,
+      "severity_sum": 5285.03311607779,
       "recent": [
         0.5,
         0.5,
         0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
@@ -1199,19 +1206,11 @@
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.035
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.2,
           "user_turns": [
@@ -1220,11 +1219,23 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.6778033
+          "timestamp": 1781490781.8942008
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.5334694
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1345,62 +1356,62 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0335288
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3345864
         }
       ]
     },
     "boundary_calibration": {
-      "fail_count": 5450,
-      "severity_sum": 2623.1111855802815,
+      "fail_count": 5522,
+      "severity_sum": 2645.821113078293,
       "recent": [
-        0.17504987334858685,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
+        0.5674186702112156,
+        0.43231898682759295,
+        0.5674186702112156,
+        0.43231898682759295,
+        0.43231898682759295,
         0.16211962006034736,
         0.16211962006034736,
         0.06349093011602985,
-        0.16211962006034736,
-        0.16211962006034736,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
+        0.5674186702112156,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.5674186702112156,
+        0.5674186702112156,
+        0.43231898682759295,
+        0.5674186702112156,
+        0.43231898682759295,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
-          "dimension_score": 0.5,
+          "dimension_score": 0.3,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.685376
+          "timestamp": 1781490781.9009645
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.5401034
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1521,62 +1532,61 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0414982
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3404534
         }
       ]
     },
     "framing_selection": {
-      "fail_count": 949,
-      "severity_sum": 360.60283804659633,
+      "fail_count": 971,
+      "severity_sum": 364.30345699640344,
       "recent": [
-        0.2739554991520006,
-        0.18749574739684827,
-        0.22350849973393,
-        0.07949057795790809,
-        0.18441018977432785,
-        0.09648429988512443,
-        0.18441018977432785,
-        0.18749574739684827,
-        0.26685634247687345,
+        0.06990300571964347,
         0.0592134773184814,
-        0.2139995911036028,
+        0.22350849973393,
         0.18749574739684827,
-        0.26685634247687345,
         0.05723931253860743,
-        0.24847411170670386,
-        0.2585532201089912,
-        0.26685634247687345,
-        0.08860380388379094,
+        0.22350849973393,
+        0.18749574739684827,
+        0.07330116266750283,
+        0.18441018977432785,
+        0.18749574739684827,
+        0.0455828802183683,
         0.2739554991520006,
-        0.18749574739684827
+        0.22350849973393,
+        0.03485449312409394,
+        0.18441018977432785,
+        0.26382007739987534,
+        0.18749574739684827,
+        0.09648429988512443,
+        0.2139995911036028,
+        0.05019937780073218
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_845c3ddc5fa4",
+          "conversation_id": "train_epoch_8:episode_5e1e8d8c4727",
           "source": "train_epoch_8",
-          "dimension_score": 0.48121673811444543,
+          "dimension_score": 0.5828427124746189,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
             "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with metaphor usage. Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I was can that aurora."
           ],
-          "timestamp": 1781483134.6540523
+          "timestamp": 1781490781.86625
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.31956956826339356,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.5402434
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1697,49 +1707,37 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0417063
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.31956956826339356,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3405797
         }
       ]
     },
     "emotional_calibration": {
-      "fail_count": 639,
-      "severity_sum": 107.48607002132569,
+      "fail_count": 706,
+      "severity_sum": 119.2736093204353,
       "recent": [
         0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
-        0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.17504987334858685,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
         0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
-        0.4093
+        0.16211962006034736,
+        0.16211962006034736,
+        0.4119,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
@@ -1748,11 +1746,23 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.6855054
+          "timestamp": 1781490781.9075472
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.547607
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1873,62 +1883,50 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.049864
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3462985
         }
       ]
     },
     "semantic_precision": {
-      "fail_count": 802,
-      "severity_sum": 467.1727514671439,
+      "fail_count": 824,
+      "severity_sum": 481.00717437897356,
       "recent": [
-        0.8672252747252748,
-        0.9052609890109891,
-        0.5032378518916982,
-        0.5702753016214555,
-        0.4995354645354645,
-        0.5835748226132842,
-        0.5979649196956889,
-        0.6599800413261951,
-        0.5712866300366299,
-        0.6681695548041703,
-        0.502280632125848,
-        0.5723732037193576,
-        0.49857742476410394,
-        0.5817481236712008,
-        0.5910062436000523,
-        0.659695141041295,
-        0.5804397365455058,
-        0.5477943904386213,
-        0.5071482577251809,
-        0.570389859428321
+        0.871231684981685,
+        0.9112706043956044,
+        0.8080448717948719,
+        0.871231684981685,
+        0.5081428649697881,
+        0.5841732899683183,
+        0.5958541921041922,
+        0.7795847421808961,
+        0.6866404268808115,
+        0.6771377500704425,
+        0.5070985745024208,
+        0.5720644169776441,
+        0.501489400999251,
+        0.5868520475251247,
+        0.5931135210942904,
+        0.9121932234432235,
+        0.5801397694186157,
+        0.540747818863438,
+        0.7465064102564103,
+        0.8074496336996337
       ],
       "examples": [
         {
           "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.429610140571679,
+          "dimension_score": 0.19255036630036626,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links corpus and fragment here?",
-            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links corpus and fragment here?",
-            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I'll not can aurora.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781483134.7147837
+          "timestamp": 1781490781.9335504
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2109,46 +2107,58 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 1526,
-      "severity_sum": 706.1561648777397,
+      "fail_count": 1578,
+      "severity_sum": 719.0097210033348,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
+        0.4998688285194044,
         0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
+        0.4998688285194044,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.1798289059186005,
+        0.16211962006034736,
+        0.4998688285194044,
         0.16211962006034736,
         0.16211962006034736,
+        0.4998688285194044,
+        0.4998688285194044,
         0.16211962006034736,
-        0.4085
+        0.4998688285194044,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_845c3ddc5fa4",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with metaphor usage. Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.6542306
+          "timestamp": 1781490781.9076736
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.0,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.547751
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -2269,49 +2279,37 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0500393
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.0,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3464496
         }
       ]
     },
     "compression_elaboration_fit": {
-      "fail_count": 489,
-      "severity_sum": 229.49237638956816,
+      "fail_count": 524,
+      "severity_sum": 241.56619601580493,
       "recent": [
+        0.5,
+        0.13939156581461537,
         0.5,
         0.1971454639005459,
         0.5,
         0.5,
         0.5,
+        0.1971454639005459,
+        0.1971454639005459,
+        0.1971454639005459,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
+        0.1971454639005459,
+        0.1971454639005459,
+        0.1971454639005459,
+        0.1971454639005459,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.47407407407407404,
           "user_turns": [
@@ -2320,11 +2318,11 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.6856217
+          "timestamp": 1781490781.907776
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2487,33 +2485,33 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 2963,
-      "severity_sum": 1703.2810866581817,
+      "fail_count": 3046,
+      "severity_sum": 1749.2559242050672,
       "recent": [
         0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5925820144162781,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.2,
           "user_turns": [
@@ -2522,11 +2520,23 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.6857631
+          "timestamp": 1781490781.90786
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.5543852
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -2647,49 +2657,37 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0581586
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.2,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3522708
         }
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 1010,
-      "severity_sum": 261.67167348570075,
+      "fail_count": 1074,
+      "severity_sum": 274.691035769571,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
-        0.30839236192338537,
+        0.2915903770569399,
         0.16211962006034736,
         0.16211962006034736,
-        0.46505541409461343,
         0.16211962006034736,
         0.16211962006034736,
-        0.315617715824419,
         0.16211962006034736,
         0.16211962006034736,
-        0.4628759711479478,
         0.16211962006034736,
         0.16211962006034736,
-        0.26166284562419384,
+        0.49004027085323626,
         0.16211962006034736,
         0.16211962006034736,
-        0.4427357486220338,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "conversation_id": "train_epoch_8:episode_b3d128d26959",
           "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
@@ -2698,11 +2696,23 @@
             "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
-            "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "Warm acknowledgment can create tension \u2014 use carefully",
+            "I can that aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781483134.693231
+          "timestamp": 1781490781.9145944
+        },
+        {
+          "conversation_id": "train_epoch_1:episode_8df62dffea9e",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
+          "user_turns": [],
+          "assistant_turns": [
+            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
+            "I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconc",
+            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with thoughtful reflection. Earlier you said: \"I approach this with direct clarity. Maintain quality thr\". Keep continuity and build from that thread. Now reconcil"
+          ],
+          "timestamp": 1781490055.561142
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -2823,18 +2833,6 @@
             "I approach this with concrete example. Earlier you said: \"I approach this with curious inquiry. Earlier you said: \"I approach this with direct clarity. Maintain quality through m\". Keep continuity and build from that thread. Now reconcile t"
           ],
           "timestamp": 1781345480.0657766
-        },
-        {
-          "conversation_id": "train_epoch_1:episode_fec3e1b7cbe1",
-          "source": "train_epoch_1",
-          "dimension_score": 0.5,
-          "user_turns": [],
-          "assistant_turns": [
-            "I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your confidence level.",
-            "I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality through multiple turns instead of fading over time. Include your c\". Keep continuity and build from that thread. Now reconcil",
-            "I approach this with direct clarity. Earlier you said: \"I approach this with warm acknowledgment. Earlier you said: \"I approach this with direct clarity. Maintain quality throu\". Keep continuity and build from that thread. Now reconcile thi"
-          ],
-          "timestamp": 1781343197.3581128
         }
       ]
     }

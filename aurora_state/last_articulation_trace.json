@@ -1,26 +1,43 @@
 {
-  "original": "I want is truth. I can understand meaning.",
-  "candidate": "I want is truth. I can understand meaning.",
-  "selected": "I want is truth. I can understand meaning.",
+  "original": "I did am I do feel. I exist moment I is least.",
+  "candidate": "I did am I do feel. I exist moment I is least.",
+  "selected": "I did am I do feel. I exist moment I is least.",
   "accepted": true,
   "reason": "deterministic_preferred_passthrough",
-  "original_score": 0.74,
-  "candidate_score": 0.74,
-  "original_pressure": 0.172,
-  "candidate_pressure": 0.172,
+  "original_score": 0.8,
+  "candidate_score": 0.8,
+  "original_pressure": 0.28,
+  "candidate_pressure": 0.28,
   "pressure_relief": 0.0,
   "safe": true,
   "metadata": {
-    "prompt_excerpt": "",
+    "prompt_excerpt": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
     "input_interpretation": {
-      "raw_prompt": "",
+      "raw_prompt": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
       "intent_hint": "statement_or_context",
-      "topic_terms": [],
-      "entities": []
+      "topic_terms": [
+        "corpus",
+        "fragment",
+        "context",
+        "corpus",
+        "fragment",
+        "context",
+        "corpus",
+        "fragment"
+      ],
+      "entities": [
+        "Use",
+        "Use",
+        "Use",
+        "Use",
+        "Use",
+        "Use",
+        "Use"
+      ]
     },
-    "tone": "neutral",
+    "tone": "curious",
     "source": "deterministic_preferred",
-    "timestamp": 1781489810.3426614,
+    "timestamp": 1781490891.917355,
     "min_relief_used": 0.0
   }
 }
