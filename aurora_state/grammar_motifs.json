@@ -666,8 +666,8 @@
         "action",
         "object"
       ],
-      "success_count": 1934,
-      "fail_count": 1685,
+      "success_count": 1982,
+      "fail_count": 1733,
       "contexts_seen": [
         "2d3b3c91",
         "403b1577",
@@ -1031,8 +1031,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.2908477559401592,
-      "total_tokens_avg": 4.028955532574979
+      "compression_score": 0.29072430575436614,
+      "total_tokens_avg": 4.028254288597378
     },
     "agent_action_object_agent_action": {
       "pattern_id": "agent_action_object_agent_action",
@@ -1116,8 +1116,8 @@
         "action",
         "object"
       ],
-      "success_count": 1360,
-      "fail_count": 2151,
+      "success_count": 1426,
+      "fail_count": 2256,
       "contexts_seen": [
         "4fdd4e45",
         "eeb89e9a",
@@ -1142,6 +1142,7 @@
         "15999931",
         "f16f167f",
         "c4ffb2dc",
+        "4e0e4081",
         "c4bdf4e9",
         "d3c0a7d2",
         "836862ba",
@@ -1170,6 +1171,7 @@
         "72946edb",
         "ed4d87f8",
         "0e781882",
+        "07a677f3",
         "7da41677",
         "b902a306",
         "93fb0589",
@@ -1184,6 +1186,7 @@
         "59abc536",
         "fb96aca5",
         "8d284556",
+        "5a448d3a",
         "dc102461",
         "5d9cd5c8",
         "467b9663",
@@ -1200,6 +1203,7 @@
         "b7ad9c4f",
         "28a66e47",
         "c98ee8d1",
+        "db708f18",
         "b6949780",
         "4a599e55",
         "4a40ef87",
@@ -1208,8 +1212,10 @@
         "c8c4942e",
         "0cc7d55a",
         "919cbaa3",
+        "96cdd12b",
         "d0e13c79",
         "9a08ebd5",
+        "f88e0fb4",
         "398f0e6d",
         "68f6d276",
         "4fece6aa",
@@ -1217,6 +1223,7 @@
         "5cc8dc18",
         "978a0d5f",
         "d83d1ea1",
+        "9e4a6f08",
         "2215c6c1",
         "f6d4a9f3",
         "9730983b",
@@ -1226,11 +1233,13 @@
         "b3430f1e",
         "79d69dec",
         "b785919d",
+        "515b69dd",
         "4144f65b",
         "51815207",
         "a66abfd1",
         "36415d87",
         "f2ce8016",
+        "ca7840f5",
         "5b8a8ea7",
         "11d35261",
         "448afc8e",
@@ -1238,6 +1247,7 @@
         "64ce7760",
         "d4e4b3a0",
         "27c39d21",
+        "9bda3ad0",
         "0a7f5292",
         "5cacc5c3",
         "e5106f1a",
@@ -1247,6 +1257,7 @@
         "7e6ae860",
         "1bc784b4",
         "d28d69f1",
+        "cc9a846e",
         "80743170",
         "5c2a7f8b",
         "5f3e5b7c",
@@ -1277,6 +1288,7 @@
         "b4aae6d3",
         "d6843d42",
         "a82164ba",
+        "d4fbd9fe",
         "96865d42",
         "f5c3c556",
         "50ce107c",
@@ -1294,6 +1306,7 @@
         "d0ec955b",
         "f1c5d3f7",
         "be25f8a1",
+        "b1a3f0c3",
         "0a76bcd8",
         "3ee241af",
         "ab25d934",
@@ -1302,6 +1315,7 @@
         "5cd056aa",
         "2efd2ce9",
         "6155042e",
+        "b559a1b5",
         "72ab2791",
         "f1f3b82b",
         "8171b043",
@@ -1317,6 +1331,7 @@
         "8a2fbb9b",
         "7dd3fe56",
         "70e70698",
+        "8121c8ee",
         "9056aa8a",
         "a3c36ecf",
         "9275dcf2",
@@ -1342,6 +1357,7 @@
         "423bfcc0",
         "eb91bd21",
         "24c8ee0e",
+        "a82acda7",
         "7dabf3e3",
         "f4e0afc5",
         "47d0e935",
@@ -1414,10 +1430,13 @@
         "4b9d0596",
         "29768c06",
         "abe09fd1",
+        "4e696e4b",
         "790f8bfe",
         "3b1262e8",
         "c77fbac3",
+        "45917d78",
         "edaf2131",
+        "09b74d57",
         "299b283b",
         "cc555fd6",
         "379c6538",
@@ -1452,6 +1471,7 @@
         "5502af42",
         "c9f33195",
         "7a2c604c",
+        "e9bf366d",
         "c88e0c1d",
         "6f6e0b01",
         "91b39621",
@@ -1483,6 +1503,7 @@
         "411bdd82",
         "1b7e153b",
         "e6d386c6",
+        "3606554d",
         "3509eba6",
         "0b96d7c0",
         "77091f33",
@@ -1498,10 +1519,14 @@
         "b4840ebc",
         "3a00ed7a",
         "8ac67d8b",
+        "05023c35",
         "b893ffd9",
         "506d7fd0",
+        "7c7a6b3b",
         "96914bca",
         "eba571f8",
+        "ffca732b",
+        "fada16e4",
         "3c134607",
         "8534dd89",
         "2eb2040a",
@@ -1594,18 +1619,22 @@
         "450085da",
         "bbdd4d32",
         "6c420af1",
+        "170859b2",
         "34ceeffa",
         "9a55ae8d",
         "008937af",
         "f0248aae",
         "878aa947",
+        "ce22cce2",
         "689582be",
         "7341c40d",
         "1e591d49",
         "02554ced",
         "db00cf35",
         "92e994ab",
+        "3496b2aa",
         "841446fc",
+        "83904c1e",
         "3c5f3d24",
         "6e3272b2",
         "4c260278",
@@ -1618,11 +1647,13 @@
         "715e88cd",
         "1f20de30",
         "0a541bbe",
+        "077a8815",
         "3e6432d2",
         "5155ecde",
         "afd3a6c6",
         "42f7a091",
         "df50f2cb",
+        "de7dc5f3",
         "4acaa09e",
         "b3907181",
         "b60de5b6",
@@ -1661,6 +1692,7 @@
         "bb162346",
         "76ec0dd5",
         "4be725d5",
+        "e3e209af",
         "ef00e729",
         "9efed2f0",
         "e33d6703",
@@ -1701,6 +1733,7 @@
         "98bae904",
         "2cb9e618",
         "7a256237",
+        "186d469d",
         "4997506c",
         "1c2f9081",
         "3e57a3a4",
@@ -1720,8 +1753,8 @@
       "reference_anchors": [],
       "promoted": true,
       "generation": 0,
-      "compression_score": 0.2626728110599078,
-      "total_tokens_avg": 7.75
+      "compression_score": 0.26377200681501367,
+      "total_tokens_avg": 7.761570827489481
     },
     "agent_action_agent_action_object_action_object": {
       "pattern_id": "agent_action_agent_action_object_action_object",
@@ -5638,7 +5671,7 @@
         "context",
         "connector"
       ],
-      "success_count": 1000,
+      "success_count": 1096,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -7770,7 +7803,7 @@
         "object",
         "connector"
       ],
-      "success_count": 2010,
+      "success_count": 2090,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -7792,8 +7825,8 @@
       ],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2932489451476791,
-      "total_tokens_avg": 7.0746268656716405
+      "compression_score": 0.2929634641407306,
+      "total_tokens_avg": 7.071770334928229
     },
     "descriptor_action_object_descriptor_connector_action_agent_action_object": {
       "pattern_id": "descriptor_action_object_descriptor_connector_action_agent_action_object",
@@ -7844,7 +7877,7 @@
         "action",
         "object"
       ],
-      "success_count": 49,
+      "success_count": 53,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -7914,7 +7947,7 @@
         "action",
         "descriptor"
       ],
-      "success_count": 22,
+      "success_count": 23,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -7984,7 +8017,7 @@
         "action",
         "object"
       ],
-      "success_count": 64,
+      "success_count": 68,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8020,7 +8053,7 @@
         "action",
         "object"
       ],
-      "success_count": 116,
+      "success_count": 119,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8056,13 +8089,13 @@
         "action",
         "descriptor"
       ],
-      "success_count": 19,
+      "success_count": 20,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.9896847500545614,
+        "X": 0.9969397229051569,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -8092,7 +8125,7 @@
         "action",
         "object"
       ],
-      "success_count": 43,
+      "success_count": 44,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8163,7 +8196,7 @@
         "action",
         "object"
       ],
-      "success_count": 26,
+      "success_count": 27,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8234,7 +8267,7 @@
         "action",
         "object"
       ],
-      "success_count": 71,
+      "success_count": 75,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8305,7 +8338,7 @@
         "action",
         "descriptor"
       ],
-      "success_count": 35,
+      "success_count": 38,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8341,7 +8374,7 @@
         "action",
         "object"
       ],
-      "success_count": 43,
+      "success_count": 47,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8406,7 +8439,7 @@
         "action",
         "object"
       ],
-      "success_count": 45,
+      "success_count": 49,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8679,7 +8712,7 @@
         "action",
         "object"
       ],
-      "success_count": 20,
+      "success_count": 21,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -8806,13 +8839,13 @@
         "agent",
         "action"
       ],
-      "success_count": 20,
+      "success_count": 21,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.984885512166828,
+        "X": 0.9927163935639515,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -8841,17 +8874,17 @@
         "action",
         "descriptor"
       ],
-      "success_count": 6,
+      "success_count": 7,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7680466949846191,
-        "T": 0.9006715456617043,
-        "N": 0.8117968867013592,
-        "B": 0.8544066081062877,
-        "A": 0.8963267026973847
+        "X": 0.8019040304436076,
+        "T": 0.9421962621822998,
+        "N": 0.8478041174400532,
+        "B": 0.8868806094192474,
+        "A": 0.9360908876594127
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -11175,7 +11208,7 @@
         "connector",
         "descriptor"
       ],
-      "success_count": 374,
+      "success_count": 390,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -15258,7 +15291,7 @@
         "action",
         "object"
       ],
-      "success_count": 1424,
+      "success_count": 1488,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -15447,7 +15480,7 @@
         "action",
         "object"
       ],
-      "success_count": 636,
+      "success_count": 668,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -17654,13 +17687,13 @@
         "action",
         "descriptor"
       ],
-      "success_count": 14,
+      "success_count": 15,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.9430214884983584,
+        "X": 0.9558775017356982,
         "T": 1.0,
         "N": 1.0,
         "B": 1.0,
@@ -17690,7 +17723,7 @@
         "action",
         "descriptor"
       ],
-      "success_count": 37,
+      "success_count": 40,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
@@ -18337,17 +18370,17 @@
         "agent",
         "action"
       ],
-      "success_count": 6,
+      "success_count": 7,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.7937523553230963,
-        "T": 0.9048543944789259,
-        "N": 0.8234693353394361,
-        "B": 0.8521956321455979,
-        "A": 0.9172132901992056
+        "X": 0.8245192155414676,
+        "T": 0.9456902481414547,
+        "N": 0.858075872241561,
+        "B": 0.8842847905738405,
+        "A": 0.9538567086610152
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -21408,17 +21441,17 @@
         "action",
         "object"
       ],
-      "success_count": 5,
+      "success_count": 6,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.75873821230207,
-        "T": 0.8649745274722698,
-        "N": 0.7774573990520429,
-        "B": 0.8117886061914836,
-        "A": 0.8745402158775988
+        "X": 0.7937111166829645,
+        "T": 0.9120551081755974,
+        "N": 0.8175853683086549,
+        "B": 0.8490075877342199,
+        "A": 0.9164464052580013
       },
       "child_patterns": [],
       "parent_pattern_id": null,
@@ -21474,25 +21507,25 @@
         "action",
         "connector"
       ],
-      "success_count": 1,
+      "success_count": 2,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.565423184,
-        "T": 0.5937757188064516,
-        "N": 0.5716709677419355,
-        "B": 0.5788868832258065,
-        "A": 0.594934724
+        "X": 0.6235909937771429,
+        "T": 0.6720076675496774,
+        "N": 0.6364933087557604,
+        "B": 0.6436811115244241,
+        "A": 0.6701791204057143
       },
       "child_patterns": [],
       "parent_pattern_id": null,
       "reference_anchors": [],
       "promoted": false,
       "generation": 0,
-      "compression_score": 0.2857142857142857,
-      "total_tokens_avg": 8.0
+      "compression_score": 0.3877551020408163,
+      "total_tokens_avg": 7.0
     },
     "agent_action_descriptor_agent_action_descriptor_agent_action_connector_agent_action_object": {
       "pattern_id": "agent_action_descriptor_agent_action_descriptor_agent_action_connector_agent_action_object",
@@ -21581,15 +21614,15 @@
         "action",
         "object"
       ],
-      "success_count": 11,
+      "success_count": 12,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.907112904347865,
+        "X": 0.924289539683264,
         "T": 1.0,
-        "N": 0.9546437902919678,
+        "N": 0.9735093925997889,
         "B": 1.0,
         "A": 1.0
       },
@@ -22403,21 +22436,26 @@
         "agent",
         "action"
       ],
-      "success_count": 1,
+      "success_count": 2,
       "fail_count": 0,
       "contexts_seen": [
         "d41d8cd9"
       ],
       "constraint_scores": {
-        "X": 0.5660982231935484,
-        "T": 0.5876464488064517,
-        "N": 0.5737612903225806,
-        "B": 0.5749544058064516,
-        "A": 0.587928809
+        "X": 0.6241893752674654,
+        "T": 0.6670833859496775,
+        "N": 0.6383327926267282,
+        "B": 0.6410521313953917,
+        "A": 0.6647659462057143
       },
       "child_patterns": [],
       "parent_pattern_id": null,
-      "reference_anchors": [],
+      "reference_anchors": [
+        [
+          0,
+          8
+        ]
+      ],
       "promoted": false,
       "generation": 0,
       "compression_score": 0.2857142857142856,
@@ -23709,6 +23747,113 @@
       "generation": 0,
       "compression_score": 0.2857142857142857,
       "total_tokens_avg": 8.0
+    },
+    "agent_action_object_agent_action_agent_action_descriptor_agent_action_connector": {
+      "pattern_id": "agent_action_object_agent_action_agent_action_descriptor_agent_action_connector",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "agent",
+        "action",
+        "descriptor",
+        "agent",
+        "action",
+        "connector"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5660185918571429,
+        "T": 0.589356074,
+        "N": 0.5734228571428571,
+        "B": 0.5743400342857143,
+        "A": 0.5866814822857143
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 12.0
+    },
+    "agent_action_object_agent_action_descriptor_agent_action_descriptor_agent_action_connector": {
+      "pattern_id": "agent_action_object_agent_action_descriptor_agent_action_descriptor_agent_action_connector",
+      "role_sequence": [
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "descriptor",
+        "agent",
+        "action",
+        "descriptor",
+        "agent",
+        "action",
+        "connector"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5660214898571428,
+        "T": 0.5899675520000001,
+        "N": 0.5734228571428571,
+        "B": 0.5744194142857143,
+        "A": 0.5867582792857142
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 12.0
+    },
+    "agent_action_connector_agent_action_object_agent_action_connector_agent_action_descriptor": {
+      "pattern_id": "agent_action_connector_agent_action_object_agent_action_connector_agent_action_descriptor",
+      "role_sequence": [
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "object",
+        "agent",
+        "action",
+        "connector",
+        "agent",
+        "action",
+        "descriptor"
+      ],
+      "success_count": 1,
+      "fail_count": 0,
+      "contexts_seen": [
+        "d41d8cd9"
+      ],
+      "constraint_scores": {
+        "X": 0.5660229388571428,
+        "T": 0.589590812,
+        "N": 0.5734228571428571,
+        "B": 0.5744143742857143,
+        "A": 0.5867539322857143
+      },
+      "child_patterns": [],
+      "parent_pattern_id": null,
+      "reference_anchors": [],
+      "promoted": false,
+      "generation": 0,
+      "compression_score": 0.2857142857142856,
+      "total_tokens_avg": 12.0
     }
   },
   "discourse": {
@@ -23718,7 +23863,7 @@
         "question",
         "question"
       ],
-      "success_count": 2139,
+      "success_count": 2235,
       "fail_count": 0,
       "promoted": true
     },
@@ -23728,7 +23873,7 @@
         "question",
         "statement"
       ],
-      "success_count": 9049,
+      "success_count": 9289,
       "fail_count": 0,
       "promoted": true
     },
@@ -23738,7 +23883,7 @@
         "statement",
         "question"
       ],
-      "success_count": 9122,
+      "success_count": 9361,
       "fail_count": 0,
       "promoted": true
     },
@@ -23748,7 +23893,7 @@
         "statement",
         "statement"
       ],
-      "success_count": 16313,
+      "success_count": 16596,
       "fail_count": 0,
       "promoted": true
     },
@@ -23843,5 +23988,5 @@
       "promoted": false
     }
   },
-  "saved_at": 1781546442.2604647
+  "saved_at": 1781548371.7582037
 }
