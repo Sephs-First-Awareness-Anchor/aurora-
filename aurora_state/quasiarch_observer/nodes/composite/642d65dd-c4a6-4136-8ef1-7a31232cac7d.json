@@ -1,0 +1,83 @@
+{
+  "node_id": "642d65dd-c4a6-4136-8ef1-7a31232cac7d",
+  "order": "COMPOSITE",
+  "payload": {
+    "target": "aurora.gateway.simulation.run_epoch",
+    "issue": "context_carryover_instability",
+    "logic_tier": "evolutionary_pipeline",
+    "intervention": "context_thread_reinforcement",
+    "intended_effect": "carry context, referents, and claims across turns",
+    "observed_effect": "resolved_partially",
+    "recurrence_pattern": "periodic__single_target",
+    "distribution_context": "single_module__isolated"
+  },
+  "point_scores": {
+    "target__issue": 0.7,
+    "issue__logic_tier": 0.7,
+    "logic_tier__intervention": 0.7,
+    "intervention__intended_effect": 0.7,
+    "intended_effect__observed_effect": 0.5,
+    "observed_effect__issue": 0.5,
+    "target__logic_tier": 0.7,
+    "target__intervention": 0.2,
+    "issue__intervention": 0.7,
+    "issue__intended_effect": 0.7,
+    "logic_tier__observed_effect": 0.7,
+    "target__observed_effect": 0.7,
+    "issue__recurrence_pattern": 0.4,
+    "target__recurrence_pattern": 0.36000000000000004,
+    "logic_tier__recurrence_pattern": 0.34,
+    "intervention__recurrence_pattern": 0.32000000000000006,
+    "target__distribution_context": 0.2,
+    "issue__distribution_context": 0.2,
+    "logic_tier__distribution_context": 0.2,
+    "observed_effect__distribution_context": 0.18000000000000002
+  },
+  "resolution_fidelity": 0.5,
+  "base_event_ids": [
+    "bbe3f1aa-f795-4c9b-b85f-7984aaf3214e",
+    "f31be5e5-07ec-4715-812f-03b16c828d88",
+    "b0aff087-7b22-4c58-afc2-04aac434eef6",
+    "c9b272c0-e811-4b3f-8dfb-662032ef459b"
+  ],
+  "parent_ids": [
+    "bbe3f1aa-f795-4c9b-b85f-7984aaf3214e",
+    "f31be5e5-07ec-4715-812f-03b16c828d88",
+    "b0aff087-7b22-4c58-afc2-04aac434eef6",
+    "c9b272c0-e811-4b3f-8dfb-662032ef459b"
+  ],
+  "child_ids": [],
+  "tags": [
+    "train_epoch_2",
+    "dim:uncertainty_signaling",
+    "dim:multi_turn_stability",
+    "train_epoch_4",
+    "train_epoch_3",
+    "dim:contradiction_handling",
+    "train_epoch_1",
+    "dim:perspective_integration",
+    "aurora",
+    "dim:semantic_precision",
+    "train",
+    "composite",
+    "ghost_relic_rehydrated"
+  ],
+  "quasi_strata": null,
+  "rotation_history": [],
+  "lineage_meta": {
+    "ghost_relic_id": "relic::composite::9f646ba8_547a_4090_ae2c_ecdf3b9d80db",
+    "ghost_relic_match": 0.7778,
+    "family_key": "issue_family::context_carryover_instability",
+    "issue_category": "context_carryover_instability",
+    "stage": "COMPOSITE",
+    "version": 65,
+    "signature": "a2ae864e4bea26b0e6a3",
+    "is_active_version": false,
+    "supersedes": "02925a36-3b33-45cb-94ec-95a15daa47da",
+    "superseded_by": "ed7ef46c-9252-4772-a209-1b3e548db060"
+  },
+  "created_at": "2026-06-15T17:18:10.977941+00:00",
+  "persisted_at": "2026-06-15T17:19:09.577482+00:00",
+  "is_relic": false,
+  "checksum": "a9f0e61b2c802be2"
+}
