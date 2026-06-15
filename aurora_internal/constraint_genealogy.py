@@ -1637,9 +1637,8 @@ class ConstraintGenealogyLogger:
         # In-memory event log (ring buffer)
         self._event_log: Deque[ReliefRecord] = deque(maxlen=10_000)
 
-        # JSONL file handle (append mode)
-        self._events_path = os.path.join(output_dir, self.cfg.EVENTS_FILE)
-        self._events_fh = open(self._events_path, "a", encoding="utf-8")
+        # Compact rolling event file (replaces unbounded events.jsonl)
+        self._events_recent_path = os.path.join(output_dir, "events_recent.json")
 
         # Governor
         self.governor = GenealogyDilationGovernor(self.cfg)
@@ -2174,8 +2173,8 @@ class ConstraintGenealogyLogger:
         }
 
     def flush_files(self) -> None:
-        """Flush JSONL buffer and write abilities + links + couplings + pair_stats JSON files."""
-        self._events_fh.flush()
+        """Write abilities + links + couplings + pair_stats + rolling event snapshot."""
+        self._write_events_recent_file()
         self._write_abilities_file()
         self._write_links_file()
         self._write_couplings_file()
@@ -2217,6 +2216,24 @@ class ConstraintGenealogyLogger:
         except Exception:
             pass
         return False
+
+    def _write_events_recent_file(self) -> None:
+        """Write a capped snapshot of recent relief events to events_recent.json.
+
+        Replaces the unbounded events.jsonl append log. Keeps the last 500
+        records from _event_log (in-memory deque, maxlen=10_000) so the file
+        stays small. The header carries total_count for counter restoration.
+        """
+        try:
+            recent = [r.to_jsonl_dict() for r in list(self._event_log)[-500:]]
+            with open(self._events_recent_path, "w", encoding="utf-8") as fh:
+                json.dump({
+                    "total_count": int(self.relief_event_count),
+                    "tick_count": int(self.tick_count),
+                    "records": recent,
+                }, fh)
+        except Exception:
+            pass
 
     def _write_pair_stats_file(self) -> None:
         """
@@ -2313,7 +2330,6 @@ class ConstraintGenealogyLogger:
 
     def close(self) -> None:
         self.flush_files()
-        self._events_fh.close()
 
     # ----------------------------------------------------------------
     # INTERNAL — Relief tolerance (solution immunity)
@@ -5395,8 +5411,7 @@ class ConstraintGenealogyLogger:
     # ----------------------------------------------------------------
 
     def _write_event(self, record: ReliefRecord) -> None:
-        line = json.dumps(record.to_jsonl_dict(), ensure_ascii=False)
-        self._events_fh.write(line + "\n")
+        pass  # in-memory deque (_event_log) is the canonical store; flushed by _write_events_recent_file
 
     def _write_abilities_file(self) -> None:
         path = os.path.join(self.output_dir, self.cfg.ABILITIES_FILE)

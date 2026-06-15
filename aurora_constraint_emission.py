@@ -78,6 +78,10 @@ class SpeechAct(Enum):
     QUESTION       = auto()
     BACKCHANNEL    = auto()
     INVALIDATION   = auto()
+    HEDGE          = auto()   # low-confidence uncertainty: I think / I'm not sure
+    CLARIFY        = auto()   # ambiguous input — seeking scope clarification
+    CONTRADICTION  = auto()   # direct contradiction of a stated fact
+    REPAIR         = auto()   # correcting a prior misunderstanding
 
 
 # ── data structures ───────────────────────────────────────────────────────────
@@ -227,14 +231,13 @@ class ConstraintEmitter:
         predicate_ok = self._resolve_content_slot(ctx, "predicate", slots, {"verb"})
 
         # 7. Seeking pathway for missing required predicate (§6)
-        # DISAGREEMENT has a short-circuit form ("That's not quite right") that
-        # fires in _assemble when no predicate is present — only seek if it has
-        # an entity but needs a predicate to complete the claim.
+        # DISAGREEMENT/CONTRADICTION have a short-circuit form that fires in _assemble
+        # when no predicate is present — only seek if has entity but needs predicate.
         needs_pred = (
-            act in (SpeechAct.ASSERTION, SpeechAct.QUESTION)
+            act in (SpeechAct.ASSERTION, SpeechAct.QUESTION, SpeechAct.HEDGE, SpeechAct.REPAIR)
             and bool(slots.agent)
         ) or (
-            act == SpeechAct.DISAGREEMENT
+            act in (SpeechAct.DISAGREEMENT, SpeechAct.CONTRADICTION)
             and bool(slots.agent)
             and entity_ok        # have the "what", missing the "does"
         )
@@ -355,17 +358,30 @@ class ConstraintEmitter:
             if i_isnt > 0.5 or i_cant > 0.5:
                 # Try assertion; seeking fires if content missing (§4 note)
                 return SpeechAct.ASSERTION
+            # Low confidence on both existence and capability — hedge rather than assert
+            if i_is < 0.2 and i_can < 0.2 and i_isnt < 0.3 and i_cant < 0.3:
+                return SpeechAct.HEDGE
             return SpeechAct.ASSERTION
 
         if fr.is_statement:
             if fr.is_contradiction and i_isnt > 0.3:
+                return SpeechAct.CONTRADICTION
+            if fr.is_contradiction and (i_isnt > 0.1 or i_cant > 0.1):
                 return SpeechAct.DISAGREEMENT
             if fr.aligns_with_oets and i_is > 0.3:
                 return SpeechAct.AGREEMENT
             if fr.partial_alignment and mag_A >= MAGNITUDE_HEDGE:
                 return SpeechAct.ASSERTION   # scope-restricted via B-axis
             if fr.partial_alignment:
+                # Ambiguous scope: B-axis near zero means boundary unclear → request clarification
+                b_pol = ctx.axis_polarities.get("B", 0.0)
+                if abs(b_pol) < POLARITY_WEAK:
+                    return SpeechAct.CLARIFY
                 return SpeechAct.ACKNOWLEDGMENT
+            if not fr.aligns_with_oets and not fr.is_contradiction and i_do > 0.3 and i_is > 0.2:
+                # Directed statement that doesn't align and aurora was doing something — repair
+                if fr.is_directed:
+                    return SpeechAct.REPAIR
             if i_is > 0.3:
                 return SpeechAct.AGREEMENT
 
@@ -378,7 +394,13 @@ class ConstraintEmitter:
         heat = ctx.n_heat
         if act == SpeechAct.DISAGREEMENT:
             slots.leading = "no"
-        # ASSERTION, QUESTION, REFUSAL, BACKCHANNEL, AGREEMENT, ACKNOWLEDGMENT — no leading token
+        elif act == SpeechAct.CONTRADICTION:
+            slots.leading = "no"
+        elif act == SpeechAct.REPAIR:
+            slots.leading = "actually"
+        elif act == SpeechAct.CLARIFY:
+            slots.leading = "well"
+        # ASSERTION, QUESTION, REFUSAL, BACKCHANNEL, AGREEMENT, ACKNOWLEDGMENT, HEDGE — no leading token
 
     # ── per-axis emitters (§3.1–§3.5) ────────────────────────────────────────
     def _axis_A_emit(self, ctx: EmissionContext, slots: SlotFrame) -> None:
@@ -1122,7 +1144,10 @@ class ConstraintEmitter:
         if act == SpeechAct.AGREEMENT and not slots.predicate:
             return ""
 
-        if act == SpeechAct.DISAGREEMENT and not slots.predicate:
+        if act in (SpeechAct.DISAGREEMENT, SpeechAct.CONTRADICTION) and not slots.predicate:
+            return ""
+
+        if act in (SpeechAct.CLARIFY, SpeechAct.REPAIR) and not slots.entity and not slots.predicate:
             return ""
 
         if act == SpeechAct.REFUSAL:
@@ -1222,7 +1247,7 @@ class ConstraintEmitter:
         if not parts:
             return ""
 
-        terminal = "?" if act == SpeechAct.QUESTION else "."
+        terminal = "?" if act in (SpeechAct.QUESTION, SpeechAct.CLARIFY) else "."
         return self._fmt(" ".join(parts), terminal)
 
     @staticmethod

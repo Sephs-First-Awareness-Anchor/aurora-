@@ -776,15 +776,30 @@ def _restore_genealogy_state(
         except Exception:
             pass
 
-    # events counter from JSONL line count (for continuity in reports)
-    events_path = os.path.join(output_dir, getattr(logger.cfg, "EVENTS_FILE", "events.jsonl"))
-    if os.path.exists(events_path):
+    # Restore relief_event_count and tick_count from events_recent.json or tick_state.json.
+    # events.jsonl is no longer used — replaced by the capped rolling snapshot.
+    _events_recent = os.path.join(output_dir, "events_recent.json")
+    _tick_state    = os.path.join(output_dir, "tick_state.json")
+    _total_events  = 0
+    if os.path.exists(_events_recent):
         try:
-            with open(events_path, "r", encoding="utf-8") as fh:
-                lines = sum(1 for _ in fh)
-            logger.relief_event_count = int(lines)
-            logger.tick_count = max(int(getattr(logger, "tick_count", 0)), int(lines))
-            restored["events"] = int(lines)
+            with open(_events_recent, "r", encoding="utf-8") as fh:
+                _er = json.load(fh)
+            _total_events = int(_er.get("total_count", 0) or 0)
+            _snap_tick    = int(_er.get("tick_count", 0) or 0)
+            logger.relief_event_count = _total_events
+            logger.tick_count = max(int(getattr(logger, "tick_count", 0)), _snap_tick)
+            restored["events"] = _total_events
+        except Exception:
+            pass
+    if _total_events == 0 and os.path.exists(_tick_state):
+        # Fall back: no events file yet, but tick_state has the count
+        try:
+            with open(_tick_state, "r", encoding="utf-8") as fh:
+                _ts = json.load(fh)
+            _snap_tick = int(_ts.get("tick_count", 0) or 0)
+            logger.tick_count = max(int(getattr(logger, "tick_count", 0)), _snap_tick)
+            restored["events"] = _snap_tick
         except Exception:
             pass
 
