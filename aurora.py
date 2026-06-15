@@ -8723,21 +8723,11 @@ def _deposit_poedex_result_into_crystals(
 
     distilled = _compose_grounded_prefetch_response(concept_clean, learned_clean) or learned_clean[:400]
 
-    sensory_crystal = systems.get("sensory_crystal")
-    if sensory_crystal is not None:
-        try:
-            if hasattr(sensory_crystal, "ingest"):
-                sensory_crystal.ingest(
-                    concept_clean,
-                    modality="semantic",
-                    data=distilled,
-                    source=source,
-                )
-            elif hasattr(sensory_crystal, "observe_semantic"):
-                sensory_crystal.observe_semantic(concept_clean, weight=1.0, source=source)
-        except Exception:
-            pass
-
+    # All crystal paths converge on the same DPS Crystal.
+    # sensory_crystal.ingest() also calls dps._get_or_create() internally,
+    # so we write to DPS directly once here with the richer Poedex facets
+    # and let sensory_crystal track novelty/recognitions separately without
+    # re-evolving the same crystal a second time through the ingest path.
     dim = systems.get("dimensional")
     dps = getattr(dim, "dps", None) if dim is not None else None
     if dps is not None:
@@ -8747,6 +8737,24 @@ def _deposit_poedex_result_into_crystals(
             crystal.add_facet("poedex_source", source[:40], confidence=0.54)
             crystal.use()
             crystal.evolve()
+        except Exception:
+            pass
+
+    # Sensory crystal: update novelty/recognition tracking only — the DPS
+    # crystal write already happened above, so we use observe_semantic (the
+    # lightweight path) to avoid a second _get_or_create + evolve call.
+    sensory_crystal = systems.get("sensory_crystal")
+    if sensory_crystal is not None:
+        try:
+            if hasattr(sensory_crystal, "observe_semantic"):
+                sensory_crystal.observe_semantic(concept_clean, weight=1.0, source=source)
+            elif hasattr(sensory_crystal, "ingest"):
+                sensory_crystal.ingest(
+                    concept_clean,
+                    modality="semantic",
+                    data=distilled,
+                    source=source,
+                )
         except Exception:
             pass
 
