@@ -212,6 +212,7 @@ QUIET_START     = 22          # hour (24h) when Aurora goes quiet
 QUIET_END       = 24           # hour (24h) when she wakes up
 QUIET_WINDOW_ENABLED = False
 STUDY_INTERVAL  = 720        # seconds between study cycles (~2h), jittered ±30%
+WARP_STUDY_INTERVAL = 90    # fast-path study cycle for WARP-priority shallow concepts
 DREAM_INTERVAL  = 90        # seconds between dream bursts (~90s), jittered ±25%
 BROWSER_INTERVAL = 10800      # seconds between social API outreach checks (~3h), jittered ±40%
 SAVE_INTERVAL   = 400         # seconds between state saves (10min)
@@ -6481,6 +6482,7 @@ def run(systems: Dict[str, Any]) -> None:
     # Track next fire times (absolute epoch seconds)
     now = time.time()
     next_study   = now + _jitter(STUDY_INTERVAL)
+    next_warp_study = now + WARP_STUDY_INTERVAL
     next_dream   = now + _jitter(DREAM_INTERVAL, 0.25)
     next_browser = now + _jitter(BROWSER_INTERVAL, 0.40)
     next_save    = now + SAVE_INTERVAL
@@ -6999,6 +7001,31 @@ def run(systems: Dict[str, Any]) -> None:
                             _record_task_run("sensory_observation", now)
                     except Exception:
                         pass
+                # Fast-path study cycle — fires every 90s when WARP has queued
+                # priority research targets from shallow concept seeks.
+                # This bypasses the 720-second main study interval so concepts
+                # under active WARP pressure get real definitions + relations
+                # from the internet fetch callback without waiting a full cycle.
+                if now >= next_warp_study:
+                    try:
+                        _wp_perc = systems.get("perception")
+                        _wp_oets = getattr(_wp_perc, "oets", None) if _wp_perc else None
+                        _wp_research = getattr(_wp_oets, "research", None) if _wp_oets else None
+                        if _wp_research is not None:
+                            _warp_pending = [
+                                r for r in _wp_research.queue
+                                if r.status == "pending" and r.reason == "warp_shallow_seek"
+                            ]
+                            if _warp_pending:
+                                _wp_oets.run_study_cycle(trigger_reason="warp_fast_path")
+                                _log(
+                                    f"  [WARP-STUDY] fast-path study cycle: "
+                                    f"{len(_warp_pending)} shallow concept(s) processed"
+                                )
+                    except Exception:
+                        pass
+                    next_warp_study = now + WARP_STUDY_INTERVAL
+
                 # Feed real pressure evidence every 4 ticks (~60s) so the
                 # chamber has actual selective pressure, not just empty ticks.
                 if _evo_tick_counter % 4 == 0:
