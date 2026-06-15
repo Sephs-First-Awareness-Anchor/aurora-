@@ -1,14 +1,37 @@
 {
-  "original": "I change moment I do feel. I exist meaning I hold inside.",
-  "candidate": "I change moment I do feel. I exist meaning I hold inside.",
-  "selected": "I change moment I do feel. I exist meaning I hold inside.",
+  "original": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480",
+  "candidate": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+  "selected": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
   "accepted": true,
-  "reason": "already_well_formed",
-  "original_score": 0.92,
+  "reason": "accepted_deterministic",
+  "original_score": 0.87,
   "candidate_score": 0.92,
-  "original_pressure": 0.256,
-  "candidate_pressure": 0.256,
-  "pressure_relief": 0.0,
+  "original_pressure": 0.386,
+  "candidate_pressure": 0.316,
+  "pressure_relief": 0.07,
   "safe": true,
-  "metadata": {}
+  "metadata": {
+    "prompt_excerpt": "[PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 177",
+    "input_interpretation": {
+      "raw_prompt": "[PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 177",
+      "intent_hint": "statement_or_context",
+      "topic_terms": [
+        "present",
+        "sensory",
+        "observation",
+        "audio",
+        "description",
+        "concepts",
+        "active",
+        "confidence"
+      ],
+      "entities": [
+        "PRESENT_SENSORY_OBSERVATION"
+      ]
+    },
+    "tone": "neutral",
+    "source": "deterministic",
+    "timestamp": 1781512035.8299985,
+    "min_relief_used": 0.035
+  }
 }

@@ -2,34 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1*T^1",
-      "change_id": "MC:b3084d88512d",
-      "dominant_axis": "X",
-      "file": "aurora_dimensional_systems.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_dimensional_systems",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781482055.9368217
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:0c5576d719d5",
-      "dominant_axis": "X",
-      "file": "aurora_dream_trainer.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_dream_trainer",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781482055.9400535
-    },
-    {
-      "axis_signature": "X^1*T^1",
       "change_id": "MC:33602b8cd0f2",
       "dominant_axis": "X",
       "file": "aurora_emergence_surface.py",
@@ -3359,18 +3331,46 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1781501762.4298234
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:cc83aaccc13d",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781510478.1596117
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:42202894b008",
+      "dominant_axis": "X",
+      "file": "aurora_articulation.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_articulation",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781510478.1617963
     }
   ],
   "initialized": true,
-  "last_run_at": 1781502958.4929295,
+  "last_run_at": 1781511863.7865925,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781481721990951321,
       "size": 18819
     },
     "aurora.py": {
-      "mtime_ns": 1781481757975937732,
-      "size": 1246452
+      "mtime_ns": 1781510380894729971,
+      "size": 1246431
     },
     "aurora_625_pressure_map.py": {
       "mtime_ns": 1781481722001773769,
@@ -3381,8 +3381,8 @@
       "size": 16963
     },
     "aurora_articulation.py": {
-      "mtime_ns": 1781501715190178188,
-      "size": 33649
+      "mtime_ns": 1781510439198733437,
+      "size": 34344
     },
     "aurora_autonomy.py": {
       "mtime_ns": 1781481722001773769,
