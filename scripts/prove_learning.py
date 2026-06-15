@@ -97,7 +97,73 @@ def _crystal_snapshot(dps, concept: str) -> Dict[str, Any]:
     }
 
 
-def take_snapshot(dps, ledger, genealogy, target_concepts, target_failpoint) -> Dict[str, Any]:
+def _warp_snapshot(warp_field) -> Dict[str, Any]:
+    """Capture WARP field state: demand count, pathway distribution, anomaly ledger."""
+    if warp_field is None:
+        return {"available": False}
+
+    try:
+        status = warp_field.status()
+    except Exception:
+        return {"available": False}
+
+    # Summarize recent decisions — unresolved_text shows what triggered each demand
+    recent_demands: List[Dict[str, Any]] = []
+    try:
+        for dec in list(warp_field._decisions)[-20:]:
+            demand = dec.demand
+            recent_demands.append({
+                "trigger": getattr(demand, "trigger", "?"),
+                "source": getattr(demand, "source", "?"),
+                "layer": getattr(demand, "layer", "?"),
+                "severity": round(float(getattr(demand, "severity", 0.0)), 3),
+                "unresolved": str(getattr(demand, "unresolved_text", ""))[:80],
+                "pathway": dec.pathway,
+                "resolved": dec.resolved,
+            })
+    except Exception:
+        pass
+
+    # Anomaly ledger: recurrent high-severity demands that escalated
+    anomalies: List[Dict[str, Any]] = []
+    try:
+        for dec in list(warp_field._anomaly_ledger)[-10:]:
+            demand = dec.demand
+            anomalies.append({
+                "trigger": getattr(demand, "trigger", "?"),
+                "unresolved": str(getattr(demand, "unresolved_text", ""))[:80],
+                "severity": round(float(getattr(demand, "severity", 0.0)), 3),
+                "persistence_key": getattr(demand, "persistence_key", ""),
+            })
+    except Exception:
+        pass
+
+    # Deferred demands: low-severity, waiting for re-evaluation at next epoch flush
+    deferred_summary: List[str] = []
+    try:
+        for dec in list(warp_field._deferred)[:10]:
+            demand = dec.demand
+            text = str(getattr(demand, "unresolved_text", ""))[:60]
+            sev = round(float(getattr(demand, "severity", 0.0)), 3)
+            deferred_summary.append(f"{text} (sev={sev})")
+    except Exception:
+        pass
+
+    return {
+        "available": True,
+        "total_demands": status.get("total_demands", 0),
+        "pending_deferred": status.get("pending_deferred", 0),
+        "anomaly_count": status.get("anomaly_ledger", 0),
+        "pathway_counts": status.get("pathway_counts", {}),
+        "registered_systems": status.get("registered_systems", []),
+        "registered_handlers": status.get("registered_handlers", []),
+        "recent_demands": recent_demands,
+        "anomalies": anomalies,
+        "deferred_summary": deferred_summary,
+    }
+
+
+def take_snapshot(dps, ledger, genealogy, warp_field, target_concepts, target_failpoint) -> Dict[str, Any]:
     """Full internal state snapshot."""
     snap: Dict[str, Any] = {
         "timestamp": time.time(),
@@ -106,6 +172,7 @@ def take_snapshot(dps, ledger, genealogy, target_concepts, target_failpoint) -> 
         "failpoint_fail_count": 0,
         "genealogy_relief_events": 0,
         "top_failpoints": [],
+        "warp": {},
     }
 
     for concept in target_concepts:
@@ -135,6 +202,8 @@ def take_snapshot(dps, ledger, genealogy, target_concepts, target_failpoint) -> 
             snap["genealogy_relief_events"] = genealogy.relief_event_count
         except Exception:
             pass
+
+    snap["warp"] = _warp_snapshot(warp_field)
 
     return snap
 
@@ -204,6 +273,77 @@ def _wrap(text: str, width: int = 90) -> str:
     return textwrap.fill(text, width=width, subsequent_indent="  ")
 
 
+def _warp_diff_section(before: Dict[str, Any], after: Dict[str, Any]) -> List[str]:
+    """Return lines describing WARP demand flow between two snapshots."""
+    lines = []
+    bw = before.get("warp", {})
+    aw = after.get("warp", {})
+
+    if not aw.get("available"):
+        lines.append("  WARP field not available in this boot.")
+        return lines
+
+    b_total = bw.get("total_demands", 0)
+    a_total = aw.get("total_demands", 0)
+    b_defer = bw.get("pending_deferred", 0)
+    a_defer = aw.get("pending_deferred", 0)
+    b_anom = bw.get("anomaly_count", 0)
+    a_anom = aw.get("anomaly_count", 0)
+
+    lines.append(f"  total_demands    : {b_total} → {a_total}  (+{a_total - b_total} new demands routed)")
+    lines.append(f"  pending_deferred : {b_defer} → {a_defer}")
+    lines.append(f"  anomaly_ledger   : {b_anom} → {a_anom}  (+{a_anom - b_anom} escalations)")
+
+    # Pathway breakdown
+    b_paths = bw.get("pathway_counts", {})
+    a_paths = aw.get("pathway_counts", {})
+    all_paths = sorted(set(list(b_paths.keys()) + list(a_paths.keys())))
+    if all_paths:
+        lines.append("  pathway breakdown (new demands this run):")
+        for p in all_paths:
+            delta = a_paths.get(p, 0) - b_paths.get(p, 0)
+            if delta > 0:
+                total = a_paths.get(p, 0)
+                lines.append(f"    {p:<26}: +{delta:4d}  (total={total})")
+
+    # Recent demands from after-snapshot (what just happened)
+    recent = aw.get("recent_demands", [])
+    if recent:
+        lines.append("  recent demand sample (last 20):")
+        # Group by trigger
+        by_trigger: Dict[str, List[str]] = {}
+        for d in recent:
+            t = d.get("trigger", "?")
+            by_trigger.setdefault(t, []).append(
+                f"{d.get('unresolved','')[:50]} (sev={d.get('severity',0):.2f}, path={d.get('pathway','?')})"
+            )
+        for trigger, items in sorted(by_trigger.items()):
+            lines.append(f"    [{trigger}] ×{len(items)}")
+            for item in items[:2]:
+                lines.append(f"      → {item}")
+
+    # Anomalies (recurrent high-severity unresolved states that escalated)
+    anomalies = aw.get("anomalies", [])
+    if anomalies:
+        lines.append("  escalated anomalies (recurrent + high-severity):")
+        for a in anomalies[:5]:
+            lines.append(
+                f"    [{a.get('trigger','?')}] \"{a.get('unresolved','')[:60]}\""
+                f"  sev={a.get('severity',0):.2f}  key={a.get('persistence_key','')}"
+            )
+    elif aw.get("available"):
+        lines.append("  (no anomaly escalations yet — threshold not reached)")
+
+    # Deferred (waiting for flush at next epoch)
+    deferred = aw.get("deferred_summary", [])
+    if deferred:
+        lines.append("  deferred (low-sev, queued for next epoch flush):")
+        for d in deferred[:5]:
+            lines.append(f"    {d}")
+
+    return lines
+
+
 def print_diff_report(
     before: Dict[str, Any],
     after: Dict[str, Any],
@@ -254,6 +394,19 @@ def print_diff_report(
     b_ge = before["genealogy_relief_events"]
     a_ge = after["genealogy_relief_events"]
     print(f"  relief_events: {b_ge} → {a_ge}  (+{a_ge - b_ge} new pressure-relief events)")
+    if a_ge == b_ge:
+        print("  (Genealogy fires during live conversation constraint cycles,")
+        print("   not simulation training. Events accumulate in interactive mode.)")
+
+    # --- WARP ---
+    print()
+    print(sep)
+    print("  WARP FIELD — Universal Accommodation Primitive")
+    print(sep)
+    print("  Every unresolved state in Aurora routes here. Fail points,")
+    print("  contradictions, missing representations — all become WARP demands.")
+    for line in _warp_diff_section(before, after):
+        print(line)
 
     # --- Crystals ---
     print()
@@ -402,12 +555,13 @@ def main():
     dream_trainer = systems.get('dream_trainer')
     ledger = getattr(dream_trainer, 'ledger', None) if dream_trainer else None
     genealogy = systems.get('genealogy')
+    warp_field = systems.get('warp_field')
     ExistenceMode = systems['ExistenceMode']
     StreamType = systems['StreamType']
 
     # -- Snapshot before ----------------------------------------------------
     print("\nSnapshotting internal state (BEFORE)...")
-    snap_before = take_snapshot(dps, ledger, genealogy, TARGET_CONCEPTS, TARGET_FAILPOINT)
+    snap_before = take_snapshot(dps, ledger, genealogy, warp_field, TARGET_CONCEPTS, TARGET_FAILPOINT)
 
     # -- Probe before -------------------------------------------------------
     print(f"\n  Sending probe to gateway...")
@@ -435,7 +589,7 @@ def main():
 
     # -- Snapshot after -----------------------------------------------------
     print("\nSnapshotting internal state (AFTER)...")
-    snap_after = take_snapshot(dps, ledger, genealogy, TARGET_CONCEPTS, TARGET_FAILPOINT)
+    snap_after = take_snapshot(dps, ledger, genealogy, warp_field, TARGET_CONCEPTS, TARGET_FAILPOINT)
 
     # -- Probe after --------------------------------------------------------
     print("\n  Sending probe to gateway (post-training)...")
