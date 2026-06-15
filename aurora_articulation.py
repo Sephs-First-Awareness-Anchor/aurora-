@@ -772,6 +772,46 @@ def smooth_with_decision(
         record_decision(decision)
         return decision
 
+    # When feedback analysis has determined phrase repair consistently produces
+    # no usable candidates (suggested_mode == "deterministic_preferred"), accept
+    # the draft directly rather than running repair and logging perpetual
+    # no_candidate failures. The draft is Aurora's best available output at this
+    # constraint state — logging it as a failure obscures genuine signal.
+    insights = _get_feedback_insights()
+    if insights.get("suggested_mode") == "deterministic_preferred":
+        orig_score = _clarity_score(draft_text)
+        orig_pres  = _pressure_score(draft_text, prompt)
+        meta: Dict[str, Any] = {
+            "prompt_excerpt": str(prompt or "")[:240],
+            "input_interpretation": _interpret_prompt_snapshot(prompt),
+            "tone": tone,
+            "source": "deterministic_preferred",
+            "timestamp": time.time(),
+            "min_relief_used": 0.0,
+        }
+        if context:
+            meta["expression_context"] = {
+                k: v for k, v in context.items()
+                if k in ("dominant_axis", "coherence", "expression_pressure",
+                          "voice_tone", "lineage_id")
+            }
+        decision = ArticulationDecision(
+            original=draft_text,
+            candidate=draft_text,
+            selected=draft_text,
+            accepted=True,
+            reason="deterministic_preferred_passthrough",
+            original_score=orig_score,
+            candidate_score=orig_score,
+            original_pressure=orig_pres,
+            candidate_pressure=orig_pres,
+            pressure_relief=0.0,
+            safe=True,
+            metadata=meta,
+        )
+        record_decision(decision)
+        return decision
+
     candidate = _deterministic_candidate(draft_text)
 
     # Only pass a candidate if it actually changed — otherwise record as no pattern matched

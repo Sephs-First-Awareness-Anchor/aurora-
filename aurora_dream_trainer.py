@@ -2827,8 +2827,41 @@ class DreamTrainer:
         _score_map = dict(top_fails)
         top_fails = [(dim, _score_map[dim]) for dim, _ in _boosted]
 
-        # Pass effectiveness observations so specs amplify what works
+        # Pass effectiveness observations so specs amplify what works.
+        # Apply saturation decay: dimensions that appear repeatedly in the
+        # steering history without improving leverage get their effectiveness
+        # boost reduced. This prevents chronically-targeted dims from monopolising
+        # simulation slots when they've stopped responding to pressure.
         effectiveness = self.obs_log.effectiveness_by_dim()
+        try:
+            _steering_path = os.path.join(self.state_dir, "dream_steering", "steering_state.json")
+            if os.path.exists(_steering_path):
+                with open(_steering_path) as _sf:
+                    _sstate = json.load(_sf)
+                _history = list(_sstate.get("history", []) or [])
+                # Count per-dimension appearances in the most recent 20 entries
+                _recent_history = _history[-20:]
+                _stale_counts: Dict[str, int] = {}
+                for _h in _recent_history:
+                    _ld = _h.get("leverage_dim", "")
+                    if _ld:
+                        _stale_counts[_ld] = _stale_counts.get(_ld, 0) + 1
+                # Penalise heavily-repeated dims: each appearance beyond 3 in the
+                # last 20 entries reduces effectiveness by 8%, flooring at 0.05.
+                _effective_adjusted: Dict[str, float] = {}
+                for _dim, _eff in effectiveness.items():
+                    _staleness = max(0, _stale_counts.get(_dim, 0) - 3)
+                    _decay = max(0.05, _eff * (1.0 - _staleness * 0.08))
+                    _effective_adjusted[_dim] = _decay
+                # Also initialise unseen dims at 0.5 baseline so fresh dims
+                # get fair competition with stale but effective-looking ones.
+                for _dim, _count in _stale_counts.items():
+                    if _dim not in _effective_adjusted:
+                        _effective_adjusted[_dim] = max(0.05, 0.5 * (1.0 - max(0, _count - 3) * 0.08))
+                effectiveness = _effective_adjusted
+        except Exception:
+            pass
+
         specs = self.planner.generate_specs(
             top_fails,
             n_specs=4,
@@ -2858,9 +2891,9 @@ class DreamTrainer:
     _CHRONIC_MIN_EPISODES: int = 20
     # Dampening factor: chronic fails count for less than acute ones
     # so they don't crowd out real-time signals.
-    _CHRONIC_SEVERITY_WEIGHT: float = 0.55
-    # Only run the audit every N flush calls to avoid over-flooding the ledger.
-    _CHRONIC_AUDIT_EVERY: int = 5
+    _CHRONIC_SEVERITY_WEIGHT: float = 0.70
+    # Run the audit every N flush calls.
+    _CHRONIC_AUDIT_EVERY: int = 2
 
     def audit_chronic_weaknesses(self) -> List[Tuple[str, float]]:
         """
@@ -2914,6 +2947,44 @@ class DreamTrainer:
                 example=None,  # no single conversation to blame — systemic
             )
             recorded.append((dim, severity))
+
+        # ── Ledger-based fallback ─────────────────────────────────────────
+        # When dream_episodes/ is empty (no dreampk_*.json files), the episode
+        # scan above produces nothing. Fall back to the fail_points ledger:
+        # detect dimensions where the recent severity scores have near-zero
+        # variance (all clustered at the same value). This indicates the
+        # synthetic training probes are defaulting rather than genuinely
+        # measuring the dimension — a structural chronic gap the episode
+        # audit can't see because there are no episodes to scan.
+        if not dim_scores:
+            ledger_recs = dict(getattr(self.ledger, "_records", {}) or {})
+            for dim, rec in ledger_recs.items():
+                if dim not in DIMENSION_CODE_LOGIC:
+                    continue
+                recent = list(getattr(rec, "recent", []) or [])
+                if len(recent) < 10:
+                    continue
+                # Variance-based detection: if all recent scores are within
+                # 0.02 of each other, the probe is producing a constant output.
+                r_min = min(recent)
+                r_max = max(recent)
+                if (r_max - r_min) > 0.02:
+                    continue  # genuine spread — not a default floor
+                # Treat the constant value as the effective rubric average.
+                # If it's at the default floor (0.5), that's a moderate gap;
+                # below 0.4 it counts as a proper chronic weakness.
+                avg_const = sum(recent) / len(recent)
+                if avg_const < self._CHRONIC_RUBRIC_THRESHOLD:
+                    raw_sev = (self._CHRONIC_RUBRIC_THRESHOLD - avg_const) / self._CHRONIC_RUBRIC_THRESHOLD
+                    severity = round(max(0.05, min(1.0, raw_sev * self._CHRONIC_SEVERITY_WEIGHT)), 4)
+                else:
+                    # At-floor default (e.g., 0.5) — register with reduced weight
+                    # so it influences curriculum without crowding out real fails.
+                    severity = round(0.05 * self._CHRONIC_SEVERITY_WEIGHT, 4)
+                already = [(d, s) for d, s in recorded if d == dim]
+                if not already:
+                    self.ledger.record_fail(dim, severity=severity, example=None)
+                    recorded.append((dim, severity))
 
         if recorded:
             self.ledger.save()
