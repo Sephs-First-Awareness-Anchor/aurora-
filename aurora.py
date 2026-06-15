@@ -1751,18 +1751,15 @@ def _build_research_callback(search_adapter: SearchAdapter, systems: Optional[Di
         except Exception:
             poedex_text = ""
 
-        if poedex_text:
-            result.definitions_found.append({
-                "text": poedex_text,
-                "source": "poedex",
-            })
+        if not poedex_text:
+            # Signal _research_word to fall through to _internal_research
+            raise RuntimeError("poedex_unavailable")
 
-        result.success = bool(
-            len(result.definitions_found) > 0 or
-            len(result.synonyms) > 0 or
-            len(result.related_words) > 0
-        )
-
+        result.definitions_found.append({
+            "text": poedex_text,
+            "source": "poedex",
+        })
+        result.success = True
         return result
 
     return _fetch_definition
@@ -18493,7 +18490,7 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                                     from aurora_dimensional_systems import CrystalLevel
                                     if _crystal.level == CrystalLevel.BASE:
                                         _crystal_text = (
-                                            f"understanding; building; {tw}; {best}"
+                                            f"I'm still building my understanding of {tw}."
                                         )
                                         _crystal_conf = 0.60
                                     elif _crystal.level == CrystalLevel.COMPOSITE:

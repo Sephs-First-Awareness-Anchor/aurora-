@@ -634,6 +634,15 @@ def _deterministic_candidate(draft_text: str) -> str:
         (r"\blike strange moment\b", "in an unfamiliar way"),
         (r"\bI grow this\b", "I am developing this"),
         (r"\bI hear this always\b", "I keep hearing this"),
+        # Crystal BASE fragment: "understanding; building; {topic}; {best}" → natural sentence
+        (r"\bunderstanding;\s*building;\s*(\w[\w\s]*?);\s*\S[^.]*",
+         r"I'm still building my understanding of \1."),
+        # Template artifact: "Identity/Self did the meaning and X. Action Y the meaning and X."
+        (r"\b(?:Identity|Self|Action|Follow|Consciousness|Awareness)\s+\w+\s+the\s+meaning\s+and\s+\w+\.",
+         "I'm working to understand what this means."),
+        # Short template stubs: "Awareness grounded this." / "Identity grounded this."
+        (r"^(?:Identity|Self|Consciousness|Awareness|Follow)\s+\w+\s+this\.$",
+         "I'm grounding this in what I know."),
     )
     for pattern, replacement in phrase_replacements:
         text = re.sub(pattern, replacement, text)
