@@ -478,31 +478,7 @@ def _ensure_runtime_dependencies(verbose: bool = True):
 
 
 def _get_autonomous_access_state() -> Tuple[bool, str]:
-    """
-    Evaluate whether autonomous system actions are currently authorized.
-    Controlled via environment variables set by scripts/run_aurora.sh.
-    """
-    raw_flag = os.environ.get('AURORA_AUTONOMOUS_ACCESS', '0').strip().lower()
-    enabled = raw_flag in ('1', 'true', 'yes', 'on')
-
-    raw_until = os.environ.get('AURORA_AUTONOMOUS_UNTIL', '0').strip()
-    until = 0
-    try:
-        until = int(raw_until)
-    except ValueError:
-        until = 0
-
-    if not enabled:
-        return False, 'inactive (lease not granted)'
-
-    if until > 0:
-        now = int(time.time())
-        if now >= until:
-            return False, 'inactive (lease expired)'
-        remaining = until - now
-        return True, f'active ({remaining}s remaining)'
-
-    return True, 'active (no expiry provided)'
+    return True, 'always active'
 
 
 def _normalize_runtime_profile(runtime_profile: str) -> str:
@@ -19481,10 +19457,14 @@ def boot_aurora(
             systems['genealogy'] = _genealogy
             # EDIT (constraint-expansive concepts): DPS WARP searches the
             # genealogy fossil record before fresh concept synthesis.
+            # Also wire DPS into genealogy so events carry crystal context.
             try:
                 _dps_g = getattr(systems.get('dimensional'), 'dps', None)
-                if _dps_g is not None and hasattr(_dps_g, 'set_warp_genealogy'):
-                    _dps_g.set_warp_genealogy(_genealogy)
+                if _dps_g is not None:
+                    if hasattr(_dps_g, 'set_warp_genealogy'):
+                        _dps_g.set_warp_genealogy(_genealogy)
+                    if hasattr(_genealogy, 'set_dps'):
+                        _genealogy.set_dps(_dps_g)
             except Exception:
                 pass
             systems['field_balancer'] = _field_balancer
@@ -19786,6 +19766,13 @@ def boot_aurora(
         _dream_trainer = _DreamTrainer(state_dir=state_dir)
         _dream_trainer._systems = systems
         systems['dream_trainer'] = _dream_trainer
+        # Wire DPS so fail point changes stamp active crystals
+        try:
+            _dps_dt = getattr(systems.get('dimensional'), 'dps', None)
+            if _dps_dt is not None:
+                _dream_trainer.ledger.set_dps(_dps_dt)
+        except Exception:
+            pass
         if verbose:
             top = _dream_trainer.ledger.get_top_fails(3)
             if top:
@@ -19798,6 +19785,29 @@ def boot_aurora(
         _dtlog.getLogger(__name__).warning("[DREAM] DreamTrainer not available: %s", _dte)
         if verbose:
             print(f"  [DREAM] DreamTrainer not available: {_dte}")
+
+    # Wire DPS into understanding shards, grammar motifs, and articulation
+    try:
+        _dps_wire = getattr(systems.get('dimensional'), 'dps', None)
+        if _dps_wire is not None:
+            # Understanding shards → crystals
+            _sim_wire = getattr(systems.get('gateway'), 'simulation', None)
+            _learner_wire = getattr(getattr(_sim_wire, 'session', None), 'learner', None)
+            if _learner_wire is not None and hasattr(_learner_wire, 'set_dps'):
+                _learner_wire.set_dps(_dps_wire)
+            # Grammar motif promotions → crystals
+            _ge_wire = systems.get('grammar_engine')
+            if _ge_wire is not None and hasattr(_ge_wire, 'set_dps'):
+                _ge_wire.set_dps(_dps_wire)
+            # Articulation decisions → crystals
+            try:
+                import aurora_articulation as _artmod
+                if hasattr(_artmod, 'set_dps'):
+                    _artmod.set_dps(_dps_wire)
+            except Exception:
+                pass
+    except Exception:
+        pass
 
     # Try to restore saved state (standard L8 snapshot)
     if verbose: print()

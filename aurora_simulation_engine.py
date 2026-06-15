@@ -25,6 +25,7 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
+import re
 import time
 import math
 import hashlib
@@ -201,6 +202,11 @@ class ConsciousLearner:
         self.shards: Dict[str, UnderstandingShard] = {}
         self._by_concept: Dict[ResponseConcept, List[str]] = defaultdict(list)
         self.total_observations = 0
+        self._dps = None  # injected after boot
+
+    def set_dps(self, dps) -> None:
+        """Wire DPS so understanding text flows into the crystal for that topic."""
+        self._dps = dps
 
     def generate_pool(self, context: Dict[str, Any]) -> List[ConceptualResponse]:
         """Generate response pool for Aurora to choose from."""
@@ -248,7 +254,9 @@ class ConsciousLearner:
 
     def observe_outcome(self, selected: ConceptualResponse,
                         observation: ConversationObservation,
-                        context_type: str) -> Optional[UnderstandingShard]:
+                        context_type: str,
+                        oets_web=None,
+                        topic_word: str = "") -> Optional[UnderstandingShard]:
         """Observe the outcome of a response and potentially create understanding."""
         self.total_observations += 1
 
@@ -260,12 +268,14 @@ class ConsciousLearner:
             return None  # Nothing to learn from neutral outcomes
 
         # Create or strengthen understanding
-        understanding_text = self._derive_understanding(selected, observation)
+        understanding_text = self._derive_understanding(selected, observation, oets_web,
+                                                        topic_word=topic_word)
 
         # Check for existing similar shard
         existing = self._find_similar(selected.primary_concept, context_type)
         if existing:
             existing.strengthen()
+            self._stamp_crystal(topic_word, understanding_text, strengthen=True)
             return existing
 
         shard = UnderstandingShard(
@@ -277,7 +287,22 @@ class ConsciousLearner:
         )
         self.shards[shard.shard_id] = shard
         self._by_concept[selected.primary_concept].append(shard.shard_id)
+        self._stamp_crystal(topic_word, understanding_text)
         return shard
+
+    def _stamp_crystal(self, topic_word: str, understanding_text: str,
+                       strengthen: bool = False) -> None:
+        """Add understanding facet to the DPS crystal for this topic word."""
+        if not topic_word or not understanding_text or self._dps is None:
+            return
+        try:
+            crystal = self._dps.get_crystal(topic_word)
+            if crystal is None:
+                return
+            conf = 0.7 if strengthen else 0.6
+            crystal.add_facet("understanding", understanding_text, confidence=conf)
+        except Exception:
+            pass
 
     def propose_shard(
         self,
@@ -323,7 +348,27 @@ class ConsciousLearner:
         return None
 
     def what_have_i_learned(self) -> List[str]:
-        """Return what Aurora has learned, in her own words."""
+        """Return genuine understanding — reads from DPS crystal understanding facets.
+
+        Crystals are the persistent store; in-memory shards are session-only fallback.
+        """
+        if self._dps is not None:
+            try:
+                results = []
+                for crystal in self._dps.crystals.values():
+                    best = None
+                    for facet in crystal.facets.values():
+                        if facet.role == "understanding":
+                            if best is None or facet.confidence > best.confidence:
+                                best = facet
+                    if best is not None and best.confidence >= 0.5:
+                        results.append((best.confidence, str(best.content)))
+                results.sort(reverse=True)
+                if results:
+                    return [text for _, text in results[:10]]
+            except Exception:
+                pass
+        # Session-only fallback (shards not persisted to disk)
         confident = [s for s in self.shards.values() if s.confidence > 0.5]
         confident.sort(key=lambda s: s.confidence, reverse=True)
         return [s.understanding for s in confident[:10]]
@@ -462,10 +507,79 @@ class ConsciousLearner:
         return len(self.shards)
 
     def _derive_understanding(self, selected: ConceptualResponse,
-                               obs: ConversationObservation) -> str:
-        # Fully generative: return "" so understanding accumulates via pressure
-        # axes (numeric signals), not template text strings.
-        return ""
+                               obs: ConversationObservation,
+                               oets_web=None,
+                               topic_word: str = "") -> str:
+        """
+        Derive understanding from:
+          - The OETS semantic node for the conversation topic (what Aurora knows
+            about this word: depth, neighbors, sense)
+          - The observation outcome mapped to IVM axis language
+          - The response concept (the strategy Aurora used)
+
+        Every call produces different text because each topic_word has different
+        neighbors, depth, and sense in the OETS graph.
+        """
+        strategy = selected.primary_concept.value.replace('_', ' ')
+
+        # Clean topic word — extract the key term from the prompt if needed
+        topic = re.sub(r'[^\w\s]', '', (topic_word or "")).strip().lower()
+        topic = re.sub(r'^(what is|tell me about|how do you|do you experience|'
+                       r'what does|describe)\s+', '', topic).strip()
+        topic = topic.split()[0] if topic else ""
+
+        # Read Aurora's actual knowledge about the topic from OETS
+        depth = 0.0
+        primary_sense = ""
+        key_neighbors: List[str] = []
+        if oets_web is not None and topic:
+            try:
+                node = oets_web.get_node(topic)
+                if node:
+                    depth = float(node.ontological_depth or 0.0)
+                    raw = str(node.primary_sense_id or "")
+                    primary_sense = raw.split(':')[0].replace('_', ' ')
+                rels = oets_web.get_all_relations_for(topic) or {}
+                for rel in (list(rels.values()) if isinstance(rels, dict)
+                            else list(rels))[:8]:
+                    tgt = str(getattr(rel, 'target_word', '') or
+                              getattr(rel, 'target', '') or '')
+                    if tgt and tgt != topic and tgt not in key_neighbors:
+                        key_neighbors.append(tgt)
+            except Exception:
+                pass
+
+        # Map observation outcome to IVM axis language
+        if obs.tension_arose:
+            verb, axis = "creates friction", "B-axis"
+        elif obs.avatar_pulled_back:
+            verb, axis = "caused withdrawal", "X-axis contraction"
+        elif obs.connection_felt_stronger:
+            verb, axis = "built connection", "A-axis relief"
+        elif obs.conversation_deepened:
+            verb, axis = "opened depth", "T-axis expansion"
+        elif obs.avatar_engaged:
+            verb, axis = "held attention", "N-axis resonance"
+        else:
+            return ""
+
+        # Compose from real data — unique per topic × outcome × OETS state
+        subject = topic if topic else strategy
+        parts = [f"{subject} {verb} when approached with {strategy}"]
+
+        if key_neighbors:
+            parts.append(f"— it connects to {', '.join(key_neighbors[:2])}")
+
+        if depth >= 0.6:
+            parts.append(f"({axis} — well-mapped, depth {depth:.2f})")
+        elif depth >= 0.2:
+            parts.append(f"({axis}, depth {depth:.2f})")
+        elif topic:
+            parts.append(f"({axis} — {topic!r} still shallow in my web)")
+        else:
+            parts.append(f"({axis})")
+
+        return " ".join(parts) + "."
 
     def _find_similar(self, concept: ResponseConcept,
                       context_type: str) -> Optional[UnderstandingShard]:
@@ -1547,17 +1661,6 @@ class SimulationSession:
                 prompt_candidates.append(topic_override["prompt"])
 
         code_hints: List[str] = []
-        ranked_dims = sorted(
-            pressure_targets.items(),
-            key=lambda kv: float(kv[1]),
-            reverse=True,
-        )
-        for dim, _ in ranked_dims:
-            hint = self._DIMENSION_CODE_HINTS.get(dim)
-            if hint:
-                code_hints.append(f"{dim}: {hint}")
-            if len(code_hints) >= 3:
-                break
 
         return {
             "avatar_id": avatar_id,
@@ -1859,8 +1962,12 @@ class SimulationSession:
 
             # Aurora observes outcome
             observation = self._interpret_reaction(reaction)
+            _oets_web = getattr(
+                getattr(self.perception, 'oets', None), 'web', None)
             shard = self.learner.observe_outcome(selected, observation,
-                                                 turn_topic['category'])
+                                                 turn_topic['category'],
+                                                 oets_web=_oets_web,
+                                                 topic_word=turn_topic.get('topic', ''))
             if shard:
                 understanding_texts.append(shard.understanding)
 

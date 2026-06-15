@@ -1,37 +1,14 @@
 {
-  "original": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480",
-  "candidate": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
-  "selected": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+  "original": "I exist meaning I did can. I do feel I is am.",
+  "candidate": "I exist meaning I did can. I do feel I is am.",
+  "selected": "I exist meaning I did can. I do feel I is am.",
   "accepted": true,
-  "reason": "accepted_deterministic",
-  "original_score": 0.87,
-  "candidate_score": 0.92,
-  "original_pressure": 0.386,
-  "candidate_pressure": 0.316,
-  "pressure_relief": 0.07,
+  "reason": "already_well_formed",
+  "original_score": 0.8,
+  "candidate_score": 0.8,
+  "original_pressure": 0.28,
+  "candidate_pressure": 0.28,
+  "pressure_relief": 0.0,
   "safe": true,
-  "metadata": {
-    "prompt_excerpt": "[PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 177",
-    "input_interpretation": {
-      "raw_prompt": "[PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 177",
-      "intent_hint": "statement_or_context",
-      "topic_terms": [
-        "present",
-        "sensory",
-        "observation",
-        "audio",
-        "description",
-        "concepts",
-        "active",
-        "confidence"
-      ],
-      "entities": [
-        "PRESENT_SENSORY_OBSERVATION"
-      ]
-    },
-    "tone": "neutral",
-    "source": "deterministic",
-    "timestamp": 1781512035.8299985,
-    "min_relief_used": 0.035
-  }
+  "metadata": {}
 }

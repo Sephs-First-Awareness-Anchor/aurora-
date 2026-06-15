@@ -425,6 +425,11 @@ class FailPointLedger:
             dim: DimensionRecord() for dim in self.ALL_DIMENSIONS
         }
         self._total_fails = 0
+        self._dps = None  # injected after boot via set_dps()
+
+    def set_dps(self, dps) -> None:
+        """Wire DPS crystal system so fail point changes stamp active crystals."""
+        self._dps = dps
 
     # ----------------------------------------------------------------
     def _sanitize_example(self, example: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
@@ -474,9 +479,15 @@ class FailPointLedger:
         if dimension not in self._records:
             self._records[dimension] = DimensionRecord()
         rec = self._records[dimension]
+        _prev_avg = rec.recent_avg  # snapshot before this fail lands
         rec.fail_count += 1
         rec.severity_sum += max(0.0, min(1.0, severity))
         rec.recent.append(max(0.0, min(1.0, severity)))
+        if self._dps is not None:
+            try:
+                self._dps.record_failpoint_update(dimension, _prev_avg, rec.recent_avg)
+            except Exception:
+                pass
         normalized_example = self._sanitize_example(example)
         if normalized_example:
             conv_id = normalized_example.get("conversation_id", "")

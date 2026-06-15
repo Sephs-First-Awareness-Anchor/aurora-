@@ -193,6 +193,27 @@ class CrystalLevel(IntEnum):
     QUASI = 4
 
 
+# Fail point dimensions that become trackable at each crystal level.
+# Simple concepts can only fail in simple ways; complexity expands liability.
+FAILPOINTS_BY_LEVEL: Dict[str, List[str]] = {
+    "BASE": [
+        "semantic_precision", "coherence_maintenance",
+    ],
+    "COMPOSITE": [
+        "context_carryover", "contradiction_handling", "ambiguity_handling",
+    ],
+    "FULL_CONCEPT": [
+        "uncertainty_signaling", "emotional_calibration",
+        "boundary_calibration", "misunderstanding_repair",
+    ],
+    "QUASI": [
+        "framing_selection", "implied_intent_inference",
+        "adaptive_strategy_selection", "compression_elaboration_fit",
+        "perspective_integration", "multi_turn_stability",
+    ],
+}
+
+
 class FacetState(Enum):
     ACTIVE = "active"
     DECAYING = "decaying"
@@ -330,6 +351,16 @@ class Crystal:
     # Preserves the signed polarity — abs() is never applied.
     constraint_signature: Optional[Dict[str, float]] = None
 
+    # Running mean of IVM axis state at every activation.
+    # Builds the crystal's dimensional home — which axes it tends to live in.
+    axis_mean: Dict[str, float] = field(default_factory=dict)
+    axis_sample_count: int = 0
+
+    # Fail point profile: expands with crystal level.
+    # {dimension: {"prev": float|None, "current": float|None,
+    #              "achievements": int, "missteps": int}}
+    failpoint_profile: Dict[str, Any] = field(default_factory=dict)
+
     def add_facet(self, role: str, content: Any, confidence: float = 0.5) -> CrystalFacet:
         # Strengthen existing facet with same role
         for f in self.facets.values():
@@ -343,6 +374,29 @@ class Crystal:
 
     def use(self):
         self.usage_count += 1
+        self.last_used: float = time.time()
+
+    def update_axis_mean(self, axis_state: Dict[str, float]) -> None:
+        """Online Welford mean — no history stored, O(1) per update."""
+        self.axis_sample_count += 1
+        n = self.axis_sample_count
+        for ax, val in axis_state.items():
+            prev = self.axis_mean.get(ax, 0.0)
+            self.axis_mean[ax] = prev + (val - prev) / n
+
+    def _unlock_failpoints(self) -> None:
+        """Add fail point tracking for dimensions unlocked at this crystal's level.
+
+        Called at creation (BASE dims) and again on each promotion.
+        Only adds entries for dimensions not yet tracked — existing data preserved.
+        """
+        dims = FAILPOINTS_BY_LEVEL.get(self.level.name, [])
+        for dim in dims:
+            if dim not in self.failpoint_profile:
+                self.failpoint_profile[dim] = {
+                    "prev": None, "current": None,
+                    "achievements": 0, "missteps": 0,
+                }
 
     def can_evolve(self) -> bool:
         external = [f for f in self.facets.values() if not f.role.startswith("LAW_")]
@@ -372,6 +426,7 @@ class Crystal:
                 pass
             if self.level == CrystalLevel.QUASI:
                 self._internalize_laws()
+            self._unlock_failpoints()
             return True
         return False
 
@@ -430,6 +485,9 @@ class Crystal:
             "usage_count":         self.usage_count,
             "created_at":          self.created_at,
             "constraint_signature":self.constraint_signature,
+            "axis_mean":           self.axis_mean,
+            "axis_sample_count":   self.axis_sample_count,
+            "failpoint_profile":   self.failpoint_profile,
         }
 
     @classmethod
@@ -441,6 +499,9 @@ class Crystal:
             usage_count         = int(d.get("usage_count", 0)),
             created_at          = float(d.get("created_at", time.time())),
             constraint_signature= d.get("constraint_signature"),
+            axis_mean           = dict(d.get("axis_mean") or {}),
+            axis_sample_count   = int(d.get("axis_sample_count", 0)),
+            failpoint_profile   = dict(d.get("failpoint_profile") or {}),
         )
         c.connections = dict(d.get("connections") or {})
         for fid, fd in (d.get("facets") or {}).items():
@@ -448,6 +509,8 @@ class Crystal:
                 c.facets[fid] = CrystalFacet.from_dict(fd)
             except Exception:
                 pass
+        # Unlock any fail point dims the crystal earned but weren't serialized
+        c._unlock_failpoints()
         return c
 
 
@@ -548,6 +611,17 @@ class CrystalProcessingSystem(WarpCapable):
         crystal = self._get_or_create(concept)
         crystal.use()
 
+        # Sample IVM axis state from envelope position → running mean
+        try:
+            _phases = getattr(getattr(envelope, 'position', None), 'phases', None)
+            if _phases is not None:
+                _axes = ['X', 'T', 'N', 'B', 'A']
+                _axis_state = {ax: float(_phases[i])
+                               for i, ax in enumerate(_axes) if i < len(_phases)}
+                crystal.update_axis_mean(_axis_state)
+        except Exception:
+            pass
+
         # Add facet from the envelope's data type
         facet = crystal.add_facet(
             role=envelope.data_type,
@@ -595,6 +669,63 @@ class CrystalProcessingSystem(WarpCapable):
             'usage': crystal.usage_count,
         }
 
+    def get_recently_active(self, n: int = 5) -> List[str]:
+        """Return concepts of the n most recently touched crystals."""
+        if not self.crystals:
+            return []
+        ranked = sorted(
+            self.crystals.values(),
+            key=lambda c: getattr(c, 'last_used', c.created_at),
+            reverse=True,
+        )
+        return [c.concept for c in ranked[:n]]
+
+    def note_relief_event(self, active_concepts: List[str],
+                          dominant_axis: str, tick: int) -> None:
+        """Stamp a lightweight relief-event facet onto the active crystals.
+
+        This makes each crystal aware of what IVM pressure resolved while it
+        was being processed — enabling contextual recall of events by concept.
+        """
+        for concept in active_concepts[:3]:
+            cid = self.concept_index.get(concept)
+            if cid and cid in self.crystals:
+                crystal = self.crystals[cid]
+                crystal.add_facet(
+                    role="relief_event",
+                    content=f"{dominant_axis}@{tick}",
+                    confidence=0.4,
+                )
+
+    def record_failpoint_update(self, dimension: str,
+                                prev_avg: float, current_avg: float) -> None:
+        """Stamp active crystals when a fail point dimension changes.
+
+        Improving (lower avg) = achievement; worsening (higher avg) = misstep.
+        Only stamps crystals that have unlocked that dimension via evolution.
+        Updates prev/current trajectory so crystals can show their own arc.
+        """
+        improving = current_avg < prev_avg
+        for concept in self.get_recently_active(5):
+            cid = self.concept_index.get(concept)
+            if not cid or cid not in self.crystals:
+                continue
+            crystal = self.crystals[cid]
+            if dimension not in crystal.failpoint_profile:
+                continue  # dimension not yet unlocked at this crystal level
+            profile = crystal.failpoint_profile[dimension]
+            profile["prev"] = profile.get("current") if profile.get("current") is not None \
+                               else prev_avg
+            profile["current"] = current_avg
+            if improving:
+                profile["achievements"] = profile.get("achievements", 0) + 1
+                crystal.add_facet("achievement", f"{dimension}:{current_avg:.3f}",
+                                  confidence=0.5)
+            else:
+                profile["missteps"] = profile.get("missteps", 0) + 1
+                crystal.add_facet("misstep", f"{dimension}:{current_avg:.3f}",
+                                  confidence=0.3)
+
     def _infer_category(self, data_type: str) -> str:
         """Map data type to energy category for DER facet registration."""
         routing = {
@@ -610,6 +741,7 @@ class CrystalProcessingSystem(WarpCapable):
             return self.crystals[cid]
         cid = hashlib.md5(concept.encode()).hexdigest()[:12]
         crystal = Crystal(crystal_id=cid, concept=concept)
+        crystal._unlock_failpoints()  # BASE dimensions active from birth
         self.crystals[cid] = crystal
         self.concept_index[concept] = cid
         return crystal
