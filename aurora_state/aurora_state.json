@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1781502952.9534023,
-  "generation": 3843,
-  "genome_version": 3843,
+  "timestamp": 1781513264.7627935,
+  "generation": 4040,
+  "genome_version": 4040,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,56 +66,61 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.5068,
+    "curiosity": 0.5353,
     "caution": 0.41,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.39,
-    "introspection": 0.468,
+    "verbosity": 0.3986,
+    "introspection": 0.4762,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3484
   },
-  "personality_drift": 0.8432,
+  "personality_drift": 0.7616,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9481839725346543,
-      "precision": 0.5891260666798813,
-      "depth": 0.7470638324624973,
-      "confidence": 0.5263775401244806
+      "warmth": 0.635282590448764,
+      "precision": 0.7151879296180986,
+      "depth": 0.954282662703129,
+      "confidence": 0.4967143908518872
     },
     "cognitive": {
-      "curiosity": 1.0,
-      "pattern_matching": 0.8136464331341826,
-      "abstraction": 0.5586494465566655,
-      "risk_assessment": 0.61193854736802
+      "curiosity": 0.6057585528297126,
+      "pattern_matching": 0.5736798450222295,
+      "abstraction": 0.8069317455641184,
+      "risk_assessment": 0.5630533602883361
     },
     "social": {
-      "empathy": 0.9842853236622622,
-      "trust_extension": 0.6409557478742203,
-      "boundary_maintenance": 0.9596530141764295,
-      "engagement": 0.8919646805954778
+      "empathy": 0.8372589216530313,
+      "trust_extension": 1.0,
+      "boundary_maintenance": 0.5608176679672737,
+      "engagement": 0.9852095549936375
     }
   },
   "governance_stats": {
-    "total_nodes": 84,
+    "total_nodes": 270,
     "layers": {
       "DNA": 0,
-      "ENERGY": 84,
+      "ENERGY": 270,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 84,
+    "total_ingested": 270,
     "total_promoted": 0,
     "violations_blocked": 0,
     "axis_conflicts": {}
   },
-  "simulation_epochs": 121,
-  "total_episodes": 10,
-  "understanding_shards": 24,
-  "what_aurora_learned": [],
-  "time_dilation": 3000.0,
-  "stability_state": "cautious",
-  "_checksum": "4a600c207029"
+  "simulation_epochs": 136,
+  "total_episodes": 45,
+  "understanding_shards": 4,
+  "what_aurora_learned": [
+    "",
+    "",
+    "",
+    ""
+  ],
+  "time_dilation": 3449.9999999999995,
+  "stability_state": "stable",
+  "_checksum": "5124ae270bbf"
 }

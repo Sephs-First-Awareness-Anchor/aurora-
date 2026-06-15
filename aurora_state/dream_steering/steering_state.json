@@ -678,37 +678,139 @@
         "Bias A-axis mutation exploration by 0.12 (deficit depth: 0.06)"
       ],
       "timestamp": 1781502813.4498403
+    },
+    {
+      "directive_id": "spd_1f5457fa9ac6",
+      "source_episode_ids": [
+        "episode_b175fcc9865b"
+      ],
+      "target_domains": [
+        "expression"
+      ],
+      "mutation_bias": {
+        "N_exploration": 0.5,
+        "B_exploration": 0.21
+      },
+      "promotion_bias": {
+        "uncertainty_signaling": 1.385
+      },
+      "cost_shaping": {
+        "uncertainty_signaling": 0.85
+      },
+      "threshold_shaping": {
+        "uncertainty_signaling": -0.09
+      },
+      "tolerance_shaping": {
+        "uncertainty_signaling": 1.3
+      },
+      "confidence": 0.7638132069451874,
+      "rationale": [
+        "Bias N-axis mutation exploration by 0.50 (deficit depth: 0.30)",
+        "Ease promotion burden for uncertainty_signaling structures by 1.39x",
+        "Reduce cost for uncertainty_signaling structures to 0.85x",
+        "Lower acceptance threshold for uncertainty_signaling by 0.090"
+      ],
+      "timestamp": 1781512858.6060731
+    },
+    {
+      "directive_id": "spd_4b74d247ceb4",
+      "source_episode_ids": [
+        "episode_b175fcc9865b"
+      ],
+      "target_domains": [
+        "consciousness",
+        "simulation"
+      ],
+      "mutation_bias": {
+        "T_exploration": 0.5
+      },
+      "promotion_bias": {
+        "context_carryover": 1.3224208333333332
+      },
+      "cost_shaping": {
+        "context_carryover": 0.7949999999999999
+      },
+      "threshold_shaping": {
+        "context_carryover": -0.123
+      },
+      "tolerance_shaping": {
+        "context_carryover": 1.4100000000000001
+      },
+      "confidence": 0.7262657069451874,
+      "rationale": [
+        "Bias T-axis mutation exploration by 0.50 (deficit depth: 0.41)",
+        "Ease promotion burden for context_carryover structures by 1.32x",
+        "Reduce cost for context_carryover structures to 0.79x",
+        "Lower acceptance threshold for context_carryover by 0.123"
+      ],
+      "timestamp": 1781512858.6060927
+    },
+    {
+      "directive_id": "spd_1ff9c1f6d73d",
+      "source_episode_ids": [
+        "episode_b175fcc9865b"
+      ],
+      "target_domains": [
+        "consciousness",
+        "simulation"
+      ],
+      "mutation_bias": {
+        "B_exploration": 0.5
+      },
+      "promotion_bias": {
+        "perspective_integration": 1.3125
+      },
+      "cost_shaping": {
+        "perspective_integration": 0.85
+      },
+      "threshold_shaping": {
+        "perspective_integration": -0.09
+      },
+      "tolerance_shaping": {
+        "perspective_integration": 1.3
+      },
+      "confidence": 0.7203132069451875,
+      "rationale": [
+        "Bias B-axis mutation exploration by 0.50 (deficit depth: 0.30)",
+        "Ease promotion burden for perspective_integration structures by 1.31x",
+        "Reduce cost for perspective_integration structures to 0.85x",
+        "Lower acceptance threshold for perspective_integration by 0.090"
+      ],
+      "timestamp": 1781512858.6061153
+    },
+    {
+      "directive_id": "spd_7f1442312734",
+      "source_episode_ids": [
+        "episode_b175fcc9865b"
+      ],
+      "target_domains": [
+        "expression",
+        "identity"
+      ],
+      "mutation_bias": {
+        "X_exploration": 0.29999999999999993,
+        "T_exploration": 0.08999999999999998
+      },
+      "promotion_bias": {
+        "framing_selection": 1.151275
+      },
+      "cost_shaping": {
+        "framing_selection": 0.925
+      },
+      "threshold_shaping": {},
+      "tolerance_shaping": {
+        "framing_selection": 1.15
+      },
+      "confidence": 0.6235782069451874,
+      "rationale": [
+        "Bias X-axis mutation exploration by 0.30 (deficit depth: 0.15)",
+        "Ease promotion burden for framing_selection structures by 1.15x",
+        "Reduce cost for framing_selection structures to 0.93x"
+      ],
+      "timestamp": 1781512858.6061676
     }
   ],
   "history": [
-    {
-      "directive_id": "spd_7be1f2d29a95",
-      "leverage_dim": "context_carryover",
-      "leverage_score": 1.0742166666666666,
-      "confidence": 0.855154089236854,
-      "timestamp": 1780509537.357069
-    },
-    {
-      "directive_id": "spd_54f9d6ea1a1d",
-      "leverage_dim": "perspective_integration",
-      "leverage_score": 0.78,
-      "confidence": 0.7668890892368541,
-      "timestamp": 1780509537.3570955
-    },
-    {
-      "directive_id": "spd_ccc7f66a51e4",
-      "leverage_dim": "uncertainty_signaling",
-      "leverage_score": 0.77,
-      "confidence": 0.7638890892368541,
-      "timestamp": 1780509537.357117
-    },
-    {
-      "directive_id": "spd_8e0e77c5fd0e",
-      "leverage_dim": "framing_selection",
-      "leverage_score": 0.33779999999999993,
-      "confidence": 0.6342290892368541,
-      "timestamp": 1780509537.3571377
-    },
     {
       "directive_id": "spd_a20c11171112",
       "leverage_dim": "context_carryover",
@@ -1380,6 +1482,34 @@
       "leverage_score": 0.12593749999999998,
       "confidence": 0.5711740114556041,
       "timestamp": 1781502813.4498403
+    },
+    {
+      "directive_id": "spd_1f5457fa9ac6",
+      "leverage_dim": "uncertainty_signaling",
+      "leverage_score": 0.77,
+      "confidence": 0.7638132069451874,
+      "timestamp": 1781512858.6060731
+    },
+    {
+      "directive_id": "spd_4b74d247ceb4",
+      "leverage_dim": "context_carryover",
+      "leverage_score": 0.6448416666666665,
+      "confidence": 0.7262657069451874,
+      "timestamp": 1781512858.6060927
+    },
+    {
+      "directive_id": "spd_1ff9c1f6d73d",
+      "leverage_dim": "perspective_integration",
+      "leverage_score": 0.625,
+      "confidence": 0.7203132069451875,
+      "timestamp": 1781512858.6061153
+    },
+    {
+      "directive_id": "spd_7f1442312734",
+      "leverage_dim": "framing_selection",
+      "leverage_score": 0.3025499999999999,
+      "confidence": 0.6235782069451874,
+      "timestamp": 1781512858.6061676
     }
   ]
 }
