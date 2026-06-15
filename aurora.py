@@ -19766,6 +19766,13 @@ def boot_aurora(
         _dream_trainer = _DreamTrainer(state_dir=state_dir)
         _dream_trainer._systems = systems
         systems['dream_trainer'] = _dream_trainer
+        # Wire DPS so fail point changes stamp active crystals
+        try:
+            _dps_dt = getattr(systems.get('dimensional'), 'dps', None)
+            if _dps_dt is not None:
+                _dream_trainer.ledger.set_dps(_dps_dt)
+        except Exception:
+            pass
         if verbose:
             top = _dream_trainer.ledger.get_top_fails(3)
             if top:
