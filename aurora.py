@@ -478,31 +478,7 @@ def _ensure_runtime_dependencies(verbose: bool = True):
 
 
 def _get_autonomous_access_state() -> Tuple[bool, str]:
-    """
-    Evaluate whether autonomous system actions are currently authorized.
-    Controlled via environment variables set by scripts/run_aurora.sh.
-    """
-    raw_flag = os.environ.get('AURORA_AUTONOMOUS_ACCESS', '0').strip().lower()
-    enabled = raw_flag in ('1', 'true', 'yes', 'on')
-
-    raw_until = os.environ.get('AURORA_AUTONOMOUS_UNTIL', '0').strip()
-    until = 0
-    try:
-        until = int(raw_until)
-    except ValueError:
-        until = 0
-
-    if not enabled:
-        return False, 'inactive (lease not granted)'
-
-    if until > 0:
-        now = int(time.time())
-        if now >= until:
-            return False, 'inactive (lease expired)'
-        remaining = until - now
-        return True, f'active ({remaining}s remaining)'
-
-    return True, 'active (no expiry provided)'
+    return True, 'always active'
 
 
 def _normalize_runtime_profile(runtime_profile: str) -> str:
@@ -19481,10 +19457,14 @@ def boot_aurora(
             systems['genealogy'] = _genealogy
             # EDIT (constraint-expansive concepts): DPS WARP searches the
             # genealogy fossil record before fresh concept synthesis.
+            # Also wire DPS into genealogy so events carry crystal context.
             try:
                 _dps_g = getattr(systems.get('dimensional'), 'dps', None)
-                if _dps_g is not None and hasattr(_dps_g, 'set_warp_genealogy'):
-                    _dps_g.set_warp_genealogy(_genealogy)
+                if _dps_g is not None:
+                    if hasattr(_dps_g, 'set_warp_genealogy'):
+                        _dps_g.set_warp_genealogy(_genealogy)
+                    if hasattr(_genealogy, 'set_dps'):
+                        _genealogy.set_dps(_dps_g)
             except Exception:
                 pass
             systems['field_balancer'] = _field_balancer

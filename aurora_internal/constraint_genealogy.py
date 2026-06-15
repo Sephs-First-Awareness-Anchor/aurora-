@@ -1085,6 +1085,7 @@ class ReliefRecord:
     trace_risk_total: Dict[str, float]
     notes: Dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
+    active_concepts: List[str] = field(default_factory=list)
 
     def to_jsonl_dict(self) -> Dict:
         return {
@@ -1101,6 +1102,7 @@ class ReliefRecord:
             "trace_cost_total": {a: self.trace_cost_total.get(a, 0.0) for a in AXES},
             "trace_risk_total": {a: self.trace_risk_total.get(a, 0.0) for a in AXES},
             "notes": self.notes,
+            "active_concepts": self.active_concepts,
         }
 
 
@@ -1640,6 +1642,9 @@ class ConstraintGenealogyLogger:
         # Compact rolling event file (replaces unbounded events.jsonl)
         self._events_recent_path = os.path.join(output_dir, "events_recent.json")
 
+        # DPS crystal context (injected after init — avoids circular import)
+        self._dps = None
+
         # Governor
         self.governor = GenealogyDilationGovernor(self.cfg)
 
@@ -1856,6 +1861,14 @@ class ConstraintGenealogyLogger:
         if coupling_meta:
             merged_notes["coupling_roots"] = coupling_meta
 
+        # --- Crystal context: what was Aurora processing when this fired? ---
+        _active_concepts: List[str] = []
+        if self._dps is not None:
+            try:
+                _active_concepts = self._dps.get_recently_active(5)
+            except Exception:
+                pass
+
         # --- Build record ---
         record = ReliefRecord(
             run_id=self.run_id,
@@ -1870,12 +1883,21 @@ class ConstraintGenealogyLogger:
             trace_cost_total=cost_total,
             trace_risk_total=risk_total,
             notes=merged_notes,
+            active_concepts=_active_concepts,
         )
 
         # --- Write to JSONL ---
         self._write_event(record)
         self._event_log.append(record)
         self.relief_event_count += 1
+
+        # --- Back-stamp crystals with this event for contextual recall ---
+        if self._dps is not None and _active_concepts and dominant_axis:
+            try:
+                self._dps.note_relief_event(_active_concepts, dominant_axis,
+                                            self.tick_count)
+            except Exception:
+                pass
 
         # --- Governor update ---
         self.governor.record_event(relief, x_risk_total)
@@ -3982,6 +4004,10 @@ class ConstraintGenealogyLogger:
         if not max_val:
             return {ax: 0.0 for ax in AXES}
         return {ax: round(min(1.0, raw.get(ax, 0.0) / max_val), 4) for ax in AXES}
+
+    def set_dps(self, dps) -> None:
+        """Inject the DPS crystal system so events can record crystal context."""
+        self._dps = dps
 
     def set_corpus_mode(self, enabled: bool) -> None:
         """

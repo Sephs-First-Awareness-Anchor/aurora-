@@ -343,6 +343,7 @@ class Crystal:
 
     def use(self):
         self.usage_count += 1
+        self.last_used: float = time.time()
 
     def can_evolve(self) -> bool:
         external = [f for f in self.facets.values() if not f.role.startswith("LAW_")]
@@ -594,6 +595,34 @@ class CrystalProcessingSystem(WarpCapable):
             'evolved': evolved,
             'usage': crystal.usage_count,
         }
+
+    def get_recently_active(self, n: int = 5) -> List[str]:
+        """Return concepts of the n most recently touched crystals."""
+        if not self.crystals:
+            return []
+        ranked = sorted(
+            self.crystals.values(),
+            key=lambda c: getattr(c, 'last_used', c.created_at),
+            reverse=True,
+        )
+        return [c.concept for c in ranked[:n]]
+
+    def note_relief_event(self, active_concepts: List[str],
+                          dominant_axis: str, tick: int) -> None:
+        """Stamp a lightweight relief-event facet onto the active crystals.
+
+        This makes each crystal aware of what IVM pressure resolved while it
+        was being processed — enabling contextual recall of events by concept.
+        """
+        for concept in active_concepts[:3]:
+            cid = self.concept_index.get(concept)
+            if cid and cid in self.crystals:
+                crystal = self.crystals[cid]
+                crystal.add_facet(
+                    role="relief_event",
+                    content=f"{dominant_axis}@{tick}",
+                    confidence=0.4,
+                )
 
     def _infer_category(self, data_type: str) -> str:
         """Map data type to energy category for DER facet registration."""
