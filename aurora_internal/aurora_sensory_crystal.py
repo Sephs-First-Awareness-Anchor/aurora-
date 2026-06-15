@@ -216,7 +216,7 @@ _SENSORY_ARCHETYPES: Dict[str, Dict[str, float]] = {
 }
 
 
-def _seed_archetype_nodes(facet: "CrystalFacet", facet_name: str) -> None:
+def _seed_archetype_nodes(facet: "SensoryClusterFacet", facet_name: str) -> None:
     """Populate a freshly-loaded (empty) facet with archetype primitive nodes."""
     archetypes = _SENSORY_ARCHETYPES.get(facet_name, {})
     ndims = _FACET_NDIMS.get(facet_name, 4)
@@ -530,7 +530,7 @@ class SensoryNode:
 # CRYSTAL FACET  —  one face of the bipyramid
 # =============================================================================
 
-class CrystalFacet:
+class SensoryClusterFacet:
     """
     One face of the sensory crystal.  Manages a population of SensoryNodes
     for a single dimension (tone, timbre, rhythm, hue, shape, or motion).
@@ -805,7 +805,7 @@ class SemanticCrystalNode:
 
     Lifecycle:  candidate  ->  concept  ->  promoted
 
-    On promotion writes cross-modal links back into both CrystalFacets,
+    On promotion writes cross-modal links back into both SensoryClusterFacets,
     completing the bipyramid geometry.
 
     Operation: sensory.cross_modal_link (N×A = "force")
@@ -915,13 +915,13 @@ class AuroraSensoryCrystal:
         self._session_id = ""
 
         # Audio facets (bottom of crystal)
-        self._audio: Dict[str, CrystalFacet] = {
-            name: CrystalFacet("audio", name, concept_floor=AUDIO_CONCEPT_FLOOR)
+        self._audio: Dict[str, SensoryClusterFacet] = {
+            name: SensoryClusterFacet("audio", name, concept_floor=AUDIO_CONCEPT_FLOOR)
             for name in AUDIO_FACET_NAMES
         }
         # Visual facets (top of crystal)
-        self._visual: Dict[str, CrystalFacet] = {
-            name: CrystalFacet("visual", name, concept_floor=VISUAL_CONCEPT_FLOOR)
+        self._visual: Dict[str, SensoryClusterFacet] = {
+            name: SensoryClusterFacet("visual", name, concept_floor=VISUAL_CONCEPT_FLOOR)
             for name in VISUAL_FACET_NAMES
         }
         # Semantic middle plane
@@ -1834,7 +1834,7 @@ def _make_lineage_trait_spec() -> Optional[Any]:
         ),
         OperationBinding(
             module         = "aurora_internal.aurora_sensory_crystal",
-            qualname       = "CrystalFacet.tick_promotion",
+            qualname       = "SensoryClusterFacet.tick_promotion",
             stage_ids      = ("sensory_concept_promotion",),
             dominant_axis  = "A",
             purpose_lane   = "meaning",

@@ -97,9 +97,25 @@ import json
 import math
 import os
 import time
-import uuid
+import uuid as _uuid_mod
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple
+
+
+# ---------------------------------------------------------------------------
+# DPS Crystal import (with fallback for environments without it)
+# ---------------------------------------------------------------------------
+
+try:
+    from aurora_dimensional_systems import (
+        Crystal as _DPSCrystal,
+        CrystalFacet as _DPSCrystalFacet,
+        CrystalLevel as _DPSCrystalLevel,
+    )
+    _DPS_AVAILABLE = True
+except ImportError:
+    _DPS_AVAILABLE = False
+    _DPSCrystalLevel = None  # type: ignore[assignment]
 
 
 # ---------------------------------------------------------------------------
@@ -161,7 +177,7 @@ _QUASI_SEDI_FLOOR: float = 5.0
 
 
 # ---------------------------------------------------------------------------
-# ConceptCrystalNode
+# ConceptCrystalNode — kept as backward-compat shim; new code uses DPS Crystal
 # ---------------------------------------------------------------------------
 
 @dataclass
@@ -185,6 +201,9 @@ class ConceptCrystalNode:
     CURRENT OVERLAY: Records how the specific instance being observed RIGHT
     NOW differs from the accumulated archetype. Cleared each turn. This is
     "this particular tree" vs "trees in general as Aurora knows them."
+
+    NOTE: New code should use DPS Crystal objects (returned by ConceptCrystalRegistry).
+    This class is retained for backward compatibility with code that imports it.
     """
     node_id:         str
     stage:           str      # base | composite | higher_order | quasi
@@ -386,25 +405,25 @@ class ConceptCrystalNode:
 
 
 # ---------------------------------------------------------------------------
-# ConceptCrystalRegistry
+# ConceptCrystalRegistry — axis-space proximity index backed by DPS Crystal
 # ---------------------------------------------------------------------------
 
 class ConceptCrystalRegistry:
     """
-    The full population of ConceptCrystalNodes, indexed by axis_bucket.
+    The full population of DPS Crystal objects, indexed by axis_bucket.
 
     Lookup: given a current axis state, find the nearest existing crystal
     (within 0.20 Euclidean distance in axis space) or create a new base
-    node for this semantic coordinate.
+    DPS Crystal for this semantic coordinate.
 
     The registry does not know concept names. It knows axis-state regions
     and which senses have co-activated there, whether semantic grounding
     has occurred, and how much memory resonance has accumulated.
 
-    From the outside, a crystal at axis-bucket (0.3, 0.7, 0.4, 0.6, 0.8)
-    is just that — a stable cognitive structure at those coordinates.
-    Whether that corresponds to "tree" or "trust" or "fatigue" is known
-    only by what senses activate there and what language path fires there.
+    When _DPS_AVAILABLE is True, _nodes stores DPS Crystal objects and
+    all physics are routed through DPS CrystalFacet physics points.
+    When _DPS_AVAILABLE is False (import error), falls back to the legacy
+    ConceptCrystalNode objects for graceful degradation.
     """
 
     BUCKET_RESOLUTION: float = 0.10
@@ -413,9 +432,9 @@ class ConceptCrystalRegistry:
     CULL_FRACTION:     float = 0.08
 
     def __init__(self) -> None:
-        self._nodes:     Dict[str, ConceptCrystalNode] = {}
-        self._ax_index:  Dict[tuple, str]               = {}
-        self._promo_log: List[Dict[str, Any]]           = []
+        self._nodes:     Dict[str, Any]               = {}  # DPS Crystal or ConceptCrystalNode
+        self._ax_index:  Dict[tuple, str]             = {}
+        self._promo_log: List[Dict[str, Any]]         = []
 
     # ── Axis bucket helpers ───────────────────────────────────────────────
 
@@ -424,8 +443,12 @@ class ConceptCrystalRegistry:
         r = ConceptCrystalRegistry.BUCKET_RESOLUTION
         return tuple(round(ax.get(k, 0.5) / r) * r for k in ("X", "T", "N", "B", "A"))
 
-    def _nearest(self, ax: Dict[str, float]) -> Optional[str]:
-        target  = self._to_bucket(ax)
+    def _nearest(self, target_or_ax: Any) -> Optional[str]:
+        # Accept either a pre-computed bucket tuple or an ax dict
+        if isinstance(target_or_ax, dict):
+            target = self._to_bucket(target_or_ax)
+        else:
+            target = target_or_ax
         best_d  = float("inf")
         best_id: Optional[str] = None
         for bkt, nid in self._ax_index.items():
@@ -435,42 +458,137 @@ class ConceptCrystalRegistry:
                 best_id = nid
         return best_id if best_d <= self.PROXIMITY_RADIUS else None
 
-    def _get_or_create(self, ax: Dict[str, float]) -> ConceptCrystalNode:
+    def _get_or_create(self, ax: Dict[str, float]) -> Any:
         nid = self._nearest(ax)
         if nid is not None:
             return self._nodes[nid]
         if len(self._nodes) >= self.MAX_NODES:
             self._cull()
-        bkt  = self._to_bucket(ax)
-        nid  = str(uuid.uuid4())[:12]
-        node = ConceptCrystalNode(
-            node_id        = nid,
-            stage          = "base",
-            generation     = 0,
-            axis_bucket    = bkt,
-            dim_links      = {},
-            lsa_keys       = [],
-            is_grounded    = False,
-            sedi_resonance = 0.0,
-            cross_hits     = 0,
-            active_dims    = set(),
-            function_class = None,
-            current_overlay= {},
-            first_seen     = time.time(),
-            last_seen      = time.time(),
-        )
-        self._nodes[nid]    = node
-        self._ax_index[bkt] = nid
-        return node
+        bkt = self._to_bucket(ax)
+        if _DPS_AVAILABLE:
+            ax_keys = ("X", "T", "N", "B", "A")
+            crystal = _DPSCrystal(
+                crystal_id=_uuid_mod.uuid4().hex[:12],
+                concept="axbkt:" + "_".join(str(v) for v in bkt),
+                constraint_signature={k: v for k, v in zip(ax_keys, bkt)},
+            )
+            crystal._unlock_failpoints()
+            nid = crystal.crystal_id
+            self._nodes[nid]    = crystal
+            self._ax_index[bkt] = nid
+            return crystal
+        else:
+            # Fallback: legacy ConceptCrystalNode
+            nid  = str(_uuid_mod.uuid4())[:12]
+            node = ConceptCrystalNode(
+                node_id        = nid,
+                stage          = "base",
+                generation     = 0,
+                axis_bucket    = bkt,
+                dim_links      = {},
+                lsa_keys       = [],
+                is_grounded    = False,
+                sedi_resonance = 0.0,
+                cross_hits     = 0,
+                active_dims    = set(),
+                function_class = None,
+                current_overlay= {},
+                first_seen     = time.time(),
+                last_seen      = time.time(),
+            )
+            self._nodes[nid]    = node
+            self._ax_index[bkt] = nid
+            return node
 
     def _cull(self) -> None:
-        by_age = sorted(self._nodes.values(), key=lambda n: n.last_seen)
-        cut    = max(1, int(len(by_age) * self.CULL_FRACTION))
-        for n in by_age[:cut]:
-            self._nodes.pop(n.node_id, None)
-            self._ax_index.pop(n.axis_bucket, None)
+        if _DPS_AVAILABLE:
+            # Cull by usage_count (least used first)
+            items = sorted(self._nodes.values(), key=lambda c: getattr(c, 'usage_count', 0))
+        else:
+            items = sorted(self._nodes.values(), key=lambda n: n.last_seen)
+        cut = max(1, int(len(items) * self.CULL_FRACTION))
+        for item in items[:cut]:
+            nid = getattr(item, 'crystal_id', None) or getattr(item, 'node_id', None)
+            if nid:
+                self._nodes.pop(nid, None)
+            if _DPS_AVAILABLE:
+                bkt_str = getattr(item, 'constraint_signature', None)
+                if bkt_str:
+                    bkt = tuple(bkt_str.get(k, 0.5) for k in ("X", "T", "N", "B", "A"))
+                    self._ax_index.pop(bkt, None)
+            else:
+                self._ax_index.pop(getattr(item, 'axis_bucket', None), None)
 
     # ── Public observation API ────────────────────────────────────────────
+
+    def observe_lsa(self, ax: Dict[str, float], path_key: str) -> Any:
+        """
+        Record semantic grounding — an LSA path fired at this axis coordinate.
+        Maps to DPS Crystal with physics point: coherence (semantic grounding),
+        resonance (memory connection), potential (growth capacity).
+        Returns the DPS Crystal (or legacy node) that received the observation.
+        """
+        if not _DPS_AVAILABLE:
+            # Legacy path
+            node = self._get_or_create(ax)
+            promoted = node.observe_lsa(path_key)
+            if promoted:
+                self._log_promotion(node)
+            return node
+
+        crystal = self._get_or_create(ax)
+        role = f"lsa:{path_key[:30]}"
+        existing = next((f for f in crystal.facets.values() if f.role == role), None)
+        if existing:
+            existing.strengthen()
+            existing.coherence = min(1.0, existing.coherence + 0.05)
+        else:
+            fid = f"{crystal.crystal_id}_f{len(crystal.facets)}"
+            f = _DPSCrystalFacet(facet_id=fid, role=role, content=path_key, confidence=0.85)
+            f.coherence  = 0.90   # grounded = semantically coherent
+            f.resonance  = 0.75   # connected to memory plane
+            f.potential  = 0.60   # semantic paths = growth potential
+            f.frequency  = min(1.0, crystal.usage_count / 40.0)
+            crystal.facets[fid] = f
+        crystal.use()
+        try:
+            crystal.evolve()
+        except Exception:
+            pass
+        promoted = crystal.level.value > 1 if _DPS_AVAILABLE else False
+        if promoted:
+            self._log_promotion(crystal)
+        return crystal
+
+    def observe_sedi(self, ax: Dict[str, float], delta: float = 0.05) -> None:
+        """
+        Accumulate SediMemory resonance at this axis coordinate.
+        Strengthens the resonance physics point on the DPS Crystal.
+        Memory deepening at the semantic plane — only strengthens existing nodes.
+        Does NOT create new nodes.
+        """
+        nid = self._nearest(ax)
+        if nid is None:
+            return
+        crystal = self._nodes[nid]
+        if not _DPS_AVAILABLE:
+            promoted = crystal.observe_sedi(delta)
+            if promoted:
+                self._log_promotion(crystal)
+            return
+        # DPS path: strengthen/create sedi_resonance facet
+        sedi_facet = next((f for f in crystal.facets.values() if f.role == "sedi_resonance"), None)
+        if sedi_facet:
+            sedi_facet.resonance = min(1.0, sedi_facet.resonance + delta)
+            sedi_facet.strengthen(delta)
+        else:
+            fid = f"{crystal.crystal_id}_f{len(crystal.facets)}"
+            f = _DPSCrystalFacet(facet_id=fid, role="sedi_resonance",
+                                  content="memory_resonance", confidence=0.60)
+            f.resonance = min(1.0, delta * 5.0)  # scale small delta up
+            f.stability = 0.80   # memory is stable
+            crystal.facets[fid] = f
+        crystal.use()
 
     def observe_sensory(
         self,
@@ -478,100 +596,137 @@ class ConceptCrystalRegistry:
         dim:      str,                      # SensoryDim value string
         node_ref: str,
         overlay:  Optional[Dict[str, Any]] = None,
-    ) -> ConceptCrystalNode:
+    ) -> Any:
         """
         Record a raw sense activation (visual, audio, proprioceptive, self_obs)
-        at this axis coordinate. Returns the concept node that received it.
-
-        This can build cross-sense relationships but CANNOT promote to composite
-        without semantic grounding (observe_lsa). Signal requires interpretation.
+        at this axis coordinate.
+        Maps sensory dims to complexity/frequency physics points.
+        Returns the DPS Crystal (or legacy node) that received it.
         """
-        node     = self._get_or_create(ax)
-        promoted = node.observe(dim, node_ref, overlay)
-        if promoted:
-            self._log_promotion(node)
-        return node
-
-    def observe_lsa(self, ax: Dict[str, float], path_key: str) -> ConceptCrystalNode:
-        """
-        Record semantic grounding — an LSA path fired at this axis coordinate.
-
-        This is the connective event between raw sense data and meaning.
-        Without this, a sensory node stays BASE regardless of how often it fires.
-        With this, composite promotion becomes possible — sense + interpretation.
-
-        Also marks the axis coordinate as semantically active in SediMemory's
-        language: after this, memory deposits at this coordinate will resonate
-        with this concept crystal.
-        """
-        node     = self._get_or_create(ax)
-        promoted = node.observe_lsa(path_key)
-        if promoted:
-            self._log_promotion(node)
-        return node
-
-    def observe_sedi(self, ax: Dict[str, float], delta: float = 0.05) -> None:
-        """
-        Accumulate SediMemory resonance at this axis coordinate.
-        Memory deepening at the semantic plane — only strengthens existing nodes.
-        Does NOT create new nodes (memory doesn't create concepts, it deepens them).
-        """
-        nid = self._nearest(ax)
-        if nid is not None:
-            node     = self._nodes[nid]
-            promoted = node.observe_sedi(delta)
+        if not _DPS_AVAILABLE:
+            node     = self._get_or_create(ax)
+            promoted = node.observe(dim, node_ref, overlay)
             if promoted:
                 self._log_promotion(node)
+            return node
+
+        crystal = self._get_or_create(ax)
+        role = f"sensory:{dim}"
+        existing = next((f for f in crystal.facets.values() if f.role == role), None)
+        if existing:
+            existing.strengthen()
+            existing.frequency = min(1.0, existing.frequency + 0.05)
+        else:
+            fid = f"{crystal.crystal_id}_f{len(crystal.facets)}"
+            f = _DPSCrystalFacet(facet_id=fid, role=role,
+                                  content=str(node_ref)[:40], confidence=0.70)
+            f.sensitivity = 0.75   # sensory input = sensitive
+            f.frequency   = 0.20   # starts low, grows with each observation
+            crystal.facets[fid] = f
+        # Update complexity based on sensory dimension count
+        n_sensory_dims = sum(1 for f in crystal.facets.values() if f.role.startswith("sensory:"))
+        for f in crystal.facets.values():
+            f.complexity = min(1.0, n_sensory_dims / 4.0)
+        crystal.use()
+        try:
+            crystal.evolve()
+        except Exception:
+            pass
+        return crystal
 
     def clear_turn_overlays(self) -> None:
-        """Called at turn start — clears all specific-instance overlays."""
-        for n in self._nodes.values():
-            n.clear_overlay()
+        """
+        Called at turn start. DPS Crystal has no current_overlay concept;
+        this is a no-op for DPS Crystal objects.
+        For legacy nodes, clears specific-instance overlays.
+        """
+        if not _DPS_AVAILABLE:
+            for n in self._nodes.values():
+                if hasattr(n, 'clear_overlay'):
+                    n.clear_overlay()
 
     def set_function_class(self, ax: Dict[str, float], func: str) -> None:
         """
         Mark the concept crystal at this axis coordinate with a cognitive
-        function classification. Only called when evidence is clear —
-        never assumed, never assigned top-down.
+        function classification. Only called when evidence is clear.
         """
         nid = self._nearest(ax)
         if nid is not None:
-            self._nodes[nid].function_class = func
+            node = self._nodes[nid]
+            if hasattr(node, 'function_class'):
+                node.function_class = func
 
     # ── Query API ─────────────────────────────────────────────────────────
 
-    def query(self, ax: Dict[str, float]) -> Optional[ConceptCrystalNode]:
+    def query(self, ax: Dict[str, float]) -> Optional[Any]:
+        """Return nearest DPS Crystal (or legacy node) at this axis coordinate."""
         nid = self._nearest(ax)
         return self._nodes.get(nid) if nid else None
 
-    def query_grounded(self, ax: Dict[str, float]) -> Optional[ConceptCrystalNode]:
-        """Return nearest crystal only if it has semantic grounding."""
-        node = self.query(ax)
-        return node if (node and node.is_grounded) else None
+    def query_grounded(self, ax: Dict[str, float]) -> Optional[Any]:
+        """Return nearest crystal only if it has semantic grounding (lsa: facets)."""
+        crystal = self.query(ax)
+        if crystal is None:
+            return None
+        if _DPS_AVAILABLE and hasattr(crystal, 'facets'):
+            is_grounded = any(f.role.startswith("lsa:") for f in crystal.facets.values())
+            return crystal if is_grounded else None
+        # Legacy path
+        return crystal if (hasattr(crystal, 'is_grounded') and crystal.is_grounded) else None
 
-    def query_composite_or_higher(self, ax: Dict[str, float]) -> Optional[ConceptCrystalNode]:
-        node = self.query(ax)
-        return node if (node and node.stage in ("composite", "higher_order", "quasi")) else None
+    def query_composite_or_higher(self, ax: Dict[str, float]) -> Optional[Any]:
+        """Return nearest crystal only if it is at COMPOSITE level or above."""
+        crystal = self.query(ax)
+        if crystal is None:
+            return None
+        if _DPS_AVAILABLE and hasattr(crystal, 'level'):
+            return crystal if crystal.level.value >= 2 else None
+        # Legacy path
+        if hasattr(crystal, 'stage'):
+            return crystal if crystal.stage in ("composite", "higher_order", "quasi") else None
+        return None
 
-    def promoted_nodes(self) -> List[ConceptCrystalNode]:
-        return [n for n in self._nodes.values() if n.stage != "base"]
+    def promoted_nodes(self) -> List[Any]:
+        """Return all crystals that have advanced beyond BASE."""
+        if _DPS_AVAILABLE:
+            return [c for c in self._nodes.values()
+                    if hasattr(c, 'level') and c.level.value > 1]
+        return [n for n in self._nodes.values()
+                if hasattr(n, 'stage') and n.stage != "base"]
 
-    def nodes_by_stage(self, stage: str) -> List[ConceptCrystalNode]:
-        return [n for n in self._nodes.values() if n.stage == stage]
+    def nodes_by_stage(self, stage: str) -> List[Any]:
+        """Return all crystals at the given stage name."""
+        # Map old stage names to DPS level values
+        _stage_to_level = {"base": 1, "composite": 2, "higher_order": 3, "quasi": 4}
+        if _DPS_AVAILABLE:
+            lvl = _stage_to_level.get(stage, 1)
+            return [c for c in self._nodes.values()
+                    if hasattr(c, 'level') and c.level.value == lvl]
+        return [n for n in self._nodes.values()
+                if hasattr(n, 'stage') and n.stage == stage]
 
     def stats(self) -> Dict[str, Any]:
-        counts: Dict[str, int] = {s: 0 for s in ("base", "composite", "higher_order", "quasi")}
+        counts: Dict[str, int] = {"base": 0, "composite": 0, "higher_order": 0, "quasi": 0}
         grounded = 0
-        for n in self._nodes.values():
-            counts[n.stage] = counts.get(n.stage, 0) + 1
-            if n.is_grounded:
-                grounded += 1
+        _level_to_stage = {1: "base", 2: "composite", 3: "higher_order", 4: "quasi"}
+        for crystal in self._nodes.values():
+            if _DPS_AVAILABLE and hasattr(crystal, 'level'):
+                lvl   = crystal.level.value  # 1=BASE,2=COMPOSITE,3=FULL_CONCEPT,4=QUASI
+                stage = _level_to_stage.get(min(lvl, 4), "quasi")
+                counts[stage] = counts.get(stage, 0) + 1
+                if any(f.role.startswith("lsa:") for f in crystal.facets.values()):
+                    grounded += 1
+            else:
+                stage = getattr(crystal, 'stage', 'base')
+                counts[stage] = counts.get(stage, 0) + 1
+                if getattr(crystal, 'is_grounded', False):
+                    grounded += 1
         return {
-            "total":         len(self._nodes),
-            "grounded":      grounded,
-            "ungrounded":    len(self._nodes) - grounded,
-            "by_stage":      counts,
-            "promo_events":  len(self._promo_log),
+            "total":        len(self._nodes),
+            "grounded":     grounded,
+            "ungrounded":   len(self._nodes) - grounded,
+            "by_stage":     counts,
+            "promo_events": len(self._promo_log),
         }
 
     # ── Persistence ───────────────────────────────────────────────────────
@@ -579,10 +734,15 @@ class ConceptCrystalRegistry:
     def save(self, state_dir: str) -> None:
         path = os.path.join(state_dir, "concept_crystals.json.gz")
         try:
-            data = {
-                "nodes":     [n.to_dict() for n in self._nodes.values()],
-                "promo_log": self._promo_log[-500:],
+            data: Dict[str, Any] = {
+                "nodes":    [],
+                "ax_index": {str(k): v for k, v in self._ax_index.items()},
             }
+            for crystal in self._nodes.values():
+                if _DPS_AVAILABLE and hasattr(crystal, 'to_dict'):
+                    data["nodes"].append(crystal.to_dict())
+                elif hasattr(crystal, 'to_dict'):
+                    data["nodes"].append(crystal.to_dict())
             with gzip.open(path, "wt", encoding="utf-8") as f:
                 json.dump(data, f)
         except Exception:
@@ -596,25 +756,56 @@ class ConceptCrystalRegistry:
             with gzip.open(path, "rt", encoding="utf-8") as f:
                 data = json.load(f)
             for nd in data.get("nodes", []):
-                node = ConceptCrystalNode.from_dict(nd)
-                self._nodes[node.node_id]        = node
-                self._ax_index[node.axis_bucket] = node.node_id
-            self._promo_log = data.get("promo_log", [])
+                if _DPS_AVAILABLE:
+                    try:
+                        crystal = _DPSCrystal.from_dict(nd)
+                        self._nodes[crystal.crystal_id] = crystal
+                    except Exception:
+                        # Try legacy node format
+                        try:
+                            node = ConceptCrystalNode.from_dict(nd)
+                            self._nodes[node.node_id] = node
+                        except Exception:
+                            pass
+                else:
+                    try:
+                        node = ConceptCrystalNode.from_dict(nd)
+                        self._nodes[node.node_id]        = node
+                        self._ax_index[node.axis_bucket] = node.node_id
+                    except Exception:
+                        pass
+            # Rebuild ax_index from saved string keys
+            for k_str, nid in data.get("ax_index", {}).items():
+                try:
+                    bkt = tuple(float(v) for v in k_str.strip("()").split(", "))
+                    if nid in self._nodes:
+                        self._ax_index[bkt] = nid
+                except Exception:
+                    pass
         except Exception:
             pass
 
-    def _log_promotion(self, node: ConceptCrystalNode) -> None:
-        self._promo_log.append({
-            "node_id":      node.node_id,
-            "stage":        node.stage,
-            "generation":   node.generation,
-            "cross_hits":   node.cross_hits,
-            "n_dims":       len(node.active_dims),
-            "active_dims":  sorted(node.active_dims),
-            "is_grounded":  node.is_grounded,
-            "function_class": node.function_class,
-            "ts":           time.time(),
-        })
+    def _log_promotion(self, crystal: Any) -> None:
+        if _DPS_AVAILABLE and hasattr(crystal, 'crystal_id'):
+            self._promo_log.append({
+                "crystal_id": getattr(crystal, 'crystal_id', ''),
+                "concept":    getattr(crystal, 'concept', ''),
+                "level":      getattr(crystal.level, 'name', 'BASE') if hasattr(crystal, 'level') else 'unknown',
+                "ts":         time.time(),
+            })
+        else:
+            # Legacy node
+            self._promo_log.append({
+                "node_id":      getattr(crystal, 'node_id', ''),
+                "stage":        getattr(crystal, 'stage', ''),
+                "generation":   getattr(crystal, 'generation', 0),
+                "cross_hits":   getattr(crystal, 'cross_hits', 0),
+                "n_dims":       len(getattr(crystal, 'active_dims', set())),
+                "active_dims":  sorted(getattr(crystal, 'active_dims', set())),
+                "is_grounded":  getattr(crystal, 'is_grounded', False),
+                "function_class": getattr(crystal, 'function_class', None),
+                "ts":           time.time(),
+            })
 
     def drain_promotions(self, since_ts: float = 0.0) -> List[Dict[str, Any]]:
         """

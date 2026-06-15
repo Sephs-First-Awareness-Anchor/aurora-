@@ -159,10 +159,20 @@ class PressureExperienceLedger:
         )
         self._buffer.append(exp)
 
-        # Persist immediately -- atomic append to JSONL
+        # Persist immediately -- atomic append to JSONL (max 500 entries retained)
+        _MAX_ENTRIES = 500
         try:
             with open(self._LOG_PATH, "a") as f:
                 f.write(json.dumps(exp.to_dict()) + "\n")
+            # Trim to last 500 entries if file is growing too large
+            try:
+                with open(self._LOG_PATH, "r") as _rf:
+                    _lines = _rf.readlines()
+                if len(_lines) > _MAX_ENTRIES:
+                    with open(self._LOG_PATH, "w") as _wf:
+                        _wf.writelines(_lines[-_MAX_ENTRIES:])
+            except Exception:
+                pass
         except Exception:
             pass
 

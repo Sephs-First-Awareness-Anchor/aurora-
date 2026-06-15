@@ -986,15 +986,9 @@ class ThoughtContinuity:
 
 
 def _log_thought(thought: ThoughtState) -> None:
-    """Append ThoughtState to thought_chain.jsonl. Aurora's private thinking record."""
-    try:
-        _THOUGHT_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        entry = thought.to_dict()
-        entry["timestamp"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        with open(_THOUGHT_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+    """Record ThoughtState in-memory only. The 10-entry ThoughtContinuity buffer
+    is the authoritative store — thoughts are working state, not permanent storage."""
+    pass  # File write removed; in-memory buffer in ThoughtContinuity is sufficient
 
 
 # ---------------------------------------------------------------------------

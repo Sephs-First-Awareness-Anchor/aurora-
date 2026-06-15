@@ -31,9 +31,24 @@ def _ensure_dir(path: str) -> None:
     os.makedirs(path, exist_ok=True)
 
 
+_MAX_ENTRIES_PER_FILE = 200
+_MAX_FILE_BYTES       = 512 * 1024  # 512 KB
+
+
 def _append_jsonl(path: str, rec: Dict[str, Any]) -> None:
+    """Append a JSON record to a JSONL file, capping at MAX_ENTRIES_PER_FILE entries."""
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(rec, ensure_ascii=True, sort_keys=True) + "\n")
+    # Trim to last MAX_ENTRIES_PER_FILE entries if file exceeds size cap
+    try:
+        if os.path.getsize(path) > _MAX_FILE_BYTES:
+            with open(path, "r", encoding="utf-8", errors="ignore") as _rf:
+                _lines = [ln for ln in _rf.readlines() if ln.strip()]
+            if len(_lines) > _MAX_ENTRIES_PER_FILE:
+                with open(path, "w", encoding="utf-8") as _wf:
+                    _wf.writelines(_lines[-_MAX_ENTRIES_PER_FILE:])
+    except Exception:
+        pass
 
 
 def _read_jsonl(path: str) -> List[Dict[str, Any]]:

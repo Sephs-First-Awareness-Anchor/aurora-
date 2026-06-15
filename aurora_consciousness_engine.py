@@ -567,15 +567,11 @@ class DCEAssembly:
         self.assembly_count += 1
         self.history.append(result)
 
-        # Log reasoning + meaning to the evolution pipeline.
-        # aurora_hub reads dce_assembly_log.jsonl for the evolution and
-        # sensory tabs.  Written every assembly cycle — low overhead since
-        # we only capture a compact summary dict.
+        # Keep last 100 assembly entries in-memory (no disk write).
+        # aurora_hub.read_dce_log() will return [] if the file is absent —
+        # that is acceptable; the file is not written anymore.
         try:
-            import json as _json, time as _time, os as _os
-            _base = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
-                                  "aurora_state")
-            _os.makedirs(_base, exist_ok=True)
+            import time as _time
             _cc = result.constraint_context or {}
             _sc = result.sensory_context or {}
             _entry = {
@@ -589,8 +585,10 @@ class DCEAssembly:
                 "sensory_mat":  round(_sc.get("maturity", 0.0), 3),
                 "sensory_frm":  _sc.get("total_frames", 0),
             }
-            with open(_os.path.join(_base, "dce_assembly_log.jsonl"), "a") as _fh:
-                _fh.write(_json.dumps(_entry) + "\n")
+            if not hasattr(self, '_assembly_log'):
+                from collections import deque as _deque
+                self._assembly_log = _deque(maxlen=100)
+            self._assembly_log.append(_entry)
         except Exception:
             pass
 

@@ -20525,40 +20525,21 @@ def boot_aurora(
             if _dps is not None:
                 from aurora_dimensional_systems import CrystalLevel as _CL
                 _seeded_ccr = 0
-                import uuid as _uuid_ccr, time as _time_ccr
-                from concept_crystal import ConceptCrystalNode as _CCN
                 for _dc in _dps.crystals.values():
                     if _dc.level < _CL.COMPOSITE:
                         continue
+                    # Derive axis bucket from facet roles (same logic as _ccr_bucket_from_facets)
                     _bucket = _ccr_bucket_from_facets(_dc)
-                    _nid_existing = _ccr._ax_index.get(_bucket)
-                    if _nid_existing:
-                        # Bucket occupied — append concept to existing node's lsa_keys
-                        _existing_node = _ccr._nodes.get(_nid_existing)
-                        if _existing_node and hasattr(_existing_node, 'lsa_keys'):
-                            if _dc.concept not in _existing_node.lsa_keys:
-                                _existing_node.lsa_keys.append(_dc.concept)
-                        continue
-                    _nid = _uuid_ccr.uuid4().hex[:12]
-                    _node = _CCN(
-                        node_id=_nid,
-                        stage="composite",
-                        generation=1,
-                        axis_bucket=_bucket,
-                        dim_links={},
-                        lsa_keys=[_dc.concept],
-                        is_grounded=True,
-                        sedi_resonance=0.0,
-                        cross_hits=max(0, len(_dc.facets) - 1),
-                        active_dims=set(),
-                        function_class=None,
-                        current_overlay={},
-                        first_seen=_dc.created_at,
-                        last_seen=_time_ccr.time(),
-                    )
-                    _ccr._nodes[_nid] = _node
-                    _ccr._ax_index[_bucket] = _nid
-                    _seeded_ccr += 1
+                    _ax_dict = dict(zip(("X", "T", "N", "B", "A"), _bucket))
+                    _bucket_key = _ccr._to_bucket(_ax_dict)
+                    if _bucket_key in _ccr._ax_index:
+                        continue  # already seeded
+                    # Seed via public observe_lsa API
+                    try:
+                        _ccr.observe_lsa(_ax_dict, _dc.concept)
+                        _seeded_ccr += 1
+                    except Exception:
+                        pass
         except Exception:
             _seeded_ccr = 0
 

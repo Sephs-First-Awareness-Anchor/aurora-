@@ -8605,9 +8605,9 @@ class AuroraEvolvedSurfaceEngine:
             with open(log_path, "a", encoding="utf-8") as _f:
                 _f.write(_json.dumps(entry) + "\n")
             try:
-                if os.path.getsize(log_path) > 32 * 1024 * 1024:
+                if os.path.getsize(log_path) > 1 * 1024 * 1024:
                     with open(log_path, "rb") as _src:
-                        _src.seek(-8 * 1024 * 1024, os.SEEK_END)
+                        _src.seek(-200 * 1024, os.SEEK_END)
                         _src.readline()
                         _tail = _src.read()
                     with open(log_path, "wb") as _dst:
