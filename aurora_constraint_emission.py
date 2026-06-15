@@ -233,8 +233,10 @@ class ConstraintEmitter:
         # 7. Seeking pathway for missing required predicate (§6)
         # DISAGREEMENT/CONTRADICTION have a short-circuit form that fires in _assemble
         # when no predicate is present — only seek if has entity but needs predicate.
+        # HEDGE does NOT seek — it falls through to _assemble() which produces a
+        # minimal epistemic-uncertainty form from the B/T/A slots without needing OETS.
         needs_pred = (
-            act in (SpeechAct.ASSERTION, SpeechAct.QUESTION, SpeechAct.HEDGE, SpeechAct.REPAIR)
+            act in (SpeechAct.ASSERTION, SpeechAct.QUESTION, SpeechAct.REPAIR)
             and bool(slots.agent)
         ) or (
             act in (SpeechAct.DISAGREEMENT, SpeechAct.CONTRADICTION)
@@ -1147,8 +1149,22 @@ class ConstraintEmitter:
         if act in (SpeechAct.DISAGREEMENT, SpeechAct.CONTRADICTION) and not slots.predicate:
             return ""
 
-        if act in (SpeechAct.CLARIFY, SpeechAct.REPAIR) and not slots.entity and not slots.predicate:
+        if act == SpeechAct.REPAIR and not slots.entity and not slots.predicate:
             return ""
+
+        # HEDGE with no OETS content — build minimal epistemic-uncertainty surface from
+        # axis state (A-agent, T-tense, B-negation) without requiring vocabulary lookup.
+        if act == SpeechAct.HEDGE and not slots.entity and not slots.predicate:
+            subject, _ = self._split_subject_modal(slots.agent or "I")
+            aux = self._agree_aux(subject, slots.tense_aux or "am")
+            neg = "not " if slots.negation in {"not", "only"} else ""
+            return self._fmt(f"{subject} {aux} {neg}certain", ".")
+
+        # CLARIFY with no OETS content — surface a minimal scope-clarification request
+        # using the leading token already set in slots.leading ("well").
+        if act == SpeechAct.CLARIFY and not slots.entity and not slots.predicate:
+            prefix = f"{slots.leading}, " if slots.leading else ""
+            return self._fmt(f"{prefix}what do you mean", "?")
 
         if act == SpeechAct.REFUSAL:
             agent = slots.agent or "I can't"
