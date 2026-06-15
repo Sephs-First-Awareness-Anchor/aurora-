@@ -1,41 +1,31 @@
 {
-  "original": "I am change sunni. I meaning did mind.",
+  "original": "I meaning did moment. I am understand axes.",
   "candidate": "",
-  "selected": "I am change sunni. I meaning did mind.",
+  "selected": "I meaning did moment. I am understand axes.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.74,
   "candidate_score": 0.0,
-  "original_pressure": 0.232,
+  "original_pressure": 0.292,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.768,
+  "pressure_relief": -0.708,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Integrate two perspectives that disagree without colla",
+    "prompt_excerpt": "What behavior links use and corpus here?",
     "input_interpretation": {
-      "raw_prompt": "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Integrate two perspectives that disagree without colla",
+      "raw_prompt": "What behavior links use and corpus here?",
       "intent_hint": "question",
       "topic_terms": [
-        "mean",
-        "integrate",
-        "perspectives",
-        "disagree",
-        "without",
-        "collapsing",
-        "either",
-        "mind"
+        "behavior",
+        "links",
+        "corpus",
+        "here"
       ],
-      "entities": [
-        "Integrate",
-        "With",
-        "Internal",
-        "Integrate",
-        "With"
-      ]
+      "entities": []
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781346955.8135247,
+    "timestamp": 1781482845.2563574,
     "min_relief_used": 0.035
   }
 }

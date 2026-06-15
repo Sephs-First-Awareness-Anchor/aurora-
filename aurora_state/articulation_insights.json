@@ -2,7 +2,7 @@
   "total": 500,
   "accepted": 1,
   "acceptance_rate": 0.002,
-  "avg_pressure_relief": -0.6972,
+  "avg_pressure_relief": -0.6971,
   "top_reasons": [
     [
       "no_candidate",
@@ -17,7 +17,7 @@
     "no_pattern_matched": {
       "count": 499,
       "acceptance_rate": 0.0,
-      "avg_pressure_relief": -0.6988
+      "avg_pressure_relief": -0.6987
     },
     "deterministic": {
       "count": 1,
@@ -27,5 +27,5 @@
   },
   "suggested_min_relief": 0.035,
   "suggested_mode": "deterministic_preferred",
-  "analyzed_at": 1781346922.1530166
+  "analyzed_at": 1781482195.7737222
 }
