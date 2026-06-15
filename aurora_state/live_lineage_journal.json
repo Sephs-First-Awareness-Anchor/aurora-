@@ -1,14 +1,6 @@
 {
-  "updated_at": 1781544619.2421834,
+  "updated_at": 1781546422.7481415,
   "events": [
-    {
-      "timestamp": 1781482056.0161855,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:658d58b0d087",
-      "axis": "X",
-      "summary": "Manual code change in aurora_internal/aurora_comprehension_gap.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781482056.0188997,
       "source": "aurora.boot",
@@ -1918,6 +1910,14 @@
       "source": "aurora.boot",
       "kind": "manual_code_assimilation",
       "id": "MC:15995fc7b6b9",
+      "axis": "X",
+      "summary": "Manual code change in scripts/prove_learning.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781545803.8348675,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:c136ed0cf0cc",
       "axis": "X",
       "summary": "Manual code change in scripts/prove_learning.py formed a new lineage branch"
     }
