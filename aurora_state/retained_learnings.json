@@ -144,6 +144,720 @@
       "sightings": 350,
       "first_seen": 1781294156.679874,
       "last_seen": 1781514228.4138114
+    },
+    {
+      "text": "what creates friction when approached with warm acknowledgment \u2014 it connects to stays, perspectives (B-axis, depth 0.34).",
+      "confidence": 0.9634572526320548,
+      "sources": [
+        "train_epoch_2",
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative",
+        "relational_probe"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "warm",
+        "acknowledgment",
+        "relational_probe"
+      ],
+      "tags": [
+        "warm_acknowledgment"
+      ],
+      "sightings": 6,
+      "first_seen": 1781543808.1415024,
+      "last_seen": 1781543949.592813
+    },
+    {
+      "text": "what creates friction when approached with thoughtful reflection \u2014 it connects to stays, perspectives (B-axis, depth 0.34).",
+      "confidence": 0.8796857765384195,
+      "sources": [
+        "train_epoch_2",
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative",
+        "relational_probe"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "thoughtful",
+        "reflection",
+        "relational_probe"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 6,
+      "first_seen": 1781543808.1416032,
+      "last_seen": 1781543949.5927596
+    },
+    {
+      "text": "use opened depth when approached with direct clarity \u2014 it connects to we're, like (T-axis expansion, depth 0.29).",
+      "confidence": 0.7675283643313486,
+      "sources": [
+        "train_epoch_2",
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "opened",
+        "depth",
+        "approached",
+        "direct",
+        "clarity",
+        "connects"
+      ],
+      "tags": [
+        "direct_clarity"
+      ],
+      "sightings": 4,
+      "first_seen": 1781543808.141668,
+      "last_seen": 1781543949.5926585
+    },
+    {
+      "text": "what creates friction when approached with curious inquiry \u2014 it connects to stays, perspectives (B-axis, depth 0.34).",
+      "confidence": 0.7324081924454066,
+      "sources": [
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "curious",
+        "inquiry"
+      ],
+      "tags": [
+        "curious_inquiry"
+      ],
+      "sightings": 2,
+      "first_seen": 1781543891.0706136,
+      "last_seen": 1781543949.5924146
+    },
+    {
+      "text": "what creates friction when approached with warm acknowledgment \u2014 it connects to awareness, land (B-axis, depth 0.34).",
+      "confidence": 0.9444044480187387,
+      "sources": [
+        "train_epoch_2",
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "warm",
+        "acknowledgment"
+      ],
+      "tags": [
+        "warm_acknowledgment"
+      ],
+      "sightings": 4,
+      "first_seen": 1781544173.6352282,
+      "last_seen": 1781544333.0683522
+    },
+    {
+      "text": "what creates friction when approached with direct clarity \u2014 it connects to awareness, land (B-axis, depth 0.34).",
+      "confidence": 0.7992984242661235,
+      "sources": [
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative",
+        "relational_probe"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "direct",
+        "clarity",
+        "relational_probe"
+      ],
+      "tags": [
+        "direct_clarity"
+      ],
+      "sightings": 6,
+      "first_seen": 1781544215.5514028,
+      "last_seen": 1781544333.0684628
+    },
+    {
+      "text": "what creates friction when approached with thoughtful reflection \u2014 it connects to awareness, land (B-axis, depth 0.34).",
+      "confidence": 0.7324081924454066,
+      "sources": [
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "thoughtful",
+        "reflection"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 3,
+      "first_seen": 1781544215.551476,
+      "last_seen": 1781544333.0682957
+    },
+    {
+      "text": "what creates friction when approached with curious inquiry \u2014 it connects to awareness, land (B-axis, depth 0.34).",
+      "confidence": 0.8283022165960001,
+      "sources": [
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "curious",
+        "inquiry"
+      ],
+      "tags": [
+        "curious_inquiry"
+      ],
+      "sightings": 2,
+      "first_seen": 1781544268.7273297,
+      "last_seen": 1781544333.0681667
+    },
+    {
+      "text": "use held attention when approached with thoughtful reflection \u2014 it connects to fits, cor (N-axis resonance, depth 0.29).",
+      "confidence": 0.6931471805599453,
+      "sources": [
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "relational_probe"
+      ],
+      "topic_words": [
+        "relational_probe",
+        "held",
+        "attention",
+        "approached",
+        "thoughtful",
+        "reflection",
+        "connects"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 2,
+      "first_seen": 1781544268.7276776,
+      "last_seen": 1781544333.0684092
+    },
+    {
+      "text": "what creates friction when approached with thoughtful reflection \u2014 it connects to core, question (B-axis, depth 0.34).",
+      "confidence": 0.8283022165960001,
+      "sources": [
+        "train_epoch_2",
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "thoughtful",
+        "reflection"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 4,
+      "first_seen": 1781544449.022325,
+      "last_seen": 1781544617.9988258
+    },
+    {
+      "text": "use held attention when approached with warm acknowledgment \u2014 it connects to how, need (N-axis resonance, depth 0.29).",
+      "confidence": 0.9026834003674034,
+      "sources": [
+        "train_epoch_2",
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "held",
+        "attention",
+        "approached",
+        "warm",
+        "acknowledgment",
+        "connects"
+      ],
+      "tags": [
+        "warm_acknowledgment"
+      ],
+      "sightings": 4,
+      "first_seen": 1781544449.0224156,
+      "last_seen": 1781544617.9991312
+    },
+    {
+      "text": "what creates friction when approached with direct clarity \u2014 it connects to core, question (B-axis, depth 0.34).",
+      "confidence": 0.7992984242661235,
+      "sources": [
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "direct",
+        "clarity"
+      ],
+      "tags": [
+        "direct_clarity"
+      ],
+      "sightings": 3,
+      "first_seen": 1781544494.9464214,
+      "last_seen": 1781544617.9989285
+    },
+    {
+      "text": "what creates friction when approached with curious inquiry \u2014 it connects to core, question (B-axis, depth 0.34).",
+      "confidence": 0.8796857765384195,
+      "sources": [
+        "train_epoch_3",
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "curious",
+        "inquiry"
+      ],
+      "tags": [
+        "curious_inquiry"
+      ],
+      "sightings": 3,
+      "first_seen": 1781544494.9464881,
+      "last_seen": 1781544617.9990697
+    },
+    {
+      "text": "what creates friction when approached with warm acknowledgment \u2014 it connects to core, question (B-axis, depth 0.34).",
+      "confidence": 0.6486367163517711,
+      "sources": [
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "relational_probe"
+      ],
+      "topic_words": [
+        "relational_probe",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "warm",
+        "acknowledgment"
+      ],
+      "tags": [
+        "warm_acknowledgment"
+      ],
+      "sightings": 2,
+      "first_seen": 1781544550.7104259,
+      "last_seen": 1781544617.999187
+    },
+    {
+      "text": "use held attention when approached with thoughtful reflection \u2014 it connects to how, need (N-axis resonance, depth 0.29).",
+      "confidence": 0.6931471805599453,
+      "sources": [
+        "train_epoch_4",
+        "train_epoch_5"
+      ],
+      "context_types": [
+        "relational_probe"
+      ],
+      "topic_words": [
+        "relational_probe",
+        "held",
+        "attention",
+        "approached",
+        "thoughtful",
+        "reflection",
+        "connects"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 2,
+      "first_seen": 1781544550.7104878,
+      "last_seen": 1781544617.999243
+    },
+    {
+      "text": "what creates friction when approached with direct clarity \u2014 it connects to see, experience (B-axis, depth 0.34).",
+      "confidence": 1.0,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative",
+        "relational_probe"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "direct",
+        "clarity",
+        "relational_probe"
+      ],
+      "tags": [
+        "direct_clarity"
+      ],
+      "sightings": 31,
+      "first_seen": 1781545863.8600497,
+      "last_seen": 1781548699.7840257
+    },
+    {
+      "text": "use held attention when approached with thoughtful reflection \u2014 it connects to [internal, clarify (N-axis resonance, depth 0.29).",
+      "confidence": 1.0,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "held",
+        "attention",
+        "approached",
+        "thoughtful",
+        "reflection",
+        "connects"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 17,
+      "first_seen": 1781545863.8601575,
+      "last_seen": 1781548699.7839725
+    },
+    {
+      "text": "perspective creates friction when approached with curious inquiry (B-axis \u2014 'perspective' still shallow in my web).",
+      "confidence": 1.0,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "perspective",
+        "creates",
+        "friction",
+        "approached",
+        "curious",
+        "inquiry"
+      ],
+      "tags": [
+        "curious_inquiry"
+      ],
+      "sightings": 16,
+      "first_seen": 1781545909.8374283,
+      "last_seen": 1781548699.7838402
+    },
+    {
+      "text": "perspective creates friction when approached with warm acknowledgment (B-axis \u2014 'perspective' still shallow in my web).",
+      "confidence": 1.0,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "perspective",
+        "creates",
+        "friction",
+        "approached",
+        "warm",
+        "acknowledgment"
+      ],
+      "tags": [
+        "warm_acknowledgment"
+      ],
+      "sightings": 15,
+      "first_seen": 1781545966.0943596,
+      "last_seen": 1781548699.783733
+    },
+    {
+      "text": "what creates friction when approached with curious inquiry \u2014 it connects to see, experience (B-axis, depth 0.34).",
+      "confidence": 1.0,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "relational_probe"
+      ],
+      "topic_words": [
+        "relational_probe",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "curious",
+        "inquiry"
+      ],
+      "tags": [
+        "curious_inquiry"
+      ],
+      "sightings": 15,
+      "first_seen": 1781545966.0946307,
+      "last_seen": 1781548699.784073
+    },
+    {
+      "text": "what creates friction when approached with warm acknowledgment \u2014 it connects to see, experience (B-axis, depth 0.34).",
+      "confidence": 1.0,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "relational_probe"
+      ],
+      "topic_words": [
+        "relational_probe",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "warm",
+        "acknowledgment"
+      ],
+      "tags": [
+        "warm_acknowledgment"
+      ],
+      "sightings": 15,
+      "first_seen": 1781545966.0946887,
+      "last_seen": 1781548699.7841241
+    },
+    {
+      "text": "what creates friction when approached with thoughtful reflection \u2014 it connects to see, experience (B-axis, depth 0.34).",
+      "confidence": 0.8796857765384195,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "relational_probe"
+      ],
+      "topic_words": [
+        "relational_probe",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "thoughtful",
+        "reflection"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 10,
+      "first_seen": 1781546421.430641,
+      "last_seen": 1781548699.784175
+    },
+    {
+      "text": "perspective creates friction when approached with thoughtful reflection (B-axis \u2014 'perspective' still shallow in my web).",
+      "confidence": 0.8549831191538456,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "perspective",
+        "creates",
+        "friction",
+        "approached",
+        "thoughtful",
+        "reflection"
+      ],
+      "tags": [
+        "thoughtful_reflection"
+      ],
+      "sightings": 3,
+      "first_seen": 1781549143.2366493,
+      "last_seen": 1781549267.542606
+    },
+    {
+      "text": "perspective creates friction when approached with direct clarity (B-axis \u2014 'perspective' still shallow in my web).",
+      "confidence": 0.8283022165960001,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "perspective",
+        "creates",
+        "friction",
+        "approached",
+        "direct",
+        "clarity"
+      ],
+      "tags": [
+        "direct_clarity"
+      ],
+      "sightings": 3,
+      "first_seen": 1781549143.2367983,
+      "last_seen": 1781549267.5426762
+    },
+    {
+      "text": "what creates friction when approached with curious inquiry \u2014 it connects to if, question (B-axis, depth 0.34).",
+      "confidence": 0.5972531564093516,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "relational_probe"
+      ],
+      "topic_words": [
+        "relational_probe",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "curious",
+        "inquiry"
+      ],
+      "tags": [
+        "curious_inquiry"
+      ],
+      "sightings": 2,
+      "first_seen": 1781549202.0933194,
+      "last_seen": 1781549267.5428145
+    },
+    {
+      "text": "use held attention when approached with curious inquiry \u2014 it connects to cor, sense\u2014'what (N-axis resonance, depth 0.29).",
+      "confidence": 0.8549831191538456,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "held",
+        "attention",
+        "approached",
+        "curious",
+        "inquiry",
+        "connects"
+      ],
+      "tags": [
+        "curious_inquiry"
+      ],
+      "sightings": 2,
+      "first_seen": 1781549202.0933843,
+      "last_seen": 1781549267.5428772
+    },
+    {
+      "text": "what creates friction when approached with warm acknowledgment \u2014 it connects to if, question (B-axis, depth 0.34).",
+      "confidence": 0.6931471805599453,
+      "sources": [
+        "prove_ep_epoch_1"
+      ],
+      "context_types": [
+        "generative"
+      ],
+      "topic_words": [
+        "generative",
+        "what",
+        "creates",
+        "friction",
+        "approached",
+        "warm",
+        "acknowledgment"
+      ],
+      "tags": [
+        "warm_acknowledgment"
+      ],
+      "sightings": 1,
+      "first_seen": 1781549267.5427341,
+      "last_seen": 1781549267.5427341
     }
   ]
 }

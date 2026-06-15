@@ -576,6 +576,20 @@ class ConsciousLearner:
             parts.append(f"({axis}, depth {depth:.2f})")
         elif topic:
             parts.append(f"({axis} — {topic!r} still shallow in my web)")
+            # Emit a SEEK demand so WARP actively tries to deepen this concept —
+            # noting the gap isn't enough; WARP should attempt resolution.
+            try:
+                from aurora_warp_protocol import warp_guard as _wg, WarpTrigger as _WT
+                _wg(
+                    source="conscious_learner",
+                    layer="understanding",
+                    trigger=_WT.NO_MEMORY,
+                    unresolved_text=topic,
+                    severity=0.65,
+                    persistence_key=f"shallow:{topic}",
+                )
+            except Exception:
+                pass
         else:
             parts.append(f"({axis})")
 
