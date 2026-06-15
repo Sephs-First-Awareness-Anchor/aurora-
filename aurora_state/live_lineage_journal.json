@@ -1,38 +1,6 @@
 {
-  "updated_at": 1781514346.2935975,
+  "updated_at": 1781527810.831175,
   "events": [
-    {
-      "timestamp": 1781482055.97002,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:64c0c5784c2b",
-      "axis": "X",
-      "summary": "Manual code change in aurora_i_state_beings.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781482055.9730904,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:7f3a3b5091fa",
-      "axis": "X",
-      "summary": "Manual code change in aurora_image_ingestion.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781482055.9768155,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:645ae3882104",
-      "axis": "X",
-      "summary": "Manual code change in aurora_interaction_engine.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781482055.9795592,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:ada2cc6044ff",
-      "axis": "X",
-      "summary": "Manual code change in aurora_interaction_memory.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781482055.9823675,
       "source": "aurora.boot",
@@ -1918,6 +1886,38 @@
       "source": "explore_study_cycle",
       "kind": "discovery_cycle",
       "id": "study:1781514339",
+      "axis": "T",
+      "summary": "Exploration study cycle integrated 5 result(s) into memory."
+    },
+    {
+      "timestamp": 1781527766.2724962,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:67f53d6298fe",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781527766.2748957,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:4ffbccb864d2",
+      "axis": "X",
+      "summary": "Manual code change in aurora_dimensional_systems.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781527766.2773347,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:e37b8d12d26c",
+      "axis": "B",
+      "summary": "Manual code change in aurora_internal/constraint_genealogy.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781527802.216536,
+      "source": "explore_study_cycle",
+      "kind": "discovery_cycle",
+      "id": "study:1781527802",
       "axis": "T",
       "summary": "Exploration study cycle integrated 5 result(s) into memory."
     }
