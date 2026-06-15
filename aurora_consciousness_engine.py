@@ -116,7 +116,7 @@ from aurora_dimensional_systems import (
     EnergyRegulatorSystem,
     ThoughtBudget,
 )
-from aurora_internal.dual_strata import DualStrataBridge
+from aurora_internal.dual_strata import DualStrataBridge, recursion_weights_from_lattice
 
 # External pressure guidance (runtime -> DPME bridge).
 # Keep this abstract: score + channel targets only.
@@ -1171,6 +1171,7 @@ class ConsciousnessEngine:
         raw_snapshot = evidence.get("understanding_contract") or evidence.get("contract_snapshot")
         if isinstance(raw_snapshot, dict):
             contract_snapshot = dict(raw_snapshot)
+        _recursion_weights = recursion_weights_from_lattice(self.lattice)
         snapshot = self.dual_strata.build_snapshot(
             result,
             payload=payload,
@@ -1179,6 +1180,7 @@ class ConsciousnessEngine:
             contract_snapshot=contract_snapshot,
             requested_frame=frame_name,
             thought_intent=thought_intent,
+            recursion_weights=_recursion_weights,
         )
         result.subsurface_state = dict(snapshot.subsurface_state or {})
         result.conscious_frame = dict(snapshot.conscious_frame or {})

@@ -87,7 +87,8 @@ def n_passes_for_density(dominant_axis: str) -> int:
     """Number of perspective passes for one Subsurface tick given the dominant axis.
 
     Formula: round(1 + log10(ratio) * 2)
-    Results: X→1, T→3, N→3, B→5, A→6
+    Results (from _DENSITY_RATIO = {X:1, T:7, N:10, B:40, A:150}):
+        X->1, T->3, N->3, B->4, A->5
     """
     ratio = _DENSITY_RATIO.get(str(dominant_axis or "X").upper(), 1.0)
     return max(1, round(1.0 + math.log10(max(ratio, 1.0)) * 2))
@@ -370,6 +371,26 @@ class PredictiveStager:
         return PredictiveStager.pop_staged_frames(limit=max_frames)
 
     @staticmethod
+    def harvest_into_systems(systems: Dict[str, Any], max_frames: int = _MAX_FRAMES) -> int:
+        """Surface-side bridge: pop unconsumed staged frames from the
+        file-backed queue and place them where EmissionContextBuilder reads
+        from (systems["_staged_subsurface_frame"] / "_staged_subsurface_frames").
+
+        Best-effort: any failure leaves systems untouched and returns 0.
+        Safe to call multiple times per turn — once a frame is popped it is
+        marked consumed in the queue, so a later call this turn returns []
+        and the earlier call's values remain in systems untouched.
+        """
+        try:
+            frames = PredictiveStager.pop_all_recent_frames(max_frames=max_frames)
+            if frames:
+                systems["_staged_subsurface_frames"] = frames
+                systems["_staged_subsurface_frame"] = frames[0]
+            return len(frames)
+        except Exception:
+            return 0
+
+    @staticmethod
     def stage_hypothesis(
         systems: Dict[str, Any],
         working_memory: Any,
@@ -382,7 +403,7 @@ class PredictiveStager:
         Returns True if a frame was staged, False otherwise.
         """
         try:
-            lattice = systems.get("ivm_lattice")
+            lattice = systems.get("ivm_lattice") or systems.get("lattice")
             if lattice is None:
                 return False
 
@@ -456,7 +477,7 @@ class PredictiveStager:
         persist offset across ticks for continuous perspective cycling.
         """
         try:
-            lattice = systems.get("ivm_lattice")
+            lattice = systems.get("ivm_lattice") or systems.get("lattice")
             if lattice is None:
                 return 0, perspective_offset
 

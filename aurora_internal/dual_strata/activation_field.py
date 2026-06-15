@@ -19,10 +19,13 @@ before it is explicitly needed.
 
 from __future__ import annotations
 
+import json
+import os
 import re
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -324,10 +327,14 @@ class ActivationField:
 #  Seed extraction helpers
 # ------------------------------------------------------------------ #
 
-def extract_seeds_from_systems(systems: Dict[str, Any]) -> List[str]:
+def extract_seeds_from_systems(systems: Dict[str, Any]) -> Tuple[List[str], List[str]]:
     """
     Pull concept seeds from all available context sources.
     Called by the subsurface each tick.
+
+    Returns:
+        (seeds, sensory_recognitions) -- two separate token lists; pass both
+        to ActivationField.spread() as `seeds` and `sensory_recognitions`.
     """
     seeds: List[str] = []
 
@@ -398,3 +405,78 @@ def _tokenize(text: str) -> List[str]:
     """Extract meaningful content words from a text string."""
     words = re.findall(r"[a-z]{3,}", str(text or "").lower())
     return [w for w in words if w not in _STOP_WORDS]
+
+
+# ------------------------------------------------------------------ #
+#  Per-tick orchestration
+# ------------------------------------------------------------------ #
+
+_BASE_DIR = Path(__file__).parent.parent.parent  # aurora repo root
+_STATE_DIR_DEFAULT = _BASE_DIR / "aurora_state"
+_FIELD_FILENAME = "activation_field.json"
+
+
+def _resolve_state_dir(systems: Dict[str, Any]) -> Path:
+    """Mirror the state_dir resolution used by aurora.py's read-side tiers."""
+    return Path(str(systems.get("state_dir") or _STATE_DIR_DEFAULT))
+
+
+def _load_field(state_dir: Path) -> ActivationField:
+    path = state_dir / _FIELD_FILENAME
+    try:
+        if path.exists():
+            return ActivationField.from_dict(json.loads(path.read_text()) or {})
+    except Exception:
+        pass
+    return ActivationField()
+
+
+def _save_field(afield: ActivationField, state_dir: Path) -> None:
+    path = state_dir / _FIELD_FILENAME
+    try:
+        state_dir.mkdir(parents=True, exist_ok=True)
+        tmp = str(path) + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(afield.to_dict(), f, indent=2)
+        os.replace(tmp, str(path))
+    except Exception:
+        pass
+
+
+def run_activation_cycle(systems: Dict[str, Any]) -> Dict[str, Any]:
+    """Subsurface per-tick activation cycle: seed -> spread -> decay -> persist.
+
+    Loads the persisted ActivationField (cross-process via
+    aurora_state/activation_field.json), extracts seeds from systems
+    (working memory, conscious frame, sensory recognitions), spreads through
+    OETS, decays existing activations, then writes the result to both
+    systems["_activation_field"] (Tier 1, in-process) and
+    activation_field.json (Tier 2, cross-process) -- the two tiers
+    _chain_down4_meaning and the subsurface-evidence block already check
+    before falling through to the dual_strata_snapshot.json metadata tier.
+
+    Best-effort: any failure returns {} and leaves systems untouched.
+    """
+    try:
+        state_dir = _resolve_state_dir(systems)
+        afield = _load_field(state_dir)
+
+        seeds, sensory_recognitions = extract_seeds_from_systems(systems)
+        oets_web = systems.get("oets") or systems.get("ontological_web")
+        wm = systems.get("working_memory")
+        identity = systems.get("identity") or systems.get("core_identity")
+
+        afield.spread(
+            seeds, oets_web,
+            working_memory=wm,
+            core_identity=identity,
+            sensory_recognitions=sensory_recognitions,
+        )
+        afield.decay()
+
+        data = afield.to_dict()
+        _save_field(afield, state_dir)
+        systems["_activation_field"] = data
+        return data
+    except Exception:
+        return {}

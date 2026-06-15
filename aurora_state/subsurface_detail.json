@@ -25,6 +25,30 @@
     }
   ],
   "law_bindings": [],
+  "micro_reasoning": [
+    {
+      "confidence": 0.6,
+      "label": "conflict_exposure",
+      "rationale": "The active assembly still contains paradox or unresolved conflict.",
+      "source": "assembly",
+      "tags": [
+        "conflict",
+        "stability"
+      ],
+      "urgency": 0.6
+    },
+    {
+      "confidence": 1.0,
+      "label": "novelty_attention",
+      "rationale": "Novelty is high enough that the frame should stay exploratory.",
+      "source": "entropy",
+      "tags": [
+        "novelty",
+        "exploration"
+      ],
+      "urgency": 0.4
+    }
+  ],
   "origin_systems": [
     "incoming_input",
     "DimensionalSystems.process_synthesis",
@@ -61,7 +85,7 @@
   },
   "readiness": 0.4813,
   "recalled_fragments": [
-    "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you."
+    "Let me be more specific: Two claims conflict. Reconcile them without pretending there is no tension.. How does that land for you?"
   ],
   "salience_weights": {
     "A": 0.0,
@@ -70,7 +94,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1781347006.2569773,
+  "saved_at": 1781511675.493899,
   "sub_crests": [
     {
       "axis": "X",
@@ -111,6 +135,16 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8176,
+      "label": "surface"
+    },
+    {
+      "axis": "B",
+      "intensity": 0.8389,
+      "label": "surface"
     }
   ]
 }

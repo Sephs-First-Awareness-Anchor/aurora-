@@ -108,9 +108,9 @@
         "learned_hint",
         "chain"
       ],
-      "sightings": 24,
+      "sightings": 27,
       "first_seen": 1781291332.6106157,
-      "last_seen": 1781294309.8122072
+      "last_seen": 1781491102.9580786
     },
     {
       "text": "user name is Working",
@@ -122,7 +122,6 @@
         "semantic_frame"
       ],
       "topic_words": [
-        "behavior",
         "user",
         "integrate",
         "carry",
@@ -131,18 +130,20 @@
         "clarify",
         "talk",
         "use",
-        "respond"
+        "respond",
+        "answer"
       ],
       "tags": [
         "semantic_frame",
         "speaker_identity",
         "learned_hint",
         "generative",
-        "constraint_fallback"
+        "constraint_fallback",
+        "sedimemory_recall"
       ],
-      "sightings": 82,
+      "sightings": 343,
       "first_seen": 1781294156.679874,
-      "last_seen": 1781347006.784437
+      "last_seen": 1781511619.102405
     }
   ]
 }

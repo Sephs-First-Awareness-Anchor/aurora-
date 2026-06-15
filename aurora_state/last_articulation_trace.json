@@ -1,41 +1,37 @@
 {
-  "original": "I am change sunni. I meaning did mind.",
-  "candidate": "",
-  "selected": "I am change sunni. I meaning did mind.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.74,
-  "candidate_score": 0.0,
-  "original_pressure": 0.232,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.768,
-  "safe": false,
+  "original": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480",
+  "candidate": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+  "selected": "I am noticing visually, a moderately lit, mixed-contrast live camera frame at 640 by 480.",
+  "accepted": true,
+  "reason": "accepted_deterministic",
+  "original_score": 0.87,
+  "candidate_score": 0.92,
+  "original_pressure": 0.386,
+  "candidate_pressure": 0.316,
+  "pressure_relief": 0.07,
+  "safe": true,
   "metadata": {
-    "prompt_excerpt": "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Integrate two perspectives that disagree without colla",
+    "prompt_excerpt": "[PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 177",
     "input_interpretation": {
-      "raw_prompt": "What I mean is: Integrate two perspectives that disagree without collapsing either one.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Integrate two perspectives that disagree without colla",
-      "intent_hint": "question",
+      "raw_prompt": "[PRESENT_SENSORY_OBSERVATION] {\"audio_description\": \"\", \"concepts_active\": [], \"confidence\": 0.94, \"modality\": \"visual+auditory\", \"native_meaning\": {\"context_refs\": [\"sensory_scene\", \"sensory_crystal\", \"surface_snapshot\"], \"created_at\": 177",
+      "intent_hint": "statement_or_context",
       "topic_terms": [
-        "mean",
-        "integrate",
-        "perspectives",
-        "disagree",
-        "without",
-        "collapsing",
-        "either",
-        "mind"
+        "present",
+        "sensory",
+        "observation",
+        "audio",
+        "description",
+        "concepts",
+        "active",
+        "confidence"
       ],
       "entities": [
-        "Integrate",
-        "With",
-        "Internal",
-        "Integrate",
-        "With"
+        "PRESENT_SENSORY_OBSERVATION"
       ]
     },
-    "tone": "curious",
-    "source": "no_pattern_matched",
-    "timestamp": 1781346955.8135247,
+    "tone": "neutral",
+    "source": "deterministic",
+    "timestamp": 1781512035.8299985,
     "min_relief_used": 0.035
   }
 }

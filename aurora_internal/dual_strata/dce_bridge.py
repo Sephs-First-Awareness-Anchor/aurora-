@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from .crest import Crest, CrestBundle
 from .conscious_frame import ConsciousFrame
 from .contextual_overlay import ContextualOverlay
+from .micro_reasoning import generate_micro_reasoning
 from .prediction_field import build_prediction_signal
 from .subsurface_state import AXES, SubsurfaceState, clip01, normalize_axis_map
 from .subsystem_waveforms import emit_subsystem_crests
@@ -295,6 +296,46 @@ def build_contextual_overlay(
     )
 
 
+def recursion_weights_from_lattice(lattice: Any) -> Optional[Dict[str, float]]:
+    """Derive the {REC_SURFACE, REC_SHALLOW, REC_MODERATE, REC_DEEP, REC_CORE}
+    weight dict from the live IVM lattice's node depth distribution, for
+    emit_subsystem_crests()'s optional recursion_weights param (15D coverage).
+
+    Duck-typed: reads node.recursion_level.name off each IVMNode in
+    lattice.nodes, normalizes to fractions summing to ~1.0. No aurora_ivm
+    import required.
+
+    Returns None if lattice is unavailable or has no admitted nodes — callers
+    then fall back to the prior 10D I-state-only coverage check, unchanged.
+    """
+    nodes = getattr(lattice, "nodes", None)
+    if not nodes:
+        return None
+    try:
+        node_values = list(nodes.values()) if hasattr(nodes, "values") else list(nodes)
+    except Exception:
+        return None
+    if not node_values:
+        return None
+
+    counts: Dict[str, int] = {}
+    for node in node_values:
+        try:
+            level_name = str(node.recursion_level.name)
+        except Exception:
+            continue
+        counts[level_name] = counts.get(level_name, 0) + 1
+
+    total = sum(counts.values())
+    if total <= 0:
+        return None
+
+    return {
+        f"REC_{level}": counts.get(level, 0) / total
+        for level in ("SURFACE", "SHALLOW", "MODERATE", "DEEP", "CORE")
+    }
+
+
 class DualStrataBridge:
     """Crest convergence orchestrator — recursive waveform-crest ecology."""
 
@@ -312,6 +353,7 @@ class DualStrataBridge:
         contract_snapshot: Optional[Dict[str, Any]] = None,
         requested_frame: str = "balanced",
         thought_intent: Optional[Dict[str, Any]] = None,
+        recursion_weights: Optional[Dict[str, float]] = None,
     ) -> DualStrataSnapshot:
         evidence = dict(evidence or {})
         contract_snapshot = dict(contract_snapshot or {})
@@ -344,6 +386,7 @@ class DualStrataBridge:
             sensory_context=sensory_context,
             adjusted_axes=adjusted_axes,
             pressure_snapshot=pressure_snapshot,
+            recursion_weights=recursion_weights,
         )
 
         # 4. Subsurface convergence — converge 8 sub-crests into ONE
@@ -457,6 +500,19 @@ class DualStrataBridge:
             overlay=overlay,
             _subsurface_detail=_subsurface_detail,
         )
+
+        # 5b. Micro-reasoning hypotheses (FIX-A009: generate_micro_reasoning
+        # now reads prediction/coherence/contract_signals/salience_weights
+        # from subsurface._subsurface_detail, which is populated above).
+        # Folded back into the same dict object so persist_subsurface_detail()
+        # and expand_crest() both see it.
+        _mr_hypotheses = generate_micro_reasoning(
+            subsurface,
+            assembly_result=assembly_result,
+            evidence=evidence,
+            contract_snapshot=contract_snapshot,
+        )
+        _subsurface_detail["micro_reasoning"] = [h.to_dict() for h in _mr_hypotheses]
 
         # 6. Surface convergence — consume only subsurface_crest + overlay + coherence
         surface_input = dict(evidence.get("surface_input") or {})

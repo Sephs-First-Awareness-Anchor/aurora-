@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import time
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 
@@ -204,3 +206,79 @@ def sensory_gate_state_update(packet: Dict[str, Any], previous: Dict[str, Any] |
         state["last_spoken_at"] = time.time()
         state["last_spoken_observation_id"] = str(packet.get("observation_id", "") or "")
     return state, spoken
+
+
+# ------------------------------------------------------------------ #
+#  Per-tick orchestration
+# ------------------------------------------------------------------ #
+
+_BASE_DIR = Path(__file__).parent.parent.parent  # aurora repo root
+_STATE_DIR_DEFAULT = _BASE_DIR / "aurora_state"
+_GATE_FILENAME = "sensory_observation_gate.json"
+_PENDING_FILENAME = "sensory_observation_pending.json"
+
+
+def _resolve_state_dir(systems: Dict[str, Any]) -> Path:
+    """Mirror the state_dir resolution used elsewhere in dual_strata."""
+    return Path(str(systems.get("state_dir") or _STATE_DIR_DEFAULT))
+
+
+def _load_json(path: Path, default: Any) -> Any:
+    try:
+        if path.exists():
+            data = json.loads(path.read_text())
+            if data is not None:
+                return data
+    except Exception:
+        pass
+    return default
+
+
+def _save_json(path: Path, data: Any) -> None:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = str(path) + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp, str(path))
+    except Exception:
+        pass
+
+
+def run_sensory_observation_cycle(systems: Dict[str, Any]) -> Dict[str, Any]:
+    """Subsurface per-tick cycle: "accelerated sim leaves a message for self".
+
+    Reads the live surface sensory snapshot (surface_sensory_snapshot.json,
+    written every cycle by write_surface_snapshot), builds an observation
+    packet against persisted gate-state, and applies the novelty/confidence/
+    cooldown gate from sensory_gate_state_update.
+
+    Gate-state (cooldown + evidence-hash tracking) is persisted to
+    aurora_state/sensory_observation_gate.json so it survives across ticks
+    and processes. When the gate says `speakable`, the packet is staged as
+    "the message the surface-self reads next cycle": written to both
+    systems["_sensory_observation_pending"] (Tier 1) and
+    aurora_state/sensory_observation_pending.json (Tier 2). The
+    _chain_down4_meaning consumer injects it into law_bindings and clears
+    both tiers so it is surfaced exactly once.
+
+    Best-effort: any failure returns {} and leaves systems untouched.
+    """
+    try:
+        from .sensory_snapshot_channel import read_surface_snapshot
+
+        state_dir = _resolve_state_dir(systems)
+        snapshot = read_surface_snapshot(state_dir)
+        gate_state = _load_json(state_dir / _GATE_FILENAME, {})
+
+        packet = build_sensory_observation_packet(snapshot, previous=gate_state)
+        new_gate_state, spoken = sensory_gate_state_update(packet, previous=gate_state)
+        _save_json(state_dir / _GATE_FILENAME, new_gate_state)
+
+        if spoken:
+            _save_json(state_dir / _PENDING_FILENAME, packet)
+            systems["_sensory_observation_pending"] = packet
+
+        return {"packet": packet, "spoken": spoken, "gate_state": new_gate_state}
+    except Exception:
+        return {}

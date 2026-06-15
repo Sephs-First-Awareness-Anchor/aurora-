@@ -200,215 +200,21 @@ _AXIS_SLOT_WEIGHT: Dict[str, float] = {
 }
 
 DIMENSION_CODE_LOGIC: Dict[str, Dict[str, str]] = {
-    "coherence_maintenance": {
-        "code": (
-            "DPME cat_processing facet (aurora_consciousness_engine.py) — "
-            "higher energy keeps temporal-thread coherence during assembly; "
-            "TimeDilationGovernor stability state (aurora_simulation_engine.py) "
-            "gates how many turns Aurora holds together."
-        ),
-        "pressure": (
-            "Increasing DPME cat_processing via corpus comparison relief raises "
-            "coherence baseline.  OUTLET_PUSH fraction growth in the genealogy "
-            "means the agency axis found a communication relief path — this is "
-            "alignment pressure working."
-        ),
-    },
-    "context_carryover": {
-        "code": (
-            "WorkingMemory.current_topic / topic_stack (aurora.py) — up to 6 "
-            "prior topics tracked per session; OETS relation depth "
-            "(aurora_internal/aurora_ontological_scaffolding.py) stores cross-turn "
-            "semantic links; IVM temporal axis tension (aurora_ivm.py) drives "
-            "how much past context bleeds into the current tick."
-        ),
-        "pressure": (
-            "Each time Aurora successfully carries context, the temporal axis "
-            "accrues relief in ConstraintGenealogyLogger.  T-axis relief "
-            "promotes DEFER abilities, reducing impulsive topic-drop."
-        ),
-    },
-    "ambiguity_handling": {
-        "code": (
-            "UtteranceParser._classify_query_type() (aurora.py) — maps utterances "
-            "to query_type; if ambiguous, falls to 'general'; "
-            "ReasoningEngine multi-step chain can ask clarifying sub-questions "
-            "before committing to an answer."
-        ),
-        "pressure": (
-            "B-axis (Boundary) constraint relief rises when Aurora explicitly "
-            "seeks clarification instead of guessing — SEPARATE ability. "
-            "Low boundary relief keeps Aurora guessing; high relief means "
-            "she learned to negotiate ambiguity at the interface."
-        ),
-    },
-    "contradiction_handling": {
-        "code": (
-            "ContradictionLedger (aurora_ivm.py) — tracks internal conflicts; "
-            "consciousness.synthesize() in aurora_consciousness_engine.py runs "
-            "paradox detection before assembly; IVM heat level rises under "
-            "contradiction load."
-        ),
-        "pressure": (
-            "X-axis ADMIT/REJECT ability pairing in genealogy — when ADMIT "
-            "relieves more pressure than REJECT, Aurora leans toward "
-            "acknowledging contradiction rather than suppressing it.  "
-            "Higher heat tolerance (aurora_ivm.py HeatLevel) enables richer "
-            "reconciliation before expression."
-        ),
-    },
-    "implied_intent_inference": {
-        "code": (
-            "ReasoningEngine.reason() property-question chain (aurora.py) — "
-            "extracts implied entities and properties from subtext before searching; "
-            "OETS semantic_categories guide inference about unstated needs."
-        ),
-        "pressure": (
-            "N-axis (Energy/Resource) REUSE ability: when Aurora infers intent "
-            "correctly, she reuses existing context rather than re-asking. "
-            "Low N-axis relief means wasteful re-confirmation loops."
-        ),
-    },
-    "misunderstanding_repair": {
-        "code": (
-            "IStateCollective tension signal (aurora_i_state_beings.py) rises "
-            "on repeated misalignment; DER cat_memory facet holds the prior "
-            "understanding for repair reference; DPME auto_correct() can "
-            "re-route energy after repair events."
-        ),
-        "pressure": (
-            "T-axis DEFER ability: deferring the current interpretation to "
-            "re-confirm gives repair events time to complete.  "
-            "Genealogy T-relief from successful repairs promotes DEFER over "
-            "forced-forward commitment."
-        ),
-    },
-    "uncertainty_signaling": {
-        "code": (
-            "ExpressionEcology confidence scores (aurora_expression_perception.py) "
-            "flow into final token selection; DPME cat_processing at low energy "
-            "suppresses hedging language; OntologicalClaim uncertain_token field "
-            "(aurora_internal/aurora_ontological_scaffolding.py) marks explicit "
-            "unknowns."
-        ),
-        "pressure": (
-            "X-axis ADMIT ability relief: honest acknowledgement of limits "
-            "reduces X-tension.  High X-axis pressure without ADMIT routing "
-            "causes over-confident expression — genealogy OUTLET_PUSH fraction "
-            "tracks this as communication-axis relief."
-        ),
-    },
-    "boundary_calibration": {
-        "code": (
-            "DMM moral layer (aurora_dimensional_systems.py) gates over-extension; "
-            "BehavioralIdentityEngine boundary trait (aurora_behavioral_identity.py) "
-            "modulates how far Aurora extends into personal territory; "
-            "DPME cat_emotional energy governs warmth-intensity."
-        ),
-        "pressure": (
-            "B-axis SEPARATE ability: clean separation between Aurora's space and "
-            "the user's space reduces boundary pressure.  Genealogy B-relief from "
-            "calibrated responses promotes SEPARATE over INTERFACE_STRENGTHEN."
-        ),
-    },
-    "framing_selection": {
-        "code": (
-            "ExpressionPerceptionEngine express() framing path "
-            "(aurora_expression_perception.py) — TemplateEvolution selects frames "
-            "from ecology; CONCEPT_SLOT_MAP in aurora_simulation_engine.py maps "
-            "response concepts to 625-slot highway gradients."
-        ),
-        "pressure": (
-            "A-axis (Agency) OUTLET_PUSH: when Aurora's communication finds a "
-            "relief outlet, the genealogy promotes the framing ability that "
-            "enabled it.  Higher outlet_push_fraction signals better frame fit."
-        ),
-    },
-    "emotional_calibration": {
-        "code": (
-            "DPME cat_emotional facet (aurora_consciousness_engine.py) — "
-            "directly controls emotional energy in synthesis; "
-            "EmotionShard strength (aurora_expression_perception.py) weights "
-            "affective tone; IStateCollective emotional beings contribute "
-            "warmth/tension to collective SynthesisResult."
-        ),
-        "pressure": (
-            "B-axis relief: emotionally calibrated responses (not too cold, "
-            "not overwhelming) satisfy boundary constraints.  Genealogy records "
-            "each calibrated outcome as B-relief, teaching the system what "
-            "emotional level fits each context."
-        ),
-    },
-    "semantic_precision": {
-        "code": (
-            "LexicalConvergence and MeaningAnchors in aurora_language_state.py "
-            "track term stability; OETS SemanticNode add_definition() records "
-            "confident meanings; ExpressionEcology template selection "
-            "prefers high-specificity tokens when cat_processing is high."
-        ),
-        "pressure": (
-            "N-axis REUSE: reusing a precisely defined term costs less than "
-            "introducing a new one.  Genealogy N-relief from precise reuse "
-            "pushes the system toward consistent vocabulary over paraphrase drift."
-        ),
-    },
-    "adaptive_strategy_selection": {
-        "code": (
-            "SimulationSession behavior_modes (aurora_simulation_engine.py) — "
-            "test_cross_turn_memory, present_conflicting_evidence etc. "
-            "apply escalating pressure; ConsciousLearner generate_pool() "
-            "biases toward response concepts with highest historical confidence."
-        ),
-        "pressure": (
-            "A-axis agency relief: switching strategy when the first approach "
-            "stalls reduces agency pressure.  Genealogy A-relief promotes "
-            "OUTLET_PUSH when flexibility drives communication success."
-        ),
-    },
-    "compression_elaboration_fit": {
-        "code": (
-            "LSV sentence_length_target in aurora_language_state.py gates "
-            "response verbosity; _evolutionary_response_refinement() in aurora.py "
-            "clips to max_words based on evo_cycles + sentence_target; "
-            "TimeDilationGovernor dilation rate affects how much thinking time "
-            "Aurora spends per turn."
-        ),
-        "pressure": (
-            "N-axis REUSE: concise, accurate answers reuse established context "
-            "efficiently.  Over-elaboration spends energy without relief. "
-            "Genealogy N-axis cost signal drops when brevity + depth match."
-        ),
-    },
-    "perspective_integration": {
-        "code": (
-            "IStateCollective collective synthesis (aurora_i_state_beings.py) — "
-            "10 beings vote on the response; InceptionEntity collapse_to_parent() "
-            "(aurora_simulation_engine.py) rolls inner-universe wisdom upward; "
-            "DER dispersal (aurora_dimensional_systems.py) distributes insight "
-            "energy across the facet graph."
-        ),
-        "pressure": (
-            "X+T axis coupling: holding two perspectives requires both existence "
-            "ground (X) and temporal continuity (T).  Genealogy link promotion "
-            "for X^1*T^1 patterns (persistent pressure root) signals successful "
-            "dual-perspective integration."
-        ),
-    },
-    "multi_turn_stability": {
-        "code": (
-            "TimeDilationGovernor StabilityState (aurora_simulation_engine.py) "
-            "degrades from OPTIMAL → CRITICAL over turns; "
-            "DPME auto_correct() re-stabilises if coherence drifts; "
-            "DivergenceTracker (aurora_simulation_engine.py) flags late-turn "
-            "coherence drops and triggers governor re-centering."
-        ),
-        "pressure": (
-            "T-axis DEFER keeps Aurora from rushing closure.  "
-            "Genealogy T-relief accumulates when multi-turn stability is "
-            "maintained — promotes DEFER+REUSE composite links over "
-            "single-turn commit patterns."
-        ),
-    },
+    "coherence_maintenance": {},
+    "context_carryover": {},
+    "ambiguity_handling": {},
+    "contradiction_handling": {},
+    "implied_intent_inference": {},
+    "misunderstanding_repair": {},
+    "uncertainty_signaling": {},
+    "boundary_calibration": {},
+    "framing_selection": {},
+    "emotional_calibration": {},
+    "semantic_precision": {},
+    "adaptive_strategy_selection": {},
+    "compression_elaboration_fit": {},
+    "perspective_integration": {},
+    "multi_turn_stability": {},
 }
 
 
@@ -628,17 +434,6 @@ class FailPointLedger:
         def _clean_list(values: Any, limit: int = 6) -> List[str]:
             out: List[str] = []
             seen = set()
-            blocked_prefixes = (
-                "can you carry our earlier thread",
-                "keep one coherent thread",
-                "i am being vague on purpose",
-                "two claims conflict",
-                "read what i need from subtext",
-                "assume you misunderstood me",
-                "answer while being explicit about uncertainty",
-                "use precise wording so your meaning cannot be misread",
-                "maintain quality through multiple turns",
-            )
             for value in list(values or [])[:limit]:
                 text = str(value or '').strip()
                 text = re.sub(r'^(?:\[(?:AFTERTHOUGHT|aftermath)\]\s*)+', '', text)
@@ -648,8 +443,6 @@ class FailPointLedger:
                     continue
                 lower = text.lower()
                 if lower.startswith("earlier you said:"):
-                    continue
-                if any(lower.startswith(prefix) for prefix in blocked_prefixes):
                     continue
                 key = text.lower()
                 if key in seen:
@@ -895,16 +688,6 @@ class RetainedLearningBank:
                 break
         return tokens
 
-    def _is_generic_strategy_learning(self, text: str) -> bool:
-        low = self._key(text)
-        if not low:
-            return True
-        generic_patterns = (
-            ("can create tension", "use carefully"),
-            ("when i use", "conversations tend to deepen"),
-        )
-        return any(all(part in low for part in pattern) for pattern in generic_patterns)
-
     def record(
         self,
         text: str,
@@ -922,8 +705,6 @@ class RetainedLearningBank:
         if (clean.startswith("125-layer manifold:")
                 or ("basis=" in clean and "target=" in clean)
                 or re.search(r'\b[XTNBA]\s+[XTNBA]:[A-Z_]+\b', clean)):
-            return False
-        if self._is_generic_strategy_learning(clean):
             return False
         # Reject SentenceComposer slot-fill artifacts — adjacent repeated words
         # (e.g. "statement answer answer explicit uncertainty") are a structural
@@ -1790,13 +1571,7 @@ class LessonPlanEngine:
             # behavior_modes for this dimension
             behavior_modes = dict(self._DIM_BEHAVIOR_MODES.get(dim, {}))
 
-            # Code hints — the full architectural explanation
-            logic = DIMENSION_CODE_LOGIC.get(dim, {})
             code_hints: List[str] = []
-            if logic.get("code"):
-                code_hints.append(f"[CODE] {dim}: {logic['code']}")
-            if logic.get("pressure"):
-                code_hints.append(f"[PRESSURE] {dim}: {logic['pressure']}")
 
             prompt_candidates: List[str] = []
             followup_candidates: List[str] = []
@@ -2827,8 +2602,41 @@ class DreamTrainer:
         _score_map = dict(top_fails)
         top_fails = [(dim, _score_map[dim]) for dim, _ in _boosted]
 
-        # Pass effectiveness observations so specs amplify what works
+        # Pass effectiveness observations so specs amplify what works.
+        # Apply saturation decay: dimensions that appear repeatedly in the
+        # steering history without improving leverage get their effectiveness
+        # boost reduced. This prevents chronically-targeted dims from monopolising
+        # simulation slots when they've stopped responding to pressure.
         effectiveness = self.obs_log.effectiveness_by_dim()
+        try:
+            _steering_path = os.path.join(self.state_dir, "dream_steering", "steering_state.json")
+            if os.path.exists(_steering_path):
+                with open(_steering_path) as _sf:
+                    _sstate = json.load(_sf)
+                _history = list(_sstate.get("history", []) or [])
+                # Count per-dimension appearances in the most recent 20 entries
+                _recent_history = _history[-20:]
+                _stale_counts: Dict[str, int] = {}
+                for _h in _recent_history:
+                    _ld = _h.get("leverage_dim", "")
+                    if _ld:
+                        _stale_counts[_ld] = _stale_counts.get(_ld, 0) + 1
+                # Penalise heavily-repeated dims: each appearance beyond 3 in the
+                # last 20 entries reduces effectiveness by 8%, flooring at 0.05.
+                _effective_adjusted: Dict[str, float] = {}
+                for _dim, _eff in effectiveness.items():
+                    _staleness = max(0, _stale_counts.get(_dim, 0) - 3)
+                    _decay = max(0.05, _eff * (1.0 - _staleness * 0.08))
+                    _effective_adjusted[_dim] = _decay
+                # Also initialise unseen dims at 0.5 baseline so fresh dims
+                # get fair competition with stale but effective-looking ones.
+                for _dim, _count in _stale_counts.items():
+                    if _dim not in _effective_adjusted:
+                        _effective_adjusted[_dim] = max(0.05, 0.5 * (1.0 - max(0, _count - 3) * 0.08))
+                effectiveness = _effective_adjusted
+        except Exception:
+            pass
+
         specs = self.planner.generate_specs(
             top_fails,
             n_specs=4,
@@ -2858,9 +2666,9 @@ class DreamTrainer:
     _CHRONIC_MIN_EPISODES: int = 20
     # Dampening factor: chronic fails count for less than acute ones
     # so they don't crowd out real-time signals.
-    _CHRONIC_SEVERITY_WEIGHT: float = 0.55
-    # Only run the audit every N flush calls to avoid over-flooding the ledger.
-    _CHRONIC_AUDIT_EVERY: int = 5
+    _CHRONIC_SEVERITY_WEIGHT: float = 0.70
+    # Run the audit every N flush calls.
+    _CHRONIC_AUDIT_EVERY: int = 2
 
     def audit_chronic_weaknesses(self) -> List[Tuple[str, float]]:
         """
@@ -2914,6 +2722,44 @@ class DreamTrainer:
                 example=None,  # no single conversation to blame — systemic
             )
             recorded.append((dim, severity))
+
+        # ── Ledger-based fallback ─────────────────────────────────────────
+        # When dream_episodes/ is empty (no dreampk_*.json files), the episode
+        # scan above produces nothing. Fall back to the fail_points ledger:
+        # detect dimensions where the recent severity scores have near-zero
+        # variance (all clustered at the same value). This indicates the
+        # synthetic training probes are defaulting rather than genuinely
+        # measuring the dimension — a structural chronic gap the episode
+        # audit can't see because there are no episodes to scan.
+        if not dim_scores:
+            ledger_recs = dict(getattr(self.ledger, "_records", {}) or {})
+            for dim, rec in ledger_recs.items():
+                if dim not in DIMENSION_CODE_LOGIC:
+                    continue
+                recent = list(getattr(rec, "recent", []) or [])
+                if len(recent) < 10:
+                    continue
+                # Variance-based detection: if all recent scores are within
+                # 0.02 of each other, the probe is producing a constant output.
+                r_min = min(recent)
+                r_max = max(recent)
+                if (r_max - r_min) > 0.02:
+                    continue  # genuine spread — not a default floor
+                # Treat the constant value as the effective rubric average.
+                # If it's at the default floor (0.5), that's a moderate gap;
+                # below 0.4 it counts as a proper chronic weakness.
+                avg_const = sum(recent) / len(recent)
+                if avg_const < self._CHRONIC_RUBRIC_THRESHOLD:
+                    raw_sev = (self._CHRONIC_RUBRIC_THRESHOLD - avg_const) / self._CHRONIC_RUBRIC_THRESHOLD
+                    severity = round(max(0.05, min(1.0, raw_sev * self._CHRONIC_SEVERITY_WEIGHT)), 4)
+                else:
+                    # At-floor default (e.g., 0.5) — register with reduced weight
+                    # so it influences curriculum without crowding out real fails.
+                    severity = round(0.05 * self._CHRONIC_SEVERITY_WEIGHT, 4)
+                already = [(d, s) for d, s in recorded if d == dim]
+                if not already:
+                    self.ledger.record_fail(dim, severity=severity, example=None)
+                    recorded.append((dim, severity))
 
         if recorded:
             self.ledger.save()

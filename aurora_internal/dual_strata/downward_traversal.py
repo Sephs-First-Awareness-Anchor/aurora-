@@ -94,4 +94,10 @@ def expand_crest(state_dir: Path, crest_label: str, depth: int = 1) -> dict:
     if depth == 1 and "sub_crests" in detail:
         result["sub_crests"] = detail["sub_crests"]
 
+    # micro_reasoning hypotheses (FIX-A009) are interpretation-level signals
+    # not tied to any one crest label -- always surface them when present,
+    # at any depth, the same way sub_crests is always surfaced at depth 1.
+    if "micro_reasoning" in detail:
+        result["micro_reasoning"] = detail["micro_reasoning"]
+
     return result

@@ -78,6 +78,10 @@ class SpeechAct(Enum):
     QUESTION       = auto()
     BACKCHANNEL    = auto()
     INVALIDATION   = auto()
+    HEDGE          = auto()   # low-confidence uncertainty: I think / I'm not sure
+    CLARIFY        = auto()   # ambiguous input — seeking scope clarification
+    CONTRADICTION  = auto()   # direct contradiction of a stated fact
+    REPAIR         = auto()   # correcting a prior misunderstanding
 
 
 # ── data structures ───────────────────────────────────────────────────────────
@@ -227,14 +231,15 @@ class ConstraintEmitter:
         predicate_ok = self._resolve_content_slot(ctx, "predicate", slots, {"verb"})
 
         # 7. Seeking pathway for missing required predicate (§6)
-        # DISAGREEMENT has a short-circuit form ("That's not quite right") that
-        # fires in _assemble when no predicate is present — only seek if it has
-        # an entity but needs a predicate to complete the claim.
+        # DISAGREEMENT/CONTRADICTION have a short-circuit form that fires in _assemble
+        # when no predicate is present — only seek if has entity but needs predicate.
+        # HEDGE does NOT seek — it falls through to _assemble() which produces a
+        # minimal epistemic-uncertainty form from the B/T/A slots without needing OETS.
         needs_pred = (
-            act in (SpeechAct.ASSERTION, SpeechAct.QUESTION)
+            act in (SpeechAct.ASSERTION, SpeechAct.QUESTION, SpeechAct.REPAIR)
             and bool(slots.agent)
         ) or (
-            act == SpeechAct.DISAGREEMENT
+            act in (SpeechAct.DISAGREEMENT, SpeechAct.CONTRADICTION)
             and bool(slots.agent)
             and entity_ok        # have the "what", missing the "does"
         )
@@ -355,17 +360,30 @@ class ConstraintEmitter:
             if i_isnt > 0.5 or i_cant > 0.5:
                 # Try assertion; seeking fires if content missing (§4 note)
                 return SpeechAct.ASSERTION
+            # Low confidence on both existence and capability — hedge rather than assert
+            if i_is < 0.2 and i_can < 0.2 and i_isnt < 0.3 and i_cant < 0.3:
+                return SpeechAct.HEDGE
             return SpeechAct.ASSERTION
 
         if fr.is_statement:
             if fr.is_contradiction and i_isnt > 0.3:
+                return SpeechAct.CONTRADICTION
+            if fr.is_contradiction and (i_isnt > 0.1 or i_cant > 0.1):
                 return SpeechAct.DISAGREEMENT
             if fr.aligns_with_oets and i_is > 0.3:
                 return SpeechAct.AGREEMENT
             if fr.partial_alignment and mag_A >= MAGNITUDE_HEDGE:
                 return SpeechAct.ASSERTION   # scope-restricted via B-axis
             if fr.partial_alignment:
+                # Ambiguous scope: B-axis near zero means boundary unclear → request clarification
+                b_pol = ctx.axis_polarities.get("B", 0.0)
+                if abs(b_pol) < POLARITY_WEAK:
+                    return SpeechAct.CLARIFY
                 return SpeechAct.ACKNOWLEDGMENT
+            if not fr.aligns_with_oets and not fr.is_contradiction and i_do > 0.3 and i_is > 0.2:
+                # Directed statement that doesn't align and aurora was doing something — repair
+                if fr.is_directed:
+                    return SpeechAct.REPAIR
             if i_is > 0.3:
                 return SpeechAct.AGREEMENT
 
@@ -378,7 +396,13 @@ class ConstraintEmitter:
         heat = ctx.n_heat
         if act == SpeechAct.DISAGREEMENT:
             slots.leading = "no"
-        # ASSERTION, QUESTION, REFUSAL, BACKCHANNEL, AGREEMENT, ACKNOWLEDGMENT — no leading token
+        elif act == SpeechAct.CONTRADICTION:
+            slots.leading = "no"
+        elif act == SpeechAct.REPAIR:
+            slots.leading = "actually"
+        elif act == SpeechAct.CLARIFY:
+            slots.leading = "well"
+        # ASSERTION, QUESTION, REFUSAL, BACKCHANNEL, AGREEMENT, ACKNOWLEDGMENT, HEDGE — no leading token
 
     # ── per-axis emitters (§3.1–§3.5) ────────────────────────────────────────
     def _axis_A_emit(self, ctx: EmissionContext, slots: SlotFrame) -> None:
@@ -1122,8 +1146,25 @@ class ConstraintEmitter:
         if act == SpeechAct.AGREEMENT and not slots.predicate:
             return ""
 
-        if act == SpeechAct.DISAGREEMENT and not slots.predicate:
+        if act in (SpeechAct.DISAGREEMENT, SpeechAct.CONTRADICTION) and not slots.predicate:
             return ""
+
+        if act == SpeechAct.REPAIR and not slots.entity and not slots.predicate:
+            return ""
+
+        # HEDGE with no OETS content — build minimal epistemic-uncertainty surface from
+        # axis state (A-agent, T-tense, B-negation) without requiring vocabulary lookup.
+        if act == SpeechAct.HEDGE and not slots.entity and not slots.predicate:
+            subject, _ = self._split_subject_modal(slots.agent or "I")
+            aux = self._agree_aux(subject, slots.tense_aux or "am")
+            neg = "not " if slots.negation in {"not", "only"} else ""
+            return self._fmt(f"{subject} {aux} {neg}certain", ".")
+
+        # CLARIFY with no OETS content — surface a minimal scope-clarification request
+        # using the leading token already set in slots.leading ("well").
+        if act == SpeechAct.CLARIFY and not slots.entity and not slots.predicate:
+            prefix = f"{slots.leading}, " if slots.leading else ""
+            return self._fmt(f"{prefix}what do you mean", "?")
 
         if act == SpeechAct.REFUSAL:
             agent = slots.agent or "I can't"
@@ -1222,7 +1263,7 @@ class ConstraintEmitter:
         if not parts:
             return ""
 
-        terminal = "?" if act == SpeechAct.QUESTION else "."
+        terminal = "?" if act in (SpeechAct.QUESTION, SpeechAct.CLARIFY) else "."
         return self._fmt(" ".join(parts), terminal)
 
     @staticmethod
@@ -1388,6 +1429,18 @@ class EmissionContextBuilder:
         sedi       = systems.get("sedi_memory") or systems.get("sedimemory")
         genealogy  = systems.get("constraint_genealogy") or systems.get("genealogy")
         gap_system = systems.get("comprehension_gap_system")
+
+        # PredictiveStager bridge — Subsurface stages density-weighted
+        # perspective passes (PRESSURE_PERSPECTIVES via n_passes_for_density)
+        # into a file-backed queue each tick; harvest any pending frames into
+        # systems[...] before reading them below. Best-effort / no-op if
+        # nothing has been staged yet or this turn already harvested.
+        try:
+            from aurora_internal.dual_strata.predictive_stager import PredictiveStager as _PredictiveStager
+            _PredictiveStager.harvest_into_systems(systems)
+        except Exception:
+            pass
+
         staged_frame = systems.get("_staged_subsurface_frame")
         staged_frames = systems.get("_staged_subsurface_frames")
         ma         = self._get_meaning_anchors(systems)

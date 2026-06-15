@@ -1,13 +1,13 @@
 {
   "level": "CONVERSANT",
   "quotas": {
-    "date": "2026-06-13",
+    "date": "2026-06-15",
     "inquiries_used": 0,
-    "study_cycles_used": 8,
+    "study_cycles_used": 5,
     "observations_used": 0,
-    "speakups_count": 0,
+    "speakups_count": 5,
     "files_read": 0,
-    "dreams_used": 0,
+    "dreams_used": 5,
     "_aurora_evolved_reflection": {
       "available": false,
       "reason": "evolved_surface_method_renamed: reflect_aurora_governance_persistence_gateway_dailyquotas_to_dict",
@@ -130,5 +130,5 @@
   ],
   "pending_thoughts": [],
   "curiosity_queue": [],
-  "last_dream_time": 0.0
+  "last_dream_time": 1781502792.941891
 }
