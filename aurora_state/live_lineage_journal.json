@@ -1,30 +1,6 @@
 {
-  "updated_at": 1781483620.8765843,
+  "updated_at": 1781490018.279015,
   "events": [
-    {
-      "timestamp": 1781482055.9143248,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:4b922711b203",
-      "axis": "X",
-      "summary": "Manual code change in aurora_conversation_trainer.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781482055.9172459,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:a84886e47afb",
-      "axis": "X",
-      "summary": "Manual code change in aurora_crystal_ingestion.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781482055.9199688,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:4f68f3465957",
-      "axis": "X",
-      "summary": "Manual code change in aurora_crystal_state_bridge.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781482055.9227004,
       "source": "aurora.boot",
@@ -1920,6 +1896,30 @@
       "id": "MC:648f43fa96d2",
       "axis": "X",
       "summary": "Manual code change in aurora_training_run.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781490018.2732537,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:03fe0af6bfb8",
+      "axis": "X",
+      "summary": "Manual code change in aurora_articulation.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781490018.2761545,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:3955357d60de",
+      "axis": "X",
+      "summary": "Manual code change in aurora_dream_trainer.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781490018.2789853,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:7276e001d1ac",
+      "axis": "X",
+      "summary": "Manual code change in aurora_learning_report.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {
