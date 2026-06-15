@@ -1,30 +1,6 @@
 {
-  "updated_at": 1781491427.5097523,
+  "updated_at": 1781496760.6653123,
   "events": [
-    {
-      "timestamp": 1781482055.9227004,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:aa7f6a5c1d46",
-      "axis": "X",
-      "summary": "Manual code change in aurora_curiosity_engine.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781482055.9254725,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:5fbaa7eae13b",
-      "axis": "X",
-      "summary": "Manual code change in aurora_daemon.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1781482055.9282238,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:bbe915fbf352",
-      "axis": "X",
-      "summary": "Manual code change in aurora_desktop_agent.py formed a new lineage branch"
-    },
     {
       "timestamp": 1781482055.931107,
       "source": "aurora.boot",
@@ -1920,6 +1896,30 @@
       "id": "MC:7276e001d1ac",
       "axis": "X",
       "summary": "Manual code change in aurora_learning_report.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781496760.6602361,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:3fdf7b738d8c",
+      "axis": "B",
+      "summary": "Manual code change in aurora_constraint_emission.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781496760.6630616,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:17f3d2901ddb",
+      "axis": "B",
+      "summary": "Manual code change in aurora_internal/constraint_genealogy.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1781496760.6652594,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:03ad5d3631b6",
+      "axis": "T",
+      "summary": "Manual code change in aurora_runtime.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {

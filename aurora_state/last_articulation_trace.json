@@ -1,22 +1,22 @@
 {
-  "original": "I feel change moment. I meaning do before.",
+  "original": "I do am track. I did meaning sure.",
   "candidate": "",
-  "selected": "I feel change moment. I meaning do before.",
+  "selected": "I do am track. I did meaning sure.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.74,
+  "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.292,
+  "original_pressure": 0.316,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.708,
+  "pressure_relief": -0.684,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
+    "prompt_excerpt": "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it? [Internal: I understand. I'm thinking ab",
     "input_interpretation": {
-      "raw_prompt": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
+      "raw_prompt": "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it? [Internal: I understand. I'm thinking ab",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "sure",
+        "clarify",
         "corpus",
         "fragment",
         "context",
@@ -26,17 +26,18 @@
         "corpus"
       ],
       "entities": [
-        "Sure",
         "Use",
         "Use",
         "Use",
         "Use",
-        "Use"
+        "Use",
+        "Does",
+        "Internal"
       ]
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781491424.7608018,
+    "timestamp": 1781497041.597393,
     "min_relief_used": 0.035
   }
 }
