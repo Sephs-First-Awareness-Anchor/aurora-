@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1781501508.873443,
-  "generation": 3791,
-  "genome_version": 3791,
+  "timestamp": 1781502952.9534023,
+  "generation": 3843,
+  "genome_version": 3843,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,69 +66,56 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.4938,
-    "caution": 0.4125,
+    "curiosity": 0.5068,
+    "caution": 0.41,
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
     "introspection": 0.468,
     "pattern_sensitivity": 0.39,
-    "social_engagement": 0.3923,
-    "energy_conservation": 0.3235
+    "social_engagement": 0.39,
+    "energy_conservation": 0.312
   },
-  "personality_drift": 0.8399,
+  "personality_drift": 0.8432,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6864413466556669,
-      "precision": 0.8291467871450582,
-      "depth": 0.665799897897327,
-      "confidence": 0.523850002708042
+      "warmth": 0.9481839725346543,
+      "precision": 0.5891260666798813,
+      "depth": 0.7470638324624973,
+      "confidence": 0.5263775401244806
     },
     "cognitive": {
-      "curiosity": 0.8795588487796173,
-      "pattern_matching": 0.93882441183334,
-      "abstraction": 0.7046947195573107,
-      "risk_assessment": 0.577827940868728
+      "curiosity": 1.0,
+      "pattern_matching": 0.8136464331341826,
+      "abstraction": 0.5586494465566655,
+      "risk_assessment": 0.61193854736802
     },
     "social": {
-      "empathy": 0.7552350652803985,
-      "trust_extension": 0.9340324554444502,
-      "boundary_maintenance": 0.7643897845490221,
-      "engagement": 0.8903027775801484
+      "empathy": 0.9842853236622622,
+      "trust_extension": 0.6409557478742203,
+      "boundary_maintenance": 0.9596530141764295,
+      "engagement": 0.8919646805954778
     }
   },
   "governance_stats": {
-    "total_nodes": 270,
+    "total_nodes": 84,
     "layers": {
       "DNA": 0,
-      "ENERGY": 270,
+      "ENERGY": 84,
       "SHARDS": 0,
       "RELICS": 0,
       "CRYSTALS": 0,
       "QUASICRYSTALS": 0
     },
-    "total_ingested": 270,
+    "total_ingested": 84,
     "total_promoted": 0,
     "violations_blocked": 0,
-    "axis_conflicts": {
-      "existence": 36
-    }
+    "axis_conflicts": {}
   },
   "simulation_epochs": 121,
-  "total_episodes": 45,
-  "understanding_shards": 17,
-  "what_aurora_learned": [
-    "",
-    "Curious inquiry can create tension \u2014 use carefully",
-    "Thoughtful reflection can create tension \u2014 use carefully",
-    "",
-    "Thoughtful reflection can create tension \u2014 use carefully",
-    "",
-    "Direct clarity can create tension \u2014 use carefully",
-    "",
-    "",
-    "Warm acknowledgment can create tension \u2014 use carefully"
-  ],
+  "total_episodes": 10,
+  "understanding_shards": 24,
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "b4394c254f8e"
+  "_checksum": "4a600c207029"
 }
