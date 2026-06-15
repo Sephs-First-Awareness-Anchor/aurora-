@@ -1,47 +1,47 @@
 {
-  "total_fails": 45878,
+  "total_fails": 46497,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 3140,
-      "severity_sum": 1464.4885844131868,
+      "fail_count": 3184,
+      "severity_sum": 1474.4206080401075,
       "recent": [
-        0.3911770242427265,
-        0.1404361687424891,
-        0.27706080929448335,
-        0.29509778615807236,
-        0.4561272380713345,
-        0.5466221203206791,
-        0.5494381635856548,
-        0.42693853730697073,
-        0.48651722316145396,
-        0.13586816659712603,
-        0.27706080929448335,
-        0.2926192575115644,
-        0.425410491994193,
-        0.34500213778857397,
-        0.3901761938676602,
-        0.21659884489659295,
-        0.27706080929448335,
-        0.42379081104948835,
-        0.49448590512052065,
-        0.5023553070600444
+        0.16159275578652518,
+        0.1328651122291022,
+        0.07036507936507937,
+        0.05,
+        0.05,
+        0.09722957516339871,
+        0.07025231481481481,
+        0.050275641025641034,
+        0.06770486111111111,
+        0.06296875,
+        0.14500496031746032,
+        0.13756250000000003,
+        0.07907152777777778,
+        0.05,
+        0.07104166666666667,
+        0.07340972222222221,
+        0.050275641025641034,
+        0.10319194393569395,
+        0.1223792658730159,
+        0.05
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:rel_probe_use_corpus_0",
+          "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.4089937563999477,
+          "dimension_score": 0.429610140571679,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-            "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What behavior links corpus and fragment here?",
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with warm acknowledgment. What behavior links corpus and fragment here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781482651.4551191
+          "timestamp": 1781483134.7147837
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -228,21 +228,21 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 7096,
-      "severity_sum": 3568.5525173086603,
+      "fail_count": 7225,
+      "severity_sum": 3631.569623609312,
       "recent": [
         0.5,
         0.5,
         0.5,
         0.5,
-        0.2738606900381922,
-        0.3978323255682571,
-        0.38878643164863363,
-        0.5001318692099772,
-        0.4179174435076847,
-        0.4165384355752203,
-        0.29245719553513255,
-        0.3978323255682571,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -254,20 +254,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
-          "dimension_score": 0.3255268261150614,
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
+          "dimension_score": 0.223109243697479,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.3797991
+          "timestamp": 1781483134.669652
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -454,11 +454,9 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 908,
-      "severity_sum": 310.436366686359,
+      "fail_count": 928,
+      "severity_sum": 315.09300848616107,
       "recent": [
-        0.1798289059186005,
-        0.16211962006034736,
         0.16211962006034736,
         0.16930914697607946,
         0.16211962006034736,
@@ -466,7 +464,7 @@
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.16930914697607946,
+        0.17504987334858685,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
@@ -475,25 +473,27 @@
         0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736
+        0.5,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.3880298
+          "timestamp": 1781483134.6775813
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -630,21 +630,21 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 9830,
-      "severity_sum": 5056.628740347348,
+      "fail_count": 9962,
+      "severity_sum": 5122.140774084762,
       "recent": [
         0.5,
         0.5,
         0.5,
         0.5,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.23985462488277923,
-        0.5674186702112157,
-        0.11708639226580644,
-        0.6294011707151017,
-        0.5674186702112157,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -656,20 +656,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_845c3ddc5fa4",
+          "source": "train_epoch_8",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
             "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with metaphor usage. Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
-          "timestamp": 1781482651.3882
+          "timestamp": 1781483134.6377773
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -806,8 +806,8 @@
       ]
     },
     "implied_intent_inference": {
-      "fail_count": 711,
-      "severity_sum": 328.1692011234195,
+      "fail_count": 714,
+      "severity_sum": 329.6692011234195,
       "recent": [
         0.21615949341379642,
         0.21615949341379642,
@@ -819,16 +819,16 @@
         0.21615949341379642,
         0.21615949341379642,
         0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
-        0.21615949341379642,
         0.5,
         0.21615949341379642,
         0.21615949341379642,
         0.21615949341379642,
         0.5,
         0.21615949341379642,
-        0.21615949341379642
+        0.21615949341379642,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
@@ -1009,51 +1009,46 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 550,
-      "severity_sum": 90.32666683810096,
+      "fail_count": 564,
+      "severity_sum": 92.63939175239977,
       "recent": [
+        0.16211962006034736,
+        0.16211962006034736,
         0.16930914697607946,
         0.16211962006034736,
+        0.16211962006034736,
         0.16734078745203107,
+        0.16211962006034736,
+        0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
+        0.16211962006034736,
+        0.17504987334858685,
+        0.16211962006034736,
         0.16734078745203107,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736,
-        0.16930914697607946,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16930914697607946,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16734078745203107
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_ea39a6463719",
-          "source": "train_epoch_6",
-          "dimension_score": 0.5083333333333333,
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
+          "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
-            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links use and corpus here?",
-            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
-            "I approach this with concrete example. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.3430576
+          "timestamp": 1781483134.6777146
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1190,21 +1185,21 @@
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 9957,
-      "severity_sum": 5124.693463766968,
+      "fail_count": 10094,
+      "severity_sum": 5193.847232887822,
       "recent": [
         0.5,
         0.5,
         0.5,
         0.5,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.41621831964952866,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -1216,20 +1211,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.39614
+          "timestamp": 1781483134.6778033
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1366,46 +1361,46 @@
       ]
     },
     "boundary_calibration": {
-      "fail_count": 5423,
-      "severity_sum": 2615.1661802142,
+      "fail_count": 5450,
+      "severity_sum": 2623.1111855802815,
       "recent": [
-        0.1798289059186005,
-        0.16211962006034736,
-        0.29721930344397024,
-        0.06349093011602985,
+        0.17504987334858685,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
         0.06349093011602985,
-        0.29721930344397024,
-        0.16211962006034736,
-        0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.06349093011602985,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.404279
+          "timestamp": 1781483134.685376
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1542,19 +1537,9 @@
       ]
     },
     "framing_selection": {
-      "fail_count": 939,
-      "severity_sum": 358.5533083283551,
+      "fail_count": 949,
+      "severity_sum": 360.60283804659633,
       "recent": [
-        0.2739554991520006,
-        0.15471552681203316,
-        0.11502757167624988,
-        0.18441018977432785,
-        0.2585532201089912,
-        0.07330116266750283,
-        0.21417327225174498,
-        0.18749574739684827,
-        0.22350849973393,
-        0.08860380388379094,
         0.2739554991520006,
         0.18749574739684827,
         0.22350849973393,
@@ -1564,29 +1549,34 @@
         0.18441018977432785,
         0.18749574739684827,
         0.26685634247687345,
-        0.0592134773184814
+        0.0592134773184814,
+        0.2139995911036028,
+        0.18749574739684827,
+        0.26685634247687345,
+        0.05723931253860743,
+        0.24847411170670386,
+        0.2585532201089912,
+        0.26685634247687345,
+        0.08860380388379094,
+        0.2739554991520006,
+        0.18749574739684827
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_ea39a6463719",
-          "source": "train_epoch_6",
-          "dimension_score": 0.5804867902525408,
+          "conversation_id": "train_epoch_8:episode_845c3ddc5fa4",
+          "source": "train_epoch_8",
+          "dimension_score": 0.48121673811444543,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
-            "Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
+            "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links use and corpus here?",
-            "I approach this with curious inquiry. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
-            "I approach this with concrete example. Let me be more specific: Can you carry our earlier thread into this next step without losing context?. How does that land for you?",
-            "I approach this with thoughtful reflection. Sure \u2014 Can you carry our earlier thread into this next step without losing context?. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. To clarify \u2014 Can you carry our earlier thread into this next step without losing context?. Does that help frame it?"
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with metaphor usage. Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
-          "timestamp": 1781482651.3524904
+          "timestamp": 1781483134.6540523
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1723,13 +1713,9 @@
       ]
     },
     "emotional_calibration": {
-      "fail_count": 622,
-      "severity_sum": 104.42012822152388,
+      "fail_count": 638,
+      "severity_sum": 107.07677002132569,
       "recent": [
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
@@ -1741,28 +1727,32 @@
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.16930914697607946,
+        0.17504987334858685,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16930914697607946,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.404483
+          "timestamp": 1781483134.6855054
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -1899,14 +1889,9 @@
       ]
     },
     "semantic_precision": {
-      "fail_count": 797,
-      "severity_sum": 464.30728408196495,
+      "fail_count": 802,
+      "severity_sum": 467.1727514671439,
       "recent": [
-        0.8728342490842491,
-        0.5835552108148263,
-        0.6001832675871139,
-        0.6703720531605147,
-        0.09212232033622388,
         0.8672252747252748,
         0.9052609890109891,
         0.5032378518916982,
@@ -1921,24 +1906,29 @@
         0.5723732037193576,
         0.49857742476410394,
         0.5817481236712008,
-        0.5910062436000523
+        0.5910062436000523,
+        0.659695141041295,
+        0.5804397365455058,
+        0.5477943904386213,
+        0.5071482577251809,
+        0.570389859428321
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:rel_probe_use_corpus_0",
+          "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.4089937563999477,
+          "dimension_score": 0.429610140571679,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-            "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What behavior links corpus and fragment here?",
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with warm acknowledgment. What behavior links corpus and fragment here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781482651.4551191
+          "timestamp": 1781483134.7147837
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2119,11 +2109,9 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 1515,
-      "severity_sum": 704.0910501054195,
+      "fail_count": 1525,
+      "severity_sum": 705.7476648777397,
       "recent": [
-        0.16211962006034736,
-        0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
@@ -2141,24 +2129,26 @@
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_845c3ddc5fa4",
+          "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
             "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with metaphor usage. Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
           ],
-          "timestamp": 1781482651.4045932
+          "timestamp": 1781483134.6542306
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -2295,34 +2285,34 @@
       ]
     },
     "compression_elaboration_fit": {
-      "fail_count": 469,
-      "severity_sum": 219.79523092566762,
+      "fail_count": 489,
+      "severity_sum": 229.49237638956816,
       "recent": [
         0.5,
-        0.5,
-        0.5,
         0.1971454639005459,
         0.5,
-        0.1971454639005459,
         0.5,
-        0.1971454639005459,
         0.5,
-        0.1971454639005459,
         0.5,
-        0.1971454639005459,
-        0.1971454639005459,
-        0.1971454639005459,
         0.5,
-        0.1971454639005459,
         0.5,
-        0.1971454639005459,
         0.5,
-        0.1971454639005459
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_5:episode_451969cd178d",
-          "source": "train_epoch_5",
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
           "dimension_score": 0.47407407407407404,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
@@ -2331,10 +2321,10 @@
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links use and corpus here?",
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482484.9628773
+          "timestamp": 1781483134.6856217
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2497,46 +2487,46 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 2927,
-      "severity_sum": 1683.9828403588751,
+      "fail_count": 2963,
+      "severity_sum": 1703.2810866581817,
       "recent": [
         0.5674186702112157,
-        0.5674186702112157,
-        0.5925820144162781,
         0.5,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5925820144162781,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5925820144162781,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.4046962
+          "timestamp": 1781483134.6857631
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",
@@ -2673,46 +2663,46 @@
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 994,
-      "severity_sum": 257.94040996972353,
+      "fail_count": 1010,
+      "severity_sum": 261.67167348570075,
       "recent": [
-        0.24901564232066495,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.41949723825276797,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.24135443650108024,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.49233135733219846,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.25916272757480086,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.460100789337529,
         0.16211962006034736,
         0.16211962006034736,
         0.30839236192338537,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.46505541409461343,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.315617715824419,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.4628759711479478,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.26166284562419384,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.4427357486220338,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_6:episode_45f59fa3e248",
-          "source": "train_epoch_6",
+          "conversation_id": "train_epoch_8:episode_e93eed19860a",
+          "source": "train_epoch_8",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it?"
+            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
           ],
           "assistant_turns": [
             "Direct clarity can create tension \u2014 use carefully",
-            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame "
+            "I approach this with curious inquiry. What behavior links use and corpus here?",
+            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781482651.4124637
+          "timestamp": 1781483134.693231
         },
         {
           "conversation_id": "train_epoch_1:episode_847a84602641",

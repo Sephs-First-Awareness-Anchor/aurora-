@@ -1,31 +1,43 @@
 {
-  "original": "I meaning did moment. I am understand axes.",
+  "original": "Moment understand feel am. Question change how before.",
   "candidate": "",
-  "selected": "I meaning did moment. I am understand axes.",
+  "selected": "Moment understand feel am. Question change how before.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.74,
   "candidate_score": 0.0,
-  "original_pressure": 0.292,
+  "original_pressure": 0.232,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.708,
+  "pressure_relief": -0.768,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "What behavior links use and corpus here?",
+    "prompt_excerpt": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Two claims conflict. Reconcile them without preten",
     "input_interpretation": {
-      "raw_prompt": "What behavior links use and corpus here?",
+      "raw_prompt": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Two claims conflict. Reconcile them without preten",
       "intent_hint": "question",
       "topic_terms": [
-        "behavior",
-        "links",
-        "corpus",
-        "here"
+        "mean",
+        "claims",
+        "conflict",
+        "reconcile",
+        "them",
+        "without",
+        "pretending",
+        "there"
       ],
-      "entities": []
+      "entities": [
+        "Two",
+        "Reconcile",
+        "With",
+        "Internal",
+        "Two",
+        "Reconcile",
+        "With"
+      ]
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781482845.2563574,
+    "timestamp": 1781483616.8280993,
     "min_relief_used": 0.035
   }
 }

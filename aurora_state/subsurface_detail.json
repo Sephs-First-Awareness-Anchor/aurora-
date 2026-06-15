@@ -18,25 +18,9 @@
     "tracked_surface_emotion": "neutral",
     "tracked_surface_intensity": 0.0
   },
-  "instability_markers": [
-    {
-      "label": "paradox_active",
-      "severity": 0.8
-    }
-  ],
+  "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 0.6,
-      "label": "conflict_exposure",
-      "rationale": "The active assembly still contains paradox or unresolved conflict.",
-      "source": "assembly",
-      "tags": [
-        "conflict",
-        "stability"
-      ],
-      "urgency": 0.6
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -58,11 +42,11 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6006,
+    "confidence": 0.577,
     "expected_observation": "followup",
     "expected_user_continuation": "",
     "likely_affect_shift": "neutral",
-    "mismatch": 0.2125,
+    "mismatch": 0.28,
     "prediction_payload": {
       "affect": "neutral",
       "axis_signature": "",
@@ -73,7 +57,7 @@
     "preload_context": [
       "followup"
     ],
-    "readiness_bias": 0.5739,
+    "readiness_bias": 0.5331,
     "source": "runtime_evidence"
   },
   "pressure_map": {
@@ -83,9 +67,9 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.4813,
+  "readiness": 0.541,
   "recalled_fragments": [
-    "What behavior links use and corpus here?"
+    "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Inter..."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -94,7 +78,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1781482845.248075,
+  "saved_at": 1781483616.8071117,
   "sub_crests": [
     {
       "axis": "X",
@@ -113,13 +97,13 @@
     },
     {
       "axis": "X",
-      "intensity": 0.7875,
-      "label": "steady_continuation"
+      "intensity": 0.55,
+      "label": "expectation"
     },
     {
-      "axis": "B",
-      "intensity": 0.65,
-      "label": "contradiction"
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "novelty"
     },
     {
       "axis": "T",
@@ -138,12 +122,12 @@
     },
     {
       "axis": "X",
-      "intensity": 0.8168,
+      "intensity": 0.8176,
       "label": "surface"
     },
     {
       "axis": "B",
-      "intensity": 0.8382,
+      "intensity": 0.8389,
       "label": "surface"
     }
   ]
