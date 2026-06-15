@@ -1,43 +1,26 @@
 {
-  "original": "Moment understand feel am. Question change how before.",
-  "candidate": "",
-  "selected": "Moment understand feel am. Question change how before.",
-  "accepted": false,
-  "reason": "no_candidate",
+  "original": "I want is truth. I can understand meaning.",
+  "candidate": "I want is truth. I can understand meaning.",
+  "selected": "I want is truth. I can understand meaning.",
+  "accepted": true,
+  "reason": "deterministic_preferred_passthrough",
   "original_score": 0.74,
-  "candidate_score": 0.0,
-  "original_pressure": 0.232,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.768,
-  "safe": false,
+  "candidate_score": 0.74,
+  "original_pressure": 0.172,
+  "candidate_pressure": 0.172,
+  "pressure_relief": 0.0,
+  "safe": true,
   "metadata": {
-    "prompt_excerpt": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Two claims conflict. Reconcile them without preten",
+    "prompt_excerpt": "",
     "input_interpretation": {
-      "raw_prompt": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: That makes sense\u2014'what i' as in What I mean is: Two claims conflict. Reconcile them without preten",
-      "intent_hint": "question",
-      "topic_terms": [
-        "mean",
-        "claims",
-        "conflict",
-        "reconcile",
-        "them",
-        "without",
-        "pretending",
-        "there"
-      ],
-      "entities": [
-        "Two",
-        "Reconcile",
-        "With",
-        "Internal",
-        "Two",
-        "Reconcile",
-        "With"
-      ]
+      "raw_prompt": "",
+      "intent_hint": "statement_or_context",
+      "topic_terms": [],
+      "entities": []
     },
-    "tone": "curious",
-    "source": "no_pattern_matched",
-    "timestamp": 1781483616.8280993,
-    "min_relief_used": 0.035
+    "tone": "neutral",
+    "source": "deterministic_preferred",
+    "timestamp": 1781489810.3426614,
+    "min_relief_used": 0.0
   }
 }
