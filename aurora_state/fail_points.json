@@ -1,18 +1,10 @@
 {
-  "total_fails": 58469,
+  "total_fails": 58568,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 4029,
-      "severity_sum": 1836.0687174915818,
+      "fail_count": 4037,
+      "severity_sum": 1840.5413114671896,
       "recent": [
-        0.5314054907219505,
-        0.5314054907219505,
-        0.6079128627782474,
-        0.6768768667230206,
-        0.5314054907219505,
-        0.5314054907219505,
-        0.5314054907219505,
-        0.5314054907219505,
         0.5314054907219505,
         0.5314054907219505,
         0.60717938151592,
@@ -24,6 +16,14 @@
         0.5314054907219505,
         0.5314054907219505,
         0.6072841645533953,
+        0.6762481684981685,
+        0.5314054907219505,
+        0.5314054907219505,
+        0.5314054907219505,
+        0.5314054907219505,
+        0.5314054907219505,
+        0.5314054907219505,
+        0.6079128627782474,
         0.6762481684981685
       ],
       "examples": [
@@ -41,7 +41,7 @@
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5625541
+          "timestamp": 1781548699.696022
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -226,19 +226,9 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 9160,
-      "severity_sum": 4564.339509902934,
+      "fail_count": 9170,
+      "severity_sum": 4569.382340771831,
       "recent": [
-        0.5071384781490946,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5071384781490946,
-        0.5071384781490946,
-        0.5071384781490946,
         0.5071384781490946,
         0.5071384781490946,
         0.5071384781490946,
@@ -248,11 +238,21 @@
         0.5,
         0.035,
         0.5,
+        0.5,
+        0.5071384781490946,
+        0.5071384781490946,
+        0.5071384781490946,
+        0.5071384781490946,
+        0.5071384781490946,
+        0.5071384781490946,
+        0.5,
+        0.5,
+        0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.2446190476190476,
           "user_turns": [
@@ -261,11 +261,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.4896317
+          "timestamp": 1781548699.6253262
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -450,33 +450,33 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 1700,
-      "severity_sum": 502.6109595276531,
+      "fail_count": 1707,
+      "severity_sum": 503.9999772480153,
       "recent": [
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.4163,
         0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -485,11 +485,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.4981165
+          "timestamp": 1781548699.633408
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -628,21 +628,21 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 12106,
-      "severity_sum": 6181.691195884779,
+      "fail_count": 12121,
+      "severity_sum": 6189.595707906044,
       "recent": [
         0.5,
         0.5,
         0.5,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
         0.5,
         0.5,
         0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
@@ -654,7 +654,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
@@ -663,11 +663,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.498396
+          "timestamp": 1781548699.633758
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1009,8 +1009,8 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 1085,
-      "severity_sum": 184.0592832693988,
+      "fail_count": 1091,
+      "severity_sum": 185.03200098976083,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
@@ -1024,18 +1024,18 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.4163,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -1044,11 +1044,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5066729
+          "timestamp": 1781548699.6417267
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1187,21 +1187,21 @@
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 12079,
-      "severity_sum": 6205.525476041792,
+      "fail_count": 12094,
+      "severity_sum": 6213.429988063057,
       "recent": [
         0.5,
         0.5,
         0.5,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
         0.5,
         0.5,
         0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
@@ -1213,7 +1213,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
@@ -1222,11 +1222,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5069795
+          "timestamp": 1781548699.642018
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1365,12 +1365,13 @@
       ]
     },
     "boundary_calibration": {
-      "fail_count": 6316,
-      "severity_sum": 2938.5156025393385,
+      "fail_count": 6327,
+      "severity_sum": 2943.6095164603053,
       "recent": [
         0.43231898682759295,
         0.43231898682759295,
         0.43231898682759295,
+        0.43231898682759295,
         0.5,
         0.5,
         0.5,
@@ -1383,7 +1384,6 @@
         0.43231898682759295,
         0.43231898682759295,
         0.43231898682759295,
-        0.5,
         0.5,
         0.5,
         0.5,
@@ -1391,7 +1391,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.3,
           "user_turns": [
@@ -1400,11 +1400,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5151112
+          "timestamp": 1781548699.64987
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1721,33 +1721,33 @@
       ]
     },
     "emotional_calibration": {
-      "fail_count": 1244,
-      "severity_sum": 214.0332210628045,
+      "fail_count": 1251,
+      "severity_sum": 215.42223878316653,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.4163,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -1756,11 +1756,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5232375
+          "timestamp": 1781548699.6579177
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1899,11 +1899,9 @@
       ]
     },
     "semantic_precision": {
-      "fail_count": 990,
-      "severity_sum": 593.7429373828471,
+      "fail_count": 992,
+      "severity_sum": 595.2537150667017,
       "recent": [
-        0.7144519582981121,
-        0.7960791772330235,
         0.7144519582981121,
         0.7955860805860806,
         0.7151916032685264,
@@ -1921,6 +1919,8 @@
         0.7143286841363765,
         0.7960791772330235,
         0.7144519582981121,
+        0.7955860805860806,
+        0.7151916032685264,
         0.7955860805860806
       ],
       "examples": [
@@ -1938,7 +1938,7 @@
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5625541
+          "timestamp": 1781548699.696022
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2119,8 +2119,8 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 1995,
-      "severity_sum": 846.7707047585013,
+      "fail_count": 2001,
+      "severity_sum": 849.0944193126998,
       "recent": [
         0.4998688285194044,
         0.4998688285194044,
@@ -2145,7 +2145,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.25,
           "user_turns": [
@@ -2154,11 +2154,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5234964
+          "timestamp": 1781548699.6581929
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -2497,16 +2497,16 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 3582,
-      "severity_sum": 2052.2012653033903,
+      "fail_count": 3588,
+      "severity_sum": 2055.605777324658,
       "recent": [
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
         0.035,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
@@ -2523,7 +2523,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
@@ -2532,11 +2532,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.531908
+          "timestamp": 1781548699.6659484
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -2675,16 +2675,16 @@
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 1596,
-      "severity_sum": 380.1543942669115,
+      "fail_count": 1602,
+      "severity_sum": 381.1271119872737,
       "recent": [
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.4163,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
@@ -2701,7 +2701,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_b28f92933142",
+          "conversation_id": "prove_ep_epoch_1:episode_5d5f6e8af600",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -2710,11 +2710,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with direct clarity. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+            "I approach this with curious inquiry. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus f",
             "what behavior means here.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781548314.5398793
+          "timestamp": 1781548699.6739314
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
