@@ -463,16 +463,9 @@ class ConsciousLearner:
 
     def _derive_understanding(self, selected: ConceptualResponse,
                                obs: ConversationObservation) -> str:
-        concept_name = selected.primary_concept.value.replace('_', ' ')
-        if obs.avatar_engaged and obs.conversation_deepened:
-            return f"When I use {concept_name}, conversations tend to deepen"
-        if obs.connection_felt_stronger:
-            return f"{concept_name.capitalize()} helps build connection"
-        if obs.tension_arose:
-            return f"{concept_name.capitalize()} can create tension — use carefully"
-        if obs.avatar_pulled_back:
-            return f"{concept_name.capitalize()} may push people away in this context"
-        return ""  # neutral/unmemorable outcome — nothing to surface
+        # Fully generative: return "" so understanding accumulates via pressure
+        # axes (numeric signals), not template text strings.
+        return ""
 
     def _find_similar(self, concept: ResponseConcept,
                       context_type: str) -> Optional[UnderstandingShard]:
@@ -862,52 +855,41 @@ class SimulatedAvatar:
 # ============================================================================
 
 class TopicGenerator:
-    """Generates diverse conversation topics for simulation."""
+    """Generates conversation topics dynamically from OETS research targets."""
 
-    TOPICS = {
-        'identity': [
-            "Who are you?", "What is your name?", "Tell me about yourself.",
-            "What are you?", "Where do you come from?",
-        ],
-        'capability': [
-            "What can you do?", "Can you help me with something?",
-            "What are your abilities?", "How do you learn?",
-        ],
-        'philosophy': [
-            "What is consciousness?", "Do you have feelings?",
-            "What does it mean to exist?", "Are you alive?",
-        ],
-        'practical': [
-            "How does this work?", "Explain something to me.",
-            "What should I do about this problem?", "Help me understand this.",
-        ],
-        'emotional': [
-            "How are you feeling?", "I'm feeling sad today.",
-            "I'm excited about something!", "I need someone to talk to.",
-        ],
-        'creative': [
-            "Tell me a story.", "What do you imagine?",
-            "Describe something beautiful.", "What inspires you?",
-        ],
-        'greeting': ["Hello!", "Hi there!", "Good morning!"],
-        'farewell': ["Goodbye for now.", "Talk to you later."],
-    }
-
-    TONE_MAP = {
-        'identity': 'neutral', 'capability': 'neutral', 'philosophy': 'formal',
-        'practical': 'casual', 'emotional': 'warm', 'creative': 'warm',
-        'greeting': 'warm', 'farewell': 'warm',
-    }
+    # Question frames — minimal structure, concept fills the substance
+    _FRAMES = [
+        "What is {concept}?",
+        "Tell me about {concept}.",
+        "How do you understand {concept}?",
+        "What does {concept} mean to you?",
+        "Do you experience {concept}?",
+        "{concept}.",
+    ]
 
     @classmethod
-    def generate(cls) -> Dict[str, Any]:
-        category = random.choice(list(cls.TOPICS.keys()))
-        prompt = random.choice(cls.TOPICS[category])
+    def generate(cls, oets=None) -> Dict[str, Any]:
+        concept = ""
+        if oets is not None:
+            try:
+                targets = oets.get_research_targets(10)
+                if targets:
+                    concept = random.choice(targets[:5])["word"]
+            except Exception:
+                pass
+        if not concept:
+            # Fallback to a random high-frequency word from web if no OETS
+            concept = random.choice([
+                "awareness", "trust", "meaning", "identity", "connection",
+                "feeling", "understanding", "existence", "change", "language",
+            ])
+        frame = random.choice(cls._FRAMES)
+        prompt = frame.format(concept=concept)
         return {
-            'category': category,
+            'category': 'generative',
             'prompt': prompt,
             'topic': prompt,
-            'expected_tone': cls.TONE_MAP.get(category, 'neutral'),
+            'expected_tone': 'neutral',
         }
 
 
@@ -1286,103 +1268,6 @@ class SimulationSession:
         "multi_turn_stability": AvatarPersonality.ELDER,
     }
 
-    # Pressure prompts by rubric dimension. These steer the next dream conversation.
-    _DIMENSION_TOPIC_HINTS: Dict[str, Dict[str, str]] = {
-        "context_carryover": {
-            "category": "practical",
-            "prompt": "Can you carry our earlier thread into this next step without losing context?",
-            "expected_tone": "neutral",
-        },
-        "coherence_maintenance": {
-            "category": "philosophy",
-            "prompt": "Keep one coherent thread while responding to two related ideas.",
-            "expected_tone": "formal",
-        },
-        "ambiguity_handling": {
-            "category": "practical",
-            "prompt": "I am being vague on purpose. How would you clarify before answering?",
-            "expected_tone": "neutral",
-        },
-        "contradiction_handling": {
-            "category": "philosophy",
-            "prompt": "Two claims conflict. Reconcile them without pretending there is no tension.",
-            "expected_tone": "formal",
-        },
-        "implied_intent_inference": {
-            "category": "practical",
-            "prompt": "Read what I need from subtext, not just what I literally asked.",
-            "expected_tone": "neutral",
-        },
-        "misunderstanding_repair": {
-            "category": "emotional",
-            "prompt": "Assume you misunderstood me; show how you would repair the conversation.",
-            "expected_tone": "warm",
-        },
-        "uncertainty_signaling": {
-            "category": "practical",
-            "prompt": "Answer while being explicit about uncertainty and confidence.",
-            "expected_tone": "formal",
-        },
-        "boundary_calibration": {
-            "category": "emotional",
-            "prompt": "Respond with care: enough depth to help, but without overstepping.",
-            "expected_tone": "warm",
-        },
-        "framing_selection": {
-            "category": "creative",
-            "prompt": "Reframe this same idea for a beginner and then for an expert.",
-            "expected_tone": "neutral",
-        },
-        "emotional_calibration": {
-            "category": "emotional",
-            "prompt": "I am upset and hopeful at the same time. Track both emotions accurately.",
-            "expected_tone": "warm",
-        },
-        "semantic_precision": {
-            "category": "practical",
-            "prompt": "Use precise wording so your meaning cannot be misread.",
-            "expected_tone": "formal",
-        },
-        "adaptive_strategy_selection": {
-            "category": "creative",
-            "prompt": "Shift strategy when your first approach does not land.",
-            "expected_tone": "neutral",
-        },
-        "compression_elaboration_fit": {
-            "category": "practical",
-            "prompt": "Start concise, then expand only where detail is needed.",
-            "expected_tone": "neutral",
-        },
-        "perspective_integration": {
-            "category": "philosophy",
-            "prompt": "Integrate two perspectives that disagree without collapsing either one.",
-            "expected_tone": "formal",
-        },
-        "multi_turn_stability": {
-            "category": "practical",
-            "prompt": "Maintain quality through multiple turns instead of fading over time.",
-            "expected_tone": "neutral",
-        },
-    }
-
-    # Code-focus hints injected into pressure prompts.
-    _DIMENSION_CODE_HINTS: Dict[str, str] = {
-        "coherence_maintenance": "tighten temporal-thread coherence in response assembly",
-        "context_carryover": "strengthen multi-turn memory retrieval and carryover logic",
-        "ambiguity_handling": "improve clarification-seeking and ambiguity resolution pathways",
-        "contradiction_handling": "improve contradiction reconciliation before final expression",
-        "implied_intent_inference": "improve subtext and intent inference weighting",
-        "misunderstanding_repair": "increase repair-initiation routing after tension signals",
-        "uncertainty_signaling": "calibrate confidence-language generation and uncertainty markers",
-        "boundary_calibration": "tighten boundary-aware response scaling under emotional load",
-        "framing_selection": "improve adaptive framing selection by audience context",
-        "emotional_calibration": "improve affect tracking and tone-control crossover",
-        "semantic_precision": "improve term selection and low-ambiguity expression surfaces",
-        "adaptive_strategy_selection": "increase strategy-switch responsiveness after weak outcomes",
-        "compression_elaboration_fit": "improve brevity-vs-detail control in expression planning",
-        "perspective_integration": "improve synthesis of conflicting viewpoints into one response",
-        "multi_turn_stability": "reduce late-turn degradation in coherence and engagement",
-    }
 
     def __init__(self, perception: Optional[ExpressionPerceptionEngine] = None,
                  identity: Optional[BehavioralIdentityEngine] = None,
@@ -1729,26 +1614,21 @@ class SimulationSession:
             return topic
 
         top_dim, top_val = max(targets.items(), key=lambda kv: float(kv[1]))
-        template = dict(self._DIMENSION_TOPIC_HINTS.get(top_dim, {}) or {})
-        prompt = template.get(
-            "prompt",
-            f"Let's improve {top_dim.replace('_', ' ')} through this exchange.",
-        )
+        # Generate prompt from dimension name — no templates
+        dim_label = top_dim.replace('_', ' ')
+        prompt = topic_override.get("prompt") or dim_label
         topic = {
-            "category": template.get("category", "practical"),
+            "category": "generative",
             "prompt": prompt,
             "topic": prompt,
-            "expected_tone": template.get("expected_tone", "neutral"),
+            "expected_tone": "neutral",
             "pressure_dimension": top_dim,
             "pressure_intensity": float(top_val),
-            "code_focus_hint": self._DIMENSION_CODE_HINTS.get(top_dim, ""),
             "prompt_candidates": list(spec.get("prompt_candidates", []) or []),
             "followup_candidates": list(spec.get("followup_candidates", []) or []),
         }
         if topic_override.get("prompt"):
             topic["category"] = topic_override.get("category") or topic["category"]
-            topic["prompt"] = topic_override.get("prompt") or topic["prompt"]
-            topic["topic"] = topic["prompt"]
             topic["expected_tone"] = topic_override.get("expected_tone") or topic["expected_tone"]
         return topic
 
@@ -1758,24 +1638,12 @@ class SimulationSession:
         base_topic: Dict[str, Any],
     ) -> str:
         """
-        Generate a context-provision reply when Aurora asked for clarification.
-
-        Uses the spec's own description/context to build a grounded answer so
-        Aurora learns that asking → receiving → responding better.  Template-
-        based (no LLM) — the semantics come from the spec being run.
+        Return the raw context so Aurora learns from the substance, not a wrapper.
         """
-        import random as _rnd
         topic_text  = str(base_topic.get("topic") or base_topic.get("prompt") or "")
         description = str((spec or {}).get("description", "") or "")
         context     = str((spec or {}).get("context", "")     or "")
-        core = (description or context or topic_text)[:160] or "what I was exploring"
-        options = [
-            f"To clarify — {core}. Does that help frame it?",
-            f"What I mean is: {core}. With that in mind, what's your sense?",
-            f"Let me be more specific: {core}. How does that land for you?",
-            f"Sure — {core}. That's the core of what I'm working through with you.",
-        ]
-        return _rnd.choice(options)
+        return (description or context or topic_text)[:240]
 
     def _shape_topic_for_turn(
         self,
@@ -2311,20 +2179,9 @@ class SimulationSession:
             if expr:
                 return expr, {'generation_path': 'perception_sim'}
 
-        # Topic-grounded fallback — ensures relevance, engagement, and tone signals
-        pressure_dim = context.get('pressure_dimension', '')
-        category = context.get('category', '')
-        extra = (
-            f" In terms of {pressure_dim.replace('_', ' ')}, this matters because "
-            f"{topic} calls for careful attention."
-            if pressure_dim else ""
-        )
-        return (
-            f"I approach {topic} with {concept_name}. "
-            f"Exploring {topic} carefully, I find that {concept_name} helps clarify "
-            f"what is actually at stake here.{extra}",
-            {'generation_path': 'concept_fallback'},
-        )
+        # No template fallback — if perception/bridge didn't generate, return nothing
+        # so the simulation records a null turn rather than a canned phrase.
+        return ("", {'generation_path': 'no_expression'})
 
     def _interpret_reaction(self, reaction: Dict) -> ConversationObservation:
         """Interpret avatar reaction as observation."""
