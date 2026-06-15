@@ -8623,6 +8623,162 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
         return ''
 
 
+def _normalize_poedex_concept(value: str) -> str:
+    concept = str(value or "").strip().lower()
+    concept = re.sub(r"\s+", " ", concept)
+    concept = concept.strip(" \t\r\n.,;:!?\"'()[]{}")
+    return concept
+
+
+def _current_axis_state(systems: Dict[str, Any]) -> Dict[str, float]:
+    crest = dict(systems.get("_live_conscious_crest") or {})
+    return {
+        "X": float(crest.get("X", crest.get("existence", 0.5)) or 0.5),
+        "T": float(crest.get("T", crest.get("temporal", 0.5)) or 0.5),
+        "N": float(crest.get("N", crest.get("energy", 0.5)) or 0.5),
+        "B": float(crest.get("B", crest.get("boundary", 0.5)) or 0.5),
+        "A": float(crest.get("A", crest.get("agency", 0.5)) or 0.5),
+    }
+
+
+def _queue_warp_poedex_study_target(
+    systems: Dict[str, Any],
+    concept: str,
+    *,
+    reason: str = "",
+    priority: float = 0.88,
+) -> bool:
+    if not isinstance(systems, dict):
+        return False
+    concept_clean = _normalize_poedex_concept(concept)
+    if not concept_clean:
+        return False
+
+    # If Aurora has already grounded this concept, do not keep re-queuing it.
+    if _lookup_local_grounded_definition(concept_clean, systems):
+        return False
+
+    history = systems.setdefault("_warp_research_history", {})
+    now = time.time()
+    last_ts = float(history.get(concept_clean, 0.0) or 0.0)
+    if last_ts and (now - last_ts) < 600.0:
+        return False
+
+    perception = systems.get("perception")
+    oets = getattr(perception, "oets", None) if perception is not None else None
+    research = getattr(oets, "research", None) if oets is not None else None
+    if research is None:
+        return False
+
+    try:
+        pending = any(
+            str(getattr(req, "word", "") or "").strip().lower() == concept_clean
+            and str(getattr(req, "reason", "") or "").strip() == "warp_shallow_seek"
+            and str(getattr(req, "status", "") or "").strip().lower() == "pending"
+            for req in getattr(research, "queue", []) or []
+        )
+        if pending:
+            history[concept_clean] = now
+            return False
+
+        from aurora_internal.aurora_ontological_scaffolding import (
+            ResearchRequest as _RR,
+            _generate_id as _gid,
+        )
+        research.queue.insert(
+            0,
+            _RR(
+                request_id=_gid("warp_seek"),
+                word=concept_clean,
+                priority=priority,
+                reason="warp_shallow_seek",
+            ),
+        )
+        history[concept_clean] = now
+        systems["_warp_research_target"] = {
+            "concept": concept_clean,
+            "reason": str(reason or "").strip(),
+            "queued_at": now,
+            "priority": priority,
+        }
+        return True
+    except Exception:
+        return False
+
+
+def _deposit_poedex_result_into_crystals(
+    systems: Dict[str, Any],
+    concept: str,
+    learned_text: str,
+    *,
+    request_text: str = "",
+    source: str = "poedex",
+) -> None:
+    if not isinstance(systems, dict):
+        return
+    concept_clean = _normalize_poedex_concept(concept)
+    learned_clean = str(learned_text or "").strip()
+    if not concept_clean or not learned_clean:
+        return
+
+    distilled = _compose_grounded_prefetch_response(concept_clean, learned_clean) or learned_clean[:400]
+
+    sensory_crystal = systems.get("sensory_crystal")
+    if sensory_crystal is not None:
+        try:
+            if hasattr(sensory_crystal, "ingest"):
+                sensory_crystal.ingest(
+                    concept_clean,
+                    modality="semantic",
+                    data=distilled,
+                    source=source,
+                )
+            elif hasattr(sensory_crystal, "observe_semantic"):
+                sensory_crystal.observe_semantic(concept_clean, weight=1.0, source=source)
+        except Exception:
+            pass
+
+    dim = systems.get("dimensional")
+    dps = getattr(dim, "dps", None) if dim is not None else None
+    if dps is not None:
+        try:
+            crystal = dps._get_or_create(f"concept:{concept_clean[:40]}")
+            crystal.add_facet("poedex_understanding", distilled[:120], confidence=0.80)
+            crystal.add_facet("poedex_source", source[:40], confidence=0.54)
+            crystal.use()
+            crystal.evolve()
+        except Exception:
+            pass
+
+    ccr = systems.get("_concept_crystal_registry")
+    if ccr is not None and hasattr(ccr, "observe_lsa"):
+        try:
+            ax = _current_axis_state(systems)
+            ccr.observe_lsa(ax, f"poedex:{concept_clean}")
+            ccr.observe_sedi(ax, delta=0.05)
+            systems["_ccr_needs_overlay_clear"] = True
+        except Exception:
+            pass
+
+    systems["_last_poedex_crystal_write"] = {
+        "concept": concept_clean,
+        "request": str(request_text or "").strip(),
+        "understanding": distilled,
+        "source": source,
+        "updated": True,
+    }
+
+    # Immediately deepen OETS with the researched definition — don't wait
+    # for the next scheduled study cycle; the knowledge is already here.
+    try:
+        _perc = systems.get("perception")
+        _oets = getattr(_perc, "oets", None) if _perc is not None else None
+        if _oets is not None and hasattr(_oets, "teach"):
+            _oets.teach(concept_clean, distilled)
+    except Exception:
+        pass
+
+
 def _broadcast_poedex_result(
     systems: Dict[str, Any],
     *,
@@ -8922,6 +9078,13 @@ def _apply_poedex_learning_result(
                 applied["applied"] = True
                 applied["definition"] = str(learned.get("definition", "") or "").strip()
                 applied["systems_updated"] = list(learned.get("systems_updated", []) or [])
+                _deposit_poedex_result_into_crystals(
+                    systems,
+                    concept_clean,
+                    learning_note,
+                    request_text=source_text or request_clean,
+                    source="poedex_learning",
+                )
                 _queue_poedex_representation_followup(
                     systems,
                     concept_clean,
@@ -8976,6 +9139,13 @@ def _apply_poedex_learning_result(
                         pass
                 applied["applied"] = True
                 applied["systems_updated"] = ["working_memory.concept_meanings", "working_memory.stated_facts"]
+                _deposit_poedex_result_into_crystals(
+                    systems,
+                    concept_clean,
+                    learning_note,
+                    request_text=source_text or request_clean,
+                    source="poedex_learning",
+                )
                 _queue_poedex_representation_followup(
                     systems,
                     concept_clean,
@@ -8986,6 +9156,13 @@ def _apply_poedex_learning_result(
             pass
 
     try:
+        _deposit_poedex_result_into_crystals(
+            systems,
+            concept_clean or request_clean,
+            learning_note,
+            request_text=source_text or request_clean,
+            source="poedex_learning",
+        )
         _broadcast_poedex_result(
             systems,
             concept=concept_clean or request_clean,
@@ -9095,6 +9272,13 @@ def _apply_poedex_representation_result(
         )
     except Exception:
         pass
+    _deposit_poedex_result_into_crystals(
+        systems,
+        concept_clean or term_key,
+        entry.get("meaning_representation", "") or variants[0],
+        request_text=source_text or request_clean,
+        source="poedex_representation",
+    )
     return {
         "concept": concept_clean or term_key,
         "request": request_clean,
@@ -9118,6 +9302,8 @@ def _stage_poedex_learning_request(
     concept = str(anchor or "").strip()
     if not concept:
         return
+    if _lookup_local_grounded_definition(concept, systems):
+        return
     current_concept = str(pipeline_state.get("poedex_learning_concept", "") or "").strip()
     current_status = str(pipeline_state.get("poedex_learning_status", "") or "").strip().lower()
     if current_concept.lower() == concept.lower() and current_status in {"pending", "ready"}:
@@ -9129,6 +9315,7 @@ def _stage_poedex_learning_request(
     pipeline_state["poedex_learning_reason"] = str(reason or "").strip()
     pipeline_state["poedex_learning_status"] = "pending"
     pipeline_state.pop("poedex_learning_result", None)
+    _queue_warp_poedex_study_target(systems, concept, reason=reason)
 
     def _learning_worker() -> None:
         try:
@@ -9210,6 +9397,10 @@ def _stage_poedex_representation_request(
     concept = str(anchor or "").strip()
     if not concept:
         return
+    if _lookup_local_grounded_definition(concept, systems):
+        existing = dict(getattr(systems.get("working_memory"), "concept_meanings", {}).get(concept, {}) or {})
+        if list(existing.get("representation_variants", []) or []):
+            return
     current_concept = str(pipeline_state.get("poedex_representation_concept", "") or "").strip()
     current_status = str(pipeline_state.get("poedex_representation_status", "") or "").strip().lower()
     if current_concept.lower() == concept.lower() and current_status in {"pending", "ready"}:
@@ -9224,6 +9415,7 @@ def _stage_poedex_representation_request(
     pipeline_state["poedex_representation_reason"] = str(reason or "").strip()
     pipeline_state["poedex_representation_status"] = "pending"
     pipeline_state.pop("poedex_representation_result", None)
+    _queue_warp_poedex_study_target(systems, concept, reason=reason)
 
     def _representation_worker() -> None:
         try:
@@ -9995,27 +10187,34 @@ def _apply_word_meaning_learning(
                     pass
         except Exception:
             pass
-        try:
-            if hasattr(working_memory, "_register_mention"):
-                working_memory._register_mention(clean_term, "concept", source, 0.94)
-                for idx, word in enumerate(re.findall(r"[a-z]{3,}", definition.lower())[:4]):
-                    if not getattr(working_memory, "_is_weak_anchor_label", lambda _w: False)(word):
-                        working_memory._register_mention(
-                            word,
-                            "meaning",
-                            source,
-                            max(0.44, 0.78 - idx * 0.08),
-                        )
-            if (
-                concept is not None
-                and hasattr(working_memory, "_semantic_frame_from_concept")
-                and hasattr(working_memory, "_register_semantic_frame")
-            ):
-                working_memory._register_semantic_frame(
-                    working_memory._semantic_frame_from_concept(concept)
-                )
-        except Exception:
-            pass
+    try:
+        if hasattr(working_memory, "_register_mention"):
+            working_memory._register_mention(clean_term, "concept", source, 0.94)
+            for idx, word in enumerate(re.findall(r"[a-z]{3,}", definition.lower())[:4]):
+                if not getattr(working_memory, "_is_weak_anchor_label", lambda _w: False)(word):
+                    working_memory._register_mention(
+                        word,
+                        "meaning",
+                        source,
+                        max(0.44, 0.78 - idx * 0.08),
+                    )
+        if (
+            concept is not None
+            and hasattr(working_memory, "_semantic_frame_from_concept")
+            and hasattr(working_memory, "_register_semantic_frame")
+        ):
+            working_memory._register_semantic_frame(
+                working_memory._semantic_frame_from_concept(concept)
+            )
+    except Exception:
+        pass
+    _deposit_poedex_result_into_crystals(
+        systems,
+        clean_term,
+        definition,
+        request_text=source_text or f"{clean_term} means {definition}",
+        source=source,
+    )
     _queue_poedex_representation_followup(
         systems,
         clean_term,

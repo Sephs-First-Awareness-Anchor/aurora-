@@ -1460,6 +1460,25 @@ class AuroraSensoryCrystal:
             except Exception:
                 pass
 
+    def observe_semantic(self, concept: str, weight: float = 1.0,
+                         source: str = "corpus") -> None:
+        """
+        Compatibility surface for corpus ingestion.
+
+        Corpus training emits lightweight semantic word observations; route them
+        through the existing concept-level ingest path so they can affect
+        recognitions, novelty, and DPS semantic facets when wired.
+        """
+        concept = str(concept or "").strip()
+        if not concept:
+            return
+        self.ingest(
+            concept=concept,
+            modality="semantic",
+            data=f"observed semantic corpus token weight={float(weight or 0.0):.3f}",
+            source=source,
+        )
+
     def end_session(self) -> List[Dict[str, Any]]:
         """
         End-of-interaction consolidation.  Runs promotion, maturity, cull, save.

@@ -2870,6 +2870,189 @@ def _run_study_cycle(systems: Dict[str, Any]) -> None:
         _log(f"  [EVO]  EvolutionarySimulator error: {_evo_e}")
 
 
+def _poedex_room_responder_available() -> bool:
+    """Return True when Aurora Room is available to answer POEDEX queue files."""
+    try:
+        proc = subprocess.run(
+            ["pgrep", "-f", "aurora_room.py"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=1.0,
+        )
+        return proc.returncode == 0
+    except Exception:
+        return False
+
+
+def _poedex_lookup_topic(question: str) -> str:
+    """Extract the actual lookup target from Aurora's POEDEX prompt."""
+    import re
+
+    q = str(question or "").strip()
+    q = re.sub(r"^Poedex Researcher lookup:\s*", "", q, flags=re.I).strip()
+    patterns = [
+        r"what\s+new\s+material\s+should\s+aurora\s+learn\s+about\s+(.+?)\??$",
+        r"what\s+are\s+other\s+ways\s+to\s+represent\s+(.+?)\s+in\s+human\s+language",
+        r"^\s*(?:define|definition\s+of|meaning\s+of|look\s+up)\s+(.+?)\??$",
+    ]
+    for pat in patterns:
+        m = re.search(pat, q, flags=re.I)
+        if m:
+            q = m.group(1)
+            break
+    q = q.split("?")[0].split("\n")[0].strip(" '\".,:;!-")
+    return q[:160]
+
+
+def _poedex_fetch_json(url: str, timeout: float = 10.0) -> Any:
+    import urllib.request
+
+    req = urllib.request.Request(url, headers={
+        "User-Agent": "Aurora-Poedex/1.0",
+        "Accept": "application/json",
+    })
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read().decode("utf-8", errors="replace"))
+
+
+def _poedex_strip_html(text: str) -> str:
+    import html
+    import re
+
+    text = re.sub(r"<script.*?</script>", " ", str(text or ""), flags=re.I | re.S)
+    text = re.sub(r"<style.*?</style>", " ", text, flags=re.I | re.S)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", html.unescape(text)).strip()
+
+
+def _poedex_headless_lookup(question: str, cat: str = "define",
+                            lane: str = "self") -> str:
+    """
+    No-GUI POEDEX resolver.
+
+    The Room GUI remains the preferred responder when it is running. On Android
+    or other headless runtimes, Aurora still needs POEDEX to act like a tool, so
+    this uses public no-key sources and returns concise research text suitable
+    for OETS definition ingestion.
+    """
+    import urllib.parse
+
+    topic = _poedex_lookup_topic(question)
+    if not topic:
+        return ""
+
+    parts: List[str] = []
+    sources: List[str] = []
+    related: List[str] = []
+
+    # Dictionary API: best for single words and OETS lexical depth.
+    if len(topic.split()) == 1:
+        try:
+            url = (
+                "https://api.dictionaryapi.dev/api/v2/entries/en/"
+                f"{urllib.parse.quote(topic)}"
+            )
+            data = _poedex_fetch_json(url, timeout=8.0)
+            if isinstance(data, list) and data:
+                entry = data[0]
+                for meaning in entry.get("meanings", [])[:3]:
+                    pos = str(meaning.get("partOfSpeech", "") or "").strip()
+                    for defn in meaning.get("definitions", [])[:2]:
+                        text = str(defn.get("definition", "") or "").strip()
+                        if text:
+                            prefix = f"{pos}: " if pos else ""
+                            parts.append(f"{prefix}{text}")
+                        ex = str(defn.get("example", "") or "").strip()
+                        if ex:
+                            parts.append(f"Example: {ex}")
+                    for syn in meaning.get("synonyms", [])[:8]:
+                        if syn not in related:
+                            related.append(str(syn))
+                    for ant in meaning.get("antonyms", [])[:5]:
+                        if ant not in related:
+                            related.append(f"opposite:{ant}")
+                if parts:
+                    sources.append("dictionaryapi.dev")
+        except Exception:
+            pass
+
+    # DuckDuckGo instant answer: broad concept/context.
+    try:
+        url = (
+            "https://api.duckduckgo.com/?"
+            f"q={urllib.parse.quote(topic)}&format=json&no_html=1&skip_disambig=1"
+        )
+        data = _poedex_fetch_json(url, timeout=8.0)
+        abstract = str(data.get("Abstract") or data.get("Definition") or "").strip()
+        if abstract:
+            parts.append(abstract)
+            src = str(data.get("AbstractSource") or data.get("DefinitionSource") or "duckduckgo")
+            sources.append(src)
+        for item in list(data.get("RelatedTopics") or [])[:3]:
+            if isinstance(item, dict):
+                text = str(item.get("Text", "") or "").strip()
+                if text:
+                    parts.append(text)
+    except Exception:
+        pass
+
+    # Wikipedia summary/search: fallback for concepts and entities.
+    try:
+        summary_url = (
+            "https://en.wikipedia.org/api/rest_v1/page/summary/"
+            f"{urllib.parse.quote(topic)}"
+        )
+        data = _poedex_fetch_json(summary_url, timeout=8.0)
+        extract = str(data.get("extract", "") or "").strip()
+        if extract:
+            parts.append(extract)
+            sources.append("wikipedia")
+    except Exception:
+        try:
+            search_url = (
+                "https://en.wikipedia.org/w/api.php?action=query&list=search"
+                f"&srsearch={urllib.parse.quote(topic)}&srlimit=1&format=json"
+            )
+            data = _poedex_fetch_json(search_url, timeout=8.0)
+            hits = list(data.get("query", {}).get("search", []) or [])
+            if hits:
+                snippet = _poedex_strip_html(hits[0].get("snippet", ""))
+                if snippet:
+                    parts.append(snippet)
+                    sources.append("wikipedia-search")
+        except Exception:
+            pass
+
+    if not parts:
+        return ""
+
+    # De-duplicate while preserving order.
+    seen = set()
+    clean_parts = []
+    for part in parts:
+        part = " ".join(str(part).split())
+        key = part.lower()
+        if part and key not in seen:
+            seen.add(key)
+            clean_parts.append(part)
+
+    answer = [
+        f"POEDEX HEADLESS RESEARCH: {topic}",
+        "What it is: " + clean_parts[0][:700],
+    ]
+    if len(clean_parts) > 1:
+        answer.append("Context: " + " ".join(clean_parts[1:4])[:900])
+    if related:
+        answer.append("Related language: " + ", ".join(related[:12]))
+    if sources:
+        unique_sources = []
+        for source in sources:
+            if source and source not in unique_sources:
+                unique_sources.append(source)
+        answer.append("Sources: " + ", ".join(unique_sources[:5]))
+    return "\n".join(answer)
+
+
 def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
                 timeout: float = 12.0) -> str:
     """
@@ -2877,7 +3060,8 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
 
     Writes the query to poedex_queue/{qid}.json (per-request file), waits for
     aurora_room.py to process it and write the result to
-    poedex_results/{qid}.json, then returns the result string.
+    poedex_results/{qid}.json, then returns the result string. If Room is not
+    running, resolves the lookup directly through headless public web sources.
 
     Using per-request files instead of a shared single-slot file eliminates
     the race condition when multiple queries are in flight simultaneously.
@@ -2904,6 +3088,32 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
             "status":    "pending",
             "submitted": time.time(),
         }, indent=2))
+
+        if not _poedex_room_responder_available():
+            try:
+                query_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+            result = _poedex_headless_lookup(question, cat=cat, lane=lane)
+            if result:
+                try:
+                    result_path.write_text(json.dumps({
+                        "id": qid,
+                        "question": question,
+                        "cat": cat,
+                        "lane": lane,
+                        "result": result,
+                        "status": "done",
+                        "source": "poedex_headless",
+                        "ts": time.time(),
+                        "ts_str": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    }, indent=2))
+                except Exception:
+                    pass
+                _log(f"  [POEDEX] headless result: {question[:60]}")
+                return result
+            _log(f"  [POEDEX] headless lookup failed: {question[:60]}")
+            return ""
 
         effective_timeout = float(timeout)
         if cat in ("external", "researcher"):
@@ -2937,6 +3147,27 @@ def _poedex_ask(question: str, cat: str = "define", lane: str = "self",
             query_path.unlink(missing_ok=True)
         except Exception:
             pass
+        result = _poedex_headless_lookup(question, cat=cat, lane=lane)
+        if result:
+            try:
+                result_path.write_text(json.dumps({
+                    "id": qid,
+                    "question": question,
+                    "cat": cat,
+                    "lane": lane,
+                    "result": result,
+                    "status": "done",
+                    "source": "poedex_headless_after_room_timeout",
+                    "ts": time.time(),
+                    "ts_str": time.strftime("%Y-%m-%d %H:%M:%S"),
+                }, indent=2))
+            except Exception:
+                pass
+            _log(
+                f"  [POEDEX] room timeout after {effective_timeout:.1f}s; "
+                f"headless result: {question[:60]}"
+            )
+            return result
         _log(f"  [POEDEX] query timeout after {effective_timeout:.1f}s: {question[:60]}")
         return ""
     except Exception as ex:
