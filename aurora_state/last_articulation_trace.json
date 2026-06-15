@@ -1,14 +1,31 @@
 {
-  "original": "I do am I is moment. I exist meaning I hold feel.",
-  "candidate": "I do am I is moment. I exist meaning I hold feel.",
-  "selected": "I do am I is moment. I exist meaning I hold feel.",
-  "accepted": true,
-  "reason": "already_well_formed",
-  "original_score": 0.8,
-  "candidate_score": 0.8,
-  "original_pressure": 0.28,
-  "candidate_pressure": 0.28,
-  "pressure_relief": 0.0,
-  "safe": true,
-  "metadata": {}
+  "original": "I meaning do moment. I feel did am.",
+  "candidate": "",
+  "selected": "I meaning do moment. I feel did am.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.62,
+  "candidate_score": 0.0,
+  "original_pressure": 0.316,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.684,
+  "safe": false,
+  "metadata": {
+    "prompt_excerpt": "What would likely cause that relation to change?",
+    "input_interpretation": {
+      "raw_prompt": "What would likely cause that relation to change?",
+      "intent_hint": "question",
+      "topic_terms": [
+        "likely",
+        "cause",
+        "relation",
+        "change"
+      ],
+      "entities": []
+    },
+    "tone": "curious",
+    "source": "no_pattern_matched",
+    "timestamp": 1781553812.1418352,
+    "min_relief_used": 0.035
+  }
 }

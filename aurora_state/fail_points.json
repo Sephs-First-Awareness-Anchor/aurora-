@@ -1,47 +1,47 @@
 {
-  "total_fails": 58942,
+  "total_fails": 60793,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 4061,
-      "severity_sum": 1853.3573775956477,
+      "fail_count": 4197,
+      "severity_sum": 1928.8711841028828,
       "recent": [
         0.46073146885189276,
         0.46073146885189276,
-        0.6716089743589744,
-        0.7356858974358974,
+        0.6079128627782474,
+        0.6761433854606931,
+        0.5314054907219505,
         0.46073146885189276,
         0.46073146885189276,
+        0.5314054907219505,
         0.46073146885189276,
         0.46073146885189276,
+        0.6528570019723866,
+        0.7292606015779092,
+        0.5314054907219505,
         0.46073146885189276,
         0.46073146885189276,
-        0.671818540433925,
-        0.735581114398422,
         0.5314054907219505,
-        0.5314054907219505,
-        0.5314054907219505,
-        0.5314054907219505,
-        0.5314054907219505,
-        0.5314054907219505,
-        0.6072841645533953,
-        0.6768768667230206
+        0.46073146885189276,
+        0.46073146885189276,
+        0.671189842209073,
+        0.7361050295857988
       ],
       "examples": [
         {
           "conversation_id": "prove_ep_epoch_1:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.20367427444350517,
+          "dimension_score": 0.13399408284023667,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links corpus and fragment here?",
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
-            "what behavior means here.",
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.457095
+          "timestamp": 1781553635.3930285
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -226,46 +226,46 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 9214,
-      "severity_sum": 4590.673473161406,
+      "fail_count": 9431,
+      "severity_sum": 4694.863797751724,
       "recent": [
+        0.5071384781490946,
         0.5148584600567302,
         0.5148584600567302,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5071384781490946,
         0.5148584600567302,
         0.5148584600567302,
+        0.5071384781490946,
         0.5148584600567302,
-        0.035,
+        0.5148584600567302,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5071384781490946,
-        0.5071384781490946,
-        0.5071384781490946,
-        0.5071384781490946,
-        0.5071384781490946,
-        0.5071384781490946,
-        0.5,
-        0.5
+        0.035
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
-          "dimension_score": 0.2446190476190476,
+          "dimension_score": 0.23890476190476187,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2493346
+          "timestamp": 1781553635.1503425
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -450,11 +450,10 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 1726,
-      "severity_sum": 507.4181304091019,
+      "fail_count": 1834,
+      "severity_sum": 526.4521316552591,
       "recent": [
         0.16211962006034736,
-        0.5,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
@@ -472,11 +471,12 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736
+        0.16211962006034736,
+        0.4163
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -485,11 +485,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2573454
+          "timestamp": 1781553635.1604788
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -628,8 +628,8 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 12192,
-      "severity_sum": 6225.844243969838,
+      "fail_count": 12502,
+      "severity_sum": 6387.720948331343,
       "recent": [
         0.5,
         0.5,
@@ -637,16 +637,16 @@
         0.5,
         0.5,
         0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
         0.5,
         0.5,
         0.5,
@@ -654,7 +654,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
@@ -663,11 +663,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2577598
+          "timestamp": 1781553635.1610706
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1009,11 +1009,9 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 1110,
-      "severity_sum": 188.36645415084692,
+      "fail_count": 1217,
+      "severity_sum": 206.98415539700142,
       "recent": [
-        0.16211962006034736,
-        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
@@ -1031,11 +1029,13 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -1044,11 +1044,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2667522
+          "timestamp": 1781553635.1707668
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1187,8 +1187,8 @@
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 12165,
-      "severity_sum": 6249.678524126852,
+      "fail_count": 12475,
+      "severity_sum": 6411.555228488356,
       "recent": [
         0.5,
         0.5,
@@ -1196,16 +1196,16 @@
         0.5,
         0.5,
         0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
         0.5,
         0.5,
         0.5,
@@ -1213,7 +1213,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
@@ -1222,11 +1222,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.267131
+          "timestamp": 1781553635.1712534
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1365,15 +1365,13 @@
       ]
     },
     "boundary_calibration": {
-      "fail_count": 6372,
-      "severity_sum": 2964.8912582232056,
+      "fail_count": 6578,
+      "severity_sum": 3060.9877948796407,
       "recent": [
         0.43231898682759295,
         0.43231898682759295,
         0.43231898682759295,
         0.43231898682759295,
-        0.43231898682759295,
-        0.43231898682759295,
         0.5,
         0.5,
         0.5,
@@ -1386,12 +1384,14 @@
         0.43231898682759295,
         0.43231898682759295,
         0.43231898682759295,
+        0.5,
+        0.5,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.3,
           "user_turns": [
@@ -1400,11 +1400,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2754393
+          "timestamp": 1781553635.2015326
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1721,8 +1721,8 @@
       ]
     },
     "emotional_calibration": {
-      "fail_count": 1270,
-      "severity_sum": 218.75669194425262,
+      "fail_count": 1377,
+      "severity_sum": 237.37439319040712,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
@@ -1740,14 +1740,14 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.4163,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -1756,11 +1756,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2838345
+          "timestamp": 1781553635.211564
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -1899,46 +1899,46 @@
       ]
     },
     "semantic_precision": {
-      "fail_count": 998,
-      "severity_sum": 600.0758980760002,
+      "fail_count": 1032,
+      "severity_sum": 625.9784706316491,
       "recent": [
-        0.7144519582981121,
-        0.7963257255564948,
-        0.7144519582981121,
-        0.7960791772330235,
+        0.7149450549450549,
+        0.7954628064243449,
+        0.7149450549450549,
+        0.7955860805860806,
         0.7143286841363765,
         0.7960791772330235,
-        0.7151916032685264,
-        0.7963257255564948,
         0.7143286841363765,
+        0.7963257255564948,
+        0.7149450549450549,
         0.7960791772330235,
-        0.7144519582981121,
-        0.7955860805860806,
+        0.6926373626373628,
+        0.7807142857142858,
+        0.7149450549450549,
+        0.7963257255564948,
         0.7151916032685264,
-        0.7955860805860806,
-        0.7901282051282051,
-        0.8655128205128205,
-        0.7903747534516765,
-        0.8653895463510848,
-        0.7144519582981121,
-        0.7963257255564948
+        0.7954628064243449,
+        0.7680670611439843,
+        0.8579536489151873,
+        0.7896351084812624,
+        0.8660059171597634
       ],
       "examples": [
         {
           "conversation_id": "prove_ep_epoch_1:rel_probe_corpus_fragment_1",
           "source": "relational_probe",
-          "dimension_score": 0.20367427444350517,
+          "dimension_score": 0.13399408284023667,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links corpus and fragment here?",
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
-            "what behavior means here.",
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.457095
+          "timestamp": 1781553635.3930285
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2119,8 +2119,8 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 2019,
-      "severity_sum": 856.065562975295,
+      "fail_count": 2121,
+      "severity_sum": 895.5687103966684,
       "recent": [
         0.4998688285194044,
         0.4998688285194044,
@@ -2145,7 +2145,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.25,
           "user_turns": [
@@ -2154,11 +2154,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2841346
+          "timestamp": 1781553635.212197
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -2497,12 +2497,12 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 3607,
-      "severity_sum": 2065.854313388461,
+      "fail_count": 3714,
+      "severity_sum": 2123.906017750011,
       "recent": [
-        0.5674186702112157,
-        0.5674186702112157,
         0.035,
+        0.5674186702112157,
+        0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
@@ -2523,7 +2523,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
@@ -2532,11 +2532,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.2920802
+          "timestamp": 1781553635.2215152
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",
@@ -2675,12 +2675,12 @@
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 1621,
-      "severity_sum": 384.46156514836025,
+      "fail_count": 1728,
+      "severity_sum": 403.0792663945175,
       "recent": [
-        0.16211962006034736,
-        0.16211962006034736,
         0.4163,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
@@ -2701,7 +2701,7 @@
       ],
       "examples": [
         {
-          "conversation_id": "prove_ep_epoch_1:episode_d4e1bb9bb8da",
+          "conversation_id": "prove_ep_epoch_1:episode_d45dd5bdbaf3",
           "source": "prove_ep_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
@@ -2710,11 +2710,11 @@
             "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
-            "what behavior means here.",
+            "I approach this with thoughtful reflection. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this co",
+            "Behavior: learned:behavior.",
             "Relation: learned:relation."
           ],
-          "timestamp": 1781549267.3002644
+          "timestamp": 1781553635.242052
         },
         {
           "conversation_id": "train_epoch_2:episode_c6388e715bc2",

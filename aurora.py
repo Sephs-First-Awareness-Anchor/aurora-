@@ -19105,16 +19105,54 @@ def boot_aurora(
                             return
                     except Exception:
                         pass
-                # Has coverage but working memory couldn't synthesize — flag in OETS
-                # for relational derivation on the next processing pass
-                if _web is not None and hasattr(_web, 'add_node'):
+                # Has coverage but working memory couldn't synthesize — run internal
+                # relational derivation NOW instead of deferring to the next pass.
+                # Also queue as a priority research target so the study cycle
+                # deepens it further via the internet fetch callback.
+                _word_key = _text.split()[0][:32].lower()
+                _research_sm = getattr(_oets, 'research', None) if _oets is not None else None
+                _derived = False
+                if _research_sm is not None:
                     try:
-                        _web.add_node(_text.split()[0][:32], role="gap_flagged",
-                                      valence=0.0)
+                        _ir = _research_sm._internal_research(_word_key)
+                        if _ir and _ir.success and (
+                            _ir.related_words or _ir.synonyms
+                            or _ir.antonyms or _ir.hypernyms
+                        ):
+                            _research_sm._integrate_result(_word_key, _ir)
+                            _derived = True
+                    except Exception:
+                        pass
+                    # Queue as high-priority so next study cycle deepens via internet
+                    try:
+                        from aurora_internal.aurora_ontological_scaffolding import (
+                            ResearchRequest as _RR, _generate_id as _gid
+                        )
+                        _already = any(
+                            r.word == _word_key and r.status == "pending"
+                            for r in _research_sm.queue
+                        )
+                        if not _already:
+                            _req = _RR(
+                                request_id=_gid("warp_seek"),
+                                word=_word_key,
+                                priority=0.88,
+                                reason="warp_shallow_seek",
+                            )
+                            _research_sm.queue.insert(0, _req)
+                    except Exception:
+                        pass
+                elif _web is not None:
+                    try:
+                        _web.add_node(_word_key, role="gap_flagged", valence=0.0)
                     except Exception:
                         pass
                 decision.action_taken = True
-                decision.notes = "relational gap — OETS has coverage, derivation deferred"
+                decision.notes = (
+                    "relational derivation executed — OETS depth deepened and queued for study"
+                    if _derived else
+                    "shallow concept queued for priority study cycle"
+                )
                 return
 
             # ── Step 2b: Self-relation — reason from current axis state ──────────
@@ -19148,17 +19186,28 @@ def boot_aurora(
                     pass
 
             if _result:
-                # Seed into OETS so the next seek for this concept resolves internally
-                if _web is not None and hasattr(_web, 'add_node'):
+                # Integrate the retrieved definition into OETS so depth actually
+                # increases — add_node alone only calls encounter(), not _recalculate_depth().
+                _word_key = _text.split()[0][:32].lower()
+                _research_sm = getattr(_oets, 'research', None) if _oets is not None else None
+                if _research_sm is not None:
                     try:
-                        _web.add_node(_text.split()[0][:32], role="retrieved",
-                                      valence=0.0)
+                        _research_sm.teach_concept(_word_key, _result[:500])
+                    except Exception:
+                        if _web is not None:
+                            try:
+                                _web.add_node(_word_key, role="retrieved", valence=0.0)
+                            except Exception:
+                                pass
+                elif _web is not None:
+                    try:
+                        _web.add_node(_word_key, role="retrieved", valence=0.0)
                     except Exception:
                         pass
                 decision.result = _result
                 decision.action_taken = True
                 decision.resolved = True
-                decision.notes = f"external retrieval seeded to OETS ({len(_result)} chars)"
+                decision.notes = f"external retrieval integrated into OETS — depth updated ({len(_result)} chars)"
                 _tc = systems.get('_seek_stats')
                 if _tc is not None: _tc['external'] = _tc.get('external', 0) + 1
             else:

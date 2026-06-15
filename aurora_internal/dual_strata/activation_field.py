@@ -477,6 +477,38 @@ def run_activation_cycle(systems: Dict[str, Any]) -> Dict[str, Any]:
         data = afield.to_dict()
         _save_field(afield, state_dir)
         systems["_activation_field"] = data
+
+        # Continuous subsurface deepening: for each top-activated concept whose
+        # ontological_depth is still shallow (<0.25), run internal relational
+        # derivation right now — don't wait for the 720-second study cycle.
+        # This is what lets the subsurface resolve pressure continuously
+        # instead of leaving shallow concepts stuck until a scheduled pass.
+        try:
+            _perc = systems.get("perception")
+            _oets_eng = getattr(_perc, "oets", None) if _perc is not None else None
+            _research = getattr(_oets_eng, "research", None) if _oets_eng is not None else None
+            _eng_web = getattr(_oets_eng, "web", None) if _oets_eng is not None else None
+            if _research is not None and _eng_web is not None:
+                _top = sorted(
+                    afield.activations.items(), key=lambda x: x[1], reverse=True
+                )[:10]
+                for _concept, _strength in _top:
+                    if _strength < 0.25:
+                        break
+                    try:
+                        _node = _eng_web.get_node(_concept)
+                        if _node is not None and _node.ontological_depth < 0.25:
+                            _ir = _research._internal_research(_concept)
+                            if _ir and _ir.success and (
+                                _ir.related_words or _ir.synonyms
+                                or _ir.antonyms or _ir.hypernyms
+                            ):
+                                _research._integrate_result(_concept, _ir)
+                    except Exception:
+                        continue
+        except Exception:
+            pass
+
         return data
     except Exception:
         return {}
