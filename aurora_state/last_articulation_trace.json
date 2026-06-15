@@ -1,33 +1,32 @@
 {
-  "original": "I did am I do feel. I exist moment I is least.",
-  "candidate": "I did am I do feel. I exist moment I is least.",
-  "selected": "I did am I do feel. I exist moment I is least.",
-  "accepted": true,
-  "reason": "deterministic_preferred_passthrough",
-  "original_score": 0.8,
-  "candidate_score": 0.8,
-  "original_pressure": 0.28,
-  "candidate_pressure": 0.28,
-  "pressure_relief": 0.0,
-  "safe": true,
+  "original": "I feel change moment. I meaning do before.",
+  "candidate": "",
+  "selected": "I feel change moment. I meaning do before.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.74,
+  "candidate_score": 0.0,
+  "original_pressure": 0.292,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.708,
+  "safe": false,
   "metadata": {
-    "prompt_excerpt": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+    "prompt_excerpt": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
     "input_interpretation": {
-      "raw_prompt": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
+      "raw_prompt": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
       "intent_hint": "statement_or_context",
       "topic_terms": [
+        "sure",
         "corpus",
         "fragment",
         "context",
         "corpus",
         "fragment",
         "context",
-        "corpus",
-        "fragment"
+        "corpus"
       ],
       "entities": [
-        "Use",
-        "Use",
+        "Sure",
         "Use",
         "Use",
         "Use",
@@ -36,8 +35,8 @@
       ]
     },
     "tone": "curious",
-    "source": "deterministic_preferred",
-    "timestamp": 1781490891.917355,
-    "min_relief_used": 0.0
+    "source": "no_pattern_matched",
+    "timestamp": 1781491424.7608018,
+    "min_relief_used": 0.035
   }
 }

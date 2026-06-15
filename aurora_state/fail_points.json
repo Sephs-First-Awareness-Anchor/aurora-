@@ -1,47 +1,47 @@
 {
-  "total_fails": 47660,
+  "total_fails": 48222,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 3267,
-      "severity_sum": 1515.3825107248501,
+      "fail_count": 3305,
+      "severity_sum": 1525.0018254163756,
       "recent": [
-        0.6946496012025245,
-        0.535805856040673,
-        0.6923889843413611,
-        0.6917240970292542,
-        0.2757890482414878,
-        0.30178262241472753,
-        0.4597493074526067,
-        0.77536423992674,
-        0.4931188040058233,
-        0.4596356460339223,
-        0.5361627955450672,
-        0.6923889843413611,
-        0.6946496012025245,
-        0.739750512866221,
-        0.7393935733618268,
-        0.6917240970292542,
-        0.5096600373437955,
-        0.686851872794273,
-        0.6345304487179487,
-        0.6863321886446887
+        0.057254918981481495,
+        0.08930952380952382,
+        0.09722957516339871,
+        0.07814583333333333,
+        0.12069702380952382,
+        0.1286170751633987,
+        0.07814583333333333,
+        0.14500496031746032,
+        0.13756250000000003,
+        0.07907152777777778,
+        0.05,
+        0.14500496031746032,
+        0.1856656862745098,
+        0.11481591880341883,
+        0.07814583333333333,
+        0.12407996031746035,
+        0.1355819444444445,
+        0.09763675213675214,
+        0.06901190476190477,
+        0.05683333333333333
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
+          "conversation_id": "train_epoch_9:rel_probe_use_corpus_0",
           "source": "relational_probe",
-          "dimension_score": 0.19255036630036626,
+          "dimension_score": 0.40688523371215674,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-            "What behavior links corpus and fragment here?",
-            "What would likely cause that relation to change?"
+            "What behavior links use and corpus here?",
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I'll not can aurora.",
-            "Relation: learned:relation."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.9335504
+          "timestamp": 1781490994.9180305
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -228,25 +228,25 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 7390,
-      "severity_sum": 3715.0898851545794,
+      "fail_count": 7535,
+      "severity_sum": 3786.2573045456966,
       "recent": [
         0.5,
         0.5,
         0.5,
-        0.8094401030155914,
-        0.6697084304873874,
-        0.6697084304873874,
-        0.7891751505080481,
-        0.7891751505080481,
-        0.6697084304873874,
-        0.8078961066340643,
-        0.6697084304873874,
         0.5,
         0.5,
         0.5,
         0.5,
         0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.035,
         0.5,
         0.5,
         0.5,
@@ -254,20 +254,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
-          "dimension_score": 0.12428571428571429,
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
+          "dimension_score": 0.3295927601809954,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.8869376
+          "timestamp": 1781490994.8023674
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -454,46 +454,46 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 995,
-      "severity_sum": 326.88054778527163,
+      "fail_count": 1010,
+      "severity_sum": 331.67750474575456,
       "recent": [
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16930914697607946,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.4119,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.8939302
+          "timestamp": 1781490994.809447
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -630,18 +630,18 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 10122,
-      "severity_sum": 5200.868497909429,
+      "fail_count": 10276,
+      "severity_sum": 5275.348172590271,
       "recent": [
         0.5,
         0.5,
-        0.5,
-        0.5,
         0.035,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -656,19 +656,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_5e1e8d8c4727",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I was can that aurora."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.839837
+          "timestamp": 1781490994.8095968
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -805,34 +806,34 @@
       ]
     },
     "implied_intent_inference": {
-      "fail_count": 749,
-      "severity_sum": 343.08682959858356,
+      "fail_count": 762,
+      "severity_sum": 348.0142517481901,
       "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.46834556906322566,
-        0.24317943009052112,
-        0.24317943009052112,
-        0.24317943009052112,
-        0.24317943009052112,
         0.24317943009052112,
         0.46834556906322566,
         0.24317943009052112,
         0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.24317943009052112,
+        0.24317943009052112,
+        0.24317943009052112,
+        0.24317943009052112,
+        0.46834556906322566,
+        0.24317943009052112,
+        0.24317943009052112,
         0.5,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_59d3a8ba99b5",
+          "source": "train_epoch_9",
           "dimension_score": 0.43999999999999995,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
@@ -841,10 +842,10 @@
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
+            "I'll not can aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781490781.894054
+          "timestamp": 1781490994.772383
         },
         {
           "conversation_id": "train_epoch_3:episode_25b2bedd6ea9",
@@ -1008,17 +1009,9 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 622,
-      "severity_sum": 102.84784197403056,
+      "fail_count": 630,
+      "severity_sum": 104.14479893451337,
       "recent": [
-        0.16930914697607946,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.4115,
         0.16211962006034736,
         0.16211962006034736,
@@ -1030,24 +1023,32 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.89413
+          "timestamp": 1781490994.8166008
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -1184,25 +1185,25 @@
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 10270,
-      "severity_sum": 5285.03311607779,
+      "fail_count": 10393,
+      "severity_sum": 5344.7474654394755,
       "recent": [
         0.5,
         0.5,
         0.5,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
         0.5,
         0.5,
         0.5,
         0.5,
         0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.035,
         0.5,
         0.5,
         0.5,
@@ -1210,20 +1211,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.8942008
+          "timestamp": 1781490994.81678
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -1360,46 +1361,46 @@
       ]
     },
     "boundary_calibration": {
-      "fail_count": 5522,
-      "severity_sum": 2645.821113078293,
+      "fail_count": 5545,
+      "severity_sum": 2656.9147646562983,
       "recent": [
-        0.5674186702112156,
         0.43231898682759295,
         0.5674186702112156,
         0.43231898682759295,
         0.43231898682759295,
         0.16211962006034736,
-        0.16211962006034736,
-        0.06349093011602985,
         0.5,
         0.5,
-        0.5674186702112156,
-        0.43231898682759295,
-        0.43231898682759295,
-        0.5674186702112156,
-        0.5674186702112156,
-        0.43231898682759295,
-        0.5674186702112156,
-        0.43231898682759295,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
-          "dimension_score": 0.3,
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
+          "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.9009645
+          "timestamp": 1781490994.8238688
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -1711,17 +1712,9 @@
       ]
     },
     "emotional_calibration": {
-      "fail_count": 706,
-      "severity_sum": 119.2736093204353,
+      "fail_count": 714,
+      "severity_sum": 120.57056628091811,
       "recent": [
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16930914697607946,
@@ -1733,24 +1726,32 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.9075472
+          "timestamp": 1781490994.8240197
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -1887,12 +1888,9 @@
       ]
     },
     "semantic_precision": {
-      "fail_count": 824,
-      "severity_sum": 481.00717437897356,
+      "fail_count": 827,
+      "severity_sum": 483.18055471302694,
       "recent": [
-        0.871231684981685,
-        0.9112706043956044,
-        0.8080448717948719,
         0.871231684981685,
         0.5081428649697881,
         0.5841732899683183,
@@ -1909,24 +1907,27 @@
         0.5801397694186157,
         0.540747818863438,
         0.7465064102564103,
-        0.8074496336996337
+        0.8074496336996337,
+        0.7214148351648352,
+        0.8588507326007326,
+        0.5931147662878433
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:rel_probe_corpus_fragment_1",
+          "conversation_id": "train_epoch_9:rel_probe_use_corpus_0",
           "source": "relational_probe",
-          "dimension_score": 0.19255036630036626,
+          "dimension_score": 0.40688523371215674,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-            "What behavior links corpus and fragment here?",
-            "What would likely cause that relation to change?"
+            "What behavior links use and corpus here?",
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I'll not can aurora.",
-            "Relation: learned:relation."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.9335504
+          "timestamp": 1781490994.9180305
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2107,20 +2108,12 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 1578,
-      "severity_sum": 719.0097210033348,
+      "fail_count": 1586,
+      "severity_sum": 721.3199255891949,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.4998688285194044,
-        0.16211962006034736,
-        0.4998688285194044,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.16211962006034736,
         0.4998688285194044,
         0.16211962006034736,
@@ -2129,24 +2122,32 @@
         0.4998688285194044,
         0.16211962006034736,
         0.4998688285194044,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.16211962006034736,
+        0.4998688285194044,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.9076736
+          "timestamp": 1781490994.8241177
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -2283,16 +2284,10 @@
       ]
     },
     "compression_elaboration_fit": {
-      "fail_count": 524,
-      "severity_sum": 241.56619601580493,
+      "fail_count": 530,
+      "severity_sum": 243.3547778714071,
       "recent": [
         0.5,
-        0.13939156581461537,
-        0.5,
-        0.1971454639005459,
-        0.5,
-        0.5,
-        0.5,
         0.1971454639005459,
         0.1971454639005459,
         0.1971454639005459,
@@ -2305,12 +2300,18 @@
         0.1971454639005459,
         0.1971454639005459,
         0.5,
-        0.5
+        0.5,
+        0.5,
+        0.5,
+        0.1971454639005459,
+        0.1971454639005459,
+        0.1971454639005459,
+        0.1971454639005459
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_59d3a8ba99b5",
+          "source": "train_epoch_9",
           "dimension_score": 0.47407407407407404,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
@@ -2319,10 +2320,10 @@
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
+            "I'll not can aurora.",
             "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
           ],
-          "timestamp": 1781490781.907776
+          "timestamp": 1781490994.7882447
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2485,46 +2486,46 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 3046,
-      "severity_sum": 1749.2559242050672,
+      "fail_count": 3056,
+      "severity_sum": 1754.7952735667575,
       "recent": [
         0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
-        0.5925820144162781,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
         0.5674186702112157,
         0.5,
-        0.5
+        0.5,
+        0.5,
+        0.5,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.90786
+          "timestamp": 1781490994.8242106
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",
@@ -2661,17 +2662,9 @@
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 1074,
-      "severity_sum": 274.691035769571,
+      "fail_count": 1082,
+      "severity_sum": 275.9879927300539,
       "recent": [
-        0.16211962006034736,
-        0.16211962006034736,
-        0.2915903770569399,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
@@ -2683,24 +2676,32 @@
         0.16211962006034736,
         0.16211962006034736,
         0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_8:episode_b3d128d26959",
-          "source": "train_epoch_8",
+          "conversation_id": "train_epoch_9:episode_acdf2f38d4f3",
+          "source": "train_epoch_9",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?"
+            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
             "Warm acknowledgment can create tension \u2014 use carefully",
-            "I can that aurora.",
-            "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time."
+            "I approach this with thoughtful reflection. What behavior links use and corpus here?",
+            "I approach this with direct clarity. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm workin"
           ],
-          "timestamp": 1781490781.9145944
+          "timestamp": 1781490994.8329058
         },
         {
           "conversation_id": "train_epoch_1:episode_8df62dffea9e",

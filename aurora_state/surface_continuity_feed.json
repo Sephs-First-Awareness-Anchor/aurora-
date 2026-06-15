@@ -1,68 +1,10 @@
 [
   {
-    "packet_id": "f3e9813add964cdea73b8a4eea7d2b97",
-    "created_at": 1781490733.2643487,
-    "source": "simulation_live_bridge",
-    "user_input": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: I've added 'what i' as What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?. That shifts how I reason through this thread. Does that match what you're pointing at?]",
-    "aurora_response": "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time.",
-    "response_tone": "careful",
-    "concepts_activated": [
-      "two",
-      "claims",
-      "conflict",
-      "reconcile",
-      "without",
-      "pretending"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.66"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "97900634d69d4bd1b292573824adbad7",
-    "created_at": 1781490740.9207313,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "Warm acknowledgment can create tension \u2014 use carefully",
-    "response_tone": "attentive",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.028,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.66"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "37ef7b4d5c504a5cadfa306ea1dfade0",
-    "created_at": 1781490748.6616912,
+    "packet_id": "bcca023e6db74666a05952d0efa76c38",
+    "created_at": 1781491352.0208025,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "I was can that aurora.",
+    "aurora_response": "Behavior: learned:behavior.",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
@@ -70,35 +12,6 @@
       "use",
       "corpus",
       "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1b84a53bc02b4af19e9d287ab960131a",
-    "created_at": 1781490756.4922998,
-    "source": "simulation_live_bridge",
-    "user_input": "Let me be more specific: Integrate two perspectives that disagree without collapsing either one.. How does that land for you?",
-    "aurora_response": "I was can that aurora.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "more",
-      "specific",
-      "integrate",
-      "two",
-      "perspectives",
-      "disagree"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -108,18 +21,47 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.56"
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "1e78dbf1fc9a42cda0db11b5e1aa58b6",
-    "created_at": 1781490763.4704375,
+    "packet_id": "05ff2dc17d884d30adb8d545035e0ce5",
+    "created_at": 1781491355.4262726,
+    "source": "simulation_live_bridge",
+    "user_input": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a1109642eb984780890b5eea96db1370",
+    "created_at": 1781491359.17802,
     "source": "simulation_live_bridge",
     "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "Warm acknowledgment can create tension \u2014 use carefully",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
@@ -137,18 +79,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.43"
+      "existence:+0.68"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "8b7baa62ed244fcd94e968a54399a3b4",
-    "created_at": 1781490771.4616175,
+    "packet_id": "61cf2b2fc0eb43a6bf42dfe209af7106",
+    "created_at": 1781491363.1656551,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "I can that aurora.",
+    "aurora_response": "Behavior: learned:behavior.",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
@@ -160,52 +102,52 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.43"
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "b0fa8200f8df4192a96422d873fdc15c",
-    "created_at": 1781490780.6809008,
+    "packet_id": "709ca028ec4e45f3b9b36e28033a69c0",
+    "created_at": 1781491366.678029,
     "source": "simulation_live_bridge",
-    "user_input": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
-    "aurora_response": "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time.",
-    "response_tone": "careful",
+    "user_input": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "two",
-      "claims",
-      "conflict",
-      "reconcile",
-      "without",
-      "pretending"
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.56"
+      "existence:+0.63"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "c55ad4cfe4c54993ab7fdb1b6aa8b6e7",
-    "created_at": 1781490789.2849283,
+    "packet_id": "2228ff9abc7640c986c89a37eb045125",
+    "created_at": 1781491369.6996891,
     "source": "simulation_live_bridge",
     "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "Warm acknowledgment can create tension \u2014 use carefully",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
@@ -219,22 +161,22 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "B",
-    "coherence": 0.028,
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.64"
+      "existence:+0.58"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "498c5500ce5a440699b39af857b91ed4",
-    "created_at": 1781490797.57366,
+    "packet_id": "dcbcb0af834449deba0159c30d4b432f",
+    "created_at": 1781491373.7506914,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "I was not can aurora.",
+    "aurora_response": "Behavior: learned:behavior.",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
@@ -246,52 +188,52 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.68"
+      "existence:+0.64"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "f88a26144a9e43e78f95b4ac0f873290",
-    "created_at": 1781490806.8544576,
+    "packet_id": "48f02c3676d9406f895198b9440328fe",
+    "created_at": 1781491377.3829038,
     "source": "simulation_live_bridge",
-    "user_input": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
-    "aurora_response": "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time.",
-    "response_tone": "careful",
+    "user_input": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "two",
-      "claims",
-      "conflict",
-      "reconcile",
-      "without",
-      "pretending"
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.67"
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "0c154af4eb0a43899860b051c10ab473",
-    "created_at": 1781490814.2302551,
+    "packet_id": "77c0bf551f7e4037916ff890cbd6d340",
+    "created_at": 1781491380.3969958,
     "source": "simulation_live_bridge",
     "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "Warm acknowledgment can create tension \u2014 use carefully",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
@@ -305,22 +247,22 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "B",
-    "coherence": 0.028,
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.66"
+      "existence:+0.67"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "37875d17dacb422dbc7027362cc83311",
-    "created_at": 1781490822.5965943,
+    "packet_id": "4f3186a3bd7440d680c1e0966e522cc2",
+    "created_at": 1781491384.5134156,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "I was not can aurora.",
+    "aurora_response": "Behavior: learned:behavior.",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
@@ -332,20 +274,20 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "73a127ba20284fb28702a443a23806b8",
-    "created_at": 1781490832.0440254,
+    "packet_id": "3450d55ea95741feb604864fcedb83dd",
+    "created_at": 1781491388.7459135,
     "source": "simulation_live_bridge",
     "user_input": "What would likely cause that relation to change?",
     "aurora_response": "Relation: learned:relation.",
@@ -364,18 +306,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.59"
+      "existence:+0.57"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "8cbe4941234c4a428891d3bac8a270c0",
-    "created_at": 1781490839.6165237,
+    "packet_id": "89852687c8f24360b735f51eaeb10b16",
+    "created_at": 1781491392.89948,
     "source": "simulation_live_bridge",
     "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "Warm acknowledgment can create tension \u2014 use carefully",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
@@ -393,18 +335,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.51"
+      "existence:+0.44"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "69643ce1932e43a7ac29b2452acbcc1c",
-    "created_at": 1781490848.090597,
+    "packet_id": "02603b6883d54b22a25487d05b81e14a",
+    "created_at": 1781491397.2748222,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links corpus and fragment here?",
-    "aurora_response": "I not can aurora.",
+    "aurora_response": "Behavior: learned:behavior.",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
@@ -416,20 +358,20 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.55"
+      "existence:+0.44"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "102cb91b28d241cebcc6c585f70a8f96",
-    "created_at": 1781490857.6700053,
+    "packet_id": "b583c5adfdd84ee8ad4a1284a537f4bf",
+    "created_at": 1781491401.8099115,
     "source": "simulation_live_bridge",
     "user_input": "What would likely cause that relation to change?",
     "aurora_response": "Relation: learned:relation.",
@@ -448,18 +390,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.68"
+      "existence:+0.59"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "8301868374cf438eb2e87d4f792080b6",
-    "created_at": 1781490865.455676,
+    "packet_id": "75f8d9dc8c1846cc904c61485ad85caa",
+    "created_at": 1781491405.0909822,
     "source": "simulation_live_bridge",
     "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "Warm acknowledgment can create tension \u2014 use carefully",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
@@ -477,18 +419,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.62"
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "1199eef8f04241daa7054a9ea21ec1be",
-    "created_at": 1781490874.131629,
+    "packet_id": "2dff01a6f54d46e4b8a4df0f0c918f20",
+    "created_at": 1781491409.4948816,
     "source": "simulation_live_bridge",
     "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "I'll can that aurora.",
+    "aurora_response": "Behavior: learned:behavior.",
     "response_tone": "uncertain",
     "concepts_activated": [
       "behavior",
@@ -500,52 +442,52 @@
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.53"
+      "existence:+0.58"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "1c259f42951d4d6ea4daa3adc919c2b0",
-    "created_at": 1781490884.0739906,
+    "packet_id": "359368442b414306b16d12a69ea7a452",
+    "created_at": 1781491413.4739785,
     "source": "simulation_live_bridge",
-    "user_input": "What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense? [Internal: So 'what i' is What I mean is: Two claims conflict. Reconcile them without pretending there is no tension.. With that in mind, what's your sense?. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
-    "aurora_response": "both what i means is two claims conflict and what i means is two claims conflict can hold at the same time.",
-    "response_tone": "careful",
+    "user_input": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "two",
-      "claims",
-      "conflict",
-      "reconcile",
-      "without",
-      "pretending"
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.58"
+      "existence:+0.51"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "f8dfb86d08694421b313be68bcfb21ae",
-    "created_at": 1781490891.9539287,
+    "packet_id": "c1538469f6a447d2be89dd8c065c0c30",
+    "created_at": 1781491416.7688682,
     "source": "simulation_live_bridge",
     "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "Warm acknowledgment can create tension \u2014 use carefully",
+    "aurora_response": "Direct clarity can create tension \u2014 use carefully",
     "response_tone": "attentive",
     "concepts_activated": [
       "use",
@@ -559,11 +501,68 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "B",
-    "coherence": 0.028,
+    "coherence": 0.0,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.69"
+      "existence:+0.57"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "05c3335eb54c4de3b1ebdf3024ff72cb",
+    "created_at": 1781491421.2860563,
+    "source": "simulation_live_bridge",
+    "user_input": "What behavior links use and corpus here?",
+    "aurora_response": "Behavior: learned:behavior.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "behavior",
+      "links",
+      "use",
+      "corpus",
+      "here"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "dd663871d2514efcbc09fc291ec288f8",
+    "created_at": 1781491425.3219097,
+    "source": "simulation_live_bridge",
+    "user_input": "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you.",
+    "aurora_response": "",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "use",
+      "corpus",
+      "fragment",
+      "context",
+      "use",
+      "corpus"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.56"
     ],
     "resolved_bindings": [],
     "consumed": false,
