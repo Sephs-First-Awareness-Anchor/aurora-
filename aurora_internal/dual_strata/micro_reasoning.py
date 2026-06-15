@@ -34,25 +34,33 @@ def generate_micro_reasoning(
     contract_snapshot = dict(contract_snapshot or {})
     contract_b = dict(contract_snapshot.get("B", {}) or {})
     contract_m = dict(contract_snapshot.get("M", {}) or {})
-    prediction = dict(subsurface.prediction or {})
+    # NOTE (FIX-A009): SubsurfaceState no longer carries prediction/coherence/
+    # contract_signals/salience_weights as top-level attributes -- the
+    # Recursive Crest Propagation Law moved all of that into
+    # subsurface._subsurface_detail. dominant_axis is the one attribute that
+    # still exists directly on SubsurfaceState.
+    _detail = subsurface._subsurface_detail or {}
+    prediction = dict(_detail.get("prediction_signal") or {})
+    _contract_signals = dict(_detail.get("contract_signals") or {})
+    _salience_weights = dict(_detail.get("salience_weights") or {})
 
     hypotheses: List[MicroReasoningHypothesis] = []
     mismatch = clip01(prediction.get("mismatch", 0.0))
     ambiguity = clip01(contract_b.get("ambiguity", 0.0))
-    coherence = clip01(subsurface.coherence)
+    coherence = clip01(_detail.get("coherence", 0.0))
     dominant_axis = str(subsurface.dominant_axis or "").upper()
     tracked_surface_emotion = str(
-        subsurface.contract_signals.get("dominant_emotion")
-        or subsurface.contract_signals.get("tracked_surface_emotion")
+        _contract_signals.get("dominant_emotion")
+        or _contract_signals.get("tracked_surface_emotion")
         or evidence.get("tone")
         or "neutral"
     ).lower()
     deep_emotion = str(
-        subsurface.contract_signals.get("interpreted_deep_emotion")
+        _contract_signals.get("interpreted_deep_emotion")
         or tracked_surface_emotion
         or "neutral"
     ).lower()
-    deep_passion = str(subsurface.contract_signals.get("interpreted_deep_passion") or "").lower()
+    deep_passion = str(_contract_signals.get("interpreted_deep_passion") or "").lower()
 
     if mismatch >= 0.45:
         hypotheses.append(
@@ -70,7 +78,7 @@ def generate_micro_reasoning(
         hypotheses.append(
             MicroReasoningHypothesis(
                 label="clarification_pressure",
-                confidence=max(ambiguity, clip01(subsurface.salience_weights.get("B", 0.0))),
+                confidence=max(ambiguity, clip01(_salience_weights.get("B", 0.0))),
                 urgency=max(ambiguity, 0.35),
                 rationale="Boundary clarity is weak enough that surface interpretation should stay careful.",
                 source="boundary",
@@ -84,7 +92,7 @@ def generate_micro_reasoning(
                 label="callback_pressure",
                 confidence=max(
                     clip01(contract_m.get("frame_continuity", 0.0)),
-                    clip01(subsurface.salience_weights.get("T", 0.0)),
+                    clip01(_salience_weights.get("T", 0.0)),
                 ),
                 urgency=0.45,
                 rationale="Prior context is exerting enough pull to bias the next conscious frame.",
@@ -100,7 +108,7 @@ def generate_micro_reasoning(
         hypotheses.append(
             MicroReasoningHypothesis(
                 label="comfort_bias",
-                confidence=max(0.5, clip01(subsurface.salience_weights.get("A", 0.0))),
+                confidence=max(0.5, clip01(_salience_weights.get("A", 0.0))),
                 urgency=0.55,
                 rationale="Deeper affective pressure suggests comfort or care may matter more than pure explanation.",
                 source="affect",

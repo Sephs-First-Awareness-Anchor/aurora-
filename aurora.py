@@ -12474,7 +12474,7 @@ def _refresh_live_dual_strata_runtime(
         return runtime
 
     try:
-        from aurora_internal.dual_strata.dce_bridge import DualStrataBridge
+        from aurora_internal.dual_strata.dce_bridge import DualStrataBridge, recursion_weights_from_lattice
     except Exception:
         return _read_live_dual_strata_runtime(systems)
 
@@ -12483,6 +12483,8 @@ def _refresh_live_dual_strata_runtime(
         if bridge is None:
             bridge = DualStrataBridge(state_dir=str(_dual_strata_state_dir(systems)))
             systems["_dual_strata_bridge"] = bridge
+        _lattice_for_rw = systems.get("ivm_lattice") or systems.get("lattice")
+        _recursion_weights = recursion_weights_from_lattice(_lattice_for_rw)
         snapshot = bridge.build_snapshot(
             assembly,
             payload=payload,
@@ -12491,6 +12493,7 @@ def _refresh_live_dual_strata_runtime(
             contract_snapshot=dict(contract_snapshot or {}),
             requested_frame=str(requested_frame or "balanced"),
             thought_intent=None,
+            recursion_weights=_recursion_weights,
         )
     except Exception:
         return _read_live_dual_strata_runtime(systems)
@@ -14492,6 +14495,73 @@ def _chain_down4_meaning(user_text: str, systems: dict, state: Any, *, auto_sear
                 systems["_native_meaning"] = _nm
     except Exception:
         pass
+
+    # Downward traversal — surface the waveform sub-crests behind this turn's
+    # converged crest via expand_crest(), the ONLY supported path into
+    # _subsurface_detail (aurora_internal/dual_strata/downward_traversal.py).
+    # depth=1 always includes sub_crests when subsurface_detail.json exists
+    # (written every build_snapshot() call via persist_subsurface_detail).
+    try:
+        from aurora_internal.dual_strata.downward_traversal import expand_crest as _expand_crest
+        _cc_label = str(
+            (systems.get("_live_conscious_frame") or {}).get("conscious_crest", {}).get("label", "")
+            or ""
+        )
+        _detail = _expand_crest(_dual_strata_state_dir(systems), _cc_label, depth=1)
+        _sub_crests = list(_detail.get("sub_crests") or [])
+        if _sub_crests:
+            _nm = dict(systems.get("_native_meaning") or {})
+            _existing = list(_nm.get("law_bindings") or [])
+            _existing_names = {b.get("nc_name", "") for b in _existing}
+            for _sc in _sub_crests:
+                _sc_label = str(_sc.get("label", "") or "")
+                _sc_intensity = float(_sc.get("intensity", 0.0) or 0.0)
+                if not _sc_label or _sc_label in _existing_names or _sc_intensity < 0.5:
+                    continue
+                _sc_axis = str(_sc.get("axis", "X") or "X")
+                _existing.append({
+                    "nc_name": _sc_label,
+                    "summary": f"a {_sc_axis}-axis subsurface perspective: {_sc_label}",
+                    "score": round(_sc_intensity, 4),
+                    "source": "subsurface_detail",
+                })
+                _existing_names.add(_sc_label)
+            _nm["law_bindings"] = _existing
+            systems["_native_meaning"] = _nm
+    except Exception:
+        pass
+
+    # Sensory observation — consume a pending proactive-comment packet staged
+    # by run_sensory_observation_cycle() (sensory_observation.py): if the
+    # subsurface decided this moment is novel/confident/un-cooled-down enough
+    # to warrant comment ("a message the surface-self reads next cycle"),
+    # surface it as a law_binding and clear the pending state so it is
+    # injected exactly once.
+    try:
+        _so_pending = dict(systems.get("_sensory_observation_pending") or {})
+        _so_path = _dual_strata_state_dir(systems) / "sensory_observation_pending.json"
+        if not _so_pending and _so_path.exists():
+            _so_pending = dict(json.loads(_so_path.read_text()) or {})
+        if _so_pending and _so_pending.get("speakable"):
+            _nm = dict(systems.get("_native_meaning") or {})
+            _existing = [b for b in list(_nm.get("law_bindings") or []) if b.get("nc_name", "") != "sensory_observation"]
+            _existing.append({
+                "nc_name": "sensory_observation",
+                "summary": str(_so_pending.get("summary", "") or ""),
+                "score": round(float(_so_pending.get("confidence", 0.0) or 0.0), 4),
+                "source": "sensory_observation",
+            })
+            _nm["law_bindings"] = _existing
+            systems["_native_meaning"] = _nm
+            # Consume: clear both tiers so this packet isn't re-injected
+            systems.pop("_sensory_observation_pending", None)
+            try:
+                _so_path.write_text(json.dumps({}))
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     response_already_set = bool(state.response_content)
     # A-dominant is a weighting signal, not a bypass: keep the meaning stage live
     # so the field can still be interpreted rather than hard-skipping the clause.

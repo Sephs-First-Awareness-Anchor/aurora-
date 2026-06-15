@@ -6950,6 +6950,55 @@ def run(systems: Dict[str, Any]) -> None:
                 if tick_decision.get("allowed", False):
                     _chamber.tick()
                     _record_task_run("evo_tick", now)
+
+                    # PredictiveStager — Subsurface runs density-weighted
+                    # perspective passes this tick (n_passes_for_density:
+                    # X->1, T->3, N->3, B->4, A->5 by dominant axis) and
+                    # stages them for Surface to harvest via
+                    # EmissionContextBuilder.build() -> harvest_into_systems().
+                    try:
+                        from aurora_internal.dual_strata.predictive_stager import PredictiveStager
+                        _ps_offset = int(systems.get("_predictive_stager_offset", 0) or 0)
+                        _ps_staged, _ps_next_offset = PredictiveStager.stage_passes_for_tick(
+                            systems,
+                            systems.get("working_memory"),
+                            systems.get("_live_conscious_frame"),
+                            perspective_offset=_ps_offset,
+                        )
+                        systems["_predictive_stager_offset"] = _ps_next_offset
+                        if _ps_staged:
+                            _record_task_run("predictive_stager", now)
+                    except Exception:
+                        pass
+
+                    # ActivationField — Subsurface spreading-activation cycle:
+                    # seed from working_memory/conscious_frame/sensory,
+                    # spread through OETS, decay, and persist to both
+                    # systems["_activation_field"] and aurora_state/
+                    # activation_field.json for _chain_down4_meaning and the
+                    # subsurface-evidence block to consume each turn.
+                    try:
+                        from aurora_internal.dual_strata.activation_field import run_activation_cycle
+                        _af_result = run_activation_cycle(systems)
+                        if _af_result:
+                            _record_task_run("activation_field", now)
+                    except Exception:
+                        pass
+
+                    # SensoryObservation — "accelerated sim leaves a message
+                    # for self": read the live surface sensory snapshot,
+                    # apply the novelty/confidence/cooldown gate, and if
+                    # speakable, stage the packet (systems["_sensory_
+                    # observation_pending"] + aurora_state/sensory_
+                    # observation_pending.json) for _chain_down4_meaning to
+                    # inject into law_bindings and consume.
+                    try:
+                        from aurora_internal.dual_strata.sensory_observation import run_sensory_observation_cycle
+                        _so_result = run_sensory_observation_cycle(systems)
+                        if _so_result:
+                            _record_task_run("sensory_observation", now)
+                    except Exception:
+                        pass
                 # Feed real pressure evidence every 4 ticks (~60s) so the
                 # chamber has actual selective pressure, not just empty ticks.
                 if _evo_tick_counter % 4 == 0:

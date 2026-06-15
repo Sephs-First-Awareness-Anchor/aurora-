@@ -1388,6 +1388,18 @@ class EmissionContextBuilder:
         sedi       = systems.get("sedi_memory") or systems.get("sedimemory")
         genealogy  = systems.get("constraint_genealogy") or systems.get("genealogy")
         gap_system = systems.get("comprehension_gap_system")
+
+        # PredictiveStager bridge — Subsurface stages density-weighted
+        # perspective passes (PRESSURE_PERSPECTIVES via n_passes_for_density)
+        # into a file-backed queue each tick; harvest any pending frames into
+        # systems[...] before reading them below. Best-effort / no-op if
+        # nothing has been staged yet or this turn already harvested.
+        try:
+            from aurora_internal.dual_strata.predictive_stager import PredictiveStager as _PredictiveStager
+            _PredictiveStager.harvest_into_systems(systems)
+        except Exception:
+            pass
+
         staged_frame = systems.get("_staged_subsurface_frame")
         staged_frames = systems.get("_staged_subsurface_frames")
         ma         = self._get_meaning_anchors(systems)
