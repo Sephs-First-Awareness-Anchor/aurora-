@@ -27,6 +27,14 @@ INSIGHTS_FILE = Path("aurora_state") / "articulation_insights.json"
 LANGUAGE_STATE_FILE = Path("aurora_state") / "language_state.json"
 LEXICON_FILE = Path("aurora_state") / "lexicon.json"
 
+# DPS crystal reference — injected at boot via set_dps()
+_dps_ref = None
+
+def set_dps(dps) -> None:
+    """Wire DPS so every articulation decision stamps the active crystals."""
+    global _dps_ref
+    _dps_ref = dps
+
 # Language state cache — invalidated on file change
 _LANGUAGE_STATE_CACHE: Optional[Dict[str, Any]] = None
 _LANGUAGE_STATE_MTIME: float = 0.0
@@ -763,6 +771,19 @@ def record_decision(decision: ArticulationDecision) -> None:
         SUMMARY_FILE.write_text(json.dumps(summary, indent=2, ensure_ascii=True), encoding="utf-8")
     except Exception:
         pass
+
+    # Stamp active DPS crystals with the articulation outcome
+    if _dps_ref is not None:
+        try:
+            role = "expression_flow" if decision.accepted else "expression_friction"
+            content = f"{decision.reason}:{decision.pressure_relief:.3f}"
+            conf = 0.45 if decision.accepted else 0.3
+            for concept in _dps_ref.get_recently_active(3):
+                c = _dps_ref.get_crystal(concept)
+                if c:
+                    c.add_facet(role, content, confidence=conf)
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------

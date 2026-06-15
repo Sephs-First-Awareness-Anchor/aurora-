@@ -995,6 +995,7 @@ class GrammarEngine:
         self._discourse   = DiscourseTracker(self._lineage)
         self._genealogy: Optional[Any] = None
         self._ivm:       Optional[Any] = None
+        self._dps:       Optional[Any] = None
         self._lock        = threading.Lock()
         self._last_motif_id: Optional[str] = None
 
@@ -1005,6 +1006,10 @@ class GrammarEngine:
     def set_ivm(self, ivm: Any):
         """Wire in the IVM lattice so heat level can modulate clause depth."""
         self._ivm = ivm
+
+    def set_dps(self, dps: Any):
+        """Wire in DPS so motif promotions stamp the active crystals."""
+        self._dps = dps
 
     # ---- pressure state ---------------------------------------------------
 
@@ -1310,12 +1315,27 @@ class GrammarEngine:
                     anchors.append((agent_pos, rp))
 
         if success:
+            # Snapshot promotion state before record_success to detect new promotions
+            _pre_promoted = {k for k, m in self._lineage._motifs.items() if m.promoted}
             self._lineage.record_success(
                 pattern, ctx_hash, n_tokens, orientation, anchors
             )
             # Pass the last applied motif so B/T relief is correctly scored
             last_m = self._lineage._motifs.get(self._last_motif_id) if self._last_motif_id else None
             self._log_relief_to_genealogy(True, clarity, motif=last_m)
+            # Stamp active crystals when a motif just promoted
+            if self._dps is not None:
+                _post_promoted = {k for k, m in self._lineage._motifs.items() if m.promoted}
+                _new = _post_promoted - _pre_promoted
+                if _new:
+                    try:
+                        for concept in self._dps.get_recently_active(3):
+                            c = self._dps.get_crystal(concept)
+                            if c:
+                                c.add_facet("motif_promotion",
+                                            str(pattern), confidence=0.5)
+                    except Exception:
+                        pass
         else:
             self._lineage.record_fail(pattern)
 

@@ -19786,6 +19786,29 @@ def boot_aurora(
         if verbose:
             print(f"  [DREAM] DreamTrainer not available: {_dte}")
 
+    # Wire DPS into understanding shards, grammar motifs, and articulation
+    try:
+        _dps_wire = getattr(systems.get('dimensional'), 'dps', None)
+        if _dps_wire is not None:
+            # Understanding shards → crystals
+            _sim_wire = getattr(systems.get('gateway'), 'simulation', None)
+            _learner_wire = getattr(getattr(_sim_wire, 'session', None), 'learner', None)
+            if _learner_wire is not None and hasattr(_learner_wire, 'set_dps'):
+                _learner_wire.set_dps(_dps_wire)
+            # Grammar motif promotions → crystals
+            _ge_wire = systems.get('grammar_engine')
+            if _ge_wire is not None and hasattr(_ge_wire, 'set_dps'):
+                _ge_wire.set_dps(_dps_wire)
+            # Articulation decisions → crystals
+            try:
+                import aurora_articulation as _artmod
+                if hasattr(_artmod, 'set_dps'):
+                    _artmod.set_dps(_dps_wire)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     # Try to restore saved state (standard L8 snapshot)
     if verbose: print()
     # Read the snapshot straight from the persistence layer.  The gateway's

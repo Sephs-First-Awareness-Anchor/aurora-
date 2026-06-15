@@ -202,6 +202,11 @@ class ConsciousLearner:
         self.shards: Dict[str, UnderstandingShard] = {}
         self._by_concept: Dict[ResponseConcept, List[str]] = defaultdict(list)
         self.total_observations = 0
+        self._dps = None  # injected after boot
+
+    def set_dps(self, dps) -> None:
+        """Wire DPS so understanding text flows into the crystal for that topic."""
+        self._dps = dps
 
     def generate_pool(self, context: Dict[str, Any]) -> List[ConceptualResponse]:
         """Generate response pool for Aurora to choose from."""
@@ -270,6 +275,7 @@ class ConsciousLearner:
         existing = self._find_similar(selected.primary_concept, context_type)
         if existing:
             existing.strengthen()
+            self._stamp_crystal(topic_word, understanding_text, strengthen=True)
             return existing
 
         shard = UnderstandingShard(
@@ -281,7 +287,22 @@ class ConsciousLearner:
         )
         self.shards[shard.shard_id] = shard
         self._by_concept[selected.primary_concept].append(shard.shard_id)
+        self._stamp_crystal(topic_word, understanding_text)
         return shard
+
+    def _stamp_crystal(self, topic_word: str, understanding_text: str,
+                       strengthen: bool = False) -> None:
+        """Add understanding facet to the DPS crystal for this topic word."""
+        if not topic_word or not understanding_text or self._dps is None:
+            return
+        try:
+            crystal = self._dps.get_crystal(topic_word)
+            if crystal is None:
+                return
+            conf = 0.7 if strengthen else 0.6
+            crystal.add_facet("understanding", understanding_text, confidence=conf)
+        except Exception:
+            pass
 
     def propose_shard(
         self,
