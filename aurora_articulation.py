@@ -814,8 +814,42 @@ def smooth_with_decision(
 
     candidate = _deterministic_candidate(draft_text)
 
-    # Only pass a candidate if it actually changed — otherwise record as no pattern matched
+    # Only pass a candidate if it actually changed.
+    # If nothing changed, the draft either needs no repair (already well-formed)
+    # or is genuinely unfixable. Distinguish by clarity score: clean, grammatical
+    # outputs (HEDGE → "I'm not certain.", CLARIFY → "Well, what do you mean?",
+    # and other short-circuit forms) should be accepted directly rather than
+    # silently dropped as no_candidate.
+    _INTERNAL_MARKER = re.compile(
+        r"\bnc:[A-Za-z]|\bresp:[A-Za-z]|\banchor:[A-Za-z]|\[curious\]|\[seek\]|\[gap\]",
+        re.IGNORECASE,
+    )
     if not candidate or candidate == draft_text:
+        words_in_draft = re.findall(r"[A-Za-z']+", draft_text)
+        already_formed = (
+            len(words_in_draft) >= 3
+            and bool(re.search(r"[.!?]$", draft_text))
+            and _clarity_score(draft_text) >= 0.65
+            and not _INTERNAL_MARKER.search(draft_text)
+        )
+        if already_formed:
+            orig_score = _clarity_score(draft_text)
+            orig_pres  = _pressure_score(draft_text, prompt)
+            decision = ArticulationDecision(
+                original=draft_text,
+                candidate=draft_text,
+                selected=draft_text,
+                accepted=True,
+                reason="already_well_formed",
+                original_score=orig_score,
+                candidate_score=orig_score,
+                original_pressure=orig_pres,
+                candidate_pressure=orig_pres,
+                pressure_relief=0.0,
+                safe=True,
+            )
+            record_decision(decision)
+            return decision
         candidate = ""
         source = "no_pattern_matched"
     else:
