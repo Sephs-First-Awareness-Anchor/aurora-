@@ -1,43 +1,38 @@
 {
-  "original": "I do am track. I did meaning sure.",
+  "original": "I change meaning feel. I exist or where.",
   "candidate": "",
-  "selected": "I do am track. I did meaning sure.",
+  "selected": "I change meaning feel. I exist or where.",
   "accepted": false,
   "reason": "no_candidate",
-  "original_score": 0.62,
+  "original_score": 0.74,
   "candidate_score": 0.0,
-  "original_pressure": 0.316,
+  "original_pressure": 0.292,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
+  "pressure_relief": -0.708,
   "safe": false,
   "metadata": {
-    "prompt_excerpt": "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it? [Internal: I understand. I'm thinking ab",
+    "prompt_excerpt": "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
     "input_interpretation": {
-      "raw_prompt": "To clarify \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. Does that help frame it? [Internal: I understand. I'm thinking ab",
+      "raw_prompt": "Sure \u2014 Integrate two perspectives that disagree without collapsing either one.. That's the core of what I'm working through with you.",
       "intent_hint": "statement_or_context",
       "topic_terms": [
-        "clarify",
-        "corpus",
-        "fragment",
-        "context",
-        "corpus",
-        "fragment",
-        "context",
-        "corpus"
+        "sure",
+        "integrate",
+        "perspectives",
+        "disagree",
+        "without",
+        "collapsing",
+        "either",
+        "that's"
       ],
       "entities": [
-        "Use",
-        "Use",
-        "Use",
-        "Use",
-        "Use",
-        "Does",
-        "Internal"
+        "Sure",
+        "Integrate"
       ]
     },
     "tone": "curious",
     "source": "no_pattern_matched",
-    "timestamp": 1781497041.597393,
+    "timestamp": 1781498558.8185756,
     "min_relief_used": 0.035
   }
 }
