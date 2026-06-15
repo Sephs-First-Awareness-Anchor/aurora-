@@ -2,20 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1*T^1",
-      "change_id": "MC:015f720cb8d1",
-      "dominant_axis": "X",
-      "file": "aurora_diag.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_diag",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1781482055.9338346
-    },
-    {
-      "axis_signature": "X^1*T^1",
       "change_id": "MC:b3084d88512d",
       "dominant_axis": "X",
       "file": "aurora_dimensional_systems.py",
@@ -3359,10 +3345,24 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1781499606.3952715
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:476cc348382f",
+      "dominant_axis": "X",
+      "file": "aurora_articulation.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_articulation",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1781501762.4298234
     }
   ],
   "initialized": true,
-  "last_run_at": 1781501509.4616506,
+  "last_run_at": 1781501762.4339852,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781481721990951321,
@@ -3381,8 +3381,8 @@
       "size": 16963
     },
     "aurora_articulation.py": {
-      "mtime_ns": 1781489747058334822,
-      "size": 32179
+      "mtime_ns": 1781501715190178188,
+      "size": 33649
     },
     "aurora_autonomy.py": {
       "mtime_ns": 1781481722001773769,

@@ -1,7 +1,7 @@
 {
   "action_bias_candidates": [],
   "candidate_interpretations": [],
-  "coherence": 0.45,
+  "coherence": 0.235,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
@@ -18,9 +18,29 @@
     "tracked_surface_emotion": "neutral",
     "tracked_surface_intensity": 0.0
   },
-  "instability_markers": [],
+  "instability_markers": [
+    {
+      "label": "low_coherence",
+      "severity": 0.765
+    },
+    {
+      "label": "paradox_active",
+      "severity": 0.8
+    }
+  ],
   "law_bindings": [],
   "micro_reasoning": [
+    {
+      "confidence": 0.765,
+      "label": "conflict_exposure",
+      "rationale": "The active assembly still contains paradox or unresolved conflict.",
+      "source": "assembly",
+      "tags": [
+        "conflict",
+        "stability"
+      ],
+      "urgency": 0.765
+    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -42,11 +62,11 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.577,
+    "confidence": 0.6006,
     "expected_observation": "followup",
     "expected_user_continuation": "",
     "likely_affect_shift": "neutral",
-    "mismatch": 0.28,
+    "mismatch": 0.2125,
     "prediction_payload": {
       "affect": "neutral",
       "axis_signature": "",
@@ -57,7 +77,7 @@
     "preload_context": [
       "followup"
     ],
-    "readiness_bias": 0.5331,
+    "readiness_bias": 0.5739,
     "source": "runtime_evidence"
   },
   "pressure_map": {
@@ -67,9 +87,9 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.541,
+  "readiness": 0.3755,
   "recalled_fragments": [
-    "To clarify \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. Does that help frame it? [Internal: So 'them wi..."
+    "What behavior links use and corpus here?"
   ],
   "salience_weights": {
     "A": 0.0,
@@ -78,7 +98,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1781501505.8474953,
+  "saved_at": 1781501774.305166,
   "sub_crests": [
     {
       "axis": "X",
@@ -97,13 +117,13 @@
     },
     {
       "axis": "X",
-      "intensity": 0.55,
-      "label": "expectation"
+      "intensity": 0.7875,
+      "label": "steady_continuation"
     },
     {
-      "axis": "N",
-      "intensity": 1.0,
-      "label": "novelty"
+      "axis": "B",
+      "intensity": 0.65,
+      "label": "contradiction"
     },
     {
       "axis": "T",
@@ -119,16 +139,6 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.8178,
-      "label": "surface"
-    },
-    {
-      "axis": "B",
-      "intensity": 0.8391,
-      "label": "surface"
     }
   ]
 }

@@ -1,30 +1,14 @@
 {
-  "original": "[curious] nc:Existential_Operator_of_Existence anchor:teach resp:existence.",
-  "candidate": "",
-  "selected": "[curious] nc:Existential_Operator_of_Existence anchor:teach resp:existence.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.92,
-  "candidate_score": 0.0,
-  "original_pressure": 0.1585,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.8415,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "Teach me something",
-    "input_interpretation": {
-      "raw_prompt": "Teach me something",
-      "intent_hint": "statement_or_context",
-      "topic_terms": [
-        "teach"
-      ],
-      "entities": [
-        "Teach"
-      ]
-    },
-    "tone": "neutral",
-    "source": "no_pattern_matched",
-    "timestamp": 1781501724.8429642,
-    "min_relief_used": 0.035
-  }
+  "original": "I exist can truth.",
+  "candidate": "I exist can truth.",
+  "selected": "I exist can truth.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.292,
+  "candidate_pressure": 0.292,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }

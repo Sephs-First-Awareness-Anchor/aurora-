@@ -1,16 +1,16 @@
 {
   "conscious_frame": {
-    "coherence": 0.45,
+    "coherence": 0.235,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.4645,
-      "label": "explain"
+      "intensity": 0.45,
+      "label": "hold"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "To clarify \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. Does that help frame it? [Internal: So 'them wi...",
+      "present_anchor": "What behavior links use and corpus here?",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -19,25 +19,25 @@
       "reinforcement_hint": 0.1047
     },
     "processing_mode": "blended",
-    "readiness": 0.541,
-    "selected_action": "explain",
+    "readiness": 0.3755,
+    "selected_action": "wait",
     "should_speak": true,
-    "stance": "interpretive_explanation",
+    "stance": "hold_for_coherence",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4707,
+      "intensity": 0.4109,
       "label": "steady"
     },
-    "timestamp": 1781501505.8469493
+    "timestamp": 1781501774.3046956
   },
-  "saved_at": 1781501505.8471267,
+  "saved_at": 1781501774.304847,
   "subsurface_state": {
     "dominant_axis": "N",
-    "frame_request": "observation",
+    "frame_request": "action",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "To clarify \u2014 Two claims conflict. Reconcile them without pretending there is no tension.. Does that help frame it? [Internal: So 'them wi...",
+      "present_anchor": "What behavior links use and corpus here?",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -63,13 +63,13 @@
       },
       {
         "axis": "X",
-        "intensity": 0.55,
-        "label": "expectation"
+        "intensity": 0.7875,
+        "label": "steady_continuation"
       },
       {
-        "axis": "N",
-        "intensity": 1.0,
-        "label": "novelty"
+        "axis": "B",
+        "intensity": 0.65,
+        "label": "contradiction"
       },
       {
         "axis": "T",
@@ -85,21 +85,11 @@
         "axis": "X",
         "intensity": 1.0,
         "label": "calm"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.8178,
-        "label": "surface"
-      },
-      {
-        "axis": "B",
-        "intensity": 0.8391,
-        "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4707,
+      "intensity": 0.4109,
       "label": "steady"
     }
   }
