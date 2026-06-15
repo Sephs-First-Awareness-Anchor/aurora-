@@ -15,13 +15,13 @@
   },
   "M": {
     "active_frame": {
-      "anchor": "side",
+      "anchor": "you've",
       "confidence": 0.84,
-      "frame_id": "SF:19e71dadcb2e",
+      "frame_id": "SF:e6a15ab24984",
       "kind": "explore_study_cycle",
       "resolution_confidence": 1.0,
       "source": "explore_study_cycle",
-      "summary": "Exploration studied side (0 definitions, 10 relations added).",
+      "summary": "Exploration studied you've (0 definitions, 51 relations added).",
       "turn": 0
     },
     "active_meaning": {
@@ -275,7 +275,7 @@
     "correction": false,
     "intent": "",
     "question": false,
-    "raw": "Exploration studied side (0 definitions, 10 relations added)."
+    "raw": "Exploration studied you've (0 definitions, 51 relations added)."
   },
   "P": {
     "active_behavior_request": "",
@@ -285,10 +285,10 @@
     "dominant_axis": "X",
     "dominant_emotion": "calm",
     "emotion_bridge": {},
-    "focus": "side",
+    "focus": "you've",
     "goal_stack": [],
     "listener_owner": "aurora",
-    "perspective_signature": "X|calm|none|side|behavior:0|explore_study_cycle",
+    "perspective_signature": "X|calm|none|you've|behavior:0|explore_study_cycle",
     "speaker_owner": "user",
     "surface_reactive_emotion": {},
     "user_name": ""
@@ -311,7 +311,7 @@
     "last_phase": "observation",
     "sequence_gap": 1.0,
     "transition_stability": 0.0,
-    "turn_index": 606
+    "turn_index": 611
   },
   "X": {
     "coherence_persistence": 0.62,
@@ -388,380 +388,6 @@
     ]
   },
   "history": [
-    {
-      "accuracy": {
-        "delta": 0.0,
-        "fit_reason": "",
-        "label": "engaged_followup",
-        "projected_next": 0.2759,
-        "score": 0.59
-      },
-      "contracts": {
-        "coherence": {
-          "failure_signatures": [
-            "referent_continuity_drop",
-            "topic_carryover_loss",
-            "meaning_body_fragment"
-          ],
-          "genealogy_effect": {
-            "penalize": "fragmentation",
-            "promote": "identity_across_time"
-          },
-          "score": 0.4,
-          "success": false
-        },
-        "communication": {
-          "failure_signatures": [
-            "signal_loss",
-            "structure_blur"
-          ],
-          "genealogy_effect": {
-            "penalize": "distortion",
-            "promote": "precision_rendering"
-          },
-          "score": 0.6517,
-          "success": false
-        },
-        "developmental": {
-          "bottleneck": "information",
-          "bottleneck_axis": "B",
-          "current_stage": "none",
-          "failure_signatures": [
-            "stage_gap:information",
-            "no_stable_meaning_form"
-          ],
-          "genealogy_effect": {
-            "penalize": "premature_stage_pressure",
-            "promote": "stage_transition:information"
-          },
-          "score": 0.0,
-          "success": false
-        },
-        "intelligence": {
-          "failure_signatures": [
-            "adaptive_stagnation",
-            "pressure_stuck",
-            "no_new_structure"
-          ],
-          "genealogy_effect": {
-            "penalize": "shallow_local_wins",
-            "promote": "long_range_adaptation"
-          },
-          "score": 0.0,
-          "success": false
-        }
-      },
-      "meaning": {
-        "active_frame": "",
-        "active_topic": "",
-        "dominant_form": "tension",
-        "dominant_signature": "N^1*B^1",
-        "frame_continuity": 0.0,
-        "meaning_delta": 0.0,
-        "semantic_pressure": 1.0
-      },
-      "meaning_focus": "",
-      "observation": {
-        "callback": false,
-        "clarification": true,
-        "correction": false,
-        "intent": "clarification",
-        "question": true,
-        "raw": "What does it mean to truly understand something, versus just knowing it?"
-      },
-      "pending_cleared": false,
-      "phase": "observation",
-      "source": "runtime",
-      "time": 1781491018.021,
-      "time_index": 486,
-      "user_text": "What does it mean to truly understand something, versus just knowing it?"
-    },
-    {
-      "boundary": {
-        "ambiguity": 0.545,
-        "claim_clarity": 0.0,
-        "ownership_clarity": 0.92,
-        "referent_clarity": 0.0,
-        "self_world_separation": 0.9
-      },
-      "contracts": {
-        "coherence": {
-          "failure_signatures": [
-            "referent_continuity_drop",
-            "topic_carryover_loss",
-            "meaning_body_fragment"
-          ],
-          "genealogy_effect": {
-            "penalize": "fragmentation",
-            "promote": "identity_across_time"
-          },
-          "score": 0.4,
-          "success": false
-        },
-        "communication": {
-          "failure_signatures": [
-            "signal_loss",
-            "structure_blur"
-          ],
-          "genealogy_effect": {
-            "penalize": "distortion",
-            "promote": "precision_rendering"
-          },
-          "score": 0.5697,
-          "success": false
-        },
-        "developmental": {
-          "bottleneck": "information",
-          "bottleneck_axis": "B",
-          "current_stage": "none",
-          "failure_signatures": [
-            "stage_gap:information",
-            "no_stable_meaning_form"
-          ],
-          "genealogy_effect": {
-            "penalize": "premature_stage_pressure",
-            "promote": "stage_transition:information"
-          },
-          "score": 0.0,
-          "success": false
-        },
-        "intelligence": {
-          "failure_signatures": [
-            "adaptive_stagnation",
-            "pressure_stuck",
-            "no_new_structure"
-          ],
-          "genealogy_effect": {
-            "penalize": "shallow_local_wins",
-            "promote": "long_range_adaptation"
-          },
-          "score": 0.0151,
-          "success": false
-        }
-      },
-      "cost": {
-        "active_claim_penalty": 0.0,
-        "articulation_cost": 0.0,
-        "boundary_cost": 0.545,
-        "coherence_cost": 0.256,
-        "contradiction_cost": 0.0,
-        "external_dependency_cost": 0.0,
-        "total": 0.173
-      },
-      "meaning": {
-        "active_topic": "",
-        "dominant_form": "tension",
-        "dominant_signature": "N^1*B^1"
-      },
-      "phase": "application",
-      "policy": {
-        "action_type": "grounded_response",
-        "articulation_assisted": false,
-        "confidence": 0.58,
-        "expected_affect": "curiosity",
-        "expected_axis": "N",
-        "expected_observation": "followup",
-        "expected_topic": "",
-        "projected_accuracy": 0.2542,
-        "projected_cost": 0.313,
-        "response_id": "U:44d51650900a",
-        "response_source": "generative",
-        "summary": ""
-      },
-      "policy_delta": 0.0605,
-      "response_source": "generative",
-      "response_text": "",
-      "source": "runtime_dialogue",
-      "time": 1781491026.729,
-      "time_index": 486
-    },
-    {
-      "flags": [
-        "boundary_tension_unresolved"
-      ],
-      "law": "RECONCILIATION_REQUIRED \u2014 Understanding may not be emitted from unreconciled tension",
-      "phase": "reflection_tension",
-      "session_id": "session_1781491013",
-      "state_snapshot_time_index": 486,
-      "time": 1781491026.73,
-      "time_index": 486
-    },
-    {
-      "accuracy": {
-        "delta": 0.05,
-        "fit_reason": "intent=followup matched=0 axis_consistent:N",
-        "label": "engaged_followup",
-        "projected_next": 0.2542,
-        "score": 0.64
-      },
-      "contracts": {
-        "coherence": {
-          "failure_signatures": [
-            "referent_continuity_drop",
-            "topic_carryover_loss",
-            "meaning_body_fragment"
-          ],
-          "genealogy_effect": {
-            "penalize": "fragmentation",
-            "promote": "identity_across_time"
-          },
-          "score": 0.4,
-          "success": false
-        },
-        "communication": {
-          "failure_signatures": [
-            "signal_loss",
-            "structure_blur"
-          ],
-          "genealogy_effect": {
-            "penalize": "distortion",
-            "promote": "precision_rendering"
-          },
-          "score": 0.6517,
-          "success": false
-        },
-        "developmental": {
-          "bottleneck": "information",
-          "bottleneck_axis": "B",
-          "current_stage": "none",
-          "failure_signatures": [
-            "stage_gap:information",
-            "no_stable_meaning_form"
-          ],
-          "genealogy_effect": {
-            "penalize": "premature_stage_pressure",
-            "promote": "stage_transition:information"
-          },
-          "score": 0.0,
-          "success": false
-        },
-        "intelligence": {
-          "failure_signatures": [
-            "adaptive_stagnation",
-            "pressure_stuck",
-            "no_new_structure"
-          ],
-          "genealogy_effect": {
-            "penalize": "shallow_local_wins",
-            "promote": "long_range_adaptation"
-          },
-          "score": 0.0018,
-          "success": false
-        }
-      },
-      "meaning": {
-        "active_frame": "",
-        "active_topic": "",
-        "dominant_form": "tension",
-        "dominant_signature": "N^1*B^1",
-        "frame_continuity": 0.0,
-        "meaning_delta": 0.0,
-        "semantic_pressure": 1.0
-      },
-      "meaning_focus": "",
-      "observation": {
-        "callback": false,
-        "clarification": false,
-        "correction": false,
-        "intent": "factual_general",
-        "question": true,
-        "raw": "When you encounter something beautiful or elegant \u2014 a proof, a sentence, a pattern \u2014 what happens inside you?"
-      },
-      "pending_cleared": true,
-      "phase": "observation",
-      "source": "runtime_dialogue",
-      "time": 1781491026.761,
-      "time_index": 487,
-      "user_text": "When you encounter something beautiful or elegant \u2014 a proof, a sentence, a pattern \u2014 what happens inside you?"
-    },
-    {
-      "accuracy": {
-        "delta": 0.0,
-        "fit_reason": "",
-        "label": "engaged_followup",
-        "projected_next": 0.2542,
-        "score": 0.64
-      },
-      "contracts": {
-        "coherence": {
-          "failure_signatures": [
-            "referent_continuity_drop",
-            "topic_carryover_loss",
-            "meaning_body_fragment"
-          ],
-          "genealogy_effect": {
-            "penalize": "fragmentation",
-            "promote": "identity_across_time"
-          },
-          "score": 0.4,
-          "success": false
-        },
-        "communication": {
-          "failure_signatures": [
-            "signal_loss",
-            "structure_blur"
-          ],
-          "genealogy_effect": {
-            "penalize": "distortion",
-            "promote": "precision_rendering"
-          },
-          "score": 0.6517,
-          "success": false
-        },
-        "developmental": {
-          "bottleneck": "information",
-          "bottleneck_axis": "B",
-          "current_stage": "none",
-          "failure_signatures": [
-            "stage_gap:information",
-            "no_stable_meaning_form"
-          ],
-          "genealogy_effect": {
-            "penalize": "premature_stage_pressure",
-            "promote": "stage_transition:information"
-          },
-          "score": 0.0,
-          "success": false
-        },
-        "intelligence": {
-          "failure_signatures": [
-            "adaptive_stagnation",
-            "pressure_stuck",
-            "no_new_structure"
-          ],
-          "genealogy_effect": {
-            "penalize": "shallow_local_wins",
-            "promote": "long_range_adaptation"
-          },
-          "score": 0.0,
-          "success": false
-        }
-      },
-      "meaning": {
-        "active_frame": "",
-        "active_topic": "",
-        "dominant_form": "tension",
-        "dominant_signature": "N^1*B^1",
-        "frame_continuity": 0.0,
-        "meaning_delta": 0.0,
-        "semantic_pressure": 1.0
-      },
-      "meaning_focus": "",
-      "observation": {
-        "callback": false,
-        "clarification": false,
-        "correction": false,
-        "intent": "factual_general",
-        "question": true,
-        "raw": "When you encounter something beautiful or elegant \u2014 a proof, a sentence, a pattern \u2014 what happens inside you?"
-      },
-      "pending_cleared": false,
-      "phase": "observation",
-      "source": "runtime",
-      "time": 1781491026.778,
-      "time_index": 488,
-      "user_text": "When you encounter something beautiful or elegant \u2014 a proof, a sentence, a pattern \u2014 what happens inside you?"
-    },
     {
       "boundary": {
         "ambiguity": 0.545,
@@ -17598,9 +17224,439 @@
       "time": 1781513264.76,
       "time_index": 607,
       "user_text": "Exploration studied side (0 definitions, 10 relations added)."
+    },
+    {
+      "accuracy": {
+        "delta": 0.0,
+        "fit_reason": "",
+        "label": "continued_without_validation",
+        "projected_next": 0.3791,
+        "score": 0.56
+      },
+      "contracts": {
+        "coherence": {
+          "failure_signatures": [
+            "topic_carryover_loss",
+            "meaning_body_fragment"
+          ],
+          "genealogy_effect": {
+            "penalize": "fragmentation",
+            "promote": "identity_across_time"
+          },
+          "score": 0.4533,
+          "success": false
+        },
+        "communication": {
+          "failure_signatures": [
+            "signal_loss"
+          ],
+          "genealogy_effect": {
+            "penalize": "distortion",
+            "promote": "precision_rendering"
+          },
+          "score": 0.7475,
+          "success": false
+        },
+        "developmental": {
+          "bottleneck": "information",
+          "bottleneck_axis": "B",
+          "current_stage": "none",
+          "failure_signatures": [
+            "stage_gap:information",
+            "no_stable_meaning_form"
+          ],
+          "genealogy_effect": {
+            "penalize": "premature_stage_pressure",
+            "promote": "stage_transition:information"
+          },
+          "score": 0.0,
+          "success": false
+        },
+        "intelligence": {
+          "failure_signatures": [
+            "adaptive_stagnation",
+            "pressure_stuck",
+            "no_new_structure"
+          ],
+          "genealogy_effect": {
+            "penalize": "shallow_local_wins",
+            "promote": "long_range_adaptation"
+          },
+          "score": 0.1961,
+          "success": false
+        }
+      },
+      "meaning": {
+        "active_frame": "Exploration studied knowing (0 definitions, 14 relations added).",
+        "active_topic": "",
+        "dominant_form": "tension",
+        "dominant_signature": "N^1*B^1",
+        "frame_continuity": 0.7143,
+        "meaning_delta": 0.07,
+        "semantic_pressure": 0.4822
+      },
+      "meaning_focus": "",
+      "observation": {
+        "callback": false,
+        "clarification": false,
+        "correction": false,
+        "intent": "",
+        "question": false,
+        "raw": "Exploration studied knowing (0 definitions, 14 relations added)."
+      },
+      "pending_cleared": false,
+      "phase": "observation",
+      "source": "explore_study_cycle",
+      "time": 1781514339.5,
+      "time_index": 608,
+      "user_text": "Exploration studied knowing (0 definitions, 14 relations added)."
+    },
+    {
+      "accuracy": {
+        "delta": 0.0,
+        "fit_reason": "",
+        "label": "continued_without_validation",
+        "projected_next": 0.3791,
+        "score": 0.56
+      },
+      "contracts": {
+        "coherence": {
+          "failure_signatures": [
+            "topic_carryover_loss",
+            "meaning_body_fragment"
+          ],
+          "genealogy_effect": {
+            "penalize": "fragmentation",
+            "promote": "identity_across_time"
+          },
+          "score": 0.4533,
+          "success": false
+        },
+        "communication": {
+          "failure_signatures": [
+            "signal_loss"
+          ],
+          "genealogy_effect": {
+            "penalize": "distortion",
+            "promote": "precision_rendering"
+          },
+          "score": 0.7475,
+          "success": false
+        },
+        "developmental": {
+          "bottleneck": "information",
+          "bottleneck_axis": "B",
+          "current_stage": "none",
+          "failure_signatures": [
+            "stage_gap:information",
+            "no_stable_meaning_form"
+          ],
+          "genealogy_effect": {
+            "penalize": "premature_stage_pressure",
+            "promote": "stage_transition:information"
+          },
+          "score": 0.0,
+          "success": false
+        },
+        "intelligence": {
+          "failure_signatures": [
+            "adaptive_stagnation",
+            "pressure_stuck",
+            "no_new_structure"
+          ],
+          "genealogy_effect": {
+            "penalize": "shallow_local_wins",
+            "promote": "long_range_adaptation"
+          },
+          "score": 0.1961,
+          "success": false
+        }
+      },
+      "meaning": {
+        "active_frame": "Exploration studied related (0 definitions, 58 relations added).",
+        "active_topic": "",
+        "dominant_form": "tension",
+        "dominant_signature": "N^1*B^1",
+        "frame_continuity": 0.7143,
+        "meaning_delta": 0.07,
+        "semantic_pressure": 0.4822
+      },
+      "meaning_focus": "",
+      "observation": {
+        "callback": false,
+        "clarification": false,
+        "correction": false,
+        "intent": "",
+        "question": false,
+        "raw": "Exploration studied related (0 definitions, 58 relations added)."
+      },
+      "pending_cleared": false,
+      "phase": "observation",
+      "source": "explore_study_cycle",
+      "time": 1781514339.508,
+      "time_index": 609,
+      "user_text": "Exploration studied related (0 definitions, 58 relations added)."
+    },
+    {
+      "accuracy": {
+        "delta": 0.0,
+        "fit_reason": "",
+        "label": "continued_without_validation",
+        "projected_next": 0.3791,
+        "score": 0.56
+      },
+      "contracts": {
+        "coherence": {
+          "failure_signatures": [
+            "topic_carryover_loss",
+            "meaning_body_fragment"
+          ],
+          "genealogy_effect": {
+            "penalize": "fragmentation",
+            "promote": "identity_across_time"
+          },
+          "score": 0.4404,
+          "success": false
+        },
+        "communication": {
+          "failure_signatures": [
+            "signal_loss"
+          ],
+          "genealogy_effect": {
+            "penalize": "distortion",
+            "promote": "precision_rendering"
+          },
+          "score": 0.7475,
+          "success": false
+        },
+        "developmental": {
+          "bottleneck": "information",
+          "bottleneck_axis": "B",
+          "current_stage": "none",
+          "failure_signatures": [
+            "stage_gap:information",
+            "no_stable_meaning_form"
+          ],
+          "genealogy_effect": {
+            "penalize": "premature_stage_pressure",
+            "promote": "stage_transition:information"
+          },
+          "score": 0.0,
+          "success": false
+        },
+        "intelligence": {
+          "failure_signatures": [
+            "adaptive_stagnation",
+            "pressure_stuck",
+            "no_new_structure"
+          ],
+          "genealogy_effect": {
+            "penalize": "shallow_local_wins",
+            "promote": "long_range_adaptation"
+          },
+          "score": 0.1716,
+          "success": false
+        }
+      },
+      "meaning": {
+        "active_frame": "Exploration studied shifts (0 definitions, 128 relations added).",
+        "active_topic": "",
+        "dominant_form": "tension",
+        "dominant_signature": "N^1*B^1",
+        "frame_continuity": 0.625,
+        "meaning_delta": 0.0612,
+        "semantic_pressure": 0.5156
+      },
+      "meaning_focus": "",
+      "observation": {
+        "callback": false,
+        "clarification": false,
+        "correction": false,
+        "intent": "",
+        "question": false,
+        "raw": "Exploration studied shifts (0 definitions, 128 relations added)."
+      },
+      "pending_cleared": false,
+      "phase": "observation",
+      "source": "explore_study_cycle",
+      "time": 1781514339.516,
+      "time_index": 610,
+      "user_text": "Exploration studied shifts (0 definitions, 128 relations added)."
+    },
+    {
+      "accuracy": {
+        "delta": 0.0,
+        "fit_reason": "",
+        "label": "continued_without_validation",
+        "projected_next": 0.3791,
+        "score": 0.56
+      },
+      "contracts": {
+        "coherence": {
+          "failure_signatures": [
+            "topic_carryover_loss",
+            "meaning_body_fragment"
+          ],
+          "genealogy_effect": {
+            "penalize": "fragmentation",
+            "promote": "identity_across_time"
+          },
+          "score": 0.4404,
+          "success": false
+        },
+        "communication": {
+          "failure_signatures": [
+            "signal_loss"
+          ],
+          "genealogy_effect": {
+            "penalize": "distortion",
+            "promote": "precision_rendering"
+          },
+          "score": 0.7475,
+          "success": false
+        },
+        "developmental": {
+          "bottleneck": "information",
+          "bottleneck_axis": "B",
+          "current_stage": "none",
+          "failure_signatures": [
+            "stage_gap:information",
+            "no_stable_meaning_form"
+          ],
+          "genealogy_effect": {
+            "penalize": "premature_stage_pressure",
+            "promote": "stage_transition:information"
+          },
+          "score": 0.0,
+          "success": false
+        },
+        "intelligence": {
+          "failure_signatures": [
+            "adaptive_stagnation",
+            "pressure_stuck",
+            "no_new_structure"
+          ],
+          "genealogy_effect": {
+            "penalize": "shallow_local_wins",
+            "promote": "long_range_adaptation"
+          },
+          "score": 0.1716,
+          "success": false
+        }
+      },
+      "meaning": {
+        "active_frame": "Exploration studied happens (0 definitions, 33 relations added).",
+        "active_topic": "",
+        "dominant_form": "tension",
+        "dominant_signature": "N^1*B^1",
+        "frame_continuity": 0.625,
+        "meaning_delta": 0.0612,
+        "semantic_pressure": 0.5156
+      },
+      "meaning_focus": "",
+      "observation": {
+        "callback": false,
+        "clarification": false,
+        "correction": false,
+        "intent": "",
+        "question": false,
+        "raw": "Exploration studied happens (0 definitions, 33 relations added)."
+      },
+      "pending_cleared": false,
+      "phase": "observation",
+      "source": "explore_study_cycle",
+      "time": 1781514339.524,
+      "time_index": 611,
+      "user_text": "Exploration studied happens (0 definitions, 33 relations added)."
+    },
+    {
+      "accuracy": {
+        "delta": 0.0,
+        "fit_reason": "",
+        "label": "continued_without_validation",
+        "projected_next": 0.3791,
+        "score": 0.56
+      },
+      "contracts": {
+        "coherence": {
+          "failure_signatures": [
+            "topic_carryover_loss",
+            "meaning_body_fragment"
+          ],
+          "genealogy_effect": {
+            "penalize": "fragmentation",
+            "promote": "identity_across_time"
+          },
+          "score": 0.4533,
+          "success": false
+        },
+        "communication": {
+          "failure_signatures": [
+            "signal_loss"
+          ],
+          "genealogy_effect": {
+            "penalize": "distortion",
+            "promote": "precision_rendering"
+          },
+          "score": 0.7475,
+          "success": false
+        },
+        "developmental": {
+          "bottleneck": "information",
+          "bottleneck_axis": "B",
+          "current_stage": "none",
+          "failure_signatures": [
+            "stage_gap:information",
+            "no_stable_meaning_form"
+          ],
+          "genealogy_effect": {
+            "penalize": "premature_stage_pressure",
+            "promote": "stage_transition:information"
+          },
+          "score": 0.0,
+          "success": false
+        },
+        "intelligence": {
+          "failure_signatures": [
+            "adaptive_stagnation",
+            "pressure_stuck",
+            "no_new_structure"
+          ],
+          "genealogy_effect": {
+            "penalize": "shallow_local_wins",
+            "promote": "long_range_adaptation"
+          },
+          "score": 0.1961,
+          "success": false
+        }
+      },
+      "meaning": {
+        "active_frame": "Exploration studied you've (0 definitions, 51 relations added).",
+        "active_topic": "",
+        "dominant_form": "tension",
+        "dominant_signature": "N^1*B^1",
+        "frame_continuity": 0.7143,
+        "meaning_delta": 0.07,
+        "semantic_pressure": 0.4822
+      },
+      "meaning_focus": "",
+      "observation": {
+        "callback": false,
+        "clarification": false,
+        "correction": false,
+        "intent": "",
+        "question": false,
+        "raw": "Exploration studied you've (0 definitions, 51 relations added)."
+      },
+      "pending_cleared": false,
+      "phase": "observation",
+      "source": "explore_study_cycle",
+      "time": 1781514339.532,
+      "time_index": 612,
+      "user_text": "Exploration studied you've (0 definitions, 51 relations added)."
     }
   ],
-  "last_saved_at": 1781513265.4929013,
+  "last_saved_at": 1781514346.295441,
   "pending_validation": {},
-  "time_index": 607
+  "time_index": 612
 }

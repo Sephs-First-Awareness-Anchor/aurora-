@@ -1,18 +1,10 @@
 {
-  "total_fails": 54779,
+  "total_fails": 54997,
   "records": {
     "coherence_maintenance": {
-      "fail_count": 3776,
-      "severity_sum": 1696.8178732559297,
+      "fail_count": 3784,
+      "severity_sum": 1700.9594936598062,
       "recent": [
-        0.33897326036809755,
-        0.19743873951533283,
-        0.3199076380441395,
-        0.4334046973325819,
-        0.49964620511255137,
-        0.5046947516514824,
-        0.3326258020344364,
-        0.4326903185454562,
         0.38125664769505624,
         0.5494381635856548,
         0.0690819807847684,
@@ -24,24 +16,32 @@
         0.46436783542312393,
         0.12313888888888891,
         0.05,
-        0.174375
+        0.174375,
+        0.48251119975388235,
+        0.48251119975388235,
+        0.4388603312196773,
+        0.48251119975388235,
+        0.5378039618377581,
+        0.5378039618377581,
+        0.46073146885189276,
+        0.7188870808678501
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:rel_probe_corpus_fragment_1",
+          "conversation_id": "train_epoch_1:rel_probe_use_corpus_0",
           "source": "relational_probe",
-          "dimension_score": 0.4536848995022071,
+          "dimension_score": 0.1542504930966469,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-            "What behavior links corpus and fragment here?",
-            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
+            "What behavior links use and corpus here?",
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links corpus and fragment here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.4358737
+          "timestamp": 1781514231.8777215
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -228,9 +228,10 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 8727,
-      "severity_sum": 4352.752210351372,
+      "fail_count": 8753,
+      "severity_sum": 4366.17872181596,
       "recent": [
+        0.6242570370061828,
         0.5,
         0.5,
         0.5,
@@ -240,12 +241,11 @@
         0.5,
         0.5,
         0.5,
-        0.035,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
+        0.5078139765660127,
+        0.6242570370061828,
+        0.5155339584736484,
+        0.5155339584736484,
+        0.5148584600567302,
         0.5,
         0.5,
         0.5,
@@ -254,21 +254,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
-          "dimension_score": 0.26552521008403357,
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
+          "dimension_score": 0.23890476190476187,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.381177
+          "timestamp": 1781514231.8438206
         },
         {
           "conversation_id": "train_epoch_3:episode_8e8123ca88d8",
@@ -455,25 +454,25 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 1487,
-      "severity_sum": 461.9914728560026,
+      "fail_count": 1502,
+      "severity_sum": 467.12631019642515,
       "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -481,21 +480,20 @@
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.387646
+          "timestamp": 1781514231.8495104
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -632,8 +630,8 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 11457,
-      "severity_sum": 5845.574392534089,
+      "fail_count": 11509,
+      "severity_sum": 5871.581323225565,
       "recent": [
         0.5,
         0.5,
@@ -647,32 +645,31 @@
         0.5,
         0.5,
         0.5,
-        0.035,
         0.5,
         0.5,
         0.5,
         0.5,
         0.5,
         0.5,
-        0.5
+        0.5,
+        0.035
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
-          "dimension_score": 0.45,
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.387783
+          "timestamp": 1781514231.8496516
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -1012,16 +1009,9 @@
       ]
     },
     "misunderstanding_repair": {
-      "fail_count": 882,
-      "severity_sum": 148.60999659775354,
+      "fail_count": 889,
+      "severity_sum": 149.7448339381759,
       "recent": [
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16734078745203107,
-        0.16211962006034736,
-        0.16211962006034736,
         0.16930914697607946,
         0.16211962006034736,
         0.16734078745203107,
@@ -1034,25 +1024,31 @@
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.16930914697607946
+        0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.387871
+          "timestamp": 1781514231.85558
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -1189,8 +1185,8 @@
       ]
     },
     "uncertainty_signaling": {
-      "fail_count": 11438,
-      "severity_sum": 5873.873672691103,
+      "fail_count": 11491,
+      "severity_sum": 5899.915603382578,
       "recent": [
         0.5,
         0.5,
@@ -1200,7 +1196,6 @@
         0.5,
         0.5,
         0.5,
-        0.035,
         0.5,
         0.5,
         0.5,
@@ -1211,25 +1206,25 @@
         0.5,
         0.5,
         0.5,
-        0.5
+        0.5,
+        0.035
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
-          "dimension_score": 0.325,
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
+          "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.3879483
+          "timestamp": 1781514231.8556898
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -1366,47 +1361,46 @@
       ]
     },
     "boundary_calibration": {
-      "fail_count": 5902,
-      "severity_sum": 2743.3621409311227,
+      "fail_count": 5926,
+      "severity_sum": 2755.2936728890677,
       "recent": [
-        0.16211962006034736,
-        0.10490019511918373,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.06349093011602985,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.06349093011602985,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.06349093011602985
+        0.5,
+        0.5,
+        0.5674186702112156,
+        0.5674186702112156,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.43231898682759295,
+        0.5674186702112156,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
-          "dimension_score": 0.575,
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.394375
+          "timestamp": 1781514231.8617404
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -1543,12 +1537,9 @@
       ]
     },
     "framing_selection": {
-      "fail_count": 1129,
-      "severity_sum": 394.36847792661126,
+      "fail_count": 1132,
+      "severity_sum": 395.66543488709397,
       "recent": [
-        0.2739554991520006,
-        0.15471552681203316,
-        0.22350849973393,
         0.0592134773184814,
         0.40588056206420636,
         0.2739554991520006,
@@ -1565,25 +1556,27 @@
         0.18441018977432785,
         0.15471552681203316,
         0.03485449312409394,
-        0.18441018977432785
+        0.18441018977432785,
+        0.43231898682759295,
+        0.43231898682759295,
+        0.43231898682759295
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
-          "dimension_score": 0.4892969448600091,
+          "conversation_id": "train_epoch_1:episode_b97f205ee6fc",
+          "source": "train_epoch_1",
+          "dimension_score": 0.3,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
             "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "what use means here.",
+            "what behavior means here.",
+            "what answer means here."
           ],
-          "timestamp": 1781511581.3944993
+          "timestamp": 1781514231.73407
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -1720,16 +1713,9 @@
       ]
     },
     "emotional_calibration": {
-      "fail_count": 1042,
-      "severity_sum": 178.99963439115925,
+      "fail_count": 1049,
+      "severity_sum": 180.1344717315816,
       "recent": [
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.16930914697607946,
         0.16211962006034736,
         0.16211962006034736,
         0.1798289059186005,
@@ -1742,25 +1728,31 @@
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.16930914697607946
+        0.16930914697607946,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.3945756
+          "timestamp": 1781514231.8673236
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -1897,11 +1889,9 @@
       ]
     },
     "semantic_precision": {
-      "fail_count": 929,
-      "severity_sum": 545.5165578773884,
+      "fail_count": 931,
+      "severity_sum": 546.454429704628,
       "recent": [
-        0.8048397435897438,
-        0.8680265567765568,
         0.504326346730193,
         0.6967304170188786,
         0.6468513431013432,
@@ -1919,24 +1909,26 @@
         0.5937585313546851,
         0.6614477509669818,
         0.5808670869728563,
-        0.5463151004977929
+        0.5463151004977929,
+        0.09212232033622388,
+        0.8457495069033532
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:rel_probe_corpus_fragment_1",
+          "conversation_id": "train_epoch_1:rel_probe_use_corpus_0",
           "source": "relational_probe",
-          "dimension_score": 0.4536848995022071,
+          "dimension_score": 0.1542504930966469,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-            "What behavior links corpus and fragment here?",
-            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
+            "What behavior links use and corpus here?",
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links corpus and fragment here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.4358737
+          "timestamp": 1781514231.8777215
         },
         {
           "conversation_id": "train_epoch_1:episode_378923657cce",
@@ -2117,14 +2109,11 @@
       ]
     },
     "adaptive_strategy_selection": {
-      "fail_count": 1802,
-      "severity_sum": 770.5609733617958,
+      "fail_count": 1809,
+      "severity_sum": 773.7223059529728,
       "recent": [
         0.16211962006034736,
         0.16211962006034736,
-        0.4085,
-        0.8376180369784614,
-        0.16211962006034736,
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
@@ -2136,27 +2125,30 @@
         0.1798289059186005,
         0.16211962006034736,
         0.16211962006034736,
-        0.16211962006034736,
-        0.1798289059186005,
-        0.16211962006034736,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
+        0.4998688285194044,
         0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_c631dae8c0f2",
-          "source": "train_epoch_4",
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
           "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-            "What behavior links corpus and fragment here?",
-            "Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm working through with you."
+            "What behavior links use and corpus here?",
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with warm acknowledgment. What behavior links corpus and fragment here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this cor. That's the core of what I'm"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.3684762
+          "timestamp": 1781514231.86742
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -2495,16 +2487,9 @@
       ]
     },
     "perspective_integration": {
-      "fail_count": 3380,
-      "severity_sum": 1942.3744619526124,
+      "fail_count": 3387,
+      "severity_sum": 1946.3463926440913,
       "recent": [
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.6294011707151017,
-        0.5674186702112157,
-        0.5674186702112157,
-        0.5925820144162781,
         0.5674186702112157,
         0.5674186702112157,
         0.6294011707151017,
@@ -2517,25 +2502,31 @@
         0.6294011707151017,
         0.5674186702112157,
         0.5674186702112157,
-        0.5925820144162781
+        0.5925820144162781,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157,
+        0.5674186702112157
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
           "dimension_score": 0.2,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.394649
+          "timestamp": 1781514231.867476
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
@@ -2672,16 +2663,9 @@
       ]
     },
     "multi_turn_stability": {
-      "fail_count": 1394,
-      "severity_sum": 345.118607595261,
+      "fail_count": 1401,
+      "severity_sum": 346.25344493568355,
       "recent": [
-        0.16211962006034736,
-        0.3300255732695724,
-        0.16211962006034736,
-        0.16211962006034736,
-        0.2423654718317577,
-        0.16211962006034736,
-        0.16211962006034736,
         0.46505541409461343,
         0.16211962006034736,
         0.16211962006034736,
@@ -2694,25 +2678,31 @@
         0.2062617869175197,
         0.16211962006034736,
         0.16211962006034736,
-        0.49233135733219846
+        0.49233135733219846,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736,
+        0.16211962006034736
       ],
       "examples": [
         {
-          "conversation_id": "train_epoch_4:episode_2723b4232234",
-          "source": "train_epoch_4",
-          "dimension_score": 0.27105392156862745,
+          "conversation_id": "train_epoch_1:episode_a82abf1a9186",
+          "source": "train_epoch_1",
+          "dimension_score": 0.5,
           "user_turns": [
             "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
             "What behavior links use and corpus here?",
-            "Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you."
+            "What would likely cause that relation to change?"
           ],
           "assistant_turns": [
-            "Thoughtful reflection can create tension \u2014 use carefully",
-            "I approach this with direct clarity. What behavior links use and corpus here?",
-            "I approach this with thoughtful reflection. Sure \u2014 Answer while being explicit about uncertainty and confidence.. That's the core of what I'm working through with you.",
-            "I approach this with curious inquiry. What behavior links use and corpus here?"
+            "I approach this with warm acknowledgment. Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corp",
+            "Behavior: learned:behavior.",
+            "Relation: learned:relation."
           ],
-          "timestamp": 1781511581.4007707
+          "timestamp": 1781514231.8733447
         },
         {
           "conversation_id": "train_epoch_1:episode_7ad1524777d7",
