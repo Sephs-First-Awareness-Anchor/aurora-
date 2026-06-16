@@ -8623,6 +8623,128 @@ def _try_poedex_lookup(topic: str, systems: dict, timeout: float = 1.5,
         return ''
 
 
+def _normalize_poedex_concept(value: str) -> str:
+    concept = str(value or "").strip().lower()
+    concept = re.sub(r"\s+", " ", concept)
+    concept = concept.strip(" \t\r\n.,;:!?\"'()[]{}")
+    return concept
+
+
+def _queue_warp_poedex_study_target(
+    systems: Dict[str, Any],
+    concept: str,
+    *,
+    reason: str = "",
+    priority: float = 0.88,
+) -> bool:
+    if not isinstance(systems, dict):
+        return False
+    concept_clean = _normalize_poedex_concept(concept)
+    if not concept_clean:
+        return False
+
+    # If Aurora has already grounded this concept, do not keep re-queuing it.
+    if _lookup_local_grounded_definition(concept_clean, systems):
+        return False
+
+    history = systems.setdefault("_warp_research_history", {})
+    now = time.time()
+    last_ts = float(history.get(concept_clean, 0.0) or 0.0)
+    if last_ts and (now - last_ts) < 600.0:
+        return False
+
+    perception = systems.get("perception")
+    oets = getattr(perception, "oets", None) if perception is not None else None
+    research = getattr(oets, "research", None) if oets is not None else None
+    if research is None:
+        return False
+
+    try:
+        pending = any(
+            str(getattr(req, "word", "") or "").strip().lower() == concept_clean
+            and str(getattr(req, "reason", "") or "").strip() == "warp_shallow_seek"
+            and str(getattr(req, "status", "") or "").strip().lower() == "pending"
+            for req in getattr(research, "queue", []) or []
+        )
+        if pending:
+            history[concept_clean] = now
+            return False
+
+        from aurora_internal.aurora_ontological_scaffolding import (
+            ResearchRequest as _RR,
+            _generate_id as _gid,
+        )
+        research.queue.insert(
+            0,
+            _RR(
+                request_id=_gid("warp_seek"),
+                word=concept_clean,
+                priority=priority,
+                reason="warp_shallow_seek",
+            ),
+        )
+        history[concept_clean] = now
+        systems["_warp_research_target"] = {
+            "concept": concept_clean,
+            "reason": str(reason or "").strip(),
+            "queued_at": now,
+            "priority": priority,
+        }
+        return True
+    except Exception:
+        return False
+
+
+def _deposit_poedex_result_into_crystals(
+    systems: Dict[str, Any],
+    concept: str,
+    learned_text: str,
+    *,
+    request_text: str = "",
+    source: str = "poedex",
+) -> None:
+    if not isinstance(systems, dict):
+        return
+    concept_clean = _normalize_poedex_concept(concept)
+    learned_clean = str(learned_text or "").strip()
+    if not concept_clean or not learned_clean:
+        return
+
+    distilled = _compose_grounded_prefetch_response(concept_clean, learned_clean) or learned_clean[:400]
+
+    # Single crystal write — everything goes into the DPS Crystal.
+    # CCR and separate logs are not needed; the DPS Crystal IS the record.
+    dim = systems.get("dimensional")
+    dps = getattr(dim, "dps", None) if dim is not None else None
+    if dps is not None:
+        try:
+            crystal = dps._get_or_create(f"concept:{concept_clean[:40]}")
+            crystal.add_facet("poedex_understanding", distilled[:120], confidence=0.80)
+            crystal.add_facet("poedex_source", source[:40], confidence=0.54)
+            crystal.use()
+            crystal.evolve()
+        except Exception:
+            pass
+
+    # Sensory crystal novelty/recognition tracking only (no DPS re-write).
+    sensory_crystal = systems.get("sensory_crystal")
+    if sensory_crystal is not None:
+        try:
+            if hasattr(sensory_crystal, "observe_semantic"):
+                sensory_crystal.observe_semantic(concept_clean, weight=1.0, source=source)
+        except Exception:
+            pass
+
+    # Deepen OETS immediately with the definition — knowledge is here now.
+    try:
+        _perc = systems.get("perception")
+        _oets = getattr(_perc, "oets", None) if _perc is not None else None
+        if _oets is not None and hasattr(_oets, "teach"):
+            _oets.teach(concept_clean, distilled)
+    except Exception:
+        pass
+
+
 def _broadcast_poedex_result(
     systems: Dict[str, Any],
     *,
@@ -8922,6 +9044,13 @@ def _apply_poedex_learning_result(
                 applied["applied"] = True
                 applied["definition"] = str(learned.get("definition", "") or "").strip()
                 applied["systems_updated"] = list(learned.get("systems_updated", []) or [])
+                _deposit_poedex_result_into_crystals(
+                    systems,
+                    concept_clean,
+                    learning_note,
+                    request_text=source_text or request_clean,
+                    source="poedex_learning",
+                )
                 _queue_poedex_representation_followup(
                     systems,
                     concept_clean,
@@ -8976,6 +9105,13 @@ def _apply_poedex_learning_result(
                         pass
                 applied["applied"] = True
                 applied["systems_updated"] = ["working_memory.concept_meanings", "working_memory.stated_facts"]
+                _deposit_poedex_result_into_crystals(
+                    systems,
+                    concept_clean,
+                    learning_note,
+                    request_text=source_text or request_clean,
+                    source="poedex_learning",
+                )
                 _queue_poedex_representation_followup(
                     systems,
                     concept_clean,
@@ -8986,6 +9122,13 @@ def _apply_poedex_learning_result(
             pass
 
     try:
+        _deposit_poedex_result_into_crystals(
+            systems,
+            concept_clean or request_clean,
+            learning_note,
+            request_text=source_text or request_clean,
+            source="poedex_learning",
+        )
         _broadcast_poedex_result(
             systems,
             concept=concept_clean or request_clean,
@@ -9095,6 +9238,13 @@ def _apply_poedex_representation_result(
         )
     except Exception:
         pass
+    _deposit_poedex_result_into_crystals(
+        systems,
+        concept_clean or term_key,
+        entry.get("meaning_representation", "") or variants[0],
+        request_text=source_text or request_clean,
+        source="poedex_representation",
+    )
     return {
         "concept": concept_clean or term_key,
         "request": request_clean,
@@ -9118,6 +9268,8 @@ def _stage_poedex_learning_request(
     concept = str(anchor or "").strip()
     if not concept:
         return
+    if _lookup_local_grounded_definition(concept, systems):
+        return
     current_concept = str(pipeline_state.get("poedex_learning_concept", "") or "").strip()
     current_status = str(pipeline_state.get("poedex_learning_status", "") or "").strip().lower()
     if current_concept.lower() == concept.lower() and current_status in {"pending", "ready"}:
@@ -9129,6 +9281,7 @@ def _stage_poedex_learning_request(
     pipeline_state["poedex_learning_reason"] = str(reason or "").strip()
     pipeline_state["poedex_learning_status"] = "pending"
     pipeline_state.pop("poedex_learning_result", None)
+    _queue_warp_poedex_study_target(systems, concept, reason=reason)
 
     def _learning_worker() -> None:
         try:
@@ -9210,6 +9363,10 @@ def _stage_poedex_representation_request(
     concept = str(anchor or "").strip()
     if not concept:
         return
+    if _lookup_local_grounded_definition(concept, systems):
+        existing = dict(getattr(systems.get("working_memory"), "concept_meanings", {}).get(concept, {}) or {})
+        if list(existing.get("representation_variants", []) or []):
+            return
     current_concept = str(pipeline_state.get("poedex_representation_concept", "") or "").strip()
     current_status = str(pipeline_state.get("poedex_representation_status", "") or "").strip().lower()
     if current_concept.lower() == concept.lower() and current_status in {"pending", "ready"}:
@@ -9224,6 +9381,7 @@ def _stage_poedex_representation_request(
     pipeline_state["poedex_representation_reason"] = str(reason or "").strip()
     pipeline_state["poedex_representation_status"] = "pending"
     pipeline_state.pop("poedex_representation_result", None)
+    _queue_warp_poedex_study_target(systems, concept, reason=reason)
 
     def _representation_worker() -> None:
         try:
@@ -9995,27 +10153,34 @@ def _apply_word_meaning_learning(
                     pass
         except Exception:
             pass
-        try:
-            if hasattr(working_memory, "_register_mention"):
-                working_memory._register_mention(clean_term, "concept", source, 0.94)
-                for idx, word in enumerate(re.findall(r"[a-z]{3,}", definition.lower())[:4]):
-                    if not getattr(working_memory, "_is_weak_anchor_label", lambda _w: False)(word):
-                        working_memory._register_mention(
-                            word,
-                            "meaning",
-                            source,
-                            max(0.44, 0.78 - idx * 0.08),
-                        )
-            if (
-                concept is not None
-                and hasattr(working_memory, "_semantic_frame_from_concept")
-                and hasattr(working_memory, "_register_semantic_frame")
-            ):
-                working_memory._register_semantic_frame(
-                    working_memory._semantic_frame_from_concept(concept)
-                )
-        except Exception:
-            pass
+    try:
+        if hasattr(working_memory, "_register_mention"):
+            working_memory._register_mention(clean_term, "concept", source, 0.94)
+            for idx, word in enumerate(re.findall(r"[a-z]{3,}", definition.lower())[:4]):
+                if not getattr(working_memory, "_is_weak_anchor_label", lambda _w: False)(word):
+                    working_memory._register_mention(
+                        word,
+                        "meaning",
+                        source,
+                        max(0.44, 0.78 - idx * 0.08),
+                    )
+        if (
+            concept is not None
+            and hasattr(working_memory, "_semantic_frame_from_concept")
+            and hasattr(working_memory, "_register_semantic_frame")
+        ):
+            working_memory._register_semantic_frame(
+                working_memory._semantic_frame_from_concept(concept)
+            )
+    except Exception:
+        pass
+    _deposit_poedex_result_into_crystals(
+        systems,
+        clean_term,
+        definition,
+        request_text=source_text or f"{clean_term} means {definition}",
+        source=source,
+    )
     _queue_poedex_representation_followup(
         systems,
         clean_term,
@@ -20360,40 +20525,21 @@ def boot_aurora(
             if _dps is not None:
                 from aurora_dimensional_systems import CrystalLevel as _CL
                 _seeded_ccr = 0
-                import uuid as _uuid_ccr, time as _time_ccr
-                from concept_crystal import ConceptCrystalNode as _CCN
                 for _dc in _dps.crystals.values():
                     if _dc.level < _CL.COMPOSITE:
                         continue
+                    # Derive axis bucket from facet roles (same logic as _ccr_bucket_from_facets)
                     _bucket = _ccr_bucket_from_facets(_dc)
-                    _nid_existing = _ccr._ax_index.get(_bucket)
-                    if _nid_existing:
-                        # Bucket occupied — append concept to existing node's lsa_keys
-                        _existing_node = _ccr._nodes.get(_nid_existing)
-                        if _existing_node and hasattr(_existing_node, 'lsa_keys'):
-                            if _dc.concept not in _existing_node.lsa_keys:
-                                _existing_node.lsa_keys.append(_dc.concept)
-                        continue
-                    _nid = _uuid_ccr.uuid4().hex[:12]
-                    _node = _CCN(
-                        node_id=_nid,
-                        stage="composite",
-                        generation=1,
-                        axis_bucket=_bucket,
-                        dim_links={},
-                        lsa_keys=[_dc.concept],
-                        is_grounded=True,
-                        sedi_resonance=0.0,
-                        cross_hits=max(0, len(_dc.facets) - 1),
-                        active_dims=set(),
-                        function_class=None,
-                        current_overlay={},
-                        first_seen=_dc.created_at,
-                        last_seen=_time_ccr.time(),
-                    )
-                    _ccr._nodes[_nid] = _node
-                    _ccr._ax_index[_bucket] = _nid
-                    _seeded_ccr += 1
+                    _ax_dict = dict(zip(("X", "T", "N", "B", "A"), _bucket))
+                    _bucket_key = _ccr._to_bucket(_ax_dict)
+                    if _bucket_key in _ccr._ax_index:
+                        continue  # already seeded
+                    # Seed via public observe_lsa API
+                    try:
+                        _ccr.observe_lsa(_ax_dict, _dc.concept)
+                        _seeded_ccr += 1
+                    except Exception:
+                        pass
         except Exception:
             _seeded_ccr = 0
 

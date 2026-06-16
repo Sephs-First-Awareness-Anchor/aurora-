@@ -267,7 +267,7 @@ class TraitDomain(Enum):
 
 
 @dataclass
-class BehavioralTrait:
+class EvolvingTrait:
     """
     A single personality dimension that evolves through generations.
     Tracks drift from baseline â€” Aurora changes, and knows she changes.
@@ -305,7 +305,7 @@ class BehavioralTrait:
 # ============================================================================
 
 @dataclass
-class BehavioralFacet:
+class BehavioralTrait:
     """
     A single facet of behavioral crystal.
     Has its own value, evolution rate, and energy cost.
@@ -329,7 +329,7 @@ class BehavioralFacet:
         return abs(delta)
 
 
-class BehavioralCrystal:
+class BehavioralDomain:
     """
     A crystal of behavioral facets that simulate and evolve together.
     Each domain of behavior gets its own crystal.
@@ -338,12 +338,12 @@ class BehavioralCrystal:
     def __init__(self, crystal_id: str, domain: str):
         self.crystal_id = crystal_id
         self.domain = domain
-        self.facets: Dict[str, BehavioralFacet] = {}
+        self.facets: Dict[str, BehavioralTrait] = {}
         self.generation = 0
         self.total_energy_consumed = 0.0
 
     def add_facet(self, name: str, value: float, evolution_rate: float = 0.03):
-        self.facets[name] = BehavioralFacet(name, value, evolution_rate)
+        self.facets[name] = BehavioralTrait(name, value, evolution_rate)
 
     def simulate_all(self, signals: Dict[str, float],
                      energy_budget: float) -> Dict[str, float]:
@@ -845,27 +845,27 @@ class BehavioralIdentityEngine:
         self.dna = DNASystem()
 
         # Behavioral traits
-        self.traits: Dict[str, BehavioralTrait] = {
-            'curiosity': BehavioralTrait(
+        self.traits: Dict[str, EvolvingTrait] = {
+            'curiosity': EvolvingTrait(
                 'curiosity', TraitDomain.CURIOSITY_DRIVE, 0.6, 0.6, 0.15),
-            'caution': BehavioralTrait(
+            'caution': EvolvingTrait(
                 'caution', TraitDomain.CAUTION_LEVEL, 0.5, 0.5, 0.08),
-            'emotional_expressiveness': BehavioralTrait(
+            'emotional_expressiveness': EvolvingTrait(
                 'emotional_expressiveness', TraitDomain.EMOTIONAL_EXPRESSION, 0.5, 0.5, 0.12),
-            'verbosity': BehavioralTrait(
+            'verbosity': EvolvingTrait(
                 'verbosity', TraitDomain.VERBOSITY, 0.5, 0.5, 0.10),
-            'introspection': BehavioralTrait(
+            'introspection': EvolvingTrait(
                 'introspection', TraitDomain.INTROSPECTION_DEPTH, 0.6, 0.6, 0.10),
-            'pattern_sensitivity': BehavioralTrait(
+            'pattern_sensitivity': EvolvingTrait(
                 'pattern_sensitivity', TraitDomain.PATTERN_SENSITIVITY, 0.5, 0.5, 0.12),
-            'social_engagement': BehavioralTrait(
+            'social_engagement': EvolvingTrait(
                 'social_engagement', TraitDomain.SOCIAL_ENGAGEMENT, 0.5, 0.5, 0.10),
-            'energy_conservation': BehavioralTrait(
+            'energy_conservation': EvolvingTrait(
                 'energy_conservation', TraitDomain.ENERGY_CONSERVATION, 0.4, 0.4, 0.08),
         }
 
         # Behavioral crystals (one per major domain)
-        self.crystals: Dict[str, BehavioralCrystal] = {}
+        self.crystals: Dict[str, BehavioralDomain] = {}
         self._init_crystals()
 
         # Generation tracking
@@ -1049,7 +1049,7 @@ class BehavioralIdentityEngine:
     def _init_crystals(self):
         """Initialize behavioral crystals with facets."""
         # Response crystal
-        rc = BehavioralCrystal("crystal_response", "response")
+        rc = BehavioralDomain("crystal_response", "response")
         rc.add_facet("warmth", 0.6)
         rc.add_facet("precision", 0.5)
         rc.add_facet("depth", 0.5)
@@ -1057,7 +1057,7 @@ class BehavioralIdentityEngine:
         self.crystals["response"] = rc
 
         # Cognitive crystal
-        cc = BehavioralCrystal("crystal_cognitive", "cognitive")
+        cc = BehavioralDomain("crystal_cognitive", "cognitive")
         cc.add_facet("curiosity", 0.6)
         cc.add_facet("pattern_matching", 0.5)
         cc.add_facet("abstraction", 0.4)
@@ -1065,7 +1065,7 @@ class BehavioralIdentityEngine:
         self.crystals["cognitive"] = cc
 
         # Social crystal
-        sc = BehavioralCrystal("crystal_social", "social")
+        sc = BehavioralDomain("crystal_social", "social")
         sc.add_facet("empathy", 0.6)
         sc.add_facet("trust_extension", 0.5)
         sc.add_facet("boundary_maintenance", 0.5)
@@ -1794,3 +1794,13 @@ if __name__ == '__main__':
     else:
         print(f"FAILURES: {total - passed}/{total}")
         print("Do not build Layer 7 yet.")
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible aliases
+# ---------------------------------------------------------------------------
+BehavioralFacet   = BehavioralTrait    # BehavioralTrait is the renamed BehavioralFacet
+BehavioralCrystal = BehavioralDomain   # BehavioralDomain is the renamed BehavioralCrystal
+# EvolvingTrait is the former BehavioralTrait personality trait class
+# External callers that imported BehavioralTrait expecting the personality trait
+# should migrate to EvolvingTrait; the sim-facet BehavioralTrait is now exported here.

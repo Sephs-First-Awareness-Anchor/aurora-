@@ -450,6 +450,11 @@ class FileStorageBackend:
     def __init__(self, base_dir: str) -> None:
         self.base_dir = Path(base_dir)
         self._init_dirs()
+        # Bounded in-memory journal (replaces journal.jsonl on disk).
+        # The DPS Crystal's level field tracks crystal state; the journal
+        # is event metadata only — kept in-memory, not persisted.
+        from collections import deque as _deque
+        self._journal_mem: _deque = _deque(maxlen=500)
 
     def _init_dirs(self) -> None:
         for order_dir in self.ORDER_DIRS.values():
@@ -602,28 +607,40 @@ class FileStorageBackend:
     # ── Journal ───────────────────────────────────────────────────────────────
 
     def append_journal(self, entry: JournalEntry) -> None:
-        journal_path = self.base_dir / "journal.jsonl"
-        with journal_path.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry.to_dict()) + "\n")
+        # Store in bounded in-memory deque only (no disk write).
+        self._journal_mem.append(entry.to_dict())
 
     def read_journal(self, tail: int = 50) -> List[Dict[str, Any]]:
+        # Read from in-memory deque. Falls back to disk file if it still exists
+        # (for backwards compat with runs that wrote it before this change).
+        if self._journal_mem:
+            items = list(self._journal_mem)
+            return items[-tail:]
         journal_path = self.base_dir / "journal.jsonl"
         if not journal_path.exists():
             return []
-        lines = journal_path.read_text(encoding="utf-8").strip().splitlines()
-        return [json.loads(line) for line in lines[-tail:]]
+        try:
+            lines = journal_path.read_text(encoding="utf-8").strip().splitlines()
+            return [json.loads(line) for line in lines[-tail:]]
+        except Exception:
+            return []
 
     def read_journal_for_node(self, node_id: str) -> List[Dict[str, Any]]:
         """Return all journal entries referencing a given node_id."""
+        if self._journal_mem:
+            return [e for e in self._journal_mem if e.get("node_id") == node_id]
         journal_path = self.base_dir / "journal.jsonl"
         if not journal_path.exists():
             return []
-        result = []
-        for line in journal_path.read_text(encoding="utf-8").strip().splitlines():
-            entry = json.loads(line)
-            if entry.get("node_id") == node_id:
-                result.append(entry)
-        return result
+        try:
+            result = []
+            for line in journal_path.read_text(encoding="utf-8").strip().splitlines():
+                entry = json.loads(line)
+                if entry.get("node_id") == node_id:
+                    result.append(entry)
+            return result
+        except Exception:
+            return []
 
 
 # ══════════════════════════════════════════════════════════════════════════════

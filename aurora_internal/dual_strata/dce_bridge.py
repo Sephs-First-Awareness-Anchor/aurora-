@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections import deque
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -342,6 +343,8 @@ class DualStrataBridge:
     def __init__(self, state_dir: Optional[str] = None):
         base = Path(state_dir) if state_dir else (Path(__file__).resolve().parents[2] / "aurora_state")
         self.state_dir = Path(base)
+        # Bounded in-memory frame log (replaces dual_strata_frame_log.jsonl on disk)
+        self._frame_log: deque = deque(maxlen=50)
 
     def build_snapshot(
         self,
@@ -572,8 +575,8 @@ class DualStrataBridge:
             "dominant_axis": payload.get("conscious_frame", {}).get("dominant_axis", ""),
             "readiness": payload.get("conscious_frame", {}).get("readiness", 0.0),
         }
-        with (self.state_dir / "dual_strata_frame_log.jsonl").open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(log_entry, ensure_ascii=True) + "\n")
+        # Keep last 50 frames in bounded in-memory deque (no disk write).
+        self._frame_log.append(log_entry)
 
         # Sediment high-coherence frames into geological memory
         _sedi = getattr(self, "_sedimemory_ref", None)

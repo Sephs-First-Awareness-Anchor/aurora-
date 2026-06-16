@@ -130,7 +130,7 @@ class TensorExpression:
 # The five composite crystals
 # ---------------------------------------------------------------------------
 
-class ActivationCrystal(TensorExpression):
+class ActivationTensor(TensorExpression):
     """
     Activation  (X+T+N+B+A) + X+N
     Signature:  X+N — Existence under Energy
@@ -156,7 +156,7 @@ class ActivationCrystal(TensorExpression):
         return self._activation
 
 
-class SalienceCrystal(TensorExpression):
+class SalienceTensor(TensorExpression):
     """
     Salience  (X+T+N+B+A) + N+B
     Signature: N+B — Energy at the Boundary surface
@@ -195,7 +195,7 @@ class SalienceCrystal(TensorExpression):
         return activation > self._threshold
 
 
-class PredictionCrystal(TensorExpression):
+class PredictionTensor(TensorExpression):
     """
     Prediction  (X+T+N+B+A) + T+N
     Signature:  T+N — Temporal pressure trajectory
@@ -238,7 +238,7 @@ class PredictionCrystal(TensorExpression):
         self.receive_cascade(understanding)
 
 
-class AttentionCrystal(TensorExpression):
+class AttentionTensor(TensorExpression):
     """
     Attention  (X+T+N+B+A) + X+N+A
     Signature: X+N+A — Presence-pressure allocation under Agency
@@ -265,7 +265,7 @@ class AttentionCrystal(TensorExpression):
         return self._activation
 
 
-class MeaningCrystal(TensorExpression):
+class MeaningTensor(TensorExpression):
     """
     Meaning  (X+T+N+B+A) + T+B+A
     Signature: T+B+A — Temporal Boundary expressed through Agency
@@ -323,8 +323,8 @@ class TensorExpressionLayer:
 
     DOWNWARD CASCADE:
         receive_understanding()  — recalibrates all five crystal weights
-        recalibrate_salience()   — recalibrates SalienceCrystal threshold
-        reset_prediction_priors()— resets PredictionCrystal priors
+        recalibrate_salience()   — recalibrates SalienceTensor threshold
+        reset_prediction_priors()— resets PredictionTensor priors
         recalibrate_constraint_basis() — signals dimensional layer
 
     THRESHOLDS (AURORA_COGNITIVE_PHYSICS.md §7):
@@ -343,11 +343,11 @@ class TensorExpressionLayer:
         self._field = identity_field
 
         # The five composite crystals
-        self.activation  = ActivationCrystal()
-        self.salience    = SalienceCrystal()
-        self.prediction  = PredictionCrystal()
-        self.attention   = AttentionCrystal()
-        self.meaning     = MeaningCrystal()
+        self.activation  = ActivationTensor()
+        self.salience    = SalienceTensor()
+        self.prediction  = PredictionTensor()
+        self.attention   = AttentionTensor()
+        self.meaning     = MeaningTensor()
 
         self._crystals: List[TensorExpression] = [
             self.activation, self.salience, self.prediction,
@@ -377,6 +377,14 @@ class TensorExpressionLayer:
         except Exception:
             return {ax: 0.3 for ax in ('X', 'T', 'N', 'B', 'A')}
 
+    _TENSOR_NAMES = {
+        ActivationTensor: 'activation',
+        SalienceTensor:   'salience',
+        PredictionTensor: 'prediction',
+        AttentionTensor:  'attention',
+        MeaningTensor:    'meaning',
+    }
+
     def tick(self) -> Dict[str, float]:
         """
         Update all five crystals from the current identity field state.
@@ -385,10 +393,11 @@ class TensorExpressionLayer:
         pressures = self._axis_pressures()
         levels = {}
         for crystal in self._crystals:
+            name = self._TENSOR_NAMES.get(type(crystal), crystal.__class__.__name__)
             try:
-                levels[crystal.__class__.__name__] = crystal.compute(pressures)
+                levels[name] = crystal.compute(pressures)
             except Exception:
-                levels[crystal.__class__.__name__] = 0.0
+                levels[name] = 0.0
         self._update_count += 1
         self._cached_state = None   # invalidate cache
         return levels
@@ -605,3 +614,13 @@ def reset_tensor_layer() -> None:
     """Reset singleton (for testing)."""
     global _layer_singleton
     _layer_singleton = None
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible aliases
+# ---------------------------------------------------------------------------
+ActivationCrystal = ActivationTensor
+SalienceCrystal   = SalienceTensor
+PredictionCrystal = PredictionTensor
+AttentionCrystal  = AttentionTensor
+MeaningCrystal    = MeaningTensor
