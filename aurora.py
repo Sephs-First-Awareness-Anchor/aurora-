@@ -5025,6 +5025,31 @@ def _flush_quasiarch_runtime_events(
     return flushed
 
 
+def _gap_access_route(systems: Optional[Dict[str, Any]]) -> str:
+    """Name the knowledge-access capability Aurora actually has available for
+    resolving a representation gap, read from live ``systems`` (not prescripted).
+
+    The surface acknowledges this route; the heavy resolution itself runs in
+    subsurface (dream / simulation / research / warp derivation) so the surface
+    turn stays light. Returns "" when no resolver is wired.
+    """
+    if not isinstance(systems, dict):
+        return ""
+    # Ordered by how directly each capability can resolve a representation gap.
+    for key, label in (
+        ("search_adapter", "research"),
+        ("poedex", "research"),
+        ("simulation", "simulation"),
+        ("dream_trainer", "the dream trainer"),
+        ("dream_orchestrator", "the dream trainer"),
+        ("interaction_engine", "this exchange"),
+        ("constraint_reasoner", "constraint reasoning"),
+    ):
+        if systems.get(key) is not None:
+            return label
+    return ""
+
+
 def _render_runtime_intent(
     systems: Optional[Dict[str, Any]],
     core_claim: str,
@@ -14925,46 +14950,47 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                         break
         except Exception:
             pass
-        # Terminal gap: nothing emerged from the field this turn. Seed the
-        # field-waveform compression from Aurora's *emergent* constraint
-        # orientation -- the dominant active axis -- rather than echoing a
-        # surface token back as a referent gap ("what hello means here"), which
-        # is non-emergent (hand-keyed off the input) and reads as broken. Any
-        # usable topic rides along as a supporting concept in the render call
-        # below, so the field keeps referent context without hardcoded intent.
-        _dom_ax = "X"
+        # Terminal gap: nothing emerged from the field — Aurora has no settled
+        # structure for this. This is the warp engine's domain: confess the gap
+        # so it can be discovered/classified as a new constraint derivative
+        # (compared to known relational structures via genealogy; else
+        # accumulated through research). The heavy derivation runs in subsurface;
+        # the surface turn only confesses (light, synchronous) and acknowledges
+        # the knowledge-access route it actually has.
         try:
-            _id_field = systems.get("identity_field")
-            _axis_raw = (_id_field if isinstance(_id_field, dict)
-                         else (getattr(_id_field, "_axis_p", {}) or {}))
-            _ap = {k: float(_axis_raw.get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[k], 0.10))
-                   for k in ("X", "T", "N", "B", "A")}
-            _dom_ax = max(_ap, key=lambda k: _ap[k])
+            from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
+            _warp_guard(
+                source="expression",
+                layer="articulation",
+                trigger=_WT.MISSING_REPRESENTATION,
+                unresolved_text=str(user_text or ""),
+                severity=0.55,
+                persistence_key=(_fb_topic or str(user_text or ""))[:48],
+            )
         except Exception:
             pass
-        # Axis-oriented gap claims — presence/orientation toward the entity
-        # here, emergent from the dominant constraint axis rather than abstract
-        # physics:
-        #   X = existence/presence  → who is here
-        #   T = temporal/continuity → when they have been
-        #   N = cost/direction      → where they are going
-        #   B = distinction/boundary→ what they want
-        #   A = agency/source       → why they have come
-        _AXIS_GAP_CLAIMS = {
-            "X": "who is here",
-            "T": "when they have been",
-            "N": "where they are going",
-            "B": "what they want",
-            "A": "why they have come",
-        }
-        _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "who is here")
+        # The utterance is sourced from live state, not a canned claim: the
+        # unrepresented topic (from the input) and the knowledge-access route
+        # Aurora actually has wired (dream / simulation / research). The language
+        # faculty composes the surface form; the real tokens ride as supporting
+        # concepts. Heavy resolution is deferred to subsurface.
+        _route = _gap_access_route(systems)
+        if _fb_topic and _route:
+            _gap_claim = f"{_fb_topic} is still forming for me; I will reach it through {_route}"
+        elif _fb_topic:
+            _gap_claim = f"{_fb_topic} is still forming for me"
+        elif _route:
+            _gap_claim = f"I am reaching toward this through {_route}"
+        else:
+            _gap_claim = "I am still reaching for this"
+        _gap_supporting = [t for t in (_fb_topic, _route) if t]
         state.response_content = _render_runtime_intent(
             systems, _gap_claim,
-            emotion_tone="curious", certainty=0.58,
-            supporting_concepts=[_fb_topic] if _fb_topic else [],
+            emotion_tone="reaching", certainty=0.5,
+            supporting_concepts=_gap_supporting,
         )
-        state.response_tone = "curious"
-        state.response_confidence = 0.58
+        state.response_tone = "reaching"
+        state.response_confidence = 0.5
         state.response_src = "generative"
         # Preserve gap-claim responses: the SIC already rendered the claim above;
         # another EVO pass would re-process a fragile fragment into word salad.
