@@ -9,6 +9,7 @@ and rolls back rejected mutations.
 
 from __future__ import annotations
 
+import ast
 import importlib
 import inspect
 import json
@@ -83,6 +84,7 @@ class CodeAutoEvolver:
         changed: List[str] = []
         details: List[Dict[str, Any]] = []
         file_timings: List[Dict[str, Any]] = []
+        rejected: List[Dict[str, Any]] = []
 
         for path, updated in updates.items():
             existed = os.path.exists(path)
@@ -95,6 +97,19 @@ class CodeAutoEvolver:
                     continue
             if updated == original:
                 continue
+            # Safety gate: never overwrite a Python source file with content
+            # that does not parse. A malformed generation would otherwise
+            # corrupt the module on disk, recoverable only via rollback().
+            if path.endswith(".py"):
+                try:
+                    ast.parse(updated)
+                except SyntaxError as exc:
+                    rejected.append({
+                        "file": path,
+                        "reason": "syntax_error",
+                        "detail": f"{exc.msg} (line {exc.lineno})",
+                    })
+                    continue
             backups[path] = original if existed else _NONEXISTENT_BACKUP
             folder = os.path.dirname(path)
             if folder:
@@ -130,6 +145,8 @@ class CodeAutoEvolver:
             "file_timings": file_timings,
             "backups": backups,
             "details": details,
+            "rejected": rejected,
+            "rejected_count": len(rejected),
             "manifest": dict(plan.get("manifest", {}) or {}),
         }
 
