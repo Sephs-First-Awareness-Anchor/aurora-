@@ -14925,39 +14925,53 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                         break
         except Exception:
             pass
-        # Terminal gap: nothing emerged from the field this turn. Seed the
-        # field-waveform compression from Aurora's *emergent* constraint
-        # orientation -- the dominant active axis -- rather than echoing a
-        # surface token back as a referent gap ("what hello means here"), which
-        # is non-emergent (hand-keyed off the input) and reads as broken. Any
-        # usable topic rides along as a supporting concept in the render call
-        # below, so the field keeps referent context without hardcoded intent.
-        _dom_ax = "X"
-        try:
-            _id_field = systems.get("identity_field")
-            _axis_raw = (_id_field if isinstance(_id_field, dict)
-                         else (getattr(_id_field, "_axis_p", {}) or {}))
-            _ap = {k: float(_axis_raw.get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[k], 0.10))
-                   for k in ("X", "T", "N", "B", "A")}
-            _dom_ax = max(_ap, key=lambda k: _ap[k])
-        except Exception:
-            pass
-        # Axis-oriented gap claims — presence/orientation toward the entity
-        # here, emergent from the dominant constraint axis rather than abstract
-        # physics:
-        #   X = existence/presence  → who is here
-        #   T = temporal/continuity → when they have been
-        #   N = cost/direction      → where they are going
-        #   B = distinction/boundary→ what they want
-        #   A = agency/source       → why they have come
-        _AXIS_GAP_CLAIMS = {
-            "X": "who is here",
-            "T": "when they have been",
-            "N": "where they are going",
-            "B": "what they want",
-            "A": "why they have come",
-        }
-        _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "who is here")
+        # Build a gap-state claim from available content.
+        # Claims are phrased as noun clauses ("what X means here") so they read
+        # naturally when the SIC wraps them in "I understand X." via _bundle_direct_line.
+        if _fb_topic:
+            _gap_claim = "what " + _fb_topic + " means here"
+        else:
+            _uw = [w.lower() for w in re.findall(r"[a-zA-Z]{4,}", str(user_text or ""))
+                   if w.lower() not in {"that", "this", "with", "what", "from",
+                                        "have", "does", "here", "there", "than",
+                                        "some", "more", "less", "come", "been",
+                                        "will", "your", "just", "when", "also",
+                                        "means", "mean", "want", "wants", "know",
+                                        "feel", "feels", "think", "thinks", "says",
+                                        "about", "right", "doing", "like", "into",
+                                        "time", "moment", "sense", "currently"}
+                   and not _is_weak_response_topic(w.lower())]
+            if _uw:
+                _gap_claim = "what " + _uw[0] + " points to"
+            else:
+                # Derive gap claim from the dominant active axis so each turn's
+                # gap claim reflects Aurora's current constraint orientation
+                # rather than repeating the same generic phrase.
+                _dom_ax = "X"
+                try:
+                    _ap = {k: float((systems.get("identity_field") or {})
+                                    if isinstance(systems.get("identity_field"), dict)
+                                    else (getattr(systems.get("identity_field"), "_axis_p", {}) or {}))
+                               .get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[k], 0.10)
+                           for k in ("X", "T", "N", "B", "A")}
+                    _dom_ax = max(_ap, key=lambda k: _ap[k])
+                except Exception:
+                    pass
+                # Five axis-oriented questions about the entity present —
+                # genuine curiosity about who is here, not abstract physics.
+                # X = existence/presence → who is here
+                # T = temporal/continuity → when they have been
+                # N = cost/direction → where they are going
+                # B = distinction/boundary → what they want
+                # A = agency/source → why they have come
+                _AXIS_GAP_CLAIMS = {
+                    "X": "who is here",
+                    "T": "when they have been",
+                    "N": "where they are going",
+                    "B": "what they want",
+                    "A": "why they have come",
+                }
+                _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "who is here")
         state.response_content = _render_runtime_intent(
             systems, _gap_claim,
             emotion_tone="curious", certainty=0.58,
