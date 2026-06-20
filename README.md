@@ -315,11 +315,20 @@ See **`ALWAYS_ON.md`** for always-on mode via systemd.
 
 ## Development Checks
 
-Run smoke tests (same as CI):
+Run the same checks as CI (`.github/workflows/python-ci.yml`):
 
 ```bash
+# 1) Install minimal core deps (numpy is the only import-time requirement)
+pip install -r requirements-core.txt
+
+# 2) Syntax check
 python -m py_compile aurora.py aurora_*.py foundational_contract.py
 bash -n scripts/run_aurora.sh scripts/autonomous_access.sh
+
+# 3) Architectural guard: enforce the acyclic L0-L8 layer ordering
+python tests/test_layer_acyclicity.py
+
+# 4) Import smoke test
 AURORA_SKIP_DEP_INSTALL=1 python - <<'PY'
 import aurora
 import aurora_consciousness_engine
@@ -328,6 +337,10 @@ import aurora_governance_persistence_gateway
 print('Aurora imports OK')
 PY
 ```
+
+The layer guard (step 3) fails the build if any of the nine core layer
+modules introduces an upward import (e.g. L4 importing L7), protecting the
+acyclic dependency ordering the architecture depends on.
 
 ---
 

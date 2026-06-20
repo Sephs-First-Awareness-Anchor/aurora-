@@ -1,0 +1,14 @@
+# Aurora core dependencies
+# ------------------------
+# The minimal set required to import and boot the L0-L8 cognitive stack
+# (`import aurora`, boot_aurora, process_external_user_turn).
+#
+# Everything in the flat `current_requirements.txt` beyond this is for an
+# optional feature group (sensory/voice, GUI hub/room, training/evolution,
+# cloud/API, mobile build) and is imported lazily at the point of use. CI and
+# headless deployments only need this file.
+#
+# Verified: `AURORA_SKIP_DEP_INSTALL=1 python -c "import aurora"` succeeds with
+# only numpy present.
+
+numpy==1.26.4
