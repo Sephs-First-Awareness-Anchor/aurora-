@@ -342,7 +342,7 @@ class FilesystemExplorer:
             size = os.path.getsize(path)
             if size > 400 * 1024 * 1024:
                 return False, "File too large (>10MB)"
-        except:
+        except Exception:
             return False, "Cannot determine file size"
 
         return True, "OK"
@@ -1088,7 +1088,7 @@ class AutonomyEngine:
         if integration:
             try:
                 context["sensory"] = integration.get_sensory_context()
-            except:
+            except Exception:
                 pass
 
         return context
