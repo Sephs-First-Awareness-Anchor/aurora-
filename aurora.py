@@ -14902,86 +14902,49 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         except Exception:
             pass
     if not state.response_content:
-        # Express the gap as constraint data — let _render_runtime_intent
-        # translate it through the FGAE rather than emitting silence.
-        _fb_topic = ""
+        # Terminal gap: nothing emerged at any level — Aurora has no place for
+        # this yet. This is warp's domain (the universal accommodation engine):
+        # confess the unresolved state so warp recognizes the missing
+        # representation and accommodates it (compare to known relational
+        # structures via genealogy; else discover). Heavy resolution runs in
+        # subsurface. The surface is the emitter's constraint-native honest
+        # abstain — never a manufactured "what X means here" claim (that FGAE/SIC
+        # fallback was removed in the Language Reset).
         try:
-            _fb_parsed = state.parsed or {}
-            _fb_topic = str(_fb_parsed.get("topic", "") or _fb_parsed.get("search_query", "") or "").strip()
-            # Reject single-word weak topics
-            if _is_weak_response_topic(_fb_topic):
-                _fb_topic = ""
-            # Also reject multi-word phrases where every word is weak
-            # (e.g. "something here" → all weak → not a usable anchor)
-            if _fb_topic:
-                _topic_words = re.findall(r"[a-zA-Z]{3,}", _fb_topic)
-                if _topic_words and all(_is_weak_response_topic(w.lower()) for w in _topic_words):
-                    _fb_topic = ""
-            if not _fb_topic:
-                for _cand in list(_fb_parsed.get("topic_words", []) or []):
-                    _cand_s = str(_cand or "").strip()
-                    if _cand_s and not _is_weak_response_topic(_cand_s):
-                        _fb_topic = _cand_s
-                        break
+            from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
+            _warp_guard(
+                source="expression",
+                layer="articulation",
+                trigger=_WT.MISSING_REPRESENTATION,
+                unresolved_text=str(user_text or ""),
+                severity=0.55,
+                persistence_key=str(user_text or "")[:48],
+            )
         except Exception:
             pass
-        # Build a gap-state claim from available content.
-        # Claims are phrased as noun clauses ("what X means here") so they read
-        # naturally when the SIC wraps them in "I understand X." via _bundle_direct_line.
-        if _fb_topic:
-            _gap_claim = "what " + _fb_topic + " means here"
-        else:
-            _uw = [w.lower() for w in re.findall(r"[a-zA-Z]{4,}", str(user_text or ""))
-                   if w.lower() not in {"that", "this", "with", "what", "from",
-                                        "have", "does", "here", "there", "than",
-                                        "some", "more", "less", "come", "been",
-                                        "will", "your", "just", "when", "also",
-                                        "means", "mean", "want", "wants", "know",
-                                        "feel", "feels", "think", "thinks", "says",
-                                        "about", "right", "doing", "like", "into",
-                                        "time", "moment", "sense", "currently"}
-                   and not _is_weak_response_topic(w.lower())]
-            if _uw:
-                _gap_claim = "what " + _uw[0] + " points to"
-            else:
-                # Derive gap claim from the dominant active axis so each turn's
-                # gap claim reflects Aurora's current constraint orientation
-                # rather than repeating the same generic phrase.
-                _dom_ax = "X"
-                try:
-                    _ap = {k: float((systems.get("identity_field") or {})
-                                    if isinstance(systems.get("identity_field"), dict)
-                                    else (getattr(systems.get("identity_field"), "_axis_p", {}) or {}))
-                               .get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[k], 0.10)
-                           for k in ("X", "T", "N", "B", "A")}
-                    _dom_ax = max(_ap, key=lambda k: _ap[k])
-                except Exception:
-                    pass
-                # Five axis-oriented questions about the entity present —
-                # genuine curiosity about who is here, not abstract physics.
-                # X = existence/presence → who is here
-                # T = temporal/continuity → when they have been
-                # N = cost/direction → where they are going
-                # B = distinction/boundary → what they want
-                # A = agency/source → why they have come
-                _AXIS_GAP_CLAIMS = {
-                    "X": "who is here",
-                    "T": "when they have been",
-                    "N": "where they are going",
-                    "B": "what they want",
-                    "A": "why they have come",
-                }
-                _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "who is here")
-        state.response_content = _render_runtime_intent(
-            systems, _gap_claim,
-            emotion_tone="curious", certainty=0.58,
-            supporting_concepts=[_fb_topic] if _fb_topic else [],
-        )
-        state.response_tone = "curious"
-        state.response_confidence = 0.58
-        state.response_src = "generative"
-        # Preserve gap-claim responses: the SIC already rendered the claim above;
-        # another EVO pass would re-process a fragile fragment into word salad.
+        _abstain = ""
+        try:
+            _emitter = systems.get("constraint_emitter")
+            if _emitter is not None:
+                from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
+                _gp = getattr(state, "parsed", {}) or {}
+                _gif = _IF(
+                    text=str(user_text or ""),
+                    is_question=bool(_gp.get("is_question", False)),
+                    is_directed=True,
+                    is_self_referential=bool(_gp.get("is_self_referential", False)),
+                )
+                _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
+                _ares = _emitter._emit_abstain(_gctx)
+                _abstain = str(getattr(_ares, "text", "") or "").strip()
+        except Exception:
+            _abstain = ""
+        state.response_content = _abstain
+        state.response_tone = "honest"
+        state.response_confidence = 0.4
+        state.response_src = "constraint_abstain"
+        # Honest abstain is terminal — do not let a later refinement pass
+        # re-inflate it into manufactured content.
         if isinstance(systems, dict):
             systems["_preserve_literal_response_once"] = True
     # Evolutionary refinement (learning hints woven in)
