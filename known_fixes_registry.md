@@ -51,5 +51,33 @@ logging + resetting — a corpus novelty plateau is a genuine unresolved tension
 
 ---
 
-<!-- FIX-A002 (Anomaly Ledger Consumer, PART A of the directive) to be appended
-     when that part is implemented. -->
+## FIX-A002 (ARCHITECTURAL) — WarpField anomaly ledger had no consumer
+
+**Files:** `aurora_warp_protocol.py`, `aurora_curiosity_engine.py`
+
+**What was wrong:** `WarpField._anomaly_ledger` accumulates every demand
+classified as `WarpPathway.ANOMALY` (severity >= 0.90 with a persistence_key —
+a high-severity *recurring* unresolved state). It was written and surfaced only
+as a count in `status()`; nothing read or drained it. Demands routed to ANOMALY
+were therefore permanently silenced after classification — recognized, then
+forgotten. (Distinct from `WarpGenerator._anomaly_log`, the coverage-gap signal,
+which the curiosity engine already consumes.)
+
+**The fix:**
+- `WarpField.anomaly_ledger_summary()` — non-destructive read, collapses entries
+  by persistence_key (count + max severity), ranked by (count, severity).
+- `WarpField.drain_anomaly_ledger(keep_recent=50)` — destructive epoch-level
+  compaction.
+- `CuriosityEngine._step1_emergence` now consumes the ledger as a third
+  WARP-aware emergence source (between the WarpGenerator structural-gap
+  candidates and the crystal gap report): a demand that recurred >= 2 times
+  becomes a `CuriosityObject` ("recurring unresolved demand: …") so Aurora
+  investigates whether it reflects a genuine missing primitive or a handler
+  registration gap.
+
+**Verified:** `anomaly_ledger_summary()` returns `[]` when empty; two ANOMALY
+demands sharing a persistence_key collapse to one entry with `count == 2`;
+`drain` removes correctly; the consumer builds a CuriosityObject whose subject
+begins with "recurring unresolved demand:". This pairs with the warp-confession
+wiring — the ledger now accumulates real demands to consume.
+
