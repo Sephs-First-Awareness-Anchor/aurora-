@@ -19146,17 +19146,46 @@ def boot_aurora(
             except Exception:
                 pass
 
-        # generate_form: no language / representation → grammar + language field
+        # generate_form: missing representation → accommodate through the
+        # language field's WarpCapable actuator. Build the gap's 15D I-state
+        # profile from the current axis state and let check_and_extend derive +
+        # integrate a new comparison-type component (genealogy-biased), gated by
+        # gap persistence so novelties are not acted on hastily. Heavy
+        # accommodation runs in subsurface; the surface turn only confesses.
         def _h_generate_form(decision):
-            for _sys_key, _method in (('grammar_engine', 'flag_missing_form'),
-                                       ('language_field',  'flag_missing_form')):
-                _s = systems.get(_sys_key)
-                if _s is not None and hasattr(_s, _method):
-                    try:
-                        getattr(_s, _method)(decision.demand.unresolved_text)
-                        decision.resolved = True
-                    except Exception:
-                        pass
+            lf = systems.get('language_field')
+            if lf is None or not hasattr(lf, 'check_and_extend'):
+                decision.notes = "generate_form: no language_field actuator"
+                return
+            if str(systems.get('runtime_profile', '') or '') == 'surface':
+                decision.notes = "generate_form: confessed; accommodation deferred to subsurface"
+                return
+            try:
+                from aurora_warp_protocol import axes_to_istates as _a2i
+                _prof = decision.demand.profile or {}
+                if _prof and any(k in _prof for k in "XTNBA"):
+                    _aw = {ax: float(_prof.get(ax, 0.10)) for ax in "XTNBA"}
+                else:
+                    _idf = systems.get('identity_field')
+                    _raw = getattr(_idf, '_axis_p', {}) if _idf is not None else {}
+                    _aw = {ax: float(_raw.get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[ax], 0.10))
+                           for ax in "XTNBA"}
+                _data_axes = _a2i(_aw, ivm_polarity=None)
+                # Language crosses the B-axis boundary → operates near SURFACE/SHALLOW.
+                _data_axes["REC_SURFACE"]  = 0.30
+                _data_axes["REC_SHALLOW"]  = 0.50
+                _data_axes["REC_MODERATE"] = 0.15
+                _data_axes["REC_DEEP"]     = 0.05
+                _data_axes["REC_CORE"]     = 0.00
+                _comp = lf.check_and_extend(_data_axes, source="articulation_gap", tick=0)
+                decision.action_taken = True
+                if _comp is not None:
+                    decision.resolved = True
+                    decision.notes = f"accommodated: comparison_type {getattr(_comp, 'component_id', '')}"
+                else:
+                    decision.notes = "gap monitored — below persistence threshold"
+            except Exception as _gf_e:
+                decision.notes = f"generate_form error: {_gf_e}"
 
         # surface_emergence: architecture-level failure → quasiarch + understanding contract
         def _h_surface_emergence(decision):
@@ -20363,6 +20392,18 @@ def boot_aurora(
                     _cpm_lf_boot = systems.get('_cpm_session') or systems.get('cpm')
                     if _cpm_lf_boot is not None and hasattr(_lf_boot, 'set_cpm'):
                         _lf_boot.set_cpm(_cpm_lf_boot)
+                except Exception:
+                    pass
+                # Register the language field as a WarpCapable actuator so the
+                # warp engine can accommodate missing representations (derive +
+                # integrate new comparison-type components, genealogy-biased
+                # toward proven structure).
+                try:
+                    _wf_lf = systems.get('warp_field')
+                    if _wf_lf is not None and hasattr(_wf_lf, 'register_warp_capable'):
+                        _wf_lf.register_warp_capable('language_field', _lf_boot)
+                    if hasattr(_lf_boot, 'set_warp_genealogy'):
+                        _lf_boot.set_warp_genealogy(systems.get('genealogy'))
                 except Exception:
                     pass
                 if verbose:
