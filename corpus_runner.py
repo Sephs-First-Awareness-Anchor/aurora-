@@ -2549,6 +2549,23 @@ def run_corpus_ingestion(
                     f"avg_novelty={report['avg_novelty']:.3f} ÃÂ¢Ã¢âÂ¬Ã¢â¬Â "
                     f"consider rotating corpus"
                 )
+            # Confess the stall to WarpField — it is an unresolved tension:
+            # the corpus is no longer producing novel comparison geometry.
+            try:
+                from aurora_warp_protocol import warp_guard as _wg, WarpTrigger as _WT
+                _wg(
+                    source="corpus_runner",
+                    layer="learning",
+                    trigger=_WT.TENSION,
+                    unresolved_text=(
+                        "corpus novelty plateau — existing material no longer "
+                        "producing novel comparison geometry"
+                    ),
+                    severity=0.65,
+                    persistence_key="curriculum_stall",
+                )
+            except Exception:
+                pass
             absorption_field.plateau_detector.reset_stall()
 
         if cadence.should_save(counter):
