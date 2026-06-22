@@ -1018,6 +1018,30 @@ class AuroraQuasiArchObserver:
         }
         self.recent_events.append(event)
 
+    def record_warp_emergence(self, decision: Any) -> None:
+        """
+        Record a warp SURFACE_EMERGENCE — an architecture-level novelty the warp
+        field could not place in any existing organ (e.g. new code structure
+        with no genealogy/ability family). Logged with WARP provenance so the
+        observer tracks emergent structure alongside its other event sources for
+        later crystal formation/promotion.
+        """
+        import time as _t
+        demand = getattr(decision, "demand", None)
+        event = {
+            "ts": float(_t.time()),
+            "provenance": "WARP",
+            "pathway": str(getattr(decision, "pathway", "") or ""),
+            "source": str(getattr(demand, "source", "") or ""),
+            "layer": str(getattr(demand, "layer", "") or ""),
+            "trigger": str(getattr(demand, "trigger", "") or ""),
+            "unresolved": str(getattr(demand, "unresolved_text", "") or "")[:200],
+            "severity": float(getattr(demand, "severity", 0.0) or 0.0),
+            "persistence_key": str(getattr(demand, "persistence_key", "") or ""),
+            "profile": dict(getattr(demand, "profile", {}) or {}),
+        }
+        self.recent_events.append(event)
+
     # ── Waveform pressure tracing ─────────────────────────────────────────────
 
     def record_pressure_disturbance(self, disturbance_summary: Dict[str, Any]) -> None:

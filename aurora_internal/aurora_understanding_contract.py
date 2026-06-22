@@ -367,6 +367,31 @@ class RuntimeUnderstandingContract:
         except Exception:
             return False
 
+    def record_structural_gap(self, decision: Any) -> None:
+        """
+        Record an architecture-level structural gap surfaced by the warp field —
+        a novelty (e.g. new code structure) that has no place in any existing
+        organ. Logging it keeps runtime understanding honest about what the
+        system does not yet represent, instead of silently ignoring it.
+        """
+        import time as _t
+        demand = getattr(decision, "demand", None)
+        gaps = list(self.state.get("structural_gaps", []) or [])
+        gaps.append({
+            "ts": float(_t.time()),
+            "source": str(getattr(demand, "source", "") or ""),
+            "layer": str(getattr(demand, "layer", "") or ""),
+            "trigger": str(getattr(demand, "trigger", "") or ""),
+            "unresolved": str(getattr(demand, "unresolved_text", "") or "")[:200],
+            "severity": float(getattr(demand, "severity", 0.0) or 0.0),
+            "pathway": str(getattr(decision, "pathway", "") or ""),
+        })
+        self.state["structural_gaps"] = gaps[-200:]
+        try:
+            self.save()
+        except Exception:
+            pass
+
     def clone_ephemeral(self, *, label: str = "simulation") -> "RuntimeUnderstandingContract":
         clone = RuntimeUnderstandingContract(
             state_dir=self.state_dir,

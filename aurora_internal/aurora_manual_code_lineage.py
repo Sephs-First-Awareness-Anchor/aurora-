@@ -459,15 +459,17 @@ class ManualCodeLineageAssimilator:
                     ),
                 },
             )
-            # Confess genuinely novel structure (no existing genealogy family)
-            # to the warp field — the universal accommodation engine — so that
-            # "new for her code" is recognized the same way understanding-level
-            # gaps are. Code with no organ/family alignment routes to
-            # SURFACE_EMERGENCE (architecture-level recognition); the demand
-            # carries the structure's dominant constraint axis so the field can
-            # classify and (later) accommodate it. Matched changes already have
-            # a place, so only novel ones are confessed.
-            if not matched_ability_id:
+            # Confess genuinely NEW structure (a newly-added file with no
+            # existing genealogy family) to the warp field — the universal
+            # accommodation engine — so that "new for her code" is recognized
+            # the same way understanding-level gaps are. Restricted to added
+            # files: a modified-but-unmatched file is not new structure, and
+            # confessing every one of them floods the field on a stale manifest.
+            # Code with no organ/family alignment routes to SURFACE_EMERGENCE
+            # (architecture-level recognition + record); the demand carries the
+            # structure's dominant constraint axis so the field can classify
+            # and (later) accommodate it.
+            if not matched_ability_id and str(change.get("kind", "")) == "added":
                 try:
                     from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
                     _dom = str(meta.get("dominant_axis", "X") or "X").upper()
