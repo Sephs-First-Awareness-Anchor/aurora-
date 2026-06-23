@@ -73,6 +73,7 @@ USAGE
   python3 aurora_runtime.py --mode test                   # self-checks
   python3 aurora_runtime.py --out my_run --state my_state
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
 
 from __future__ import annotations
 
@@ -91,7 +92,7 @@ import time
 import uuid
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Tuple
+from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 try:
     from aurora_internal.lineage_canonical import constraints_for_operation as _canonical_constraints_for_operation
@@ -421,6 +422,10 @@ def _env_float(name: str, default: float) -> float:
         return float(raw)
     except Exception:
         return float(default)
+
+
+def _clamp(v: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    return max(lo, min(hi, v))
 
 
 def _normalize_ancestry_constraints(constraints: Optional[Iterable[str]]) -> FrozenSet[str]:
@@ -1486,10 +1491,8 @@ class ChainSimBridge:
             perception = getattr(session, "perception", None)
             if perception is None:
                 return
-            ecology = getattr(getattr(perception, "ecology", None), None, None)
             # ExpressionEcology lives at perception.ecology (ExpressionPerceptionEngine)
-            if ecology is None:
-                ecology = getattr(perception, "ecology", None)
+            ecology = getattr(perception, "ecology", None)
             if ecology is None:
                 return
             wisdom_store = getattr(ecology, "wisdom", None)

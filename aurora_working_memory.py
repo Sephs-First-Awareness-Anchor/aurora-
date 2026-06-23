@@ -15,10 +15,13 @@ import time
 import hashlib
 import logging
 from collections import deque
+from types import SimpleNamespace
 from typing import Optional, Dict, Any, List, Tuple, Set
 from dataclasses import field
 
 from aurora_support_stack import UtteranceParser
+from aurora_internal.aurora_language_state import _merge_native_meaning_bundle
+from aurora_internal.aurora_identity_persistence import ConversationMemory
 
 logger = logging.getLogger(__name__)
 

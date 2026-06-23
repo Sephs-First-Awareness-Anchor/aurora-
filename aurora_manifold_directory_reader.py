@@ -67,7 +67,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
-    Dict, Generator, Iterator, List,
+    Any, Dict, Generator, Iterator, List,
     Optional, Tuple,
 )
 

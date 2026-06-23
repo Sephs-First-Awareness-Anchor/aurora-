@@ -730,7 +730,7 @@ class EnhancedDCE:
                     elif isinstance(vocab, (set, list)):
                         return list(vocab)[:1000]
             return []
-        except:
+        except Exception:
             return []
     
     def _get_actual_wisdom(self, context: Optional[Dict] = None) -> List:
@@ -816,7 +816,7 @@ class EnhancedDCE:
                     elif isinstance(shards, list):
                         return shards[:20]
             return []
-        except:
+        except Exception:
             return []
     
     def _extract_concepts(self, text: str) -> List[str]:
@@ -845,7 +845,7 @@ class EnhancedDCE:
                     self.dim_memory.store(crystal.to_dict())
                 elif hasattr(self.dim_memory, 'add_memory'):
                     self.dim_memory.add_memory(crystal.to_dict())
-            except:
+            except Exception:
                 pass
         return ""
     

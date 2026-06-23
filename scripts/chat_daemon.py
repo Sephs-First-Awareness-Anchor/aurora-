@@ -22,7 +22,7 @@ def queue_turn(text: str) -> str:
     if _QUEUE_FILE.exists():
         try:
             state = json.loads(_QUEUE_FILE.read_text())
-        except:
+        except Exception:
             pass
             
     pending = state.get("pending", [])
@@ -49,7 +49,7 @@ def wait_for_result(turn_id: str, timeout: int = 60):
                 results = json.loads(_RESULT_FILE.read_text())
                 if results.get("id") == turn_id:
                     return results
-            except:
+            except Exception:
                 pass
         time.sleep(0.5)
     return None

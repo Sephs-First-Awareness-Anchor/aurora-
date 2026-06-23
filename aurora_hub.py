@@ -39,6 +39,7 @@ from aurora_internal.dual_strata.sensory_control_channel import (
 _BASE_DIR   = Path(__file__).parent
 _STATE_DIR  = _BASE_DIR / "aurora_state"
 
+_DAEMON_STATUS      = _STATE_DIR / "daemon_status.json"
 _ROOM_MSGS          = _STATE_DIR / "aurora_room_messages.json"
 _ROOM_NOTES         = _STATE_DIR / "aurora_room_notes.json"
 _ROOM_ACTIVITY      = _STATE_DIR / "aurora_room_activity.json"

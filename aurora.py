@@ -14902,86 +14902,49 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         except Exception:
             pass
     if not state.response_content:
-        # Express the gap as constraint data — let _render_runtime_intent
-        # translate it through the FGAE rather than emitting silence.
-        _fb_topic = ""
+        # Terminal gap: nothing emerged at any level — Aurora has no place for
+        # this yet. This is warp's domain (the universal accommodation engine):
+        # confess the unresolved state so warp recognizes the missing
+        # representation and accommodates it (compare to known relational
+        # structures via genealogy; else discover). Heavy resolution runs in
+        # subsurface. The surface is the emitter's constraint-native honest
+        # abstain — never a manufactured "what X means here" claim (that FGAE/SIC
+        # fallback was removed in the Language Reset).
         try:
-            _fb_parsed = state.parsed or {}
-            _fb_topic = str(_fb_parsed.get("topic", "") or _fb_parsed.get("search_query", "") or "").strip()
-            # Reject single-word weak topics
-            if _is_weak_response_topic(_fb_topic):
-                _fb_topic = ""
-            # Also reject multi-word phrases where every word is weak
-            # (e.g. "something here" → all weak → not a usable anchor)
-            if _fb_topic:
-                _topic_words = re.findall(r"[a-zA-Z]{3,}", _fb_topic)
-                if _topic_words and all(_is_weak_response_topic(w.lower()) for w in _topic_words):
-                    _fb_topic = ""
-            if not _fb_topic:
-                for _cand in list(_fb_parsed.get("topic_words", []) or []):
-                    _cand_s = str(_cand or "").strip()
-                    if _cand_s and not _is_weak_response_topic(_cand_s):
-                        _fb_topic = _cand_s
-                        break
+            from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
+            _warp_guard(
+                source="expression",
+                layer="articulation",
+                trigger=_WT.MISSING_REPRESENTATION,
+                unresolved_text=str(user_text or ""),
+                severity=0.55,
+                persistence_key=str(user_text or "")[:48],
+            )
         except Exception:
             pass
-        # Build a gap-state claim from available content.
-        # Claims are phrased as noun clauses ("what X means here") so they read
-        # naturally when the SIC wraps them in "I understand X." via _bundle_direct_line.
-        if _fb_topic:
-            _gap_claim = "what " + _fb_topic + " means here"
-        else:
-            _uw = [w.lower() for w in re.findall(r"[a-zA-Z]{4,}", str(user_text or ""))
-                   if w.lower() not in {"that", "this", "with", "what", "from",
-                                        "have", "does", "here", "there", "than",
-                                        "some", "more", "less", "come", "been",
-                                        "will", "your", "just", "when", "also",
-                                        "means", "mean", "want", "wants", "know",
-                                        "feel", "feels", "think", "thinks", "says",
-                                        "about", "right", "doing", "like", "into",
-                                        "time", "moment", "sense", "currently"}
-                   and not _is_weak_response_topic(w.lower())]
-            if _uw:
-                _gap_claim = "what " + _uw[0] + " points to"
-            else:
-                # Derive gap claim from the dominant active axis so each turn's
-                # gap claim reflects Aurora's current constraint orientation
-                # rather than repeating the same generic phrase.
-                _dom_ax = "X"
-                try:
-                    _ap = {k: float((systems.get("identity_field") or {})
-                                    if isinstance(systems.get("identity_field"), dict)
-                                    else (getattr(systems.get("identity_field"), "_axis_p", {}) or {}))
-                               .get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[k], 0.10)
-                           for k in ("X", "T", "N", "B", "A")}
-                    _dom_ax = max(_ap, key=lambda k: _ap[k])
-                except Exception:
-                    pass
-                # Five axis-oriented questions about the entity present —
-                # genuine curiosity about who is here, not abstract physics.
-                # X = existence/presence → who is here
-                # T = temporal/continuity → when they have been
-                # N = cost/direction → where they are going
-                # B = distinction/boundary → what they want
-                # A = agency/source → why they have come
-                _AXIS_GAP_CLAIMS = {
-                    "X": "who is here",
-                    "T": "when they have been",
-                    "N": "where they are going",
-                    "B": "what they want",
-                    "A": "why they have come",
-                }
-                _gap_claim = _AXIS_GAP_CLAIMS.get(_dom_ax, "who is here")
-        state.response_content = _render_runtime_intent(
-            systems, _gap_claim,
-            emotion_tone="curious", certainty=0.58,
-            supporting_concepts=[_fb_topic] if _fb_topic else [],
-        )
-        state.response_tone = "curious"
-        state.response_confidence = 0.58
-        state.response_src = "generative"
-        # Preserve gap-claim responses: the SIC already rendered the claim above;
-        # another EVO pass would re-process a fragile fragment into word salad.
+        _abstain = ""
+        try:
+            _emitter = systems.get("constraint_emitter")
+            if _emitter is not None:
+                from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
+                _gp = getattr(state, "parsed", {}) or {}
+                _gif = _IF(
+                    text=str(user_text or ""),
+                    is_question=bool(_gp.get("is_question", False)),
+                    is_directed=True,
+                    is_self_referential=bool(_gp.get("is_self_referential", False)),
+                )
+                _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
+                _ares = _emitter._emit_abstain(_gctx)
+                _abstain = str(getattr(_ares, "text", "") or "").strip()
+        except Exception:
+            _abstain = ""
+        state.response_content = _abstain
+        state.response_tone = "honest"
+        state.response_confidence = 0.4
+        state.response_src = "constraint_abstain"
+        # Honest abstain is terminal — do not let a later refinement pass
+        # re-inflate it into manufactured content.
         if isinstance(systems, dict):
             systems["_preserve_literal_response_once"] = True
     # Evolutionary refinement (learning hints woven in)
@@ -19183,17 +19146,46 @@ def boot_aurora(
             except Exception:
                 pass
 
-        # generate_form: no language / representation → grammar + language field
+        # generate_form: missing representation → accommodate through the
+        # language field's WarpCapable actuator. Build the gap's 15D I-state
+        # profile from the current axis state and let check_and_extend derive +
+        # integrate a new comparison-type component (genealogy-biased), gated by
+        # gap persistence so novelties are not acted on hastily. Heavy
+        # accommodation runs in subsurface; the surface turn only confesses.
         def _h_generate_form(decision):
-            for _sys_key, _method in (('grammar_engine', 'flag_missing_form'),
-                                       ('language_field',  'flag_missing_form')):
-                _s = systems.get(_sys_key)
-                if _s is not None and hasattr(_s, _method):
-                    try:
-                        getattr(_s, _method)(decision.demand.unresolved_text)
-                        decision.resolved = True
-                    except Exception:
-                        pass
+            lf = systems.get('language_field')
+            if lf is None or not hasattr(lf, 'check_and_extend'):
+                decision.notes = "generate_form: no language_field actuator"
+                return
+            if str(systems.get('runtime_profile', '') or '') == 'surface':
+                decision.notes = "generate_form: confessed; accommodation deferred to subsurface"
+                return
+            try:
+                from aurora_warp_protocol import axes_to_istates as _a2i
+                _prof = decision.demand.profile or {}
+                if _prof and any(k in _prof for k in "XTNBA"):
+                    _aw = {ax: float(_prof.get(ax, 0.10)) for ax in "XTNBA"}
+                else:
+                    _idf = systems.get('identity_field')
+                    _raw = getattr(_idf, '_axis_p', {}) if _idf is not None else {}
+                    _aw = {ax: float(_raw.get({"X": 0, "T": 1, "N": 2, "B": 3, "A": 4}[ax], 0.10))
+                           for ax in "XTNBA"}
+                _data_axes = _a2i(_aw, ivm_polarity=None)
+                # Language crosses the B-axis boundary → operates near SURFACE/SHALLOW.
+                _data_axes["REC_SURFACE"]  = 0.30
+                _data_axes["REC_SHALLOW"]  = 0.50
+                _data_axes["REC_MODERATE"] = 0.15
+                _data_axes["REC_DEEP"]     = 0.05
+                _data_axes["REC_CORE"]     = 0.00
+                _comp = lf.check_and_extend(_data_axes, source="articulation_gap", tick=0)
+                decision.action_taken = True
+                if _comp is not None:
+                    decision.resolved = True
+                    decision.notes = f"accommodated: comparison_type {getattr(_comp, 'component_id', '')}"
+                else:
+                    decision.notes = "gap monitored — below persistence threshold"
+            except Exception as _gf_e:
+                decision.notes = f"generate_form error: {_gf_e}"
 
         # surface_emergence: architecture-level failure → quasiarch + understanding contract
         def _h_surface_emergence(decision):
@@ -20400,6 +20392,18 @@ def boot_aurora(
                     _cpm_lf_boot = systems.get('_cpm_session') or systems.get('cpm')
                     if _cpm_lf_boot is not None and hasattr(_lf_boot, 'set_cpm'):
                         _lf_boot.set_cpm(_cpm_lf_boot)
+                except Exception:
+                    pass
+                # Register the language field as a WarpCapable actuator so the
+                # warp engine can accommodate missing representations (derive +
+                # integrate new comparison-type components, genealogy-biased
+                # toward proven structure).
+                try:
+                    _wf_lf = systems.get('warp_field')
+                    if _wf_lf is not None and hasattr(_wf_lf, 'register_warp_capable'):
+                        _wf_lf.register_warp_capable('language_field', _lf_boot)
+                    if hasattr(_lf_boot, 'set_warp_genealogy'):
+                        _lf_boot.set_warp_genealogy(systems.get('genealogy'))
                 except Exception:
                     pass
                 if verbose:

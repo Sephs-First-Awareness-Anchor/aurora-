@@ -452,6 +452,46 @@ class CuriosityEngine:
         except Exception:
             pass
 
+        # --- WarpField anomaly ledger — recurring unresolved demands become curiosity targets ---
+        # High-severity demands that recur across ticks (persistence_key set, severity >= 0.90)
+        # accumulate in WarpField._anomaly_ledger. These are subsystem confessions the field
+        # could not route to a registered handler. Curiosity investigates what the unresolved
+        # demand actually IS before deciding whether structural action is warranted.
+        # This is distinct from WarpGenerator anomaly candidates (coverage-gap based).
+        try:
+            from aurora_warp_protocol import get_warp_field as _get_wf
+            _wf = _get_wf()
+            _ledger_summary = _wf.anomaly_ledger_summary()
+            # Only surface demands that recurred at least twice
+            _wf_candidates = [r for r in _ledger_summary if r.get("count", 0) >= 2]
+            if _wf_candidates:
+                rec = _wf_candidates[0]
+                _trigger = rec.get("trigger", "unknown")
+                _source  = rec.get("source", "unknown")
+                _count   = rec.get("count", 0)
+                _sev     = rec.get("last_severity", 0.9)
+                _text    = rec.get("unresolved_text", "").strip()
+                return CuriosityObject(
+                    subject=(
+                        f"recurring unresolved demand: {_trigger} from {_source}"
+                        + (f" — '{_text[:60]}'" if _text else "")
+                    ),
+                    origin_axis="X",  # existence — something keeps failing to be placed
+                    curiosity_type="conceptual",
+                    urgency=min(1.0, 0.70 + (_count - 2) * 0.05),
+                    hypothesis=(
+                        f"The {_source} subsystem has submitted {_count} unresolved demands "
+                        f"of type '{_trigger}' (severity {_sev:.2f}) that WarpField routed "
+                        f"to the anomaly ledger. Either the demand is beyond current "
+                        f"representational capacity, or no pathway handler is registered to "
+                        f"resolve it. I should investigate whether this reflects a genuine "
+                        f"missing primitive or a handler registration gap."
+                    ),
+                    tick=tick,
+                )
+        except Exception:
+            pass
+
         # --- Crystal gap report — highest priority new curiosity source ---
         # The sensory crystal knows exactly which concepts are underfed and
         # which modality is missing. This is the primary driver of gap-seeking

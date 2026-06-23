@@ -2840,7 +2840,7 @@ class LinuxCamera:
                 motion_amount = float(np.mean(diff)) / 255.0
                 features["motion_detected"] = motion_amount > 0.02
                 features["features"]["motion_intensity"] = motion_amount
-            except:
+            except Exception:
                 pass
 
         # Face detection (if cascade available)
@@ -3497,7 +3497,7 @@ class LinuxVoice:
         if self._engine:
             try:
                 self._engine.stop()
-            except:
+            except Exception:
                 pass
         self._speaking = False
 
@@ -4198,7 +4198,7 @@ def check_dependencies() -> Dict[str, bool]:
     # Check espeak
     try:
         deps["espeak"] = os.system("which espeak > /dev/null 2>&1") == 0
-    except:
+    except Exception:
         deps["espeak"] = False
 
     return deps
@@ -4939,7 +4939,7 @@ class SensoryIntegrationEngine:
                 personality = identity.get_personality()
                 traits = personality.get("traits", {})
                 self.voice_mapper.set_personality(traits)
-            except:
+            except Exception:
                 pass
 
     def start(self):
@@ -5815,7 +5815,7 @@ class SensoryIntegrationEngine:
                 try:
                     voice._engine.setProperty('rate', params['rate'])
                     voice._engine.setProperty('volume', params['volume'])
-                except:
+                except Exception:
                     pass
             success = voice.speak(prepared_text, blocking=blocking)
 

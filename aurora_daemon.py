@@ -737,7 +737,7 @@ def _should_reach_out(systems: Dict[str, Any], heat_level: str) -> bool:
         if sc is not None:
             sc_state = sc.get_state()
     except Exception as e:
-        _log_error(f"Error retrieving sensory crystal state: {e}")
+        _log(f"Error retrieving sensory crystal state: {e}")
 
     # --- DCE recent coherence trend -----------------------------------------
     dce_low_streak = 0
@@ -758,9 +758,9 @@ def _should_reach_out(systems: Dict[str, Any], heat_level: str) -> bool:
                     else:
                         break
                 except Exception as e:
-                    _log_error(f"Error processing dce log line: {e}")
+                    _log(f"Error processing dce log line: {e}")
     except Exception as e:
-        _log_error(f"Error in DCE recent coherence trend: {e}")
+        _log(f"Error in DCE recent coherence trend: {e}")
 
     # --- Build probability ---------------------------------------------------
     p = 0.05  # base floor

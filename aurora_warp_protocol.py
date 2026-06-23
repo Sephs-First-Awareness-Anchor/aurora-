@@ -1207,6 +1207,49 @@ class WarpField:
                 results.append(self.submit(dec.demand))
         return results
 
+    def anomaly_ledger_summary(self) -> List[Dict[str, Any]]:
+        """
+        Return a summary of WarpDecision anomaly entries, ranked by severity.
+        Non-destructive — the ledger is not cleared.
+        Consumers (e.g. CuriosityEngine) use this to surface recurring
+        high-severity unresolved demands as curiosity targets.
+        """
+        seen: Dict[str, Dict[str, Any]] = {}
+        for dec in self._anomaly_ledger:
+            key = dec.demand.persistence_key or dec.demand.demand_id
+            if key in seen:
+                seen[key]["count"] += 1
+                seen[key]["last_severity"] = max(
+                    seen[key]["last_severity"], float(dec.demand.severity)
+                )
+            else:
+                seen[key] = {
+                    "persistence_key": key,
+                    "source":          dec.demand.source,
+                    "layer":           dec.demand.layer,
+                    "trigger":         dec.demand.trigger,
+                    "unresolved_text": dec.demand.unresolved_text[:120],
+                    "last_severity":   float(dec.demand.severity),
+                    "count":           1,
+                    "first_seen":      dec.demand.timestamp,
+                }
+        return sorted(
+            seen.values(),
+            key=lambda r: (r["count"], r["last_severity"]),
+            reverse=True,
+        )
+
+    def drain_anomaly_ledger(self, keep_recent: int = 50) -> int:
+        """
+        Compact the anomaly ledger, keeping only the most recent `keep_recent`
+        entries. Returns the number of entries removed.
+        Call at most once per epoch — not per tick.
+        """
+        removed = max(0, len(self._anomaly_ledger) - keep_recent)
+        if removed > 0:
+            self._anomaly_ledger = self._anomaly_ledger[-keep_recent:]
+        return removed
+
     def status(self) -> Dict[str, Any]:
         return {
             "total_demands":      self._demand_count,
