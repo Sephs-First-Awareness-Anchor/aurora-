@@ -4449,6 +4449,14 @@ def _save_state(systems: Dict[str, Any]) -> None:
         aurora_obj = systems.get("aurora")
         if aurora_obj and hasattr(aurora_obj, "save_state"):
             aurora_obj.save_state()
+        # Running developmental-timeline log + EEPR feed during always-on
+        # operation: capture autonomous growth, not only interaction-driven.
+        try:
+            from aurora_developmental_log import record_developmental_snapshot
+
+            record_developmental_snapshot(systems)
+        except Exception:
+            pass
         try:
             from aurora import save_sensory_skill_state
 
