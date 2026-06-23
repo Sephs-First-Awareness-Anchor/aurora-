@@ -22391,5 +22391,76 @@
       "dominant_dimension:OPERATOR",
       "nc_dim:POLARITY"
     ]
+  },
+  "L:280119127f": {
+    "id": "L:280119127f",
+    "parents": [
+      "NC:T>T",
+      "NC:T>X"
+    ],
+    "depth": 1,
+    "created_at_tick": 67064,
+    "stats": {
+      "count": 368,
+      "mean_pos_relief": {
+        "X": 0.00019025753711739485,
+        "T": 2.9269662158085474e-05,
+        "N": 1.7563128192664712e-07,
+        "B": 4.5713148668663884e-08,
+        "A": -1.695139279296527e-10
+      },
+      "mean_relief": {
+        "X": 0.00019025753711739485,
+        "T": 2.9269662158085474e-05,
+        "N": 1.7563128192664712e-07,
+        "B": 4.5713148668663884e-08,
+        "A": -1.695139279296527e-10
+      },
+      "stdev_relief": {
+        "X": 0.00029315553383066605,
+        "T": 8.466823986952714e-05,
+        "N": 3.5755112556877757e-06,
+        "B": 3.115105726009876e-07,
+        "A": 5.581965060128832e-09
+      },
+      "mean_cost": {
+        "X": 0.02041543839705168,
+        "T": 0.073853226250159,
+        "N": 0.33017895624490434,
+        "B": 0.287070721275496,
+        "A": 1.9663844812939966
+      },
+      "mean_x_risk": 0.025204517776581302
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:X^1*T^3",
+      "dominant_axis:T",
+      "purpose_family:X+T",
+      "origin_signature:X^1*T^3",
+      "operator_action:operator_on_t",
+      "purpose_lane:intelligence",
+      "operator_grade:0.657",
+      "purpose_grade:0.639",
+      "overall_grade:0.493",
+      "complexity_axes:2",
+      "complexity_slots:3",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.000",
+      "seed_lineage:false",
+      "artificial_seed_influence:0.000",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:2",
+      "ontological_status:native_closed",
+      "depth_score:0.0200",
+      "leverage_grade:0.0769",
+      "viable_band_alignment:0.1538",
+      "energetic_footprint:0.0200",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "nc_dim:OPERATOR"
+    ]
   }
 }
