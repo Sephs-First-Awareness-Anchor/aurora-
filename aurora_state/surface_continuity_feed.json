@@ -1,79 +1,123 @@
 [
   {
-    "packet_id": "de96fd24a5dc4ff4bf4f29d2f51004fd",
-    "created_at": 1781553420.9199095,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
+    "packet_id": "569d1c5de73d4f03abb3ad09f98a4669",
+    "created_at": 1782250897.1587508,
+    "source": "external_user_turn",
+    "user_input": "My name is Sunni. Please remember that.",
+    "aurora_response": "your name is Sunni.",
+    "response_tone": "warm",
     "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
+      "sunni",
+      "please",
+      "remember"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.0,
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:-0.66"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "f078247bb7bb49f18794ddb836c489d4",
-    "created_at": 1781553453.0717793,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
+    "packet_id": "effb0aa390bd4ad2aa8b28457ddf6142",
+    "created_at": 1782250900.9480848,
+    "source": "external_user_turn",
+    "user_input": "A raven is a black bird.",
+    "aurora_response": "your name is Sunni.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "raven",
+      "black",
+      "bird"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.64"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "80bb4ee023fb42bb8f910f1455d93f55",
+    "created_at": 1782250904.782988,
+    "source": "external_user_turn",
+    "user_input": "What is a raven?",
+    "aurora_response": "fact, raven, description. a black bird.",
     "response_tone": "uncertain",
     "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
+      "raven"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.0,
+    "coherence": 0.026,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.61"
+      "existence:-0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "aa130efa1440464bb4d709986e1e6743",
-    "created_at": 1781553478.9290805,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "",
-    "response_tone": "neutral",
+    "packet_id": "411bbcf5ba014d93a6df07fc52e8fb4f",
+    "created_at": 1782250908.644107,
+    "source": "external_user_turn",
+    "user_input": "Photosynthesis is how plants turn light into energy.",
+    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
+    "response_tone": "curious",
     "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
+      "photosynthesis",
+      "plants",
+      "turn",
+      "light",
+      "energy"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
+    "dominant_axis": "N",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.63"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "7b37e6fa3fdc4292a468c11976250330",
+    "created_at": 1782250912.5609245,
+    "source": "external_user_turn",
+    "user_input": "What is photosynthesis?",
+    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "photosynthesis"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.026,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -84,51 +128,89 @@
     "consumed_at": null
   },
   {
-    "packet_id": "d3b89c099b2746b4bd70a5ba89ff53fe",
-    "created_at": 1781553510.7835512,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "Behavior: learned:behavior.",
+    "packet_id": "ddf3f5b81c9f458ba0b1f4fd257a8259",
+    "created_at": 1782250921.4328501,
+    "source": "external_user_turn",
+    "user_input": "Explain quantum chromodynamics to me.",
+    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
     "response_tone": "curious",
     "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
+      "quantum",
+      "chromodynamics"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.0,
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.66"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "97d6100b8bc242efb0a9d5542bdebcc0",
-    "created_at": 1781553543.4120986,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
+    "packet_id": "d267053d357d41dcb2f14777f323bb41",
+    "created_at": 1782250924.6646998,
+    "source": "external_user_turn",
+    "user_input": "What is my name?",
+    "aurora_response": "Yes \u2014 you're Sunni.",
+    "response_tone": "warm",
+    "concepts_activated": [],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.0,
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.63"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "759d414eb6244c22a7d8709c15b7b86f",
+    "created_at": 1782250927.7350085,
+    "source": "external_user_turn",
+    "user_input": "How do you feel right now?",
+    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.003, dominant-emotion=fear. Existence moved down since the last exchange.",
+    "response_tone": "self-aware",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.61"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "72d648c6d4f1438ca1287f7c7f6c4160",
+    "created_at": 1782250931.6278343,
+    "source": "external_user_turn",
+    "user_input": "What did we just talk about?",
+    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.003, dominant-emo.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -139,193 +221,20 @@
     "consumed_at": null
   },
   {
-    "packet_id": "b3f0cf65af7a4c9e89853ad4a4e6b19c",
-    "created_at": 1781553568.8990502,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "",
-    "response_tone": "neutral",
+    "packet_id": "e32b82ff093e4bfb8ab11177ea67d670",
+    "created_at": 1782250934.8776762,
+    "source": "external_user_turn",
+    "user_input": "Do you feel like you are growing?",
+    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.20. Field state: heat=0.006, dominant-emotion=fear. Agency moved up since the last exchange.",
+    "response_tone": "self-aware",
     "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
+      "growing"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.67"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b06c85c5404a423f9558b70fec890459",
-    "created_at": 1781553600.1336877,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "Behavior: learned:behavior.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "d8b765d0043744689b24fa7cc4f3a321",
-    "created_at": 1781553632.1197066,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.57"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "bf1067e0662e4f57ae0928cc6442690d",
-    "created_at": 1781553662.4825602,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.45"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4424ede7057f4bf0909ad7c06a4421c8",
-    "created_at": 1781553694.9666672,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links corpus and fragment here?",
-    "aurora_response": "what behavior means here.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "corpus",
-      "fragment",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.51"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "5b5f1ebe940b425884978cbc4eed5778",
-    "created_at": 1781553727.5311146,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.67"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1712e48b678e486ba000367732226203",
-    "created_at": 1781553753.138463,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
+    "dominant_axis": "A",
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -336,135 +245,48 @@
     "consumed_at": null
   },
   {
-    "packet_id": "3769c65921de4513936791b3f3af58d7",
-    "created_at": 1781553785.8442278,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "Behavior: learned:behavior.",
-    "response_tone": "curious",
+    "packet_id": "726a7a6425024ec7b5b7cd8060fe13fd",
+    "created_at": 1782250942.478798,
+    "source": "external_user_turn",
+    "user_input": "My name is Sunni. Please remember that.",
+    "aurora_response": "your name is Sunni.",
+    "response_tone": "warm",
     "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
+      "sunni",
+      "please",
+      "remember"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.0,
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.57"
+      "existence:-0.61"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "b45fa8b176084d45a33e6dfc34ee65d0",
-    "created_at": 1781553818.6512017,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "417d128d01bb489cb308a153eb8c8fa1",
-    "created_at": 1781553844.982481,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "580e0358d0c646ee9095410c447a1ccc",
-    "created_at": 1781553877.3921301,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links corpus and fragment here?",
-    "aurora_response": "Behavior: learned:behavior.",
+    "packet_id": "4deb67da09974cb79febcc185bde5264",
+    "created_at": 1782250946.3535266,
+    "source": "external_user_turn",
+    "user_input": "A raven is a black bird.",
+    "aurora_response": "your name is Sunni.",
     "response_tone": "curious",
     "concepts_activated": [
-      "behavior",
-      "links",
-      "corpus",
-      "fragment",
-      "here"
+      "raven",
+      "black",
+      "bird"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "83f936a028b243e19eb901780d3d5fd1",
-    "created_at": 1781553910.9216418,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
+    "coherence": 0.026,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -475,25 +297,72 @@
     "consumed_at": null
   },
   {
-    "packet_id": "3b62d9b2aeca40b4a409c38a61192244",
-    "created_at": 1781553937.3903623,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "",
-    "response_tone": "neutral",
+    "packet_id": "83c7173ab06144bf83588bad9ab51d61",
+    "created_at": 1782250950.4183826,
+    "source": "external_user_turn",
+    "user_input": "What is a raven?",
+    "aurora_response": "fact, raven, description. a black bird.",
+    "response_tone": "uncertain",
     "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
+      "raven"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
+    "dominant_axis": "X",
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ac06d1de46f143c3bb200e60e8ffde33",
+    "created_at": 1782250954.509711,
+    "source": "external_user_turn",
+    "user_input": "Photosynthesis is how plants turn light into energy.",
+    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "photosynthesis",
+      "plants",
+      "turn",
+      "light",
+      "energy"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2f420e647ff94cc4929654bffbe75a37",
+    "created_at": 1782250958.477502,
+    "source": "external_user_turn",
+    "user_input": "What is photosynthesis?",
+    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "photosynthesis"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.026,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -504,55 +373,117 @@
     "consumed_at": null
   },
   {
-    "packet_id": "b61bd2db540845308b622fe14a44c334",
-    "created_at": 1781553972.0763688,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "what behavior means here.",
+    "packet_id": "942c19ba82cd48efae57e9014a952dc5",
+    "created_at": 1782250967.6016681,
+    "source": "external_user_turn",
+    "user_input": "Explain quantum chromodynamics to me.",
+    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
     "response_tone": "curious",
     "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
+      "quantum",
+      "chromodynamics"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.0,
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.65"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "cb6d3141ac8842f3b5ca34438e09924f",
-    "created_at": 1781554007.0259213,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Relation: learned:relation.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
+    "packet_id": "de9fd52aee304b949d21212ee024c8d6",
+    "created_at": 1782250971.2100606,
+    "source": "external_user_turn",
+    "user_input": "What is my name?",
+    "aurora_response": "Yes \u2014 you're Sunni.",
+    "response_tone": "warm",
+    "concepts_activated": [],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.0,
+    "coherence": 0.026,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c25000246d374a3c9fe7cb3900c0da6b",
+    "created_at": 1782250974.6878037,
+    "source": "external_user_turn",
+    "user_input": "How do you feel right now?",
+    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.004, dominant-emotion=fear. Existence moved down since the last exchange.",
+    "response_tone": "self-aware",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "4784b711829b4e58bde3e4ccba69f917",
+    "created_at": 1782250978.8274512,
+    "source": "external_user_turn",
+    "user_input": "What did we just talk about?",
+    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.004, dominant-emo.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "talk"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.64"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "cac4475cd0d240a184e616caa951555d",
+    "created_at": 1782250982.353955,
+    "source": "external_user_turn",
+    "user_input": "Do you feel like you are growing?",
+    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.20. Field state: heat=0.008, dominant-emotion=fear. Agency moved up since the last exchange.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "growing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.62"
     ],
     "resolved_bindings": [],
     "consumed": false,

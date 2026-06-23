@@ -23103,6 +23103,15 @@ def _run_live_response_turn(
                     bridge.inject_promoted_links()
                 except Exception:
                     pass
+            # Running developmental-timeline log + EEPR feed: snapshot growth
+            # metrics, append to developmental_timeline.jsonl, and feed the
+            # snapshot into the experiential wisdom store as a WisdomShard so
+            # development becomes experiential pressure (throttled internally).
+            try:
+                from aurora_developmental_log import record_developmental_snapshot
+                record_developmental_snapshot(systems)
+            except Exception:
+                pass
         if turn_tick % 50 == 0:
             # Pressure routing: classify typed pressure, route to all three layers
             # (evolution adapter_hints, training fail-ledger, GPT query_bias)

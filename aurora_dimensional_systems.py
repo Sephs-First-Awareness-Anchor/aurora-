@@ -1518,6 +1518,10 @@ class EnergyRegulatorSystem:
         # ---- Core facet-level physics ----
         self.facet_energy: Dict[str, float] = {}
         self.facet_to_facet_links: Dict[str, Dict[str, float]] = {}
+        # Boundary sharpening (#5): the complement of the resonance graph — for
+        # each facet, the near facets it was distinguished FROM (resonant above
+        # noise but below the link cut). What this concept is NOT.
+        self.facet_to_facet_excludes: Dict[str, Dict[str, float]] = {}
         self.registered_facets: Dict[str, CrystalFacet] = {}
         self.facet_categories: Dict[str, str] = {}  # facet_id â†' category
 
@@ -1667,6 +1671,23 @@ class EnergyRegulatorSystem:
             facet_ids[i]: float(sims[i] / total_score)
             for i in indices
         }
+
+        # Boundary sharpening (#5): facets that resonated meaningfully (above the
+        # 0.25 distinction floor) but fell below the top-k link cut are what this
+        # concept is distinguished FROM — its negative space. Recorded as the
+        # complement of the resonance graph so a concept is defined by exclusion
+        # as well as inclusion.
+        linked = {int(i) for i in indices}
+        excluded = [
+            int(i) for i in np.argsort(sims)[::-1]
+            if int(i) not in linked and float(sims[int(i)]) >= 0.25
+        ]
+        if excluded:
+            self.facet_to_facet_excludes[facet_id] = {
+                facet_ids[i]: float(sims[i]) for i in excluded[:top_k]
+            }
+        else:
+            self.facet_to_facet_excludes.pop(facet_id, None)
 
     # ====================================================================
     # ENERGY INJECTION & DISPERSAL

@@ -910,6 +910,28 @@
       "sightings": 16,
       "first_seen": 1781549434.4227195,
       "last_seen": 1781553635.5192752
+    },
+    {
+      "text": "user name is Sunni",
+      "confidence": 0.94,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "user",
+        "growing"
+      ],
+      "tags": [
+        "semantic_frame",
+        "speaker_identity",
+        "generative"
+      ],
+      "sightings": 8,
+      "first_seen": 1782250669.922333,
+      "last_seen": 1782250942.4806292
     }
   ]
 }
