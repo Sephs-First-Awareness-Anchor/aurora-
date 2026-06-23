@@ -92,7 +92,7 @@ import time
 import uuid
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Tuple
+from typing import Any, Deque, Dict, FrozenSet, Iterable, List, Optional, Set, Tuple
 
 try:
     from aurora_internal.lineage_canonical import constraints_for_operation as _canonical_constraints_for_operation
