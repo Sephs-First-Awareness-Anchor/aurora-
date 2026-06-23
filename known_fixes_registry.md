@@ -106,6 +106,10 @@ file. Fixed the safe, verifiable ones:
   her own whitelisted training tools. Added the imports and updated the
   (outdated) doctrine text to reflect that she may launch the whitelisted
   TRAINING_TOOLS as subprocesses.
+- `aurora_hardware_io.py`: `_extract_rich_audio_features` (defined in
+  aurora_expression_perception) was never imported, so the audio feature
+  extraction in the hardware paths silently failed. Added the import (verified
+  no circular import).
 
 **Still open (need a decision, not a blind patch):**
 - `aurora_working_memory.py:3222` — `state` referenced in the grammar-suggestion
@@ -116,8 +120,14 @@ file. Fixed the safe, verifiable ones:
   the helpers moved to a shared module.
 - `aurora_daemon.py:195` — `_surface_channel_recently_active` is defined nowhere;
   needs implementing or the call removed.
-- `aurora_hardware_io.py` — `_extract_rich_audio_features` (lives in
-  expression_perception) and the `_ConstraintVector`/`_GovernorWeights`/`_FC`/
-  `_ExistenceMode` cluster need (aliased) imports; deferred only because they
-  activate sensory/hardware paths not runtime-testable in a headless env.
+- `aurora_hardware_io.py` — the `_ConstraintVector`/`_GovernorWeights`/`_FC`/
+  `_ExistenceMode` cluster (in the dormant `constraint_profile` / governor /
+  `language_projection` hardware methods). `_ConstraintVector` and
+  `_GovernorWeights` map cleanly to `aurora_constraint_engine`, but `_FC` /
+  `_ExistenceMode` are ambiguous: `_FC.language_projection(_ExistenceMode.AGENTIC)`
+  implies `_FC` is an *instance* (the method is `language_projection(self, mode)`),
+  and `AGENTIC` lives on `foundational_contract.ExistenceMode` while
+  `language_projection` lives on `aurora_constraint_engine.FoundationalContract`
+  — i.e. two different ExistenceMode enums. Needs the author's confirmation of
+  the original import intent; not safe to reconstruct blind.
 

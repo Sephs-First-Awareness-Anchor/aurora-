@@ -1037,6 +1037,9 @@ from foundational_contract import (
 
 # Pattern types shared with aurora_expression_perception
 from aurora_perception_primitives import PatternType, DimensionalPattern
+# Shared audio feature extractor (lives in the expression/perception module);
+# the audio paths here call it directly.
+from aurora_expression_perception import _extract_rich_audio_features
 
 # DNA structures from Layer 6
 from aurora_behavioral_identity import (
