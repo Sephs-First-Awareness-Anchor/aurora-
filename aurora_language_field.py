@@ -128,6 +128,14 @@ class LSAEntry:
     last_fidelity:       float = 0.0
     context_fingerprint: Dict[str, float] = field(default_factory=dict)
     last_used:           float = field(default_factory=time.time)
+    # Boundary sharpening: the near comparison-types this crossing is distinguished
+    # FROM (what this relation is NOT). This is the in-architecture form of
+    # "forced commitment with rejected alternatives" — committing to a crossing
+    # records its contrast set on the B-axis, rather than a committee vote.
+    excludes:            List[str] = field(default_factory=list)
+    # Consequence loop: what changed the last time this crossing was confirmed
+    # true (n_cost/b_gate deltas + use). "What changes because this is true."
+    consequence:         Dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -880,21 +888,50 @@ class LanguageField(WarpCapable):
             "lsa_size":           len(self._lsa),
         }
 
+    def _excluded_comparison_types(self, comparison_type: str) -> List[str]:
+        """
+        Boundary set: the near comparison-types this one is distinguished FROM —
+        types that share at least one dominant axis but are not this type. This
+        is what the relation EXCLUDES on the B-axis (what it is NOT), not only
+        what it includes.
+        """
+        all_types = {**_COMPARISON_TYPE_AXES, **LanguageField._warp_comparison_types}
+        own = set(all_types.get(comparison_type, []) or [])
+        if not own:
+            return []
+        return sorted(
+            t for t, axes in all_types.items()
+            if t != comparison_type and own.intersection(axes or [])
+        )
+
     def _update_lsa(self, path_key: str, fidelity: float, proto: ProtoLanguage):
         if path_key not in self._lsa:
             self._lsa[path_key] = LSAEntry(
                 path_key=path_key,
                 comparison_type=proto.comparison_type,
                 context_fingerprint=proto.context_fingerprint(),
+                # Boundary sharpening (#5): record what this crossing excludes at
+                # commit time, not just what activates it.
+                excludes=self._excluded_comparison_types(proto.comparison_type),
             )
 
         entry = self._lsa[path_key]
+        if not entry.excludes:
+            entry.excludes = self._excluded_comparison_types(entry.comparison_type)
 
         if fidelity >= _FIDELITY_REINFORCE:
             # Successful crossing: N-cost decreases, B-gate tightens
             entry.n_cost  = max(_N_COST_FLOOR, entry.n_cost - _N_COST_DECAY)
             entry.b_gate  = min(_B_GATE_CAP,   entry.b_gate + _B_GATE_TIGHTEN)
             entry.use_count += 1
+            # Consequence loop (#3): record what changed because this crossing
+            # held true — the N/B deltas and accrued use. Even small.
+            entry.consequence = {
+                "n_cost_delta": -_N_COST_DECAY,
+                "b_gate_delta": _B_GATE_TIGHTEN,
+                "use_count":    float(entry.use_count),
+                "fidelity":     float(fidelity),
+            }
             # Drift context fingerprint toward this crossing's context
             for ax in proto.raw_axes:
                 old = entry.context_fingerprint.get(ax, proto.raw_axes[ax])
@@ -904,6 +941,14 @@ class LanguageField(WarpCapable):
         else:
             # Failed crossing: slight cost increase, field pushed toward novel path
             entry.n_cost = min(1.0, entry.n_cost + 0.02)
+            # Consequence loop (#3): even a weak crossing changes something —
+            # its cost rose and the field is nudged toward a novel route.
+            entry.consequence = {
+                "n_cost_delta": 0.02,
+                "b_gate_delta": 0.0,
+                "use_count":    float(entry.use_count),
+                "fidelity":     float(fidelity),
+            }
 
         entry.last_fidelity = fidelity
         entry.last_used     = time.time()
