@@ -81,3 +81,43 @@ demands sharing a persistence_key collapse to one entry with `count == 2`;
 begins with "recurring unresolved demand:". This pairs with the warp-confession
 wiring — the ledger now accumulates real demands to consume.
 
+---
+
+## FIX-A003 (RUNTIME BUG, class-wide) — undefined names in swallowed code paths
+
+A pyflakes F821 sweep surfaced the same class of bug as FIX-A001's `_clamp`:
+a name used in a code path that never raised because something upstream failed
+first (or the path is rarely hit), with the `NameError` absorbed by a
+surrounding `except Exception`. Triaged to names never bound anywhere in their
+file. Fixed the safe, verifiable ones:
+
+- `aurora_runtime.py`: `Set` missing from the typing import (used in
+  `_forward_to_sim` annotations).
+- `aurora_daemon.py`: `_log_error(...)` called 3× but never defined → switched
+  to the module's existing `_log(...)`.
+- `aurora_working_memory.py`: `SimpleNamespace` (killed the `perception.express`
+  branch of `_render_from_comprehension_intent`), `_merge_native_meaning_bundle`,
+  `ConversationMemory` — added imports (no circular import; turn battery
+  unchanged).
+- `aurora_manifold_directory_reader.py`: `Any` missing from typing.
+- `aurora_hub.py`: `_DAEMON_STATUS` constant missing for a status panel.
+- `aurora_autonomy.py`: `subprocess` / `sys` never imported, so
+  `run_training_tool` silently failed on every call — Aurora could never launch
+  her own whitelisted training tools. Added the imports and updated the
+  (outdated) doctrine text to reflect that she may launch the whitelisted
+  TRAINING_TOOLS as subprocesses.
+
+**Still open (need a decision, not a blind patch):**
+- `aurora_working_memory.py:3222` — `state` referenced in the grammar-suggestion
+  block but not in scope (guarded; just skips grammar). Needs intended source.
+- `aurora_working_memory.py` — `_classify_input_intent`, `_is_understanding_challenge`,
+  `_meaning_profile_for_value`, `_log_claim_resolution_relief` are defined in
+  `aurora.py`, which imports working_memory → importing back is circular. Needs
+  the helpers moved to a shared module.
+- `aurora_daemon.py:195` — `_surface_channel_recently_active` is defined nowhere;
+  needs implementing or the call removed.
+- `aurora_hardware_io.py` — `_extract_rich_audio_features` (lives in
+  expression_perception) and the `_ConstraintVector`/`_GovernorWeights`/`_FC`/
+  `_ExistenceMode` cluster need (aliased) imports; deferred only because they
+  activate sensory/hardware paths not runtime-testable in a headless env.
+

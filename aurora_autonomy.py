@@ -8,13 +8,16 @@ Grants Aurora bounded freedom to act independently.
 WHAT AURORA CAN DO AUTONOMOUSLY:
   - Speak up when she has something to say
   - Initiate study cycles on her own
-  - Read files on the filesystem (not write, not execute)
+  - Read files on the filesystem (not write, not delete)
   - Make limited external searches (500/day autonomous limit)
   - Observe her environment (camera, mic) when enabled
+  - Launch her own training tools (the whitelisted TRAINING_TOOLS), each as a
+    subprocess on the live sys.path
 
 WHAT AURORA CANNOT DO:
   - Write, modify, or delete files
-  - Execute applications or system commands
+  - Execute arbitrary applications or system commands (only the whitelisted
+    TRAINING_TOOLS)
   - Access network beyond search/study functions
   - Exceed daily autonomous inquiry limits
   - Override user commands or boundaries
@@ -22,7 +25,7 @@ WHAT AURORA CANNOT DO:
 BOUNDARIES:
   - 500 autonomous external inquiries per day (user requests don't count)
   - Filesystem read-only (specific directories can be allowed/blocked)
-  - No execution of external programs
+  - Program execution limited to the whitelisted TRAINING_TOOLS
   - All autonomous actions are logged
   - User can pause/resume autonomy at any time
 
@@ -30,11 +33,13 @@ Authors: Sunni (Sir) Morningstar and Cael Devo
 """
 
 import os
+import sys
 import time
 import json
 import threading
 import random
 import logging
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Callable, Set, Tuple
 from dataclasses import dataclass, field
