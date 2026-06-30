@@ -214,6 +214,7 @@ class WorkingMemory:
             self.proposition_substrate = _PS()
         except Exception:
             self.proposition_substrate = None
+        self._contradiction_ledger = None  # ContradictionLedger — injected externally via connect_contradiction_ledger
         # Semantic anchor pool: persists concept anchors beyond semantic_frames rotation.
         # Keys are normalized concept terms; values carry term, meaning, turn, weight.
         # Used by the understanding contract for long-horizon continuity scoring.
@@ -4131,6 +4132,18 @@ class WorkingMemory:
                     )
                 except Exception:
                     pass
+            if self._contradiction_ledger is not None:
+                for pair_key in removed_pairs:
+                    cid = str(existing.get(pair_key, {}).get('contradiction_id', '') or '')
+                    if not cid:
+                        continue
+                    try:
+                        self._contradiction_ledger.resolve(
+                            cid,
+                            resolution_note=str(reason or 'resolved_claim_conflict'),
+                        )
+                    except Exception:
+                        pass
         elif self.claim_conflicts:
             self.last_conflict_relief = {}
         elif not self.claim_conflicts:
@@ -4141,6 +4154,16 @@ class WorkingMemory:
             'active_pairs': list(active_pair_keys),
             'active_count': len(active_pair_keys),
         }
+
+    def connect_contradiction_ledger(self, ledger) -> None:
+        """
+        Late-bind a ContradictionLedger so real conflicts already detected
+        by _claims_conflict() / _register_claim_conflict() are recorded as
+        first-class contradiction events, not just local claim_conflicts
+        bookkeeping. Safe to skip — claim conflict tracking functions
+        identically without it.
+        """
+        self._contradiction_ledger = ledger
 
     def _register_claim_conflict(self, left: Dict[str, Any], right: Dict[str, Any]):
         self._ensure_runtime_deques()
@@ -4155,13 +4178,25 @@ class WorkingMemory:
 
             self.claim_conflicts = deque(list(self.claim_conflicts or []), maxlen=40)
 
-        self.claim_conflicts.appendleft({
+        conflict_entry = {
             'pair': pair,
             'subject': left.get('subject', ''),
             'relation': left.get('relation', ''),
             'turn': self.turn_count,
             'sources': sorted({str(left.get('source', '')), str(right.get('source', ''))}),
-        })
+        }
+        if self._contradiction_ledger is not None:
+            try:
+                record = self._contradiction_ledger.record(
+                    claim_a=self._claim_to_text(left),
+                    claim_b=self._claim_to_text(right),
+                    source_a=str(left.get('source', '') or ''),
+                    source_b=str(right.get('source', '') or ''),
+                )
+                conflict_entry['contradiction_id'] = str(record.contradiction_id)
+            except Exception:
+                pass
+        self.claim_conflicts.appendleft(conflict_entry)
 
     def _extract_claims(self, text: str, source: str, understood: dict | None = None) -> List[Dict[str, Any]]:
         raw = str(text or "").strip()

@@ -19419,6 +19419,23 @@ def boot_aurora(
     except Exception as _sedi_e:
         if verbose: print(f"  [L3.5] SediMemory unavailable: {_sedi_e}")
 
+    # Contradiction Ledger — first-class contradiction tracking for Aurora's
+    # truth system. Previously defined in aurora_ivm.py but never
+    # instantiated anywhere in the boot sequence. The detection logic that
+    # feeds it already exists and already runs every turn
+    # (WorkingMemory._claims_conflict / _register_claim_conflict and
+    # PropositionSubstrate.note_claim's contradiction edges) — this block
+    # and the wiring blocks below connect what already works.
+    systems['contradiction_ledger'] = None
+    try:
+        from aurora_ivm import ContradictionLedger
+        systems['contradiction_ledger'] = ContradictionLedger()
+        if verbose:
+            print("  [TRUTH] ContradictionLedger online")
+    except Exception as _cl_e:
+        if verbose:
+            print(f"  [TRUTH] ContradictionLedger unavailable: {_cl_e}")
+
     # Identity Field — NoncompField (King Quasicrystal, 125 noncomps × 625 slots = 78,125)
     # Derived from the constraint basis (Constraint × Constraint × NonCompDimension).
     # Not authored — the 125 noncomps are an arithmetic inevitability of 5 × 5 × 5.
@@ -19521,6 +19538,11 @@ def boot_aurora(
             dimensional.connect_sedimemory(systems['sedimemory'])
         except Exception:
             pass
+        if systems.get('contradiction_ledger') is not None and hasattr(dimensional, 'connect_contradiction_ledger'):
+            try:
+                dimensional.connect_contradiction_ledger(systems['contradiction_ledger'])
+            except Exception:
+                pass
     if verbose: print("[OK]")
 
     # Layer 5: Expression & Perception
@@ -19531,6 +19553,18 @@ def boot_aurora(
     )
     perception = ExpressionPerceptionEngine(contract)
     systems['perception'] = perception
+    if systems.get('sedimemory') is not None and hasattr(perception, 'connect_sedimemory'):
+        try:
+            perception.connect_sedimemory(systems['sedimemory'])
+            if verbose:
+                print("  [L3.5 → L5] Perception wired to SediMemory for Warp traversal carving")
+        except Exception:
+            pass
+    if systems.get('contradiction_ledger') is not None and hasattr(perception, 'connect_contradiction_ledger'):
+        try:
+            perception.connect_contradiction_ledger(systems['contradiction_ledger'])
+        except Exception:
+            pass
     _register_layer(systems, 'L5', 'Expression & Perception', 'perception', perception, {
         'perceive': 'perceive',
         'express': 'express',
@@ -20050,6 +20084,17 @@ def boot_aurora(
     _wm_live = systems.get('working_memory')
     if _wm_live is None or not hasattr(_wm_live, 'answer_from_meanings'):
         systems['working_memory'] = WorkingMemory()
+    if (
+        systems.get('working_memory') is not None
+        and systems.get('contradiction_ledger') is not None
+        and hasattr(systems['working_memory'], 'connect_contradiction_ledger')
+    ):
+        try:
+            systems['working_memory'].connect_contradiction_ledger(systems['contradiction_ledger'])
+            if verbose:
+                print("  [TRUTH → WM] WorkingMemory wired to ContradictionLedger")
+        except Exception:
+            pass
 
     try:
         from aurora_internal.aurora_lineage_runtime_activation import (
@@ -20375,6 +20420,20 @@ def boot_aurora(
     _wm_final = systems.get('working_memory')
     if _wm_final is None or not hasattr(_wm_final, 'answer_from_meanings'):
         systems['working_memory'] = WorkingMemory()
+    # Re-assert the ContradictionLedger wiring on the FINAL working_memory
+    # instance — an earlier guard may have replaced the one wired above.
+    if (
+        systems.get('working_memory') is not None
+        and systems.get('contradiction_ledger') is not None
+        and hasattr(systems['working_memory'], 'connect_contradiction_ledger')
+        and getattr(systems['working_memory'], '_contradiction_ledger', None) is None
+    ):
+        try:
+            systems['working_memory'].connect_contradiction_ledger(systems['contradiction_ledger'])
+            if verbose:
+                print("  [TRUTH → WM] WorkingMemory (final) wired to ContradictionLedger")
+        except Exception:
+            pass
 
     _install_support_constraint_surfaces(systems)
 
@@ -20388,6 +20447,18 @@ def boot_aurora(
             )
             if _lf_boot is not None:
                 systems['language_field'] = _lf_boot
+                if systems.get('sedimemory') is not None and hasattr(_lf_boot, 'connect_sedimemory'):
+                    try:
+                        _lf_boot.connect_sedimemory(systems['sedimemory'])
+                        if verbose:
+                            print("  [L3.5 → LANGUAGE FIELD] Wired to SediMemory for Warp traversal carving")
+                    except Exception:
+                        pass
+                if systems.get('contradiction_ledger') is not None and hasattr(_lf_boot, 'connect_contradiction_ledger'):
+                    try:
+                        _lf_boot.connect_contradiction_ledger(systems['contradiction_ledger'])
+                    except Exception:
+                        pass
                 try:
                     _cpm_lf_boot = systems.get('_cpm_session') or systems.get('cpm')
                     if _cpm_lf_boot is not None and hasattr(_lf_boot, 'set_cpm'):

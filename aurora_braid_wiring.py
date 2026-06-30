@@ -228,6 +228,18 @@ def boot_thought_braid(systems: Dict[str, Any], *, verbose: bool = False) -> Non
 
         systems['_thought_braid'] = braid
         systems['_thought_braid_thread'] = thread
+        if systems.get('sedimemory') is not None and hasattr(braid, 'connect_sedimemory'):
+            try:
+                braid.connect_sedimemory(systems['sedimemory'])
+                if verbose:
+                    print("  [L3.5 → BRAID] Wired to SediMemory for Warp traversal carving")
+            except Exception:
+                pass
+        if systems.get('contradiction_ledger') is not None and hasattr(braid, 'connect_contradiction_ledger'):
+            try:
+                braid.connect_contradiction_ledger(systems['contradiction_ledger'])
+            except Exception:
+                pass
 
         if verbose:
             print("  [BRAID] Continuous thought braid online (2s tick)")
