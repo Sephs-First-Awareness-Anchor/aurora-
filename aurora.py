@@ -4671,6 +4671,51 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
                     pass
         if not str(getattr(state, "response_content", "") or "").strip():
             _emit_honest_abstain_and_seek(user_text, systems, state)
+        # Expose this turn's captured waveform for observability (Step 1). The crest
+        # compression (later stage) will consume state.waveform directly.
+        if isinstance(systems, dict):
+            systems["_last_waveform"] = list(getattr(state, "waveform", []) or [])
+    except Exception:
+        pass
+
+
+_WAVEFORM_LEVEL_AXIS = {
+    "information": "X", "belief": "T", "purpose": "N",
+    "meaning": "B", "understanding": "A",
+}
+
+
+def _capture_waveform_deposit(state, level: str, systems) -> None:
+    """STEP 1 (additive, non-authoritative): record each chain level's deposit into
+    a waveform accumulator on `state`, tagged by its axis and weighted by the LIVE
+    constraint pressure on that axis.
+
+    Salience is pressure-determined: the level only ROUTES a contribution to its
+    axis; the field's live pressure on that axis decides its value to the output --
+    nothing is a fixed level rank. This only CAPTURES; the crest compression (later
+    stage) consumes it. Behaviour is unchanged while it runs alongside last-writer-
+    wins, so it can be verified before compression becomes authoritative.
+    """
+    try:
+        axis = _WAVEFORM_LEVEL_AXIS.get(level, "X")
+        content = str(getattr(state, "response_content", "") or "").strip()
+        prev = str(getattr(state, "_last_waveform_content", "") or "").strip()
+        if not content or content == prev:
+            return
+        pressure = 0.0
+        try:
+            pressure = float((getattr(state, "axis_activation", {}) or {}).get(axis, 0.0) or 0.0)
+        except Exception:
+            pressure = 0.0
+        wf = getattr(state, "waveform", None)
+        if not isinstance(wf, list):
+            wf = []
+            state.waveform = wf
+        wf.append({
+            "level": level, "axis": axis,
+            "content": content[:240], "pressure": round(pressure, 4),
+        })
+        state._last_waveform_content = content
     except Exception:
         pass
 
@@ -15517,13 +15562,22 @@ def _run_reasoning_pipeline(
     except Exception:
         pass
 
+    # Waveform accumulator for this turn (Step 1 capture; the crest compresses it).
+    state.waveform = []
+    state._last_waveform_content = ""
+
     # ---- UPWARD PASS ----
     _chain_up1_information(user_text, systems, state)
+    _capture_waveform_deposit(state, "information", systems)
     _inject_surface_recent_context(systems, state, user_text)
     _chain_up2_belief(user_text, systems, state)
+    _capture_waveform_deposit(state, "belief", systems)
     _chain_up3_purpose(user_text, systems, state)
+    _capture_waveform_deposit(state, "purpose", systems)
     _chain_up4_meaning(user_text, systems, state)
+    _capture_waveform_deposit(state, "meaning", systems)
     _chain_up5_understanding(user_text, systems, state, turn_tick=turn_tick, session_id=session_id)
+    _capture_waveform_deposit(state, "understanding", systems)
     # up5 is now the apex (A axis) -- no up6 needed
     try:
         _apply_noncomp_input_guidance(systems, state, user_text)
@@ -15703,13 +15757,18 @@ def _run_reasoning_pipeline(
     # ---- DOWNWARD PASS ----
     # down6_apex removed -- hints now propagated inside _chain_down5_understanding
     _chain_down5_understanding(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+    _capture_waveform_deposit(state, "understanding", systems)
     _chain_down4_meaning(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+    _capture_waveform_deposit(state, "meaning", systems)
     _chain_down3_purpose(user_text, systems, state, auto_search_enabled=auto_search_enabled,
                         use_search=use_search, raw_evidence=raw_evidence or [])
+    _capture_waveform_deposit(state, "purpose", systems)
     _chain_down2_belief(user_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
+    _capture_waveform_deposit(state, "belief", systems)
     _skip_post = bool(systems.pop("_skip_response_postprocessing_once", False))
     _chain_down1_information(user_text, systems, state, use_search=use_search, skip_postprocessing=_skip_post)
+    _capture_waveform_deposit(state, "information", systems)
     _preserve_literal_response = bool(systems.pop("_preserve_literal_response_once", False))
     _skip_surface_expression = bool(systems.pop("_skip_surface_expression_once", False))
 
