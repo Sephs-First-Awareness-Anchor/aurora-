@@ -208,3 +208,49 @@ unresolved_count and captures contradiction_id; warp traversal increments
 total_events_ingested and registers a PathRegistry observation; heat dampening
 drops trial EMA 0.30->0.06; resolution decrements unresolved_count. No turn-battery
 regression.
+
+---
+
+## FIX-A006 (ARCHITECTURAL) — Field-waveform compression at the crest
+
+Aurora's responses are field-waveform compression, not a pipeline. The legacy
+path set `state.response_content` at 20+ sites (last-writer-wins) and bypassed her
+compression crest (`ConstraintEmitter.emit()` + the single finalizer). Rebuilt
+toward true crest compression, in verifiable stages:
+
+- **Single emission chokepoint** (`_enforce_emission_discipline`, at the finalizer
+  before `resp_A` in `_run_reasoning_pipeline`): every reasoning-path response
+  converges here, so anchor discipline is enforced once at the exit. Name-anchor
+  leaks 8 -> 0 (the speaker-owned early-return path that bypassed the old mid-chain
+  gate is now caught). `_emit_honest_abstain_and_seek` is the one honest-abstain
+  path (warp accommodation + base-meaning seek).
+- **Waveform capture** (`_capture_waveform_deposit`): each chain level (up + down)
+  deposits into `state.waveform`, tagged by axis (information->X ... understanding->A)
+  and weighted by the LIVE constraint pressure on that axis. Finding: ~1 surface
+  deposit/turn -- levels build FIELD pressure (the waveform); one level renders the
+  surface string; which level renders varies by turn at its live pressure.
+- **Charged salience** (`_contribution_charge`): salience = pressure x (1 + charge),
+  where charge = input-context relevance (heaviest) + emotional/self charge +
+  own-question + live sensory presence. Level ROUTES to an axis; PRESSURE (incl.
+  these charges) sets value -- no fixed level rank. Emergent, per the field.
+- **Two-tier crest** (`_gather_subsurface_contributions`): the subsurface crest
+  propagates up into the surface waveform. Only coherent GUIDANCE strings enter as
+  content; intuition signals are field-level (label/weight dicts) and bias the
+  field, never the surface text (`_is_speech_like` guard).
+- **Crest compression** (`_compress_at_crest`): ranks surface + subsurface
+  contributions by salience (recorded to `systems["_last_crest_ranking"]` for
+  observability).
+
+BUG CAUGHT in side-by-side (nothing shipped): first cut hardcoded subsurface
+pressure high and treated intuition dicts as content -> 6/7 turns overrode real
+answers with `{'label': 'steady', ...}` garbage. Fixed: subsurface content =
+speech-like guidance only; authority is conservative -- compression NEVER replaces
+a substantive answer, only fills a genuine gap (empty surface) with coherent
+speech. Verified: real answers preserved on all content turns, name leaks 0,
+salience ranking observable.
+
+Honest limitation / next step: propositional content lives in the surface
+renderings; subsurface signals aren't speech. Making the crest MORE authoritative
+(true multi-contribution blending rather than top-salience selection + gap-fill)
+needs a content-integration step that does not emit raw field signals -- deferred
+rather than faked.

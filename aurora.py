@@ -4655,6 +4655,26 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
     to the honest abstain + active seek. Nothing outputs without passing this gate.
     """
     try:
+        # ── SURFACE CREST COMPRESSION ──────────────────────────────────────────
+        # Compress the charged surface waveform + the propagated subsurface crest
+        # into meaning, ranked by pressure x charge. Safety: authoritative only when
+        # it FILLS a gap (current content empty/thin) or when deep/charged material
+        # (subsurface) genuinely outranks a weak surface rendering -- never replaces
+        # a substantive propositional answer. So compression can only add or hold.
+        _lww = str(getattr(state, "response_content", "") or "").strip()
+        _crest = _compress_at_crest(user_text, systems, state)
+        if isinstance(systems, dict):
+            systems["_last_lww_output"] = _lww
+            systems["_last_crest_output"] = _crest
+        # Authority is conservative: the surface renderings hold the propositional
+        # content, so compression NEVER replaces a substantive answer. It only fills
+        # a genuine gap (surface produced nothing) with a coherent, speech-like
+        # contribution (top surface rendering, or a resolved subsurface guidance).
+        # The ranking above is recorded for observability regardless.
+        if _crest and not _lww and _is_speech_like(_crest):
+            state.response_content = _crest
+            state.response_src = "crest_compression"
+
         wm = systems.get("working_memory") if isinstance(systems, dict) else None
         if state.response_content and _response_is_leaked_anchor(user_text, state.response_content, wm):
             state.response_content = ""
@@ -4671,8 +4691,7 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
                     pass
         if not str(getattr(state, "response_content", "") or "").strip():
             _emit_honest_abstain_and_seek(user_text, systems, state)
-        # Expose this turn's captured waveform for observability (Step 1). The crest
-        # compression (later stage) will consume state.waveform directly.
+        # Expose this turn's captured waveform for observability.
         if isinstance(systems, dict):
             systems["_last_waveform"] = list(getattr(state, "waveform", []) or [])
     except Exception:
@@ -4718,6 +4737,116 @@ def _capture_waveform_deposit(state, level: str, systems) -> None:
         state._last_waveform_content = content
     except Exception:
         pass
+
+
+def _contribution_charge(content: str, user_text: str, state, systems) -> float:
+    """Charge that lifts a contribution's salience ABOVE raw axis pressure. These
+    sit at the top of propagation formation: input-context relevance (heaviest),
+    emotional / self-charge, her own perspective or question, and live sensory
+    presence. Salience stays pressure-determined -- charge is itself pressure-like
+    (relevance/feeling/sensory pressure), not a fixed rank."""
+    c = str(content or "").strip().lower()
+    u = str(user_text or "").strip().lower()
+    charge = 0.0
+    # Input context relevance -- heaviest.
+    if c and u:
+        cw = {w for w in c.split() if len(w) > 3}
+        uw = {w for w in u.split() if len(w) > 3}
+        if cw and uw:
+            charge += 0.6 * (len(cw & uw) / max(1, len(uw)))
+    # Emotional / self-charge.
+    try:
+        es = getattr(state, "emotional_state", {}) or {}
+        if str(es.get("passion", "") or "") not in ("", "observant", "neutral"):
+            charge += 0.20
+        if str(es.get("drive", "") or "") not in ("", "steady", "neutral"):
+            charge += 0.10
+    except Exception:
+        pass
+    # Her own perspective / question.
+    if c.endswith("?"):
+        charge += 0.15
+    # Live sensory presence at the turn boundary.
+    if isinstance(systems, dict) and systems.get("_present_frame_snapshot"):
+        charge += 0.20
+    return charge
+
+
+def _is_speech_like(content: str) -> bool:
+    """A contribution is eligible to BE surface output only if it reads as speech --
+    not a raw signal / mechanism representation. Subsurface intuition signals are
+    field-level dicts (label/weight/subsystem); they bias the field, they are never
+    spoken. This is the guard that keeps mechanism data out of the surface."""
+    c = str(content or "").strip()
+    if not c:
+        return False
+    for bad in ("{", "}", "'label'", "\"label\"", "weight':", "weight\":",
+                "': ", "\": ", "axis_pressure", "np.", "0x", "subsystem"):
+        if bad in c:
+            return False
+    return sum(ch.isalpha() for ch in c) >= 3
+
+
+def _gather_subsurface_contributions(systems) -> list:
+    """The subsurface crest as it propagates UP into the surface waveform. Only
+    coherent GUIDANCE (a resolved meaning string) enters as content; the intuition
+    signals are field-level (label/weight dicts) and bias the field, never the
+    surface text. So the subsurface contributes speech only when it has genuinely
+    resolved something speakable -- otherwise it shapes salience, not words."""
+    out: list = []
+    if not isinstance(systems, dict):
+        return out
+    try:
+        proj = dict(systems.get("_subsurface_projection") or {})
+        conscious = dict(proj.get("conscious") or {})
+        guidance = str(conscious.get("guidance", "") or proj.get("guidance", "") or "").strip()
+        if guidance and _is_speech_like(guidance):
+            out.append({"level": "subsurface", "axis": "B", "content": guidance[:240],
+                        "pressure": 0.55, "source": "subsurface_crest"})
+    except Exception:
+        pass
+    return out
+
+
+def _compress_at_crest(user_text: str, systems, state) -> str:
+    """SURFACE CREST. Compress the charged surface waveform together with the
+    propagated subsurface crest into the final meaning, ranked by salience
+    (pressure x (1 + charge)). Input context, strong feeling, perspective/questions
+    and sensory ride at the top; the subsurface crest enters as high-salience deep
+    material. Returns the top-salience content, and records the full ranking for
+    observability. Returns '' when there is nothing to compress."""
+    try:
+        contribs: list = []
+        for d in list(getattr(state, "waveform", []) or []):
+            content = str(d.get("content", "") or "")
+            if not content:
+                continue
+            charge = _contribution_charge(content, user_text, state, systems)
+            sal = float(d.get("pressure", 0.0) or 0.0) * (1.0 + charge)
+            contribs.append({"level": d.get("level"), "axis": d.get("axis"),
+                             "content": content, "pressure": d.get("pressure"),
+                             "charge": round(charge, 3), "salience": round(sal, 4),
+                             "source": "surface"})
+        for d in _gather_subsurface_contributions(systems):
+            content = str(d.get("content", "") or "")
+            charge = _contribution_charge(content, user_text, state, systems)
+            sal = float(d.get("pressure", 0.0) or 0.0) * (1.0 + charge)
+            contribs.append({**d, "content": content, "charge": round(charge, 3),
+                             "salience": round(sal, 4)})
+        if not contribs:
+            return ""
+        contribs.sort(key=lambda x: x.get("salience", 0.0), reverse=True)
+        if isinstance(systems, dict):
+            systems["_last_crest_ranking"] = [
+                {"level": c.get("level"), "axis": c.get("axis"),
+                 "salience": c.get("salience"), "source": c.get("source"),
+                 "content": str(c.get("content", ""))[:60]}
+                for c in contribs[:6]
+            ]
+            systems["_last_crest_top_source"] = str(contribs[0].get("source", ""))
+        return str(contribs[0].get("content", "") or "").strip()
+    except Exception:
+        return ""
 
 
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
