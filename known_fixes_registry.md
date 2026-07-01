@@ -172,6 +172,12 @@ directly and are dampened. Mirroring the connect_sedimemory forwarder onto
 DimensionalSystems would close it, but that wasn't in the directive — flagging
 rather than adding.
 
+RESOLVED (follow-up, approved): added the mirror
+`DimensionalSystems.connect_contradiction_ledger` forwarder (sets
+`self.dps._contradiction_ledger`). Verified dps now receives the ledger and its
+Warp trials are heat-dampened like the other three hosts. All four WarpCapable
+hosts are now fully wired.
+
 Verified: all boot wiring lines print; contradiction record increments
 unresolved_count and captures contradiction_id; warp traversal increments
 total_events_ingested and registers a PathRegistry observation; heat dampening

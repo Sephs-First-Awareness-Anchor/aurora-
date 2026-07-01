@@ -2361,6 +2361,16 @@ class DimensionalSystems:
         """
         self.dps._sedimemory = sedimemory
 
+    def connect_contradiction_ledger(self, ledger) -> None:
+        """
+        Forward the ContradictionLedger to CrystalProcessingSystem — the actual
+        WarpCapable host inside DimensionalSystems — so its Warp trial scoring
+        is heat-dampened under unresolved-contradiction load, the same way the
+        other three WarpCapable hosts are. Mirrors connect_sedimemory above:
+        DimensionalSystems is not itself WarpCapable, self.dps is.
+        """
+        self.dps._contradiction_ledger = ledger
+
     # ── Unified crystal state persistence ────────────────────────────────────
 
     _DPS_CRYSTALS_FILE = "dps_crystals.json"
