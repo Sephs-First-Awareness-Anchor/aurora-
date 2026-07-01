@@ -1035,6 +1035,21 @@ from foundational_contract import (
     ExistenceMode, OntologicalClaim, OntologicalViolation, FoundationalContract
 )
 
+# Constraint-physics bridge for the hardware constraint_profile / governor /
+# language_projection paths.  `_FC` is the FoundationalContract *instance* that
+# projects an existence mode into Aurora's language register -- aligning what the
+# hardware surfaces derive and say with her root ontological rules of conduct
+# (INV-09/10/11).  The mode-taking language_projection and the axis-weighted
+# ConstraintVector / GovernorWeights live in aurora_constraint_engine (not
+# foundational_contract, whose language_projection takes no mode argument).
+from aurora_constraint_engine import (
+    ConstraintVector as _ConstraintVector,
+    GovernorWeights as _GovernorWeights,
+    ExistenceMode as _ExistenceMode,
+    FoundationalContract as _FoundationalContract,
+)
+_FC = _FoundationalContract()
+
 # Pattern types shared with aurora_expression_perception
 from aurora_perception_primitives import PatternType, DimensionalPattern
 # Shared audio feature extractor (lives in the expression/perception module);

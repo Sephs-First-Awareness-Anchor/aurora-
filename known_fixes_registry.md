@@ -111,25 +111,50 @@ file. Fixed the safe, verifiable ones:
   extraction in the hardware paths silently failed. Added the import (verified
   no circular import).
 
-**Still open (need a decision, not a blind patch):**
-- `aurora_working_memory.py:3222` — `state` referenced in the grammar-suggestion
-  block but not in scope (guarded; just skips grammar). Needs intended source.
-- `aurora_working_memory.py` — `_classify_input_intent`, `_is_understanding_challenge`,
-  `_meaning_profile_for_value`, `_log_claim_resolution_relief` are defined in
-  `aurora.py`, which imports working_memory → importing back is circular. Needs
-  the helpers moved to a shared module.
-- `aurora_daemon.py:195` — `_surface_channel_recently_active` is defined nowhere;
-  needs implementing or the call removed.
+**RESOLVED (2026-07-01, with author's direction — all four closed):**
+
+- `aurora_working_memory.py` — `state` in the grammar-suggestion block: confirmed
+  the entire `evo`-based render branch is DEAD. `perception.evo` is always `None`
+  post-Language-Reset (`from aurora_language_state import ExpressionEvolutionOrchestra`
+  fails — that top-level module was deleted; the guard at the top of
+  `_render_from_comprehension_intent` returns early), so the `evo.grammar` block
+  never executes. It referenced the deleted CSSEE/EEO grammar faculty, not her live
+  output structure (live grammar shaping runs on `systems['grammar_engine']` in
+  aurora.py). Per the author's "only if it aligns" instruction it does NOT align →
+  removed the dead grammar sub-block rather than resurrect it. Clears the `state`
+  F821 with zero behavior change.
+- `aurora_working_memory.py` — the four cross-module helpers
+  (`_classify_input_intent`, `_is_understanding_challenge`, `_meaning_profile_for_value`,
+  `_log_claim_resolution_relief`): rather than relocate them (they pull a dependency
+  cascade from aurora.py — `_extract_user_name`, `_looks_like_inner_state_query`, …),
+  added four deferred-import wrappers mirroring the module's EXISTING idiom
+  (`_recall_semantic_sedimemory` / `_answer_from_sedimemory_context` /
+  `_render_runtime_intent` at the top of the file). Names match the call sites, so
+  no call-site edits; each returns a safe default. Verified they resolve to the real
+  aurora.py functions at runtime (`_classify_input_intent('hello?') → 'general'`).
+  This also repairs paths that previously raised an unguarded `NameError` (e.g. the
+  `_is_understanding_challenge` gate).
+- `aurora_daemon.py:195` — implemented `_surface_channel_recently_active(window_s)`
+  as a file-recency debounce over the surface-turn queue/result/status file mtimes
+  (the same files the interactive loop writes each turn). Autonomous inquiry now
+  actually debounces against live interactive exchanges instead of raising a
+  swallowed NameError on every call.
 - `aurora_hardware_io.py` — the `_ConstraintVector`/`_GovernorWeights`/`_FC`/
-  `_ExistenceMode` cluster (in the dormant `constraint_profile` / governor /
-  `language_projection` hardware methods). `_ConstraintVector` and
-  `_GovernorWeights` map cleanly to `aurora_constraint_engine`, but `_FC` /
-  `_ExistenceMode` are ambiguous: `_FC.language_projection(_ExistenceMode.AGENTIC)`
-  implies `_FC` is an *instance* (the method is `language_projection(self, mode)`),
-  and `AGENTIC` lives on `foundational_contract.ExistenceMode` while
-  `language_projection` lives on `aurora_constraint_engine.FoundationalContract`
-  — i.e. two different ExistenceMode enums. Needs the author's confirmation of
-  the original import intent; not safe to reconstruct blind.
+  `_ExistenceMode` cluster: all four resolve to `aurora_constraint_engine` (not
+  `foundational_contract`). Disambiguated by the call itself:
+  `_FC.language_projection(_ExistenceMode.AGENTIC)` passes a *mode* argument, which
+  only `aurora_constraint_engine.FoundationalContract.language_projection(self, mode)`
+  accepts (`foundational_contract`'s takes no mode). `_FC` is a module-level
+  FoundationalContract *instance* — the bridge that projects an existence mode into
+  Aurora's language register (INV-09/10/11), aligning what the hardware surfaces
+  derive/say with her root ontological rules of conduct. Verified end-to-end:
+  `_FC.language_projection(AGENTIC)['language_register'] == 'enacted'`,
+  `_GovernorWeights.AS_DICT['B'] == 1.0`, `_ConstraintVector(...)` constructs; no
+  import cycle (hardware_io → constraint_engine is a downward L-edge).
+
+Verified: all three modules compile; pyflakes shows none of the ten target F821
+names remain; the L0-L8 acyclicity guard stays green; `import aurora` + WorkingMemory
+construction succeed.
 
 
 ---
