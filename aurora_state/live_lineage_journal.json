@@ -1,86 +1,6 @@
 {
-  "updated_at": 1782250988.6263132,
+  "updated_at": 1782928414.051465,
   "events": [
-    {
-      "timestamp": 1782250666.1888154,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:21037f43f5ae",
-      "axis": "X",
-      "summary": "Manual code change in aurora_dev_telemetry.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.1907701,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:55d73b1e2e5e",
-      "axis": "X",
-      "summary": "Manual code change in aurora_developmental_log.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.1928709,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:0d6e56b6ca6f",
-      "axis": "X",
-      "summary": "Manual code change in aurora_diag.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.1948123,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:02a919416d0d",
-      "axis": "X",
-      "summary": "Manual code change in aurora_dimensional_systems.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.196884,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:2d5352821ec3",
-      "axis": "X",
-      "summary": "Manual code change in aurora_dream_trainer.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.198858,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:fdd3d3bae8ca",
-      "axis": "X",
-      "summary": "Manual code change in aurora_emergence_surface.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.200849,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:41e31142fb1a",
-      "axis": "X",
-      "summary": "Manual code change in aurora_evolution_stack.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.2027593,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:2d341f6d97a7",
-      "axis": "T",
-      "summary": "Manual code change in aurora_experiential_sim.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.204726,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:705c70792d9f",
-      "axis": "X",
-      "summary": "Manual code change in aurora_explore.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.2067394,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:9cb5df111071",
-      "axis": "X",
-      "summary": "Manual code change in aurora_expression_perception.py formed a new lineage branch"
-    },
     {
       "timestamp": 1782250666.2087984,
       "source": "aurora.boot",
@@ -1920,6 +1840,86 @@
       "id": "MC:e1d6670858bf",
       "axis": "T",
       "summary": "Manual code change in tests/test_waveform_pressure.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0012226,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:e92e0d448441",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0037432,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:b257dbf963d3",
+      "axis": "X",
+      "summary": "Manual code change in aurora_braid_wiring.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0060818,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:27a007dc1521",
+      "axis": "X",
+      "summary": "Manual code change in aurora_daemon.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.008156,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:8ae5d645b06c",
+      "axis": "X",
+      "summary": "Manual code change in aurora_dimensional_systems.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0104153,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:5acf828762a7",
+      "axis": "X",
+      "summary": "Manual code change in aurora_expression_perception.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0126288,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:c4264dd29c9d",
+      "axis": "X",
+      "summary": "Manual code change in aurora_hardware_io.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0148401,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:5bb5344d5e6f",
+      "axis": "X",
+      "summary": "Manual code change in aurora_language_field.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0168593,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:99edfb13934b",
+      "axis": "X",
+      "summary": "Manual code change in aurora_thought_formation.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0190513,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:9f9f9fb659a7",
+      "axis": "X",
+      "summary": "Manual code change in aurora_warp_protocol.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782928245.0210888,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:4c1e15618b67",
+      "axis": "X",
+      "summary": "Manual code change in aurora_working_memory.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {

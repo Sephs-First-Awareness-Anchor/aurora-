@@ -2,5 +2,105 @@
   "total_gaps_asked": 0,
   "total_gaps_resolved": 0,
   "last_ask_turn": -10,
-  "resolved_gaps": []
+  "resolved_gaps": [
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "anchor' i",
+      "question": "",
+      "answer": "By 'anchor' I mean a stable reference point I return to.",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "intent",
+      "unclear_element": "quantum",
+      "question": "",
+      "answer": "Do you actually understand what I mean, or are you guessing?",
+      "systems_updated": [
+        "composer",
+        "working_memory",
+        "conversation_memory"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "the sky",
+      "question": "",
+      "answer": "Actually, the sky is red at sunset.",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "anchor' i",
+      "question": "",
+      "answer": "By 'anchor' I mean a stable reference point I return to.",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "intent",
+      "unclear_element": "quantum",
+      "question": "",
+      "answer": "Do you actually understand what I mean, or are you guessing?",
+      "systems_updated": [
+        "composer",
+        "working_memory",
+        "conversation_memory"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "the sky",
+      "question": "",
+      "answer": "Actually, the sky is red at sunset.",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "anchor' i",
+      "question": "",
+      "answer": "By 'anchor' I mean a stable reference point I return to.",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    },
+    {
+      "gap_type": "intent",
+      "unclear_element": "quantum",
+      "question": "",
+      "answer": "Do you actually understand what I mean, or are you guessing?",
+      "systems_updated": [
+        "composer",
+        "working_memory",
+        "conversation_memory"
+      ]
+    },
+    {
+      "gap_type": "vocabulary",
+      "unclear_element": "the sky",
+      "question": "",
+      "answer": "Actually, the sky is red at sunset.",
+      "systems_updated": [
+        "composer",
+        "oets",
+        "lexicon"
+      ]
+    }
+  ]
 }

@@ -929,9 +929,75 @@
         "speaker_identity",
         "generative"
       ],
-      "sightings": 8,
+      "sightings": 11,
       "first_seen": 1782250669.922333,
-      "last_seen": 1782250942.4806292
+      "last_seen": 1782928359.748286
+    },
+    {
+      "text": "enough requires plants structure overstepping care matters understand photosynthesis weight exist light",
+      "confidence": 0.68,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "photosynthesis",
+        "enough"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "reasoning"
+      ],
+      "sightings": 1,
+      "first_seen": 1782928374.8715994,
+      "last_seen": 1782928374.8715994
+    },
+    {
+      "text": "care requires explain respond overstepping light enough is matters photosynthesis understand weight",
+      "confidence": 0.7000000000000001,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "quantum",
+        "care"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1782928385.8812551,
+      "last_seen": 1782928385.8812551
+    },
+    {
+      "text": "respond requires care structure overstepping plants matters do explain enough did weight",
+      "confidence": 0.72,
+      "sources": [
+        "external_user_turn:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "sky",
+        "respond"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "sedimemory_recall"
+      ],
+      "sightings": 1,
+      "first_seen": 1782928400.950508,
+      "last_seen": 1782928400.950508
     }
   ]
 }
