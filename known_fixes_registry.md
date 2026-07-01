@@ -131,3 +131,55 @@ file. Fixed the safe, verifiable ones:
   — i.e. two different ExistenceMode enums. Needs the author's confirmation of
   the original import intent; not safe to reconstruct blind.
 
+
+---
+
+## FIX-A005 (ARCHITECTURAL) — Signal-Through Field Wiring (Warp ↔ SediMemory ↔ ContradictionLedger)
+
+Implemented the Signal-Through Field Propagation directive (2026-06-30): Warp's
+discovery/synthesis output now carves paths in the SediMemory erosion substrate,
+and real per-turn contradiction detection now reaches ContradictionLedger whose
+heat dampens Warp trial promotion (with resolution wired so heat can fall again).
+
+- aurora_warp_protocol.py (WarpCapable mixin): `_sediment_warp_traversal()` (deposits
+  warp_gap_closed / warp_trial_promoted into SediMemory via ingest_event), called
+  from check_and_extend and the evaluate_warp_trials promotion branch;
+  `connect_sedimemory` / `connect_contradiction_ledger` on the mixin;
+  `_init_warp` now seeds `_sedimemory` / `_contradiction_ledger`; heat dampening
+  (`score *= max(0, 1 - heat)`) in evaluate_warp_trials.
+- `_sedimemory = None` added to ThoughtBraid / ExpressionPerceptionEngine /
+  LanguageField __init__.
+- aurora.py: ContradictionLedger instantiated; perception / language_field /
+  dimensional / working_memory wired at boot.
+- aurora_braid_wiring.py: thought braid wired.
+- aurora_working_memory.py: `connect_contradiction_ledger`, ledger.record() in
+  `_register_claim_conflict` (captures contradiction_id), ledger.resolve() in
+  refresh_claim_conflicts on removed pairs.
+
+Deviation from the literal directive (made to fulfil its intent): a SECOND
+WorkingMemory() construction (aurora.py ~20422) replaced the wired instance, so
+the live WM was unwired. Added a re-assert of connect_contradiction_ledger on the
+FINAL working_memory instance. Verified WM-to-ledger now binds.
+
+FLAGGED, not improvised (per the directive's standing rule): the `dimensional`
+aggregate is NOT itself WarpCapable — `CrystalProcessingSystem` (`dimensional.dps`)
+is. `DimensionalSystems.connect_sedimemory` forwards to `self.dps._sedimemory`
+(so warp traversal deposits work for dps), but there is no parallel
+`connect_contradiction_ledger` forwarder, so `hasattr(dimensional,
+'connect_contradiction_ledger')` is False and dps's warp trials are NOT
+heat-dampened. The other three hosts (perception, language_field, braid) are wired
+directly and are dampened. Mirroring the connect_sedimemory forwarder onto
+DimensionalSystems would close it, but that wasn't in the directive — flagging
+rather than adding.
+
+RESOLVED (follow-up, approved): added the mirror
+`DimensionalSystems.connect_contradiction_ledger` forwarder (sets
+`self.dps._contradiction_ledger`). Verified dps now receives the ledger and its
+Warp trials are heat-dampened like the other three hosts. All four WarpCapable
+hosts are now fully wired.
+
+Verified: all boot wiring lines print; contradiction record increments
+unresolved_count and captures contradiction_id; warp traversal increments
+total_events_ingested and registers a PathRegistry observation; heat dampening
+drops trial EMA 0.30->0.06; resolution decrements unresolved_count. No turn-battery
+regression.

@@ -181,6 +181,7 @@ class LanguageField(WarpCapable):
         self._recent_paths: collections.deque = collections.deque(maxlen=5)
         self._warp_usage_counts: Dict[str, int] = {}   # component_id → usage count
         self._cpm: Optional[Any] = None               # CPMSession — wired in post-boot
+        self._sedimemory = None  # L3.5 SediMemory (injected externally via connect_sedimemory)
         # Interface confirmation flags — set on first successful call so status()
         # can report which paths are live vs. falling back to approximations.
         self._tensor_confirmed: bool = False

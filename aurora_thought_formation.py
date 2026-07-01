@@ -1251,6 +1251,7 @@ class ThoughtBraid(WarpCapable):
         self._lock = threading.Lock()
         # WARP extension registry — streams born from coverage gaps
         self._warp_streams: Dict[str, WarpStreamEntry] = {}
+        self._sedimemory = None  # L3.5 SediMemory (injected externally via connect_sedimemory)
         self._init_warp()  # WarpCapable mixin initialisation
 
     def advance(self, systems: Dict[str, Any]) -> None:

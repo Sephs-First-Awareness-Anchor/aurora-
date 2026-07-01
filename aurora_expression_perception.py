@@ -3219,6 +3219,7 @@ class ExpressionPerceptionEngine(WarpCapable):
 
     def __init__(self, contract: Optional[FoundationalContract] = None):
         self.contract = contract or FoundationalContract()
+        self._sedimemory = None  # L3.5 SediMemory (injected externally via connect_sedimemory)
         self.hardware = None
         self.sensory_engine = None
         self.identity = None

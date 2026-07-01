@@ -714,8 +714,33 @@ class WarpCapable:
         self._warp_promoted:  Dict[str, WarpComponent] = {}
         self._warp_generator: WarpGenerator = WarpGenerator()
         self._warp_genealogy: Any = genealogy  # ConstraintGenealogyLogger or None
+        self._contradiction_ledger: Any = None  # ContradictionLedger or None — injected via connect_contradiction_ledger
+        self._sedimemory: Any = None  # L3.5 SediMemory or None — injected via connect_sedimemory
         self._gap_counter:    Dict[str, int] = {}   # gap_sig → consecutive count
         self._last_gap:       Optional[CoverageGap] = None
+
+    def connect_sedimemory(self, sedimemory: Any) -> None:
+        """
+        Late-bind a SediMemory instance so Warp's discovery/synthesis output
+        deposits into the channel-carving erosion substrate (PathRegistry /
+        SedimentChannel) instead of staying local to this host system.
+        Mirrors the existing connect_sedimemory() convention used by
+        ConsciousnessEngine, DimensionalSystems, and BehavioralIdentityEngine.
+        Safe to skip — Warp functions identically without it.
+        """
+        self._sedimemory = sedimemory
+
+    def connect_contradiction_ledger(self, ledger: Any) -> None:
+        """
+        Late-bind a ContradictionLedger so trial scoring (evaluate_warp_trials)
+        can dampen promotion under elevated unresolved-contradiction heat.
+        This is a GLOBAL throttle, not per-path attribution — see the
+        signal-through directive, Section 2, for why that's the honest
+        scope of this signal as currently wired. Safe to skip — Warp trial
+        scoring functions identically (pure _score_trial output) without it.
+        """
+        self._contradiction_ledger = ledger
+
 
     def set_warp_genealogy(self, genealogy: Any) -> None:
         """
@@ -756,6 +781,66 @@ class WarpCapable:
         parent_ids: List[str],
     ) -> Dict[str, Any]:
         return {}
+
+    def _sediment_warp_traversal(
+        self,
+        component: "WarpComponent",
+        event: str,
+    ) -> None:
+        """
+        Deposit a Warp lifecycle event into SediMemory, if the host has
+        connected one via connect_sedimemory(). This is the "signal travels
+        through the field and carves a path" mechanism — Warp's own
+        discovery/synthesis output now participates in the same
+        channel-carving erosion (PathRegistry/SedimentChannel) that governs
+        the rest of Aurora's memory substrate, instead of staying siloed
+        inside the host system that spawned it.
+
+        event: "warp_gap_closed" (component just integrated, first traversal)
+               or "warp_trial_promoted" (component proved itself over
+               TRIAL_TICKS — a stronger, independently-weighted traversal)
+
+        Silent no-op if the host never called connect_sedimemory() — Warp
+        must function identically with or without SediMemory present.
+        """
+        sedi = getattr(self, "_sedimemory", None)
+        if sedi is None:
+            return
+        try:
+            from aurora_internal.aurora_constraint_manifold_patched import ConstraintVector
+        except ImportError:
+            from aurora_constraint_manifold_patched import ConstraintVector  # type: ignore
+        from foundational_contract import ExistenceMode
+
+        axes_5d = istates_to_axes(component.axis_profile)
+        try:
+            cv = ConstraintVector(
+                X=axes_5d.get("X", 0.5),
+                T=axes_5d.get("T", 0.5),
+                N=axes_5d.get("N", 0.5),
+                B=axes_5d.get("B", 0.5),
+                A=axes_5d.get("A", 0.5),
+            )
+        except Exception:
+            return  # manifold rejected an out-of-band profile — don't force it
+
+        try:
+            sedi.ingest_event(
+                content={
+                    "source":        "warp_traversal",
+                    "event":         event,
+                    "level":         component.level,
+                    "component_id":  component.component_id,
+                    "name":          component.name,
+                    "parent_ids":    list(component.parent_ids or []),
+                    "trial_score":   round(float(component.trial_score_ema), 4),
+                },
+                constraint_vector=cv,
+                source=self._warp_level_name() if hasattr(self, "_warp_level_name") else "warp",
+                existence_mode=ExistenceMode.AGENTIC,
+            )
+        except Exception:
+            pass  # SediMemory ingestion is best-effort; never break Warp lifecycle on it
 
     # ── public interface ──────────────────────────────────────────────────────
 
@@ -812,6 +897,7 @@ class WarpCapable:
             return None
 
         self._integrate_warp(new_comp)
+        self._sediment_warp_traversal(new_comp, "warp_gap_closed")
         self._warp_trials[new_comp.component_id] = new_comp
         return new_comp
 
@@ -826,6 +912,15 @@ class WarpCapable:
         for comp_id in list(self._warp_trials):
             comp = self._warp_trials[comp_id]
             score = self._score_trial(comp)
+
+            ledger = getattr(self, "_contradiction_ledger", None)
+            if ledger is not None:
+                try:
+                    heat = float(ledger.heat_contribution())
+                    score = score * max(0.0, 1.0 - heat)
+                except Exception:
+                    pass
+
             comp.trial_score_ema = 0.7 * comp.trial_score_ema + 0.3 * score
             comp.trial_tick += 1
 
@@ -836,6 +931,7 @@ class WarpCapable:
                 comp.promoted = True
                 self._warp_promoted[comp_id] = comp
                 del self._warp_trials[comp_id]
+                self._sediment_warp_traversal(comp, "warp_trial_promoted")
                 promoted.append(comp_id)
             else:
                 comp.dissolved = True
