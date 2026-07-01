@@ -4655,24 +4655,26 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
     to the honest abstain + active seek. Nothing outputs without passing this gate.
     """
     try:
-        # ── SURFACE CREST COMPRESSION ──────────────────────────────────────────
-        # Compress the charged surface waveform + the propagated subsurface crest
-        # into meaning, ranked by pressure x charge. Safety: authoritative only when
-        # it FILLS a gap (current content empty/thin) or when deep/charged material
-        # (subsurface) genuinely outranks a weak surface rendering -- never replaces
-        # a substantive propositional answer. So compression can only add or hold.
+        # ── FIELD-WAVEFORM CREST COMPRESSION ───────────────────────────────────
+        # Compress the charged surface waveform + propagated subsurface crest into a
+        # top-salience core (pressure x charge), then route that core through the
+        # field's own compressor (emit) so the constraint waveform shapes how the
+        # meaning is said. Meaning is never dropped: when the field carries the whole
+        # core its emission IS the response (pure waveform compression); otherwise the
+        # core is preserved and the field's stance frames delivery. A genuine gap
+        # (no real core) falls through to the honest abstain below, never raw field.
         _lww = str(getattr(state, "response_content", "") or "").strip()
         _crest = _compress_at_crest(user_text, systems, state)
+        _core = _lww if (_lww and len(_lww.split()) >= 3) else (_crest or _lww)
+        _fused = ""
+        if _core and len(_core.split()) >= 2:
+            _fused = _field_frame_compress(user_text, systems, state, _core)
         if isinstance(systems, dict):
             systems["_last_lww_output"] = _lww
             systems["_last_crest_output"] = _crest
-        # Authority is conservative: the surface renderings hold the propositional
-        # content, so compression NEVER replaces a substantive answer. It only fills
-        # a genuine gap (surface produced nothing) with a coherent, speech-like
-        # contribution (top surface rendering, or a resolved subsurface guidance).
-        # The ranking above is recorded for observability regardless.
-        if _crest and not _lww and _is_speech_like(_crest):
-            state.response_content = _crest
+            systems["_last_fused_output"] = _fused
+        if _fused and _fused != _lww:
+            state.response_content = _fused
             state.response_src = "crest_compression"
 
         wm = systems.get("working_memory") if isinstance(systems, dict) else None
@@ -4847,6 +4849,56 @@ def _compress_at_crest(user_text: str, systems, state) -> str:
         return str(contribs[0].get("content", "") or "").strip()
     except Exception:
         return ""
+
+
+def _field_frame_compress(user_text: str, systems, state, core: str) -> str:
+    """Final compression: route the top-salience CORE through the field's own
+    compressor (ConstraintEmitter.emit), so the constraint waveform shapes how the
+    meaning is said. Meaning is never dropped:
+
+      - if the field fully compresses the meaning (its emission carries the core's
+        content words), that field-native utterance IS the response -- pure
+        waveform compression;
+      - otherwise the core is preserved and the field's stance (leading token) frames
+        its delivery.
+
+    The share that becomes pure field compression grows with her grounding: as more
+    is crystallised, emit() resolves more content from the field itself.
+    """
+    core = str(core or "").strip()
+    try:
+        emitter = systems.get("constraint_emitter") if isinstance(systems, dict) else None
+        if emitter is None:
+            return core
+        from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
+        gp = getattr(state, "parsed", {}) or {}
+        iff = _IF(
+            text=str(user_text or ""),
+            is_question=bool(gp.get("is_question", False)),
+            is_directed=True,
+            is_self_referential=bool(gp.get("is_self_referential", False)),
+        )
+        ctx = EmissionContextBuilder().build(systems, input_frame=iff, recent_words=[])
+        res = emitter.emit(ctx)
+        field_text = str(getattr(res, "text", "") or "").strip()
+        lead = str(getattr(getattr(res, "slot_frame", None), "leading", "") or "").strip()
+    except Exception:
+        return core
+
+    def _content_words(s: str) -> set:
+        return {w for w in re.findall(r"[a-z0-9']+", str(s or "").lower()) if len(w) > 3}
+
+    if not core:
+        return field_text  # the field is all there is
+    cw_core = _content_words(core)
+    cw_field = _content_words(field_text)
+    # Pure waveform compression: the field carries the whole core meaning.
+    if field_text and cw_core and cw_core <= cw_field:
+        return field_text
+    # Otherwise preserve the core; let the field's stance frame its delivery.
+    if lead and core[:1].isalpha() and not core.lower().startswith(lead.lower()):
+        return f"{lead}, {core[0].lower()}{core[1:]}"
+    return core
 
 
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
