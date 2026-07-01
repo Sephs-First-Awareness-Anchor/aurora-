@@ -4606,6 +4606,75 @@ def _seed_abstained_gap(user_text: str, systems) -> None:
         pass
 
 
+def _emit_honest_abstain_and_seek(user_text: str, systems, state) -> None:
+    """The single honest-abstain path: confess the gap to warp (universal
+    accommodation), seed the base meaning for active seeking on first contact, and
+    emit the constraint-native abstain. Used both mid-chain and at the emission
+    chokepoint so every gap is treated identically -- warp + seek + honest surface,
+    never a manufactured claim (the FGAE/SIC fallback was removed in the Reset)."""
+    try:
+        from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
+        _warp_guard(
+            source="expression", layer="articulation",
+            trigger=_WT.MISSING_REPRESENTATION, unresolved_text=str(user_text or ""),
+            severity=0.55, persistence_key=str(user_text or "")[:48],
+        )
+    except Exception:
+        pass
+    _seed_abstained_gap(user_text, systems)
+    _abstain = ""
+    try:
+        _emitter = systems.get("constraint_emitter") if isinstance(systems, dict) else None
+        if _emitter is not None:
+            from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
+            _gp = getattr(state, "parsed", {}) or {}
+            _gif = _IF(
+                text=str(user_text or ""),
+                is_question=bool(_gp.get("is_question", False)),
+                is_directed=True,
+                is_self_referential=bool(_gp.get("is_self_referential", False)),
+            )
+            _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
+            _ares = _emitter._emit_abstain(_gctx)
+            _abstain = str(getattr(_ares, "text", "") or "").strip()
+    except Exception:
+        _abstain = ""
+    state.response_content = _abstain
+    state.response_tone = "honest"
+    state.response_confidence = 0.4
+    state.response_src = "constraint_abstain"
+    if isinstance(systems, dict):
+        systems["_preserve_literal_response_once"] = True
+
+
+def _enforce_emission_discipline(user_text: str, systems, state) -> None:
+    """SINGLE EMISSION CHOKEPOINT. Every candidate response converges here before
+    resp_A is built, so anchor discipline is enforced once, at the exit -- a leaked
+    grounding anchor is suppressed regardless of which path (chain step, intent
+    handler, post-processing) produced it. If nothing genuine remains, fall through
+    to the honest abstain + active seek. Nothing outputs without passing this gate.
+    """
+    try:
+        wm = systems.get("working_memory") if isinstance(systems, dict) else None
+        if state.response_content and _response_is_leaked_anchor(user_text, state.response_content, wm):
+            state.response_content = ""
+            state.response_src = "anchor_suppressed"
+            if isinstance(systems, dict):
+                systems["_anchor_suppressions"] = int(systems.get("_anchor_suppressions", 0) or 0) + 1
+                try:
+                    from aurora_developmental_log import record_developmental_event
+                    record_developmental_event(
+                        systems, "anchor_grounding_enforced",
+                        "held the grounding anchor internally instead of leaking it to output",
+                    )
+                except Exception:
+                    pass
+        if not str(getattr(state, "response_content", "") or "").strip():
+            _emit_honest_abstain_and_seek(user_text, systems, state)
+    except Exception:
+        pass
+
+
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
     """Retrieve the user's name from stored facts or working memory.
 
@@ -15017,78 +15086,12 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.quasiarch_events.append(dict(fb_event))
         except Exception:
             pass
-    # Anchor discipline: the grounding anchor biases focus internally and enables
-    # genuine recall/callbacks — it must never BE the reply to input that neither
-    # references it nor asks to recall it. If the produced response is just the
-    # stale anchor echoed at unrelated input, suppress it so the turn falls through
-    # to the honest warp-abstain below (which then actively seeks the base meaning).
-    if state.response_content:
-        try:
-            _wm_anchor = systems.get("working_memory") if isinstance(systems, dict) else None
-            if _response_is_leaked_anchor(user_text, state.response_content, _wm_anchor):
-                state.response_content = ""
-                state.response_src = "anchor_suppressed"
-                if isinstance(systems, dict):
-                    systems["_anchor_suppressions"] = int(systems.get("_anchor_suppressions", 0) or 0) + 1
-                    try:
-                        from aurora_developmental_log import record_developmental_event
-                        record_developmental_event(
-                            systems, "anchor_grounding_enforced",
-                            "held the grounding anchor internally instead of leaking it to output",
-                        )
-                    except Exception:
-                        pass
-        except Exception:
-            pass
     if not state.response_content:
-        # Terminal gap: nothing emerged at any level — Aurora has no place for
-        # this yet. This is warp's domain (the universal accommodation engine):
-        # confess the unresolved state so warp recognizes the missing
-        # representation and accommodates it (compare to known relational
-        # structures via genealogy; else discover). Heavy resolution runs in
-        # subsurface. The surface is the emitter's constraint-native honest
-        # abstain — never a manufactured "what X means here" claim (that FGAE/SIC
-        # fallback was removed in the Language Reset).
-        try:
-            from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
-            _warp_guard(
-                source="expression",
-                layer="articulation",
-                trigger=_WT.MISSING_REPRESENTATION,
-                unresolved_text=str(user_text or ""),
-                severity=0.55,
-                persistence_key=str(user_text or "")[:48],
-            )
-        except Exception:
-            pass
-        # Active seeking: seek the BASE MEANING of what was asked/inferred on FIRST
-        # contact (no recurrence gate). Feeds the subsurface curiosity/study loop.
-        _seed_abstained_gap(user_text, systems)
-        _abstain = ""
-        try:
-            _emitter = systems.get("constraint_emitter")
-            if _emitter is not None:
-                from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
-                _gp = getattr(state, "parsed", {}) or {}
-                _gif = _IF(
-                    text=str(user_text or ""),
-                    is_question=bool(_gp.get("is_question", False)),
-                    is_directed=True,
-                    is_self_referential=bool(_gp.get("is_self_referential", False)),
-                )
-                _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
-                _ares = _emitter._emit_abstain(_gctx)
-                _abstain = str(getattr(_ares, "text", "") or "").strip()
-        except Exception:
-            _abstain = ""
-        state.response_content = _abstain
-        state.response_tone = "honest"
-        state.response_confidence = 0.4
-        state.response_src = "constraint_abstain"
-        # Honest abstain is terminal — do not let a later refinement pass
-        # re-inflate it into manufactured content.
-        if isinstance(systems, dict):
-            systems["_preserve_literal_response_once"] = True
+        # Terminal gap mid-chain: nothing emerged at any level yet. Honest abstain +
+        # active seek (warp accommodation + base-meaning seeking). Anchor discipline
+        # itself is enforced once at the emission chokepoint (_enforce_emission_
+        # discipline, just before resp_A is built) so no path can leak past it.
+        _emit_honest_abstain_and_seek(user_text, systems, state)
     # Evolutionary refinement (learning hints woven in)
     try:
         state.response_content = _evolutionary_response_refinement(
@@ -16143,6 +16146,13 @@ def _run_reasoning_pipeline(
                 )
         except Exception:
             pass
+
+    # SINGLE EMISSION CHOKEPOINT — every reasoning-path response converges here.
+    # Enforce anchor discipline once, at the exit: a leaked grounding anchor is
+    # suppressed no matter which path produced it, and if nothing genuine remains
+    # the turn falls through to the honest abstain + active seek. Nothing outputs
+    # without passing this gate.
+    _enforce_emission_discipline(user_text, systems, state)
 
     # Build resp_A
     resp_A = _MiniResp(state.response_content, state.response_tone, state.response_confidence)
