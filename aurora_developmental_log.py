@@ -75,6 +75,13 @@ def snapshot_developmental_state(systems: Dict[str, Any]) -> Dict[str, Any]:
     except Exception:
         pass
 
+    # Behavioral-maturation counters: how often she held grounding internally
+    # instead of leaking it (anchor discipline), and how often she sought the base
+    # meaning of a gap on first contact (active seeking). Real changes in conduct,
+    # tracked as growth alongside the structural metrics.
+    snap["anchor_suppressions"] = int(systems.get("_anchor_suppressions", 0) or 0)
+    snap["gaps_sought"] = int(systems.get("_base_meanings_sought", 0) or 0)
+
     return snap
 
 
@@ -85,6 +92,7 @@ def _developmental_index(snap: Optional[Dict[str, Any]]) -> float:
         snap.get("abilities", 0) + snap.get("genealogy_links", 0)
         + snap.get("crystals", 0) + snap.get("lsa_reinforced", 0)
         + snap.get("lsa_excludes", 0) + snap.get("wisdom_shards", 0)
+        + snap.get("gaps_sought", 0)   # actively reaching for the unknown is growth
     )
 
 
@@ -156,6 +164,59 @@ def _feed_eepr(systems: Dict[str, Any], snap: Dict[str, Any],
         return True
     except Exception:
         return False
+
+
+def record_developmental_event(systems: Dict[str, Any], event: str,
+                               detail: str = "", *, once: bool = True) -> bool:
+    """Log a discrete developmental EVENT -- a real change in how she behaves --
+    into the same timeline as the metric snapshots, and feed it to EEPR as a
+    milestone shard.
+
+    Snapshots record continuous metrics; an event marks a *transition* (e.g.
+    anchor grounding coming online, or active seeking engaging). It is logged as
+    i_did -- an enacted change on the A-axis -- so it becomes real experiential
+    pressure, not just a dashboard line. With once=True (default) the same event
+    is recorded only once per process, so a milestone marks the moment it first
+    became true.
+    """
+    if not isinstance(systems, dict):
+        return False
+    if once:
+        logged = systems.setdefault("_dev_events_logged", set())
+        if not isinstance(logged, set):
+            logged = set(logged or [])
+            systems["_dev_events_logged"] = logged
+        if event in logged:
+            return False
+        logged.add(event)
+
+    state_dir = str(systems.get("state_dir") or "aurora_state")
+    path = os.path.join(state_dir, _LOG_NAME)
+    entry = {
+        "ts": round(time.time(), 3),
+        "kind": "developmental_event",
+        "event": str(event or "")[:80],
+        "detail": str(detail or "")[:200],
+    }
+    generation = _append_capped(path, entry)
+
+    # Milestone shard: an enacted change biases expression toward openness.
+    try:
+        from aurora_expression_perception import WisdomShard
+        store = getattr(getattr(systems.get("perception"), "ecology", None), "wisdom", None)
+        if store is not None and hasattr(store, "add"):
+            store.add(WisdomShard(
+                shard_id=f"devevt_{int(time.time() * 1000)}",
+                i_state="i_did",   # A-axis: she DID change how she behaves
+                tone_bias=0.03,
+                structure_bias=0.02,
+                fitness_at_death=0.6,
+                cause_of_death=f"developmental_event:{event}"[:64],
+                generation=int(generation),
+            ))
+    except Exception:
+        pass
+    return True
 
 
 def record_developmental_snapshot(systems: Dict[str, Any], *,

@@ -4490,6 +4490,122 @@ def _render_user_name_grounding(
     return str(rendered or WorkingMemory._data_to_minimal_speech(core_claim, 'precise', 'neutral')).strip()
 
 
+def _input_references_anchor(inp: str, working_memory) -> bool:
+    """True when the current input is a genuine recall/callback or explicitly
+    names the grounding anchor -- i.e. the turn really IS about the anchor, so
+    surfacing it is correct rather than a leak."""
+    low = str(inp or "").strip().lower()
+    if not low or working_memory is None:
+        return False
+    try:
+        utts = getattr(working_memory, "recent_user_utterances", None)
+        if utts:
+            cur = dict(utts[0] or {})
+            if cur.get("is_callback") or str(cur.get("intent", "")) == "recall_question":
+                return True
+    except Exception:
+        pass
+    if any(p in low for p in (
+        "my name", "who am i", "what did i", "what's my", "you said",
+        "remember", "recall", "earlier", "just told", "just said",
+    )):
+        return True
+    anchor = getattr(working_memory, "last_response_anchor_claim", {}) or {}
+    for key in ("subject", "object", "value"):
+        v = str(anchor.get(key, "") or "").strip().lower()
+        if len(v) > 2 and v in low:
+            return True
+    return False
+
+
+def _response_is_leaked_anchor(user_text: str, response: str, working_memory) -> bool:
+    """True when `response` is the internal grounding anchor bleeding into output
+    instead of answering the current input.
+
+    An anchor is internal grounding: it biases focus and enables genuine recall /
+    callbacks, but it must never BE the reply to input that neither references it
+    nor asks to recall it.  Suppressing a leaked anchor lets the turn fall through
+    to the honest warp-abstain, which then actively seeks the base meaning it
+    lacked (rather than parroting the stale anchor).
+    """
+    if working_memory is None:
+        return False
+    resp = str(response or "").strip().lower()
+    inp = str(user_text or "").strip().lower()
+    if not resp or not inp:
+        return False
+    # The turn genuinely IS about the anchor -> surfacing it is correct.
+    if _input_references_anchor(inp, working_memory):
+        return False
+    # Stored user identity is a persistent grounding anchor too -- it leaks the
+    # same way: the name surfacing at input that never asked about it, even when
+    # the *current* claim-anchor has moved on to something else. (Genuine "what is
+    # my name" turns were already let through by _input_references_anchor above.)
+    try:
+        stored_name = str(working_memory.get_stated_fact("user", "name") or "").strip().lower()
+    except Exception:
+        stored_name = ""
+    if (
+        stored_name and len(stored_name) > 1
+        and stored_name in resp and stored_name not in inp
+        and (len(resp) <= 40 or "name" in resp)
+    ):
+        return True
+    anchor = getattr(working_memory, "last_response_anchor_claim", {}) or {}
+    if not anchor:
+        return False
+    anchor_val = str(anchor.get("object", "") or anchor.get("value", "") or "").strip().lower()
+    anchor_subj = str(anchor.get("subject", "") or "").strip().lower()
+    # Input names neither the anchor's value nor its subject (already established
+    # by _input_references_anchor, but re-checked defensively for the value form).
+    if (len(anchor_val) > 2 and anchor_val in inp) or (len(anchor_subj) > 2 and anchor_subj in inp):
+        return False
+    try:
+        anchor_txt = str(working_memory._claim_to_text(anchor) or "").strip().lower()
+    except Exception:
+        anchor_txt = ""
+    resp_carries_anchor = (
+        (len(anchor_val) > 2 and anchor_val in resp) or
+        (bool(anchor_txt) and (anchor_txt in resp or resp in anchor_txt))
+    )
+    return resp_carries_anchor
+
+
+def _seed_abstained_gap(user_text: str, systems) -> None:
+    """A gap asked or inferred of her must have its BASE MEANING sought on FIRST
+    contact -- not gated on recurrence.  Seed it into the in-process channels the
+    subsurface curiosity/study loop consumes (systems["_abstained_gaps"] +
+    systems["_open_loops"]) so she reaches for what she doesn't know instead of
+    dropping it.  (Recurrence of the deeper signature drives alternative
+    conceptual interpretations -- a separate, deeper layer.)
+    """
+    subject = str(user_text or "").strip()
+    if not subject or not isinstance(systems, dict):
+        return
+    try:
+        gaps = systems.setdefault("_abstained_gaps", [])
+        if isinstance(gaps, list) and not any(
+            isinstance(g, dict) and str(g.get("subject", "")) == subject for g in gaps
+        ):
+            gaps.append({"subject": subject, "origin": "surface_abstain", "sought": False})
+            gaps[:] = gaps[-24:]
+            systems["_base_meanings_sought"] = int(systems.get("_base_meanings_sought", 0) or 0) + 1
+            try:
+                from aurora_developmental_log import record_developmental_event
+                record_developmental_event(
+                    systems, "active_seeking_engaged",
+                    "sought the base meaning of an unmet gap on first contact",
+                )
+            except Exception:
+                pass
+        loops = systems.setdefault("_open_loops", [])
+        if isinstance(loops, list):
+            loops.append({"tension": f"unmet base meaning: {subject[:80]}", "source": "abstain"})
+            loops[:] = loops[-40:]
+    except Exception:
+        pass
+
+
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
     """Retrieve the user's name from stored facts or working memory.
 
@@ -14901,6 +15017,29 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.quasiarch_events.append(dict(fb_event))
         except Exception:
             pass
+    # Anchor discipline: the grounding anchor biases focus internally and enables
+    # genuine recall/callbacks — it must never BE the reply to input that neither
+    # references it nor asks to recall it. If the produced response is just the
+    # stale anchor echoed at unrelated input, suppress it so the turn falls through
+    # to the honest warp-abstain below (which then actively seeks the base meaning).
+    if state.response_content:
+        try:
+            _wm_anchor = systems.get("working_memory") if isinstance(systems, dict) else None
+            if _response_is_leaked_anchor(user_text, state.response_content, _wm_anchor):
+                state.response_content = ""
+                state.response_src = "anchor_suppressed"
+                if isinstance(systems, dict):
+                    systems["_anchor_suppressions"] = int(systems.get("_anchor_suppressions", 0) or 0) + 1
+                    try:
+                        from aurora_developmental_log import record_developmental_event
+                        record_developmental_event(
+                            systems, "anchor_grounding_enforced",
+                            "held the grounding anchor internally instead of leaking it to output",
+                        )
+                    except Exception:
+                        pass
+        except Exception:
+            pass
     if not state.response_content:
         # Terminal gap: nothing emerged at any level — Aurora has no place for
         # this yet. This is warp's domain (the universal accommodation engine):
@@ -14922,6 +15061,9 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
             )
         except Exception:
             pass
+        # Active seeking: seek the BASE MEANING of what was asked/inferred on FIRST
+        # contact (no recurrence gate). Feeds the subsurface curiosity/study loop.
+        _seed_abstained_gap(user_text, systems)
         _abstain = ""
         try:
             _emitter = systems.get("constraint_emitter")
