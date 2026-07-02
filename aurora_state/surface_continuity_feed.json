@@ -1,326 +1,45 @@
 [
   {
-    "packet_id": "5152d7aa294447f59bb0d8c4da1ac7cf",
-    "created_at": 1782928337.2948856,
+    "packet_id": "218c125a721f4bca88e85f4a8e9fe4c2",
+    "created_at": 1782955728.9164107,
     "source": "external_user_turn",
-    "user_input": "Do you actually understand what I mean, or are you guessing? [Internal: I'm reasoning through that now: Do you actually understand what I mean, or are you guessing?. It adds weight to my present understanding.]",
-    "aurora_response": "I'm not sure.",
-    "response_tone": "honest",
+    "user_input": "A raven has black feathers.",
+    "aurora_response": "fact, raven, description. intelligent.",
+    "response_tone": "curious",
     "concepts_activated": [
-      "understand",
-      "guessing",
-      "internal",
-      "reasoning",
-      "understand",
-      "guessing"
+      "raven",
+      "black",
+      "feathers"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.029,
+    "dominant_axis": "N",
+    "coherence": 0.026,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:-0.70"
     ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
+    "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "8df164698caf4be8abb39e099efee9e3",
-    "created_at": 1782928340.754478,
+    "packet_id": "4cb0859e62bc44d4be9da4b6a76e80a8",
+    "created_at": 1782955733.7010632,
     "source": "external_user_turn",
-    "user_input": "The sky is blue.",
-    "aurora_response": "sky. sky is blue.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "sky",
-      "blue"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.56"
-    ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "44dfbf88974f44a49f92f41aac3a4094",
-    "created_at": 1782928344.379973,
-    "source": "external_user_turn",
-    "user_input": "Actually, the sky is red at sunset. [Internal: So 'the sky' is Actually, the sky is red at sunset. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
-    "aurora_response": "fact, sky, description. blue.",
+    "user_input": "Describe a raven.",
+    "aurora_response": "fact, raven, description. intelligent.",
     "response_tone": "curious",
-    "concepts_activated": [
-      "sky",
-      "red",
-      "sunset",
-      "internal",
-      "sky",
-      "sky"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.47"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6d21ef281c304468b9327bef9aa0a227",
-    "created_at": 1782928351.9778235,
-    "source": "external_user_turn",
-    "user_input": "How do you feel right now?",
-    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.006, dominant-emotion=fear. Agency moved up since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.60"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4490a7e6deec4ddc93f86912c2990916",
-    "created_at": 1782928354.7784786,
-    "source": "external_user_turn",
-    "user_input": "What did we just talk about?",
-    "aurora_response": "I'm not sure.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "talk"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "906ec8af17de40af8db6ebb751452a7e",
-    "created_at": 1782928357.4755244,
-    "source": "external_user_turn",
-    "user_input": "Do you feel like you are growing?",
-    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.21. Field state: heat=0.003, dominant-emotion=fear. Agency moved up since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "growing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.63"
-    ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "0c79abfe0a2848998f9d0ebc4d5f1f5f",
-    "created_at": 1782928359.746364,
-    "source": "external_user_turn",
-    "user_input": "My name is Sunni. Please remember that.",
-    "aurora_response": "your name is Sunni.",
-    "response_tone": "warm",
-    "concepts_activated": [
-      "sunni",
-      "please",
-      "remember"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.55"
-    ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "56fd7626a96f48d09d4dfe91f233a6c3",
-    "created_at": 1782928363.2592437,
-    "source": "external_user_turn",
-    "user_input": "A raven is a black bird.",
-    "aurora_response": "your name is Sunni.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "raven",
-      "black",
-      "bird"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.59"
-    ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e7297daff1954bef971021a67ea1db10",
-    "created_at": 1782928371.7733068,
-    "source": "external_user_turn",
-    "user_input": "What is a raven?",
-    "aurora_response": "fact, raven, description. a black bird.",
-    "response_tone": "uncertain",
     "concepts_activated": [
       "raven"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.65"
-    ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "00a4782a81594134964adfc5719d0e6c",
-    "created_at": 1782928374.7865338,
-    "source": "external_user_turn",
-    "user_input": "Photosynthesis is how plants turn light into energy.",
-    "aurora_response": "Enough need plants structure overstepping care. Matters understand photosynthesis weight exist light.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "photosynthesis",
-      "plants",
-      "turn",
-      "light",
-      "energy"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.55"
-    ],
-    "resolved_bindings": [
-      "resolve_factual_gap",
-      "hold_possibility_space"
-    ],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e1358b3eb26943f7a2ac81cb172854e4",
-    "created_at": 1782928378.5102007,
-    "source": "external_user_turn",
-    "user_input": "What is photosynthesis?",
-    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "photosynthesis"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.58"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "c3b37c6019a34e8f8eb168ae36098780",
-    "created_at": 1782928382.3556933,
-    "source": "external_user_turn",
-    "user_input": "By 'anchor' I mean a stable reference point I return to. [Internal: So 'anchor' i' is By 'anchor' I mean a stable reference point I return to. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
-    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "anchor",
-      "stable",
-      "reference",
-      "point",
-      "return",
-      "internal"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.029,
+    "coherence": 0.031,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -331,97 +50,170 @@
     "consumed_at": null
   },
   {
-    "packet_id": "65ff5e0d07c54965bbab37af9ec9df77",
-    "created_at": 1782928385.6896787,
+    "packet_id": "7d18eb1983624759af1bc6d10263a8de",
+    "created_at": 1782955738.3840947,
     "source": "external_user_turn",
-    "user_input": "Explain quantum chromodynamics to me.",
-    "aurora_response": "Care need explain respond overstepping light. Enough is matters photosynthesis understand weight.",
+    "user_input": "Is a raven a bird?",
+    "aurora_response": "Raven description raven description.",
     "response_tone": "curious",
     "concepts_activated": [
-      "quantum",
-      "chromodynamics"
+      "raven",
+      "bird"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.026,
+    "coherence": 0.031,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.60"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "aa3bb6a0c4e04ea79d572c4ed790797d",
-    "created_at": 1782928394.032478,
+    "packet_id": "3a8ceb54e8724b3aba291fb5ecc4be8a",
+    "created_at": 1782955750.0456026,
     "source": "external_user_turn",
-    "user_input": "What is my name?",
-    "aurora_response": "Yes \u2014 you're Sunni.",
-    "response_tone": "warm",
-    "concepts_activated": [],
+    "user_input": "A raven is intelligent.",
+    "aurora_response": "Raven description raven description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "raven",
+      "intelligent"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.034,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.54"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f4294d9c16b94448860c34263a74b99d",
+    "created_at": 1782955754.8109422,
+    "source": "external_user_turn",
+    "user_input": "A raven can also be a symbol of mystery.",
+    "aurora_response": "Raven description raven description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "raven",
+      "symbol",
+      "mystery"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.031,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.53"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e9ba757dad8a4cc9bb5bef9a47ef62cc",
+    "created_at": 1782955759.472155,
+    "source": "external_user_turn",
+    "user_input": "What is a quokka?",
+    "aurora_response": "fact, quokka, description. also the name of a software project.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "quokka"
+    ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.026,
+    "coherence": 0.031,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.50"
+      "existence:-0.64"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "3b63b8ba19e640d8b4b5769c75b1d6ab",
-    "created_at": 1782928397.6491067,
+    "packet_id": "22847a04f9994bcf9e299501a19a5cc0",
+    "created_at": 1782955765.4485385,
     "source": "external_user_turn",
-    "user_input": "Do you actually understand what I mean, or are you guessing? [Internal: I understand. I'm thinking about how that relates to what we're discussing.]",
-    "aurora_response": "it works by making explain respond overstepping light enough is matters photosynthesis understand weight a dependency for care.",
+    "user_input": "The quokka is a marsupial.",
+    "aurora_response": "fact, quokka, description. also the name of a software project.",
     "response_tone": "curious",
     "concepts_activated": [
-      "understand",
-      "guessing",
-      "internal",
-      "understand",
-      "thinking",
-      "relates"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.55"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3f720a712c474ed2ae752edf5bfc41a7",
-    "created_at": 1782928400.8129425,
-    "source": "external_user_turn",
-    "user_input": "The sky is blue.",
-    "aurora_response": "Respond need care structure overstepping plants. Matters do explain enough did weight.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "sky",
-      "blue"
+      "quokka",
+      "marsupial"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
     "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "73d52efc85554754838ea7c4f0aae828",
+    "created_at": 1782955771.035668,
+    "source": "external_user_turn",
+    "user_input": "A quokka is friendly.",
+    "aurora_response": "fact, quokka, description. also the name of a software project.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "quokka",
+      "friendly"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2369362c1c8b49c4aa39a6f4b9c91537",
+    "created_at": 1782955781.7530499,
+    "source": "external_user_turn",
+    "user_input": "Tell me about the quokka.",
+    "aurora_response": "fact, quokka, description. friendly.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "quokka"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.031,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -432,99 +224,274 @@
     "consumed_at": null
   },
   {
-    "packet_id": "1049d31ac6754d118ff7e12af3978bd5",
-    "created_at": 1782928404.6754656,
+    "packet_id": "a1cb8420765747aa988a9e5e620ed255",
+    "created_at": 1782955787.5044193,
     "source": "external_user_turn",
-    "user_input": "Actually, the sky is red at sunset. [Internal: I've added 'the sky' as Actually, the sky is red at sunset. That shifts how I reason through this thread. Does that match what you're pointing at?]",
-    "aurora_response": "fact, sky, description. blue.",
+    "user_input": "A quokka is small.",
+    "aurora_response": "fact, quokka, description. friendly.",
     "response_tone": "curious",
     "concepts_activated": [
-      "sky",
-      "red",
-      "sunset",
-      "internal",
-      "added",
-      "sky"
+      "quokka",
+      "small"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.63"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "ed41311516744194a817a1f2c019319c",
-    "created_at": 1782928407.654589,
-    "source": "external_user_turn",
-    "user_input": "How do you feel right now?",
-    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.002, dominant-emotion=fear. Agency moved up since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.56"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e8085024f0d74683ad6288a05ed8b284",
-    "created_at": 1782928417.6313472,
-    "source": "external_user_turn",
-    "user_input": "What did we just talk about?",
-    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.002, dominant-emo.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "talk"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.67"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "48bb24a00a1d4fcaa37511c3c53ee6a6",
-    "created_at": 1782928420.8919203,
-    "source": "external_user_turn",
-    "user_input": "Do you feel like you are growing?",
-    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.21. Field state: heat=0.003, dominant-emotion=fear. Agency moved up since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "growing"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.029,
+    "coherence": 0.031,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "1db90fbbc82243edbaf5e420cfb77b35",
+    "created_at": 1782955792.3024323,
+    "source": "external_user_turn",
+    "user_input": "Is a quokka a marsupial?",
+    "aurora_response": "fact, quokka, description. small.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "quokka",
+      "marsupial"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.031,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.65"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "9ab5a771ad1245258e87896d4a46d83d",
+    "created_at": 1782955798.3861878,
+    "source": "external_user_turn",
+    "user_input": "Quokka is also the name of a software project.",
+    "aurora_response": "fact, quokka, description. small.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "quokka",
+      "software",
+      "project"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.034,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.64"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "8d7df349c61e4fb2a5d79628bd6ffc5b",
+    "created_at": 1782955803.3605762,
+    "source": "external_user_turn",
+    "user_input": "What is gravity?",
+    "aurora_response": "Gravity description gravity description.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "gravity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.031,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a66c8925ed3f49a5885ab39e16c89931",
+    "created_at": 1782955817.4059126,
+    "source": "external_user_turn",
+    "user_input": "Gravity is a force.",
+    "aurora_response": "Gravity description gravity description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "gravity",
+      "force"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.41"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "26f8f7d39f83474599adbdf817221a54",
+    "created_at": 1782955822.5565317,
+    "source": "external_user_turn",
+    "user_input": "Gravity pulls objects down.",
+    "aurora_response": "Gravity description gravity description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "gravity",
+      "pulls",
+      "objects"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "904f65d053714e7ab22de6d4e4cfad06",
+    "created_at": 1782955827.375404,
+    "source": "external_user_turn",
+    "user_input": "Describe gravity.",
+    "aurora_response": "Gravity description gravity description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "gravity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.031,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "21f55858b73b4f6eb692646520157eba",
+    "created_at": 1782955832.3842454,
+    "source": "external_user_turn",
+    "user_input": "Does gravity pull things?",
+    "aurora_response": "Gravity description gravity description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "gravity",
+      "pull",
+      "things"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.031,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.38"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "66600690fe6545ae9f838e1d85d7b001",
+    "created_at": 1782955837.4433475,
+    "source": "external_user_turn",
+    "user_input": "Gravity affects mass.",
+    "aurora_response": "Gravity description gravity description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "gravity",
+      "affects",
+      "mass"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.034,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.57"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "02e04f08973d46f3849c6cc196fbc554",
+    "created_at": 1782955850.0412493,
+    "source": "external_user_turn",
+    "user_input": "Gravity can also mean seriousness in a situation.",
+    "aurora_response": "Gravity description gravity description.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "gravity",
+      "seriousness",
+      "situation"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.031,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.60"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "3da6b31458744f26b04bbabf4b664cb7",
+    "created_at": 1782955855.4778922,
+    "source": "external_user_turn",
+    "user_input": "A raven is not a fish.",
+    "aurora_response": "raven is not fish.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "raven",
+      "fish"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.031,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.41"
     ],
     "resolved_bindings": [],
     "consumed": false,

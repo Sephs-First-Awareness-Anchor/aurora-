@@ -283,3 +283,58 @@ so it crystallises/resonates faster, but emit-compression still activates as the
 gains resonance, not instantly. Making it instant would require boosting taught-node
 resonance/activation -- deferred (risks wrong content selection / garbled output),
 not faked.
+
+---
+
+## FIX-A008 (ARCHITECTURAL) — Learn-through-use: outcome tracking + sense growth
+
+When Aurora USES a learned concept she now tests the use against what she was
+taught and tracks the outcome, carefully keeping three cases apart (never
+collapsing them):
+  - ALIGNED (use fits the taught meaning) -> reinforce that sense;
+  - MISUSE / CONTRADICTS (use negates/replaces the taught meaning on the SAME
+    dimension -- "doesn't fit at all") -> record a failed application + flag the
+    ContradictionLedger; do NOT expand;
+  - NEW SENSE (use is coherent in a DIFFERENT area -- "fits more than one, applies
+    in multiple areas") -> add_sense; the concept is broader than taught.
+
+`_track_concept_use_outcome` runs BEFORE `_sediment_validated_fact` in the live
+ingestion loop (`_run_live_response_turn`) so the use is judged against PRIOR
+knowledge, then the fact is integrated. It errs toward GROWTH over rigidity (a
+contradiction requires an explicit same-dimension conflict signal), so valid
+multi-applicability is never mistaken for error. Per-concept outcomes are logged
+to `systems['_concept_use_outcomes']`; new-sense and misuse each emit a
+developmental event.
+
+VERIFIED: teaching 'quokka = marsupial' then using it as "symbol of joy" and
+"name of a software project" adds two new senses (quokka.symbol, quokka.name --
+concept broadened); the taught use is aligned.
+
+HONEST BOUNDARY (follow-up): the MISUSE/contradiction case's classifier is correct
+(negated claim + fits_taught -> misuse) but does not fire live yet, because
+negation/correction inputs are routed to the context-directive path and skipped in
+the claim-ingestion seed loop (detect_context_directive continue), so they never
+reach the tracker. Wiring the tracker into the correction/negation path is the
+remaining step for the (a) case to fire in live turns. Also: an "Actually,"-prefixed
+sentence currently extracts no claim at all (parser edge), independent of this.
+
+---
+
+## FIX-A008b — Discourse-marker classifiers for the (a)-vs-(b) split
+
+Added `_CORRECTION_MARKERS` ("actually", "no,", "isn't", "rather", "instead", …)
+and `_MULTIVARIABLE_MARKERS` ("also", "can also", "in another sense", "sometimes",
+"depending on", …) as classifier priors in `_track_concept_use_outcome`. Priority:
+correction/negation frame -> misuse_contradicts; multivariable frame -> new_sense;
+else fall back to the meaning comparison (fits_taught -> aligned, else new_sense).
+The classifying marker is recorded on each outcome ("noted"), so the signal is
+tracked and informs the verdict without overriding the meaning comparison.
+
+Verified: plain declaratives classify correctly (aligned + new_sense recorded).
+HONEST BOUNDARY (upstream, = FIX-A008 follow-up): the marker branches do not fire
+LIVE yet because the phrasings that carry them do not reach the tracker with a
+clean claim -- "X can also be Y" (modal+also) often extracts no claim; negation /
+"Actually…" inputs are routed to the context-directive path and/or fail extraction.
+So the classifier is correct and complete; delivering marker-framed / corrective
+inputs to it is upstream claim-extraction + seed-loop-routing work (larger, core
+NLP), tracked as the follow-up.

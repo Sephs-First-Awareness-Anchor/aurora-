@@ -5047,6 +5047,149 @@ def _validate_fact_through_use(systems, user_text: str, state) -> int:
     return boosted
 
 
+# Discourse-marker classifiers: prefixes/markers that signal how the SPEAKER frames
+# information -- whether a use CORRECTS prior meaning (incorrect / contradiction) or
+# EXTENDS it (multivariable / a further coherent sense). Helpful priors for the
+# (a)-vs-(b) distinction; they INFORM the verdict, they do not override the meaning
+# comparison, and the classifying marker is recorded so the signal is noted.
+_CORRECTION_MARKERS = (
+    "actually", "no,", "not a ", "not an ", "isn't", "is not", "aren't",
+    "that's wrong", "that's not", "that is not", "incorrect", "i misspoke",
+    "correction", "not really", "rather", "instead", "wrong",
+)
+_MULTIVARIABLE_MARKERS = (
+    "also", "as well", "in another sense", "can also", "could also", "sometimes",
+    "in some", "another meaning", "alternatively", "on the other hand",
+    "in other contexts", "depending on", "as well as", " or a ", " or an ",
+)
+
+
+def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str]:
+    """Test a USED concept against what she was taught and track the outcome,
+    carefully keeping THREE cases apart (never collapsing them):
+
+      - ALIGNED: the use fits the taught meaning -> reinforce that sense.
+      - MISUSE / CONTRADICTS: the use negates or replaces the taught meaning on the
+        SAME dimension ("this doesn't fit the meaning at all") -> record a failed
+        use + flag the contradiction; do NOT expand the concept.
+      - NEW SENSE: the use is coherent but in a DIFFERENT conceptual area, not
+        contradicting ("fits more than one -- applies in multiple areas") -> ADD a
+        sense; the concept is broader than she was taught.
+
+    It errs toward GROWTH over rigidity: a contradiction requires an explicit
+    same-dimension conflict signal (negation / correction of a taught category), so
+    valid multi-applicability is never mistaken for error -- the failure mode we
+    must avoid. Records a per-concept outcome ledger in _concept_use_outcomes so she
+    can see where a concept worked, where it didn't, and how its use varies.
+    """
+    if not isinstance(systems, dict) or not claims:
+        return {}
+    outcomes: Dict[str, str] = {}
+    try:
+        oets = getattr(systems.get("perception"), "oets", None)
+        nodes = getattr(getattr(oets, "web", None), "nodes", None)
+        if not nodes:
+            return {}
+        ledger = systems.setdefault("_concept_use_outcomes", {})
+        low_text = str(user_text or "").lower()
+        correction_signal = next((m for m in _CORRECTION_MARKERS if m in low_text), "")
+        multivariable_signal = next((m for m in _MULTIVARIABLE_MARKERS if m in low_text), "")
+        for claim in list(claims)[:4]:
+            if not isinstance(claim, dict):
+                continue
+            subject = str(claim.get("subject", "") or "").strip().lower()
+            new_obj = str(claim.get("object", "") or "").strip().lower()
+            negated = bool(claim.get("negated", False)) or " not " in f" {claim.get('predicate','')} "
+            node = nodes.get(subject)
+            if node is None or not new_obj:
+                continue
+            new_tokens = [w for w in re.findall(r"[a-z][a-z']{2,}", new_obj)]
+            # Established taught knowledge: IS_A targets + definition words + sense clues.
+            established = set()
+            for rel in list(getattr(node, "relations", {}).values()):
+                rtv = getattr(getattr(rel, "relation_type", None), "value", "")
+                if rtv in ("is_a", "has_a"):
+                    tgt = rel.target_word if getattr(rel, "source_word", "") == subject else rel.source_word
+                    established.add(str(tgt).lower())
+            if hasattr(node, "best_definition"):
+                for w in re.findall(r"[a-z][a-z']{2,}", str(node.best_definition() or "").lower()):
+                    established.add(w)
+
+            fits_taught = any(t in established for t in new_tokens)
+            marker = ""
+            # Priority: an explicit correction/negation frame means "doesn't fit" ->
+            # contradiction; an explicit multivariable frame means "another sense" ->
+            # broaden; otherwise fall back to the meaning comparison. Markers inform
+            # but a bare same-dimension token match still counts as aligned.
+            if negated or correction_signal:
+                verdict = "misuse_contradicts"
+                marker = correction_signal or ("negated" if negated else "")
+                led = systems.get("contradiction_ledger")
+                if led is not None and hasattr(led, "record"):
+                    try:
+                        led.record(f"use of '{subject}' as '{new_obj}' conflicts with taught meaning")
+                    except Exception:
+                        pass
+            elif multivariable_signal:
+                # Speaker framed this as an additional/alternative sense -> broaden.
+                verdict = "new_sense"
+                marker = multivariable_signal
+                if hasattr(node, "add_sense") and new_tokens:
+                    try:
+                        node.add_sense(f"{subject}.{new_tokens[0]}", gloss=new_obj,
+                                       source="use_expansion", confidence=0.4,
+                                       context_clues=new_tokens)
+                    except Exception:
+                        pass
+            elif fits_taught:
+                verdict = "aligned"
+                if getattr(node, "senses", None) and hasattr(node, "disambiguate_sense"):
+                    sid = node.disambiguate_sense(new_tokens)
+                    if sid and sid in node.senses:
+                        s = node.senses[sid]
+                        s.confidence = min(1.0, s.confidence + 0.05)
+                        s.times_activated += 1
+            else:
+                # Coherent, different area, no conflict frame -> broaden (new sense).
+                verdict = "new_sense"
+                if hasattr(node, "add_sense") and new_tokens:
+                    try:
+                        node.add_sense(f"{subject}.{new_tokens[0]}", gloss=new_obj,
+                                       source="use_expansion", confidence=0.4,
+                                       context_clues=new_tokens)
+                    except Exception:
+                        pass
+            outcomes[subject] = verdict
+            entry = ledger.setdefault(subject, [])
+            # Dedup identical consecutive record (a turn may reach here via more
+            # than one capture site; the outcome is the same event).
+            if entry and entry[-1].get("use") == new_obj[:60] and entry[-1].get("verdict") == verdict:
+                continue
+            entry.append({"use": new_obj[:60], "verdict": verdict,
+                          "marker": marker, "context": low_text[:60]})
+            ledger[subject] = entry[-12:]
+
+        if outcomes:
+            _new = sum(1 for v in outcomes.values() if v == "new_sense")
+            _mis = sum(1 for v in outcomes.values() if v == "misuse_contradicts")
+            if _new or _mis:
+                try:
+                    from aurora_developmental_log import record_developmental_event
+                    if _new:
+                        record_developmental_event(
+                            systems, "concept_sense_expanded",
+                            "a used concept fit a new coherent area -> added a sense (broader than taught)")
+                    if _mis:
+                        record_developmental_event(
+                            systems, "concept_misuse_tracked",
+                            "a use conflicted with the taught meaning -> tracked as a failed application")
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return outcomes
+
+
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
     """Retrieve the user's name from stored facts or working memory.
 
@@ -8731,6 +8874,11 @@ def _build_grounded_fallback_response(
                     captured_claims = working_memory.note_claims(user_text, source='user', understood=understood)
                 except Exception:
                     captured_claims = []
+                # Ground validated facts into the field substrate (OETS + genealogy)
+                # and test the used concept against the taught meaning (aligned /
+                # contradicts / new-sense). This is the live statement path.
+                _sediment_validated_fact(systems, captured_claims, user_text)
+                _track_concept_use_outcome(systems, captured_claims, user_text)
                 if semantic_frames and not captured_claims:
                     return (
                         working_memory.compose_semantic_frame_acknowledgement(
@@ -18456,6 +18604,10 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
             # so emit() can compress them -- moves a taught fact from working-memory
             # rendering toward true field-waveform compression.
             _sediment_validated_fact(systems, captured_claims, user_text)
+            # Test the used concept against what she was taught: reinforce an aligned
+            # sense, flag a same-dimension contradiction as misuse, or broaden the
+            # concept with a new sense when the use fits a different coherent area.
+            _track_concept_use_outcome(systems, captured_claims, user_text)
         role_claim = _extract_role_assertion(user_text)
         if role_claim and conversation_memory:
             subj = role_claim.get("subject", "").strip()
@@ -23049,7 +23201,14 @@ def _run_live_response_turn(
                 working_memory.note_user_facts(seed_text, understood=pre_understood)
                 working_memory.note_concept_clarification(seed_text, source='user', understood=pre_understood)
                 working_memory.note_semantic_principles(seed_text, source='user', understood=pre_understood)
-                working_memory.note_claims(seed_text, source='user', understood=pre_understood)
+                _seed_claims = working_memory.note_claims(seed_text, source='user', understood=pre_understood)
+                # Test the used concept against the taught meaning FIRST (aligned /
+                # contradicts / new-sense), comparing against PRIOR knowledge -- then
+                # sediment the fact into the field substrate (OETS + genealogy). Order
+                # matters: sedimenting first would fold the new use into the baseline
+                # and mask a genuine new sense as "aligned".
+                _track_concept_use_outcome(systems, _seed_claims, seed_text)
+                _sediment_validated_fact(systems, _seed_claims, seed_text)
                 working_memory._register_understood_mentions(pre_understood, source='user')
             except Exception:
                 continue

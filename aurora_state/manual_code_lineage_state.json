@@ -2,48 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1*T^1",
-      "change_id": "MC:52908812ed5f",
-      "dominant_axis": "X",
-      "file": "aurora_governance_persistence_gateway.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_governance_persistence_gateway",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1782250666.2087984
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:f202a14e40bf",
-      "dominant_axis": "X",
-      "file": "aurora_grammar_engine.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_grammar_engine",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1782250666.2108793
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:7004e5716859",
-      "dominant_axis": "X",
-      "file": "aurora_hardware_io.py",
-      "matched_ability_id": "",
-      "matched_score": 0.0,
-      "mode": "created_manual_branch",
-      "module_name": "aurora_hardware_io",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "",
-      "source": "aurora.boot",
-      "timestamp": 1782250666.2128897
-    },
-    {
-      "axis_signature": "X^1*T^1",
       "change_id": "MC:1f83d71065df",
       "dominant_axis": "X",
       "file": "aurora_hub.py",
@@ -3359,18 +3317,60 @@
       "registered_ability_id": "",
       "source": "aurora.boot",
       "timestamp": 1782928245.0210888
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:9af0458431ff",
+      "dominant_axis": "X",
+      "file": "aurora.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1782955466.953501
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:5a88e2824496",
+      "dominant_axis": "X",
+      "file": "aurora_curiosity_engine.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_curiosity_engine",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1782955466.956597
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:79f321f84eb2",
+      "dominant_axis": "X",
+      "file": "aurora_developmental_log.py",
+      "matched_ability_id": "",
+      "matched_score": 0.0,
+      "mode": "created_manual_branch",
+      "module_name": "aurora_developmental_log",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "",
+      "source": "aurora.boot",
+      "timestamp": 1782955466.9591112
     }
   ],
   "initialized": true,
-  "last_run_at": 1782928413.48722,
+  "last_run_at": 1782955811.0341868,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781923576496086440,
       "size": 18819
     },
     "aurora.py": {
-      "mtime_ns": 1782860988730295140,
-      "size": 1258957
+      "mtime_ns": 1782955193802464084,
+      "size": 1295216
     },
     "aurora_625_pressure_map.py": {
       "mtime_ns": 1781923576499580699,
@@ -3477,8 +3477,8 @@
       "size": 12477
     },
     "aurora_curiosity_engine.py": {
-      "mtime_ns": 1782172552030199310,
-      "size": 59642
+      "mtime_ns": 1782930646931500699,
+      "size": 61253
     },
     "aurora_daemon.py": {
       "mtime_ns": 1782927289089491463,
@@ -3493,8 +3493,8 @@
       "size": 11147
     },
     "aurora_developmental_log.py": {
-      "mtime_ns": 1782250096976937568,
-      "size": 7109
+      "mtime_ns": 1782930934819494114,
+      "size": 9845
     },
     "aurora_diag.py": {
       "mtime_ns": 1781923576511580700,
