@@ -1,30 +1,6 @@
 {
-  "updated_at": 1782928414.051465,
+  "updated_at": 1782955811.80428,
   "events": [
-    {
-      "timestamp": 1782250666.2087984,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:52908812ed5f",
-      "axis": "X",
-      "summary": "Manual code change in aurora_governance_persistence_gateway.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.2108793,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:f202a14e40bf",
-      "axis": "X",
-      "summary": "Manual code change in aurora_grammar_engine.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.2128897,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:7004e5716859",
-      "axis": "X",
-      "summary": "Manual code change in aurora_hardware_io.py formed a new lineage branch"
-    },
     {
       "timestamp": 1782250666.2148619,
       "source": "aurora.boot",
@@ -1920,6 +1896,30 @@
       "id": "MC:4c1e15618b67",
       "axis": "X",
       "summary": "Manual code change in aurora_working_memory.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782955466.953501,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:9af0458431ff",
+      "axis": "X",
+      "summary": "Manual code change in aurora.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782955466.956597,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:5a88e2824496",
+      "axis": "X",
+      "summary": "Manual code change in aurora_curiosity_engine.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1782955466.9591112,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:79f321f84eb2",
+      "axis": "X",
+      "summary": "Manual code change in aurora_developmental_log.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {
