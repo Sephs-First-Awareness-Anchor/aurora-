@@ -9,6 +9,8 @@ Phases:
   3. Conversation turns — L0→L8 full pipeline via stdin
   4. Exploration cycles — autonomous reasoning
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
+
 
 import subprocess
 import sys

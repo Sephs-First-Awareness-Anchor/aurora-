@@ -509,7 +509,8 @@ class RuntimeConstraintGovernor:
             "task_profiles": sorted(_TASK_PROFILES.keys()),
         }
 
-    def constraint_profile(self):
+    def _unit_profile(self):
+        """Internal ConstraintProfile for regime/projection/representation views."""
         status = self.status()
         pressure_axes = dict((status.get("runtime_regime", {}) or {}).get("pressure_axes", {}) or {})
         return build_constraint_profile(
@@ -521,14 +522,55 @@ class RuntimeConstraintGovernor:
             pressure_axes=pressure_axes,
         )
 
+    def constraint_profile(self):
+        """
+        Engine contract: return the live ConstraintVector for this governor —
+        runtime axes scaled by empirical GovernorWeights (INV-11).
+        """
+        from aurora_constraint_engine import (
+            ConstraintVector as _EngineCV,
+            GovernorWeights as _GW,
+        )
+        status = self.status()
+        axes = dict(status.get("runtime_axes", {}) or {})
+        return _EngineCV(
+            X=max(1e-9, float(axes.get("X", 1.0) or 1.0) * _GW.X),
+            T=float(axes.get("T", 0.0) or 0.0) * _GW.T,
+            N=float(axes.get("N", 0.0) or 0.0) * _GW.N,
+            B=float(axes.get("B", 0.0) or 0.0) * _GW.B,
+            A=float(axes.get("A", 0.0) or 0.0) * _GW.A,
+        )
+
+    _MODE_REGISTER = {
+        "REFERENCE":  "observable",
+        "TRANSIENT":  "possible",
+        "PERSISTENT": "recurring",
+        "BOUNDED":    "remembered",
+        "AGENTIC":    "enacted",
+    }
+
     def runtime_regime(self) -> Dict[str, Any]:
-        return self.constraint_profile().runtime_regime()
+        from aurora_constraint_engine import GovernorWeights as _GW
+        regime = self._unit_profile().runtime_regime()
+        regime["governor_weight"] = _GW.AS_DICT.get(
+            regime.get("dominant_axis", "X"), _GW.X
+        )
+        return regime
 
     def language_projection(self) -> Dict[str, Any]:
-        return self.constraint_profile().language_projection()
+        proj = self._unit_profile().language_projection()
+        mode = self._unit_profile().runtime_regime().get("mode", "AGENTIC")
+        proj["existence_mode"] = mode
+        proj["language_register"] = self._MODE_REGISTER.get(mode, "enacted")
+        return proj
 
     def universal_representation(self) -> Dict[str, Any]:
-        rep = self.constraint_profile().universal_representation()
+        cv = self.constraint_profile()
+        rep = self._unit_profile().universal_representation()
+        rep["constraint_vector"] = {
+            "X": cv.X, "T": cv.T, "N": cv.N, "B": cv.B, "A": cv.A,
+        }
+        rep["runtime_regime"] = self.runtime_regime()
         rep["unit_state"] = self.status()
         return rep
 

@@ -338,3 +338,41 @@ clean claim -- "X can also be Y" (modal+also) often extracts no claim; negation 
 So the classifier is correct and complete; delivering marker-framed / corrective
 inputs to it is upstream claim-extraction + seed-loop-routing work (larger, core
 NLP), tracked as the follow-up.
+
+---
+
+## SEVEN-FLAG RESOLUTION (2026-07-02, external directive, verified-merged)
+
+Applied the SEVEN_FLAG_RESOLUTION_DIRECTIVE overlay (author-built on this branch's
+latest push, so it is my session work + seven-flag deltas -- verified by diff before
+applying; no session work lost). Phases:
+
+- P1 WarpField actuator registration: register each WarpCapable host under the
+  routing key it actually emits as demand.source (_warp_level_name()): dps ->
+  'dimensional_crystal', perception -> 'representation', braid -> 'braid_stream',
+  language_field -> 'comparison_type' (legacy aliases retained). Was: registry held
+  only 'dps'/'language_field', so every demand fell through to the dps fallback.
+- P2 quasiarch_observer import: flat import -> try/except fallback to
+  aurora_internal.quasiarch_observer; InteractionEngine now boots (no
+  '[INTERACTION] Unavailable').
+- P3 De-nest CPS SediMemory wiring in aurora.py (unconditional, not gated on
+  identity_field presence).
+- P4/P5 Engine-contract compliance (foundational_contract.py +
+  aurora_runtime_constraint_governor.py): constraint_profile() returns the engine
+  ConstraintVector; runtime_regime adds governor_weight; language_projection adds
+  existence_mode/language_register; universal_representation adds
+  constraint_vector/runtime_regime. Adapter profile moved to _unit_profile().
+- P6 DreamEpisodePack engine fields (constraint_signature/runtime_regime/
+  language_projection) + compiler engine anchors.
+- P7 ExpressionEcology axis coherence bonus (fitness * (1 + weight*0.15), weight from
+  GovernorWeights of the dominant axis climate).
+- P8 SentenceComposer sensory register bias (energy -> N-axis nudge, template-free).
+- P9 State hygiene: contradiction_ledger placeholder purged; authorship headers on 6
+  modules; removed root junk (.codex).
+
+VERIFIED: tests/_engine_integration_test.py 9/9, tests/_pipeline_test.py 6/6, boot
+actuator registry = all six routing keys, no [INTERACTION] Unavailable, L0-L8 guard
+green, live turn battery + this session's learning mechanisms intact.
+
+(Directive's registry ids FIX-A007/FIX-I004 target the read-only aurora-preemptive-
+hardening skill registry; noted here to avoid collision with this file's FIX-A007.)

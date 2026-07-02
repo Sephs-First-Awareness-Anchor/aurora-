@@ -13,6 +13,8 @@ Real signals:
   genealogy/links.json         — constraint link depth and per-axis relief stats
   aurora_state.json            — evolutionary state
 """
+# Authors: Sunni (Sir) Morningstar & Cael Devo
+
 
 import json
 import os

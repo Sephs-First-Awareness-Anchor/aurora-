@@ -1,16 +1,16 @@
 {
   "conscious_frame": {
-    "coherence": 0.45,
+    "coherence": 0.986,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.4546,
+      "intensity": 0.8399,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "A raven is not a fish.",
+      "present_anchor": "Explain quantum chromodynamics.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -18,26 +18,26 @@
       "present_tone": "neutral",
       "reinforcement_hint": 0.1047
     },
-    "processing_mode": "blended",
-    "readiness": 0.5613,
+    "processing_mode": "reactive",
+    "readiness": 0.8292,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4565,
+      "intensity": 0.7773,
       "label": "steady"
     },
-    "timestamp": 1782955853.580995
+    "timestamp": 1783021752.7244751
   },
-  "saved_at": 1782955853.5811996,
+  "saved_at": 1783021752.7247179,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "A raven is not a fish.",
+      "present_anchor": "Explain quantum chromodynamics.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -85,16 +85,11 @@
         "axis": "X",
         "intensity": 1.0,
         "label": "calm"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.821,
-        "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4565,
+      "intensity": 0.7773,
       "label": "steady"
     }
   }

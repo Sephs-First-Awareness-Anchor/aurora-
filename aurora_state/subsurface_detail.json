@@ -1,7 +1,7 @@
 {
   "action_bias_candidates": [],
   "candidate_interpretations": [],
-  "coherence": 0.45,
+  "coherence": 0.986,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
@@ -67,9 +67,9 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.5613,
+  "readiness": 0.8292,
   "recalled_fragments": [
-    "A raven is not a fish."
+    "Explain quantum chromodynamics."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -78,7 +78,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1782955853.581546,
+  "saved_at": 1783021752.7251112,
   "sub_crests": [
     {
       "axis": "X",
@@ -119,11 +119,6 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.821,
-      "label": "surface"
     }
   ]
 }

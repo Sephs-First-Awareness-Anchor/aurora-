@@ -19819,6 +19819,9 @@ def boot_aurora(
         _warp_field = _WarpField()
         _dps_sys = getattr(dimensional, 'dps', None)
         if _dps_sys is not None:
+            # Register under the routing key the host actually emits as
+            # demand.source (its _warp_level_name()), plus the legacy alias.
+            _warp_field.register_warp_capable('dimensional_crystal', _dps_sys)
             _warp_field.register_warp_capable('dps', _dps_sys)
         _install_wf(_warp_field)
         systems['warp_field'] = _warp_field
@@ -20232,16 +20235,18 @@ def boot_aurora(
                 print("  [IDENTITY] Boot pressure primed")
         except Exception:
             pass
-        # Wire L3.5 → L3: DMC crystal promotions sedimented (Section 9)
+    # Wire L3.5 → L3: DMC crystal promotions sedimented (Section 9).
+    # Unconditional — this wiring must never depend on identity_field presence.
+    if systems.get('sedimemory') is not None:
         try:
             dimensional.connect_sedimemory(systems['sedimemory'])
         except Exception:
             pass
-        if systems.get('contradiction_ledger') is not None and hasattr(dimensional, 'connect_contradiction_ledger'):
-            try:
-                dimensional.connect_contradiction_ledger(systems['contradiction_ledger'])
-            except Exception:
-                pass
+    if systems.get('contradiction_ledger') is not None and hasattr(dimensional, 'connect_contradiction_ledger'):
+        try:
+            dimensional.connect_contradiction_ledger(systems['contradiction_ledger'])
+        except Exception:
+            pass
     if verbose: print("[OK]")
 
     # Layer 5: Expression & Perception
@@ -20262,6 +20267,15 @@ def boot_aurora(
     if systems.get('contradiction_ledger') is not None and hasattr(perception, 'connect_contradiction_ledger'):
         try:
             perception.connect_contradiction_ledger(systems['contradiction_ledger'])
+        except Exception:
+            pass
+    # Register as a WARP actuator under the routing key it emits as
+    # demand.source (its _warp_level_name() = 'representation').
+    if systems.get('warp_field') is not None:
+        try:
+            systems['warp_field'].register_warp_capable('representation', perception)
+            if verbose:
+                print("  [WARP] ExpressionPerceptionEngine registered as actuator ('representation')")
         except Exception:
             pass
     _register_layer(systems, 'L5', 'Expression & Perception', 'perception', perception, {
@@ -21171,6 +21185,9 @@ def boot_aurora(
                 try:
                     _wf_lf = systems.get('warp_field')
                     if _wf_lf is not None and hasattr(_wf_lf, 'register_warp_capable'):
+                        # Routing key = its _warp_level_name() ('comparison_type'),
+                        # plus the legacy alias for status/back-compat.
+                        _wf_lf.register_warp_capable('comparison_type', _lf_boot)
                         _wf_lf.register_warp_capable('language_field', _lf_boot)
                     if hasattr(_lf_boot, 'set_warp_genealogy'):
                         _lf_boot.set_warp_genealogy(systems.get('genealogy'))
