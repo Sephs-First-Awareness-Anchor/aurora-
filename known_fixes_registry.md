@@ -111,25 +111,50 @@ file. Fixed the safe, verifiable ones:
   extraction in the hardware paths silently failed. Added the import (verified
   no circular import).
 
-**Still open (need a decision, not a blind patch):**
-- `aurora_working_memory.py:3222` — `state` referenced in the grammar-suggestion
-  block but not in scope (guarded; just skips grammar). Needs intended source.
-- `aurora_working_memory.py` — `_classify_input_intent`, `_is_understanding_challenge`,
-  `_meaning_profile_for_value`, `_log_claim_resolution_relief` are defined in
-  `aurora.py`, which imports working_memory → importing back is circular. Needs
-  the helpers moved to a shared module.
-- `aurora_daemon.py:195` — `_surface_channel_recently_active` is defined nowhere;
-  needs implementing or the call removed.
+**RESOLVED (2026-07-01, with author's direction — all four closed):**
+
+- `aurora_working_memory.py` — `state` in the grammar-suggestion block: confirmed
+  the entire `evo`-based render branch is DEAD. `perception.evo` is always `None`
+  post-Language-Reset (`from aurora_language_state import ExpressionEvolutionOrchestra`
+  fails — that top-level module was deleted; the guard at the top of
+  `_render_from_comprehension_intent` returns early), so the `evo.grammar` block
+  never executes. It referenced the deleted CSSEE/EEO grammar faculty, not her live
+  output structure (live grammar shaping runs on `systems['grammar_engine']` in
+  aurora.py). Per the author's "only if it aligns" instruction it does NOT align →
+  removed the dead grammar sub-block rather than resurrect it. Clears the `state`
+  F821 with zero behavior change.
+- `aurora_working_memory.py` — the four cross-module helpers
+  (`_classify_input_intent`, `_is_understanding_challenge`, `_meaning_profile_for_value`,
+  `_log_claim_resolution_relief`): rather than relocate them (they pull a dependency
+  cascade from aurora.py — `_extract_user_name`, `_looks_like_inner_state_query`, …),
+  added four deferred-import wrappers mirroring the module's EXISTING idiom
+  (`_recall_semantic_sedimemory` / `_answer_from_sedimemory_context` /
+  `_render_runtime_intent` at the top of the file). Names match the call sites, so
+  no call-site edits; each returns a safe default. Verified they resolve to the real
+  aurora.py functions at runtime (`_classify_input_intent('hello?') → 'general'`).
+  This also repairs paths that previously raised an unguarded `NameError` (e.g. the
+  `_is_understanding_challenge` gate).
+- `aurora_daemon.py:195` — implemented `_surface_channel_recently_active(window_s)`
+  as a file-recency debounce over the surface-turn queue/result/status file mtimes
+  (the same files the interactive loop writes each turn). Autonomous inquiry now
+  actually debounces against live interactive exchanges instead of raising a
+  swallowed NameError on every call.
 - `aurora_hardware_io.py` — the `_ConstraintVector`/`_GovernorWeights`/`_FC`/
-  `_ExistenceMode` cluster (in the dormant `constraint_profile` / governor /
-  `language_projection` hardware methods). `_ConstraintVector` and
-  `_GovernorWeights` map cleanly to `aurora_constraint_engine`, but `_FC` /
-  `_ExistenceMode` are ambiguous: `_FC.language_projection(_ExistenceMode.AGENTIC)`
-  implies `_FC` is an *instance* (the method is `language_projection(self, mode)`),
-  and `AGENTIC` lives on `foundational_contract.ExistenceMode` while
-  `language_projection` lives on `aurora_constraint_engine.FoundationalContract`
-  — i.e. two different ExistenceMode enums. Needs the author's confirmation of
-  the original import intent; not safe to reconstruct blind.
+  `_ExistenceMode` cluster: all four resolve to `aurora_constraint_engine` (not
+  `foundational_contract`). Disambiguated by the call itself:
+  `_FC.language_projection(_ExistenceMode.AGENTIC)` passes a *mode* argument, which
+  only `aurora_constraint_engine.FoundationalContract.language_projection(self, mode)`
+  accepts (`foundational_contract`'s takes no mode). `_FC` is a module-level
+  FoundationalContract *instance* — the bridge that projects an existence mode into
+  Aurora's language register (INV-09/10/11), aligning what the hardware surfaces
+  derive/say with her root ontological rules of conduct. Verified end-to-end:
+  `_FC.language_projection(AGENTIC)['language_register'] == 'enacted'`,
+  `_GovernorWeights.AS_DICT['B'] == 1.0`, `_ConstraintVector(...)` constructs; no
+  import cycle (hardware_io → constraint_engine is a downward L-edge).
+
+Verified: all three modules compile; pyflakes shows none of the ten target F821
+names remain; the L0-L8 acyclicity guard stays green; `import aurora` + WorkingMemory
+construction succeed.
 
 
 ---
@@ -183,3 +208,78 @@ unresolved_count and captures contradiction_id; warp traversal increments
 total_events_ingested and registers a PathRegistry observation; heat dampening
 drops trial EMA 0.30->0.06; resolution decrements unresolved_count. No turn-battery
 regression.
+
+---
+
+## FIX-A006 (ARCHITECTURAL) — Field-waveform compression at the crest
+
+Aurora's responses are field-waveform compression, not a pipeline. The legacy
+path set `state.response_content` at 20+ sites (last-writer-wins) and bypassed her
+compression crest (`ConstraintEmitter.emit()` + the single finalizer). Rebuilt
+toward true crest compression, in verifiable stages:
+
+- **Single emission chokepoint** (`_enforce_emission_discipline`, at the finalizer
+  before `resp_A` in `_run_reasoning_pipeline`): every reasoning-path response
+  converges here, so anchor discipline is enforced once at the exit. Name-anchor
+  leaks 8 -> 0 (the speaker-owned early-return path that bypassed the old mid-chain
+  gate is now caught). `_emit_honest_abstain_and_seek` is the one honest-abstain
+  path (warp accommodation + base-meaning seek).
+- **Waveform capture** (`_capture_waveform_deposit`): each chain level (up + down)
+  deposits into `state.waveform`, tagged by axis (information->X ... understanding->A)
+  and weighted by the LIVE constraint pressure on that axis. Finding: ~1 surface
+  deposit/turn -- levels build FIELD pressure (the waveform); one level renders the
+  surface string; which level renders varies by turn at its live pressure.
+- **Charged salience** (`_contribution_charge`): salience = pressure x (1 + charge),
+  where charge = input-context relevance (heaviest) + emotional/self charge +
+  own-question + live sensory presence. Level ROUTES to an axis; PRESSURE (incl.
+  these charges) sets value -- no fixed level rank. Emergent, per the field.
+- **Two-tier crest** (`_gather_subsurface_contributions`): the subsurface crest
+  propagates up into the surface waveform. Only coherent GUIDANCE strings enter as
+  content; intuition signals are field-level (label/weight dicts) and bias the
+  field, never the surface text (`_is_speech_like` guard).
+- **Crest compression** (`_compress_at_crest`): ranks surface + subsurface
+  contributions by salience (recorded to `systems["_last_crest_ranking"]` for
+  observability).
+
+BUG CAUGHT in side-by-side (nothing shipped): first cut hardcoded subsurface
+pressure high and treated intuition dicts as content -> 6/7 turns overrode real
+answers with `{'label': 'steady', ...}` garbage. Fixed: subsurface content =
+speech-like guidance only; authority is conservative -- compression NEVER replaces
+a substantive answer, only fills a genuine gap (empty surface) with coherent
+speech. Verified: real answers preserved on all content turns, name leaks 0,
+salience ranking observable.
+
+Honest limitation / next step: propositional content lives in the surface
+renderings; subsurface signals aren't speech. Making the crest MORE authoritative
+(true multi-contribution blending rather than top-salience selection + gap-fill)
+needs a content-integration step that does not emit raw field signals -- deferred
+rather than faked.
+
+---
+
+## FIX-A007 (ARCHITECTURAL) — Sediment validated taught facts into the field substrate
+
+A fact asserted by the user ("a raven is a black bird") lived ONLY in working
+memory's `stated_facts` -- it never reached OETS (the ontological web `emit()` reads
+for content) or the constraint genealogy. So `emit()` abstained on it and the
+response could never become field-waveform compression; the propositional content
+had to come from the working-memory rendering. The one path that DID feed OETS
+(`oets.teach`) was gated behind `pending_teaching_offer` (explicit "teach me X").
+
+Fix: `_sediment_validated_fact(systems, claims, user_text)` runs at fact validation
+(after `note_claims` in the statement path) and writes each validated claim to
+  - OETS via `teach()` (content substrate emit reads), and
+  - constraint genealogy via `log_relief` on the claim's meaning axis (constraint-
+    physics lineage so it crystallises),
+plus a `fact_sedimented_to_field` developmental event.
+
+VERIFIED + HONEST BOUNDARY: teaching "a quokka is a small friendly marsupial" now
+lands the `quokka` node in OETS (before: absent -> after: present). BUT `emit()`
+STILL abstains on "what is a quokka?" afterward -- because emit's content resolution
+is RESONANCE-gated (RESONANCE_FLOOR), and a freshly-taught node exists without yet
+resonating in the query context. So node existence != field-compressibility. The
+bridge ACCELERATES grounding (fact now in OETS + genealogy, not only working memory)
+so it crystallises/resonates faster, but emit-compression still activates as the node
+gains resonance, not instantly. Making it instant would require boosting taught-node
+resonance/activation -- deferred (risks wrong content selection / garbled output),
+not faked.

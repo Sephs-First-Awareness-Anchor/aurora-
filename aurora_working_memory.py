@@ -49,6 +49,44 @@ def _render_runtime_intent(systems, core_claim, **kwargs):
     except Exception:
         return core_claim or ""
 
+
+# These four helpers live in aurora.py (the top-level module), which imports this
+# module -- so a static import back would be circular.  aurora.py is fully loaded
+# by the time any WorkingMemory method runs, so they are resolved lazily here,
+# mirroring the deferred-wrapper pattern above.  Each returns a safe default if
+# aurora is somehow unavailable, so the call sites never raise NameError.
+def _classify_input_intent(text, **kwargs):
+    try:
+        from aurora import _classify_input_intent as _fn
+        return _fn(text, **kwargs)
+    except Exception:
+        return ""
+
+
+def _is_understanding_challenge(text):
+    try:
+        from aurora import _is_understanding_challenge as _fn
+        return _fn(text)
+    except Exception:
+        return False
+
+
+def _meaning_profile_for_value(value):
+    try:
+        from aurora import _meaning_profile_for_value as _fn
+        return _fn(value)
+    except Exception:
+        return {}
+
+
+def _log_claim_resolution_relief(genealogy, **kwargs):
+    try:
+        from aurora import _log_claim_resolution_relief as _fn
+        return _fn(genealogy, **kwargs)
+    except Exception:
+        return None
+
+
 class WorkingMemory:
     """
     Per-session short-term memory that tracks what's being talked about,
@@ -3220,14 +3258,6 @@ class WorkingMemory:
 
                 evo._last_draft = draft
                 final_text = str(draft.selected_text() or '').strip()
-
-                if evo.grammar is not None and final_text:
-                    try:
-                        suggestion = evo.grammar.suggest_structure(final_text, context_text=clean, tone=getattr(state, "response_tone", "neutral"), passion=getattr(state, "emotional_state", {}).get("passion", "observant"), drive=getattr(state, "emotional_state", {}).get("drive", "steady"))
-                        if suggestion:
-                            final_text = str(suggestion.get('applied_text', '') or final_text).strip()
-                    except Exception:
-                        pass
             else:
                 final_text = expression_candidate or clean
 

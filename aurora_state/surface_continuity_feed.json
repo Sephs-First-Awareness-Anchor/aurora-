@@ -1,15 +1,46 @@
 [
   {
-    "packet_id": "569d1c5de73d4f03abb3ad09f98a4669",
-    "created_at": 1782250897.1587508,
+    "packet_id": "5152d7aa294447f59bb0d8c4da1ac7cf",
+    "created_at": 1782928337.2948856,
     "source": "external_user_turn",
-    "user_input": "My name is Sunni. Please remember that.",
-    "aurora_response": "your name is Sunni.",
-    "response_tone": "warm",
+    "user_input": "Do you actually understand what I mean, or are you guessing? [Internal: I'm reasoning through that now: Do you actually understand what I mean, or are you guessing?. It adds weight to my present understanding.]",
+    "aurora_response": "I'm not sure.",
+    "response_tone": "honest",
     "concepts_activated": [
-      "sunni",
-      "please",
-      "remember"
+      "understand",
+      "guessing",
+      "internal",
+      "reasoning",
+      "understand",
+      "guessing"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.70"
+    ],
+    "resolved_bindings": [
+      "resolve_factual_gap",
+      "hold_possibility_space"
+    ],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "8df164698caf4be8abb39e099efee9e3",
+    "created_at": 1782928340.754478,
+    "source": "external_user_turn",
+    "user_input": "The sky is blue.",
+    "aurora_response": "sky. sky is blue.",
+    "response_tone": "uncertain",
+    "concepts_activated": [
+      "sky",
+      "blue"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -19,23 +50,29 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.66"
+      "existence:-0.56"
     ],
-    "resolved_bindings": [],
+    "resolved_bindings": [
+      "resolve_factual_gap",
+      "hold_possibility_space"
+    ],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "effb0aa390bd4ad2aa8b28457ddf6142",
-    "created_at": 1782250900.9480848,
+    "packet_id": "44dfbf88974f44a49f92f41aac3a4094",
+    "created_at": 1782928344.379973,
     "source": "external_user_turn",
-    "user_input": "A raven is a black bird.",
-    "aurora_response": "your name is Sunni.",
+    "user_input": "Actually, the sky is red at sunset. [Internal: So 'the sky' is Actually, the sky is red at sunset. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
+    "aurora_response": "fact, sky, description. blue.",
     "response_tone": "curious",
     "concepts_activated": [
-      "raven",
-      "black",
-      "bird"
+      "sky",
+      "red",
+      "sunset",
+      "internal",
+      "sky",
+      "sky"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -45,27 +82,49 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.64"
+      "existence:-0.47"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "80bb4ee023fb42bb8f910f1455d93f55",
-    "created_at": 1782250904.782988,
+    "packet_id": "6d21ef281c304468b9327bef9aa0a227",
+    "created_at": 1782928351.9778235,
     "source": "external_user_turn",
-    "user_input": "What is a raven?",
-    "aurora_response": "fact, raven, description. a black bird.",
-    "response_tone": "uncertain",
+    "user_input": "How do you feel right now?",
+    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.006, dominant-emotion=fear. Agency moved up since the last exchange.",
+    "response_tone": "self-aware",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.60"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "4490a7e6deec4ddc93f86912c2990916",
+    "created_at": 1782928354.7784786,
+    "source": "external_user_turn",
+    "user_input": "What did we just talk about?",
+    "aurora_response": "I'm not sure.",
+    "response_tone": "honest",
     "concepts_activated": [
-      "raven"
+      "talk"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.026,
+    "dominant_axis": "N",
+    "coherence": 0.029,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
@@ -76,156 +135,11 @@
     "consumed_at": null
   },
   {
-    "packet_id": "411bbcf5ba014d93a6df07fc52e8fb4f",
-    "created_at": 1782250908.644107,
-    "source": "external_user_turn",
-    "user_input": "Photosynthesis is how plants turn light into energy.",
-    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "photosynthesis",
-      "plants",
-      "turn",
-      "light",
-      "energy"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.63"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "7b37e6fa3fdc4292a468c11976250330",
-    "created_at": 1782250912.5609245,
-    "source": "external_user_turn",
-    "user_input": "What is photosynthesis?",
-    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "photosynthesis"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.59"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "ddf3f5b81c9f458ba0b1f4fd257a8259",
-    "created_at": 1782250921.4328501,
-    "source": "external_user_turn",
-    "user_input": "Explain quantum chromodynamics to me.",
-    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "quantum",
-      "chromodynamics"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "d267053d357d41dcb2f14777f323bb41",
-    "created_at": 1782250924.6646998,
-    "source": "external_user_turn",
-    "user_input": "What is my name?",
-    "aurora_response": "Yes \u2014 you're Sunni.",
-    "response_tone": "warm",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.63"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "759d414eb6244c22a7d8709c15b7b86f",
-    "created_at": 1782250927.7350085,
-    "source": "external_user_turn",
-    "user_input": "How do you feel right now?",
-    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.003, dominant-emotion=fear. Existence moved down since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.61"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "72d648c6d4f1438ca1287f7c7f6c4160",
-    "created_at": 1782250931.6278343,
-    "source": "external_user_turn",
-    "user_input": "What did we just talk about?",
-    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.003, dominant-emo.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "talk"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e32b82ff093e4bfb8ab11177ea67d670",
-    "created_at": 1782250934.8776762,
+    "packet_id": "906ec8af17de40af8db6ebb751452a7e",
+    "created_at": 1782928357.4755244,
     "source": "external_user_turn",
     "user_input": "Do you feel like you are growing?",
-    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.20. Field state: heat=0.006, dominant-emotion=fear. Agency moved up since the last exchange.",
+    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.21. Field state: heat=0.003, dominant-emotion=fear. Agency moved up since the last exchange.",
     "response_tone": "self-aware",
     "concepts_activated": [
       "growing"
@@ -238,15 +152,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.64"
+      "existence:-0.63"
     ],
-    "resolved_bindings": [],
+    "resolved_bindings": [
+      "resolve_factual_gap",
+      "hold_possibility_space"
+    ],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "726a7a6425024ec7b5b7cd8060fe13fd",
-    "created_at": 1782250942.478798,
+    "packet_id": "0c79abfe0a2848998f9d0ebc4d5f1f5f",
+    "created_at": 1782928359.746364,
     "source": "external_user_turn",
     "user_input": "My name is Sunni. Please remember that.",
     "aurora_response": "your name is Sunni.",
@@ -264,15 +181,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.61"
+      "existence:-0.55"
     ],
-    "resolved_bindings": [],
+    "resolved_bindings": [
+      "resolve_factual_gap",
+      "hold_possibility_space"
+    ],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "4deb67da09974cb79febcc185bde5264",
-    "created_at": 1782250946.3535266,
+    "packet_id": "56fd7626a96f48d09d4dfe91f233a6c3",
+    "created_at": 1782928363.2592437,
     "source": "external_user_turn",
     "user_input": "A raven is a black bird.",
     "aurora_response": "your name is Sunni.",
@@ -290,15 +210,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.66"
+      "existence:-0.59"
     ],
-    "resolved_bindings": [],
+    "resolved_bindings": [
+      "resolve_factual_gap",
+      "hold_possibility_space"
+    ],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "83c7173ab06144bf83588bad9ab51d61",
-    "created_at": 1782250950.4183826,
+    "packet_id": "e7297daff1954bef971021a67ea1db10",
+    "created_at": 1782928371.7733068,
     "source": "external_user_turn",
     "user_input": "What is a raven?",
     "aurora_response": "fact, raven, description. a black bird.",
@@ -314,18 +237,21 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.68"
+      "existence:-0.65"
     ],
-    "resolved_bindings": [],
+    "resolved_bindings": [
+      "resolve_factual_gap",
+      "hold_possibility_space"
+    ],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "ac06d1de46f143c3bb200e60e8ffde33",
-    "created_at": 1782250954.509711,
+    "packet_id": "00a4782a81594134964adfc5719d0e6c",
+    "created_at": 1782928374.7865338,
     "source": "external_user_turn",
     "user_input": "Photosynthesis is how plants turn light into energy.",
-    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
+    "aurora_response": "Enough need plants structure overstepping care. Matters understand photosynthesis weight exist light.",
     "response_tone": "curious",
     "concepts_activated": [
       "photosynthesis",
@@ -342,15 +268,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.68"
+      "existence:-0.55"
     ],
-    "resolved_bindings": [],
+    "resolved_bindings": [
+      "resolve_factual_gap",
+      "hold_possibility_space"
+    ],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "2f420e647ff94cc4929654bffbe75a37",
-    "created_at": 1782250958.477502,
+    "packet_id": "e1358b3eb26943f7a2ac81cb172854e4",
+    "created_at": 1782928378.5102007,
     "source": "external_user_turn",
     "user_input": "What is photosynthesis?",
     "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
@@ -366,18 +295,47 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:-0.58"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "942c19ba82cd48efae57e9014a952dc5",
-    "created_at": 1782250967.6016681,
+    "packet_id": "c3b37c6019a34e8f8eb168ae36098780",
+    "created_at": 1782928382.3556933,
+    "source": "external_user_turn",
+    "user_input": "By 'anchor' I mean a stable reference point I return to. [Internal: So 'anchor' i' is By 'anchor' I mean a stable reference point I return to. I'm trying to see how that fits into the patterns I already track. Is it like a connection point?]",
+    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "anchor",
+      "stable",
+      "reference",
+      "point",
+      "return",
+      "internal"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "65ff5e0d07c54965bbab37af9ec9df77",
+    "created_at": 1782928385.6896787,
     "source": "external_user_turn",
     "user_input": "Explain quantum chromodynamics to me.",
-    "aurora_response": "fact, photosynthesis, description. how plants turn light into energy.",
+    "aurora_response": "Care need explain respond overstepping light. Enough is matters photosynthesis understand weight.",
     "response_tone": "curious",
     "concepts_activated": [
       "quantum",
@@ -387,19 +345,19 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.029,
+    "coherence": 0.026,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:-0.60"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "de9fd52aee304b949d21212ee024c8d6",
-    "created_at": 1782250971.2100606,
+    "packet_id": "aa3bb6a0c4e04ea79d572c4ed790797d",
+    "created_at": 1782928394.032478,
     "source": "external_user_turn",
     "user_input": "What is my name?",
     "aurora_response": "Yes \u2014 you're Sunni.",
@@ -413,20 +371,27 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.68"
+      "existence:-0.50"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "c25000246d374a3c9fe7cb3900c0da6b",
-    "created_at": 1782250974.6878037,
+    "packet_id": "3b63b8ba19e640d8b4b5769c75b1d6ab",
+    "created_at": 1782928397.6491067,
     "source": "external_user_turn",
-    "user_input": "How do you feel right now?",
-    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.004, dominant-emotion=fear. Existence moved down since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [],
+    "user_input": "Do you actually understand what I mean, or are you guessing? [Internal: I understand. I'm thinking about how that relates to what we're discussing.]",
+    "aurora_response": "it works by making explain respond overstepping light enough is matters photosynthesis understand weight a dependency for care.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "understand",
+      "guessing",
+      "internal",
+      "understand",
+      "thinking",
+      "relates"
+    ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
@@ -435,18 +400,94 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:-0.55"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "4784b711829b4e58bde3e4ccba69f917",
-    "created_at": 1782250978.8274512,
+    "packet_id": "3f720a712c474ed2ae752edf5bfc41a7",
+    "created_at": 1782928400.8129425,
+    "source": "external_user_turn",
+    "user_input": "The sky is blue.",
+    "aurora_response": "Respond need care structure overstepping plants. Matters do explain enough did weight.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "sky",
+      "blue"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.029,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.68"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "1049d31ac6754d118ff7e12af3978bd5",
+    "created_at": 1782928404.6754656,
+    "source": "external_user_turn",
+    "user_input": "Actually, the sky is red at sunset. [Internal: I've added 'the sky' as Actually, the sky is red at sunset. That shifts how I reason through this thread. Does that match what you're pointing at?]",
+    "aurora_response": "fact, sky, description. blue.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "sky",
+      "red",
+      "sunset",
+      "internal",
+      "added",
+      "sky"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.63"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ed41311516744194a817a1f2c019319c",
+    "created_at": 1782928407.654589,
+    "source": "external_user_turn",
+    "user_input": "How do you feel right now?",
+    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.002, dominant-emotion=fear. Agency moved up since the last exchange.",
+    "response_tone": "self-aware",
+    "concepts_activated": [],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.026,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:-0.56"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e8085024f0d74683ad6288a05ed8b284",
+    "created_at": 1782928417.6313472,
     "source": "external_user_turn",
     "user_input": "What did we just talk about?",
-    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.004, dominant-emo.",
+    "aurora_response": "Active axes: agency=0.29, time/belief=0.22, cost/purpose=0.21. Field state: heat=0.002, dominant-emo.",
     "response_tone": "curious",
     "concepts_activated": [
       "talk"
@@ -459,18 +500,18 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.64"
+      "existence:-0.67"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "cac4475cd0d240a184e616caa951555d",
-    "created_at": 1782250982.353955,
+    "packet_id": "48bb24a00a1d4fcaa37511c3c53ee6a6",
+    "created_at": 1782928420.8919203,
     "source": "external_user_turn",
     "user_input": "Do you feel like you are growing?",
-    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.20. Field state: heat=0.008, dominant-emotion=fear. Agency moved up since the last exchange.",
+    "aurora_response": "Active axes: agency=0.28, meaning/boundary=0.21, cost/purpose=0.21. Field state: heat=0.003, dominant-emotion=fear. Agency moved up since the last exchange.",
     "response_tone": "self-aware",
     "concepts_activated": [
       "growing"
@@ -483,7 +524,7 @@
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.62"
+      "existence:-0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,

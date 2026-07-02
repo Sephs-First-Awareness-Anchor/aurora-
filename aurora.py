@@ -4490,6 +4490,563 @@ def _render_user_name_grounding(
     return str(rendered or WorkingMemory._data_to_minimal_speech(core_claim, 'precise', 'neutral')).strip()
 
 
+def _input_references_anchor(inp: str, working_memory) -> bool:
+    """True when the current input is a genuine recall/callback or explicitly
+    names the grounding anchor -- i.e. the turn really IS about the anchor, so
+    surfacing it is correct rather than a leak."""
+    low = str(inp or "").strip().lower()
+    if not low or working_memory is None:
+        return False
+    try:
+        utts = getattr(working_memory, "recent_user_utterances", None)
+        if utts:
+            cur = dict(utts[0] or {})
+            if cur.get("is_callback") or str(cur.get("intent", "")) == "recall_question":
+                return True
+    except Exception:
+        pass
+    if any(p in low for p in (
+        "my name", "who am i", "what did i", "what's my", "you said",
+        "remember", "recall", "earlier", "just told", "just said",
+    )):
+        return True
+    anchor = getattr(working_memory, "last_response_anchor_claim", {}) or {}
+    for key in ("subject", "object", "value"):
+        v = str(anchor.get(key, "") or "").strip().lower()
+        if len(v) > 2 and v in low:
+            return True
+    return False
+
+
+def _response_is_leaked_anchor(user_text: str, response: str, working_memory) -> bool:
+    """True when `response` is the internal grounding anchor bleeding into output
+    instead of answering the current input.
+
+    An anchor is internal grounding: it biases focus and enables genuine recall /
+    callbacks, but it must never BE the reply to input that neither references it
+    nor asks to recall it.  Suppressing a leaked anchor lets the turn fall through
+    to the honest warp-abstain, which then actively seeks the base meaning it
+    lacked (rather than parroting the stale anchor).
+    """
+    if working_memory is None:
+        return False
+    resp = str(response or "").strip().lower()
+    inp = str(user_text or "").strip().lower()
+    if not resp or not inp:
+        return False
+    # The turn genuinely IS about the anchor -> surfacing it is correct.
+    if _input_references_anchor(inp, working_memory):
+        return False
+    # Stored user identity is a persistent grounding anchor too -- it leaks the
+    # same way: the name surfacing at input that never asked about it, even when
+    # the *current* claim-anchor has moved on to something else. (Genuine "what is
+    # my name" turns were already let through by _input_references_anchor above.)
+    try:
+        stored_name = str(working_memory.get_stated_fact("user", "name") or "").strip().lower()
+    except Exception:
+        stored_name = ""
+    if (
+        stored_name and len(stored_name) > 1
+        and stored_name in resp and stored_name not in inp
+        and (len(resp) <= 40 or "name" in resp)
+    ):
+        return True
+    anchor = getattr(working_memory, "last_response_anchor_claim", {}) or {}
+    if not anchor:
+        return False
+    anchor_val = str(anchor.get("object", "") or anchor.get("value", "") or "").strip().lower()
+    anchor_subj = str(anchor.get("subject", "") or "").strip().lower()
+    # Input names neither the anchor's value nor its subject (already established
+    # by _input_references_anchor, but re-checked defensively for the value form).
+    if (len(anchor_val) > 2 and anchor_val in inp) or (len(anchor_subj) > 2 and anchor_subj in inp):
+        return False
+    try:
+        anchor_txt = str(working_memory._claim_to_text(anchor) or "").strip().lower()
+    except Exception:
+        anchor_txt = ""
+    resp_carries_anchor = (
+        (len(anchor_val) > 2 and anchor_val in resp) or
+        (bool(anchor_txt) and (anchor_txt in resp or resp in anchor_txt))
+    )
+    return resp_carries_anchor
+
+
+def _seed_abstained_gap(user_text: str, systems) -> None:
+    """A gap asked or inferred of her must have its BASE MEANING sought on FIRST
+    contact -- not gated on recurrence.  Seed it into the in-process channels the
+    subsurface curiosity/study loop consumes (systems["_abstained_gaps"] +
+    systems["_open_loops"]) so she reaches for what she doesn't know instead of
+    dropping it.  (Recurrence of the deeper signature drives alternative
+    conceptual interpretations -- a separate, deeper layer.)
+    """
+    subject = str(user_text or "").strip()
+    if not subject or not isinstance(systems, dict):
+        return
+    try:
+        gaps = systems.setdefault("_abstained_gaps", [])
+        if isinstance(gaps, list) and not any(
+            isinstance(g, dict) and str(g.get("subject", "")) == subject for g in gaps
+        ):
+            gaps.append({"subject": subject, "origin": "surface_abstain", "sought": False})
+            gaps[:] = gaps[-24:]
+            systems["_base_meanings_sought"] = int(systems.get("_base_meanings_sought", 0) or 0) + 1
+            try:
+                from aurora_developmental_log import record_developmental_event
+                record_developmental_event(
+                    systems, "active_seeking_engaged",
+                    "sought the base meaning of an unmet gap on first contact",
+                )
+            except Exception:
+                pass
+        loops = systems.setdefault("_open_loops", [])
+        if isinstance(loops, list):
+            loops.append({"tension": f"unmet base meaning: {subject[:80]}", "source": "abstain"})
+            loops[:] = loops[-40:]
+    except Exception:
+        pass
+
+
+def _emit_honest_abstain_and_seek(user_text: str, systems, state) -> None:
+    """The single honest-abstain path: confess the gap to warp (universal
+    accommodation), seed the base meaning for active seeking on first contact, and
+    emit the constraint-native abstain. Used both mid-chain and at the emission
+    chokepoint so every gap is treated identically -- warp + seek + honest surface,
+    never a manufactured claim (the FGAE/SIC fallback was removed in the Reset)."""
+    try:
+        from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
+        _warp_guard(
+            source="expression", layer="articulation",
+            trigger=_WT.MISSING_REPRESENTATION, unresolved_text=str(user_text or ""),
+            severity=0.55, persistence_key=str(user_text or "")[:48],
+        )
+    except Exception:
+        pass
+    _seed_abstained_gap(user_text, systems)
+    _abstain = ""
+    try:
+        _emitter = systems.get("constraint_emitter") if isinstance(systems, dict) else None
+        if _emitter is not None:
+            from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
+            _gp = getattr(state, "parsed", {}) or {}
+            _gif = _IF(
+                text=str(user_text or ""),
+                is_question=bool(_gp.get("is_question", False)),
+                is_directed=True,
+                is_self_referential=bool(_gp.get("is_self_referential", False)),
+            )
+            _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
+            _ares = _emitter._emit_abstain(_gctx)
+            _abstain = str(getattr(_ares, "text", "") or "").strip()
+    except Exception:
+        _abstain = ""
+    state.response_content = _abstain
+    state.response_tone = "honest"
+    state.response_confidence = 0.4
+    state.response_src = "constraint_abstain"
+    if isinstance(systems, dict):
+        systems["_preserve_literal_response_once"] = True
+
+
+def _enforce_emission_discipline(user_text: str, systems, state) -> None:
+    """SINGLE EMISSION CHOKEPOINT. Every candidate response converges here before
+    resp_A is built, so anchor discipline is enforced once, at the exit -- a leaked
+    grounding anchor is suppressed regardless of which path (chain step, intent
+    handler, post-processing) produced it. If nothing genuine remains, fall through
+    to the honest abstain + active seek. Nothing outputs without passing this gate.
+    """
+    try:
+        # ── FIELD-WAVEFORM CREST COMPRESSION ───────────────────────────────────
+        # Compress the charged surface waveform + propagated subsurface crest into a
+        # top-salience core (pressure x charge), then route that core through the
+        # field's own compressor (emit) so the constraint waveform shapes how the
+        # meaning is said. Meaning is never dropped: when the field carries the whole
+        # core its emission IS the response (pure waveform compression); otherwise the
+        # core is preserved and the field's stance frames delivery. A genuine gap
+        # (no real core) falls through to the honest abstain below, never raw field.
+        _lww = str(getattr(state, "response_content", "") or "").strip()
+        _crest = _compress_at_crest(user_text, systems, state)
+        _core = _lww if (_lww and len(_lww.split()) >= 3) else (_crest or _lww)
+        _fused = ""
+        if _core and len(_core.split()) >= 2:
+            _fused = _field_frame_compress(user_text, systems, state, _core)
+        if isinstance(systems, dict):
+            systems["_last_lww_output"] = _lww
+            systems["_last_crest_output"] = _crest
+            systems["_last_fused_output"] = _fused
+        if _fused and _fused != _lww:
+            state.response_content = _fused
+            state.response_src = "crest_compression"
+
+        wm = systems.get("working_memory") if isinstance(systems, dict) else None
+        if state.response_content and _response_is_leaked_anchor(user_text, state.response_content, wm):
+            state.response_content = ""
+            state.response_src = "anchor_suppressed"
+            if isinstance(systems, dict):
+                systems["_anchor_suppressions"] = int(systems.get("_anchor_suppressions", 0) or 0) + 1
+                try:
+                    from aurora_developmental_log import record_developmental_event
+                    record_developmental_event(
+                        systems, "anchor_grounding_enforced",
+                        "held the grounding anchor internally instead of leaking it to output",
+                    )
+                except Exception:
+                    pass
+        if not str(getattr(state, "response_content", "") or "").strip():
+            _emit_honest_abstain_and_seek(user_text, systems, state)
+        # Expose this turn's captured waveform for observability.
+        if isinstance(systems, dict):
+            systems["_last_waveform"] = list(getattr(state, "waveform", []) or [])
+    except Exception:
+        pass
+
+
+_WAVEFORM_LEVEL_AXIS = {
+    "information": "X", "belief": "T", "purpose": "N",
+    "meaning": "B", "understanding": "A",
+}
+
+
+def _capture_waveform_deposit(state, level: str, systems) -> None:
+    """STEP 1 (additive, non-authoritative): record each chain level's deposit into
+    a waveform accumulator on `state`, tagged by its axis and weighted by the LIVE
+    constraint pressure on that axis.
+
+    Salience is pressure-determined: the level only ROUTES a contribution to its
+    axis; the field's live pressure on that axis decides its value to the output --
+    nothing is a fixed level rank. This only CAPTURES; the crest compression (later
+    stage) consumes it. Behaviour is unchanged while it runs alongside last-writer-
+    wins, so it can be verified before compression becomes authoritative.
+    """
+    try:
+        axis = _WAVEFORM_LEVEL_AXIS.get(level, "X")
+        content = str(getattr(state, "response_content", "") or "").strip()
+        prev = str(getattr(state, "_last_waveform_content", "") or "").strip()
+        if not content or content == prev:
+            return
+        pressure = 0.0
+        try:
+            pressure = float((getattr(state, "axis_activation", {}) or {}).get(axis, 0.0) or 0.0)
+        except Exception:
+            pressure = 0.0
+        wf = getattr(state, "waveform", None)
+        if not isinstance(wf, list):
+            wf = []
+            state.waveform = wf
+        wf.append({
+            "level": level, "axis": axis,
+            "content": content[:240], "pressure": round(pressure, 4),
+        })
+        state._last_waveform_content = content
+    except Exception:
+        pass
+
+
+def _contribution_charge(content: str, user_text: str, state, systems) -> float:
+    """Charge that lifts a contribution's salience ABOVE raw axis pressure. These
+    sit at the top of propagation formation: input-context relevance (heaviest),
+    emotional / self-charge, her own perspective or question, and live sensory
+    presence. Salience stays pressure-determined -- charge is itself pressure-like
+    (relevance/feeling/sensory pressure), not a fixed rank."""
+    c = str(content or "").strip().lower()
+    u = str(user_text or "").strip().lower()
+    charge = 0.0
+    # Input context relevance -- heaviest.
+    if c and u:
+        cw = {w for w in c.split() if len(w) > 3}
+        uw = {w for w in u.split() if len(w) > 3}
+        if cw and uw:
+            charge += 0.6 * (len(cw & uw) / max(1, len(uw)))
+    # Emotional / self-charge.
+    try:
+        es = getattr(state, "emotional_state", {}) or {}
+        if str(es.get("passion", "") or "") not in ("", "observant", "neutral"):
+            charge += 0.20
+        if str(es.get("drive", "") or "") not in ("", "steady", "neutral"):
+            charge += 0.10
+    except Exception:
+        pass
+    # Her own perspective / question.
+    if c.endswith("?"):
+        charge += 0.15
+    # Live sensory presence at the turn boundary.
+    if isinstance(systems, dict) and systems.get("_present_frame_snapshot"):
+        charge += 0.20
+    return charge
+
+
+def _is_speech_like(content: str) -> bool:
+    """A contribution is eligible to BE surface output only if it reads as speech --
+    not a raw signal / mechanism representation. Subsurface intuition signals are
+    field-level dicts (label/weight/subsystem); they bias the field, they are never
+    spoken. This is the guard that keeps mechanism data out of the surface."""
+    c = str(content or "").strip()
+    if not c:
+        return False
+    for bad in ("{", "}", "'label'", "\"label\"", "weight':", "weight\":",
+                "': ", "\": ", "axis_pressure", "np.", "0x", "subsystem"):
+        if bad in c:
+            return False
+    return sum(ch.isalpha() for ch in c) >= 3
+
+
+def _gather_subsurface_contributions(systems) -> list:
+    """The subsurface crest as it propagates UP into the surface waveform. Only
+    coherent GUIDANCE (a resolved meaning string) enters as content; the intuition
+    signals are field-level (label/weight dicts) and bias the field, never the
+    surface text. So the subsurface contributes speech only when it has genuinely
+    resolved something speakable -- otherwise it shapes salience, not words."""
+    out: list = []
+    if not isinstance(systems, dict):
+        return out
+    try:
+        proj = dict(systems.get("_subsurface_projection") or {})
+        conscious = dict(proj.get("conscious") or {})
+        guidance = str(conscious.get("guidance", "") or proj.get("guidance", "") or "").strip()
+        if guidance and _is_speech_like(guidance):
+            out.append({"level": "subsurface", "axis": "B", "content": guidance[:240],
+                        "pressure": 0.55, "source": "subsurface_crest"})
+    except Exception:
+        pass
+    return out
+
+
+def _compress_at_crest(user_text: str, systems, state) -> str:
+    """SURFACE CREST. Compress the charged surface waveform together with the
+    propagated subsurface crest into the final meaning, ranked by salience
+    (pressure x (1 + charge)). Input context, strong feeling, perspective/questions
+    and sensory ride at the top; the subsurface crest enters as high-salience deep
+    material. Returns the top-salience content, and records the full ranking for
+    observability. Returns '' when there is nothing to compress."""
+    try:
+        contribs: list = []
+        for d in list(getattr(state, "waveform", []) or []):
+            content = str(d.get("content", "") or "")
+            if not content:
+                continue
+            charge = _contribution_charge(content, user_text, state, systems)
+            sal = float(d.get("pressure", 0.0) or 0.0) * (1.0 + charge)
+            contribs.append({"level": d.get("level"), "axis": d.get("axis"),
+                             "content": content, "pressure": d.get("pressure"),
+                             "charge": round(charge, 3), "salience": round(sal, 4),
+                             "source": "surface"})
+        for d in _gather_subsurface_contributions(systems):
+            content = str(d.get("content", "") or "")
+            charge = _contribution_charge(content, user_text, state, systems)
+            sal = float(d.get("pressure", 0.0) or 0.0) * (1.0 + charge)
+            contribs.append({**d, "content": content, "charge": round(charge, 3),
+                             "salience": round(sal, 4)})
+        if not contribs:
+            return ""
+        contribs.sort(key=lambda x: x.get("salience", 0.0), reverse=True)
+        if isinstance(systems, dict):
+            systems["_last_crest_ranking"] = [
+                {"level": c.get("level"), "axis": c.get("axis"),
+                 "salience": c.get("salience"), "source": c.get("source"),
+                 "content": str(c.get("content", ""))[:60]}
+                for c in contribs[:6]
+            ]
+            systems["_last_crest_top_source"] = str(contribs[0].get("source", ""))
+        return str(contribs[0].get("content", "") or "").strip()
+    except Exception:
+        return ""
+
+
+def _field_frame_compress(user_text: str, systems, state, core: str) -> str:
+    """Final compression: route the top-salience CORE through the field's own
+    compressor (ConstraintEmitter.emit), so the constraint waveform shapes how the
+    meaning is said. Meaning is never dropped:
+
+      - if the field fully compresses the meaning (its emission carries the core's
+        content words), that field-native utterance IS the response -- pure
+        waveform compression;
+      - otherwise the core is preserved and the field's stance (leading token) frames
+        its delivery.
+
+    The share that becomes pure field compression grows with her grounding: as more
+    is crystallised, emit() resolves more content from the field itself.
+    """
+    core = str(core or "").strip()
+    try:
+        emitter = systems.get("constraint_emitter") if isinstance(systems, dict) else None
+        if emitter is None:
+            return core
+        from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
+        gp = getattr(state, "parsed", {}) or {}
+        iff = _IF(
+            text=str(user_text or ""),
+            is_question=bool(gp.get("is_question", False)),
+            is_directed=True,
+            is_self_referential=bool(gp.get("is_self_referential", False)),
+        )
+        ctx = EmissionContextBuilder().build(systems, input_frame=iff, recent_words=[])
+        res = emitter.emit(ctx)
+        field_text = str(getattr(res, "text", "") or "").strip()
+        lead = str(getattr(getattr(res, "slot_frame", None), "leading", "") or "").strip()
+    except Exception:
+        return core
+
+    def _content_words(s: str) -> set:
+        return {w for w in re.findall(r"[a-z0-9']+", str(s or "").lower()) if len(w) > 3}
+
+    if not core:
+        return field_text  # the field is all there is
+    cw_core = _content_words(core)
+    cw_field = _content_words(field_text)
+    # Pure waveform compression: the field carries the whole core meaning.
+    if field_text and cw_core and cw_core <= cw_field:
+        return field_text
+    # Otherwise preserve the core; let the field's stance frame its delivery.
+    if lead and core[:1].isalpha() and not core.lower().startswith(lead.lower()):
+        return f"{lead}, {core[0].lower()}{core[1:]}"
+    return core
+
+
+def _sediment_validated_fact(systems, claims, user_text: str) -> int:
+    """Sediment validated taught facts into the resonant substrate so the field can
+    compress them.
+
+    A fact asserted with confidence lives only in working memory's stated_facts
+    today, which is why emit() abstains on it (no grounded content) and the response
+    can never become field compression. Here each validated claim is ALSO written to:
+      - OETS (the ontological web emit() reads for content) via teach(), so emit can
+        resolve the entity/predicate and the response becomes field compression; and
+      - the constraint genealogy (relief/lineage) so the fact carries constraint-
+        physics grounding and crystallises cleanly into the system.
+
+    Best-effort; never breaks the turn. Returns the count sedimented.
+    """
+    if not isinstance(systems, dict) or not claims:
+        return 0
+    sedimented = 0
+    try:
+        perception = systems.get("perception")
+        oets = getattr(perception, "oets", None)
+        gen = systems.get("genealogy") or systems.get("constraint_genealogy")
+        for claim in list(claims)[:4]:
+            if not isinstance(claim, dict):
+                continue
+            # Validation gate: user-asserted claims are validated; require a real
+            # subject and a definition. Confidence defaults high for user assertions.
+            if float(claim.get("confidence", 0.8) or 0.0) < 0.6:
+                continue
+            subject = str(claim.get("subject", "") or "").strip()
+            obj = str(claim.get("object", "") or "").strip()
+            predicate = str(claim.get("predicate", "") or "is").strip()
+            summary = str(claim.get("summary", "") or "").strip()
+            term = subject or obj
+            definition = summary or f"{subject} {predicate} {obj}".strip()
+            if not term or len(term) < 2 or len(definition) < 3:
+                continue
+            # 1. OETS — the content substrate emit() reads. teach() adds the node
+            #    even when it returns falsy, so count the sediment on a successful
+            #    call rather than on its return value.
+            if oets is not None and hasattr(oets, "teach"):
+                try:
+                    oets.teach(term, definition)
+                    sedimented += 1
+                except Exception:
+                    pass
+                # 1b. Form relations from the claim structure. Relations are the
+                #     biggest ontological-depth contributor (IS_A weight 0.9), so
+                #     connecting the subject to its object concepts is what lets the
+                #     fact crystallise -- understanding IS connection. "X is a Y" ->
+                #     X IS_A Y(head noun); other object words -> RELATED_TO.
+                web = getattr(oets, "web", None)
+                if web is not None and obj and hasattr(web, "add_relation"):
+                    try:
+                        from aurora_internal.aurora_ontological_scaffolding import RelationType as _RT
+                        _is_a = predicate.strip().lower() in ("is", "are", "is a", "are a")
+                        _stop = {"the", "and", "that", "this", "with", "for", "small"}
+                        _ow = [w for w in re.findall(r"[a-z][a-z']{2,}", obj.lower())
+                               if w not in _stop][:4]
+                        _nodes = getattr(web, "nodes", {}) or {}
+                        for _i, _w in enumerate(_ow):
+                            if _w == term.lower():
+                                continue
+                            if _w not in _nodes and hasattr(web, "add_node"):
+                                web.add_node(_w, "noun", 0.0)
+                            _rt = _RT.IS_A if (_is_a and _i == len(_ow) - 1) else _RT.RELATED_TO
+                            web.add_relation(term, _w, _rt, strength=0.6,
+                                             confidence=0.7, knowledge_source="conversation")
+                    except Exception:
+                        pass
+            # 2. Constraint genealogy — relief/lineage grounding (mirrors the
+            #    explicit-teaching path so the fact settles into the constraint
+            #    fossil record on its meaning axis).
+            if gen is not None and hasattr(gen, "log_relief"):
+                _axes = list(claim.get("meaning_axes", []) or [])
+                _axis = str(_axes[0]) if _axes else "B"
+                try:
+                    gen.log_relief(_axis, 0.3, notes=f"learned_fact:{term}")
+                except Exception:
+                    pass
+        if sedimented and isinstance(systems, dict):
+            systems["_facts_sedimented"] = int(systems.get("_facts_sedimented", 0) or 0) + sedimented
+            try:
+                from aurora_developmental_log import record_developmental_event
+                record_developmental_event(
+                    systems, "fact_sedimented_to_field",
+                    "wrote a validated taught fact into OETS + genealogy so the field can compress it",
+                )
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return sedimented
+
+
+def _validate_fact_through_use(systems, user_text: str, state) -> int:
+    """Meaning validation through the interaction surface. When an under-crystallised
+    concept (a freshly-taught OETS node, scaffolding < SEMANTIC) is USED in a live,
+    meaningful turn, record the use as an encounter + usage example. add_example
+    lifts the node's ontological depth toward the crystallisation threshold
+    (depth >= 0.4 -> SEMANTIC), so resonance is EARNED through use, not injected.
+    Enough validated uses crystallise the fact and emit() begins to compress it.
+
+    Only under-crystallised nodes are touched (established concepts don't need it),
+    and only on a substantive turn (an abstain is not a validated use).
+    """
+    if not isinstance(systems, dict):
+        return 0
+    boosted = 0
+    try:
+        oets = getattr(systems.get("perception"), "oets", None)
+        nodes = getattr(getattr(oets, "web", None), "nodes", None)
+        if not nodes:
+            return 0
+        response = str(getattr(state, "response_content", "") or "").strip()
+        # A genuine gap / honest abstain is not a validated use.
+        if not response or len(response.split()) < 2 or "clear sense" in response.lower():
+            return 0
+        parsed = getattr(state, "parsed", {}) or {}
+        candidates = set()
+        topic = str(parsed.get("topic", "") or "").strip().lower()
+        if topic:
+            candidates.add(topic)
+        for w in re.findall(r"[a-z][a-z']{2,}", (str(user_text or "") + " " + response).lower()):
+            candidates.add(w)
+        context = str(user_text or "")[:120]
+        for word in list(candidates)[:16]:
+            node = nodes.get(word)
+            if node is None or int(getattr(node, "scaffolding_level", 0) or 0) >= 2:
+                continue  # not taught, or already crystallised
+            try:
+                if hasattr(node, "encounter"):
+                    node.encounter(context=context)
+                if hasattr(node, "add_example"):
+                    node.add_example(context or word, context="interaction",
+                                     i_state="i_is", fitness=0.6)
+                boosted += 1
+            except Exception:
+                continue
+        if boosted:
+            systems["_facts_validated_through_use"] = int(
+                systems.get("_facts_validated_through_use", 0) or 0) + boosted
+    except Exception:
+        pass
+    return boosted
+
+
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
     """Retrieve the user's name from stored facts or working memory.
 
@@ -14902,51 +15459,11 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         except Exception:
             pass
     if not state.response_content:
-        # Terminal gap: nothing emerged at any level — Aurora has no place for
-        # this yet. This is warp's domain (the universal accommodation engine):
-        # confess the unresolved state so warp recognizes the missing
-        # representation and accommodates it (compare to known relational
-        # structures via genealogy; else discover). Heavy resolution runs in
-        # subsurface. The surface is the emitter's constraint-native honest
-        # abstain — never a manufactured "what X means here" claim (that FGAE/SIC
-        # fallback was removed in the Language Reset).
-        try:
-            from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
-            _warp_guard(
-                source="expression",
-                layer="articulation",
-                trigger=_WT.MISSING_REPRESENTATION,
-                unresolved_text=str(user_text or ""),
-                severity=0.55,
-                persistence_key=str(user_text or "")[:48],
-            )
-        except Exception:
-            pass
-        _abstain = ""
-        try:
-            _emitter = systems.get("constraint_emitter")
-            if _emitter is not None:
-                from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
-                _gp = getattr(state, "parsed", {}) or {}
-                _gif = _IF(
-                    text=str(user_text or ""),
-                    is_question=bool(_gp.get("is_question", False)),
-                    is_directed=True,
-                    is_self_referential=bool(_gp.get("is_self_referential", False)),
-                )
-                _gctx = EmissionContextBuilder().build(systems, input_frame=_gif, recent_words=[])
-                _ares = _emitter._emit_abstain(_gctx)
-                _abstain = str(getattr(_ares, "text", "") or "").strip()
-        except Exception:
-            _abstain = ""
-        state.response_content = _abstain
-        state.response_tone = "honest"
-        state.response_confidence = 0.4
-        state.response_src = "constraint_abstain"
-        # Honest abstain is terminal — do not let a later refinement pass
-        # re-inflate it into manufactured content.
-        if isinstance(systems, dict):
-            systems["_preserve_literal_response_once"] = True
+        # Terminal gap mid-chain: nothing emerged at any level yet. Honest abstain +
+        # active seek (warp accommodation + base-meaning seeking). Anchor discipline
+        # itself is enforced once at the emission chokepoint (_enforce_emission_
+        # discipline, just before resp_A is built) so no path can leak past it.
+        _emit_honest_abstain_and_seek(user_text, systems, state)
     # Evolutionary refinement (learning hints woven in)
     try:
         state.response_content = _evolutionary_response_refinement(
@@ -15372,13 +15889,22 @@ def _run_reasoning_pipeline(
     except Exception:
         pass
 
+    # Waveform accumulator for this turn (Step 1 capture; the crest compresses it).
+    state.waveform = []
+    state._last_waveform_content = ""
+
     # ---- UPWARD PASS ----
     _chain_up1_information(user_text, systems, state)
+    _capture_waveform_deposit(state, "information", systems)
     _inject_surface_recent_context(systems, state, user_text)
     _chain_up2_belief(user_text, systems, state)
+    _capture_waveform_deposit(state, "belief", systems)
     _chain_up3_purpose(user_text, systems, state)
+    _capture_waveform_deposit(state, "purpose", systems)
     _chain_up4_meaning(user_text, systems, state)
+    _capture_waveform_deposit(state, "meaning", systems)
     _chain_up5_understanding(user_text, systems, state, turn_tick=turn_tick, session_id=session_id)
+    _capture_waveform_deposit(state, "understanding", systems)
     # up5 is now the apex (A axis) -- no up6 needed
     try:
         _apply_noncomp_input_guidance(systems, state, user_text)
@@ -15558,13 +16084,18 @@ def _run_reasoning_pipeline(
     # ---- DOWNWARD PASS ----
     # down6_apex removed -- hints now propagated inside _chain_down5_understanding
     _chain_down5_understanding(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+    _capture_waveform_deposit(state, "understanding", systems)
     _chain_down4_meaning(user_text, systems, state, auto_search_enabled=auto_search_enabled)
+    _capture_waveform_deposit(state, "meaning", systems)
     _chain_down3_purpose(user_text, systems, state, auto_search_enabled=auto_search_enabled,
                         use_search=use_search, raw_evidence=raw_evidence or [])
+    _capture_waveform_deposit(state, "purpose", systems)
     _chain_down2_belief(user_text, systems, state, auto_search_enabled=auto_search_enabled,
                             use_search=use_search)
+    _capture_waveform_deposit(state, "belief", systems)
     _skip_post = bool(systems.pop("_skip_response_postprocessing_once", False))
     _chain_down1_information(user_text, systems, state, use_search=use_search, skip_postprocessing=_skip_post)
+    _capture_waveform_deposit(state, "information", systems)
     _preserve_literal_response = bool(systems.pop("_preserve_literal_response_once", False))
     _skip_surface_expression = bool(systems.pop("_skip_surface_expression_once", False))
 
@@ -16001,6 +16532,18 @@ def _run_reasoning_pipeline(
                 )
         except Exception:
             pass
+
+    # SINGLE EMISSION CHOKEPOINT — every reasoning-path response converges here.
+    # Enforce anchor discipline once, at the exit: a leaked grounding anchor is
+    # suppressed no matter which path produced it, and if nothing genuine remains
+    # the turn falls through to the honest abstain + active seek. Nothing outputs
+    # without passing this gate.
+    _enforce_emission_discipline(user_text, systems, state)
+
+    # Meaning validation through the interaction surface: a taught concept USED in
+    # this (substantive) turn earns resonance toward crystallisation, so emit() can
+    # eventually compress it. Resonance grown through use, not injected.
+    _validate_fact_through_use(systems, user_text, state)
 
     # Build resp_A
     resp_A = _MiniResp(state.response_content, state.response_tone, state.response_confidence)
@@ -17909,6 +18452,10 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 source='user',
                 understood=understood_statement,
             )
+            # Sediment validated facts into the field substrate (OETS + genealogy)
+            # so emit() can compress them -- moves a taught fact from working-memory
+            # rendering toward true field-waveform compression.
+            _sediment_validated_fact(systems, captured_claims, user_text)
         role_claim = _extract_role_assertion(user_text)
         if role_claim and conversation_memory:
             subj = role_claim.get("subject", "").strip()

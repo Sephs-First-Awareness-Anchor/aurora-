@@ -386,6 +386,37 @@ class CuriosityEngine:
             prev.urgency = min(1.0, prev.urgency + 0.15)
             return prev
 
+        # --- Abstained/inferred gaps: seek BASE MEANING on first contact ----------
+        # When the surface confessed (or inferred) a gap it seeds
+        # systems["_abstained_gaps"]. Base meaning is sought IMMEDIATELY — not gated
+        # on recurrence. (Recurrence of the deeper signature drives alternative
+        # conceptual interpretations, a separate layer handled elsewhere.) Consume
+        # one unsought gap into an active investigation so she reaches for what she
+        # does not know instead of dropping it after an honest abstain.
+        try:
+            _gaps = self.systems.get("_abstained_gaps") or []
+            _pending = next(
+                (g for g in _gaps if isinstance(g, dict) and not g.get("sought")), None
+            )
+            if _pending is not None:
+                _pending["sought"] = True
+                _subj = str(_pending.get("subject", "")).strip()
+                if _subj:
+                    return CuriosityObject(
+                        subject=_subj,
+                        origin_axis="N",   # N: cost/pressure of not knowing
+                        curiosity_type="semantic_gap",
+                        urgency=0.80,
+                        hypothesis=(
+                            f"Something was asked or inferred of me — '{_subj[:80]}' — that I "
+                            f"have no grounded base meaning for. I should seek its base meaning "
+                            f"now, not wait for it to recur."
+                        ),
+                        tick=tick,
+                    )
+        except Exception:
+            pass
+
         # --- WARP awareness: promoted structural components become curiosity targets ---
         # When WARP has derived and promoted a new structural component, it signals
         # that the system has found phenomenal territory that existing structures

@@ -191,6 +191,28 @@ def _await_surface_turn(turn_id: str, timeout_s: float = 45.0) -> Dict[str, Any]
     return {}
 
 
+def _surface_channel_recently_active(window_s: float = 120.0) -> bool:
+    """True if the interactive surface channel showed activity within the last
+    `window_s` seconds.  Used to debounce autonomous inquiries so the daemon
+    does not inject a self-prompt on top of a live interactive exchange.
+
+    Recency is read from the mtimes of the surface-turn queue / result / status
+    files (the same files the interactive loop reads and writes each turn).
+    """
+    try:
+        now = time.time()
+        horizon = max(0.0, float(window_s or 0.0))
+        for path in (_SURFACE_QUEUE, _SURFACE_RESULT, _SURFACE_STATUS):
+            try:
+                if path.exists() and (now - path.stat().st_mtime) <= horizon:
+                    return True
+            except Exception:
+                continue
+        return False
+    except Exception:
+        return False
+
+
 def _queue_autonomous_inquiry(text: str, *, source: str) -> Optional[str]:
     if _surface_channel_recently_active(120.0):
         return None
