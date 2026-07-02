@@ -283,3 +283,37 @@ so it crystallises/resonates faster, but emit-compression still activates as the
 gains resonance, not instantly. Making it instant would require boosting taught-node
 resonance/activation -- deferred (risks wrong content selection / garbled output),
 not faked.
+
+---
+
+## FIX-A008 (ARCHITECTURAL) — Learn-through-use: outcome tracking + sense growth
+
+When Aurora USES a learned concept she now tests the use against what she was
+taught and tracks the outcome, carefully keeping three cases apart (never
+collapsing them):
+  - ALIGNED (use fits the taught meaning) -> reinforce that sense;
+  - MISUSE / CONTRADICTS (use negates/replaces the taught meaning on the SAME
+    dimension -- "doesn't fit at all") -> record a failed application + flag the
+    ContradictionLedger; do NOT expand;
+  - NEW SENSE (use is coherent in a DIFFERENT area -- "fits more than one, applies
+    in multiple areas") -> add_sense; the concept is broader than taught.
+
+`_track_concept_use_outcome` runs BEFORE `_sediment_validated_fact` in the live
+ingestion loop (`_run_live_response_turn`) so the use is judged against PRIOR
+knowledge, then the fact is integrated. It errs toward GROWTH over rigidity (a
+contradiction requires an explicit same-dimension conflict signal), so valid
+multi-applicability is never mistaken for error. Per-concept outcomes are logged
+to `systems['_concept_use_outcomes']`; new-sense and misuse each emit a
+developmental event.
+
+VERIFIED: teaching 'quokka = marsupial' then using it as "symbol of joy" and
+"name of a software project" adds two new senses (quokka.symbol, quokka.name --
+concept broadened); the taught use is aligned.
+
+HONEST BOUNDARY (follow-up): the MISUSE/contradiction case's classifier is correct
+(negated claim + fits_taught -> misuse) but does not fire live yet, because
+negation/correction inputs are routed to the context-directive path and skipped in
+the claim-ingestion seed loop (detect_context_directive continue), so they never
+reach the tracker. Wiring the tracker into the correction/negation path is the
+remaining step for the (a) case to fire in live turns. Also: an "Actually,"-prefixed
+sentence currently extracts no claim at all (parser edge), independent of this.
