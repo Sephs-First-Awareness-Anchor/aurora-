@@ -4901,6 +4901,76 @@ def _field_frame_compress(user_text: str, systems, state, core: str) -> str:
     return core
 
 
+def _sediment_validated_fact(systems, claims, user_text: str) -> int:
+    """Sediment validated taught facts into the resonant substrate so the field can
+    compress them.
+
+    A fact asserted with confidence lives only in working memory's stated_facts
+    today, which is why emit() abstains on it (no grounded content) and the response
+    can never become field compression. Here each validated claim is ALSO written to:
+      - OETS (the ontological web emit() reads for content) via teach(), so emit can
+        resolve the entity/predicate and the response becomes field compression; and
+      - the constraint genealogy (relief/lineage) so the fact carries constraint-
+        physics grounding and crystallises cleanly into the system.
+
+    Best-effort; never breaks the turn. Returns the count sedimented.
+    """
+    if not isinstance(systems, dict) or not claims:
+        return 0
+    sedimented = 0
+    try:
+        perception = systems.get("perception")
+        oets = getattr(perception, "oets", None)
+        gen = systems.get("genealogy") or systems.get("constraint_genealogy")
+        for claim in list(claims)[:4]:
+            if not isinstance(claim, dict):
+                continue
+            # Validation gate: user-asserted claims are validated; require a real
+            # subject and a definition. Confidence defaults high for user assertions.
+            if float(claim.get("confidence", 0.8) or 0.0) < 0.6:
+                continue
+            subject = str(claim.get("subject", "") or "").strip()
+            obj = str(claim.get("object", "") or "").strip()
+            predicate = str(claim.get("predicate", "") or "is").strip()
+            summary = str(claim.get("summary", "") or "").strip()
+            term = subject or obj
+            definition = summary or f"{subject} {predicate} {obj}".strip()
+            if not term or len(term) < 2 or len(definition) < 3:
+                continue
+            # 1. OETS — the content substrate emit() reads. teach() adds the node
+            #    even when it returns falsy, so count the sediment on a successful
+            #    call rather than on its return value.
+            if oets is not None and hasattr(oets, "teach"):
+                try:
+                    oets.teach(term, definition)
+                    sedimented += 1
+                except Exception:
+                    pass
+            # 2. Constraint genealogy — relief/lineage grounding (mirrors the
+            #    explicit-teaching path so the fact settles into the constraint
+            #    fossil record on its meaning axis).
+            if gen is not None and hasattr(gen, "log_relief"):
+                _axes = list(claim.get("meaning_axes", []) or [])
+                _axis = str(_axes[0]) if _axes else "B"
+                try:
+                    gen.log_relief(_axis, 0.3, notes=f"learned_fact:{term}")
+                except Exception:
+                    pass
+        if sedimented and isinstance(systems, dict):
+            systems["_facts_sedimented"] = int(systems.get("_facts_sedimented", 0) or 0) + sedimented
+            try:
+                from aurora_developmental_log import record_developmental_event
+                record_developmental_event(
+                    systems, "fact_sedimented_to_field",
+                    "wrote a validated taught fact into OETS + genealogy so the field can compress it",
+                )
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return sedimented
+
+
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
     """Retrieve the user's name from stored facts or working memory.
 
@@ -18301,6 +18371,10 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
                 source='user',
                 understood=understood_statement,
             )
+            # Sediment validated facts into the field substrate (OETS + genealogy)
+            # so emit() can compress them -- moves a taught fact from working-memory
+            # rendering toward true field-waveform compression.
+            _sediment_validated_fact(systems, captured_claims, user_text)
         role_claim = _extract_role_assertion(user_text)
         if role_claim and conversation_memory:
             subj = role_claim.get("subject", "").strip()

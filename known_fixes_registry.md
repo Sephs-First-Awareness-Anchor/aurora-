@@ -254,3 +254,32 @@ renderings; subsurface signals aren't speech. Making the crest MORE authoritativ
 (true multi-contribution blending rather than top-salience selection + gap-fill)
 needs a content-integration step that does not emit raw field signals -- deferred
 rather than faked.
+
+---
+
+## FIX-A007 (ARCHITECTURAL) — Sediment validated taught facts into the field substrate
+
+A fact asserted by the user ("a raven is a black bird") lived ONLY in working
+memory's `stated_facts` -- it never reached OETS (the ontological web `emit()` reads
+for content) or the constraint genealogy. So `emit()` abstained on it and the
+response could never become field-waveform compression; the propositional content
+had to come from the working-memory rendering. The one path that DID feed OETS
+(`oets.teach`) was gated behind `pending_teaching_offer` (explicit "teach me X").
+
+Fix: `_sediment_validated_fact(systems, claims, user_text)` runs at fact validation
+(after `note_claims` in the statement path) and writes each validated claim to
+  - OETS via `teach()` (content substrate emit reads), and
+  - constraint genealogy via `log_relief` on the claim's meaning axis (constraint-
+    physics lineage so it crystallises),
+plus a `fact_sedimented_to_field` developmental event.
+
+VERIFIED + HONEST BOUNDARY: teaching "a quokka is a small friendly marsupial" now
+lands the `quokka` node in OETS (before: absent -> after: present). BUT `emit()`
+STILL abstains on "what is a quokka?" afterward -- because emit's content resolution
+is RESONANCE-gated (RESONANCE_FLOOR), and a freshly-taught node exists without yet
+resonating in the query context. So node existence != field-compressibility. The
+bridge ACCELERATES grounding (fact now in OETS + genealogy, not only working memory)
+so it crystallises/resonates faster, but emit-compression still activates as the node
+gains resonance, not instantly. Making it instant would require boosting taught-node
+resonance/activation -- deferred (risks wrong content selection / garbled output),
+not faked.
