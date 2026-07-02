@@ -5047,6 +5047,23 @@ def _validate_fact_through_use(systems, user_text: str, state) -> int:
     return boosted
 
 
+# Discourse-marker classifiers: prefixes/markers that signal how the SPEAKER frames
+# information -- whether a use CORRECTS prior meaning (incorrect / contradiction) or
+# EXTENDS it (multivariable / a further coherent sense). Helpful priors for the
+# (a)-vs-(b) distinction; they INFORM the verdict, they do not override the meaning
+# comparison, and the classifying marker is recorded so the signal is noted.
+_CORRECTION_MARKERS = (
+    "actually", "no,", "not a ", "not an ", "isn't", "is not", "aren't",
+    "that's wrong", "that's not", "that is not", "incorrect", "i misspoke",
+    "correction", "not really", "rather", "instead", "wrong",
+)
+_MULTIVARIABLE_MARKERS = (
+    "also", "as well", "in another sense", "can also", "could also", "sometimes",
+    "in some", "another meaning", "alternatively", "on the other hand",
+    "in other contexts", "depending on", "as well as", " or a ", " or an ",
+)
+
+
 def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str]:
     """Test a USED concept against what she was taught and track the outcome,
     carefully keeping THREE cases apart (never collapsing them):
@@ -5075,7 +5092,8 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
             return {}
         ledger = systems.setdefault("_concept_use_outcomes", {})
         low_text = str(user_text or "").lower()
-        correction_marker = any(m in low_text for m in ("actually", "no,", "not a", "isn't", "is not", "n't a"))
+        correction_signal = next((m for m in _CORRECTION_MARKERS if m in low_text), "")
+        multivariable_signal = next((m for m in _MULTIVARIABLE_MARKERS if m in low_text), "")
         for claim in list(claims)[:4]:
             if not isinstance(claim, dict):
                 continue
@@ -5098,7 +5116,32 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
                     established.add(w)
 
             fits_taught = any(t in established for t in new_tokens)
-            if fits_taught and not negated:
+            marker = ""
+            # Priority: an explicit correction/negation frame means "doesn't fit" ->
+            # contradiction; an explicit multivariable frame means "another sense" ->
+            # broaden; otherwise fall back to the meaning comparison. Markers inform
+            # but a bare same-dimension token match still counts as aligned.
+            if negated or correction_signal:
+                verdict = "misuse_contradicts"
+                marker = correction_signal or ("negated" if negated else "")
+                led = systems.get("contradiction_ledger")
+                if led is not None and hasattr(led, "record"):
+                    try:
+                        led.record(f"use of '{subject}' as '{new_obj}' conflicts with taught meaning")
+                    except Exception:
+                        pass
+            elif multivariable_signal:
+                # Speaker framed this as an additional/alternative sense -> broaden.
+                verdict = "new_sense"
+                marker = multivariable_signal
+                if hasattr(node, "add_sense") and new_tokens:
+                    try:
+                        node.add_sense(f"{subject}.{new_tokens[0]}", gloss=new_obj,
+                                       source="use_expansion", confidence=0.4,
+                                       context_clues=new_tokens)
+                    except Exception:
+                        pass
+            elif fits_taught:
                 verdict = "aligned"
                 if getattr(node, "senses", None) and hasattr(node, "disambiguate_sense"):
                     sid = node.disambiguate_sense(new_tokens)
@@ -5106,17 +5149,8 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
                         s = node.senses[sid]
                         s.confidence = min(1.0, s.confidence + 0.05)
                         s.times_activated += 1
-            elif (negated or correction_marker) and fits_taught:
-                # Same-dimension conflict: negating/replacing the taught category.
-                verdict = "misuse_contradicts"
-                led = systems.get("contradiction_ledger")
-                if led is not None and hasattr(led, "record"):
-                    try:
-                        led.record(f"use of '{subject}' as '{new_obj}' conflicts with taught meaning")
-                    except Exception:
-                        pass
             else:
-                # Coherent, different area, no same-dimension conflict -> broaden.
+                # Coherent, different area, no conflict frame -> broaden (new sense).
                 verdict = "new_sense"
                 if hasattr(node, "add_sense") and new_tokens:
                     try:
@@ -5131,7 +5165,8 @@ def _track_concept_use_outcome(systems, claims, user_text: str) -> Dict[str, str
             # than one capture site; the outcome is the same event).
             if entry and entry[-1].get("use") == new_obj[:60] and entry[-1].get("verdict") == verdict:
                 continue
-            entry.append({"use": new_obj[:60], "verdict": verdict, "context": low_text[:60]})
+            entry.append({"use": new_obj[:60], "verdict": verdict,
+                          "marker": marker, "context": low_text[:60]})
             ledger[subject] = entry[-12:]
 
         if outcomes:

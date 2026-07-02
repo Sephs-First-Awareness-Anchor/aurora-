@@ -317,3 +317,24 @@ the claim-ingestion seed loop (detect_context_directive continue), so they never
 reach the tracker. Wiring the tracker into the correction/negation path is the
 remaining step for the (a) case to fire in live turns. Also: an "Actually,"-prefixed
 sentence currently extracts no claim at all (parser edge), independent of this.
+
+---
+
+## FIX-A008b — Discourse-marker classifiers for the (a)-vs-(b) split
+
+Added `_CORRECTION_MARKERS` ("actually", "no,", "isn't", "rather", "instead", …)
+and `_MULTIVARIABLE_MARKERS` ("also", "can also", "in another sense", "sometimes",
+"depending on", …) as classifier priors in `_track_concept_use_outcome`. Priority:
+correction/negation frame -> misuse_contradicts; multivariable frame -> new_sense;
+else fall back to the meaning comparison (fits_taught -> aligned, else new_sense).
+The classifying marker is recorded on each outcome ("noted"), so the signal is
+tracked and informs the verdict without overriding the meaning comparison.
+
+Verified: plain declaratives classify correctly (aligned + new_sense recorded).
+HONEST BOUNDARY (upstream, = FIX-A008 follow-up): the marker branches do not fire
+LIVE yet because the phrasings that carry them do not reach the tracker with a
+clean claim -- "X can also be Y" (modal+also) often extracts no claim; negation /
+"Actually…" inputs are routed to the context-directive path and/or fail extraction.
+So the classifier is correct and complete; delivering marker-framed / corrective
+inputs to it is upstream claim-extraction + seed-loop-routing work (larger, core
+NLP), tracked as the follow-up.
