@@ -4946,6 +4946,30 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
                     sedimented += 1
                 except Exception:
                     pass
+                # 1b. Form relations from the claim structure. Relations are the
+                #     biggest ontological-depth contributor (IS_A weight 0.9), so
+                #     connecting the subject to its object concepts is what lets the
+                #     fact crystallise -- understanding IS connection. "X is a Y" ->
+                #     X IS_A Y(head noun); other object words -> RELATED_TO.
+                web = getattr(oets, "web", None)
+                if web is not None and obj and hasattr(web, "add_relation"):
+                    try:
+                        from aurora_internal.aurora_ontological_scaffolding import RelationType as _RT
+                        _is_a = predicate.strip().lower() in ("is", "are", "is a", "are a")
+                        _stop = {"the", "and", "that", "this", "with", "for", "small"}
+                        _ow = [w for w in re.findall(r"[a-z][a-z']{2,}", obj.lower())
+                               if w not in _stop][:4]
+                        _nodes = getattr(web, "nodes", {}) or {}
+                        for _i, _w in enumerate(_ow):
+                            if _w == term.lower():
+                                continue
+                            if _w not in _nodes and hasattr(web, "add_node"):
+                                web.add_node(_w, "noun", 0.0)
+                            _rt = _RT.IS_A if (_is_a and _i == len(_ow) - 1) else _RT.RELATED_TO
+                            web.add_relation(term, _w, _rt, strength=0.6,
+                                             confidence=0.7, knowledge_source="conversation")
+                    except Exception:
+                        pass
             # 2. Constraint genealogy — relief/lineage grounding (mirrors the
             #    explicit-teaching path so the fact settles into the constraint
             #    fossil record on its meaning axis).
@@ -4969,6 +4993,58 @@ def _sediment_validated_fact(systems, claims, user_text: str) -> int:
     except Exception:
         pass
     return sedimented
+
+
+def _validate_fact_through_use(systems, user_text: str, state) -> int:
+    """Meaning validation through the interaction surface. When an under-crystallised
+    concept (a freshly-taught OETS node, scaffolding < SEMANTIC) is USED in a live,
+    meaningful turn, record the use as an encounter + usage example. add_example
+    lifts the node's ontological depth toward the crystallisation threshold
+    (depth >= 0.4 -> SEMANTIC), so resonance is EARNED through use, not injected.
+    Enough validated uses crystallise the fact and emit() begins to compress it.
+
+    Only under-crystallised nodes are touched (established concepts don't need it),
+    and only on a substantive turn (an abstain is not a validated use).
+    """
+    if not isinstance(systems, dict):
+        return 0
+    boosted = 0
+    try:
+        oets = getattr(systems.get("perception"), "oets", None)
+        nodes = getattr(getattr(oets, "web", None), "nodes", None)
+        if not nodes:
+            return 0
+        response = str(getattr(state, "response_content", "") or "").strip()
+        # A genuine gap / honest abstain is not a validated use.
+        if not response or len(response.split()) < 2 or "clear sense" in response.lower():
+            return 0
+        parsed = getattr(state, "parsed", {}) or {}
+        candidates = set()
+        topic = str(parsed.get("topic", "") or "").strip().lower()
+        if topic:
+            candidates.add(topic)
+        for w in re.findall(r"[a-z][a-z']{2,}", (str(user_text or "") + " " + response).lower()):
+            candidates.add(w)
+        context = str(user_text or "")[:120]
+        for word in list(candidates)[:16]:
+            node = nodes.get(word)
+            if node is None or int(getattr(node, "scaffolding_level", 0) or 0) >= 2:
+                continue  # not taught, or already crystallised
+            try:
+                if hasattr(node, "encounter"):
+                    node.encounter(context=context)
+                if hasattr(node, "add_example"):
+                    node.add_example(context or word, context="interaction",
+                                     i_state="i_is", fitness=0.6)
+                boosted += 1
+            except Exception:
+                continue
+        if boosted:
+            systems["_facts_validated_through_use"] = int(
+                systems.get("_facts_validated_through_use", 0) or 0) + boosted
+    except Exception:
+        pass
+    return boosted
 
 
 def _get_stored_user_name(conversation_memory, systems=None) -> str:
@@ -16463,6 +16539,11 @@ def _run_reasoning_pipeline(
     # the turn falls through to the honest abstain + active seek. Nothing outputs
     # without passing this gate.
     _enforce_emission_discipline(user_text, systems, state)
+
+    # Meaning validation through the interaction surface: a taught concept USED in
+    # this (substantive) turn earns resonance toward crystallisation, so emit() can
+    # eventually compress it. Resonance grown through use, not injected.
+    _validate_fact_through_use(systems, user_text, state)
 
     # Build resp_A
     resp_A = _MiniResp(state.response_content, state.response_tone, state.response_confidence)
