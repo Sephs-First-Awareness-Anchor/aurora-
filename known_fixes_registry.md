@@ -405,3 +405,38 @@ activation ALSO needs the input-frame semantics + content-slot resonance to alig
 which happens in genuine assertive conversational context (synthetic frames with
 is_statement=False fall through to ACKNOWLEDGMENT regardless). Not force-able without
 risking her honest expression -- documented, not faked.
+
+---
+
+## POSSIBILITY-SELVES (2026-07-03, new subsystem — Stage 1 foundation)
+
+`aurora_possibility_selves.py` — inception-born divergent selves ("paths not
+taken"). NOT snapshots or clones. Each is a NEWBORN vessel of her architecture that
+develops a distinct identity by replaying her recorded pressure history
+(`pressure_experiences.jsonl`, 500 events) in a DIFFERENT order under DIFFERENT
+pressure. Because sequence + pressure shape identity, the same life-material
+re-sequenced yields a genuinely different self.
+
+Stage-1 mechanism (built + verified standalone):
+- Birth: newborn InceptionEntity vessel per self (blank), given a DivergenceProfile
+  (reorder strategy + axis emphasis).
+- Replay: her history re-ordered per self (reverse / hardest-first / diverged-first)
+  and re-pressured (axis emphasis reweights felt tension). Fast-tracked (all 500
+  lived at once).
+- Developmental resolution: a self builds capacity only on its emphasis axis and
+  resolves tensions THERE that she could not; off-axis it mostly rejects, as she did.
+- Warp for gaps: a self starved of its axis (her history barely walked it) uses warp
+  to re-read her experiences through its own lens -- growing territory she never gave
+  it, so a road-not-taken still becomes itself.
+- DivergenceTracker-style matrix confirms all three become distinct.
+
+Verified against her real state: 3 distinct fingerprints, distinct resolution
+profiles [91,92,419]; the N-forged self surpasses her in her own N-heavy domain
+(419/500) while the A/T selves are genuine roads-not-taken; each grew beyond her via
+warp. Standalone; NOT yet wired into boot/dream cycle.
+
+Remaining stages: (2) dream-cycle residence (selves exist/act only inside
+QuantumDreamSubstrate.run_dream_cycle); (3) dialogue loop (she interacts with them in
+dreams; they respond from their divergent identity); (4) feedback split (dream
+interaction feeds HER growth via shard->OETS/EEPR while the selves stay distinct);
+(5) per-self persistence (each a continuous being with its own arc).
