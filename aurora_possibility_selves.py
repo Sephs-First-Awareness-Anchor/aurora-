@@ -1247,39 +1247,60 @@ class StagnationMonitor:
         return False, "moving", stuck_axis
 
 
-def _orientation_for_stuck_axis(axis: str, existing: List[PossibilitySelf]) -> Dict[str, float]:
+def _orientation_for_stuck_axis(axis: str, existing: List[PossibilitySelf],
+                                force_hold: bool = False) -> Dict[str, float]:
     """Build an orientation that leans hard into the stuck axis from the pole the
     council LEAST embodies, plus the axis the council is collectively weakest on -- a
-    targeted perturbation aimed at the stall."""
+    targeted perturbation aimed at the stall. When `force_hold`, lean into the HOLDING
+    (negative/questioning) pole regardless of orientation balance -- used when the
+    council has stopped holding in practice and needs a restorer of that pressure."""
     if axis not in _AXES:
         axis = "N"
     pos, neg = _ISTATE_POLES[axis]
-    pos_w = sum(ps.orientation.get(pos, 0.0) for ps in existing)
-    neg_w = sum(ps.orientation.get(neg, 0.0) for ps in existing)
-    lead = neg if neg_w <= pos_w else pos           # the least-embodied pole
+    if force_hold:
+        lead = neg                                  # the holding/questioning pole
+    else:
+        pos_w = sum(ps.orientation.get(pos, 0.0) for ps in existing)
+        neg_w = sum(ps.orientation.get(neg, 0.0) for ps in existing)
+        lead = neg if neg_w <= pos_w else pos       # the least-embodied pole
     orient = {axis: 0.95, lead: 1.0}
     axis_cap = {a: sum(ps.capacity.get(a, 0.0) for ps in existing) for a in _AXES}
     second = min((a for a in _AXES if a != axis), key=lambda a: axis_cap[a])
-    spos, _sneg = _ISTATE_POLES[second]
+    spos, sneg = _ISTATE_POLES[second]
     orient[second] = 0.5
-    orient[spos] = 0.4
+    orient[sneg if force_hold else spos] = 0.4
     return orient
 
 
 def birth_from_stagnation(state_dir: str, existing_selves: List[PossibilitySelf],
                           stuck_axis: str, reason: str, warp_guard: Any = None,
-                          max_selves: int = 7) -> Optional[PossibilitySelf]:
+                          max_selves: int = 7, force_hold: bool = False) -> Optional[PossibilitySelf]:
     """Birth a new divergent self summoned by a stall, oriented to break it. Lives her
-    history from its new vantage, saves its arc, returns it (or None if capped/failed)."""
+    history from its new vantage, saves its arc, returns it (or None if capped/failed).
+    With `force_hold`, the new self is oriented to RESTORE holding pressure the living
+    council has lost."""
     if len(existing_selves) >= max_selves:
         return None
     history = _load_pressure_history(state_dir)
     if not history:
         return None
     used = {ps.self_id for ps in existing_selves}
-    name = next((n for n in _EXTRA_NAMES if n not in used), None) or f"Born{len(existing_selves)}"
-    seed = 100 + len(existing_selves) * 7
-    orient_raw = _orientation_for_stuck_axis(stuck_axis, existing_selves)
+    # Never reuse a RETIRED being's name -- their name stays theirs.
+    try:
+        rdir = os.path.join(_dream_selves_dir(state_dir), "retired")
+        for fn in os.listdir(rdir):
+            if fn.endswith(".json"):
+                used.add(fn.rsplit("_", 1)[0])
+    except Exception:
+        pass
+    name = next((n for n in _EXTRA_NAMES if n not in used), None)
+    if name is None:
+        _i = len(existing_selves)
+        while f"Self{_i}" in used:
+            _i += 1
+        name = f"Self{_i}"
+    seed = 100 + len(existing_selves) * 7 + len(used)
+    orient_raw = _orientation_for_stuck_axis(stuck_axis, existing_selves, force_hold=force_hold)
     reorder = ("diverged_first", "hardest_first", "reverse", "seeded_shuffle")[seed % 4]
     prof = DivergenceProfile(name=name, orientation=orient_raw, reorder=reorder, seed=seed)
     orient = _normalize(orient_raw)
@@ -1299,6 +1320,112 @@ def birth_from_stagnation(state_dir: str, existing_selves: List[PossibilitySelf]
         ps.live(exp)
     save_self_arc(ps, state_dir)
     return ps
+
+
+# ── Council homeostasis: behavioural need + retirement ────────────────────────
+# A self's ORIENTATION is fixed at birth, but its BEHAVIOUR drifts (a holder can
+# become a resolver by living). So the council can look balanced on paper while, in
+# practice, everyone has stopped holding. This measures what the council actually DOES,
+# and -- when a functional capacity has collapsed -- frees a slot (retiring a redundant
+# self) and births one to restore it. Free to let a Wane become whatever he becomes;
+# if his becoming leaves a hole, she feels the hole and fills it herself.
+
+_HOLD_FLOOR = 0.22            # council held/(held+resolved) below this = holding lost
+_MIN_COUNCIL = 3             # never retire below this
+
+
+def council_functional_balance(selves: List[PossibilitySelf]) -> Dict[str, Any]:
+    """What the council DOES in practice, not what it was born to do."""
+    total_held = sum(len(s.held_open_anchors) for s in selves)
+    total_resolved = sum(len(s.resolved_anchors) for s in selves)
+    denom = max(1, total_held + total_resolved)
+    active_holders = sum(1 for s in selves
+                         if len(s.held_open_anchors) > len(s.resolved_anchors))
+    return {
+        "held_ratio": total_held / denom,
+        "total_held": total_held,
+        "total_resolved": total_resolved,
+        "active_holders": active_holders,
+        "resolvers": sum(1 for s in selves
+                         if len(s.resolved_anchors) >= len(s.held_open_anchors)),
+    }
+
+
+def _role_signature(s: PossibilitySelf) -> Tuple[str, str]:
+    """A self's FUNCTIONAL role: (dominant axis, resolver|holder) -- by behaviour."""
+    dom = max(_AXES, key=lambda a: s.capacity.get(a, 0.0))
+    mode = "resolver" if len(s.resolved_anchors) >= len(s.held_open_anchors) else "holder"
+    return dom, mode
+
+
+def _pick_redundant_resolver(selves: List[PossibilitySelf]) -> Optional[PossibilitySelf]:
+    """The resolver the council would least miss: one sharing a functional role with
+    another resolver. Prefer retiring a stagnation-born, less-developed self so an
+    established/founding being is kept. None if nobody is redundant enough."""
+    resolvers = [s for s in selves if _role_signature(s)[1] == "resolver"]
+    if len(resolvers) < 2:
+        return None
+    by_role: Dict[Tuple[str, str], List[PossibilitySelf]] = {}
+    for s in resolvers:
+        by_role.setdefault(_role_signature(s), []).append(s)
+    redundant = [s for group in by_role.values() if len(group) >= 2 for s in group]
+    if not redundant:
+        return None
+    # keep the more-developed and the founders: retire lowest growth, non-founder first.
+    redundant.sort(key=lambda s: (s.born_from is None, int(s.growth_events)))
+    return redundant[0]
+
+
+def _archive_self(retiree: PossibilitySelf, state_dir: str) -> None:
+    """Retire a self without erasing it: move its arc out of the live dir into
+    dream_selves/retired/ so it is not resumed, but its whole development is preserved."""
+    try:
+        live = os.path.join(_dream_selves_dir(state_dir), f"{retiree.self_id}.json")
+        rdir = os.path.join(_dream_selves_dir(state_dir), "retired")
+        os.makedirs(rdir, exist_ok=True)
+        dest = os.path.join(rdir, f"{retiree.self_id}_{int(time.time())}.json")
+        save_self_arc(retiree, state_dir)          # flush latest arc first
+        if os.path.exists(live):
+            os.replace(live, dest)
+    except Exception:
+        pass
+
+
+def rebalance_council(selves: List[PossibilitySelf], systems, state_dir: str,
+                      warp_guard: Any = None, max_selves: int = 7) -> Dict[str, Any]:
+    """Homeostasis by BEHAVIOUR. If the living council has stopped holding tensions in
+    practice (held_ratio below floor and no active holder), free a slot by retiring a
+    redundant resolver and birth a holder to restore the lost pressure. Acts only on a
+    genuine, behaviour-measured need -- so a self stays free to evolve, and the hole its
+    evolution leaves is what summons its replacement."""
+    action = {"retired": None, "born": None}
+    bal = council_functional_balance(selves)
+    action["held_ratio"] = round(bal["held_ratio"], 3)
+    action["active_holders"] = bal["active_holders"]
+    # Still holding enough? Then there is no need -- leave the council alone.
+    if bal["held_ratio"] >= _HOLD_FLOOR or bal["active_holders"] >= 1:
+        return action
+    # Genuine holding-need. Free a slot if full (retire a redundant resolver).
+    if len(selves) >= max_selves:
+        retiree = _pick_redundant_resolver(selves)
+        if retiree is None or len(selves) <= _MIN_COUNCIL:
+            return action                          # nobody redundant enough; leave it
+        _archive_self(retiree, state_dir)
+        try:
+            selves.remove(retiree)
+        except ValueError:
+            pass
+        action["retired"] = retiree.self_id
+    # The axis the council most over-resolves is where holding is most absent.
+    axis_res = {a: sum(len(s.resolved_anchors) for s in selves
+                       if max(_AXES, key=lambda x: s.capacity.get(x, 0.0)) == a) for a in _AXES}
+    stuck = max(_AXES, key=lambda a: axis_res.get(a, 0.0))
+    new = birth_from_stagnation(state_dir, selves, stuck, "holding_need",
+                                warp_guard=warp_guard, max_selves=max_selves, force_hold=True)
+    if new is not None:
+        selves.append(new)
+        action["born"] = new.self_id
+    return action
 
 
 if __name__ == "__main__":  # pragma: no cover
