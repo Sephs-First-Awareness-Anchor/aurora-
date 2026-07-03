@@ -18,7 +18,7 @@
     "I_DIDNT": 0.0
   },
   "capacity": {
-    "X": 21.72308252555603,
+    "X": 28.123082525555326,
     "T": 0.0,
     "N": 22.249685706563167,
     "B": 0.0,
@@ -44,7 +44,7 @@
   "lived": 500,
   "warped_gaps": 37,
   "total_resonance": 102.44334774555954,
-  "resolved": 9,
+  "resolved": 13,
   "rejected": 500,
   "reframed": 0,
   "tone_counts": {
@@ -140,7 +140,11 @@
     "X:RECLASSIFY:L:f5d7aa2b5e": "constraint link candidate: X:RECLASSIFY -> L:f5d7aa2b5e",
     "X:ADMIT:L:401cc03199": "constraint link candidate: X:ADMIT -> L:401cc03199",
     "X:ADMIT:L:b6d6bb8aa6": "constraint link candidate: X:ADMIT -> L:b6d6bb8aa6",
-    "X:ADMIT:L:89c1b6df72": "constraint link candidate: X:ADMIT -> L:89c1b6df72"
+    "X:ADMIT:L:89c1b6df72": "constraint link candidate: X:ADMIT -> L:89c1b6df72",
+    "X:ADMIT:L:d37651a797": "constraint link candidate: X:ADMIT -> L:d37651a797",
+    "X:RECLASSIFY:L:534579a7ec": "constraint link candidate: X:RECLASSIFY -> L:534579a7ec",
+    "X:RECLASSIFY:L:2761307a73": "constraint link candidate: X:RECLASSIFY -> L:2761307a73",
+    "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e"
   },
   "held_open_anchors": {
     "L:d54b2235b7:X:RECLASSIFY": "constraint link candidate: L:d54b2235b7 -> X:RECLASSIFY",
@@ -169,17 +173,13 @@
     "X:RECLASSIFY:L:20ad24d7c4": "constraint link candidate: X:RECLASSIFY -> L:20ad24d7c4",
     "X:ADMIT:L:1bcbe6eeb0": "constraint link candidate: X:ADMIT -> L:1bcbe6eeb0",
     "X:ADMIT:L:27d2e65f0f": "constraint link candidate: X:ADMIT -> L:27d2e65f0f",
-    "X:ADMIT:L:52d869d42f": "constraint link candidate: X:ADMIT -> L:52d869d42f",
-    "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e",
-    "X:RECLASSIFY:L:2761307a73": "constraint link candidate: X:RECLASSIFY -> L:2761307a73",
-    "X:RECLASSIFY:L:534579a7ec": "constraint link candidate: X:RECLASSIFY -> L:534579a7ec",
-    "X:ADMIT:L:d37651a797": "constraint link candidate: X:ADMIT -> L:d37651a797"
+    "X:ADMIT:L:52d869d42f": "constraint link candidate: X:ADMIT -> L:52d869d42f"
   },
-  "witnessed": 1840,
-  "growth_events": 64,
-  "self_resolved_from_held": 9,
+  "witnessed": 2640,
+  "growth_events": 92,
+  "self_resolved_from_held": 13,
   "witness_depth": {
-    "X": 0.3200000000000102,
+    "X": 0.32000000000001466,
     "T": 0.0,
     "N": 0.0,
     "B": 0.0,
@@ -196,16 +196,16 @@
     "reorder": "diverged_first",
     "leading_stance": "I_ISNT",
     "dominant_dim": "X",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "lived": 500,
     "avg_resonance": 0.205,
-    "resolved": 9,
+    "resolved": 13,
     "rejected": 500,
     "reframed_vs_her": 0,
     "warped_gaps": 37,
     "dominant_tone": "rejected",
     "distinct_anchors": 79,
-    "fingerprint": "26528c90b56d"
+    "fingerprint": "89fbdec6c820"
   },
-  "saved_t": 1783113196.5721512
+  "saved_t": 1783113756.776411
 }

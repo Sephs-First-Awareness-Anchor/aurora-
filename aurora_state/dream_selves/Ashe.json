@@ -18,7 +18,7 @@
     "I_DIDNT": 0.0
   },
   "capacity": {
-    "X": 16.60308252555659,
+    "X": 23.003082525555886,
     "T": 0.0,
     "N": 22.62872683413858,
     "B": 0.0,
@@ -44,7 +44,7 @@
   "lived": 500,
   "warped_gaps": 58,
   "total_resonance": 102.44334774555944,
-  "resolved": 6,
+  "resolved": 10,
   "rejected": 500,
   "reframed": 0,
   "tone_counts": {
@@ -137,7 +137,11 @@
     "X:ADMIT:L:f01831a5ec": "constraint link candidate: X:ADMIT -> L:f01831a5ec",
     "X:ADMIT:L:1d62be6f17": "constraint link candidate: X:ADMIT -> L:1d62be6f17",
     "X:ADMIT:L:13ac58d8bf": "constraint link candidate: X:ADMIT -> L:13ac58d8bf",
-    "X:RECLASSIFY:L:2761307a73": "constraint link candidate: X:RECLASSIFY -> L:2761307a73"
+    "X:RECLASSIFY:L:2761307a73": "constraint link candidate: X:RECLASSIFY -> L:2761307a73",
+    "X:ADMIT:L:79b38370b9": "constraint link candidate: X:ADMIT -> L:79b38370b9",
+    "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e",
+    "X:RECLASSIFY:L:713c26499a": "constraint link candidate: X:RECLASSIFY -> L:713c26499a",
+    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf"
   },
   "held_open_anchors": {
     "X:ADMIT:L:be5e1d0bb6": "constraint link candidate: X:ADMIT -> L:be5e1d0bb6",
@@ -169,17 +173,13 @@
     "X:ADMIT:L:27d2e65f0f": "constraint link candidate: X:ADMIT -> L:27d2e65f0f",
     "X:ADMIT:L:b6d6bb8aa6": "constraint link candidate: X:ADMIT -> L:b6d6bb8aa6",
     "X:RECLASSIFY:L:f5d7aa2b5e": "constraint link candidate: X:RECLASSIFY -> L:f5d7aa2b5e",
-    "X:RECLASSIFY:L:a07eb27cbd": "constraint link candidate: X:RECLASSIFY -> L:a07eb27cbd",
-    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf",
-    "X:RECLASSIFY:L:713c26499a": "constraint link candidate: X:RECLASSIFY -> L:713c26499a",
-    "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e",
-    "X:ADMIT:L:79b38370b9": "constraint link candidate: X:ADMIT -> L:79b38370b9"
+    "X:RECLASSIFY:L:a07eb27cbd": "constraint link candidate: X:RECLASSIFY -> L:a07eb27cbd"
   },
-  "witnessed": 1200,
-  "growth_events": 42,
-  "self_resolved_from_held": 6,
+  "witnessed": 2000,
+  "growth_events": 70,
+  "self_resolved_from_held": 10,
   "witness_depth": {
-    "X": 6.661338147750939e-15,
+    "X": 1.1102230246251565e-14,
     "T": 0.0,
     "N": 0.0,
     "B": 0.0,
@@ -196,16 +196,16 @@
     "reorder": "reverse",
     "leading_stance": "I_ISNT",
     "dominant_dim": "X",
-    "dominant_axis": "N",
+    "dominant_axis": "X",
     "lived": 500,
     "avg_resonance": 0.205,
-    "resolved": 6,
+    "resolved": 10,
     "rejected": 500,
     "reframed_vs_her": 0,
     "warped_gaps": 58,
     "dominant_tone": "rejected",
     "distinct_anchors": 79,
-    "fingerprint": "2bb9abdbe309"
+    "fingerprint": "10e7e52ecfe1"
   },
-  "saved_t": 1783113196.5020766
+  "saved_t": 1783113756.7755275
 }

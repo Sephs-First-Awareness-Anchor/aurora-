@@ -20,7 +20,7 @@
   "capacity": {
     "X": 1.5089853314357562,
     "T": 0.0,
-    "N": 61.21732950934763,
+    "N": 64.89732950934805,
     "B": 0.0,
     "A": 8.378238860485219e-06
   },
@@ -146,13 +146,13 @@
     "L:b737edc98c:L:18007bd036": "constraint link candidate: L:b737edc98c -> L:18007bd036"
   },
   "held_open_anchors": {},
-  "witnessed": 1610,
-  "growth_events": 51,
+  "witnessed": 2070,
+  "growth_events": 66,
   "self_resolved_from_held": 0,
   "witness_depth": {
     "X": 0.0,
     "T": 0.0,
-    "N": 12.879999999999468,
+    "N": 16.559999999999064,
     "B": 0.0,
     "A": 0.0
   },
@@ -178,5 +178,5 @@
     "distinct_anchors": 68,
     "fingerprint": "bdd9b82a1fd6"
   },
-  "saved_t": 1783113196.4806428
+  "saved_t": 1783113756.7752142
 }

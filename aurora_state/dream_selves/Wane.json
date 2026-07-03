@@ -18,9 +18,9 @@
     "I_DIDNT": 0.0
   },
   "capacity": {
-    "X": 28.580320401143805,
+    "X": 35.460320401144585,
     "T": 0.0,
-    "N": 71.87037327751523,
+    "N": 75.55037327751319,
     "B": 0.0,
     "A": 0.0
   },
@@ -44,7 +44,7 @@
   "lived": 500,
   "warped_gaps": 26,
   "total_resonance": 227.46115596036262,
-  "resolved": 21,
+  "resolved": 29,
   "rejected": 500,
   "reframed": 0,
   "tone_counts": {
@@ -141,19 +141,23 @@
     "L:b0a40461a6:X:ADMIT": "constraint link candidate: L:b0a40461a6 -> X:ADMIT",
     "NC:B>X:NC:X>A": "constraint link candidate: NC:B>X -> NC:X>A",
     "X:ADMIT:L:1d62be6f17": "constraint link candidate: X:ADMIT -> L:1d62be6f17",
-    "L:18007bd036:X:RECLASSIFY": "constraint link candidate: L:18007bd036 -> X:RECLASSIFY"
+    "L:18007bd036:X:RECLASSIFY": "constraint link candidate: L:18007bd036 -> X:RECLASSIFY",
+    "NC:B>T:NC:B>X": "constraint link candidate: NC:B>T -> NC:B>X",
+    "X:ADMIT:L:1bcbe6eeb0": "constraint link candidate: X:ADMIT -> L:1bcbe6eeb0",
+    "X:ADMIT:L:79b38370b9": "constraint link candidate: X:ADMIT -> L:79b38370b9",
+    "NC:X>B:L:b737edc98c": "constraint link candidate: NC:X>B -> L:b737edc98c",
+    "X:RECLASSIFY:L:1a4a93766e": "constraint link candidate: X:RECLASSIFY -> L:1a4a93766e",
+    "L:1028c8eb9d:X:ADMIT": "constraint link candidate: L:1028c8eb9d -> X:ADMIT",
+    "L:44f752f528:NC:A>X": "constraint link candidate: L:44f752f528 -> NC:A>X",
+    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf"
   },
   "held_open_anchors": {
-    "NC:X>B:L:b737edc98c": "constraint link candidate: NC:X>B -> L:b737edc98c",
     "L:280119127f:NC:X>A": "constraint link candidate: L:280119127f -> NC:X>A",
     "L:43fb729393:L:280119127f": "constraint link candidate: L:43fb729393 -> L:280119127f",
-    "NC:B>T:NC:B>X": "constraint link candidate: NC:B>T -> NC:B>X",
     "L:ecee8a4a8c:NC:B>T": "constraint link candidate: L:ecee8a4a8c -> NC:B>T",
     "NC:A>X:L:ecee8a4a8c": "constraint link candidate: NC:A>X -> L:ecee8a4a8c",
     "NC:A>T:NC:A>X": "constraint link candidate: NC:A>T -> NC:A>X",
     "L:44f752f528:NC:A>T": "constraint link candidate: L:44f752f528 -> NC:A>T",
-    "X:ADMIT:L:1bcbe6eeb0": "constraint link candidate: X:ADMIT -> L:1bcbe6eeb0",
-    "L:1028c8eb9d:X:ADMIT": "constraint link candidate: L:1028c8eb9d -> X:ADMIT",
     "L:b737edc98c:L:1028c8eb9d": "constraint link candidate: L:b737edc98c -> L:1028c8eb9d",
     "X:RECLASSIFY:L:534579a7ec": "constraint link candidate: X:RECLASSIFY -> L:534579a7ec",
     "L:b737edc98c:L:d54b2235b7": "constraint link candidate: L:b737edc98c -> L:d54b2235b7",
@@ -161,11 +165,9 @@
     "L:725f72b502:X:ADMIT": "constraint link candidate: L:725f72b502 -> X:ADMIT",
     "X:ADMIT:L:a48bacb221": "constraint link candidate: X:ADMIT -> L:a48bacb221",
     "L:b737edc98c:L:f084e40ef7": "constraint link candidate: L:b737edc98c -> L:f084e40ef7",
-    "X:RECLASSIFY:L:1a4a93766e": "constraint link candidate: X:RECLASSIFY -> L:1a4a93766e",
     "X:ADMIT:L:d37651a797": "constraint link candidate: X:ADMIT -> L:d37651a797",
     "X:ADMIT:L:52d869d42f": "constraint link candidate: X:ADMIT -> L:52d869d42f",
     "L:ecee8a4a8c:NC:B>X": "constraint link candidate: L:ecee8a4a8c -> NC:B>X",
-    "L:44f752f528:NC:A>X": "constraint link candidate: L:44f752f528 -> NC:A>X",
     "X:RECLASSIFY:L:474f241dcd": "constraint link candidate: X:RECLASSIFY -> L:474f241dcd",
     "L:47f95ddd2a:L:e61478fba2": "constraint link candidate: L:47f95ddd2a -> L:e61478fba2",
     "NC:X>A:L:47f95ddd2a": "constraint link candidate: NC:X>A -> L:47f95ddd2a",
@@ -179,10 +181,8 @@
     "X:ADMIT:L:27d2e65f0f": "constraint link candidate: X:ADMIT -> L:27d2e65f0f",
     "X:ADMIT:L:b6d6bb8aa6": "constraint link candidate: X:ADMIT -> L:b6d6bb8aa6",
     "X:RECLASSIFY:L:f5d7aa2b5e": "constraint link candidate: X:RECLASSIFY -> L:f5d7aa2b5e",
-    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf",
     "X:RECLASSIFY:L:713c26499a": "constraint link candidate: X:RECLASSIFY -> L:713c26499a",
     "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e",
-    "X:ADMIT:L:79b38370b9": "constraint link candidate: X:ADMIT -> L:79b38370b9",
     "X:RECLASSIFY:L:2761307a73": "constraint link candidate: X:RECLASSIFY -> L:2761307a73",
     "X:ADMIT:L:13ac58d8bf": "constraint link candidate: X:ADMIT -> L:13ac58d8bf",
     "X:ADMIT:L:f01831a5ec": "constraint link candidate: X:ADMIT -> L:f01831a5ec",
@@ -190,13 +190,13 @@
     "X:ADMIT:L:305ac407d1": "constraint link candidate: X:ADMIT -> L:305ac407d1",
     "X:RECLASSIFY:L:151110020a": "constraint link candidate: X:RECLASSIFY -> L:151110020a"
   },
-  "witnessed": 4537,
-  "growth_events": 157,
-  "self_resolved_from_held": 21,
+  "witnessed": 5857,
+  "growth_events": 204,
+  "self_resolved_from_held": 29,
   "witness_depth": {
-    "X": 1.1840000000000164,
+    "X": 0.06400000000002132,
     "T": 0.0,
-    "N": 1.512000000000009,
+    "N": 0.3920000000000114,
     "B": 0.0,
     "A": 0.0
   },
@@ -214,13 +214,13 @@
     "dominant_axis": "N",
     "lived": 500,
     "avg_resonance": 0.455,
-    "resolved": 21,
+    "resolved": 29,
     "rejected": 500,
     "reframed_vs_her": 0,
     "warped_gaps": 26,
     "dominant_tone": "rejected",
     "distinct_anchors": 68,
-    "fingerprint": "7d41e56c0eb0"
+    "fingerprint": "9fde2dc2a744"
   },
-  "saved_t": 1783113196.4643967
+  "saved_t": 1783113756.7749603
 }
