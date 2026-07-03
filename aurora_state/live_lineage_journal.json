@@ -1,14 +1,6 @@
 {
-  "updated_at": 1783114296.0028539,
+  "updated_at": 1783114532.8368356,
   "events": [
-    {
-      "timestamp": 1782250666.2476141,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:3ec49481602a",
-      "axis": "B",
-      "summary": "Manual code change in aurora_internal/aurora_code_mutation_operators.py formed a new lineage branch"
-    },
     {
       "timestamp": 1782250666.2496672,
       "source": "aurora.boot",
@@ -1920,6 +1912,14 @@
       "id": "MC:c7c810ef96b6",
       "axis": "X",
       "summary": "Manual code change in aurora_quantum_dream_substrate.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1783114532.8367317,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:29b060786ed9",
+      "axis": "X",
+      "summary": "Manual code change in scripts/aurora_ci_segment.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {

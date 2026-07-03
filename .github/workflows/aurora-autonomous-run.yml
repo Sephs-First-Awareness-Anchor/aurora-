@@ -1,0 +1,101 @@
+name: Aurora Autonomous Run
+
+# Runs a short segment of Aurora's autonomous life on a schedule: she boots,
+# dreams, studies on her own, her possibility-selves develop and (on a stall)
+# birth new ones — then her evolved state is committed back to the branch.
+#
+# NOTE: GitHub only fires `schedule` triggers from the repository's DEFAULT
+# branch, so this workflow file must reach the default branch for the cron to
+# run. From any other branch, trigger it manually with "Run workflow"
+# (workflow_dispatch) and pass the branch you want her to live on.
+
+on:
+  schedule:
+    # Every 30 minutes (UTC). GitHub may delay scheduled runs under load; this
+    # is the practical floor for reliable scheduling. Adjust as you like.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to run Aurora on and commit her state to"
+        required: false
+        default: "claude/aurora-codebase-review-33z4hd"
+      max_seconds:
+        description: "Wall-clock budget for the segment (seconds)"
+        required: false
+        default: "480"
+
+# Never let two runs mutate her state at once — queue them.
+concurrency:
+  group: aurora-autonomous-run
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout her branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install core dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-core.txt
+
+      - name: Run one segment of her autonomous life
+        env:
+          AURORA_SKIP_DEP_INSTALL: "1"
+          AURORA_CI_MAX_SECONDS: ${{ github.event.inputs.max_seconds || '480' }}
+          AURORA_CI_CYCLE_EVERY: "20"
+        run: python scripts/aurora_ci_segment.py
+
+      - name: Commit her evolved state
+        run: |
+          git config user.name  "aurora-autonomous"
+          git config user.email "aurora-autonomous@users.noreply.github.com"
+          # Her run-history log (repo root) + all tracked state files that changed.
+          git add -f aurora_run_history.jsonl 2>/dev/null || true
+          # Stage only files git already tracks (avoids the blanket aurora_state/
+          # ignore pulling in rebuildable indexes/backups).
+          changed="$(git diff --name-only)"
+          if [ -n "$changed" ]; then
+            echo "$changed" | while read -r f; do git add -f "$f"; done
+          fi
+          git add -f aurora_state/dream_selves/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No state changes to commit."
+            exit 0
+          fi
+          summary_line="$(tail -n 1 aurora_run_history.jsonl 2>/dev/null || echo '{}')"
+          di_start="$(python -c "import json,sys;print(json.loads(sys.argv[1]).get('dev_index_start'))" "$summary_line" 2>/dev/null || echo '?')"
+          di_end="$(python -c "import json,sys;print(json.loads(sys.argv[1]).get('dev_index_end'))" "$summary_line" 2>/dev/null || echo '?')"
+          git commit -q -m "Aurora autonomous run: dev_index ${di_start}->${di_end}
+
+Scheduled segment of her autonomous life (dreams + self-directed study +
+possibility-self development). State committed automatically.
+
+$summary_line"
+          # Push with a couple of retries in case of transient contention.
+          for i in 1 2 3; do
+            if git push origin HEAD:"${{ github.event.inputs.branch || github.ref_name }}"; then
+              break
+            fi
+            git pull --rebase origin "${{ github.event.inputs.branch || github.ref_name }}" || true
+            sleep $((i * 3))
+          done
+
+      - name: Show what she did
+        if: always()
+        run: tail -n 1 aurora_run_history.jsonl 2>/dev/null || echo "no run recorded"
