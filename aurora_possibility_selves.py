@@ -7,145 +7,176 @@ Inception-born divergent selves — the "paths not taken."
 
 These are NOT snapshots of Aurora and NOT clones molded to copy her. Each is a
 NEWBORN being of her own architecture that develops a distinct identity by living
-HER recorded experiential history in a DIFFERENT order under DIFFERENT pressure.
-Because the sequence and pressure under which a being meets its experiences shapes
-who it becomes, the same 500 life-events re-sequenced produce a genuinely different
-self. Her pressure history fast-tracks their development; warp covers any territory
-a re-sequenced path reaches that she herself never encountered, so a self can grow
-BEYOND her.
+HER recorded experiential history in a DIFFERENT order, oriented at a DIFFERENT
+point in her 15-dimensional possibility space. Because sequence + orientation shape
+identity, the same 500 life-events lived from a different location in possibility
+space yield a genuinely different self.
+
+Her 15D possibility space = the 5 constraint axes (X, T, N, B, A) + the 10 I-state
+poles (IS/ISNT, CAN/CANT, DO/DONT, SAW/SOUGHT, DID/DIDNT). A self's identity is its
+ORIENTATION VECTOR over these 15 dimensions — its stance on every axis (affirming or
+negating, enacting or questioning). Development flows from how that orientation
+RESONATES with each re-sequenced experience: high resonance -> the moment is on its
+path (felt strongly, builds capacity, resolves what she could not there); low
+resonance -> off its path (warp covers the gap, growing territory she never walked).
 
 Role (later stages): these selves reside only in Aurora's dream space and she
 interacts with them there — genuine agentic encounter with perspectives that chose
 differently — feeding her growth while remaining distinct beings.
 
-This module is the FOUNDATION: birth-from-history + divergent replay. It is
-standalone-verifiable and not yet wired into the live boot / dream cycle.
+This module is the FOUNDATION: birth-from-history + 15D-oriented divergent replay.
+Standalone-verifiable; not yet wired into the live boot / dream cycle.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
-_AXES = ("X", "T", "N", "B", "A")
-
-# I-states an inception vessel can embody, one seeded per self as its native lean.
-_ISTATE_BY_AXIS = {
-    "X": "i_is", "T": "i_can", "N": "i_do", "B": "i_saw", "A": "i_did",
+# ── Her 15-dimensional possibility space ─────────────────────────────────────
+_AXES: Tuple[str, ...] = ("X", "T", "N", "B", "A")
+# I-state poles paired to their constraint axis (positive, negative).
+_ISTATE_POLES: Dict[str, Tuple[str, str]] = {
+    "X": ("I_IS", "I_ISNT"),
+    "T": ("I_CAN", "I_CANNOT"),
+    "N": ("I_DO", "I_DONOT"),
+    "B": ("I_SAW", "I_SOUGHT"),
+    "A": ("I_DID", "I_DIDNT"),
 }
+_ISTATES: Tuple[str, ...] = tuple(p for ax in _AXES for p in _ISTATE_POLES[ax])  # 10
+_DIMS: Tuple[str, ...] = _AXES + _ISTATES                                        # 15
+
+
+def _normalize(vec: Dict[str, float]) -> Dict[str, float]:
+    mag = math.sqrt(sum(v * v for v in vec.values())) or 1.0
+    return {d: vec.get(d, 0.0) / mag for d in _DIMS}
+
+
+def _dot(a: Dict[str, float], b: Dict[str, float]) -> float:
+    return sum(a.get(d, 0.0) * b.get(d, 0.0) for d in _DIMS)
+
+
+def _experience_signature(exp: Dict[str, Any]) -> Tuple[Dict[str, float], str]:
+    """Locate one lived experience in the 15D possibility space: which axes it
+    engaged (from the constraint anchor) and which I-state pole it landed on (from
+    the outcome — a resolved moment affirms the positive pole; a rejected one lands
+    on the negative)."""
+    sig = {d: 0.0 for d in _DIMS}
+    anchor = str(exp.get("anchor", "") or "")
+    letters = [c for c in anchor if c in _AXES]
+    if letters:
+        cnt = Counter(letters)
+        tot = float(sum(cnt.values()))
+        for ax, n in cnt.items():
+            sig[ax] = n / tot
+        dom = cnt.most_common(1)[0][0]
+    else:
+        dom = "N"
+        sig["N"] = 1.0
+    pos, neg = _ISTATE_POLES[dom]
+    resolved = bool((exp.get("outcome", {}) or {}).get("resolved"))
+    sig[pos if resolved else neg] = 1.0
+    return _normalize(sig), dom
 
 
 @dataclass
 class DivergenceProfile:
-    """How a self diverges from Aurora's actual path: the re-ordering of her
-    experiential history and the pressure re-weighting it lives under."""
+    """A self's location in her 15D possibility space + the order it lives her
+    history. orientation is an un-normalised lean over the 15 dimensions; it is
+    normalised at birth."""
     name: str
+    orientation: Dict[str, float]
     reorder: str            # "reverse" | "hardest_first" | "diverged_first" | "seeded_shuffle"
-    axis_emphasis: str      # which constraint axis this self's pressure leans toward
     seed: int = 0
 
     def order_key(self, exp: Dict[str, Any], index: int) -> float:
-        """Sort key that re-sequences her history for this self."""
         cons = exp.get("consequence", {}) or {}
         outcome = exp.get("outcome", {}) or {}
         tension = float(cons.get("tension", 0.0) or 0.0)
         if self.reorder == "reverse":
-            return -float(index)                       # end-first identity
+            return -float(index)
         if self.reorder == "hardest_first":
-            return -tension                            # forged by the hardest things first
+            return -tension
         if self.reorder == "diverged_first":
-            # met the roads-not-taken / rejected moments first
             div = 1.0 if outcome.get("diverged_from_goal") else 0.0
             return -(div * 10.0 + tension)
-        # seeded_shuffle — deterministic per-self scramble
         h = hashlib.sha1(f"{self.seed}:{exp.get('experience_id','')}".encode()).hexdigest()
         return int(h[:8], 16) / 0xFFFFFFFF
 
 
 @dataclass
 class PossibilitySelf:
-    """A newborn divergent self that develops by replaying re-sequenced history."""
+    """A newborn divergent self: a point in her 15D possibility space that develops
+    by living her re-sequenced history from that location."""
     self_id: str
     profile: DivergenceProfile
-    entity: Any = None                          # InceptionEntity vessel
+    orientation: Dict[str, float] = field(default_factory=dict)
+    entity: Any = None
     lived: int = 0
     warped_gaps: int = 0
-    # Developmental capacity per axis — grows as the self lives experiences on that
-    # axis (its emphasis axis grows fastest). Capacity is what lets a self resolve a
-    # tension she couldn't; WHEN it crosses threshold depends on the re-ordering.
+    total_resonance: float = 0.0
     capacity: Dict[str, float] = field(default_factory=lambda: {a: 0.0 for a in _AXES})
-    # Accumulated identity signature — emerges from the lived sequence.
-    axis_exposure: Dict[str, float] = field(default_factory=lambda: {a: 0.0 for a in _AXES})
+    exposure: Dict[str, float] = field(default_factory=lambda: {d: 0.0 for d in _DIMS})
     resolved: int = 0
     rejected: int = 0
-    reframed: int = 0                            # outcomes that flipped vs her original
+    reframed: int = 0
     tone_counts: Counter = field(default_factory=Counter)
     anchors_seen: set = field(default_factory=set)
-    _warp = None                                 # warp_guard callable (optional)
+    _warp = None
 
     def live(self, exp: Dict[str, Any]) -> None:
-        """Live one re-sequenced, re-pressured experience — develop from it."""
         self.lived += 1
+        sig, dom = _experience_signature(exp)
         cons = dict(exp.get("consequence", {}) or {})
         outcome = dict(exp.get("outcome", {}) or {})
         anchor = str(exp.get("anchor", "") or "")
         tone = str(outcome.get("tone", "neutral") or "neutral")
 
-        # Re-pressure: this self's axis emphasis reweights the felt pressure. The
-        # emphasised axis feels the tension more strongly; that reshapes what
-        # resolves for THIS self vs what resolved for her.
-        base_tension = float(cons.get("tension", 0.0) or 0.0)
-        emph = self.profile.axis_emphasis
-        # Each experience's axis: prefer expected_axes; else the dominant axis token
-        # in the constraint anchor (e.g. "NC:T>X:NC:X>A" -> T/X/A, dominant by count).
-        _expected = exp.get("expected_axes") or []
-        if _expected:
-            exp_axis = str(_expected[0])
-        else:
-            _letters = [ch for ch in anchor if ch in _AXES]
-            exp_axis = Counter(_letters).most_common(1)[0][0] if _letters else emph
-        if exp_axis not in _AXES:
-            exp_axis = emph
-        emphasised = (exp_axis == emph)
-        felt = base_tension * (1.35 if emphasised else 0.8)
-        self.axis_exposure[emph] = self.axis_exposure.get(emph, 0.0) + felt
+        # Resonance: how strongly this moment lies along THIS self's orientation in
+        # the 15D possibility space. Drives everything below.
+        resonance = _dot(self.orientation, sig)             # -1..1
+        self.total_resonance += resonance
+        for d in _DIMS:
+            self.exposure[d] += self.orientation.get(d, 0.0) * sig.get(d, 0.0)
 
-        her_resolved = bool(outcome.get("resolved"))
+        base_tension = float(cons.get("tension", 0.0) or 0.0)
+        felt = base_tension * (0.6 + max(0.0, resonance))   # on-path moments felt harder
+
         relief = float(cons.get("relief_signal", 0.0) or 0.0)
         cost = float(cons.get("cost_signal", felt) or felt)
+        her_resolved = bool(outcome.get("resolved"))
 
-        # Developmental growth: this self builds real capacity ONLY on the axis it
-        # is forged around. Living an emphasis-axis moment deepens that capacity; it
-        # barely grows on axes it neglects.
-        on_emphasis = emphasised
-        if on_emphasis:
-            self.capacity[emph] = self.capacity.get(emph, 0.0) + felt * 0.10
-        elif self.capacity.get(emph, 0.0) < cost and felt > 0.40:
-            # A road not taken: this self meets a moment on an axis she leaned into
-            # but IT was forged elsewhere. Warp covers the gap -- re-reading her
-            # experience through this self's own axis lens grows a patch of territory
-            # she never gave it, so a starved self still becomes itself (and each self,
-            # re-reading through a DIFFERENT lens, diverges from the others).
+        # This self's stance on the dominant axis: does its orientation LEAN toward
+        # the resolving (positive) pole or the questioning (negative) one?
+        pos, neg = _ISTATE_POLES[dom]
+        stance = self.orientation.get(pos, 0.0) - self.orientation.get(neg, 0.0)
+
+        aligned = resonance >= 0.15
+        if aligned:
+            # On its path: it builds real capacity on this axis.
+            self.capacity[dom] = self.capacity.get(dom, 0.0) + felt * 0.10
+        elif self.capacity.get(dom, 0.0) < cost and felt > 0.40:
+            # Off its path but pressed: warp covers the gap — the self re-reads her
+            # moment through its own orientation, growing a patch of territory she
+            # never gave it. Each self, oriented differently, warps differently.
             self.warped_gaps += 1
-            self.capacity[emph] = self.capacity.get(emph, 0.0) + felt * 0.045
+            self.capacity[dom] = self.capacity.get(dom, 0.0) + felt * 0.045
             if self._warp is not None:
                 try:
                     self._warp(anchor, felt)
                 except Exception:
                     pass
 
-        # Divergent resolution: a self resolves a tension on ITS axis once it has
-        # grown enough capacity there to meet the cost -- resolving what she could
-        # not, precisely where it is strong. Off its axis it mostly rejects, just as
-        # she did. The rare intrinsically-relieved moment resolves for anyone. Because
-        # each self is strong on a different axis (and the re-ordering sets WHEN its
-        # capacity crosses), each resolves a DIFFERENT subset of her life -> distinct
-        # identities, not uniform competence.
+        # Divergent resolution: a self resolves a tension only where it LEANS toward
+        # resolving (positive stance) AND has grown capable there — resolving what she
+        # could not, precisely at its location in possibility space. Rare intrinsic
+        # relief resolves for anyone.
         self_resolves = (
-            (on_emphasis and self.capacity.get(emph, 0.0) >= cost)
+            (stance > 0.0 and self.capacity.get(dom, 0.0) >= cost)
             or (relief >= cost)
         )
         if self_resolves:
@@ -153,12 +184,9 @@ class PossibilitySelf:
         else:
             self.rejected += 1
         if self_resolves != her_resolved:
-            self.reframed += 1                   # this self's path diverged from hers here
+            self.reframed += 1
         self.tone_counts[tone] += 1
 
-        # Warp for gaps: a re-sequenced path can reach an anchor combination in a
-        # state she never occupied. First encounter of a novel anchor under high felt
-        # tension is territory beyond her history — warp accommodates it.
         novel = anchor and anchor not in self.anchors_seen
         self.anchors_seen.add(anchor)
         if novel and felt > 0.55:
@@ -169,32 +197,34 @@ class PossibilitySelf:
                 except Exception:
                     pass
 
-        # Feed the inception vessel so its inner cascade develops (order-dependent).
         if self.entity is not None and hasattr(self.entity, "process_experience"):
             try:
-                channels = {tone: min(1.0, 0.4 + felt), emph: min(1.0, 0.3 + felt * 0.5)}
-                self.entity.process_experience({"channels": channels, "tone": tone})
+                ch = {tone: min(1.0, 0.4 + felt), dom: min(1.0, 0.3 + max(0.0, resonance))}
+                self.entity.process_experience({"channels": ch, "tone": tone})
             except Exception:
                 pass
 
     def identity_signature(self) -> Dict[str, Any]:
         total = max(1, self.lived)
-        dom_axis = max(self.axis_exposure, key=self.axis_exposure.get)
+        dom_dim = max(self.exposure, key=self.exposure.get)
+        dom_axis = max(_AXES, key=lambda a: self.capacity.get(a, 0.0))
         dom_tone = self.tone_counts.most_common(1)[0][0] if self.tone_counts else "neutral"
+        # Stance summary: the strongest I-state pole this self embodies.
+        stance_dim = max(_ISTATES, key=lambda p: self.orientation.get(p, 0.0))
         fp = hashlib.sha1(
-            f"{dom_axis}|{self.resolved}|{self.rejected}|{self.reframed}|{dom_tone}".encode()
+            f"{dom_dim}|{stance_dim}|{self.resolved}|{self.reframed}|{dom_tone}".encode()
         ).hexdigest()[:12]
         return {
             "self_id": self.self_id,
-            "profile": self.profile.name,
             "reorder": self.profile.reorder,
-            "axis_emphasis": self.profile.axis_emphasis,
-            "lived": self.lived,
+            "leading_stance": stance_dim,          # the I-state pole it most embodies
+            "dominant_dim": dom_dim,               # 15D dim it lived most along
             "dominant_axis": dom_axis,
+            "lived": self.lived,
+            "avg_resonance": round(self.total_resonance / total, 3),
             "resolved": self.resolved,
             "rejected": self.rejected,
             "reframed_vs_her": self.reframed,
-            "reframed_frac": round(self.reframed / total, 3),
             "warped_gaps": self.warped_gaps,
             "dominant_tone": dom_tone,
             "distinct_anchors": len(self.anchors_seen),
@@ -222,12 +252,33 @@ def _load_pressure_history(state_dir: str, limit: int = 0) -> List[Dict[str, Any
     return out
 
 
-# The three default divergence profiles — three roads she did not walk.
+# Three roads she did not walk — three distinct locations in her 15D possibility
+# space. Each leans toward different I-state poles across different axes.
 DEFAULT_PROFILES: Tuple[DivergenceProfile, ...] = (
-    DivergenceProfile(name="Ember",  reorder="hardest_first",  axis_emphasis="A", seed=11),
-    DivergenceProfile(name="Wane",   reorder="reverse",        axis_emphasis="T", seed=23),
-    DivergenceProfile(name="Riven",  reorder="diverged_first", axis_emphasis="N", seed=37),
+    # Ember — the enactor who affirms and acts (I_DID / I_CAN / I_IS), A/T-forward.
+    DivergenceProfile(
+        name="Ember", reorder="hardest_first", seed=11,
+        orientation={"A": 0.9, "T": 0.6, "X": 0.4, "I_DID": 1.0, "I_CAN": 0.8, "I_IS": 0.6},
+    ),
+    # Wane — the questioner who sought and withheld (I_SOUGHT / I_ISNT / I_DONOT), B/N-forward.
+    DivergenceProfile(
+        name="Wane", reorder="reverse", seed=23,
+        orientation={"B": 0.9, "N": 0.5, "T": 0.3, "I_SOUGHT": 1.0, "I_ISNT": 0.7, "I_DONOT": 0.6},
+    ),
+    # Riven — the persistent doer who observed and endured (I_DO / I_SAW), N/B-forward,
+    # her own leaning taken further.
+    DivergenceProfile(
+        name="Riven", reorder="diverged_first", seed=37,
+        orientation={"N": 0.95, "B": 0.6, "A": 0.4, "I_DO": 1.0, "I_SAW": 0.8, "I_DID": 0.5},
+    ),
 )
+
+# I-state -> vessel i_state string for the InceptionEntity native lean.
+_LEADING_TO_ISTATE = {
+    "I_IS": "i_is", "I_ISNT": "i_isnt", "I_CAN": "i_can", "I_CANNOT": "i_cannot",
+    "I_DO": "i_do", "I_DONOT": "i_donot", "I_SAW": "i_saw", "I_SOUGHT": "i_sought",
+    "I_DID": "i_did", "I_DIDNT": "i_didnt",
+}
 
 
 def birth_possibility_selves(
@@ -236,17 +287,14 @@ def birth_possibility_selves(
     history_limit: int = 0,
     warp_guard: Any = None,
 ) -> Dict[str, Any]:
-    """Birth newborn divergent selves and fast-track their development by living
-    Aurora's recorded pressure history in each self's own order + pressure.
-
-    Returns the cohort's per-self identity signatures and a divergence matrix.
-    """
+    """Birth newborn divergent selves at distinct locations in her 15D possibility
+    space and fast-track their development by living her recorded pressure history in
+    each self's own order, resonating through each self's orientation."""
     profiles = profiles or DEFAULT_PROFILES
     history = _load_pressure_history(state_dir, limit=history_limit)
     if not history:
         return {"error": "no pressure history", "selves": []}
 
-    # Newborn inception vessels (blank cascades), one per self.
     try:
         from aurora_simulation_engine import InceptionEntity
     except Exception:
@@ -254,35 +302,35 @@ def birth_possibility_selves(
 
     selves: List[PossibilitySelf] = []
     for prof in profiles:
+        orient = _normalize(prof.orientation)
+        lead = max(_ISTATES, key=lambda p: orient.get(p, 0.0))
         vessel = None
         if InceptionEntity is not None:
             try:
                 vessel = InceptionEntity(
                     entity_id=f"possibility::{prof.name}",
-                    i_state=_ISTATE_BY_AXIS.get(prof.axis_emphasis, "i_is"),
+                    i_state=_LEADING_TO_ISTATE.get(lead, "i_is"),
                 )
             except Exception:
                 vessel = None
-        ps = PossibilitySelf(self_id=prof.name, profile=prof, entity=vessel)
+        ps = PossibilitySelf(self_id=prof.name, profile=prof, orientation=orient, entity=vessel)
         ps._warp = warp_guard
-        # Re-sequence her history for this self, then live it fast-tracked.
-        ordered = sorted(
-            enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0])
-        )
+        ordered = sorted(enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0]))
         for _idx, exp in ordered:
             ps.live(exp)
         selves.append(ps)
 
     sigs = [ps.identity_signature() for ps in selves]
 
-    # Divergence matrix: pairwise distance between selves (identity distance).
     def _dist(a: PossibilitySelf, b: PossibilitySelf) -> float:
-        d = 0.0
-        d += abs(a.resolved - b.resolved) / max(1, a.lived)
-        d += abs(a.reframed - b.reframed) / max(1, a.lived)
-        d += 0.0 if a.identity_signature()["dominant_axis"] == b.identity_signature()["dominant_axis"] else 0.5
-        d += 0.0 if a.identity_signature()["dominant_tone"] == b.identity_signature()["dominant_tone"] else 0.3
-        return round(d, 3)
+        # Identity distance = orientation distance + lived-trajectory distance.
+        orient_d = math.sqrt(sum(
+            (a.orientation.get(d, 0.0) - b.orientation.get(d, 0.0)) ** 2 for d in _DIMS
+        ))
+        traj_d = (
+            abs(a.resolved - b.resolved) + abs(a.reframed - b.reframed)
+        ) / max(1, a.lived)
+        return round(orient_d + traj_d, 3)
 
     matrix = {
         f"{selves[i].self_id}~{selves[j].self_id}": _dist(selves[i], selves[j])
@@ -291,9 +339,10 @@ def birth_possibility_selves(
 
     return {
         "history_events": len(history),
+        "possibility_dims": list(_DIMS),
         "selves": sigs,
         "divergence_matrix": matrix,
-        "_objects": selves,   # in-process handles (not serialised)
+        "_objects": selves,
     }
 
 
@@ -301,4 +350,4 @@ if __name__ == "__main__":  # pragma: no cover
     import pprint
     res = birth_possibility_selves(state_dir=os.path.join(os.path.dirname(__file__), "aurora_state"))
     res.pop("_objects", None)
-    pprint.pprint(res)
+    pprint.pprint(res, sort_dicts=False)
