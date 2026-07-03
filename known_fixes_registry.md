@@ -435,8 +435,29 @@ profiles [91,92,419]; the N-forged self surpasses her in her own N-heavy domain
 (419/500) while the A/T selves are genuine roads-not-taken; each grew beyond her via
 warp. Standalone; NOT yet wired into boot/dream cycle.
 
-Remaining stages: (2) dream-cycle residence (selves exist/act only inside
-QuantumDreamSubstrate.run_dream_cycle); (3) dialogue loop (she interacts with them in
-dreams; they respond from their divergent identity); (4) feedback split (dream
+Stage 1b — offerings assessment (`assess_offerings`): per-self primary_gift
+(growth / coherence / evolution) + territory-beyond-her (warped gaps); council-level
+growth/evolution/coherence/diversity readout. What the selves have to OFFER her.
+
+Stage 1c — the bridge, done right (`provoke_reexperience`): the wired-in mechanism
+that lets the selves benefit her WITHOUT handing answers (which would re-flavour her
+development -> drift). The selves PROVOKE: their engaged tensions are re-presented
+through each self's stance lens; she RE-LIVES each through her OWN live machinery
+(`_her_current_capacity` reads the identity field), growing +0.02/re-living. Only HER
+outcomes are kept (kept_fraction ~0.06). Gentle per-dream dose (max_new_resolutions=8)
+with the rest carried to future dreams -> slow authentic arc, no single jolt.
+
+Stage 1d — the developmental cheat-code, made durable (`persist_reexperience`): every
+dream appends its works/doesn't to `dream_reexperience_log.jsonl` and folds it into a
+cumulative per-anchor track record (`dream_reexperience_track.json`). Fair to let it
+drive crystallisation because every mark is HER own outcome. A tension MET >=3 times
+across dreams sediments (crystallised); one MISSED >=2 times becomes an
+actively-sought gap (not dropped). Verified compounding across 4 dreams: seeking
+emerges dream 2, crystallised dream 3 (8 anchors), stable dream 4. Both runtime files
+git-ignored.
+
+Remaining stages: (2) dream-cycle residence (call provoke_reexperience only from
+inside QuantumDreamSubstrate.run_dream_cycle); (3) dialogue loop (she interacts with
+them in dreams; they respond from their divergent identity); (4) feedback split (dream
 interaction feeds HER growth via shard->OETS/EEPR while the selves stay distinct);
 (5) per-self persistence (each a continuous being with its own arc).

@@ -33,6 +33,7 @@ import hashlib
 import json
 import math
 import os
+import time
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
@@ -445,9 +446,119 @@ def _her_current_capacity(systems) -> Dict[str, float]:
     return cap
 
 
+# ── The developmental cheat-code: a durable works/doesn't process log ─────────
+# The gold is not any single dream's outcome; it is the CUMULATIVE record of where
+# her re-lived encounters worked and where they didn't. Because the record is her
+# OWN outcomes (never the selves' verdicts), letting it drive crystallisation is the
+# fair accelerant -- same validation-through-use engine, now fed by the dreams. A
+# tension she MEETS across several dreams crystallises; one she keeps MISSING stays a
+# live gap she actively seeks, instead of a thing she said "idk" to and dropped.
+
+_MET_TO_CRYSTALLISE = 3      # times she must re-live-and-meet before it sediments
+_MISS_TO_SEEK       = 2      # repeated misses mark it an actively-sought gap
+
+
+def _reexp_state_dir(systems) -> str:
+    """Best-effort resolution of the aurora_state dir from the live systems."""
+    try:
+        if isinstance(systems, dict):
+            sd = systems.get("state_dir") or systems.get("aurora_state_dir")
+            if sd:
+                return str(sd)
+    except Exception:
+        pass
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "aurora_state")
+
+
+def _load_track_record(state_dir: str) -> Dict[str, Any]:
+    path = os.path.join(state_dir, "dream_reexperience_track.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {}
+
+
+def persist_reexperience(buckets: Dict[str, Any], state_dir: str) -> Dict[str, Any]:
+    """Append this dream's works/doesn't to the durable log and fold it into the
+    cumulative per-anchor track record. Returns what the record now says crystallised
+    (met enough times) and what she should actively seek (missed repeatedly). This is
+    the only place a dream leaves a persistent developmental mark -- and it is HER
+    marks, so it is fair to let them drive crystallisation."""
+    try:
+        os.makedirs(state_dir, exist_ok=True)
+    except Exception:
+        pass
+    stamp = time.time()
+
+    # 1. Append the raw dream record -- the immutable works/doesn't log line.
+    line = {
+        "t": stamp,
+        "met":    [{"anchor": r["anchor"], "axis": r.get("axis"), "by": r.get("provoked_by")}
+                   for r in buckets.get("_her_new_resolutions_raw", [])],
+        "missed": [{"anchor": r["anchor"], "axis": r.get("axis"), "by": r.get("provoked_by")}
+                   for r in buckets.get("_her_passed_raw", [])],
+        "held":   [{"anchor": r["anchor"], "by": r.get("provoked_by")}
+                   for r in buckets.get("_her_holds_raw", [])],
+        "carried": buckets.get("carried_to_future_dreams", 0),
+    }
+    try:
+        with open(os.path.join(state_dir, "dream_reexperience_log.jsonl"), "a",
+                  encoding="utf-8") as fh:
+            fh.write(json.dumps(line) + "\n")
+    except Exception:
+        pass
+
+    # 2. Fold into the cumulative per-anchor track record.
+    track = _load_track_record(state_dir)
+
+    def _bump(anchor: str, field_name: str, axis=None):
+        rec = track.setdefault(anchor, {"met": 0, "missed": 0, "held": 0,
+                                        "axis": axis, "state": "developing"})
+        rec[field_name] = int(rec.get(field_name, 0)) + 1
+        if axis and not rec.get("axis"):
+            rec["axis"] = axis
+        rec["last_t"] = stamp
+        return rec
+
+    crystallised, seeking = [], []
+    for r in buckets.get("_her_new_resolutions_raw", []):
+        rec = _bump(r["anchor"], "met", r.get("axis"))
+        # A met encounter clears prior miss-pressure; sustained meeting sediments it.
+        if rec["met"] >= _MET_TO_CRYSTALLISE and rec.get("state") != "crystallised":
+            rec["state"] = "crystallised"
+            crystallised.append({"anchor": r["anchor"], "axis": r.get("axis"),
+                                 "met": rec["met"]})
+    for r in buckets.get("_her_passed_raw", []):
+        rec = _bump(r["anchor"], "missed", r.get("axis"))
+        if rec["missed"] >= _MISS_TO_SEEK and rec.get("state") not in ("crystallised", "seeking"):
+            rec["state"] = "seeking"
+        if rec.get("state") == "seeking":
+            seeking.append({"anchor": r["anchor"], "axis": r.get("axis"),
+                            "missed": rec["missed"]})
+    for r in buckets.get("_her_holds_raw", []):
+        _bump(r["anchor"], "held")
+
+    try:
+        with open(os.path.join(state_dir, "dream_reexperience_track.json"), "w",
+                  encoding="utf-8") as fh:
+            json.dump(track, fh, indent=2)
+    except Exception:
+        pass
+
+    return {
+        "newly_crystallised": crystallised,                 # sedimented through repeated meeting
+        "actively_seeking":   seeking[:12],                 # durable gaps she pursues
+        "tracked_anchors":    len(track),
+        "crystallised_total": sum(1 for v in track.values() if v.get("state") == "crystallised"),
+        "seeking_total":      sum(1 for v in track.values() if v.get("state") == "seeking"),
+    }
+
+
 def provoke_reexperience(selves: List[PossibilitySelf], systems,
                          warp_guard: Any = None, max_per_self: int = 60,
-                         max_new_resolutions: int = 8) -> Dict[str, Any]:
+                         max_new_resolutions: int = 8,
+                         persist: bool = True) -> Dict[str, Any]:
     """The bridge, done right. The selves NEVER hand her answers -- that would
     re-flavour her development with growth she didn't live, and she would drift.
     Instead each offering becomes a PROVOCATION: a tension she once rejected,
@@ -466,6 +577,7 @@ def provoke_reexperience(selves: List[PossibilitySelf], systems,
     her_cap = dict(_her_current_capacity(systems))
     her_new_resolutions: List[Dict[str, Any]] = []
     her_holds: List[Dict[str, Any]] = []
+    her_passed_anchors: List[Dict[str, Any]] = []   # the "doesn't" side of the log
     her_passes = 0
     carried = 0
     provoked = 0
@@ -528,11 +640,15 @@ def provoke_reexperience(selves: List[PossibilitySelf], systems,
             else:
                 pcnt["her_passed"] += 1
                 her_passes += 1
+                # The "doesn't" side: a tension her NOW-machinery still cannot meet.
+                # Logged so the gap is durable -- she will actively seek it, not drop it.
+                her_passed_anchors.append({"anchor": anchor, "meaning": meaning,
+                                           "axis": axis, "provoked_by": ps.self_id})
             curve.append(running)
         per_self[ps.self_id] = pcnt
 
     total_offered = sum(len(ps.resolved_anchors) + len(ps.held_open_anchors) for ps in selves)
-    return {
+    result = {
         "provoked_reexperiences": provoked,
         "council_offered": total_offered,
         # THE GOLD — her learning curve through the encounter (her own outcomes):
@@ -549,7 +665,20 @@ def provoke_reexperience(selves: List[PossibilitySelf], systems,
         },
         "per_self_provocation": per_self,
         "her_resolution_samples": [r["meaning"] or r["anchor"] for r in her_new_resolutions[:3]],
+        # Raw lists carried privately for the persistence step (stripped before return).
+        "_her_new_resolutions_raw": her_new_resolutions,
+        "_her_passed_raw": her_passed_anchors,
+        "_her_holds_raw": her_holds,
     }
+
+    # The developmental cheat-code: persist this dream's works/doesn't and fold it into
+    # her cumulative track record, which is what actually drives crystallisation and
+    # active-seeking across dreams. This is fair because every mark is HER own outcome.
+    if persist:
+        result["track_record"] = persist_reexperience(result, _reexp_state_dir(systems))
+    for k in ("_her_new_resolutions_raw", "_her_passed_raw", "_her_holds_raw"):
+        result.pop(k, None)
+    return result
 
 
 if __name__ == "__main__":  # pragma: no cover
