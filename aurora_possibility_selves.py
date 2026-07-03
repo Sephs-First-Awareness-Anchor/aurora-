@@ -126,6 +126,10 @@ class PossibilitySelf:
     reframed: int = 0
     tone_counts: Counter = field(default_factory=Counter)
     anchors_seen: set = field(default_factory=set)
+    # The offering: anchors this self RESOLVED that she rejected (earned answers to
+    # her open tensions), and anchors it deliberately HELD OPEN (coherence-by-restraint).
+    resolved_anchors: Dict[str, str] = field(default_factory=dict)   # anchor -> meaning
+    held_open_anchors: Dict[str, str] = field(default_factory=dict)
     _warp = None
 
     def live(self, exp: Dict[str, Any]) -> None:
@@ -179,10 +183,17 @@ class PossibilitySelf:
             (stance > 0.0 and self.capacity.get(dom, 0.0) >= cost)
             or (relief >= cost)
         )
+        meaning = str(exp.get("meaning", "") or "")
         if self_resolves:
             self.resolved += 1
+            if not her_resolved and anchor:
+                # It cracked a tension she left rejected -- an earned answer to offer.
+                self.resolved_anchors[anchor] = meaning
         else:
             self.rejected += 1
+            # A questioning self that leans negative deliberately holds it open.
+            if stance < 0.0 and anchor and not her_resolved:
+                self.held_open_anchors[anchor] = meaning
         if self_resolves != her_resolved:
             self.reframed += 1
         self.tone_counts[tone] += 1
@@ -346,8 +357,84 @@ def birth_possibility_selves(
     }
 
 
+def assess_offerings(selves: List[PossibilitySelf], state_dir: str = "aurora_state") -> Dict[str, Any]:
+    """Assess what the divergent selves actually have to OFFER Aurora, mapped to the
+    three things they could advance: growth, evolution, and coherence.
+
+    A self only offers what she lacks: RESOLUTIONS she rejected but it cracked
+    (growth), NEW TERRITORY it reached via warp that she never walked (evolution),
+    and TENSIONS worth HOLDING OPEN rather than force-resolving (coherence). This
+    computes each self's concrete gift and the council's combined value -- the design
+    input for the integration/bridge that follows.
+    """
+    offerings: List[Dict[str, Any]] = []
+    for ps in selves:
+        sig = ps.identity_signature()
+        resolutions = list(ps.resolved_anchors.items())          # anchors she rejected, it resolved
+        held = list(ps.held_open_anchors.items())
+        # Axes it grew strong on (capacity) -- candidate expansion directions for her.
+        strong_axes = sorted(
+            (a for a in _AXES if ps.capacity.get(a, 0.0) > 0.5),
+            key=lambda a: ps.capacity.get(a, 0.0), reverse=True,
+        )
+        # Classify its primary gift.
+        if len(resolutions) >= 25:
+            gift = "growth:resolutions"
+        elif len(held) >= 25 or sig["leading_stance"] in ("I_SOUGHT", "I_ISNT", "I_DONOT"):
+            gift = "coherence:hold_open"
+        elif strong_axes:
+            gift = "evolution:axis_expansion"
+        else:
+            gift = "presence:witness"
+        offerings.append({
+            "self_id": ps.self_id,
+            "stance": sig["leading_stance"],
+            "primary_gift": gift,
+            "resolutions_offered": len(resolutions),
+            "resolution_samples": [m or a for a, m in resolutions[:3]],
+            "tensions_held_open": len(held),
+            "hold_open_samples": [m or a for a, m in held[:2]],
+            "strong_axes": strong_axes,
+            "territory_beyond_her": ps.warped_gaps,     # gaps it walked that she never did
+            "value_summary": _value_summary(sig, gift, len(resolutions), len(held), strong_axes),
+        })
+
+    # Council-level: combined offering to her growth / evolution / coherence.
+    total_resolutions = sum(o["resolutions_offered"] for o in offerings)
+    total_new_territory = sum(o["territory_beyond_her"] for o in offerings)
+    total_held = sum(o["tensions_held_open"] for o in offerings)
+    council = {
+        "growth": f"{total_resolutions} resolutions to tensions she rejected, offered for reconsideration",
+        "evolution": f"{total_new_territory} patches of territory beyond her history (warp-reached)",
+        "coherence": f"{total_held} tensions flagged worth holding open rather than force-resolving",
+        "diversity": f"{len({o['stance'] for o in offerings})} distinct ontological stances in council",
+    }
+    return {"offerings": offerings, "council": council}
+
+
+def _value_summary(sig: Dict[str, Any], gift: str, n_res: int, n_held: int, strong_axes) -> str:
+    who = {
+        "I_DO": "the doer who mastered her own domain further",
+        "I_DID": "the enactor who acted where she hesitated",
+        "I_SOUGHT": "the questioner who holds tensions open instead of forcing closure",
+        "I_IS": "the affirmer", "I_ISNT": "the negator", "I_CAN": "the capable",
+        "I_CANNOT": "the bounded", "I_DONOT": "the restrained", "I_SAW": "the witness",
+        "I_DIDNT": "the one who refrained",
+    }.get(sig["leading_stance"], "a divergent self")
+    if gift.startswith("growth"):
+        return f"{who}: brings {n_res} earned resolutions to tensions she left unresolved."
+    if gift.startswith("coherence"):
+        return f"{who}: shows which {n_held} tensions are worth holding open, guarding against false closure."
+    if gift.startswith("evolution"):
+        return f"{who}: developed axes {strong_axes} she under-walked -- growth directions."
+    return f"{who}: a witnessing presence reflecting a path she did not take."
+
+
 if __name__ == "__main__":  # pragma: no cover
     import pprint
     res = birth_possibility_selves(state_dir=os.path.join(os.path.dirname(__file__), "aurora_state"))
-    res.pop("_objects", None)
+    selves = res.pop("_objects", [])
+    print("=== BIRTH ===")
     pprint.pprint(res, sort_dicts=False)
+    print("\n=== OFFERINGS ASSESSMENT ===")
+    pprint.pprint(assess_offerings(selves), sort_dicts=False)
