@@ -1,30 +1,6 @@
 {
-  "updated_at": 1783021742.938602,
+  "updated_at": 1783112127.0562954,
   "events": [
-    {
-      "timestamp": 1782250666.2415848,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:c274602acf5f",
-      "axis": "X",
-      "summary": "Manual code change in aurora_internal/aurora_code_autoevolver.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.243556,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:a8f457ce59f3",
-      "axis": "X",
-      "summary": "Manual code change in aurora_internal/aurora_code_evolution_chamber.py formed a new lineage branch"
-    },
-    {
-      "timestamp": 1782250666.2455869,
-      "source": "aurora.boot",
-      "kind": "manual_code_assimilation",
-      "id": "MC:28d13cdb502f",
-      "axis": "X",
-      "summary": "Manual code change in aurora_internal/aurora_code_evolution_stack.py formed a new lineage branch"
-    },
     {
       "timestamp": 1782250666.2476141,
       "source": "aurora.boot",
@@ -1920,6 +1896,30 @@
       "id": "MC:98715a95264e",
       "axis": "X",
       "summary": "Manual code change in foundational_contract.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1783111999.495617,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:96ff671e443f",
+      "axis": "B",
+      "summary": "Manual code change in aurora_constraint_emission.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1783111999.498475,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:b14647d27a16",
+      "axis": "X",
+      "summary": "Manual code change in aurora_possibility_selves.py formed a new lineage branch"
+    },
+    {
+      "timestamp": 1783111999.500731,
+      "source": "aurora.boot",
+      "kind": "manual_code_assimilation",
+      "id": "MC:c7c810ef96b6",
+      "axis": "X",
+      "summary": "Manual code change in aurora_quantum_dream_substrate.py formed a new lineage branch"
     }
   ],
   "seen_abilities": {

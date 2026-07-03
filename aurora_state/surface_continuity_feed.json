@@ -1,463 +1,116 @@
 [
   {
-    "packet_id": "7d18eb1983624759af1bc6d10263a8de",
-    "created_at": 1782955738.3840947,
-    "source": "external_user_turn",
-    "user_input": "Is a raven a bird?",
-    "aurora_response": "Raven description raven description.",
-    "response_tone": "curious",
+    "packet_id": "277dc4cc5f28406db50d3a2a694b8bab",
+    "created_at": 1783112006.8165374,
+    "source": "simulation_live_bridge",
+    "user_input": "What does identity mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
     "concepts_activated": [
-      "raven",
-      "bird"
+      "identity"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
-    "coherence": 0.031,
+    "coherence": 0.872,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "3a8ceb54e8724b3aba291fb5ecc4be8a",
-    "created_at": 1782955750.0456026,
-    "source": "external_user_turn",
-    "user_input": "A raven is intelligent.",
-    "aurora_response": "Raven description raven description.",
-    "response_tone": "curious",
+    "packet_id": "2010be19d0174c6bb60987546e2a203a",
+    "created_at": 1783112010.9005165,
+    "source": "simulation_live_bridge",
+    "user_input": "What does identity mean to you?",
+    "aurora_response": "Active axes: cost/purpose=0.26, meaning/boundary=0.22, agency=0.21. Field state: heat=0.003, dominant-emotion=calm. Meaning/boundary moved up since the last exchange.",
+    "response_tone": "self-aware",
     "concepts_activated": [
-      "raven",
-      "intelligent"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.034,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.54"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "f4294d9c16b94448860c34263a74b99d",
-    "created_at": 1782955754.8109422,
-    "source": "external_user_turn",
-    "user_input": "A raven can also be a symbol of mystery.",
-    "aurora_response": "Raven description raven description.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "raven",
-      "symbol",
-      "mystery"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.53"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e9ba757dad8a4cc9bb5bef9a47ef62cc",
-    "created_at": 1782955759.472155,
-    "source": "external_user_turn",
-    "user_input": "What is a quokka?",
-    "aurora_response": "fact, quokka, description. also the name of a software project.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "quokka"
+      "identity"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.031,
+    "coherence": 0.758,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.64"
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "22847a04f9994bcf9e299501a19a5cc0",
-    "created_at": 1782955765.4485385,
-    "source": "external_user_turn",
-    "user_input": "The quokka is a marsupial.",
-    "aurora_response": "fact, quokka, description. also the name of a software project.",
-    "response_tone": "curious",
+    "packet_id": "19bf2adb10ce437f80c2f1827f45b0be",
+    "created_at": 1783112012.0096073,
+    "source": "live_session",
+    "user_input": "I've been letting you dream lately. Do you notice anything different in yourself?",
+    "aurora_response": "Active axes: agency=0.34, cost/purpose=0.27, meaning/boundary=0.14. Field state: heat=0.002, dominant-emotion=calm. Agency moved up since the last exchange.",
+    "response_tone": "self-aware",
     "concepts_activated": [
-      "quokka",
-      "marsupial"
+      "letting",
+      "dream",
+      "lately",
+      "anything",
+      "different",
+      "yourself"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
+    "dominant_axis": "A",
+    "coherence": 0.758,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "73d52efc85554754838ea7c4f0aae828",
-    "created_at": 1782955771.035668,
-    "source": "external_user_turn",
-    "user_input": "A quokka is friendly.",
-    "aurora_response": "fact, quokka, description. also the name of a software project.",
-    "response_tone": "curious",
+    "packet_id": "4be95ed221e1442c9c7ac8e65f980191",
+    "created_at": 1783112013.9820566,
+    "source": "simulation_live_bridge",
+    "user_input": "What does identity mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
     "concepts_activated": [
-      "quokka",
-      "friendly"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2369362c1c8b49c4aa39a6f4b9c91537",
-    "created_at": 1782955781.7530499,
-    "source": "external_user_turn",
-    "user_input": "Tell me about the quokka.",
-    "aurora_response": "fact, quokka, description. friendly.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "quokka"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "a1cb8420765747aa988a9e5e620ed255",
-    "created_at": 1782955787.5044193,
-    "source": "external_user_turn",
-    "user_input": "A quokka is small.",
-    "aurora_response": "fact, quokka, description. friendly.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "quokka",
-      "small"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1db90fbbc82243edbaf5e420cfb77b35",
-    "created_at": 1782955792.3024323,
-    "source": "external_user_turn",
-    "user_input": "Is a quokka a marsupial?",
-    "aurora_response": "fact, quokka, description. small.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "quokka",
-      "marsupial"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.65"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "9ab5a771ad1245258e87896d4a46d83d",
-    "created_at": 1782955798.3861878,
-    "source": "external_user_turn",
-    "user_input": "Quokka is also the name of a software project.",
-    "aurora_response": "fact, quokka, description. small.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "quokka",
-      "software",
-      "project"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.034,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.64"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "8d7df349c61e4fb2a5d79628bd6ffc5b",
-    "created_at": 1782955803.3605762,
-    "source": "external_user_turn",
-    "user_input": "What is gravity?",
-    "aurora_response": "Gravity description gravity description.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "gravity"
+      "identity"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
-    "coherence": 0.031,
+    "coherence": 0.53,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:-0.70"
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
     "consumed_at": null
   },
   {
-    "packet_id": "a66c8925ed3f49a5885ab39e16c89931",
-    "created_at": 1782955817.4059126,
-    "source": "external_user_turn",
-    "user_input": "Gravity is a force.",
-    "aurora_response": "Gravity description gravity description.",
-    "response_tone": "curious",
+    "packet_id": "0cf26b26cfa84362a79af40b98d34f72",
+    "created_at": 1783112131.1445634,
+    "source": "live_session",
+    "user_input": "Hey Aurora. It's Sunni. How are you feeling right now?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
     "concepts_activated": [
-      "gravity",
-      "force"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.029,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.41"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "26f8f7d39f83474599adbdf817221a54",
-    "created_at": 1782955822.5565317,
-    "source": "external_user_turn",
-    "user_input": "Gravity pulls objects down.",
-    "aurora_response": "Gravity description gravity description.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "gravity",
-      "pulls",
-      "objects"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "904f65d053714e7ab22de6d4e4cfad06",
-    "created_at": 1782955827.375404,
-    "source": "external_user_turn",
-    "user_input": "Describe gravity.",
-    "aurora_response": "Gravity description gravity description.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "gravity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "21f55858b73b4f6eb692646520157eba",
-    "created_at": 1782955832.3842454,
-    "source": "external_user_turn",
-    "user_input": "Does gravity pull things?",
-    "aurora_response": "Gravity description gravity description.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "gravity",
-      "pull",
-      "things"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.38"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "66600690fe6545ae9f838e1d85d7b001",
-    "created_at": 1782955837.4433475,
-    "source": "external_user_turn",
-    "user_input": "Gravity affects mass.",
-    "aurora_response": "Gravity description gravity description.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "gravity",
-      "affects",
-      "mass"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.034,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.57"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "02e04f08973d46f3849c6cc196fbc554",
-    "created_at": 1782955850.0412493,
-    "source": "external_user_turn",
-    "user_input": "Gravity can also mean seriousness in a situation.",
-    "aurora_response": "Gravity description gravity description.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "gravity",
-      "seriousness",
-      "situation"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.60"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3da6b31458744f26b04bbabf4b664cb7",
-    "created_at": 1782955855.4778922,
-    "source": "external_user_turn",
-    "user_input": "A raven is not a fish.",
-    "aurora_response": "raven is not fish.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "raven",
-      "fish"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.41"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b5b561a3525d4035ad222fe505ca6187",
-    "created_at": 1783021749.6508303,
-    "source": "external_user_turn",
-    "user_input": "A raven is a black bird.",
-    "aurora_response": "raven is black bird.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "raven",
-      "black",
-      "bird"
+      "aurora",
+      "sunni",
+      "feeling"
     ],
     "visual_description": "",
     "audio_description": "",
@@ -474,25 +127,54 @@
     "consumed_at": null
   },
   {
-    "packet_id": "6f089b15a52b4e2b8aa0e5d7725099c1",
-    "created_at": 1783021752.8027017,
-    "source": "external_user_turn",
-    "user_input": "Explain quantum chromodynamics.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
+    "packet_id": "0cbc6a9b24914acd83e9625a9f619277",
+    "created_at": 1783112131.8885057,
+    "source": "live_session",
+    "user_input": "I have been letting you dream lately. Do you notice anything different in yourself?",
+    "aurora_response": "Active axes: agency=0.34, cost/purpose=0.28, meaning/boundary=0.14. Field state: heat=0.002, dominant-emotion=calm. Agency moved up since the last exchange.",
+    "response_tone": "self-aware",
     "concepts_activated": [
-      "quantum",
-      "chromodynamics"
+      "letting",
+      "dream",
+      "lately",
+      "anything",
+      "different",
+      "yourself"
     ],
     "visual_description": "",
     "audio_description": "",
     "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 1.0,
+    "dominant_axis": "A",
+    "coherence": 0.986,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
-      "existence:+0.69"
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "02e0b9402e4a4a2696e964c11291c58f",
+    "created_at": 1783112132.666921,
+    "source": "live_session",
+    "user_input": "What have you been curious about on your own?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "curious",
+      "own"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
