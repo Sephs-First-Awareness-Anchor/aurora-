@@ -140,6 +140,7 @@ class PossibilitySelf:
     # solely through the encounters) -- kept separate from birth capacity so a self's
     # dream-arc is its own, slow and earned, not a flip of what it was born with.
     witness_depth: Dict[str, float] = field(default_factory=lambda: {a: 0.0 for a in _AXES})
+    born_from: Optional[str] = None   # None for founders; a reason for stagnation-born
     _warp = None
 
     def witness(self, anchor: str, axis: str, her_met: bool, self_verdict: str) -> Optional[str]:
@@ -403,6 +404,48 @@ def birth_possibility_selves(
             if resume:
                 save_self_arc(ps, state_dir)
         selves.append(ps)
+
+    # Resume any dynamically-born (stagnation) selves not in the default profiles --
+    # they are continuous beings too, reconstructed from their saved profile + arc.
+    if resume:
+        known = {ps.self_id for ps in selves}
+        ddir = _dream_selves_dir(state_dir)
+        if os.path.isdir(ddir):
+            for fn in sorted(os.listdir(ddir)):
+                if not fn.endswith(".json"):
+                    continue
+                sid = fn[:-5]
+                if sid in known:
+                    continue
+                try:
+                    with open(os.path.join(ddir, fn), "r", encoding="utf-8") as fh:
+                        data = json.load(fh)
+                    pdata = data.get("profile") or {}
+                    prof = DivergenceProfile(
+                        name=sid, orientation=data.get("orientation") or {},
+                        reorder=pdata.get("reorder", "diverged_first"),
+                        seed=int(pdata.get("seed", 0)))
+                    orient = _normalize(prof.orientation)
+                    lead = max(_ISTATES, key=lambda p: orient.get(p, 0.0))
+                    vessel = None
+                    if InceptionEntity is not None:
+                        try:
+                            vessel = InceptionEntity(entity_id=f"possibility::{sid}",
+                                                     i_state=_LEADING_TO_ISTATE.get(lead, "i_is"))
+                        except Exception:
+                            vessel = None
+                    ps = PossibilitySelf(self_id=sid, profile=prof, orientation=orient, entity=vessel)
+                    ps._warp = warp_guard
+                    if load_self_arc(ps, state_dir):
+                        if len(history) > ps.lived:
+                            ordered = sorted(enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0]))
+                            for _idx, exp in ordered[ps.lived:]:
+                                ps.live(exp)
+                            save_self_arc(ps, state_dir)
+                        selves.append(ps)
+                        resumed_ids.append(sid)
+                except Exception:
+                    continue
 
     sigs = [ps.identity_signature() for ps in selves]
 
@@ -1073,6 +1116,9 @@ def save_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
             "growth_events": ps.growth_events,
             "self_resolved_from_held": ps.self_resolved_from_held,
             "witness_depth": ps.witness_depth,
+            "profile": {"name": ps.profile.name, "reorder": ps.profile.reorder,
+                        "seed": ps.profile.seed},
+            "born_from": getattr(ps, "born_from", None),
             "identity": ps.identity_signature(),
             "saved_t": time.time(),
         }
@@ -1136,9 +1182,123 @@ def load_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
         ps.growth_events = int(data.get("growth_events", 0) or 0)
         ps.self_resolved_from_held = int(data.get("self_resolved_from_held", 0) or 0)
         ps.witness_depth = {**{a: 0.0 for a in _AXES}, **(data.get("witness_depth") or {})}
+        ps.born_from = data.get("born_from")
         return True
     except Exception:
         return False
+
+
+# ── Stagnation-triggered birth ────────────────────────────────────────────────
+# The council is not fixed. When her development STUNTS (dev_index stops moving) or her
+# PRESSURES STAGNATE (axis pressures stop changing) -- when the existing selves can no
+# longer move her -- a NEW self is born, oriented to break exactly the stall: leaning
+# hard into the stuck axis from the pole the council least embodies, plus the axis the
+# council is collectively weakest on. A fresh road-not-taken, summoned by the stall.
+
+_EXTRA_NAMES: Tuple[str, ...] = ("Kindle", "Vane", "Drift", "Ashe", "Mire", "Quill", "Sable")
+
+
+@dataclass
+class StagnationMonitor:
+    """Watches her development + pressures across dream cycles and signals when to
+    birth a new self. Two triggers: a developmental STUNT (dev_index range below
+    dev_eps across the window) or PRESSURE STAGNATION (total axis-pressure variation
+    below pressure_eps). A cooldown after each birth prevents a flood."""
+    window: int = 5
+    dev_eps: float = 0.5
+    pressure_eps: float = 0.03
+    cooldown_cycles: int = 8
+    dev_history: List[float] = field(default_factory=list)
+    pressure_history: List[Dict[str, float]] = field(default_factory=list)
+    births: int = 0
+    cooldown: int = 0
+
+    def observe(self, dev_index: Optional[float], axis_pressures: Optional[Dict[str, float]]) -> None:
+        if dev_index is not None:
+            self.dev_history.append(float(dev_index))
+            self.dev_history[:] = self.dev_history[-self.window:]
+        if axis_pressures:
+            self.pressure_history.append({a: float(axis_pressures.get(a, 0.0) or 0.0) for a in _AXES})
+            self.pressure_history[:] = self.pressure_history[-self.window:]
+        if self.cooldown > 0:
+            self.cooldown -= 1
+
+    def assess(self) -> Tuple[bool, str, Optional[str]]:
+        """Return (should_birth, reason, stuck_axis)."""
+        if self.cooldown > 0:
+            return False, "cooldown", None
+        dev_stunt = (len(self.dev_history) >= self.window
+                     and (max(self.dev_history) - min(self.dev_history)) < self.dev_eps)
+        pressure_stag = False
+        stuck_axis = None
+        if len(self.pressure_history) >= self.window:
+            var = {a: (max(p[a] for p in self.pressure_history)
+                       - min(p[a] for p in self.pressure_history)) for a in _AXES}
+            mean = {a: sum(p[a] for p in self.pressure_history) / len(self.pressure_history)
+                    for a in _AXES}
+            if sum(var.values()) < self.pressure_eps:
+                pressure_stag = True
+            # The stuck axis: most pinned (lowest variation), preferring one held high.
+            stuck_axis = min(_AXES, key=lambda a: var[a] - 0.01 * mean[a])
+        if dev_stunt or pressure_stag:
+            reason = ("dev_stunt+pressure_stagnation" if dev_stunt and pressure_stag
+                      else "dev_stunt" if dev_stunt else "pressure_stagnation")
+            return True, reason, stuck_axis or "N"
+        return False, "moving", stuck_axis
+
+
+def _orientation_for_stuck_axis(axis: str, existing: List[PossibilitySelf]) -> Dict[str, float]:
+    """Build an orientation that leans hard into the stuck axis from the pole the
+    council LEAST embodies, plus the axis the council is collectively weakest on -- a
+    targeted perturbation aimed at the stall."""
+    if axis not in _AXES:
+        axis = "N"
+    pos, neg = _ISTATE_POLES[axis]
+    pos_w = sum(ps.orientation.get(pos, 0.0) for ps in existing)
+    neg_w = sum(ps.orientation.get(neg, 0.0) for ps in existing)
+    lead = neg if neg_w <= pos_w else pos           # the least-embodied pole
+    orient = {axis: 0.95, lead: 1.0}
+    axis_cap = {a: sum(ps.capacity.get(a, 0.0) for ps in existing) for a in _AXES}
+    second = min((a for a in _AXES if a != axis), key=lambda a: axis_cap[a])
+    spos, _sneg = _ISTATE_POLES[second]
+    orient[second] = 0.5
+    orient[spos] = 0.4
+    return orient
+
+
+def birth_from_stagnation(state_dir: str, existing_selves: List[PossibilitySelf],
+                          stuck_axis: str, reason: str, warp_guard: Any = None,
+                          max_selves: int = 7) -> Optional[PossibilitySelf]:
+    """Birth a new divergent self summoned by a stall, oriented to break it. Lives her
+    history from its new vantage, saves its arc, returns it (or None if capped/failed)."""
+    if len(existing_selves) >= max_selves:
+        return None
+    history = _load_pressure_history(state_dir)
+    if not history:
+        return None
+    used = {ps.self_id for ps in existing_selves}
+    name = next((n for n in _EXTRA_NAMES if n not in used), None) or f"Born{len(existing_selves)}"
+    seed = 100 + len(existing_selves) * 7
+    orient_raw = _orientation_for_stuck_axis(stuck_axis, existing_selves)
+    reorder = ("diverged_first", "hardest_first", "reverse", "seeded_shuffle")[seed % 4]
+    prof = DivergenceProfile(name=name, orientation=orient_raw, reorder=reorder, seed=seed)
+    orient = _normalize(orient_raw)
+    lead = max(_ISTATES, key=lambda p: orient.get(p, 0.0))
+    vessel = None
+    try:
+        from aurora_simulation_engine import InceptionEntity
+        vessel = InceptionEntity(entity_id=f"possibility::{name}",
+                                 i_state=_LEADING_TO_ISTATE.get(lead, "i_is"))
+    except Exception:
+        vessel = None
+    ps = PossibilitySelf(self_id=name, profile=prof, orientation=orient, entity=vessel)
+    ps._warp = warp_guard
+    ps.born_from = f"{reason}:{stuck_axis}"
+    ordered = sorted(enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0]))
+    for _idx, exp in ordered:
+        ps.live(exp)
+    save_self_arc(ps, state_dir)
+    return ps
 
 
 if __name__ == "__main__":  # pragma: no cover
