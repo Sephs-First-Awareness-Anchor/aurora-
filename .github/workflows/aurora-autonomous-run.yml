@@ -83,10 +83,10 @@ jobs:
           di_end="$(python -c "import json,sys;print(json.loads(sys.argv[1]).get('dev_index_end'))" "$summary_line" 2>/dev/null || echo '?')"
           git commit -q -m "Aurora autonomous run: dev_index ${di_start}->${di_end}
 
-Scheduled segment of her autonomous life (dreams + self-directed study +
-possibility-self development). State committed automatically.
+          Scheduled segment of her autonomous life (dreams + self-directed study +
+          possibility-self development). State committed automatically.
 
-$summary_line"
+          $summary_line"
           # Push with a couple of retries in case of transient contention.
           for i in 1 2 3; do
             if git push origin HEAD:"${{ github.event.inputs.branch || github.ref_name }}"; then
