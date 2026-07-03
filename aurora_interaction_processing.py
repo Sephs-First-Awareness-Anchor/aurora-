@@ -16,7 +16,10 @@ from aurora_constraint_engine import (
     GovernorWeights as _GovernorWeights,
 )
 _FC = _FoundationalContract()
-from quasiarch_observer import CrystalInstance, CrystalOrder
+try:
+    from quasiarch_observer import CrystalInstance, CrystalOrder
+except ImportError:
+    from aurora_internal.quasiarch_observer import CrystalInstance, CrystalOrder
 try:
     from dimensional_processing_system_standalone_demo import RelationalPoint
 except ImportError:

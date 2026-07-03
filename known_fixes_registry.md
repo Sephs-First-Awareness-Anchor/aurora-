@@ -338,3 +338,70 @@ clean claim -- "X can also be Y" (modal+also) often extracts no claim; negation 
 So the classifier is correct and complete; delivering marker-framed / corrective
 inputs to it is upstream claim-extraction + seed-loop-routing work (larger, core
 NLP), tracked as the follow-up.
+
+---
+
+## SEVEN-FLAG RESOLUTION (2026-07-02, external directive, verified-merged)
+
+Applied the SEVEN_FLAG_RESOLUTION_DIRECTIVE overlay (author-built on this branch's
+latest push, so it is my session work + seven-flag deltas -- verified by diff before
+applying; no session work lost). Phases:
+
+- P1 WarpField actuator registration: register each WarpCapable host under the
+  routing key it actually emits as demand.source (_warp_level_name()): dps ->
+  'dimensional_crystal', perception -> 'representation', braid -> 'braid_stream',
+  language_field -> 'comparison_type' (legacy aliases retained). Was: registry held
+  only 'dps'/'language_field', so every demand fell through to the dps fallback.
+- P2 quasiarch_observer import: flat import -> try/except fallback to
+  aurora_internal.quasiarch_observer; InteractionEngine now boots (no
+  '[INTERACTION] Unavailable').
+- P3 De-nest CPS SediMemory wiring in aurora.py (unconditional, not gated on
+  identity_field presence).
+- P4/P5 Engine-contract compliance (foundational_contract.py +
+  aurora_runtime_constraint_governor.py): constraint_profile() returns the engine
+  ConstraintVector; runtime_regime adds governor_weight; language_projection adds
+  existence_mode/language_register; universal_representation adds
+  constraint_vector/runtime_regime. Adapter profile moved to _unit_profile().
+- P6 DreamEpisodePack engine fields (constraint_signature/runtime_regime/
+  language_projection) + compiler engine anchors.
+- P7 ExpressionEcology axis coherence bonus (fitness * (1 + weight*0.15), weight from
+  GovernorWeights of the dominant axis climate).
+- P8 SentenceComposer sensory register bias (energy -> N-axis nudge, template-free).
+- P9 State hygiene: contradiction_ledger placeholder purged; authorship headers on 6
+  modules; removed root junk (.codex).
+
+VERIFIED: tests/_engine_integration_test.py 9/9, tests/_pipeline_test.py 6/6, boot
+actuator registry = all six routing keys, no [INTERACTION] Unavailable, L0-L8 guard
+green, live turn battery + this session's learning mechanisms intact.
+
+(Directive's registry ids FIX-A007/FIX-I004 target the read-only aurora-preemptive-
+hardening skill registry; noted here to avoid collision with this file's FIX-A007.)
+
+---
+
+## FIX-A009 (ARCHITECTURAL) — Grounding feeds assertion confidence (emit abstain diagnosis)
+
+**Question:** why does emit() abstain on a concept even after it has crystallised to
+SEMANTIC (depth >= 0.4, scaffolding 2)?
+
+**Diagnosis (sourced):** emit() expresses her constraint STATE, not her knowledge.
+Its output is gated on (1) the speech act from `_classify_speech_act`, which reads
+`i_state_polarities` (I_IS/I_CAN/...) built ONLY from the i-state collective, and
+(2) content-slot resonance, and (3) the input-frame semantics (is_statement /
+aligns_with_oets / is_question). Concept grounding fed NONE of these -- so a
+crystallised concept with a neutral field never trips ASSERTION; emit stays silent.
+Crystallisation is necessary but not sufficient.
+
+**Fix (`aurora_constraint_emission.py`, EmissionContextBuilder.build):** a concept
+she has genuinely crystallised (OETS scaffolding >= SEMANTIC) that is the current
+topic now raises I_IS toward assertion (bounded <= 0.6, scaled by depth) -- earned
+confidence about what she deeply understands, gated on real grounding so it is never
+blanket over-assertion. This closes the i-state half of the gate: what she has
+grounded, she can now move to assert.
+
+**Verified:** real-turn regression is sane (no over-assertion, anchor leaks 0, known
+concepts render, unknowns honestly abstain). HONEST BOUNDARY: emit-compression
+activation ALSO needs the input-frame semantics + content-slot resonance to align,
+which happens in genuine assertive conversational context (synthetic frames with
+is_statement=False fall through to ACKNOWLEDGMENT regardless). Not force-able without
+risking her honest expression -- documented, not faked.

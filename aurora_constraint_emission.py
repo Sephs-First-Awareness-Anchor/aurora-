@@ -1492,6 +1492,31 @@ class EmissionContextBuilder:
             except Exception:
                 pass
 
+        # Grounding feeds assertion confidence. A concept she has genuinely
+        # crystallised (OETS scaffolding >= SEMANTIC) that is the current topic
+        # earns a raised I_IS, so emit can ASSERT what she knows rather than fall
+        # silent. Gated on real grounding and bounded (<= 0.6) -- earned
+        # confidence about something she deeply understands, never blanket
+        # over-assertion. This is the field-side consequence of crystallisation:
+        # what she has grounded, she can now say.
+        try:
+            import re as _re
+            _text = (input_frame.text if input_frame is not None else "") or ""
+            _toks = set(_re.findall(r"[a-z][a-z']{2,}", _text.lower()))
+            _toks |= {str(w).lower() for w in (recent_words or [])}
+            _web = getattr(oets, "web", None)
+            _nodes = getattr(_web, "nodes", {}) or {}
+            _best_depth = 0.0
+            for _tok in _toks:
+                _nd = _nodes.get(_tok)
+                if _nd is not None and int(getattr(_nd, "scaffolding_level", 0) or 0) >= 2:
+                    _best_depth = max(_best_depth, float(getattr(_nd, "ontological_depth", 0.0) or 0.0))
+            if _best_depth > 0.0:
+                _conf = min(0.6, 0.36 + (_best_depth - 0.4) * 0.75)
+                i_state_polarities["I_IS"] = max(i_state_polarities.get("I_IS", 0.0), _conf)
+        except Exception:
+            pass
+
         return EmissionContext(
             axis_polarities      = axis_polarities,
             axis_velocities      = axis_velocities,

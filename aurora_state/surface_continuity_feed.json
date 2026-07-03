@@ -1,55 +1,5 @@
 [
   {
-    "packet_id": "218c125a721f4bca88e85f4a8e9fe4c2",
-    "created_at": 1782955728.9164107,
-    "source": "external_user_turn",
-    "user_input": "A raven has black feathers.",
-    "aurora_response": "fact, raven, description. intelligent.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "raven",
-      "black",
-      "feathers"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.026,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4cb0859e62bc44d4be9da4b6a76e80a8",
-    "created_at": 1782955733.7010632,
-    "source": "external_user_turn",
-    "user_input": "Describe a raven.",
-    "aurora_response": "fact, raven, description. intelligent.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "raven"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.031,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "7d18eb1983624759af1bc6d10263a8de",
     "created_at": 1782955738.3840947,
     "source": "external_user_turn",
@@ -492,6 +442,57 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:-0.41"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "b5b561a3525d4035ad222fe505ca6187",
+    "created_at": 1783021749.6508303,
+    "source": "external_user_turn",
+    "user_input": "A raven is a black bird.",
+    "aurora_response": "raven is black bird.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "raven",
+      "black",
+      "bird"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6f089b15a52b4e2b8aa0e5d7725099c1",
+    "created_at": 1783021752.8027017,
+    "source": "external_user_turn",
+    "user_input": "Explain quantum chromodynamics.",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "quantum",
+      "chromodynamics"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,

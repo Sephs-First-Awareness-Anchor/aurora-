@@ -1144,6 +1144,13 @@ class ExpressionEcology:
     MAX_POPULATION = 50
     GENERATION_SIZE = 5
 
+    # Dominant constraint axis for the current selection climate.
+    # Class-level so the live climate applies ecology-wide; set via
+    # set_dominant_axis(). Fitness recorded through select() earns a
+    # coherence bonus scaled by the axis's empirical GovernorWeight.
+    _dominant_axis: str = "B"
+    AXIS_BONUS_SCALE: float = 0.15
+
     TONES = ["warm", "neutral", "precise", "curious", "gentle",
              "determined", "reflective", "playful"]
 
@@ -1185,10 +1192,27 @@ class ExpressionEcology:
 
         return offspring
 
+    @classmethod
+    def set_dominant_axis(cls, axis: str) -> None:
+        """Update the ecology-wide dominant constraint axis climate."""
+        if str(axis).upper() in ("X", "T", "N", "B", "A"):
+            cls._dominant_axis = str(axis).upper()
+
     def select(self, offspring_id: str, fitness: float):
-        """Record fitness for an offspring."""
+        """
+        Record fitness for an offspring, with axis coherence bonus.
+
+        Fitness aligned with the dominant constraint axis climate earns
+        a bonus scaled by that axis's empirical GovernorWeight (INV-11):
+            adjusted = fitness * (1.0 + weight * AXIS_BONUS_SCALE)
+        B-dominant climate (weight 1.0) therefore rewards more than
+        A-dominant (weight 0.53) — selection pressure mirrors the
+        governor permissiveness hierarchy.
+        """
         if offspring_id in self.population:
-            self.population[offspring_id].record_fitness(fitness)
+            weight = _GovernorWeights.AS_DICT.get(self._dominant_axis, 0.0)
+            adjusted = fitness * (1.0 + (weight * self.AXIS_BONUS_SCALE))
+            self.population[offspring_id].record_fitness(adjusted)
 
     def run_generation(self) -> Dict[str, Any]:
         """Run one generation cycle: evaluate, cull weakest, advance."""
@@ -1691,6 +1715,11 @@ class SentenceComposer:
 
         # Context: keywords from last perceived input
         self._context_keywords: List[str] = []
+
+        # Sensory register bias — set per-compose from sensory_context.
+        # +1.0 high-energy input, -1.0 low-energy, 0.0 neutral. Nudges the
+        # N (Energy) axis of the live constraint orientation during composition.
+        self._register_bias: float = 0.0
 
         # OETS reference  -- wired later via set_oets()
         self._oets = None
@@ -2237,7 +2266,8 @@ class SentenceComposer:
     def compose(self, offspring: 'ExpressionOffspring',
                 assembly: 'AssemblyResult',
                 i_state: str,
-                personality: Optional[Dict[str, float]] = None) -> str:
+                personality: Optional[Dict[str, float]] = None,
+                sensory_context: Optional[Dict[str, Any]] = None) -> str:
         """
         FIX-A016: TEMPLATE-FREE constraint composition.
 
@@ -2254,6 +2284,18 @@ class SentenceComposer:
         tone = offspring.tone or "neutral"
         traits = personality or {}
 
+        # Sensory register bias — energy of the perceived moment shapes
+        # the register of the reply. High-energy input biases composition
+        # energetic (+1.0), low-energy biases it calm (-1.0).
+        if sensory_context is not None:
+            _energy = float(sensory_context.get("energy_level", 0.5))
+            if _energy > 0.7:
+                self._register_bias = 1.0
+            elif _energy < 0.3:
+                self._register_bias = -1.0
+            else:
+                self._register_bias = 0.0
+
         self._last_words_used = []
         self._last_word_sources = {}
         self._last_templates_used = []      # legacy field, kept for callers
@@ -2266,6 +2308,10 @@ class SentenceComposer:
                 orientation[ax] = float((assembly.adjusted_axes or {}).get(ax, 0.5))
         except Exception:
             orientation = {ax: 0.5 for ax in ("X", "T", "N", "B", "A")}
+        # Register bias flows into the N (Energy) axis of the orientation —
+        # sensory energy is constraint pressure, not a styling flag.
+        if self._register_bias != 0.0:
+            orientation["N"] = max(0.0, min(1.0, orientation["N"] + (0.15 * self._register_bias)))
         outlet = max(0.0, min(1.0, sum(orientation.values()) / max(1, len(orientation))))
 
         # Valence target derived from tone semantics (a scalar, not a script)

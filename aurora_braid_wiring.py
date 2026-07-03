@@ -240,6 +240,15 @@ def boot_thought_braid(systems: Dict[str, Any], *, verbose: bool = False) -> Non
                 braid.connect_contradiction_ledger(systems['contradiction_ledger'])
             except Exception:
                 pass
+        # Register as a WARP actuator under the routing key it emits as
+        # demand.source (its _warp_level_name() = 'braid_stream').
+        if systems.get('warp_field') is not None:
+            try:
+                systems['warp_field'].register_warp_capable('braid_stream', braid)
+                if verbose:
+                    print("  [WARP] ThoughtBraid registered as actuator ('braid_stream')")
+            except Exception:
+                pass
 
         if verbose:
             print("  [BRAID] Continuous thought braid online (2s tick)")

@@ -98,6 +98,8 @@ Created: February 2026
 """
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
+# Authors: Sunni (Sir) Morningstar & Cael Devo
+
 from __future__ import annotations
 import os
 import math

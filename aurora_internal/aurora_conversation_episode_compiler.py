@@ -33,6 +33,15 @@ from aurora_internal.aurora_conversation_rubric_engine import (
     RUBRIC_DIMENSIONS,
 )
 
+# Engine anchors — the compiler derives signatures/regimes from the live
+# constraint engine, never from a parallel abstraction.
+from aurora_constraint_engine import (
+    FoundationalContract as _EngineFoundationalContract,
+    ExistenceMode as _ExistenceMode,
+)
+_FC = _EngineFoundationalContract()
+
+
 
 # ============================================================================
 # DATA STRUCTURES
@@ -64,6 +73,10 @@ class DreamEpisodePack:
     difficulty_estimate: float = 0.5
     payloads: List[Dict[str, Any]] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
+    # Engine-derived fields — constraint signature + regime/projection at compile time
+    constraint_signature: str = ""
+    runtime_regime: Dict[str, Any] = field(default_factory=dict)
+    language_projection: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -75,6 +88,9 @@ class DreamEpisodePack:
             "difficulty_estimate": self.difficulty_estimate,
             "payload_count": len(self.payloads),
             "timestamp": self.timestamp,
+            "constraint_signature": self.constraint_signature,
+            "runtime_regime": dict(self.runtime_regime),
+            "language_projection": dict(self.language_projection),
         }
 
     @classmethod
@@ -88,6 +104,9 @@ class DreamEpisodePack:
             difficulty_estimate=d.get("difficulty_estimate", 0.5),
             payloads=d.get("payloads", []),
             timestamp=d.get("timestamp", 0.0),
+            constraint_signature=d.get("constraint_signature", ""),
+            runtime_regime=d.get("runtime_regime", {}),
+            language_projection=d.get("language_projection", {}),
         )
 
 
