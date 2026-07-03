@@ -18,7 +18,7 @@
     "I_DIDNT": 0.0
   },
   "capacity": {
-    "X": 23.32308252555585,
+    "X": 27.163082525555428,
     "T": 0.0,
     "N": 22.62872683413858,
     "B": 0.0,
@@ -44,7 +44,7 @@
   "lived": 500,
   "warped_gaps": 58,
   "total_resonance": 102.44334774555944,
-  "resolved": 10,
+  "resolved": 12,
   "rejected": 500,
   "reframed": 0,
   "tone_counts": {
@@ -141,7 +141,9 @@
     "X:ADMIT:L:79b38370b9": "constraint link candidate: X:ADMIT -> L:79b38370b9",
     "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e",
     "X:RECLASSIFY:L:713c26499a": "constraint link candidate: X:RECLASSIFY -> L:713c26499a",
-    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf"
+    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf",
+    "X:RECLASSIFY:L:a07eb27cbd": "constraint link candidate: X:RECLASSIFY -> L:a07eb27cbd",
+    "X:RECLASSIFY:L:f5d7aa2b5e": "constraint link candidate: X:RECLASSIFY -> L:f5d7aa2b5e"
   },
   "held_open_anchors": {
     "X:ADMIT:L:be5e1d0bb6": "constraint link candidate: X:ADMIT -> L:be5e1d0bb6",
@@ -171,15 +173,13 @@
     "X:ADMIT:L:abc9ffa5c5": "constraint link candidate: X:ADMIT -> L:abc9ffa5c5",
     "X:RECLASSIFY:L:20ad24d7c4": "constraint link candidate: X:RECLASSIFY -> L:20ad24d7c4",
     "X:ADMIT:L:27d2e65f0f": "constraint link candidate: X:ADMIT -> L:27d2e65f0f",
-    "X:ADMIT:L:b6d6bb8aa6": "constraint link candidate: X:ADMIT -> L:b6d6bb8aa6",
-    "X:RECLASSIFY:L:f5d7aa2b5e": "constraint link candidate: X:RECLASSIFY -> L:f5d7aa2b5e",
-    "X:RECLASSIFY:L:a07eb27cbd": "constraint link candidate: X:RECLASSIFY -> L:a07eb27cbd"
+    "X:ADMIT:L:b6d6bb8aa6": "constraint link candidate: X:ADMIT -> L:b6d6bb8aa6"
   },
-  "witnessed": 2040,
-  "growth_events": 71,
-  "self_resolved_from_held": 10,
+  "witnessed": 2520,
+  "growth_events": 87,
+  "self_resolved_from_held": 12,
   "witness_depth": {
-    "X": 0.32000000000001133,
+    "X": 0.9600000000000141,
     "T": 0.0,
     "N": 0.0,
     "B": 0.0,
@@ -199,13 +199,13 @@
     "dominant_axis": "X",
     "lived": 500,
     "avg_resonance": 0.205,
-    "resolved": 10,
+    "resolved": 12,
     "rejected": 500,
     "reframed_vs_her": 0,
     "warped_gaps": 58,
     "dominant_tone": "rejected",
     "distinct_anchors": 79,
-    "fingerprint": "10e7e52ecfe1"
+    "fingerprint": "e75be5b2546f"
   },
-  "saved_t": 1783113834.155579
+  "saved_t": 1783114170.3496265
 }

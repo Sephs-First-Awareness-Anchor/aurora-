@@ -18,9 +18,9 @@
     "I_DIDNT": 0.0
   },
   "capacity": {
-    "X": 35.8043204011447,
+    "X": 39.93232040114608,
     "T": 0.0,
-    "N": 75.73437327751309,
+    "N": 77.94237327751186,
     "B": 0.0,
     "A": 0.0
   },
@@ -44,7 +44,7 @@
   "lived": 500,
   "warped_gaps": 26,
   "total_resonance": 227.46115596036262,
-  "resolved": 29,
+  "resolved": 32,
   "rejected": 500,
   "reframed": 0,
   "tone_counts": {
@@ -149,19 +149,19 @@
     "X:RECLASSIFY:L:1a4a93766e": "constraint link candidate: X:RECLASSIFY -> L:1a4a93766e",
     "L:1028c8eb9d:X:ADMIT": "constraint link candidate: L:1028c8eb9d -> X:ADMIT",
     "L:44f752f528:NC:A>X": "constraint link candidate: L:44f752f528 -> NC:A>X",
-    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf"
+    "X:RECLASSIFY:L:f4f0908cbf": "constraint link candidate: X:RECLASSIFY -> L:f4f0908cbf",
+    "X:RECLASSIFY:L:534579a7ec": "constraint link candidate: X:RECLASSIFY -> L:534579a7ec",
+    "L:ecee8a4a8c:NC:B>T": "constraint link candidate: L:ecee8a4a8c -> NC:B>T",
+    "X:ADMIT:L:890ab44ec7": "constraint link candidate: X:ADMIT -> L:890ab44ec7"
   },
   "held_open_anchors": {
     "L:280119127f:NC:X>A": "constraint link candidate: L:280119127f -> NC:X>A",
     "L:43fb729393:L:280119127f": "constraint link candidate: L:43fb729393 -> L:280119127f",
-    "L:ecee8a4a8c:NC:B>T": "constraint link candidate: L:ecee8a4a8c -> NC:B>T",
     "NC:A>X:L:ecee8a4a8c": "constraint link candidate: NC:A>X -> L:ecee8a4a8c",
     "NC:A>T:NC:A>X": "constraint link candidate: NC:A>T -> NC:A>X",
     "L:44f752f528:NC:A>T": "constraint link candidate: L:44f752f528 -> NC:A>T",
     "L:b737edc98c:L:1028c8eb9d": "constraint link candidate: L:b737edc98c -> L:1028c8eb9d",
-    "X:RECLASSIFY:L:534579a7ec": "constraint link candidate: X:RECLASSIFY -> L:534579a7ec",
     "L:b737edc98c:L:d54b2235b7": "constraint link candidate: L:b737edc98c -> L:d54b2235b7",
-    "X:ADMIT:L:890ab44ec7": "constraint link candidate: X:ADMIT -> L:890ab44ec7",
     "L:725f72b502:X:ADMIT": "constraint link candidate: L:725f72b502 -> X:ADMIT",
     "X:ADMIT:L:a48bacb221": "constraint link candidate: X:ADMIT -> L:a48bacb221",
     "L:b737edc98c:L:f084e40ef7": "constraint link candidate: L:b737edc98c -> L:f084e40ef7",
@@ -190,13 +190,13 @@
     "X:ADMIT:L:305ac407d1": "constraint link candidate: X:ADMIT -> L:305ac407d1",
     "X:RECLASSIFY:L:151110020a": "constraint link candidate: X:RECLASSIFY -> L:151110020a"
   },
-  "witnessed": 5923,
-  "growth_events": 206,
-  "self_resolved_from_held": 29,
+  "witnessed": 6715,
+  "growth_events": 233,
+  "self_resolved_from_held": 32,
   "witness_depth": {
-    "X": 0.4080000000000216,
+    "X": 1.3360000000000247,
     "T": 0.0,
-    "N": 0.5760000000000115,
+    "N": 1.184000000000013,
     "B": 0.0,
     "A": 0.0
   },
@@ -214,13 +214,13 @@
     "dominant_axis": "N",
     "lived": 500,
     "avg_resonance": 0.455,
-    "resolved": 29,
+    "resolved": 32,
     "rejected": 500,
     "reframed_vs_her": 0,
     "warped_gaps": 26,
     "dominant_tone": "rejected",
     "distinct_anchors": 68,
-    "fingerprint": "9fde2dc2a744"
+    "fingerprint": "8db2a52653a6"
   },
-  "saved_t": 1783113834.1182697
+  "saved_t": 1783114170.3490539
 }

@@ -18,7 +18,7 @@
     "I_DIDNT": 0.0
   },
   "capacity": {
-    "X": 28.44308252555529,
+    "X": 32.283082525554995,
     "T": 0.0,
     "N": 22.249685706563167,
     "B": 0.0,
@@ -44,7 +44,7 @@
   "lived": 500,
   "warped_gaps": 37,
   "total_resonance": 102.44334774555954,
-  "resolved": 13,
+  "resolved": 15,
   "rejected": 500,
   "reframed": 0,
   "tone_counts": {
@@ -144,7 +144,9 @@
     "X:ADMIT:L:d37651a797": "constraint link candidate: X:ADMIT -> L:d37651a797",
     "X:RECLASSIFY:L:534579a7ec": "constraint link candidate: X:RECLASSIFY -> L:534579a7ec",
     "X:RECLASSIFY:L:2761307a73": "constraint link candidate: X:RECLASSIFY -> L:2761307a73",
-    "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e"
+    "X:ADMIT:L:ba74301a9e": "constraint link candidate: X:ADMIT -> L:ba74301a9e",
+    "X:ADMIT:L:52d869d42f": "constraint link candidate: X:ADMIT -> L:52d869d42f",
+    "X:ADMIT:L:27d2e65f0f": "constraint link candidate: X:ADMIT -> L:27d2e65f0f"
   },
   "held_open_anchors": {
     "L:d54b2235b7:X:RECLASSIFY": "constraint link candidate: L:d54b2235b7 -> X:RECLASSIFY",
@@ -171,15 +173,13 @@
     "X:RECLASSIFY:L:713c26499a": "constraint link candidate: X:RECLASSIFY -> L:713c26499a",
     "X:ADMIT:L:13ac58d8bf": "constraint link candidate: X:ADMIT -> L:13ac58d8bf",
     "X:RECLASSIFY:L:20ad24d7c4": "constraint link candidate: X:RECLASSIFY -> L:20ad24d7c4",
-    "X:ADMIT:L:1bcbe6eeb0": "constraint link candidate: X:ADMIT -> L:1bcbe6eeb0",
-    "X:ADMIT:L:27d2e65f0f": "constraint link candidate: X:ADMIT -> L:27d2e65f0f",
-    "X:ADMIT:L:52d869d42f": "constraint link candidate: X:ADMIT -> L:52d869d42f"
+    "X:ADMIT:L:1bcbe6eeb0": "constraint link candidate: X:ADMIT -> L:1bcbe6eeb0"
   },
-  "witnessed": 2680,
-  "growth_events": 93,
-  "self_resolved_from_held": 13,
+  "witnessed": 3160,
+  "growth_events": 110,
+  "self_resolved_from_held": 15,
   "witness_depth": {
-    "X": 0.6400000000000149,
+    "X": 1.2800000000000176,
     "T": 0.0,
     "N": 0.0,
     "B": 0.0,
@@ -199,13 +199,13 @@
     "dominant_axis": "X",
     "lived": 500,
     "avg_resonance": 0.205,
-    "resolved": 13,
+    "resolved": 15,
     "rejected": 500,
     "reframed_vs_her": 0,
     "warped_gaps": 37,
     "dominant_tone": "rejected",
     "distinct_anchors": 79,
-    "fingerprint": "89fbdec6c820"
+    "fingerprint": "a1baa703d0d0"
   },
-  "saved_t": 1783113834.1989226
+  "saved_t": 1783114170.3502579
 }

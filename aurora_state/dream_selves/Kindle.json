@@ -18,7 +18,7 @@
     "I_DIDNT": 0.0
   },
   "capacity": {
-    "X": 28.46394194679413,
+    "X": 32.30394194679384,
     "T": 0.0,
     "N": 22.249685706563167,
     "B": 0.0,
@@ -174,11 +174,11 @@
     "X:ADMIT:L:be5e1d0bb6": "constraint link candidate: X:ADMIT -> L:be5e1d0bb6"
   },
   "held_open_anchors": {},
-  "witnessed": 3040,
-  "growth_events": 97,
+  "witnessed": 3520,
+  "growth_events": 112,
   "self_resolved_from_held": 0,
   "witness_depth": {
-    "X": 24.31999999999821,
+    "X": 28.159999999997787,
     "T": 0.0,
     "N": 0.0,
     "B": 0.0,
@@ -206,5 +206,5 @@
     "distinct_anchors": 79,
     "fingerprint": "d8448c0add54"
   },
-  "saved_t": 1783113834.1827717
+  "saved_t": 1783114170.350032
 }
