@@ -456,8 +456,18 @@ actively-sought gap (not dropped). Verified compounding across 4 dreams: seeking
 emerges dream 2, crystallised dream 3 (8 anchors), stable dream 4. Both runtime files
 git-ignored.
 
-Remaining stages: (2) dream-cycle residence (call provoke_reexperience only from
-inside QuantumDreamSubstrate.run_dream_cycle); (3) dialogue loop (she interacts with
-them in dreams; they respond from their divergent identity); (4) feedback split (dream
-interaction feeds HER growth via shard->OETS/EEPR while the selves stay distinct);
-(5) per-self persistence (each a continuous being with its own arc).
+Stage 2 — dream residence (built + verified): `QuantumDreamSubstrate` now births the
+selves ONCE (lazily, first dream cycle) and holds them on `self._selves` so they
+persist across cycles as continuous beings with their own arcs. `run_dream_cycle`
+step 6 = `_dream_encounter_with_selves`: she MEETS them in the dream and experiences
+the reinforced pressures THROUGH interacting with them — the encounter calls
+`provoke_reexperience`, so the selves influence her only by what they make her
+re-encounter, never by their verdicts. Fully defensive (a dream never crashes the
+substrate thread). Verified across 3 cycles: selves born dream 1 and persist (same
+Ember/Wane/Riven), seeking emerges dream 2, crystallised dream 3.
+
+Remaining stages: (3) dialogue loop (multi-turn in-dream exchange; they respond from
+their divergent identity rather than a single provocation pass); (4) feedback split
+(dream interaction feeds HER growth via shard->OETS/EEPR while the selves stay
+distinct); (5) per-self persistence to disk (aurora_state/dream_selves/, each a
+continuous being with its own saved arc across boots).
