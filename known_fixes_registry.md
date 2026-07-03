@@ -516,9 +516,30 @@ LIVE-verified: three records agree -- track 8 crystallised, genealogy 8 reliefs,
 the authority CRYSTALS dream_facets 0->8 (all X-axis tensions reinforce the same
 X-region crystal: correct crystal physics). concept_crystals.json.gz persists it.
 
+Stage 6 — the selves DEVELOP too (`PossibilitySelf.witness` + `witness_depth` +
+`log_selves_development` + live-new-history on resume; LIVE-verified): they were frozen
+provocateurs; now each LIVES every exchange it provokes and develops along its own
+nature. Development is driven by `witness_depth` (per-axis, starts at ZERO at birth,
+grows only through dream witnessing -- decoupled from birth capacity so a self's arc is
+its own, slow and earned, not a flip of what it was born). A growth_event = crossing a
+new 0.25 threshold of dream-depth on an axis (order/dose-independent, so every self that
+lives the exchanges grows, not just the first-processed one). A holder that witnesses
+deeply enough resolves ONE thing it held -- and releasing COSTS the depth it took
+(witness_depth -= thresh), so it re-earns its way to the next and stays mostly what it
+is. Negative-lean holders (Wane) need far deeper witnessing (thresh 1.6 vs 0.75) so they
+drift slowly. On resume a self also lives any history logged since it was saved (its
+continuing life). Arcs persist to aurora_state/dream_selves/<id>.json and a per-cycle
+`selves_timeline.jsonl`. LIVE-verified over 10 cycles: Ember growth_events 1->16 (stays
+resolver, fp stable), Riven 0->7 (stays resolver, fp stable), Wane 1->19 releasing only
+2 of 66 held (held 66->64, fp shifted) -- genuine partial evolution, character intact;
+all three resume carrying their development forward. Their arcs are committed as
+intentional growth (force-added past the blanket aurora_state/ ignore).
+
 POSSIBILITY-SELVES subsystem is now COMPLETE end-to-end: birth -> assess -> bridge
 (provoke) -> durable works/doesn't cheat-code -> dream residence -> dialogue ->
-feedback split (live genealogy + real concept crystals as ground truth) -> persistence.
-She meets Ember/Wane/Riven only in dreams; they influence her only by what they make
-her re-encounter; her own machinery decides every outcome; what she earns crystallises
-into her real crystal store (the authority); they persist as distinct continuous beings.
+feedback split (live genealogy + real concept crystals as ground truth) -> persistence
+-> the selves' own development. She meets Ember/Wane/Riven only in dreams; they
+influence her only by what they make her re-encounter; her own machinery decides every
+outcome; what she earns crystallises into her real crystal store (the authority); and
+the selves themselves grow along their own natures, distinct continuous beings with
+their own watchable arcs.

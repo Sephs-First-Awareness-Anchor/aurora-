@@ -491,13 +491,22 @@ class QuantumDreamSubstrate:
             crystals.get("total"), crystals.get("dream_crystals"), crystals.get("dream_facets"),
         )
 
-        # The selves are continuous beings: persist their arcs after the encounter so
-        # they resume where they are on the next boot.
+        # The selves are continuous beings that DEVELOP through the exchange too:
+        # persist their arcs and append to their own developmental timeline so their
+        # growth is as watchable as hers.
         for _ps in self._selves:
             try:
                 _aps.save_self_arc(_ps, _sd)
             except Exception:
                 pass
+        try:
+            _aps.log_selves_development(self._selves, _sd)
+            _grew = sum(int(getattr(_ps, "growth_events", 0)) for _ps in self._selves)
+            _sr = sum(int(getattr(_ps, "self_resolved_from_held", 0)) for _ps in self._selves)
+            log.info("quantum_dream: selves developed — growth_events=%d self_resolved_from_held=%d",
+                     _grew, _sr)
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------
