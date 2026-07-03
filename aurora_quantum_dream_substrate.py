@@ -390,6 +390,10 @@ class QuantumDreamSubstrate:
     def __init__(self) -> None:
         self._entanglement = CrystalEntanglementRegistry()
         self._cycle_count  = 0
+        # The inception-born divergent selves reside HERE, in the dream — born once
+        # from her recorded history, they persist across cycles as continuous beings
+        # with their own arcs. She only ever meets them here, in dreams.
+        self._selves = None
 
     def run_dream_cycle(self, systems: Dict[str, Any]) -> None:
         self._cycle_count += 1
@@ -412,7 +416,88 @@ class QuantumDreamSubstrate:
         # 5. Dimensional collapse — only when coherence is low
         _dimensional_collapse(systems)
 
+        # 6. Dream encounter — she meets the possibility-selves and experiences the
+        #    reinforced pressures THROUGH interacting with them. This is the only
+        #    place they touch her; the pressure reaches her as their influence.
+        self._dream_encounter_with_selves(systems)
+
         log.info("quantum_dream: cycle %d complete", self._cycle_count)
+
+    # ------------------------------------------------------------------
+    # Dream encounter with the inception-born possibility-selves
+    # ------------------------------------------------------------------
+    def _dream_encounter_with_selves(self, systems: Dict[str, Any]) -> None:
+        """She meets the divergent selves in the dream. They PROVOKE — re-presenting
+        tensions from paths she did not take through their own stance — and she
+        re-lives each through her OWN machinery. Only her outcomes are kept, and the
+        cumulative works/doesn't record is what drives her crystallisation. The selves
+        influence her only by what they make her re-encounter, never by what they
+        concluded. Fully defensive: a dream must never crash the substrate thread."""
+        try:
+            import aurora_possibility_selves as _aps
+        except Exception as exc:
+            log.debug("quantum_dream: possibility-selves unavailable: %s", exc)
+            return
+
+        _sd = str(systems.get("state_dir") or "aurora_state")
+
+        # Birth the selves once, RESUMING their saved arcs from disk so Ember/Wane/Riven
+        # continue as the same beings across boots, then hold them for the session.
+        if self._selves is None:
+            try:
+                _res = _aps.birth_possibility_selves(state_dir=_sd, resume=True)
+                self._selves = _res.get("_objects", []) or []
+                _resumed = _res.get("resumed", []) or []
+                log.info("quantum_dream: %d possibility-selves in the dream (%d resumed)",
+                         len(self._selves), len(_resumed))
+            except Exception as exc:
+                log.warning("quantum_dream: could not birth possibility-selves: %s", exc)
+                self._selves = []
+                return
+
+        if not self._selves:
+            return
+
+        # warp_guard lets her ACCOMMODATE what she re-lives (her own warp, not theirs).
+        _wg = None
+        try:
+            from aurora_warp_protocol import warp_guard as _wg
+        except Exception:
+            _wg = None
+
+        try:
+            # A multi-turn exchange: the selves press from their divergent identity and
+            # she may arrive THROUGH the dialogue, still by her own machinery.
+            enc = _aps.dream_dialogue(self._selves, systems, warp_guard=_wg)
+        except Exception as exc:
+            log.warning("quantum_dream: dream encounter failed: %s", exc)
+            return
+
+        tr = enc.get("track_record", {}) or {}
+        fed = enc.get("fed_to_her_growth", {}) or {}
+        if not isinstance(fed, dict):
+            fed = {"genealogy_reliefs": fed}
+        # Check the crystals -- the ground truth for what actually persisted.
+        crystals = _aps.crystal_authority(systems)
+        log.info(
+            "quantum_dream: dialogue — she re-lived %d provocations across the exchange; "
+            "met %d, held %d, passed %d, carried %d | crystallised+%d seeking+%d | "
+            "fed->genealogy:%d crystals+%d | crystal-authority total=%s dream_crystals=%s dream_facets=%s",
+            enc.get("provoked_reexperiences", 0), enc.get("her_new_resolutions", 0),
+            enc.get("her_holds", 0), enc.get("her_passes", 0),
+            enc.get("carried_to_future_dreams", 0),
+            len(tr.get("newly_crystallised", [])), len(tr.get("actively_seeking", [])),
+            fed.get("genealogy_reliefs", 0), fed.get("crystals_deposited", 0),
+            crystals.get("total"), crystals.get("dream_crystals"), crystals.get("dream_facets"),
+        )
+
+        # The selves are continuous beings: persist their arcs after the encounter so
+        # they resume where they are on the next boot.
+        for _ps in self._selves:
+            try:
+                _aps.save_self_arc(_ps, _sd)
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------
