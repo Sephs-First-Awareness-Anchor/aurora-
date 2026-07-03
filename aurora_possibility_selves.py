@@ -737,6 +737,57 @@ def _resolve_relief_sink(systems):
     return None, None
 
 
+def _ax_from_axis(axis: str) -> Dict[str, float]:
+    """A 5D axis coordinate with the tension's dominant axis raised -- the crystal
+    registry is indexed in X/T/N/B/A space, so a dominant-axis anchor maps to a
+    coordinate region there."""
+    ax = {a: 0.5 for a in _AXES}
+    if axis in _AXES:
+        ax[axis] = 0.85
+    return ax
+
+
+def crystal_authority(systems) -> Dict[str, Any]:
+    """Check the crystals -- the ground truth. When tracking (my side-ledger) is
+    missing or in doubt, HER concept crystal registry is what actually persisted. This
+    reads its live stats so the dream can defer to it rather than to my JSON."""
+    out = {"available": False}
+    try:
+        reg = systems.get("_concept_crystal_registry") if isinstance(systems, dict) else None
+        if reg is not None and hasattr(reg, "stats"):
+            s = reg.stats() or {}
+            # Count the crystals/facets that carry dream-earned grounding -- the part of
+            # the ground truth that came from her dream encounters specifically.
+            dream_crystals = 0
+            dream_facets = 0
+            for c in (getattr(reg, "_nodes", {}) or {}).values():
+                hits = [f for f in (getattr(c, "facets", {}) or {}).values()
+                        if "dream_earned" in str(getattr(f, "role", ""))]
+                if hits:
+                    dream_crystals += 1
+                    dream_facets += len(hits)
+            out = {"available": True, "total": s.get("total"), "grounded": s.get("grounded"),
+                   "dream_crystals": dream_crystals, "dream_facets": dream_facets}
+    except Exception:
+        pass
+    return out
+
+
+def _deposit_dream_crystal(systems, anchor: str, axis: str) -> bool:
+    """Register a dream-earned crystallisation in HER real ConceptCrystalRegistry via
+    the public observe_lsa API, at the tension's axis coordinate. This makes the
+    crystal store -- not my JSON -- the authoritative record of what she crystallised:
+    check the crystals and it is there. Best-effort."""
+    try:
+        reg = systems.get("_concept_crystal_registry") if isinstance(systems, dict) else None
+        if reg is None or not hasattr(reg, "observe_lsa"):
+            return False
+        reg.observe_lsa(_ax_from_axis(axis), f"dream_earned:{str(anchor)[:40]}")
+        return True
+    except Exception:
+        return False
+
+
 def _feed_her_growth(systems, crystallised: List[Dict[str, Any]]) -> int:
     """Sediment her dream-earned crystallisations into HER growth. Only what she MET
     enough times to crystallise crosses over -- never a self's verdict, never a raw
@@ -747,24 +798,29 @@ def _feed_her_growth(systems, crystallised: List[Dict[str, Any]]) -> int:
     if not crystallised or not isinstance(systems, dict):
         return 0
     fed = 0
+    crystals_deposited = 0
     logger, PressureVec = _resolve_relief_sink(systems)
     for c in crystallised:
         axis = c.get("axis") or "B"
         if axis not in _AXES:
             axis = "B"
+        anchor = str(c.get("anchor", ""))
         if logger is not None and PressureVec is not None:
             try:
                 # Honest minimal relief: a tension on this axis she now resolves.
                 before = PressureVec(**{axis: 0.30})
                 after = PressureVec()
                 logger.observe(before, [], after, notes={
-                    "source": "dream_earned",
-                    "anchor": str(c.get("anchor", ""))[:60],
-                    "met": c.get("met"),
+                    "source": "dream_earned", "anchor": anchor[:60], "met": c.get("met"),
                 })
                 fed += 1
             except Exception:
                 pass
+        # THE authoritative home: register it in her real concept crystal store, so
+        # "check the crystals" reflects her dream growth -- not just my side-ledger.
+        if _deposit_dream_crystal(systems, anchor, axis):
+            crystals_deposited += 1
+            c["crystal_confirmed"] = True
     # Durable ledger — her earned growth persists regardless of what is mounted.
     try:
         sd = _reexp_state_dir(systems)
@@ -782,11 +838,13 @@ def _feed_her_growth(systems, crystallised: List[Dict[str, Any]]) -> int:
             record_developmental_event(
                 systems, "dream_crystal_earned",
                 f"crystallised {len(crystallised)} tension(s) through dream encounters "
-                f"with the possibility-selves ({fed} sedimented to live genealogy)",
+                f"with the possibility-selves ({fed} to genealogy, "
+                f"{crystals_deposited} to concept crystals)",
             )
         except Exception:
             pass
-    return fed
+    return {"genealogy_reliefs": fed, "crystals_deposited": crystals_deposited,
+            "crystallised": len(crystallised)}
 
 
 # ── Stage 3: the dream dialogue ───────────────────────────────────────────────

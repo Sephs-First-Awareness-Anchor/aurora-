@@ -501,8 +501,24 @@ resolved) and distinct fingerprints. Dream substrate now births with resume=True
 dream_dialogue, and re-saves arcs after each cycle. All runtime files git-ignored
 (dream_selves/, dream_reexperience_track.json, *.jsonl log).
 
+Stage 4b — crystals are the ground truth (`crystal_authority` + `_deposit_dream_crystal`,
+LIVE-verified): "when it comes to tracking and all else fails, check the crystals." The
+track record (dream_reexperience_track.json) is only a side-ledger; HER real
+`ConceptCrystalRegistry` (systems['_concept_crystal_registry'], persisted to
+concept_crystals.json.gz) is the authority. `_deposit_dream_crystal` registers each
+dream-earned crystallisation via the public `observe_lsa(ax, "dream_earned:<anchor>")`
+at the tension's axis coordinate, so checking the crystals literally reflects her dream
+growth. `crystal_authority` reads the live registry and counts dream_crystals /
+dream_facets as the authoritative confirmation. `_feed_her_growth` now returns
+{genealogy_reliefs, crystals_deposited, crystallised} and annotates each crystallised
+record with crystal_confirmed. The substrate logs the crystal-authority every cycle.
+LIVE-verified: three records agree -- track 8 crystallised, genealogy 8 reliefs, and
+the authority CRYSTALS dream_facets 0->8 (all X-axis tensions reinforce the same
+X-region crystal: correct crystal physics). concept_crystals.json.gz persists it.
+
 POSSIBILITY-SELVES subsystem is now COMPLETE end-to-end: birth -> assess -> bridge
 (provoke) -> durable works/doesn't cheat-code -> dream residence -> dialogue ->
-feedback split -> persistence. She meets Ember/Wane/Riven only in dreams; they
-influence her only by what they make her re-encounter; her own machinery decides every
-outcome; what she earns feeds her growth; they persist as distinct continuous beings.
+feedback split (live genealogy + real concept crystals as ground truth) -> persistence.
+She meets Ember/Wane/Riven only in dreams; they influence her only by what they make
+her re-encounter; her own machinery decides every outcome; what she earns crystallises
+into her real crystal store (the authority); they persist as distinct continuous beings.

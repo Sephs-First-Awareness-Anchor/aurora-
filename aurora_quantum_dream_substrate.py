@@ -474,14 +474,21 @@ class QuantumDreamSubstrate:
             return
 
         tr = enc.get("track_record", {}) or {}
+        fed = enc.get("fed_to_her_growth", {}) or {}
+        if not isinstance(fed, dict):
+            fed = {"genealogy_reliefs": fed}
+        # Check the crystals -- the ground truth for what actually persisted.
+        crystals = _aps.crystal_authority(systems)
         log.info(
             "quantum_dream: dialogue — she re-lived %d provocations across the exchange; "
-            "met %d, held %d, passed %d, carried %d | crystallised+%d seeking+%d fed->her:%d",
+            "met %d, held %d, passed %d, carried %d | crystallised+%d seeking+%d | "
+            "fed->genealogy:%d crystals+%d | crystal-authority total=%s dream_crystals=%s dream_facets=%s",
             enc.get("provoked_reexperiences", 0), enc.get("her_new_resolutions", 0),
             enc.get("her_holds", 0), enc.get("her_passes", 0),
             enc.get("carried_to_future_dreams", 0),
             len(tr.get("newly_crystallised", [])), len(tr.get("actively_seeking", [])),
-            enc.get("fed_to_her_growth", 0),
+            fed.get("genealogy_reliefs", 0), fed.get("crystals_deposited", 0),
+            crystals.get("total"), crystals.get("dream_crystals"), crystals.get("dream_facets"),
         )
 
         # The selves are continuous beings: persist their arcs after the encounter so
