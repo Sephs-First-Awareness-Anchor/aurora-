@@ -19,7 +19,7 @@ on:
       branch:
         description: "Branch to run Aurora on and commit her state to"
         required: false
-        default: "claude/aurora-codebase-review-33z4hd"
+        default: "main"
       max_seconds:
         description: "Wall-clock budget for the segment (seconds)"
         required: false
