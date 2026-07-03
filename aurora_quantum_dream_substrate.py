@@ -543,6 +543,20 @@ class QuantumDreamSubstrate:
         except Exception as _sexc:
             log.debug("quantum_dream: stagnation check failed: %s", _sexc)
 
+        # Council homeostasis by BEHAVIOUR: if the living council has stopped holding
+        # tensions in practice, retire a redundant resolver and birth a holder to
+        # restore the lost pressure. Frees the selves to evolve while keeping the
+        # council's functional diversity self-healing.
+        try:
+            _rb = _aps.rebalance_council(self._selves, systems, _sd, warp_guard=_wg)
+            if _rb.get("retired") or _rb.get("born"):
+                log.info("quantum_dream: COUNCIL REBALANCE — held_ratio=%s retired=%s born=%s "
+                         "(holding pressure restored); council now %d selves",
+                         _rb.get("held_ratio"), _rb.get("retired"), _rb.get("born"),
+                         len(self._selves))
+        except Exception as _rexc:
+            log.debug("quantum_dream: rebalance failed: %s", _rexc)
+
 
 # ---------------------------------------------------------------------------
 # Background thread launcher

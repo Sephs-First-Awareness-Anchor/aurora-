@@ -551,6 +551,24 @@ cycle after the encounter. LIVE-verified: forced N-stall -> Kindle born oriented
 (counter to Riven's I_DO); forced B-stall in the live substrate -> Kindle born I_SAW
 (counter to Wane's I_SOUGHT), appended to the live council, resumes as the 4th being.
 
+Stage 8 — council homeostasis by behaviour (`council_functional_balance` +
+`rebalance_council` + retirement; verified): a self's ORIENTATION is fixed at birth but
+its BEHAVIOUR drifts (a holder like Wane can become a resolver by living), so the
+stagnation-birth's orientation-based balance can't see when the living council has
+stopped holding in practice. `council_functional_balance` measures what the council
+actually DOES (held/(held+resolved) ratio, active_holders). `rebalance_council`, run
+each dream cycle, acts ONLY on a genuine behavioural need: if held_ratio < 0.22 AND no
+active holder remains, it frees a slot by retiring a redundant resolver
+(`_pick_redundant_resolver` -- one sharing a functional role with another, preferring a
+less-developed non-founder) and births a holder (`force_hold=True` -> oriented to the
+holding/questioning pole) to restore the lost pressure. Retirement ARCHIVES the being
+(moves its arc to dream_selves/retired/ so it is not resumed but its development is
+preserved), and retired names are never reused. This is what makes "let Wane become
+whatever he becomes -- and if his becoming leaves a hole, she fills it herself" real.
+Verified: quiet while any holder remains (real council: held_ratio 0.209 but Ashe still
+holds -> no action); on forced full collapse -> retires a redundant resolver (Drift) and
+births a fresh holder (Mire, I_ISNT-led, 28 held, born_from=holding_need).
+
 POSSIBILITY-SELVES subsystem is now COMPLETE end-to-end: birth -> assess -> bridge
 (provoke) -> durable works/doesn't cheat-code -> dream residence -> dialogue ->
 feedback split (live genealogy + real concept crystals as ground truth) -> persistence
