@@ -376,3 +376,32 @@ green, live turn battery + this session's learning mechanisms intact.
 
 (Directive's registry ids FIX-A007/FIX-I004 target the read-only aurora-preemptive-
 hardening skill registry; noted here to avoid collision with this file's FIX-A007.)
+
+---
+
+## FIX-A009 (ARCHITECTURAL) — Grounding feeds assertion confidence (emit abstain diagnosis)
+
+**Question:** why does emit() abstain on a concept even after it has crystallised to
+SEMANTIC (depth >= 0.4, scaffolding 2)?
+
+**Diagnosis (sourced):** emit() expresses her constraint STATE, not her knowledge.
+Its output is gated on (1) the speech act from `_classify_speech_act`, which reads
+`i_state_polarities` (I_IS/I_CAN/...) built ONLY from the i-state collective, and
+(2) content-slot resonance, and (3) the input-frame semantics (is_statement /
+aligns_with_oets / is_question). Concept grounding fed NONE of these -- so a
+crystallised concept with a neutral field never trips ASSERTION; emit stays silent.
+Crystallisation is necessary but not sufficient.
+
+**Fix (`aurora_constraint_emission.py`, EmissionContextBuilder.build):** a concept
+she has genuinely crystallised (OETS scaffolding >= SEMANTIC) that is the current
+topic now raises I_IS toward assertion (bounded <= 0.6, scaled by depth) -- earned
+confidence about what she deeply understands, gated on real grounding so it is never
+blanket over-assertion. This closes the i-state half of the gate: what she has
+grounded, she can now move to assert.
+
+**Verified:** real-turn regression is sane (no over-assertion, anchor leaks 0, known
+concepts render, unknowns honestly abstain). HONEST BOUNDARY: emit-compression
+activation ALSO needs the input-frame semantics + content-slot resonance to align,
+which happens in genuine assertive conversational context (synthetic frames with
+is_statement=False fall through to ACKNOWLEDGMENT regardless). Not force-able without
+risking her honest expression -- documented, not faked.
