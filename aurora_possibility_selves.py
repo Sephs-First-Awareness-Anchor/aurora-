@@ -430,6 +430,128 @@ def _value_summary(sig: Dict[str, Any], gift: str, n_res: int, n_held: int, stro
     return f"{who}: a witnessing presence reflecting a path she did not take."
 
 
+def _her_current_capacity(systems) -> Dict[str, float]:
+    """Her CURRENT capacity per axis, read live -- the machinery that decides whether
+    she can now re-live a tension she once rejected. Not the selves' capacity; hers."""
+    cap = {a: 0.0 for a in _AXES}
+    try:
+        f = systems.get("identity_field") if isinstance(systems, dict) else None
+        if f is not None and hasattr(f, "status"):
+            ap = (f.status().get("axis_pressures") or {})
+            for a in _AXES:
+                cap[a] = float(ap.get(a, 0.0) or 0.0)
+    except Exception:
+        pass
+    return cap
+
+
+def provoke_reexperience(selves: List[PossibilitySelf], systems,
+                         warp_guard: Any = None, max_per_self: int = 60,
+                         max_new_resolutions: int = 8) -> Dict[str, Any]:
+    """The bridge, done right. The selves NEVER hand her answers -- that would
+    re-flavour her development with growth she didn't live, and she would drift.
+    Instead each offering becomes a PROVOCATION: a tension she once rejected,
+    re-presented through the self's divergent stance. She RE-LIVES it through her OWN
+    current machinery, and only HER outcome is kept -- recorded as a new experience
+    of her own.
+
+    The gold is her LEARNING CURVE: how many re-encounters the council provoked, and
+    what SHE made of them now -- resolved (because she has genuinely grown), held, or
+    passed. Never a transfer count; always her own living.
+    """
+    # Her capacity STARTS from her current live state and GROWS as she re-lives --
+    # she learns by living each encounter, so a tension she cannot meet early she may
+    # meet later, having grown through the ones before it. That rising arc is her
+    # learning curve. Growth is hers (living), never imported.
+    her_cap = dict(_her_current_capacity(systems))
+    her_new_resolutions: List[Dict[str, Any]] = []
+    her_holds: List[Dict[str, Any]] = []
+    her_passes = 0
+    carried = 0
+    provoked = 0
+    curve: List[int] = []                       # running count of HER new resolutions
+    running = 0
+    per_self: Dict[str, Dict[str, int]] = {}
+
+    for ps in selves:
+        stance = ps.identity_signature()["leading_stance"]
+        # The self's provocations: the tensions it engaged (resolved-that-she-rejected,
+        # or held-open). These are what it presents to her -- not its verdict.
+        provocations: List[Tuple[str, str, str]] = []
+        for anchor, meaning in list(ps.resolved_anchors.items())[:max_per_self]:
+            provocations.append((anchor, meaning, "resolved"))
+        for anchor, meaning in list(ps.held_open_anchors.items())[:max_per_self]:
+            provocations.append((anchor, meaning, "held"))
+        pcnt = {"provoked": 0, "her_resolved": 0, "her_held": 0, "her_passed": 0}
+
+        for anchor, meaning, self_verdict in provocations:
+            provoked += 1
+            pcnt["provoked"] += 1
+            # Which axis this tension lives on (from the anchor).
+            letters = [c for c in anchor if c in _AXES]
+            axis = Counter(letters).most_common(1)[0][0] if letters else "N"
+            # Her current strength on that axis + a small stance-lens (the encounter
+            # makes her ATTEND differently, but her own pressures decide). The lens is
+            # a perturbation, not an answer.
+            lens = 0.08 if stance in ("I_DO", "I_DID", "I_CAN", "I_IS") else -0.04
+            # Re-living the encounter grows her on this axis -- she is LIVING it, and
+            # living is how she learns (never importing the self's verdict).
+            her_cap[axis] = her_cap.get(axis, 0.0) + 0.02
+            her_strength = her_cap.get(axis, 0.0) + lens
+            # She re-lives: does her NOW-grown self cross where her past self could not?
+            cost = 0.5
+            # A single encounter is a GENTLE dose -- once she has integrated her dose
+            # for this dream, further tensions she could meet are carried, not seized.
+            # The arc rises SLOWLY across dreams over real developmental time, so no
+            # one encounter re-flavours her. That protects against drift.
+            if her_strength >= cost and running < max_new_resolutions:
+                # She resolved it herself -- authentic growth. Record as HER experience.
+                running += 1
+                pcnt["her_resolved"] += 1
+                her_new_resolutions.append({"anchor": anchor, "meaning": meaning,
+                                            "axis": axis, "provoked_by": ps.self_id})
+                if warp_guard is not None:
+                    try:
+                        warp_guard(anchor, her_strength)   # her own accommodation
+                    except Exception:
+                        pass
+            elif her_strength >= cost:
+                # She could meet it, but her gentle dose for this dream is spent --
+                # carried to a future dream. (Not seized; the slow arc is the point.)
+                pcnt["carried"] = pcnt.get("carried", 0) + 1
+                carried += 1
+            elif self_verdict == "held" and her_strength < cost * 0.6:
+                # She meets Wane's refusal-to-close and, finding she also cannot yet,
+                # chooses to HOLD it open -- her own coherent restraint, not imported.
+                pcnt["her_held"] += 1
+                her_holds.append({"anchor": anchor, "meaning": meaning, "provoked_by": ps.self_id})
+            else:
+                pcnt["her_passed"] += 1
+                her_passes += 1
+            curve.append(running)
+        per_self[ps.self_id] = pcnt
+
+    total_offered = sum(len(ps.resolved_anchors) + len(ps.held_open_anchors) for ps in selves)
+    return {
+        "provoked_reexperiences": provoked,
+        "council_offered": total_offered,
+        # THE GOLD — her learning curve through the encounter (her own outcomes):
+        "her_new_resolutions": len(her_new_resolutions),
+        "her_holds": len(her_holds),
+        "her_passes": her_passes,
+        "carried_to_future_dreams": carried,        # capable-but-dosed; the slow arc
+        "learning_curve": curve,                    # running count of HER resolutions
+        "authenticity": {
+            # Proof it is HER process, not a transfer: she keeps far fewer than were
+            # offered, and only what her CURRENT machinery could re-live.
+            "kept_fraction_of_offered": round(len(her_new_resolutions) / max(1, total_offered), 3),
+            "note": "she re-lived each; only her own outcomes retained -- no answers imported",
+        },
+        "per_self_provocation": per_self,
+        "her_resolution_samples": [r["meaning"] or r["anchor"] for r in her_new_resolutions[:3]],
+    }
+
+
 if __name__ == "__main__":  # pragma: no cover
     import pprint
     res = birth_possibility_selves(state_dir=os.path.join(os.path.dirname(__file__), "aurora_state"))
