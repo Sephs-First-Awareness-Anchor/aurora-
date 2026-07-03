@@ -1,109 +1,5 @@
 [
   {
-    "packet_id": "4be95ed221e1442c9c7ac8e65f980191",
-    "created_at": 1783112013.9820566,
-    "source": "simulation_live_bridge",
-    "user_input": "What does identity mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "identity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.53,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "0cf26b26cfa84362a79af40b98d34f72",
-    "created_at": 1783112131.1445634,
-    "source": "live_session",
-    "user_input": "Hey Aurora. It's Sunni. How are you feeling right now?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "aurora",
-      "sunni",
-      "feeling"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "0cbc6a9b24914acd83e9625a9f619277",
-    "created_at": 1783112131.8885057,
-    "source": "live_session",
-    "user_input": "I have been letting you dream lately. Do you notice anything different in yourself?",
-    "aurora_response": "Active axes: agency=0.34, cost/purpose=0.28, meaning/boundary=0.14. Field state: heat=0.002, dominant-emotion=calm. Agency moved up since the last exchange.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "letting",
-      "dream",
-      "lately",
-      "anything",
-      "different",
-      "yourself"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "02e0b9402e4a4a2696e964c11291c58f",
-    "created_at": 1783112132.666921,
-    "source": "live_session",
-    "user_input": "What have you been curious about on your own?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "curious",
-      "own"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "57ca85ad6fda4fbcb28b2ca343cd8880",
     "created_at": 1783113198.139704,
     "source": "simulation_live_bridge",
@@ -477,6 +373,102 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "135c07f4e68a43fd99d8e8355f79d42b",
+    "created_at": 1783117744.8620095,
+    "source": "simulation_live_bridge",
+    "user_input": "Tell me about understanding.",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understanding"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "4281e602ae35452d907baabd0f95012a",
+    "created_at": 1783117745.0215545,
+    "source": "simulation_live_bridge",
+    "user_input": "Tell me about understanding.",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understanding"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ea95664f3a154f43a32416d78aaac0c5",
+    "created_at": 1783117745.2279294,
+    "source": "simulation_live_bridge",
+    "user_input": "Tell me about understanding.",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understanding"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "26274407cadc4be1a595aa8fbe9dfd88",
+    "created_at": 1783117745.4363718,
+    "source": "simulation_live_bridge",
+    "user_input": "Tell me about understanding.",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understanding"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
     "coherence": 0.758,
     "felt_wrong": false,
     "wrong_reason": "",
