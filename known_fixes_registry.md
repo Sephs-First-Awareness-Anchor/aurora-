@@ -475,12 +475,21 @@ arrive THROUGH the exchange on a later round -- still by her own grown capacity,
 handed the answer. Produces a readable transcript sample. Verified: a real exchange
 where she says "not yet" twice then "I can meet it now -- I have grown to it".
 
-Stage 4 — feedback split (`_feed_her_growth`, built + verified): what she EARNED
-(anchors crystallised across repeated dream re-living) sediments into HER growth
-structure -- constraint genealogy `log_relief(axis, 0.3, notes="dream_earned:...")`
-plus a `dream_crystal_earned` developmental event. The selves are never modified here;
-the dream feeds her, the selves stay themselves. Verified: 8 crystallisations ->
-8 genealogy reliefs on her own axes.
+Stage 4 — feedback split (`_feed_her_growth` + `_resolve_relief_sink`, built +
+LIVE-verified): what she EARNED (anchors crystallised across repeated dream re-living)
+sediments into HER growth. A LIVE growth session surfaced that `systems["genealogy"]`
+is only routing lanes (a dict) and the real `ConstraintGenealogyLogger` is mounted at
+`systems["chamber"]._genealogy` / `systems["grammar_engine"]._genealogy` with an
+`observe(before, trace, after)` API -- there is no live `log_relief` (the earlier
+assumption, also latent in `_sediment_validated_fact`; note evolved_surfaces'
+__getattr__ fakes hasattr for any name, so a naive duck-type is fooled).
+`_resolve_relief_sink` finds the real logger safely; `_feed_her_growth` feeds it an
+honest minimal relief observation (PressureVec 0.30 on the crystallised axis ->
+relieved) with `notes={"source":"dream_earned"}`, AND always appends a durable ledger
+(`dream_earned.jsonl`) so earned growth is never lost, plus a `dream_crystal_earned`
+developmental event. The selves are never modified. LIVE-verified on her real boot:
+genealogy event_log 0->8, dream_earned 0->8, tick_count +8, links unchanged (clean
+relief records, no spurious pair-links); ledger 8 entries.
 
 Stage 5 — per-self persistence (`save_self_arc`/`load_self_arc` + `resume=True` on
 birth; built + verified): each self's arc (orientation, capacity, resolved/held

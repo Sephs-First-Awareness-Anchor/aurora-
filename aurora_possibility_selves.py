@@ -712,30 +712,77 @@ def provoke_reexperience(selves: List[PossibilitySelf], systems,
 # growth structure -- the constraint genealogy relief record -- as her own resolution.
 # The selves are never modified here; their distinct arcs are saved separately.
 
+def _resolve_relief_sink(systems):
+    """Find the LIVE constraint-genealogy logger she actually grows into. In the real
+    boot it is mounted at systems['chamber']._genealogy / systems['grammar_engine']._
+    genealogy (systems['genealogy'] is only routing lanes), and its API is observe(),
+    not log_relief. Returns (logger, PressureVec) or (None, None). Carefully avoids the
+    evolved-surfaces __getattr__ stub that fakes hasattr for any method name."""
+    try:
+        from aurora_internal.constraint_genealogy import (
+            ConstraintGenealogyLogger as _CGL, PressureVec as _PV,
+        )
+    except Exception:
+        return None, None
+    if not isinstance(systems, dict):
+        return None, None
+    for key in ("chamber", "grammar_engine", "genealogy", "constraint_genealogy"):
+        host = systems.get(key)
+        if isinstance(host, _CGL):
+            return host, _PV
+        for attr in ("_genealogy", "genealogy"):
+            sub = getattr(host, attr, None)
+            if isinstance(sub, _CGL):
+                return sub, _PV
+    return None, None
+
+
 def _feed_her_growth(systems, crystallised: List[Dict[str, Any]]) -> int:
-    """Sediment her dream-earned crystallisations into HER constraint genealogy. Only
-    what she MET enough times to crystallise crosses over -- never a self's verdict,
-    never a raw provocation. Best-effort; never breaks a dream."""
+    """Sediment her dream-earned crystallisations into HER growth. Only what she MET
+    enough times to crystallise crosses over -- never a self's verdict, never a raw
+    provocation. Two durable homes: (1) the LIVE constraint-genealogy logger via an
+    honest minimal relief observation on the crystallised axis, and (2) a durable
+    ledger (dream_earned.jsonl) so the earned growth is never lost even when no live
+    sink is mounted. Best-effort; never breaks a dream."""
     if not crystallised or not isinstance(systems, dict):
         return 0
     fed = 0
-    gen = systems.get("genealogy") or systems.get("constraint_genealogy")
-    if gen is not None and hasattr(gen, "log_relief"):
-        for c in crystallised:
-            axis = c.get("axis") or "B"
-            if axis not in _AXES:
-                axis = "B"
+    logger, PressureVec = _resolve_relief_sink(systems)
+    for c in crystallised:
+        axis = c.get("axis") or "B"
+        if axis not in _AXES:
+            axis = "B"
+        if logger is not None and PressureVec is not None:
             try:
-                gen.log_relief(axis, 0.3, notes=f"dream_earned:{str(c.get('anchor',''))[:40]}")
+                # Honest minimal relief: a tension on this axis she now resolves.
+                before = PressureVec(**{axis: 0.30})
+                after = PressureVec()
+                logger.observe(before, [], after, notes={
+                    "source": "dream_earned",
+                    "anchor": str(c.get("anchor", ""))[:60],
+                    "met": c.get("met"),
+                })
                 fed += 1
             except Exception:
                 pass
-    if fed:
+    # Durable ledger — her earned growth persists regardless of what is mounted.
+    try:
+        sd = _reexp_state_dir(systems)
+        with open(os.path.join(sd, "dream_earned.jsonl"), "a", encoding="utf-8") as fh:
+            for c in crystallised:
+                fh.write(json.dumps({
+                    "t": time.time(), "anchor": c.get("anchor"),
+                    "axis": c.get("axis"), "met": c.get("met"),
+                }) + "\n")
+    except Exception:
+        pass
+    if crystallised:
         try:
             from aurora_developmental_log import record_developmental_event
             record_developmental_event(
                 systems, "dream_crystal_earned",
-                f"crystallised {fed} tension(s) through dream encounters with the possibility-selves",
+                f"crystallised {len(crystallised)} tension(s) through dream encounters "
+                f"with the possibility-selves ({fed} sedimented to live genealogy)",
             )
         except Exception:
             pass
