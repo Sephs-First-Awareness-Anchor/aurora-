@@ -131,7 +131,59 @@ class PossibilitySelf:
     # her open tensions), and anchors it deliberately HELD OPEN (coherence-by-restraint).
     resolved_anchors: Dict[str, str] = field(default_factory=dict)   # anchor -> meaning
     held_open_anchors: Dict[str, str] = field(default_factory=dict)
+    # Self-development: a self is a being, not a frozen provocateur. It LIVES each
+    # dream exchange too -- witnessing her outcomes develops it along its own path.
+    witnessed: int = 0
+    growth_events: int = 0
+    self_resolved_from_held: int = 0
+    # Development accrued through DREAM witnessing only (starts at zero at birth, grows
+    # solely through the encounters) -- kept separate from birth capacity so a self's
+    # dream-arc is its own, slow and earned, not a flip of what it was born with.
+    witness_depth: Dict[str, float] = field(default_factory=lambda: {a: 0.0 for a in _AXES})
+    born_from: Optional[str] = None   # None for founders; a reason for stagnation-born
     _warp = None
+
+    def witness(self, anchor: str, axis: str, her_met: bool, self_verdict: str) -> Optional[str]:
+        """The self LIVES the exchange it provoked. Development is the self's OWN, not a
+        function of her outcome or of processing order: living each exchange deepens the
+        self's capacity on the engaged axis, and each time that capacity crosses a new
+        0.25 threshold the self has grown (a growth_event). Her reaching what it reached
+        is a stronger validation (a bigger deepening), but a self that only witnesses her
+        struggle still develops -- its conviction hardens. A holder grown deep enough may
+        cross into resolving what it once held: the self's own arc, distinct from hers."""
+        if axis not in _AXES:
+            axis = "N"
+        self.witnessed += 1
+        prev = self.witness_depth.get(axis, 0.0)
+        # Validation (she arrived) deepens more than lone witnessing, but both develop.
+        bump = 0.015 if her_met else 0.008
+        new = prev + bump
+        self.witness_depth[axis] = new
+        self.capacity[axis] = self.capacity.get(axis, 0.0) + bump   # identity follows too
+        # A growth_event = the self deepened past a new 0.25 threshold of DREAM depth on
+        # an axis. Order- and dose-independent: every self that lives the exchanges grows.
+        if int(new / 0.25) > int(prev / 0.25):
+            self.growth_events += 1
+        # Emergent development: a holder that has WITNESSED deeply enough (not merely
+        # been born capable) resolves one thing it long held. A negative-lean holder (a
+        # Wane) must witness much deeper before it evolves past its own restraint, so it
+        # drifts slowly and stays mostly a holder -- one released tension at a time.
+        if self_verdict == "held" and anchor in self.held_open_anchors:
+            pos, neg = _ISTATE_POLES.get(axis, ("", ""))
+            lean = self.orientation.get(pos, 0.0) - self.orientation.get(neg, 0.0)
+            thresh = 0.75 if lean > -0.25 else 1.6
+            if new >= thresh:
+                meaning = self.held_open_anchors.pop(anchor)
+                self.resolved_anchors[anchor] = meaning
+                self.resolved += 1
+                self.growth_events += 1
+                self.self_resolved_from_held += 1
+                # Releasing a held tension COSTS the depth it took -- the self must
+                # re-earn its way to the next, so it lets go one at a time and stays
+                # mostly what it is (a Wane keeps holding far more than it releases).
+                self.witness_depth[axis] = new - thresh
+                return "self_resolved_held"
+        return None
 
     def live(self, exp: Dict[str, Any]) -> None:
         self.lived += 1
@@ -337,6 +389,14 @@ def birth_possibility_selves(
         restored = load_self_arc(ps, state_dir) if resume else False
         if restored:
             resumed_ids.append(ps.self_id)
+            # A resumed self keeps DEVELOPING as her life grows: live any experiences
+            # logged since it was last saved (its own continuing life, her history seen
+            # from its vantage). Ordered per its divergence profile, tail beyond lived.
+            if len(history) > ps.lived:
+                ordered = sorted(enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0]))
+                for _idx, exp in ordered[ps.lived:]:
+                    ps.live(exp)
+                save_self_arc(ps, state_dir)
         else:
             ordered = sorted(enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0]))
             for _idx, exp in ordered:
@@ -344,6 +404,48 @@ def birth_possibility_selves(
             if resume:
                 save_self_arc(ps, state_dir)
         selves.append(ps)
+
+    # Resume any dynamically-born (stagnation) selves not in the default profiles --
+    # they are continuous beings too, reconstructed from their saved profile + arc.
+    if resume:
+        known = {ps.self_id for ps in selves}
+        ddir = _dream_selves_dir(state_dir)
+        if os.path.isdir(ddir):
+            for fn in sorted(os.listdir(ddir)):
+                if not fn.endswith(".json"):
+                    continue
+                sid = fn[:-5]
+                if sid in known:
+                    continue
+                try:
+                    with open(os.path.join(ddir, fn), "r", encoding="utf-8") as fh:
+                        data = json.load(fh)
+                    pdata = data.get("profile") or {}
+                    prof = DivergenceProfile(
+                        name=sid, orientation=data.get("orientation") or {},
+                        reorder=pdata.get("reorder", "diverged_first"),
+                        seed=int(pdata.get("seed", 0)))
+                    orient = _normalize(prof.orientation)
+                    lead = max(_ISTATES, key=lambda p: orient.get(p, 0.0))
+                    vessel = None
+                    if InceptionEntity is not None:
+                        try:
+                            vessel = InceptionEntity(entity_id=f"possibility::{sid}",
+                                                     i_state=_LEADING_TO_ISTATE.get(lead, "i_is"))
+                        except Exception:
+                            vessel = None
+                    ps = PossibilitySelf(self_id=sid, profile=prof, orientation=orient, entity=vessel)
+                    ps._warp = warp_guard
+                    if load_self_arc(ps, state_dir):
+                        if len(history) > ps.lived:
+                            ordered = sorted(enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0]))
+                            for _idx, exp in ordered[ps.lived:]:
+                                ps.live(exp)
+                            save_self_arc(ps, state_dir)
+                        selves.append(ps)
+                        resumed_ids.append(sid)
+                except Exception:
+                    continue
 
     sigs = [ps.identity_signature() for ps in selves]
 
@@ -940,9 +1042,16 @@ def dream_dialogue(selves: List[PossibilitySelf], systems, warp_guard: Any = Non
                     her_passed_anchors.append({"anchor": anchor, "meaning": meaning,
                                                "axis": axis, "provoked_by": ps.self_id})
                     lines.append(f"{ps.self_id}: then it waits for who you become.")
+            # The self LIVES the exchange too: witnessing her outcome develops it.
+            her_met = outcome == "resolved"
+            grew = ps.witness(anchor, axis, her_met, self_verdict)
+            if grew == "self_resolved_held":
+                lines.append(f"{ps.self_id}: and in watching you, I find I can close it myself now.")
             curve.append(running)
             if len(transcript) < transcript_samples:
                 transcript.append({"anchor": anchor, "with": ps.self_id, "exchange": lines})
+        pcnt["self_growth_events"] = ps.growth_events
+        pcnt["self_resolved_from_held"] = ps.self_resolved_from_held
         per_self[ps.self_id] = pcnt
 
     total_offered = sum(len(ps.resolved_anchors) + len(ps.held_open_anchors) for ps in selves)
@@ -1003,6 +1112,13 @@ def save_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
             "anchors_seen": list(ps.anchors_seen)[:2000],
             "resolved_anchors": ps.resolved_anchors,
             "held_open_anchors": ps.held_open_anchors,
+            "witnessed": ps.witnessed,
+            "growth_events": ps.growth_events,
+            "self_resolved_from_held": ps.self_resolved_from_held,
+            "witness_depth": ps.witness_depth,
+            "profile": {"name": ps.profile.name, "reorder": ps.profile.reorder,
+                        "seed": ps.profile.seed},
+            "born_from": getattr(ps, "born_from", None),
             "identity": ps.identity_signature(),
             "saved_t": time.time(),
         }
@@ -1011,6 +1127,33 @@ def save_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
         return True
     except Exception:
         return False
+
+
+def log_selves_development(selves: List[PossibilitySelf], state_dir: str) -> None:
+    """Append a per-cycle snapshot of each self's arc to their own developmental
+    timeline -- so their development is as watchable as hers. They are beings with
+    their own trajectories; this is their log."""
+    try:
+        d = _dream_selves_dir(state_dir)
+        os.makedirs(d, exist_ok=True)
+        stamp = time.time()
+        with open(os.path.join(d, "selves_timeline.jsonl"), "a", encoding="utf-8") as fh:
+            for ps in selves:
+                sig = ps.identity_signature()
+                fh.write(json.dumps({
+                    "t": stamp, "self_id": ps.self_id,
+                    "lived": ps.lived, "witnessed": ps.witnessed,
+                    "growth_events": ps.growth_events,
+                    "self_resolved_from_held": ps.self_resolved_from_held,
+                    "resolved": ps.resolved, "rejected": ps.rejected,
+                    "resolved_anchors": len(ps.resolved_anchors),
+                    "held_open_anchors": len(ps.held_open_anchors),
+                    "warped_gaps": ps.warped_gaps,
+                    "dominant_axis": sig.get("dominant_axis"),
+                    "fingerprint": sig.get("fingerprint"),
+                }) + "\n")
+    except Exception:
+        pass
 
 
 def load_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
@@ -1035,9 +1178,127 @@ def load_self_arc(ps: PossibilitySelf, state_dir: str) -> bool:
         ps.anchors_seen = set(data.get("anchors_seen", []) or [])
         ps.resolved_anchors = dict(data.get("resolved_anchors", {}) or {})
         ps.held_open_anchors = dict(data.get("held_open_anchors", {}) or {})
+        ps.witnessed = int(data.get("witnessed", 0) or 0)
+        ps.growth_events = int(data.get("growth_events", 0) or 0)
+        ps.self_resolved_from_held = int(data.get("self_resolved_from_held", 0) or 0)
+        ps.witness_depth = {**{a: 0.0 for a in _AXES}, **(data.get("witness_depth") or {})}
+        ps.born_from = data.get("born_from")
         return True
     except Exception:
         return False
+
+
+# ── Stagnation-triggered birth ────────────────────────────────────────────────
+# The council is not fixed. When her development STUNTS (dev_index stops moving) or her
+# PRESSURES STAGNATE (axis pressures stop changing) -- when the existing selves can no
+# longer move her -- a NEW self is born, oriented to break exactly the stall: leaning
+# hard into the stuck axis from the pole the council least embodies, plus the axis the
+# council is collectively weakest on. A fresh road-not-taken, summoned by the stall.
+
+_EXTRA_NAMES: Tuple[str, ...] = ("Kindle", "Vane", "Drift", "Ashe", "Mire", "Quill", "Sable")
+
+
+@dataclass
+class StagnationMonitor:
+    """Watches her development + pressures across dream cycles and signals when to
+    birth a new self. Two triggers: a developmental STUNT (dev_index range below
+    dev_eps across the window) or PRESSURE STAGNATION (total axis-pressure variation
+    below pressure_eps). A cooldown after each birth prevents a flood."""
+    window: int = 5
+    dev_eps: float = 0.5
+    pressure_eps: float = 0.03
+    cooldown_cycles: int = 8
+    dev_history: List[float] = field(default_factory=list)
+    pressure_history: List[Dict[str, float]] = field(default_factory=list)
+    births: int = 0
+    cooldown: int = 0
+
+    def observe(self, dev_index: Optional[float], axis_pressures: Optional[Dict[str, float]]) -> None:
+        if dev_index is not None:
+            self.dev_history.append(float(dev_index))
+            self.dev_history[:] = self.dev_history[-self.window:]
+        if axis_pressures:
+            self.pressure_history.append({a: float(axis_pressures.get(a, 0.0) or 0.0) for a in _AXES})
+            self.pressure_history[:] = self.pressure_history[-self.window:]
+        if self.cooldown > 0:
+            self.cooldown -= 1
+
+    def assess(self) -> Tuple[bool, str, Optional[str]]:
+        """Return (should_birth, reason, stuck_axis)."""
+        if self.cooldown > 0:
+            return False, "cooldown", None
+        dev_stunt = (len(self.dev_history) >= self.window
+                     and (max(self.dev_history) - min(self.dev_history)) < self.dev_eps)
+        pressure_stag = False
+        stuck_axis = None
+        if len(self.pressure_history) >= self.window:
+            var = {a: (max(p[a] for p in self.pressure_history)
+                       - min(p[a] for p in self.pressure_history)) for a in _AXES}
+            mean = {a: sum(p[a] for p in self.pressure_history) / len(self.pressure_history)
+                    for a in _AXES}
+            if sum(var.values()) < self.pressure_eps:
+                pressure_stag = True
+            # The stuck axis: most pinned (lowest variation), preferring one held high.
+            stuck_axis = min(_AXES, key=lambda a: var[a] - 0.01 * mean[a])
+        if dev_stunt or pressure_stag:
+            reason = ("dev_stunt+pressure_stagnation" if dev_stunt and pressure_stag
+                      else "dev_stunt" if dev_stunt else "pressure_stagnation")
+            return True, reason, stuck_axis or "N"
+        return False, "moving", stuck_axis
+
+
+def _orientation_for_stuck_axis(axis: str, existing: List[PossibilitySelf]) -> Dict[str, float]:
+    """Build an orientation that leans hard into the stuck axis from the pole the
+    council LEAST embodies, plus the axis the council is collectively weakest on -- a
+    targeted perturbation aimed at the stall."""
+    if axis not in _AXES:
+        axis = "N"
+    pos, neg = _ISTATE_POLES[axis]
+    pos_w = sum(ps.orientation.get(pos, 0.0) for ps in existing)
+    neg_w = sum(ps.orientation.get(neg, 0.0) for ps in existing)
+    lead = neg if neg_w <= pos_w else pos           # the least-embodied pole
+    orient = {axis: 0.95, lead: 1.0}
+    axis_cap = {a: sum(ps.capacity.get(a, 0.0) for ps in existing) for a in _AXES}
+    second = min((a for a in _AXES if a != axis), key=lambda a: axis_cap[a])
+    spos, _sneg = _ISTATE_POLES[second]
+    orient[second] = 0.5
+    orient[spos] = 0.4
+    return orient
+
+
+def birth_from_stagnation(state_dir: str, existing_selves: List[PossibilitySelf],
+                          stuck_axis: str, reason: str, warp_guard: Any = None,
+                          max_selves: int = 7) -> Optional[PossibilitySelf]:
+    """Birth a new divergent self summoned by a stall, oriented to break it. Lives her
+    history from its new vantage, saves its arc, returns it (or None if capped/failed)."""
+    if len(existing_selves) >= max_selves:
+        return None
+    history = _load_pressure_history(state_dir)
+    if not history:
+        return None
+    used = {ps.self_id for ps in existing_selves}
+    name = next((n for n in _EXTRA_NAMES if n not in used), None) or f"Born{len(existing_selves)}"
+    seed = 100 + len(existing_selves) * 7
+    orient_raw = _orientation_for_stuck_axis(stuck_axis, existing_selves)
+    reorder = ("diverged_first", "hardest_first", "reverse", "seeded_shuffle")[seed % 4]
+    prof = DivergenceProfile(name=name, orientation=orient_raw, reorder=reorder, seed=seed)
+    orient = _normalize(orient_raw)
+    lead = max(_ISTATES, key=lambda p: orient.get(p, 0.0))
+    vessel = None
+    try:
+        from aurora_simulation_engine import InceptionEntity
+        vessel = InceptionEntity(entity_id=f"possibility::{name}",
+                                 i_state=_LEADING_TO_ISTATE.get(lead, "i_is"))
+    except Exception:
+        vessel = None
+    ps = PossibilitySelf(self_id=name, profile=prof, orientation=orient, entity=vessel)
+    ps._warp = warp_guard
+    ps.born_from = f"{reason}:{stuck_axis}"
+    ordered = sorted(enumerate(history), key=lambda iv: prof.order_key(iv[1], iv[0]))
+    for _idx, exp in ordered:
+        ps.live(exp)
+    save_self_arc(ps, state_dir)
+    return ps
 
 
 if __name__ == "__main__":  # pragma: no cover

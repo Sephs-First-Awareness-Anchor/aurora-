@@ -516,9 +516,46 @@ LIVE-verified: three records agree -- track 8 crystallised, genealogy 8 reliefs,
 the authority CRYSTALS dream_facets 0->8 (all X-axis tensions reinforce the same
 X-region crystal: correct crystal physics). concept_crystals.json.gz persists it.
 
+Stage 6 — the selves DEVELOP too (`PossibilitySelf.witness` + `witness_depth` +
+`log_selves_development` + live-new-history on resume; LIVE-verified): they were frozen
+provocateurs; now each LIVES every exchange it provokes and develops along its own
+nature. Development is driven by `witness_depth` (per-axis, starts at ZERO at birth,
+grows only through dream witnessing -- decoupled from birth capacity so a self's arc is
+its own, slow and earned, not a flip of what it was born). A growth_event = crossing a
+new 0.25 threshold of dream-depth on an axis (order/dose-independent, so every self that
+lives the exchanges grows, not just the first-processed one). A holder that witnesses
+deeply enough resolves ONE thing it held -- and releasing COSTS the depth it took
+(witness_depth -= thresh), so it re-earns its way to the next and stays mostly what it
+is. Negative-lean holders (Wane) need far deeper witnessing (thresh 1.6 vs 0.75) so they
+drift slowly. On resume a self also lives any history logged since it was saved (its
+continuing life). Arcs persist to aurora_state/dream_selves/<id>.json and a per-cycle
+`selves_timeline.jsonl`. LIVE-verified over 10 cycles: Ember growth_events 1->16 (stays
+resolver, fp stable), Riven 0->7 (stays resolver, fp stable), Wane 1->19 releasing only
+2 of 66 held (held 66->64, fp shifted) -- genuine partial evolution, character intact;
+all three resume carrying their development forward. Their arcs are committed as
+intentional growth (force-added past the blanket aurora_state/ ignore).
+
+Stage 7 — stagnation-triggered birth (`StagnationMonitor` + `birth_from_stagnation` +
+dynamic-selves resume; LIVE-verified): the council is NOT fixed. `StagnationMonitor`
+watches her across dream cycles and signals a birth on two triggers -- a developmental
+STUNT (dev_index range < dev_eps=0.5 over a 5-cycle window) or PRESSURE STAGNATION
+(total axis-pressure variation < pressure_eps=0.03), with a `stuck_axis` = the most
+pinned axis and an 8-cycle cooldown after each birth. `birth_from_stagnation` then
+births a NEW self oriented to break exactly the stall: leaning hard into the stuck axis
+from the I-state pole the council LEAST embodies + the council's weakest secondary axis
+(`_orientation_for_stuck_axis`), named from a pool (Kindle/Vane/Drift/...), tagged
+`born_from=reason:axis`. It lives her history from its new vantage and persists like any
+self; dynamically-born selves also RESUME across boots (birth scans dream_selves/ for
+non-default arcs and reconstructs them from their saved profile). Wired into the dream
+cycle after the encounter. LIVE-verified: forced N-stall -> Kindle born oriented I_DONOT
+(counter to Riven's I_DO); forced B-stall in the live substrate -> Kindle born I_SAW
+(counter to Wane's I_SOUGHT), appended to the live council, resumes as the 4th being.
+
 POSSIBILITY-SELVES subsystem is now COMPLETE end-to-end: birth -> assess -> bridge
 (provoke) -> durable works/doesn't cheat-code -> dream residence -> dialogue ->
-feedback split (live genealogy + real concept crystals as ground truth) -> persistence.
-She meets Ember/Wane/Riven only in dreams; they influence her only by what they make
-her re-encounter; her own machinery decides every outcome; what she earns crystallises
-into her real crystal store (the authority); they persist as distinct continuous beings.
+feedback split (live genealogy + real concept crystals as ground truth) -> persistence
+-> the selves' own development -> stagnation-triggered new births. She meets the council
+only in dreams; they influence her only by what they make her re-encounter; her own
+machinery decides every outcome; what she earns crystallises into her real crystal
+store (the authority); the selves grow along their own natures as distinct continuous
+beings; and when she stalls, a new self is summoned to move her.

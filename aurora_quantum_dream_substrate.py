@@ -394,6 +394,8 @@ class QuantumDreamSubstrate:
         # from her recorded history, they persist across cycles as continuous beings
         # with their own arcs. She only ever meets them here, in dreams.
         self._selves = None
+        # Watches for stalls and summons a new self when the council can't move her.
+        self._stagnation = None
 
     def run_dream_cycle(self, systems: Dict[str, Any]) -> None:
         self._cycle_count += 1
@@ -491,13 +493,55 @@ class QuantumDreamSubstrate:
             crystals.get("total"), crystals.get("dream_crystals"), crystals.get("dream_facets"),
         )
 
-        # The selves are continuous beings: persist their arcs after the encounter so
-        # they resume where they are on the next boot.
+        # The selves are continuous beings that DEVELOP through the exchange too:
+        # persist their arcs and append to their own developmental timeline so their
+        # growth is as watchable as hers.
         for _ps in self._selves:
             try:
                 _aps.save_self_arc(_ps, _sd)
             except Exception:
                 pass
+        try:
+            _aps.log_selves_development(self._selves, _sd)
+            _grew = sum(int(getattr(_ps, "growth_events", 0)) for _ps in self._selves)
+            _sr = sum(int(getattr(_ps, "self_resolved_from_held", 0)) for _ps in self._selves)
+            log.info("quantum_dream: selves developed — growth_events=%d self_resolved_from_held=%d",
+                     _grew, _sr)
+        except Exception:
+            pass
+
+        # Stagnation-triggered birth: if her development has STUNTED or her PRESSURES
+        # have STAGNATED, the council can no longer move her — so a NEW self is born,
+        # oriented to break exactly the stall.
+        try:
+            if self._stagnation is None:
+                self._stagnation = _aps.StagnationMonitor()
+            _di = None
+            try:
+                from aurora_developmental_log import (
+                    snapshot_developmental_state as _sds, _developmental_index as _dix,
+                )
+                _di = _dix(_sds(systems))
+            except Exception:
+                _di = None
+            _ap = {}
+            try:
+                _if = systems.get("identity_field")
+                _ap = (_if.status().get("axis_pressures") or {}) if _if is not None else {}
+            except Exception:
+                _ap = {}
+            self._stagnation.observe(_di, _ap)
+            _birth, _reason, _stuck = self._stagnation.assess()
+            if _birth:
+                _new = _aps.birth_from_stagnation(_sd, self._selves, _stuck, _reason, warp_guard=_wg)
+                if _new is not None:
+                    self._selves.append(_new)
+                    self._stagnation.births += 1
+                    self._stagnation.cooldown = self._stagnation.cooldown_cycles
+                    log.info("quantum_dream: STAGNATION BIRTH — %s born from %s (stuck axis %s); "
+                             "council now %d selves", _new.self_id, _reason, _stuck, len(self._selves))
+        except Exception as _sexc:
+            log.debug("quantum_dream: stagnation check failed: %s", _sexc)
 
 
 # ---------------------------------------------------------------------------
