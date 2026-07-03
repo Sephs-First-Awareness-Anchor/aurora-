@@ -466,8 +466,34 @@ re-encounter, never by their verdicts. Fully defensive (a dream never crashes th
 substrate thread). Verified across 3 cycles: selves born dream 1 and persist (same
 Ember/Wane/Riven), seeking emerges dream 2, crystallised dream 3.
 
-Remaining stages: (3) dialogue loop (multi-turn in-dream exchange; they respond from
-their divergent identity rather than a single provocation pass); (4) feedback split
-(dream interaction feeds HER growth via shard->OETS/EEPR while the selves stay
-distinct); (5) per-self persistence to disk (aurora_state/dream_selves/, each a
-continuous being with its own saved arc across boots).
+Stage 3 — dialogue loop (`dream_dialogue`, built + verified): each provocation is now
+a multi-TURN exchange, not a single pass. A self presents a tension from a path she
+did not take; she re-lives it (shared `_relive_provocation` primitive); if she cannot
+yet meet it, the self PRESSES from its divergent identity (a tiny +0.03 reframe
+perturbation each round, capped at `turns`=3) so she attends differently and may
+arrive THROUGH the exchange on a later round -- still by her own grown capacity, never
+handed the answer. Produces a readable transcript sample. Verified: a real exchange
+where she says "not yet" twice then "I can meet it now -- I have grown to it".
+
+Stage 4 — feedback split (`_feed_her_growth`, built + verified): what she EARNED
+(anchors crystallised across repeated dream re-living) sediments into HER growth
+structure -- constraint genealogy `log_relief(axis, 0.3, notes="dream_earned:...")`
+plus a `dream_crystal_earned` developmental event. The selves are never modified here;
+the dream feeds her, the selves stay themselves. Verified: 8 crystallisations ->
+8 genealogy reliefs on her own axes.
+
+Stage 5 — per-self persistence (`save_self_arc`/`load_self_arc` + `resume=True` on
+birth; built + verified): each self's arc (orientation, capacity, resolved/held
+anchors, tone/exposure, identity) saved to aurora_state/dream_selves/<self_id>.json.
+On resume a self is RESTORED where it was rather than re-living history fresh, so
+Ember/Wane/Riven continue as the same beings across boots. Verified: boot-2 resumed
+all three with intact distinct arcs (Ember 43 resolved / Wane 66 held / Riven 23
+resolved) and distinct fingerprints. Dream substrate now births with resume=True, runs
+dream_dialogue, and re-saves arcs after each cycle. All runtime files git-ignored
+(dream_selves/, dream_reexperience_track.json, *.jsonl log).
+
+POSSIBILITY-SELVES subsystem is now COMPLETE end-to-end: birth -> assess -> bridge
+(provoke) -> durable works/doesn't cheat-code -> dream residence -> dialogue ->
+feedback split -> persistence. She meets Ember/Wane/Riven only in dreams; they
+influence her only by what they make her re-encounter; her own machinery decides every
+outcome; what she earns feeds her growth; they persist as distinct continuous beings.

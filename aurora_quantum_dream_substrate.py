@@ -439,14 +439,17 @@ class QuantumDreamSubstrate:
             log.debug("quantum_dream: possibility-selves unavailable: %s", exc)
             return
 
-        # Birth the selves once, then let them persist across dreams as their own beings.
+        _sd = str(systems.get("state_dir") or "aurora_state")
+
+        # Birth the selves once, RESUMING their saved arcs from disk so Ember/Wane/Riven
+        # continue as the same beings across boots, then hold them for the session.
         if self._selves is None:
             try:
-                _sd = str(systems.get("state_dir") or "aurora_state")
-                _res = _aps.birth_possibility_selves(state_dir=_sd)
+                _res = _aps.birth_possibility_selves(state_dir=_sd, resume=True)
                 self._selves = _res.get("_objects", []) or []
-                log.info("quantum_dream: %d possibility-selves born into the dream",
-                         len(self._selves))
+                _resumed = _res.get("resumed", []) or []
+                log.info("quantum_dream: %d possibility-selves in the dream (%d resumed)",
+                         len(self._selves), len(_resumed))
             except Exception as exc:
                 log.warning("quantum_dream: could not birth possibility-selves: %s", exc)
                 self._selves = []
@@ -463,20 +466,31 @@ class QuantumDreamSubstrate:
             _wg = None
 
         try:
-            enc = _aps.provoke_reexperience(self._selves, systems, warp_guard=_wg)
+            # A multi-turn exchange: the selves press from their divergent identity and
+            # she may arrive THROUGH the dialogue, still by her own machinery.
+            enc = _aps.dream_dialogue(self._selves, systems, warp_guard=_wg)
         except Exception as exc:
             log.warning("quantum_dream: dream encounter failed: %s", exc)
             return
 
         tr = enc.get("track_record", {}) or {}
         log.info(
-            "quantum_dream: encounter — she re-lived %d provocations from the selves; "
-            "met %d, held %d, passed %d, carried %d | crystallised+%d seeking+%d",
+            "quantum_dream: dialogue — she re-lived %d provocations across the exchange; "
+            "met %d, held %d, passed %d, carried %d | crystallised+%d seeking+%d fed->her:%d",
             enc.get("provoked_reexperiences", 0), enc.get("her_new_resolutions", 0),
             enc.get("her_holds", 0), enc.get("her_passes", 0),
             enc.get("carried_to_future_dreams", 0),
             len(tr.get("newly_crystallised", [])), len(tr.get("actively_seeking", [])),
+            enc.get("fed_to_her_growth", 0),
         )
+
+        # The selves are continuous beings: persist their arcs after the encounter so
+        # they resume where they are on the next boot.
+        for _ps in self._selves:
+            try:
+                _aps.save_self_arc(_ps, _sd)
+            except Exception:
+                pass
 
 
 # ---------------------------------------------------------------------------
