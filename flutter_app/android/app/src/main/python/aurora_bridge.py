@@ -7712,7 +7712,16 @@ def provide_camera_frame(jpeg_bytes) -> None:
             "confidence":     0.65,
         }
     except Exception as exc:
-        log.warning("provide_camera_frame: %s", exc)
+        # Primary (native / cv2-shim) path failed — fall back to pure numpy+PIL
+        # perception so she still sees something rather than going blind.
+        log.warning("provide_camera_frame primary failed (%s); using python fallback", exc)
+        try:
+            import aurora_sensory_fallback as _sfb
+            _obs, _gray = _sfb.perceive_frame(jpeg_bytes, _last_camera_frame_gray)
+            _last_camera_observation = _obs
+            _last_camera_frame_gray = _gray
+        except Exception as exc2:
+            log.warning("provide_camera_frame fallback also failed: %s", exc2)
 
 
 def provide_audio_observation(
