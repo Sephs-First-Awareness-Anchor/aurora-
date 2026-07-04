@@ -425,8 +425,14 @@ class ComprehensionGapDetector:
         """
         if not gaps:
             return False
+        # A genuinely unknown WORD is the clearest, most-resolvable gap she can have —
+        # asking "what does X mean?" is exactly right and always answerable. Ask on it
+        # regardless of the general volatility threshold (which is tuned for fuzzier
+        # structural / intent gaps, not a concrete missing word).
+        if any(g.gap_type in (GapType.VOCABULARY, GapType.SLANG) for g in gaps):
+            return True
         score = volatility_report.get('volatility_score', 0)
-        # Ask if score is above threshold — 0.45 prevents firing on clear,
+        # Otherwise ask only above threshold — 0.45 prevents firing on clear,
         # answerable questions (challenges, identity, coherence concepts).
         # 0.25 was too aggressive: triggered on normal introspective questions.
         return score >= 0.45
@@ -1099,10 +1105,22 @@ class ComprehensionGapSystem:
             except Exception:
                 pass
 
-        # ---- STEP 1.5: Bypass gap detection for direct answerable questions ----
-        # Questions beginning with standard interrogatives are always answerable;
-        # gap detection on them produces correction-seeking responses ("I missed
-        # what you were pointing at") that are inappropriate for direct Qs.
+        # ---- STEP 2: Detect volatility in the new input ----
+        volatility = self.detector.detect(user_text, lexicon=lexicon, oets=oets)
+
+        # ---- STEP 3: Generate gaps if volatility is significant ----
+        if volatility['volatility_score'] < 0.2:
+            return None  # Low volatility — no gaps to handle
+
+        gaps = self.gap_detector.detect_gaps(user_text, volatility, working_memory)
+
+        # ---- STEP 1.5 (after detection): Bypass direct answerable questions ----
+        # Questions beginning with standard interrogatives ("how", "why", "tell me")
+        # are usually answerable, and gap-seeking on them produces correction-seeking
+        # responses that are inappropriate for direct Qs — EXCEPT when the question
+        # carries a genuinely unknown WORD. "What is mitochondria" is a direct question
+        # about a concept she does not have; she should ask what it means, not skip it.
+        # So detection runs first and the bypass only applies when there is no word gap.
         _t_low = str(user_text or "").strip().lower()
         _direct_q_starters = (
             "what ", "what's ", "whats ", "what is ",
@@ -1112,17 +1130,9 @@ class ComprehensionGapSystem:
             "are you ", "is that ", "tell me ",
             "hey aurora", "hi aurora", "hello aurora",
         )
-        if any(_t_low.startswith(s) for s in _direct_q_starters):
+        _has_word_gap = any(g.gap_type in (GapType.VOCABULARY, GapType.SLANG) for g in gaps)
+        if not _has_word_gap and any(_t_low.startswith(s) for s in _direct_q_starters):
             return None
-
-        # ---- STEP 2: Detect volatility in the new input ----
-        volatility = self.detector.detect(user_text, lexicon=lexicon, oets=oets)
-
-        # ---- STEP 3: Generate gaps if volatility is significant ----
-        if volatility['volatility_score'] < 0.2:
-            return None  # Low volatility — no gaps to handle
-
-        gaps = self.gap_detector.detect_gaps(user_text, volatility, working_memory)
 
         # ---- STEP 4: Decide whether to ask ----
         if not gaps:
