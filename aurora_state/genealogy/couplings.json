@@ -7947,7 +7947,7 @@
     "(X^1)x(N^3*B^4*A^3)": 2,
     "(X^1)x(T^1)": 14,
     "(X^1)x(T^1*A^1)": 70,
-    "(X^1)x(T^1*B^1)": 36,
+    "(X^1)x(T^1*B^1)": 37,
     "(X^1)x(T^1*B^1*A^1)": 33,
     "(X^1)x(T^1*B^2*A^5)": 4,
     "(X^1)x(T^1*B^3)": 3,
@@ -8046,7 +8046,7 @@
     "(X^3*T^1)x(T^1*B^1)": 105,
     "(X^3*T^1)x(T^1*B^1*A^1)": 197,
     "(X^3*T^1)x(T^1*N^1)": 14,
-    "(X^3*T^1)x(X^1)": 14,
+    "(X^3*T^1)x(X^1)": 15,
     "(X^4*B^4)x(B^1)": 15,
     "(X^4*B^4)x(X^1)": 16,
     "(X^4*B^4)x(X^1*B^1)": 3
@@ -8096,14 +8096,14 @@
         },
         "dominance": 0.5,
         "dynamic_thresholds": {
-          "breeding_min": 0.14916,
-          "effect_min": 0.000194001,
+          "breeding_min": 0.149163,
+          "effect_min": 0.000194027,
           "evidence_min": 10,
           "inheritance_min": 0.300563,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.448919,
-              "gradient": 0.631659
+              "factor": 0.448925,
+              "gradient": 0.631631
             },
             "dominant_axis": "B",
             "effect": {
@@ -8123,7 +8123,7 @@
               "gradient": 1.163759
             }
           },
-          "relation_min": 0.207457
+          "relation_min": 0.207474
         },
         "effect_score": 1.0,
         "effect_score_raw": 1.0,
@@ -13323,11 +13323,11 @@
           "breeding_min": 0.126712,
           "effect_min": 0.000171998,
           "evidence_min": 10,
-          "inheritance_min": 0.282163,
+          "inheritance_min": 0.282166,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.409988,
-              "gradient": 0.956066
+              "factor": 0.409989,
+              "gradient": 0.956038
             },
             "dominant_axis": "T",
             "effect": {
@@ -13347,7 +13347,7 @@
               "gradient": 1.455449
             }
           },
-          "relation_min": 0.193159
+          "relation_min": 0.193161
         },
         "effect_score": 1.0,
         "effect_score_raw": 1.0,
@@ -35052,9 +35052,9 @@
       "raw_effect_ema": 0.00020291518971464313,
       "regulation": {
         "axes_active": 3,
-        "break_even_ticks": 4.703,
+        "break_even_ticks": 4.673,
         "breeding_score": 0.444444,
-        "complexity_index": 0.2625,
+        "complexity_index": 0.225,
         "constraint_influence": {
           "A": 0.0,
           "B": 0.333333,
@@ -35098,9 +35098,9 @@
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 10,
-        "formation_burden": 1.7353,
+        "formation_burden": 1.7242,
         "inheritance_influence_factor": 0.833333,
-        "inheritance_score": 0.9,
+        "inheritance_score": 0.866667,
         "issues": [],
         "maintenance_savings_per_tick": 0.36894,
         "persistence_tax_factor": 0.948663,
@@ -35109,8 +35109,8 @@
         "representation_score": 0.685528,
         "requirement_coverage": 1.0,
         "scale_depth_index": 0.4,
-        "strictness_index": 0.345,
-        "sustainability_score": 0.573958,
+        "strictness_index": 0.33,
+        "sustainability_score": 0.539583,
         "validation_complete": true
       },
       "scope_scale": 1.18,
@@ -47512,7 +47512,7 @@
     },
     "X^4*T^1": {
       "breeding_score_ema": 0.0,
-      "count": 16,
+      "count": 17,
       "counts": {
         "A": 0,
         "B": 0,
@@ -47525,7 +47525,7 @@
         "B": 0,
         "N": 0,
         "T": 6,
-        "X": 10
+        "X": 11
       },
       "effect_ema": 1.2436888770164982e-05,
       "global_effect_ema": 0.00023463156275482,
@@ -47533,68 +47533,68 @@
       "inheritance_breach_count": 1,
       "last_generation": 2,
       "last_generation_role": "ADJACENT",
-      "last_tick": 69205,
-      "local_effect_ema": 0.00020949246674537497,
+      "last_tick": 70764,
+      "local_effect_ema": 0.00021146092294617967,
       "max_generation": 2,
       "min_generation": 2,
-      "raw_effect_ema": 0.0002033907444129854,
+      "raw_effect_ema": 0.00021146092294617967,
       "regulation": {
         "axes_active": 2,
-        "break_even_ticks": 4.187,
+        "break_even_ticks": 4.104,
         "breeding_score": 0.444444,
         "complexity_index": 0.15,
         "constraint_influence": {
           "A": 0.0,
           "B": 0.0,
           "N": 0.0,
-          "T": 0.53,
-          "X": 0.47
+          "T": 0.5,
+          "X": 0.5
         },
         "dominance": 0.8,
         "dynamic_thresholds": {
-          "breeding_min": 0.115826,
-          "effect_min": 0.000115103,
+          "breeding_min": 0.116105,
+          "effect_min": 0.000116131,
           "evidence_min": 10,
-          "inheritance_min": 0.25698,
+          "inheritance_min": 0.256698,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.435384,
-              "gradient": 0.69878
+              "factor": 0.436435,
+              "gradient": 0.692745
             },
             "dominant_axis": "X",
             "effect": {
-              "factor": 1.304908,
-              "gradient": -0.22411
+              "factor": 1.316558,
+              "gradient": -0.234723
             },
             "evidence": {
-              "factor": 0.409063,
-              "gradient": 0.975656
+              "factor": 0.408615,
+              "gradient": 0.985873
             },
             "inheritance": {
-              "factor": 0.409063,
-              "gradient": 0.975656
+              "factor": 0.408615,
+              "gradient": 0.985873
             },
             "relation": {
-              "factor": 0.409063,
-              "gradient": 0.975656
+              "factor": 0.408615,
+              "gradient": 0.985873
             }
           },
-          "relation_min": 0.172719
+          "relation_min": 0.17253
         },
-        "effect_score": 0.937319,
-        "effect_score_raw": 0.910019,
+        "effect_score": 0.910442,
+        "effect_score_raw": 0.910442,
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 10,
         "formation_burden": 1.287426,
-        "inheritance_influence_factor": 1.03,
-        "inheritance_score": 0.39,
+        "inheritance_influence_factor": 1.0,
+        "inheritance_score": 0.394583,
         "issues": [],
-        "maintenance_savings_per_tick": 0.307512,
-        "persistence_tax_factor": 0.975571,
-        "persistence_tax_per_tick": 0.6829,
+        "maintenance_savings_per_tick": 0.313662,
+        "persistence_tax_factor": 0.956442,
+        "persistence_tax_per_tick": 0.66951,
         "relation_score": 0.533333,
-        "representation_score": 0.628284,
+        "representation_score": 0.619794,
         "requirement_coverage": 1.0,
         "scale_depth_index": 0.09,
         "strictness_index": 0.114,
@@ -47603,7 +47603,7 @@
       },
       "scope_scale": 1.12,
       "semantic": "groundingx4 + timing",
-      "semantic_confidence": 0.548484,
+      "semantic_confidence": 0.555321,
       "semantic_lane_ema": {
         "communication": 0.22916666666666663,
         "intelligence": 0.43229166666666663,
@@ -47612,24 +47612,24 @@
       "semantic_thresholds": {
         "pressure_regulation": {
           "confidence": {
-            "factor": 1.292775,
-            "gradient": -0.213351
+            "factor": 1.289268,
+            "gradient": -0.210293
           },
           "count": {
-            "factor": 1.292775,
-            "gradient": -0.213351
+            "factor": 1.289268,
+            "gradient": -0.210293
           },
           "dominant_axis": "X"
         },
-        "promote_confidence": 0.840304,
+        "promote_confidence": 0.838024,
         "promote_min_count": 31
       },
-      "semantic_translation": "At gen 2, this coupling expresses model refinement in adjacent mode (local=0.000209, scope=1.120, conf=0.548).",
+      "semantic_translation": "At gen 2, this coupling expresses model refinement in adjacent mode (local=0.000211, scope=1.120, conf=0.555).",
       "semantic_version": 1,
       "signature": "X^4*T^1",
       "top_origins": {
         "(X^1)x(X^3*T^1)": 2,
-        "(X^3*T^1)x(X^1)": 14
+        "(X^3*T^1)x(X^1)": 15
       }
     },
     "X^4*T^1*B^1": {

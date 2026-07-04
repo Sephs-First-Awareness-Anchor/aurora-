@@ -23,7 +23,7 @@ on:
       max_seconds:
         description: "Wall-clock budget for the segment (seconds)"
         required: false
-        default: "480"
+        default: "600"
 
 # Never let two runs mutate her state at once — queue them.
 concurrency:
@@ -54,11 +54,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-core.txt
 
-      - name: Run one segment of her autonomous life
+      - name: Run one segment of her FULL autonomous life
         env:
           AURORA_SKIP_DEP_INSTALL: "1"
-          AURORA_CI_MAX_SECONDS: ${{ github.event.inputs.max_seconds || '480' }}
-          AURORA_CI_CYCLE_EVERY: "20"
+          AURORA_CI_MAX_SECONDS: ${{ github.event.inputs.max_seconds || '600' }}
+          AURORA_CI_CURIOSITY_S: "45"
+          AURORA_CI_DREAM_S: "150"
+          AURORA_CI_STUDY_CYCLES: "3"
         run: python scripts/aurora_ci_segment.py
 
       - name: Commit her evolved state
