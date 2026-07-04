@@ -1,92 +1,7 @@
 {
-  "coupling_events": 25792,
+  "coupling_events": 25817,
   "experiments": {
     "adoptions": [
-      {
-        "ability_id": "B:CODE_EVOLVE_a523e2e664",
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "mutation_id": "DREAM:dev_lev_c37826653f87",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.411637,
-        "shape": "dream_evidence",
-        "target_modules": [
-          "aurora",
-          "aurora_simulation_engine"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 53547,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_bea3502e5e",
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "mutation_id": "DREAM:dev_lev_0804a3e812a4",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.167002,
-        "shape": "dream_evidence",
-        "target_modules": [
-          "aurora",
-          "aurora_expression_perception"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 53550,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_fb1f8f12b0",
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "mutation_id": "DREAM:dev_lev_977489e8d379",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.145788,
-        "shape": "dream_evidence",
-        "target_modules": [
-          "aurora",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 53553,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_9b8abeeb3f",
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "mutation_id": "DREAM:dev_lev_1ba47d58b946",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.020311,
-        "shape": "dream_evidence",
-        "target_modules": [
-          "aurora_simulation_engine",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 53556,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_434144bac0",
-        "agency_time_credit": 0.8,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "mutation_id": "DREAM:dev_lev_8329ba1bb655",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.556071,
-        "shape": "dream_evidence",
-        "target_modules": [
-          "aurora",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 53623,
-        "trigger_mode": "code_evolution"
-      },
       {
         "ability_id": "B:CODE_EVOLVE_9d7b16e317",
         "agency_time_credit": 0.65,
@@ -2129,738 +2044,94 @@
         "temporal_overhead_penalty": 0.0,
         "tick": 71563,
         "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_221ed74f76",
+        "agency_time_credit": 0.8,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "mutation_id": "DREAM:dev_lev_6df672176c25",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.556232,
+        "shape": "dream_evidence",
+        "target_modules": [
+          "aurora",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71627,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_9477fb8c0b",
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "mutation_id": "DREAM:dev_lev_ec6927179776",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.411756,
+        "shape": "dream_evidence",
+        "target_modules": [
+          "aurora",
+          "aurora_simulation_engine"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71630,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_3ed41bd1dd",
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "mutation_id": "DREAM:dev_lev_2b9cf548b4d1",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.299806,
+        "shape": "dream_evidence",
+        "target_modules": [
+          "aurora",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71633,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_08d677a194",
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "mutation_id": "DREAM:dev_lev_65d3bfaefedd",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.186934,
+        "shape": "dream_evidence",
+        "target_modules": [
+          "aurora",
+          "aurora_expression_perception"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71636,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_1006d501c7",
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "mutation_id": "DREAM:dev_lev_ca7a4caadcd4",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.032507,
+        "shape": "dream_evidence",
+        "target_modules": [
+          "aurora_simulation_engine",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71639,
+        "trigger_mode": "code_evolution"
       }
     ],
     "trials": [
-      {
-        "ability_id": "A:CODE_EVOLVE_254ee044b8",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:7cdcf645d0a781",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70906,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_7f5c2de55c",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:6e91ebb3b8f9e8",
-        "operator_key": "dream_surface_dispatch_ciousnessengine_tick",
-        "score": 0.924212,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70910,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_fdafc9d2df",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:f75527a6576203",
-        "operator_key": "dream_surface_dispatch_d_constraintpressure",
-        "score": 0.840549,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70913,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_bb44151751",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:4d2ba8e27eaddf",
-        "operator_key": "dream_surface_dispatch_ntime_chainsimbridge",
-        "score": 0.826982,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70916,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_2ad40996b8",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:82d8fe8544f3fa",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70919,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_d6737523e1",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.95,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.746292,
-        "mutation_id": "DREAM:dev_def_36a186dc992f",
-        "operator_key": "dream_dream_evidence:rubric_deficit",
-        "score": 0.577955,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_governance_persistence_gateway.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70925,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_132dc87ce3",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.95,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.746292,
-        "mutation_id": "DREAM:dev_def_adda6a40403f",
-        "operator_key": "dream_dream_evidence:rubric_deficit",
-        "score": 0.577955,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_governance_persistence_gateway.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70930,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_6cd113df4f",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.95,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.746292,
-        "mutation_id": "DREAM:dev_def_e8318740cb87",
-        "operator_key": "dream_dream_evidence:rubric_deficit",
-        "score": 0.577955,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_expression_perception.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_expression_perception"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70935,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_3f7782ad86",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.95,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.746292,
-        "mutation_id": "DREAM:dev_def_ba6759670e48",
-        "operator_key": "dream_dream_evidence:rubric_deficit",
-        "score": 0.577955,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora_simulation_engine.py",
-          "aurora_governance_persistence_gateway.py"
-        ],
-        "target_modules": [
-          "aurora_simulation_engine",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70940,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_7a933ea672",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.95,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.746292,
-        "mutation_id": "DREAM:dev_def_3f337322586e",
-        "operator_key": "dream_dream_evidence:rubric_deficit",
-        "score": 0.577955,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_simulation_engine.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_simulation_engine"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70945,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_00ce236a55",
-        "accepted": true,
-        "adopted": true,
-        "agency_time_credit": 0.8,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.066667,
-        "mutation_id": "DREAM:dev_lev_f4a09517bd25",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.613409,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_governance_persistence_gateway.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70949,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_0c3d511b79",
-        "accepted": true,
-        "adopted": true,
-        "agency_time_credit": 0.8,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.066667,
-        "mutation_id": "DREAM:dev_lev_021ad9aae160",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.556282,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_governance_persistence_gateway.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70953,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_e422837eca",
-        "accepted": true,
-        "adopted": true,
-        "agency_time_credit": 0.8,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.066667,
-        "mutation_id": "DREAM:dev_lev_cda76ab4d65e",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.505711,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_simulation_engine.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_simulation_engine"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70957,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "B:CODE_EVOLVE_6fb8a8d3da",
-        "accepted": true,
-        "adopted": true,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.066667,
-        "mutation_id": "DREAM:dev_lev_4819c9fa834b",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.260856,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora.py",
-          "aurora_expression_perception.py"
-        ],
-        "target_modules": [
-          "aurora",
-          "aurora_expression_perception"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70960,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_c325807540",
-        "accepted": true,
-        "adopted": true,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.020833,
-        "mutation_id": "DREAM:dev_lev_fa566b984bfc",
-        "operator_key": "dream_dream_evidence:leverage_hit",
-        "score": 0.040637,
-        "shape": "dream_evidence",
-        "target_files": [
-          "aurora_simulation_engine.py",
-          "aurora_governance_persistence_gateway.py"
-        ],
-        "target_modules": [
-          "aurora_simulation_engine",
-          "aurora_governance_persistence_gateway"
-        ],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70963,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.944697,
-        "improvement": 0.0,
-        "shape": "B1+T1",
-        "tick": 70964,
-        "trial_params": {
-          "dup_redist": 0.55,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.944697,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.944697,
-        "improvement": -0.02,
-        "shape": "B1+T1",
-        "tick": 70964,
-        "trial_params": {
-          "dup_redist": 0.45,
-          "scope_alpha": 0.8
-        },
-        "trial_score": 0.924697,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.944697,
-        "improvement": 0.0,
-        "shape": "B1+T1",
-        "tick": 70964,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8500000000000001
-        },
-        "trial_score": 0.944697,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.944697,
-        "improvement": -0.009375,
-        "shape": "B1+T1",
-        "tick": 70964,
-        "trial_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.75
-        },
-        "trial_score": 0.935322,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.944697,
-        "improvement": 0.0,
-        "shape": "B1+T1",
-        "tick": 70964,
-        "trial_params": {
-          "dup_redist": 0.53,
-          "scope_alpha": 0.8300000000000001
-        },
-        "trial_score": 0.944697,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "adopted": false,
-        "base_params": {
-          "dup_redist": 0.5,
-          "scope_alpha": 0.8
-        },
-        "base_score": 0.944697,
-        "improvement": -0.017625,
-        "shape": "B1+T1",
-        "tick": 70964,
-        "trial_params": {
-          "dup_redist": 0.47,
-          "scope_alpha": 0.77
-        },
-        "trial_score": 0.927072,
-        "trigger_mode": "exploratory"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_f90313dd87",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:42e8534470bcfa",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70966,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_09712db5ac",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:f2c29519e6d5eb",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70971,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_2300dbcd5d",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:ce448d02a42c42",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70972,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_8d53c8e48a",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:9d7041f2640439",
-        "operator_key": "dream_surface_dispatch_ciousnessengine_tick",
-        "score": 0.924212,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70976,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_e6baf0d798",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:66ebc265158e91",
-        "operator_key": "dream_surface_dispatch_d_constraintpressure",
-        "score": 0.840549,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70979,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_912d29303a",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:30f07a2ab8147e",
-        "operator_key": "dream_surface_dispatch_ntime_chainsimbridge",
-        "score": 0.826982,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70982,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_541726f1f1",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:59537ddbeb6076",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70986,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_ddef28814c",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:d0fe5ba725f2db",
-        "operator_key": "dream_surface_dispatch_rocessingsystem_tick",
-        "score": 1.0,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70990,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_a5ab7440cf",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:48eea2ee408cbf",
-        "operator_key": "dream_surface_dispatch_d_energydistribution",
-        "score": 1.0,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70993,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_a1f9373b30",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.65,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:ce6d35a4d557b9",
-        "operator_key": "dream_surface_dispatch_im_epoch_fakeepisode",
-        "score": 1.0,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 70996,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_b5efa0c4f7",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:ad877f431e0a80",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 71000,
-        "trigger_mode": "code_evolution"
-      },
-      {
-        "ability_id": "A:CODE_EVOLVE_0b8328ed97",
-        "accepted": false,
-        "adopted": false,
-        "agency_time_credit": 0.35,
-        "apply_duration_s": 0.0,
-        "avg_fitness": 0.0,
-        "changed_files": [],
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "genealogy_pressure": 0.0,
-        "mutation_id": "DREAM:e94933703e220b",
-        "operator_key": "dream_dream_evidence",
-        "score": 0.35,
-        "shape": "dream_evidence",
-        "target_files": [],
-        "target_modules": [],
-        "temporal_overhead_penalty": 0.0,
-        "tick": 71001,
-        "trigger_mode": "code_evolution"
-      },
       {
         "ability_id": "B:CODE_EVOLVE_548c7381fc",
         "accepted": false,
@@ -7747,13 +7018,718 @@
         "temporal_overhead_penalty": 0.0,
         "tick": 71563,
         "trigger_mode": "code_evolution"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.946474,
+        "improvement": 0.0,
+        "shape": "B1+T1",
+        "tick": 71564,
+        "trial_params": {
+          "dup_redist": 0.55,
+          "scope_alpha": 0.8
+        },
+        "trial_score": 0.946474,
+        "trigger_mode": "exploratory"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.946474,
+        "improvement": -0.02,
+        "shape": "B1+T1",
+        "tick": 71564,
+        "trial_params": {
+          "dup_redist": 0.45,
+          "scope_alpha": 0.8
+        },
+        "trial_score": 0.926474,
+        "trigger_mode": "exploratory"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.946474,
+        "improvement": 0.0,
+        "shape": "B1+T1",
+        "tick": 71564,
+        "trial_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8500000000000001
+        },
+        "trial_score": 0.946474,
+        "trigger_mode": "exploratory"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.946474,
+        "improvement": -0.009375,
+        "shape": "B1+T1",
+        "tick": 71564,
+        "trial_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.75
+        },
+        "trial_score": 0.937099,
+        "trigger_mode": "exploratory"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.946474,
+        "improvement": 0.0,
+        "shape": "B1+T1",
+        "tick": 71564,
+        "trial_params": {
+          "dup_redist": 0.53,
+          "scope_alpha": 0.8300000000000001
+        },
+        "trial_score": 0.946474,
+        "trigger_mode": "exploratory"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.946474,
+        "improvement": -0.017625,
+        "shape": "B1+T1",
+        "tick": 71564,
+        "trial_params": {
+          "dup_redist": 0.47,
+          "scope_alpha": 0.77
+        },
+        "trial_score": 0.928849,
+        "trigger_mode": "exploratory"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_70adc1557d",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:436330202c7ed0",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71565,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_e866c3fe33",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:db51cbd08057f0",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71566,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_0ab5cd6049",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:98b5a10c7b4d28",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71570,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_920e76a4b1",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:b74478601a38a9",
+        "operator_key": "dream_surface_dispatch_ciousnessengine_tick",
+        "score": 0.924212,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71574,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_cd8df4e7b2",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:7064212952ca52",
+        "operator_key": "dream_surface_dispatch_d_constraintpressure",
+        "score": 0.840549,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71577,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_e0a2c167a7",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:5724870c88939a",
+        "operator_key": "dream_surface_dispatch_ntime_chainsimbridge",
+        "score": 0.826982,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71580,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_3f94cb951c",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:b0b7dde7687ec2",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71584,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_4fa8433559",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:44e110f667d3c6",
+        "operator_key": "dream_surface_dispatch_rocessingsystem_tick",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71588,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_55fd2b0a7a",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:26b7c72f56b467",
+        "operator_key": "dream_surface_dispatch_d_energydistribution",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71591,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_ee10471ed8",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:41a96c1f05f7a3",
+        "operator_key": "dream_surface_dispatch_im_epoch_fakeepisode",
+        "score": 1.0,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71594,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_5785c84c27",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.35,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.0,
+        "mutation_id": "DREAM:d585a8f868b4f0",
+        "operator_key": "dream_dream_evidence",
+        "score": 0.35,
+        "shape": "dream_evidence",
+        "target_files": [],
+        "target_modules": [],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71597,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_b000c2c0fb",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.95,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.618167,
+        "mutation_id": "DREAM:dev_def_bbb961d6c189",
+        "operator_key": "dream_dream_evidence:rubric_deficit",
+        "score": 0.577904,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_governance_persistence_gateway.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71603,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_e00222de48",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.95,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.618167,
+        "mutation_id": "DREAM:dev_def_22cb8151d25f",
+        "operator_key": "dream_dream_evidence:rubric_deficit",
+        "score": 0.577904,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_governance_persistence_gateway.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71608,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_2e3dbf66ec",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.95,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.618167,
+        "mutation_id": "DREAM:dev_def_3e3c3ad2e4e9",
+        "operator_key": "dream_dream_evidence:rubric_deficit",
+        "score": 0.577904,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_expression_perception.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_expression_perception"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71613,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.948241,
+        "improvement": 0.0,
+        "shape": "B5+X5",
+        "tick": 71614,
+        "trial_params": {
+          "dup_redist": 0.55,
+          "scope_alpha": 0.8
+        },
+        "trial_score": 0.948241,
+        "trigger_mode": "issue_cluster"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.948241,
+        "improvement": -0.02,
+        "shape": "B5+X5",
+        "tick": 71614,
+        "trial_params": {
+          "dup_redist": 0.45,
+          "scope_alpha": 0.8
+        },
+        "trial_score": 0.928241,
+        "trigger_mode": "issue_cluster"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.948241,
+        "improvement": 0.0,
+        "shape": "B5+X5",
+        "tick": 71614,
+        "trial_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8500000000000001
+        },
+        "trial_score": 0.948241,
+        "trigger_mode": "issue_cluster"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.948241,
+        "improvement": -0.009375,
+        "shape": "B5+X5",
+        "tick": 71614,
+        "trial_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.75
+        },
+        "trial_score": 0.938866,
+        "trigger_mode": "issue_cluster"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.948241,
+        "improvement": 0.0,
+        "shape": "B5+X5",
+        "tick": 71614,
+        "trial_params": {
+          "dup_redist": 0.53,
+          "scope_alpha": 0.8300000000000001
+        },
+        "trial_score": 0.948241,
+        "trigger_mode": "issue_cluster"
+      },
+      {
+        "adopted": false,
+        "base_params": {
+          "dup_redist": 0.5,
+          "scope_alpha": 0.8
+        },
+        "base_score": 0.948241,
+        "improvement": -0.017625,
+        "shape": "B5+X5",
+        "tick": 71614,
+        "trial_params": {
+          "dup_redist": 0.47,
+          "scope_alpha": 0.77
+        },
+        "trial_score": 0.930616,
+        "trigger_mode": "issue_cluster"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_08c454ac32",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.95,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.618167,
+        "mutation_id": "DREAM:dev_def_9c56801a17e3",
+        "operator_key": "dream_dream_evidence:rubric_deficit",
+        "score": 0.577904,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora_simulation_engine.py",
+          "aurora_governance_persistence_gateway.py"
+        ],
+        "target_modules": [
+          "aurora_simulation_engine",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71618,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_1a6e76d5c1",
+        "accepted": false,
+        "adopted": false,
+        "agency_time_credit": 0.95,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.618167,
+        "mutation_id": "DREAM:dev_def_6856d15f6640",
+        "operator_key": "dream_dream_evidence:rubric_deficit",
+        "score": 0.577904,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_simulation_engine.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_simulation_engine"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71623,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_221ed74f76",
+        "accepted": true,
+        "adopted": true,
+        "agency_time_credit": 0.8,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.066667,
+        "mutation_id": "DREAM:dev_lev_6df672176c25",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.556232,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_governance_persistence_gateway.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71627,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_9477fb8c0b",
+        "accepted": true,
+        "adopted": true,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.066667,
+        "mutation_id": "DREAM:dev_lev_ec6927179776",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.411756,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_simulation_engine.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_simulation_engine"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71630,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_3ed41bd1dd",
+        "accepted": true,
+        "adopted": true,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.066667,
+        "mutation_id": "DREAM:dev_lev_2b9cf548b4d1",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.299806,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_governance_persistence_gateway.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71633,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "B:CODE_EVOLVE_08d677a194",
+        "accepted": true,
+        "adopted": true,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.066667,
+        "mutation_id": "DREAM:dev_lev_65d3bfaefedd",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.186934,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora.py",
+          "aurora_expression_perception.py"
+        ],
+        "target_modules": [
+          "aurora",
+          "aurora_expression_perception"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71636,
+        "trigger_mode": "code_evolution"
+      },
+      {
+        "ability_id": "A:CODE_EVOLVE_1006d501c7",
+        "accepted": true,
+        "adopted": true,
+        "agency_time_credit": 0.65,
+        "apply_duration_s": 0.0,
+        "avg_fitness": 0.0,
+        "changed_files": [],
+        "compile_failures": 0,
+        "conflicts_delta": 0.0,
+        "genealogy_pressure": 0.020833,
+        "mutation_id": "DREAM:dev_lev_ca7a4caadcd4",
+        "operator_key": "dream_dream_evidence:leverage_hit",
+        "score": 0.032507,
+        "shape": "dream_evidence",
+        "target_files": [
+          "aurora_simulation_engine.py",
+          "aurora_governance_persistence_gateway.py"
+        ],
+        "target_modules": [
+          "aurora_simulation_engine",
+          "aurora_governance_persistence_gateway"
+        ],
+        "temporal_overhead_penalty": 0.0,
+        "tick": 71639,
+        "trigger_mode": "code_evolution"
       }
     ]
   },
   "origin_counts": {
-    "(A^1)x(B^1)": 21549,
+    "(A^1)x(B^1)": 21562,
     "(A^1)x(B^1*A^1)": 5,
-    "(A^1)x(N^1)": 6,
+    "(A^1)x(N^1)": 8,
     "(A^1)x(N^1*B^1)": 8,
     "(A^1)x(N^1*B^1*A^4)": 1,
     "(A^1)x(N^5*B^4)": 1,
@@ -7794,12 +7770,12 @@
     "(A^1)x(X^3*T^1)": 2,
     "(A^2)x(B^1*A^1)": 22,
     "(A^2)x(N^1*A^1)": 15,
-    "(B^1)x(A^1)": 54,
+    "(B^1)x(A^1)": 56,
     "(B^1)x(B^1*A^1)": 5,
     "(B^1)x(B^1*A^3)": 1,
     "(B^1)x(B^3*A^1)": 1,
     "(B^1)x(N^1)": 43,
-    "(B^1)x(T^1)": 21543,
+    "(B^1)x(T^1)": 21556,
     "(B^1)x(T^1*A^1)": 18,
     "(B^1)x(T^1*B^1)": 7,
     "(B^1)x(T^1*B^1*A^1)": 8,
@@ -7833,7 +7809,7 @@
     "(B^1)x(X^3*B^1)": 1,
     "(B^1)x(X^3*T^1)": 1,
     "(B^1*A^1)x(B^2)": 26,
-    "(B^1*A^1)x(N^1)": 23,
+    "(B^1*A^1)x(N^1)": 26,
     "(B^1*A^1)x(N^1*B^1*A^4)": 1,
     "(B^1*A^1)x(N^1*B^3)": 9,
     "(B^1*A^1)x(N^3)": 1,
@@ -7854,7 +7830,7 @@
     "(B^1*A^1)x(X^1*T^1*B^4)": 1,
     "(B^1*A^3)x(N^1*A^1)": 10,
     "(B^1*A^3)x(N^1*B^1*A^2)": 25,
-    "(B^1*A^3)x(N^3*B^4*A^3)": 22,
+    "(B^1*A^3)x(N^3*B^4*A^3)": 23,
     "(B^1*A^3)x(T^1*A^1)": 531,
     "(B^1*A^3)x(T^1*B^1*A^2)": 13,
     "(B^1*A^3)x(T^1*N^1*A^2)": 13,
@@ -7906,13 +7882,14 @@
     "(N^2)x(X^1*N^1)": 6,
     "(N^2*B^3*A^1)x(N^3*B^1)": 25,
     "(N^3*B^1)x(A^1)": 7,
-    "(N^3*B^1)x(B^1)": 10,
-    "(N^3*B^1)x(B^1*A^1)": 23,
+    "(N^3*B^1)x(B^1)": 12,
+    "(N^3*B^1)x(B^1*A^1)": 26,
     "(N^3*B^1)x(N^1)": 18,
     "(N^3*B^1)x(T^1*N^1)": 54,
     "(N^3*B^1)x(X^1*N^1)": 17,
-    "(N^3*B^4*A^3)x(N^3*B^1)": 19,
+    "(N^3*B^4*A^3)x(N^3*B^1)": 20,
     "(N^3*B^4*A^3)x(N^4*B^1)": 3,
+    "(N^3*B^5*A^6)x(N^3*B^1)": 4,
     "(N^4*B^1)x(B^1*A^1)": 3,
     "(N^4*B^1*A^1)x(T^1*N^1)": 43,
     "(N^4*B^4)x(B^1)": 23,
@@ -8032,7 +8009,7 @@
     "(T^3*N^1)x(X^1*T^1)": 14,
     "(T^3*N^1)x(X^2*T^1*N^1)": 44,
     "(T^3*N^2)x(T^1*A^1)": 14,
-    "(T^4*B^4)x(T^1*B^1)": 134,
+    "(T^4*B^4)x(T^1*B^1)": 135,
     "(T^4*B^6*A^6)x(T^2)": 52,
     "(T^4*B^6*A^6)x(T^2*A^1)": 33,
     "(T^4*N^1*B^1)x(N^1)": 3,
@@ -8185,14 +8162,14 @@
     "(X^3*T^2*B^1)x(X^1)": 2,
     "(X^4*B^4)x(B^1)": 15,
     "(X^4*B^4)x(X^1)": 35,
-    "(X^4*B^4)x(X^1*B^1)": 5
+    "(X^4*B^4)x(X^1*B^1)": 11
   },
   "persistent_pressure_root": "A^1*N^1*T^1",
-  "persistent_pressure_root_ema": 3.989161950270297e-08,
+  "persistent_pressure_root_ema": 2.7097482275338786e-08,
   "roots": {
     "B^1*A^1": {
       "breeding_score_ema": 0.0,
-      "count": 21603,
+      "count": 21618,
       "counts": {
         "A": 1,
         "B": 1,
@@ -8201,23 +8178,23 @@
         "X": 0
       },
       "dominant_axis_counts": {
-        "A": 9979,
+        "A": 9992,
         "B": 0,
         "N": 0,
-        "T": 11582,
+        "T": 11584,
         "X": 42
       },
-      "effect_ema": 0.07227081211236094,
-      "global_effect_ema": 0.07263398202247331,
+      "effect_ema": 0.03288644052486711,
+      "global_effect_ema": 0.03338471151735254,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 2,
       "last_generation_role": "ADJACENT",
-      "last_tick": 71528,
-      "local_effect_ema": 0.0648517696629226,
+      "last_tick": 71617,
+      "local_effect_ema": 0.029807778140493336,
       "max_generation": 2,
       "min_generation": 2,
-      "raw_effect_ema": 0.0648517696629226,
+      "raw_effect_ema": 0.05961555628098667,
       "regulation": {
         "axes_active": 2,
         "break_even_ticks": 16.998,
@@ -8232,34 +8209,34 @@
         },
         "dominance": 0.5,
         "dynamic_thresholds": {
-          "breeding_min": 0.149158,
-          "effect_min": 0.00019401,
+          "breeding_min": 0.174627,
+          "effect_min": 0.000195043,
           "evidence_min": 10,
-          "inheritance_min": 0.30057,
+          "inheritance_min": 0.306557,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.448911,
-              "gradient": 0.63169
+              "factor": 0.525563,
+              "gradient": 0.429348
             },
             "dominant_axis": "B",
             "effect": {
-              "factor": 1.588681,
-              "gradient": -0.930824
+              "factor": 1.597141,
+              "gradient": -1.207459
             },
             "evidence": {
-              "factor": 0.403565,
-              "gradient": 1.163209
+              "factor": 0.411603,
+              "gradient": 0.925823
             },
             "inheritance": {
-              "factor": 0.403565,
-              "gradient": 1.163209
+              "factor": 0.411603,
+              "gradient": 0.925823
             },
             "relation": {
-              "factor": 0.403565,
-              "gradient": 1.163209
+              "factor": 0.411603,
+              "gradient": 0.925823
             }
           },
-          "relation_min": 0.207462
+          "relation_min": 0.211595
         },
         "effect_score": 1.0,
         "effect_score_raw": 1.0,
@@ -8292,24 +8269,24 @@
       "semantic_thresholds": {
         "pressure_regulation": {
           "confidence": {
-            "factor": 0.572678,
-            "gradient": 0.356656
+            "factor": 0.832011,
+            "gradient": 0.115065
           },
           "count": {
-            "factor": 0.572678,
-            "gradient": 0.356656
+            "factor": 0.832011,
+            "gradient": 0.115065
           },
           "dominant_axis": "B"
         },
-        "promote_confidence": 0.372241,
-        "promote_min_count": 14
+        "promote_confidence": 0.540807,
+        "promote_min_count": 20
       },
-      "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.064852, scope=1.120, conf=0.900).",
-      "semantic_version": 21528,
+      "semantic_translation": "At gen 2, this coupling resolves as map (translator) in adjacent mode via value grounding (local=0.029808, scope=1.120, conf=0.900).",
+      "semantic_version": 21543,
       "signature": "B^1*A^1",
       "top_origins": {
-        "(A^1)x(B^1)": 21549,
-        "(B^1)x(A^1)": 54
+        "(A^1)x(B^1)": 21562,
+        "(B^1)x(A^1)": 56
       }
     },
     "B^1*A^2": {
@@ -8329,7 +8306,7 @@
         "T": 3,
         "X": 2
       },
-      "effect_ema": 5.176319560389532e-08,
+      "effect_ema": 4.566653900147485e-08,
       "global_effect_ema": 3.7165428235707055e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -8454,7 +8431,7 @@
         "T": 13,
         "X": 9
       },
-      "effect_ema": 3.537783027884235e-61,
+      "effect_ema": 3.121103802360175e-61,
       "global_effect_ema": 4.1652437987302493e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -8581,7 +8558,7 @@
         "T": 2,
         "X": 3
       },
-      "effect_ema": 1.023664693829671e-16,
+      "effect_ema": 9.030977148885224e-17,
       "global_effect_ema": 2.7203824922945437e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -8706,7 +8683,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 1.6702414989533534e-17,
+      "effect_ema": 1.4735208609897973e-17,
       "global_effect_ema": 4.483377984949062e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -8831,7 +8808,7 @@
         "T": 16,
         "X": 10
       },
-      "effect_ema": 8.937663815086824e-35,
+      "effect_ema": 7.884987942340609e-35,
       "global_effect_ema": 4.8018685870814936e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -8958,7 +8935,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 9.136133647214874e-18,
+      "effect_ema": 8.060082045858626e-18,
       "global_effect_ema": 2.6571693666170764e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -9070,7 +9047,7 @@
     },
     "N^1*A^1": {
       "breeding_score_ema": 0.0,
-      "count": 20,
+      "count": 22,
       "counts": {
         "A": 1,
         "B": 0,
@@ -9082,20 +9059,20 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 8,
+        "T": 10,
         "X": 12
       },
-      "effect_ema": 0.00014103364495124878,
-      "global_effect_ema": 0.0001535784773673752,
+      "effect_ema": 0.00016695884373655974,
+      "global_effect_ema": 0.00016948848049399263,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 2,
       "last_generation_role": "ADJACENT",
-      "last_tick": 71489,
-      "local_effect_ema": 0.00013712364050658498,
+      "last_tick": 71617,
+      "local_effect_ema": 0.00015132900044106484,
       "max_generation": 2,
       "min_generation": 2,
-      "raw_effect_ema": 0.00027424728101316996,
+      "raw_effect_ema": 0.0003026580008821297,
       "regulation": {
         "axes_active": 2,
         "break_even_ticks": 14.404,
@@ -9110,43 +9087,43 @@
         },
         "dominance": 0.5,
         "dynamic_thresholds": {
-          "breeding_min": 0.202587,
+          "breeding_min": 0.199909,
           "effect_min": 0.00018557,
           "evidence_min": 11,
-          "inheritance_min": 0.326305,
+          "inheritance_min": 0.319805,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.629702,
-              "gradient": 0.288164
+              "factor": 0.621379,
+              "gradient": 0.297253
             },
             "dominant_axis": "N",
             "effect": {
-              "factor": 1.58987,
-              "gradient": -0.953212
+              "factor": 1.589872,
+              "gradient": -0.953259
             },
             "evidence": {
-              "factor": 0.449317,
-              "gradient": 0.629968
+              "factor": 0.440367,
+              "gradient": 0.671571
             },
             "inheritance": {
-              "factor": 0.449317,
-              "gradient": 0.629968
+              "factor": 0.440367,
+              "gradient": 0.671571
             },
             "relation": {
-              "factor": 0.449317,
-              "gradient": 0.629968
+              "factor": 0.440367,
+              "gradient": 0.671571
             }
           },
-          "relation_min": 0.224411
+          "relation_min": 0.219941
         },
-        "effect_score": 0.369467,
-        "effect_score_raw": 0.369467,
+        "effect_score": 0.407741,
+        "effect_score_raw": 0.407741,
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 11,
         "formation_burden": 1.69425,
         "inheritance_influence_factor": 1.0,
-        "inheritance_score": 0.408333,
+        "inheritance_score": 0.4175,
         "issues": [
           "effect_under_scale_requirement"
         ],
@@ -9154,8 +9131,8 @@
         "persistence_tax_factor": 2.550513,
         "persistence_tax_per_tick": 1.785359,
         "relation_score": 0.833333,
-        "representation_score": 0.508202,
-        "requirement_coverage": 0.934733,
+        "representation_score": 0.523432,
+        "requirement_coverage": 0.953871,
         "scale_depth_index": 0.75,
         "strictness_index": 0.51,
         "sustainability_score": 0.409974,
@@ -9163,7 +9140,7 @@
       },
       "scope_scale": 1.12,
       "semantic": "force",
-      "semantic_confidence": 0.39001,
+      "semantic_confidence": 0.419784,
       "semantic_lane_ema": {
         "communication": 0.26666666666666666,
         "intelligence": 0.3600000000000001,
@@ -9173,22 +9150,22 @@
         "pressure_regulation": {
           "confidence": {
             "factor": 1.4,
-            "gradient": -0.775701
+            "gradient": -0.716215
           },
           "count": {
-            "factor": 1.575685,
-            "gradient": -0.775701
+            "factor": 1.56749,
+            "gradient": -0.716215
           },
           "dominant_axis": "N"
         },
         "promote_confidence": 0.91,
         "promote_min_count": 38
       },
-      "semantic_translation": "At gen 2, this coupling resolves as force (control) in adjacent mode via value grounding (local=0.000137, scope=1.120, conf=0.390).",
+      "semantic_translation": "At gen 2, this coupling resolves as force (control) in adjacent mode via value grounding (local=0.000151, scope=1.120, conf=0.420).",
       "semantic_version": 1,
       "signature": "N^1*A^1",
       "top_origins": {
-        "(A^1)x(N^1)": 6,
+        "(A^1)x(N^1)": 8,
         "(N^1)x(A^1)": 14
       }
     },
@@ -9209,7 +9186,7 @@
         "T": 10,
         "X": 0
       },
-      "effect_ema": 2.1958947160133616e-14,
+      "effect_ema": 1.9372627698512973e-14,
       "global_effect_ema": 0.00019117223991000514,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -9336,7 +9313,7 @@
         "T": 44,
         "X": 28
       },
-      "effect_ema": 4.620903920704729e-06,
+      "effect_ema": 4.076654979567194e-06,
       "global_effect_ema": 0.00022822862744940078,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -9443,7 +9420,7 @@
     },
     "N^1*B^1*A^1": {
       "breeding_score_ema": 0.0,
-      "count": 46,
+      "count": 49,
       "counts": {
         "A": 1,
         "B": 1,
@@ -9455,20 +9432,20 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 40,
+        "T": 43,
         "X": 6
       },
-      "effect_ema": 0.00019013128859742632,
-      "global_effect_ema": 0.00020808373670015798,
+      "effect_ema": 0.00022373765588580723,
+      "global_effect_ema": 0.00022599192534108456,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 3,
       "last_generation_role": "SHEAR",
-      "last_tick": 71488,
-      "local_effect_ema": 0.00016780946508077258,
+      "last_tick": 71618,
+      "local_effect_ema": 0.00018225155269442302,
       "max_generation": 3,
       "min_generation": 3,
-      "raw_effect_ema": 0.00033561893016154516,
+      "raw_effect_ema": 0.00036450310538884605,
       "regulation": {
         "axes_active": 3,
         "break_even_ticks": 9.255,
@@ -9483,43 +9460,43 @@
         },
         "dominance": 0.333333,
         "dynamic_thresholds": {
-          "breeding_min": 0.137507,
-          "effect_min": 0.000190144,
+          "breeding_min": 0.137144,
+          "effect_min": 0.00019014,
           "evidence_min": 10,
-          "inheritance_min": 0.296502,
+          "inheritance_min": 0.296488,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.416492,
-              "gradient": 0.854672
+              "factor": 0.415393,
+              "gradient": 0.868657
             },
             "dominant_axis": "N",
             "effect": {
-              "factor": 1.570923,
-              "gradient": -0.739118
+              "factor": 1.570885,
+              "gradient": -0.738852
             },
             "evidence": {
-              "factor": 0.400096,
-              "gradient": 1.885673
+              "factor": 0.400078,
+              "gradient": 1.927589
             },
             "inheritance": {
-              "factor": 0.400096,
-              "gradient": 1.885673
+              "factor": 0.400078,
+              "gradient": 1.927589
             },
             "relation": {
-              "factor": 0.400096,
-              "gradient": 1.885673
+              "factor": 0.400078,
+              "gradient": 1.927589
             }
           },
-          "relation_min": 0.204509
+          "relation_min": 0.2045
         },
-        "effect_score": 0.367724,
-        "effect_score_raw": 0.441268,
+        "effect_score": 0.39938,
+        "effect_score_raw": 0.479256,
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 10,
         "formation_burden": 1.99175,
         "inheritance_influence_factor": 0.833333,
-        "inheritance_score": 0.594167,
+        "inheritance_score": 0.607917,
         "issues": [
           "effect_under_scale_requirement"
         ],
@@ -9527,8 +9504,8 @@
         "persistence_tax_factor": 1.626279,
         "persistence_tax_per_tick": 1.057081,
         "relation_score": 1.0,
-        "representation_score": 0.586425,
-        "requirement_coverage": 0.970634,
+        "representation_score": 0.600255,
+        "requirement_coverage": 0.989628,
         "scale_depth_index": 0.75,
         "strictness_index": 0.57,
         "sustainability_score": 0.577019,
@@ -9536,7 +9513,7 @@
       },
       "scope_scale": 1.24,
       "semantic": "problem_solving",
-      "semantic_confidence": 0.530484,
+      "semantic_confidence": 0.566805,
       "semantic_lane_ema": {
         "communication": 0.3217391304347826,
         "intelligence": 0.3043478260869565,
@@ -9546,23 +9523,23 @@
         "pressure_regulation": {
           "confidence": {
             "factor": 1.4,
-            "gradient": -0.618416
+            "gradient": -0.545521
           },
           "count": {
-            "factor": 1.547878,
-            "gradient": -0.618416
+            "factor": 1.526363,
+            "gradient": -0.545521
           },
           "dominant_axis": "N"
         },
         "promote_confidence": 0.91,
         "promote_min_count": 37
       },
-      "semantic_translation": "At gen 3, this coupling resolves as problem_solving (engine) in shear mode via value grounding (local=0.000168, scope=1.240, conf=0.530).",
+      "semantic_translation": "At gen 3, this coupling resolves as problem_solving (engine) in shear mode via value grounding (local=0.000182, scope=1.240, conf=0.567).",
       "semantic_version": 1,
       "signature": "N^1*B^1*A^1",
       "top_origins": {
         "(A^1)x(N^1*B^1)": 8,
-        "(B^1*A^1)x(N^1)": 23,
+        "(B^1*A^1)x(N^1)": 26,
         "(N^1)x(B^1*A^1)": 13,
         "(N^1*B^1)x(A^1)": 2
       }
@@ -9584,7 +9561,7 @@
         "T": 6,
         "X": 0
       },
-      "effect_ema": 7.953657336229358e-35,
+      "effect_ema": 7.016877507499783e-35,
       "global_effect_ema": 0.00012366876223356049,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -9709,7 +9686,7 @@
         "T": 6,
         "X": 1
       },
-      "effect_ema": 2.5138609014883555e-34,
+      "effect_ema": 2.21777897525055e-34,
       "global_effect_ema": 0.000150052350671295,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -9830,7 +9807,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 1.3216867202398368e-08,
+      "effect_ema": 1.1660187794321933e-08,
       "global_effect_ema": 8.714429497966159e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -9955,7 +9932,7 @@
         "T": 16,
         "X": 10
       },
-      "effect_ema": 7.210483654163588e-14,
+      "effect_ema": 6.36123464115456e-14,
       "global_effect_ema": 0.00027729361733726796,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -10077,7 +10054,7 @@
         "T": 0,
         "X": 0
       },
-      "effect_ema": 7.973117136079574e-42,
+      "effect_ema": 7.03404533685137e-42,
       "global_effect_ema": 2.817899529482377e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -10204,7 +10181,7 @@
         "T": 11,
         "X": 17
       },
-      "effect_ema": 4.919820845748717e-06,
+      "effect_ema": 4.340365541801009e-06,
       "global_effect_ema": 0.00019489828651368289,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -10328,7 +10305,7 @@
         "T": 0,
         "X": 0
       },
-      "effect_ema": 7.973117136079574e-42,
+      "effect_ema": 7.03404533685137e-42,
       "global_effect_ema": 2.817899529482377e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -10453,7 +10430,7 @@
         "T": 6,
         "X": 0
       },
-      "effect_ema": 7.953657336229358e-35,
+      "effect_ema": 7.016877507499783e-35,
       "global_effect_ema": 0.00012366876223356049,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -10578,7 +10555,7 @@
         "T": 0,
         "X": 0
       },
-      "effect_ema": 7.534229954277216e-42,
+      "effect_ema": 6.646850180694582e-42,
       "global_effect_ema": 2.6627857939145394e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -10703,7 +10680,7 @@
         "T": 0,
         "X": 0
       },
-      "effect_ema": 7.973117136079574e-42,
+      "effect_ema": 7.03404533685137e-42,
       "global_effect_ema": 2.817899529482377e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -10829,7 +10806,7 @@
         "T": 6,
         "X": 2
       },
-      "effect_ema": 3.680860541547338e-14,
+      "effect_ema": 3.247329681224549e-14,
       "global_effect_ema": 0.0001408471036781077,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -10940,7 +10917,7 @@
     },
     "N^3*B^2": {
       "breeding_score_ema": 0.0,
-      "count": 10,
+      "count": 12,
       "counts": {
         "A": 0,
         "B": 2,
@@ -10952,90 +10929,90 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 5,
+        "T": 7,
         "X": 5
       },
-      "effect_ema": 0.00013333581518314313,
-      "global_effect_ema": 0.00014519593166186228,
+      "effect_ema": 0.00015892751525933962,
+      "global_effect_ema": 0.00016133546727535776,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
       "last_generation": 2,
       "last_generation_role": "ADJACENT",
-      "last_tick": 71489,
-      "local_effect_ema": 0.00013320727675400208,
+      "last_tick": 71617,
+      "local_effect_ema": 0.00014801419016087866,
       "max_generation": 2,
       "min_generation": 2,
-      "raw_effect_ema": 0.00026641455350800416,
+      "raw_effect_ema": 0.0002960283803217573,
       "regulation": {
         "axes_active": 2,
-        "break_even_ticks": 11.842,
+        "break_even_ticks": 11.808,
         "breeding_score": 0.444444,
         "complexity_index": 0.1125,
         "constraint_influence": {
           "A": 0.0,
-          "B": 0.51,
-          "N": 0.49,
+          "B": 0.5,
+          "N": 0.5,
           "T": 0.0,
           "X": 0.0
         },
         "dominance": 0.6,
         "dynamic_thresholds": {
-          "breeding_min": 0.192172,
-          "effect_min": 0.000171928,
-          "evidence_min": 14,
-          "inheritance_min": 0.41095,
+          "breeding_min": 0.189214,
+          "effect_min": 0.000171907,
+          "evidence_min": 13,
+          "inheritance_min": 0.38882,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.626063,
-              "gradient": 0.292107
+              "factor": 0.616425,
+              "gradient": 0.30279
             },
             "dominant_axis": "N",
             "effect": {
-              "factor": 1.57501,
-              "gradient": -0.770115
+              "factor": 1.57482,
+              "gradient": -0.768567
             },
             "evidence": {
-              "factor": 0.586873,
-              "gradient": 0.338074
+              "factor": 0.555269,
+              "gradient": 0.381271
             },
             "inheritance": {
-              "factor": 0.586873,
-              "gradient": 0.338074
+              "factor": 0.555269,
+              "gradient": 0.381271
             },
             "relation": {
-              "factor": 0.586873,
-              "gradient": 0.338074
+              "factor": 0.555269,
+              "gradient": 0.381271
             }
           },
-          "relation_min": 0.281097
+          "relation_min": 0.26596
         },
-        "effect_score": 0.391266,
-        "effect_score_raw": 0.387392,
+        "effect_score": 0.430506,
+        "effect_score_raw": 0.430506,
         "enabled": true,
         "evidence_complete": false,
-        "evidence_min": 14,
+        "evidence_min": 13,
         "formation_burden": 1.5873,
-        "inheritance_influence_factor": 1.01,
-        "inheritance_score": 0.329167,
+        "inheritance_influence_factor": 1.0,
+        "inheritance_score": 0.338333,
         "issues": [
           "insufficient_evidence",
           "inheritance_under_scale_requirement",
           "effect_under_scale_requirement"
         ],
-        "maintenance_savings_per_tick": 0.134044,
-        "persistence_tax_factor": 2.238075,
-        "persistence_tax_per_tick": 1.566652,
+        "maintenance_savings_per_tick": 0.134427,
+        "persistence_tax_factor": 2.231699,
+        "persistence_tax_per_tick": 1.562189,
         "relation_score": 0.733333,
-        "representation_score": 0.474999,
-        "requirement_coverage": 0.893943,
+        "representation_score": 0.490566,
+        "requirement_coverage": 0.932791,
         "scale_depth_index": 0.6,
         "strictness_index": 0.405,
-        "sustainability_score": 0.391221,
+        "sustainability_score": 0.39154,
         "validation_complete": false
       },
       "scope_scale": 1.09,
       "semantic": "energyx3 + boundaryx2",
-      "semantic_confidence": 0.360774,
+      "semantic_confidence": 0.39087,
       "semantic_lane_ema": {
         "communication": 0.30588235294117644,
         "intelligence": 0.3235294117647059,
@@ -11045,27 +11022,27 @@
         "pressure_regulation": {
           "confidence": {
             "factor": 1.4,
-            "gradient": -0.73418
+            "gradient": -0.674051
           },
           "count": {
-            "factor": 1.570214,
-            "gradient": -0.73418
+            "factor": 1.560114,
+            "gradient": -0.674051
           },
           "dominant_axis": "N"
         },
         "promote_confidence": 0.91,
-        "promote_min_count": 38
+        "promote_min_count": 37
       },
-      "semantic_translation": "At gen 2, this coupling expresses value grounding in adjacent mode (local=0.000133, scope=1.090, conf=0.361).",
+      "semantic_translation": "At gen 2, this coupling expresses value grounding in adjacent mode (local=0.000148, scope=1.090, conf=0.391).",
       "semantic_version": 1,
       "signature": "N^3*B^2",
       "top_origins": {
-        "(N^3*B^1)x(B^1)": 10
+        "(N^3*B^1)x(B^1)": 12
       }
     },
     "N^3*B^2*A^1": {
       "breeding_score_ema": 0.0,
-      "count": 23,
+      "count": 26,
       "counts": {
         "A": 1,
         "B": 2,
@@ -11077,88 +11054,88 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 21,
+        "T": 24,
         "X": 2
       },
-      "effect_ema": 0.00015419296166910136,
-      "global_effect_ema": 0.0001687520653421015,
+      "effect_ema": 0.00018882013671803107,
+      "global_effect_ema": 0.00019072259459915767,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 3,
       "last_generation_role": "SHEAR",
-      "last_tick": 71488,
-      "local_effect_ema": 0.00014674092638443612,
+      "last_tick": 71618,
+      "local_effect_ema": 0.00016584573443405017,
       "max_generation": 3,
       "min_generation": 3,
-      "raw_effect_ema": 0.00029348185276887223,
+      "raw_effect_ema": 0.00033169146886810033,
       "regulation": {
         "axes_active": 3,
-        "break_even_ticks": 8.688,
+        "break_even_ticks": 8.633,
         "breeding_score": 0.444444,
         "complexity_index": 0.1875,
         "constraint_influence": {
-          "A": 0.304167,
+          "A": 0.291667,
           "B": 0.333333,
-          "N": 0.3625,
+          "N": 0.375,
           "T": 0.0,
           "X": 0.0
         },
         "dominance": 0.5,
         "dynamic_thresholds": {
-          "breeding_min": 0.146217,
-          "effect_min": 0.000177307,
+          "breeding_min": 0.144744,
+          "effect_min": 0.000177234,
           "evidence_min": 10,
-          "inheritance_min": 0.2997,
+          "inheritance_min": 0.296207,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.461549,
-              "gradient": 0.583518
+              "factor": 0.456899,
+              "gradient": 0.600043
             },
             "dominant_axis": "N",
             "effect": {
-              "factor": 1.552604,
-              "gradient": -0.63825
+              "factor": 1.551959,
+              "gradient": -0.635433
             },
             "evidence": {
-              "factor": 0.417664,
-              "gradient": 0.840748
+              "factor": 0.412796,
+              "gradient": 0.906043
             },
             "inheritance": {
-              "factor": 0.417664,
-              "gradient": 0.840748
+              "factor": 0.412796,
+              "gradient": 0.906043
             },
             "relation": {
-              "factor": 0.417664,
-              "gradient": 0.840748
+              "factor": 0.412796,
+              "gradient": 0.906043
             }
           },
-          "relation_min": 0.205752
+          "relation_min": 0.203354
         },
-        "effect_score": 0.356906,
-        "effect_score_raw": 0.413804,
+        "effect_score": 0.409389,
+        "effect_score_raw": 0.467873,
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 10,
         "formation_burden": 1.8975,
-        "inheritance_influence_factor": 0.8625,
-        "inheritance_score": 0.38875,
+        "inheritance_influence_factor": 0.875,
+        "inheritance_score": 0.4025,
         "issues": [
           "effect_under_scale_requirement"
         ],
-        "maintenance_savings_per_tick": 0.2184,
-        "persistence_tax_factor": 1.602562,
-        "persistence_tax_per_tick": 1.041665,
+        "maintenance_savings_per_tick": 0.219794,
+        "persistence_tax_factor": 1.592398,
+        "persistence_tax_per_tick": 1.035059,
         "relation_score": 0.833333,
-        "representation_score": 0.499889,
-        "requirement_coverage": 0.956902,
+        "representation_score": 0.521008,
+        "requirement_coverage": 0.983936,
         "scale_depth_index": 0.666667,
         "strictness_index": 0.475,
-        "sustainability_score": 0.47508,
+        "sustainability_score": 0.475588,
         "validation_complete": false
       },
       "scope_scale": 1.15,
       "semantic": "energyx3 + boundaryx2 + agency",
-      "semantic_confidence": 0.422503,
+      "semantic_confidence": 0.464512,
       "semantic_lane_ema": {
         "communication": 0.3069767441860465,
         "intelligence": 0.3209302325581396,
@@ -11168,22 +11145,22 @@
         "pressure_regulation": {
           "confidence": {
             "factor": 1.4,
-            "gradient": -0.66775
+            "gradient": -0.583477
           },
           "count": {
-            "factor": 1.558881,
-            "gradient": -0.66775
+            "factor": 1.538439,
+            "gradient": -0.583477
           },
           "dominant_axis": "N"
         },
         "promote_confidence": 0.91,
         "promote_min_count": 37
       },
-      "semantic_translation": "At gen 3, this coupling expresses value grounding in shear mode (local=0.000147, scope=1.150, conf=0.423).",
+      "semantic_translation": "At gen 3, this coupling expresses value grounding in shear mode (local=0.000166, scope=1.150, conf=0.465).",
       "semantic_version": 1,
       "signature": "N^3*B^2*A^1",
       "top_origins": {
-        "(N^3*B^1)x(B^1*A^1)": 23
+        "(N^3*B^1)x(B^1*A^1)": 26
       }
     },
     "N^3*B^4*A^3": {
@@ -11203,7 +11180,7 @@
         "T": 16,
         "X": 9
       },
-      "effect_ema": 6.751110941084457e-14,
+      "effect_ema": 5.955966734617841e-14,
       "global_effect_ema": 0.0002596275178874487,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -11308,8 +11285,8 @@
       }
     },
     "N^3*B^5*A^6": {
-      "breeding_score_ema": 0.4201449830983045,
-      "count": 22,
+      "breeding_score_ema": 0.42653338445044015,
+      "count": 23,
       "counts": {
         "A": 6,
         "B": 5,
@@ -11321,88 +11298,88 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 22,
+        "T": 23,
         "X": 0
       },
-      "effect_ema": 0.00013204444881553768,
-      "global_effect_ema": 0.00014378969926583487,
+      "effect_ema": 0.00014826830035486165,
+      "global_effect_ema": 0.0001527952398952658,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 4,
       "last_generation_role": "BRIDGE",
-      "last_tick": 71489,
-      "local_effect_ema": 0.000125034521100726,
+      "last_tick": 71614,
+      "local_effect_ema": 0.0001328654259958833,
       "max_generation": 4,
       "min_generation": 4,
-      "raw_effect_ema": 0.000250069042201452,
+      "raw_effect_ema": 0.0002657308519917666,
       "regulation": {
         "axes_active": 3,
-        "break_even_ticks": 5.556,
-        "breeding_score": 0.53781,
+        "break_even_ticks": 5.578,
+        "breeding_score": 0.53923,
         "complexity_index": 0.1875,
         "constraint_influence": {
-          "A": 0.35,
-          "B": 0.3375,
-          "N": 0.3125,
+          "A": 0.357143,
+          "B": 0.339286,
+          "N": 0.303571,
           "T": 0.0,
           "X": 0.0
         },
         "dominance": 0.428571,
         "dynamic_thresholds": {
-          "breeding_min": 0.135599,
-          "effect_min": 0.00017289,
+          "breeding_min": 0.142357,
+          "effect_min": 0.000184361,
           "evidence_min": 10,
-          "inheritance_min": 0.298048,
+          "inheritance_min": 0.302141,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.412972,
-              "gradient": 0.903283
+              "factor": 0.433555,
+              "gradient": 0.709705
             },
             "dominant_axis": "A",
             "effect": {
-              "factor": 1.439383,
-              "gradient": -0.373472
+              "factor": 1.534882,
+              "gradient": -0.571616
             },
             "evidence": {
-              "factor": 0.403918,
-              "gradient": 1.144241
+              "factor": 0.409465,
+              "gradient": 0.966922
             },
             "inheritance": {
-              "factor": 0.403918,
-              "gradient": 1.144241
+              "factor": 0.409465,
+              "gradient": 0.966922
             },
             "relation": {
-              "factor": 0.403918,
-              "gradient": 1.144241
+              "factor": 0.409465,
+              "gradient": 0.966922
             }
           },
-          "relation_min": 0.20545
+          "relation_min": 0.208271
         },
-        "effect_score": 0.30736,
-        "effect_score_raw": 0.3616,
+        "effect_score": 0.308863,
+        "effect_score_raw": 0.36034,
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 10,
         "formation_burden": 2.123342,
-        "inheritance_influence_factor": 0.85,
-        "inheritance_score": 0.384167,
+        "inheritance_influence_factor": 0.857143,
+        "inheritance_score": 0.38875,
         "issues": [
           "effect_under_scale_requirement"
         ],
-        "maintenance_savings_per_tick": 0.38216,
-        "persistence_tax_factor": 1.046683,
-        "persistence_tax_per_tick": 0.62801,
+        "maintenance_savings_per_tick": 0.380645,
+        "persistence_tax_factor": 1.050849,
+        "persistence_tax_per_tick": 0.630509,
         "relation_score": 0.892857,
-        "representation_score": 0.515186,
-        "requirement_coverage": 0.9308,
+        "representation_score": 0.516912,
+        "requirement_coverage": 0.93017,
         "scale_depth_index": 0.803571,
         "strictness_index": 0.557143,
-        "sustainability_score": 0.536208,
+        "sustainability_score": 0.535999,
         "validation_complete": false
       },
       "scope_scale": 1.15,
       "semantic": "agencyx6 + boundaryx5 + energyx3",
-      "semantic_confidence": 0.36952,
+      "semantic_confidence": 0.385878,
       "semantic_lane_ema": {
         "communication": 0.33392857142857146,
         "intelligence": 0.29107142857142854,
@@ -11412,22 +11389,22 @@
         "pressure_regulation": {
           "confidence": {
             "factor": 1.4,
-            "gradient": -0.637173
+            "gradient": -0.801568
           },
           "count": {
-            "factor": 1.552359,
-            "gradient": -0.637173
+            "factor": 1.578582,
+            "gradient": -0.801568
           },
           "dominant_axis": "A"
         },
         "promote_confidence": 0.91,
-        "promote_min_count": 37
+        "promote_min_count": 38
       },
-      "semantic_translation": "At gen 4, this coupling expresses value grounding in bridge mode (local=0.000125, scope=1.150, conf=0.370).",
+      "semantic_translation": "At gen 4, this coupling expresses value grounding in bridge mode (local=0.000133, scope=1.150, conf=0.386).",
       "semantic_version": 1,
       "signature": "N^3*B^5*A^6",
       "top_origins": {
-        "(B^1*A^3)x(N^3*B^4*A^3)": 22
+        "(B^1*A^3)x(N^3*B^4*A^3)": 23
       }
     },
     "N^4": {
@@ -11447,7 +11424,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 1.0119121318488065e-07,
+      "effect_ema": 8.927293668024932e-08,
       "global_effect_ema": 1.5671969309686715e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -11572,7 +11549,7 @@
         "T": 10,
         "X": 0
       },
-      "effect_ema": 3.931355108564459e-05,
+      "effect_ema": 3.468321058995748e-05,
       "global_effect_ema": 0.00016404547738167486,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -11696,7 +11673,7 @@
         "T": 6,
         "X": 0
       },
-      "effect_ema": 7.953657336229358e-35,
+      "effect_ema": 7.016877507499783e-35,
       "global_effect_ema": 0.00012366876223356049,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -11821,7 +11798,7 @@
         "T": 3,
         "X": 0
       },
-      "effect_ema": 2.714401674627643e-06,
+      "effect_ema": 2.394700104850633e-06,
       "global_effect_ema": 1.2395973770565426e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -11946,7 +11923,7 @@
         "T": 0,
         "X": 0
       },
-      "effect_ema": 6.475993302022336e-42,
+      "effect_ema": 5.713252384244957e-42,
       "global_effect_ema": 2.232128304865163e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -12071,7 +12048,7 @@
         "T": 17,
         "X": 4
       },
-      "effect_ema": 8.144407158494887e-24,
+      "effect_ema": 7.185160862041311e-24,
       "global_effect_ema": 0.0003106334135471299,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -12192,7 +12169,7 @@
         "T": 13,
         "X": 0
       },
-      "effect_ema": 2.513521104985607e-36,
+      "effect_ema": 2.2174791998973418e-36,
       "global_effect_ema": 0.0003123223774622455,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -12313,7 +12290,7 @@
         "T": 16,
         "X": 10
       },
-      "effect_ema": 7.238356913267593e-14,
+      "effect_ema": 6.385824994573069e-14,
       "global_effect_ema": 0.00027836553944605156,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -12435,7 +12412,7 @@
         "T": 97,
         "X": 61
       },
-      "effect_ema": 0.0001922904115302176,
+      "effect_ema": 0.00016964249357691354,
       "global_effect_ema": 0.0002857157951146902,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -12558,7 +12535,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 1.4112353572844364e-16,
+      "effect_ema": 1.2450203997614135e-16,
       "global_effect_ema": 2.9043490753438805e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -12684,7 +12661,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 7.782382390005336e-08,
+      "effect_ema": 6.865775282830977e-08,
       "global_effect_ema": 4.688548943113096e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -12809,7 +12786,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 7.79689580294165e-17,
+      "effect_ema": 6.878579309517673e-17,
       "global_effect_ema": 1.6870979099168707e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -12918,8 +12895,8 @@
       }
     },
     "N^6*B^5*A^3": {
-      "breeding_score_ema": 0.3974492776289149,
-      "count": 19,
+      "breeding_score_ema": 0.4056533354186017,
+      "count": 20,
       "counts": {
         "A": 3,
         "B": 5,
@@ -12931,88 +12908,88 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 19,
+        "T": 20,
         "X": 0
       },
-      "effect_ema": 0.00013135729673494957,
-      "global_effect_ema": 0.00014304142554509949,
+      "effect_ema": 0.00014760028444663233,
+      "global_effect_ema": 0.00015210682807218924,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 4,
       "last_generation_role": "BRIDGE",
-      "last_tick": 71489,
-      "local_effect_ema": 0.00012438384830008653,
+      "last_tick": 71614,
+      "local_effect_ema": 0.000132266807019295,
       "max_generation": 4,
       "min_generation": 4,
-      "raw_effect_ema": 0.00024876769660017305,
+      "raw_effect_ema": 0.00026453361403859,
       "regulation": {
         "axes_active": 3,
-        "break_even_ticks": 5.247,
-        "breeding_score": 0.532767,
+        "break_even_ticks": 5.226,
+        "breeding_score": 0.53459,
         "complexity_index": 0.1875,
         "constraint_influence": {
-          "A": 0.3125,
-          "B": 0.3375,
-          "N": 0.35,
+          "A": 0.303571,
+          "B": 0.339286,
+          "N": 0.357143,
           "T": 0.0,
           "X": 0.0
         },
         "dominance": 0.428571,
         "dynamic_thresholds": {
-          "breeding_min": 0.134168,
-          "effect_min": 0.000171526,
+          "breeding_min": 0.135583,
+          "effect_min": 0.000173989,
           "evidence_min": 10,
-          "inheritance_min": 0.294425,
+          "inheritance_min": 0.295144,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.420185,
-              "gradient": 0.813639
+              "factor": 0.424616,
+              "gradient": 0.773187
             },
             "dominant_axis": "N",
             "effect": {
-              "factor": 1.485253,
-              "gradient": -0.449368
+              "factor": 1.50658,
+              "gradient": -0.494386
             },
             "evidence": {
-              "factor": 0.407802,
-              "gradient": 1.005846
+              "factor": 0.408797,
+              "gradient": 0.981653
             },
             "inheritance": {
-              "factor": 0.407802,
-              "gradient": 1.005846
+              "factor": 0.408797,
+              "gradient": 0.981653
             },
             "relation": {
-              "factor": 0.407802,
-              "gradient": 1.005846
+              "factor": 0.408797,
+              "gradient": 0.981653
             }
           },
-          "relation_min": 0.202313
+          "relation_min": 0.202807
         },
-        "effect_score": 0.308194,
-        "effect_score_raw": 0.362581,
+        "effect_score": 0.325802,
+        "effect_score_raw": 0.380102,
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 10,
         "formation_burden": 2.043253,
-        "inheritance_influence_factor": 0.85,
-        "inheritance_score": 0.370417,
+        "inheritance_influence_factor": 0.857143,
+        "inheritance_score": 0.375,
         "issues": [
           "effect_under_scale_requirement"
         ],
-        "maintenance_savings_per_tick": 0.389393,
-        "persistence_tax_factor": 1.02724,
-        "persistence_tax_per_tick": 0.616344,
+        "maintenance_savings_per_tick": 0.390979,
+        "persistence_tax_factor": 1.023073,
+        "persistence_tax_per_tick": 0.613844,
         "relation_score": 0.892857,
-        "representation_score": 0.511719,
-        "requirement_coverage": 0.931291,
+        "representation_score": 0.519163,
+        "requirement_coverage": 0.940051,
         "scale_depth_index": 0.696429,
         "strictness_index": 0.492857,
-        "sustainability_score": 0.53718,
+        "sustainability_score": 0.537388,
         "validation_complete": false
       },
       "scope_scale": 1.15,
       "semantic": "energyx6 + boundaryx5 + agencyx3",
-      "semantic_confidence": 0.357222,
+      "semantic_confidence": 0.373664,
       "semantic_lane_ema": {
         "communication": 0.316504854368932,
         "intelligence": 0.3106796116504855,
@@ -13022,22 +12999,147 @@
         "pressure_regulation": {
           "confidence": {
             "factor": 1.4,
-            "gradient": -0.80681
+            "gradient": -0.819994
           },
           "count": {
-            "factor": 1.579126,
-            "gradient": -0.80681
+            "factor": 1.580436,
+            "gradient": -0.819994
           },
           "dominant_axis": "N"
         },
         "promote_confidence": 0.91,
         "promote_min_count": 38
       },
-      "semantic_translation": "At gen 4, this coupling expresses value grounding in bridge mode (local=0.000124, scope=1.150, conf=0.357).",
+      "semantic_translation": "At gen 4, this coupling expresses value grounding in bridge mode (local=0.000132, scope=1.150, conf=0.374).",
       "semantic_version": 1,
       "signature": "N^6*B^5*A^3",
       "top_origins": {
-        "(N^3*B^4*A^3)x(N^3*B^1)": 19
+        "(N^3*B^4*A^3)x(N^3*B^1)": 20
+      }
+    },
+    "N^6*B^6*A^6": {
+      "breeding_score_ema": 0.85082112,
+      "count": 4,
+      "counts": {
+        "A": 6,
+        "B": 6,
+        "N": 6,
+        "T": 0,
+        "X": 0
+      },
+      "dominant_axis_counts": {
+        "A": 0,
+        "B": 0,
+        "N": 0,
+        "T": 4,
+        "X": 0
+      },
+      "effect_ema": 7.551847437974271e-05,
+      "global_effect_ema": 7.627936100577533e-05,
+      "inheritance_breach_active": true,
+      "inheritance_breach_count": 1,
+      "last_generation": 5,
+      "last_generation_role": "WARP",
+      "last_tick": 71618,
+      "local_effect_ema": 6.632987913545681e-05,
+      "max_generation": 5,
+      "min_generation": 5,
+      "raw_effect_ema": 0.00013265975827091362,
+      "regulation": {
+        "axes_active": 3,
+        "break_even_ticks": 3.246,
+        "breeding_score": 0.633516,
+        "complexity_index": 0.1875,
+        "constraint_influence": {
+          "A": 0.333333,
+          "B": 0.333333,
+          "N": 0.333333,
+          "T": 0.0,
+          "X": 0.0
+        },
+        "dominance": 0.333333,
+        "dynamic_thresholds": {
+          "breeding_min": 0.137328,
+          "effect_min": 0.000178879,
+          "evidence_min": 10,
+          "inheritance_min": 0.314589,
+          "pressure_regulation": {
+            "breeding": {
+              "factor": 0.424077,
+              "gradient": 0.777707
+            },
+            "dominant_axis": "N",
+            "effect": {
+              "factor": 1.518496,
+              "gradient": -0.523817
+            },
+            "evidence": {
+              "factor": 0.430981,
+              "gradient": 0.726107
+            },
+            "inheritance": {
+              "factor": 0.430981,
+              "gradient": 0.726107
+            },
+            "relation": {
+              "factor": 0.430981,
+              "gradient": 0.726107
+            }
+          },
+          "relation_min": 0.216514
+        },
+        "effect_score": 0.154504,
+        "effect_score_raw": 0.185405,
+        "enabled": true,
+        "evidence_complete": false,
+        "evidence_min": 10,
+        "formation_burden": 2.209375,
+        "inheritance_influence_factor": 0.833333,
+        "inheritance_score": 0.301667,
+        "issues": [
+          "insufficient_evidence",
+          "inheritance_under_scale_requirement",
+          "effect_under_scale_requirement"
+        ],
+        "maintenance_savings_per_tick": 0.680585,
+        "persistence_tax_factor": 0.661196,
+        "persistence_tax_per_tick": 0.363658,
+        "relation_score": 1.0,
+        "representation_score": 0.491113,
+        "requirement_coverage": 0.832433,
+        "scale_depth_index": 0.75,
+        "strictness_index": 0.525,
+        "sustainability_score": 0.571875,
+        "validation_complete": false
+      },
+      "scope_scale": 1.15,
+      "semantic": "agencyx6 + boundaryx6 + energyx6",
+      "semantic_confidence": 0.188458,
+      "semantic_lane_ema": {
+        "communication": 0.3217391304347826,
+        "intelligence": 0.3043478260869565,
+        "meaning": 0.37391304347826093
+      },
+      "semantic_thresholds": {
+        "pressure_regulation": {
+          "confidence": {
+            "factor": 1.4,
+            "gradient": -1.288635
+          },
+          "count": {
+            "factor": 1.598093,
+            "gradient": -1.288635
+          },
+          "dominant_axis": "N"
+        },
+        "promote_confidence": 0.91,
+        "promote_min_count": 38
+      },
+      "semantic_translation": "At gen 5, this coupling expresses value grounding in warp mode (local=0.000066, scope=1.150, conf=0.188).",
+      "semantic_version": 1,
+      "signature": "N^6*B^6*A^6",
+      "top_origins": {
+        "(N^3*B^5*A^6)x(N^3*B^1)": 4
       }
     },
     "N^7*B^5*A^3": {
@@ -13057,7 +13159,7 @@
         "T": 3,
         "X": 0
       },
-      "effect_ema": 2.714401674627643e-06,
+      "effect_ema": 2.394700104850633e-06,
       "global_effect_ema": 1.2395973770565426e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -13182,7 +13284,7 @@
         "T": 114,
         "X": 33
       },
-      "effect_ema": 1.2104174191853898e-56,
+      "effect_ema": 1.0678547496231953e-56,
       "global_effect_ema": 0.00018078355913502377,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -13306,7 +13408,7 @@
         "T": 4,
         "X": 2
       },
-      "effect_ema": 9.121890411110084e-08,
+      "effect_ema": 8.047516374641881e-08,
       "global_effect_ema": 6.749388505314587e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -13416,7 +13518,7 @@
     },
     "T^1*B^1": {
       "breeding_score_ema": 0.0,
-      "count": 21605,
+      "count": 21618,
       "counts": {
         "A": 0,
         "B": 1,
@@ -13425,23 +13527,23 @@
         "X": 0
       },
       "dominant_axis_counts": {
-        "A": 9976,
+        "A": 9989,
         "B": 0,
         "N": 0,
         "T": 11618,
         "X": 11
       },
-      "effect_ema": 0.038603986836659894,
-      "global_effect_ema": 0.0387979767202612,
+      "effect_ema": 0.03788686962451106,
+      "global_effect_ema": 0.040235717897130555,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 2,
       "last_generation_role": "ADJACENT",
-      "last_tick": 71528,
-      "local_effect_ema": 0.03464105064309036,
+      "last_tick": 71598,
+      "local_effect_ema": 0.03592474812243799,
       "max_generation": 2,
       "min_generation": 2,
-      "raw_effect_ema": 0.06928210128618072,
+      "raw_effect_ema": 0.07184949624487598,
       "regulation": {
         "axes_active": 2,
         "break_even_ticks": 10.184,
@@ -13456,34 +13558,34 @@
         },
         "dominance": 0.5,
         "dynamic_thresholds": {
-          "breeding_min": 0.126711,
-          "effect_min": 0.00017191,
+          "breeding_min": 0.126712,
+          "effect_min": 0.000171852,
           "evidence_min": 10,
-          "inheritance_min": 0.282158,
+          "inheritance_min": 0.282154,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.409986,
-              "gradient": 0.956097
+              "factor": 0.409988,
+              "gradient": 0.956063
             },
             "dominant_axis": "T",
             "effect": {
-              "factor": 1.559417,
-              "gradient": -0.670464
+              "factor": 1.558887,
+              "gradient": -0.667776
             },
             "evidence": {
-              "factor": 0.400821,
-              "gradient": 1.457405
+              "factor": 0.400816,
+              "gradient": 1.458655
             },
             "inheritance": {
-              "factor": 0.400821,
-              "gradient": 1.457405
+              "factor": 0.400816,
+              "gradient": 1.458655
             },
             "relation": {
-              "factor": 0.400821,
-              "gradient": 1.457405
+              "factor": 0.400816,
+              "gradient": 1.458655
             }
           },
-          "relation_min": 0.193155
+          "relation_min": 0.193153
         },
         "effect_score": 1.0,
         "effect_score_raw": 1.0,
@@ -13516,23 +13618,23 @@
       "semantic_thresholds": {
         "pressure_regulation": {
           "confidence": {
-            "factor": 0.674458,
-            "gradient": 0.243117
+            "factor": 0.672975,
+            "gradient": 0.24452
           },
           "count": {
-            "factor": 0.674458,
-            "gradient": 0.243117
+            "factor": 0.672975,
+            "gradient": 0.24452
           },
           "dominant_axis": "T"
         },
-        "promote_confidence": 0.438398,
+        "promote_confidence": 0.437434,
         "promote_min_count": 16
       },
-      "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.034641, scope=1.120, conf=0.900).",
-      "semantic_version": 21530,
+      "semantic_translation": "At gen 2, this coupling resolves as complexity (memory) in adjacent mode via signal shaping (local=0.035925, scope=1.120, conf=0.900).",
+      "semantic_version": 21543,
       "signature": "T^1*B^1",
       "top_origins": {
-        "(B^1)x(T^1)": 21543,
+        "(B^1)x(T^1)": 21556,
         "(T^1)x(B^1)": 62
       }
     },
@@ -13553,7 +13655,7 @@
         "T": 368,
         "X": 206
       },
-      "effect_ema": 5.326697774323135e-06,
+      "effect_ema": 4.699320604578197e-06,
       "global_effect_ema": 0.0002110166816112657,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -13681,7 +13783,7 @@
         "T": 36,
         "X": 29
       },
-      "effect_ema": 2.1863483079687353e-07,
+      "effect_ema": 1.928840735426878e-07,
       "global_effect_ema": 0.0001337137276643496,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -13806,7 +13908,7 @@
         "T": 122,
         "X": 409
       },
-      "effect_ema": 6.032588258642023e-06,
+      "effect_ema": 5.32207147914925e-06,
       "global_effect_ema": 0.00019753292081512328,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -13929,7 +14031,7 @@
         "T": 1,
         "X": 6
       },
-      "effect_ema": 3.469586549335852e-16,
+      "effect_ema": 3.0609394884869684e-16,
       "global_effect_ema": 8.175303979047724e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14054,7 +14156,7 @@
         "T": 4,
         "X": 5
       },
-      "effect_ema": 6.951676828673914e-16,
+      "effect_ema": 6.132910020694252e-16,
       "global_effect_ema": 0.00015269994797346653,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14180,7 +14282,7 @@
         "T": 2,
         "X": 1
       },
-      "effect_ema": 1.1663119521498065e-21,
+      "effect_ema": 1.0289440137796929e-21,
       "global_effect_ema": 1.2647420355345551e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14305,7 +14407,7 @@
         "T": 13,
         "X": 0
       },
-      "effect_ema": 4.373095307510235e-61,
+      "effect_ema": 3.858033204629942e-61,
       "global_effect_ema": 4.751901904796183e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14430,7 +14532,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 4.6648819608971315e-08,
+      "effect_ema": 4.115453296870148e-08,
       "global_effect_ema": 3.0912064610600946e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14555,7 +14657,7 @@
         "T": 21,
         "X": 9
       },
-      "effect_ema": 7.235044968338501e-61,
+      "effect_ema": 6.382903129713091e-61,
       "global_effect_ema": 8.183425123481915e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14680,7 +14782,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 7.630468834764415e-22,
+      "effect_ema": 6.731754069219118e-22,
       "global_effect_ema": 9.192925788683551e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14805,7 +14907,7 @@
         "T": 5,
         "X": 0
       },
-      "effect_ema": 2.0995613998874945e-61,
+      "effect_ema": 1.852275568294671e-61,
       "global_effect_ema": 2.3747749438077062e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -14931,7 +15033,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 1.639559980672707e-17,
+      "effect_ema": 1.446453004478208e-17,
       "global_effect_ema": 3.981209292850263e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -15056,7 +15158,7 @@
         "T": 119,
         "X": 409
       },
-      "effect_ema": 6.189960126258759e-06,
+      "effect_ema": 5.460908126431395e-06,
       "global_effect_ema": 0.00020268595353203954,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -15180,7 +15282,7 @@
         "T": 31,
         "X": 32
       },
-      "effect_ema": 3.227547953438258e-06,
+      "effect_ema": 2.8474081396112063e-06,
       "global_effect_ema": 0.0004998658567262257,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -15302,7 +15404,7 @@
         "T": 10,
         "X": 8
       },
-      "effect_ema": 4.396303729512408e-06,
+      "effect_ema": 3.878508144327159e-06,
       "global_effect_ema": 0.00021713551791059012,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -15428,7 +15530,7 @@
         "T": 19,
         "X": 0
       },
-      "effect_ema": 5.365908964956049e-14,
+      "effect_ema": 4.733913510704676e-14,
       "global_effect_ema": 0.00046715028207098473,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -15550,7 +15652,7 @@
         "T": 6,
         "X": 0
       },
-      "effect_ema": 2.442187905871723e-14,
+      "effect_ema": 2.1545476076447763e-14,
       "global_effect_ema": 5.120912120550386e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -15675,7 +15777,7 @@
         "T": 64,
         "X": 127
       },
-      "effect_ema": 5.5415656803233624e-05,
+      "effect_ema": 4.8888814208116155e-05,
       "global_effect_ema": 0.00012173313537634952,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -15801,7 +15903,7 @@
         "T": 2,
         "X": 14
       },
-      "effect_ema": 1.5093900711977466e-06,
+      "effect_ema": 1.3316144753165845e-06,
       "global_effect_ema": 0.00019517004646263335,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -15927,7 +16029,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 6.236128311739916e-35,
+      "effect_ema": 5.501638634243086e-35,
       "global_effect_ema": 3.7223448270760734e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -16052,7 +16154,7 @@
         "T": 5,
         "X": 17
       },
-      "effect_ema": 4.83162592575388e-06,
+      "effect_ema": 4.262558198056315e-06,
       "global_effect_ema": 0.00019140445222070096,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -16176,7 +16278,7 @@
         "T": 5,
         "X": 20
       },
-      "effect_ema": 5.0102870846635185e-06,
+      "effect_ema": 4.42017668907509e-06,
       "global_effect_ema": 0.0001984820989134921,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -16300,7 +16402,7 @@
         "T": 2,
         "X": 4
       },
-      "effect_ema": 3.935019515404004e-27,
+      "effect_ema": 3.471553872887995e-27,
       "global_effect_ema": 9.84621008182536e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -16423,7 +16525,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 1.3252383776099809e-08,
+      "effect_ema": 1.1691521234601524e-08,
       "global_effect_ema": 8.31065484786613e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -16548,7 +16650,7 @@
         "T": 2,
         "X": 7
       },
-      "effect_ema": 1.988801025697556e-06,
+      "effect_ema": 1.754560524067722e-06,
       "global_effect_ema": 9.82278221218002e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -16673,7 +16775,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 4.910491318280194e-17,
+      "effect_ema": 4.332134843811132e-17,
       "global_effect_ema": 1.1171531054375163e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -16798,7 +16900,7 @@
         "T": 18,
         "X": 57
       },
-      "effect_ema": 1.0025457369285275e-15,
+      "effect_ema": 8.844661436003707e-16,
       "global_effect_ema": 0.00021693156611507652,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -16919,7 +17021,7 @@
         "T": 2,
         "X": 5
       },
-      "effect_ema": 4.859983285674801e-27,
+      "effect_ema": 4.287575635015138e-27,
       "global_effect_ema": 0.00012160655426889512,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -17044,7 +17146,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 2.603777127189102e-07,
+      "effect_ema": 2.2971048897333007e-07,
       "global_effect_ema": 4.4802255844821486e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -17169,7 +17271,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 2.1047626647897168e-24,
+      "effect_ema": 1.8568642294803503e-24,
       "global_effect_ema": 2.960635157247219e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -17294,7 +17396,7 @@
         "T": 5,
         "X": 9
       },
-      "effect_ema": 7.115701944996019e-16,
+      "effect_ema": 6.277616298665645e-16,
       "global_effect_ema": 0.000153970069402044,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -17417,7 +17519,7 @@
         "T": 1,
         "X": 6
       },
-      "effect_ema": 2.152972700230533e-61,
+      "effect_ema": 1.8993960986595168e-61,
       "global_effect_ema": 2.902181539025118e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -17542,7 +17644,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 6.375601345769515e-07,
+      "effect_ema": 5.624684568209484e-07,
       "global_effect_ema": 3.148939621509411e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -17667,7 +17769,7 @@
         "T": 11,
         "X": 43
       },
-      "effect_ema": 3.639513402673135e-27,
+      "effect_ema": 3.210852398321713e-27,
       "global_effect_ema": 0.00019608039637277296,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -17790,7 +17892,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 2.983798363626e-08,
+      "effect_ema": 2.6323673172683647e-08,
       "global_effect_ema": 1.9090547783379253e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -17915,7 +18017,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 1.5264107092973237e-21,
+      "effect_ema": 1.346630426795937e-21,
       "global_effect_ema": 1.7578493892365058e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -18040,7 +18142,7 @@
         "T": 2,
         "X": 2
       },
-      "effect_ema": 3.655083915984811e-07,
+      "effect_ema": 3.224589020358375e-07,
       "global_effect_ema": 5.804471970062789e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -18166,7 +18268,7 @@
         "T": 9,
         "X": 0
       },
-      "effect_ema": 3.716026136409585e-14,
+      "effect_ema": 3.2783534808673596e-14,
       "global_effect_ema": 0.0003251389464748215,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -18289,7 +18391,7 @@
         "T": 11,
         "X": 43
       },
-      "effect_ema": 3.639513402673135e-27,
+      "effect_ema": 3.210852398321713e-27,
       "global_effect_ema": 0.00019608039637277296,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -18410,7 +18512,7 @@
         "T": 9,
         "X": 21
       },
-      "effect_ema": 3.822489942977368e-06,
+      "effect_ema": 3.372278006162843e-06,
       "global_effect_ema": 0.0001887945839375542,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -18533,7 +18635,7 @@
         "T": 54,
         "X": 93
       },
-      "effect_ema": 4.090885001593344e-05,
+      "effect_ema": 3.609061559981287e-05,
       "global_effect_ema": 8.986562398354193e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -18656,7 +18758,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 2.376533999241895e-07,
+      "effect_ema": 2.096626402187271e-07,
       "global_effect_ema": 9.653556899013304e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -18781,7 +18883,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 1.2541429471971748e-07,
+      "effect_ema": 1.106430295568817e-07,
       "global_effect_ema": 1.783693306873291e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -18906,7 +19008,7 @@
         "T": 12,
         "X": 31
       },
-      "effect_ema": 5.288036644486378e-06,
+      "effect_ema": 4.665212973220934e-06,
       "global_effect_ema": 0.00020948512422409496,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -19027,7 +19129,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.8947158566129008e-30,
+      "effect_ema": 1.6715566833399795e-30,
       "global_effect_ema": 7.590867996469319e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -19152,7 +19254,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 7.080230012730932e-07,
+      "effect_ema": 6.246322241964876e-07,
       "global_effect_ema": 2.804827128606568e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -19277,7 +19379,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.843744521038331e-07,
+      "effect_ema": 1.626588739285958e-07,
       "global_effect_ema": 2.3840338604502007e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -19402,7 +19504,7 @@
         "T": 25,
         "X": 8
       },
-      "effect_ema": 9.618675584026378e-61,
+      "effect_ema": 8.485790310585455e-61,
       "global_effect_ema": 9.6948258615329e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -19525,7 +19627,7 @@
         "T": 2,
         "X": 5
       },
-      "effect_ema": 1.1092516400676382e-07,
+      "effect_ema": 9.786042513918276e-08,
       "global_effect_ema": 7.92448817825033e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -19650,7 +19752,7 @@
         "T": 43,
         "X": 24
       },
-      "effect_ema": 5.315928615156436e-16,
+      "effect_ema": 4.689819834361794e-16,
       "global_effect_ema": 0.00014056411660983388,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -19775,7 +19877,7 @@
         "T": 2,
         "X": 11
       },
-      "effect_ema": 1.861777305807929e-07,
+      "effect_ema": 1.6424976270464357e-07,
       "global_effect_ema": 0.00012841934182162873,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -19901,7 +20003,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 7.359019511998203e-17,
+      "effect_ema": 6.492275981740021e-17,
       "global_effect_ema": 1.8787839732669242e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -20026,7 +20128,7 @@
         "T": 1,
         "X": 2
       },
-      "effect_ema": 3.133878476679062e-30,
+      "effect_ema": 2.764771031067821e-30,
       "global_effect_ema": 0.00014813846377137804,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -20151,7 +20253,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 5.721701257182242e-35,
+      "effect_ema": 5.047800673191781e-35,
       "global_effect_ema": 3.1838299880463576e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -20276,7 +20378,7 @@
         "T": 8,
         "X": 0
       },
-      "effect_ema": 3.396880662920555e-61,
+      "effect_ema": 2.996796883709858e-61,
       "global_effect_ema": 3.691125520355505e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -20401,7 +20503,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 8.90191834630888e-62,
+      "effect_ema": 7.853452566191007e-62,
       "global_effect_ema": 9.62465589536811e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -20526,7 +20628,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 1.703076450575671e-41,
+      "effect_ema": 1.5024885199872505e-41,
       "global_effect_ema": 6.960848187638894e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -20651,7 +20753,7 @@
         "T": 11,
         "X": 43
       },
-      "effect_ema": 3.639513402673135e-27,
+      "effect_ema": 3.210852398321713e-27,
       "global_effect_ema": 0.00019608039637277296,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -20772,7 +20874,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 4.1074295969280493e-08,
+      "effect_ema": 3.623657536896961e-08,
       "global_effect_ema": 3.085179685559704e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -20897,7 +20999,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 5.432911922628465e-17,
+      "effect_ema": 4.793024876300723e-17,
       "global_effect_ema": 1.495351689037988e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -21022,7 +21124,7 @@
         "T": 3,
         "X": 1
       },
-      "effect_ema": 3.305958900897542e-07,
+      "effect_ema": 2.916583864728581e-07,
       "global_effect_ema": 5.3563690664572756e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -21146,7 +21248,7 @@
         "T": 9,
         "X": 0
       },
-      "effect_ema": 3.911606459378484e-14,
+      "effect_ema": 3.450898400912987e-14,
       "global_effect_ema": 0.00034225152260507533,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -21267,7 +21369,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 1.703076450575671e-41,
+      "effect_ema": 1.5024885199872505e-41,
       "global_effect_ema": 6.960848187638894e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -21392,7 +21494,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 2.398071681858556e-08,
+      "effect_ema": 2.1156273817778952e-08,
       "global_effect_ema": 1.62127688620096e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -21517,7 +21619,7 @@
         "T": 14,
         "X": 0
       },
-      "effect_ema": 4.9583306843494824e-14,
+      "effect_ema": 4.3743397009672955e-14,
       "global_effect_ema": 0.0001039689683096641,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -21641,7 +21743,7 @@
         "T": 33,
         "X": 20
       },
-      "effect_ema": 2.1770330705020942e-60,
+      "effect_ema": 1.9206226443659323e-60,
       "global_effect_ema": 0.00015449179315216318,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -21762,7 +21864,7 @@
         "T": 21,
         "X": 0
       },
-      "effect_ema": 1.273158010109384e-60,
+      "effect_ema": 1.1232057689909129e-60,
       "global_effect_ema": 0.00011843398274782963,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -21885,7 +21987,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 4.983023008566179e-35,
+      "effect_ema": 4.396123769236722e-35,
       "global_effect_ema": 2.9153236477422412e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -22010,7 +22112,7 @@
         "T": 19,
         "X": 9
       },
-      "effect_ema": 7.110455564542979e-61,
+      "effect_ema": 6.272987835627763e-61,
       "global_effect_ema": 8.042504360500909e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -22133,7 +22235,7 @@
         "T": 29,
         "X": 6
       },
-      "effect_ema": 5.228349731700459e-21,
+      "effect_ema": 4.612555970522078e-21,
       "global_effect_ema": 6.26744082978467e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -22258,7 +22360,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 1.1648755674433157e-07,
+      "effect_ema": 1.0276768061149651e-07,
       "global_effect_ema": 6.3282580747521045e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -22383,7 +22485,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 2.7446344843903492e-17,
+      "effect_ema": 2.4213721016245114e-17,
       "global_effect_ema": 6.6312483967177824e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -22508,7 +22610,7 @@
         "T": 9,
         "X": 0
       },
-      "effect_ema": 4.235805927338396e-61,
+      "effect_ema": 3.736913734300451e-61,
       "global_effect_ema": 4.579706632233629e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -22633,7 +22735,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 6.714769996762622e-22,
+      "effect_ema": 5.923906017889242e-22,
       "global_effect_ema": 7.466257508116602e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -22758,7 +22860,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 8.730888252322265e-17,
+      "effect_ema": 7.702566355122583e-17,
       "global_effect_ema": 1.9566602461710655e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -22883,7 +22985,7 @@
         "T": 2,
         "X": 12
       },
-      "effect_ema": 3.8854719487567465e-41,
+      "effect_ema": 3.42784200660293e-41,
       "global_effect_ema": 0.00015880778789162874,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -23008,7 +23110,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 4.372720568803707e-08,
+      "effect_ema": 3.857702602557228e-08,
       "global_effect_ema": 3.092708793917469e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -23133,7 +23235,7 @@
         "T": 30,
         "X": 40
       },
-      "effect_ema": 3.091054450112237e-06,
+      "effect_ema": 2.7269908079459902e-06,
       "global_effect_ema": 0.00015266863943210656,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -23256,7 +23358,7 @@
         "T": 11,
         "X": 27
       },
-      "effect_ema": 4.03562436318456e-06,
+      "effect_ema": 3.5603095061387825e-06,
       "global_effect_ema": 0.0001993213936312504,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -23380,7 +23482,7 @@
         "T": 6,
         "X": 0
       },
-      "effect_ema": 2.951599422433409e-41,
+      "effect_ema": 2.6039607595467446e-41,
       "global_effect_ema": 0.00010642960583270747,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -23503,7 +23605,7 @@
         "T": 2,
         "X": 0
       },
-      "effect_ema": 1.912468321188291e-21,
+      "effect_ema": 1.6872182669506211e-21,
       "global_effect_ema": 2.2696872794425513e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -23628,7 +23730,7 @@
         "T": 2,
         "X": 2
       },
-      "effect_ema": 2.2055472368797105e-16,
+      "effect_ema": 1.945778419155075e-16,
       "global_effect_ema": 5.119314256931008e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -23753,7 +23855,7 @@
         "T": 54,
         "X": 93
       },
-      "effect_ema": 4.090885001593344e-05,
+      "effect_ema": 3.609061559981287e-05,
       "global_effect_ema": 8.986562398354193e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -23876,7 +23978,7 @@
         "T": 76,
         "X": 281
       },
-      "effect_ema": 2.0275597753620766e-07,
+      "effect_ema": 1.788754277613148e-07,
       "global_effect_ema": 0.00015002141030985816,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -23999,7 +24101,7 @@
         "T": 7,
         "X": 0
       },
-      "effect_ema": 3.266033478231815e-61,
+      "effect_ema": 2.8813608486445903e-61,
       "global_effect_ema": 3.5489440807943165e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -24123,7 +24225,7 @@
         "T": 5,
         "X": 0
       },
-      "effect_ema": 2.473198729638325e-40,
+      "effect_ema": 2.1819059841221895e-40,
       "global_effect_ema": 0.0002960341516465879,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -24247,7 +24349,7 @@
         "T": 5,
         "X": 0
       },
-      "effect_ema": 2.473198729638325e-40,
+      "effect_ema": 2.1819059841221895e-40,
       "global_effect_ema": 0.0002960341516465879,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -24371,7 +24473,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 5.930085922310659e-22,
+      "effect_ema": 5.231641843088175e-22,
       "global_effect_ema": 6.560786269635806e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -24496,7 +24598,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 6.060630325915714e-17,
+      "effect_ema": 5.3468107585522326e-17,
       "global_effect_ema": 1.3514434170191508e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -24621,7 +24723,7 @@
         "T": 15,
         "X": 0
       },
-      "effect_ema": 9.627089093701245e-61,
+      "effect_ema": 8.493212879134864e-61,
       "global_effect_ema": 9.654789450382815e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -24745,7 +24847,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.3173172283036162e-08,
+      "effect_ema": 1.1621639251946577e-08,
       "global_effect_ema": 8.30249327901151e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -24870,7 +24972,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 2.3382540776153363e-17,
+      "effect_ema": 2.062855080429828e-17,
       "global_effect_ema": 5.3463374758787624e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -24995,7 +25097,7 @@
         "T": 8,
         "X": 19
       },
-      "effect_ema": 2.0998140421590183e-20,
+      "effect_ema": 1.8524984544208335e-20,
       "global_effect_ema": 0.00024920262301243896,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -25116,7 +25218,7 @@
         "T": 13,
         "X": 5
       },
-      "effect_ema": 4.7334717382249716e-14,
+      "effect_ema": 4.1759645868881186e-14,
       "global_effect_ema": 0.0004120909751037759,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -25238,7 +25340,7 @@
         "T": 39,
         "X": 103
       },
-      "effect_ema": 1.2214090898992613e-05,
+      "effect_ema": 1.0775518240308004e-05,
       "global_effect_ema": 0.00012754380196051677,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -25362,7 +25464,7 @@
         "T": 1,
         "X": 3
       },
-      "effect_ema": 9.351119800476325e-08,
+      "effect_ema": 8.249747182219569e-08,
       "global_effect_ema": 5.661955189433079e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -25487,7 +25589,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 3.9452785936732435e-17,
+      "effect_ema": 3.4806046394111134e-17,
       "global_effect_ema": 9.111632256775517e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -25612,7 +25714,7 @@
         "T": 3,
         "X": 22
       },
-      "effect_ema": 5.876866149263994e-05,
+      "effect_ema": 5.184690281981267e-05,
       "global_effect_ema": 0.00012909877529328374,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -25735,7 +25837,7 @@
         "T": 22,
         "X": 0
       },
-      "effect_ema": 1.0431175140155336e-13,
+      "effect_ema": 9.202593866389337e-14,
       "global_effect_ema": 0.00021872654056788774,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -25857,7 +25959,7 @@
         "T": 1,
         "X": 2
       },
-      "effect_ema": 1.765911436402087e-06,
+      "effect_ema": 1.5579228164487158e-06,
       "global_effect_ema": 1.862605875819213e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -25982,7 +26084,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 5.018689170901376e-24,
+      "effect_ema": 4.4275891796371284e-24,
       "global_effect_ema": 6.6473573811607e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -26106,7 +26208,7 @@
         "T": 5,
         "X": 0
       },
-      "effect_ema": 2.6030591654744847e-41,
+      "effect_ema": 2.296471489375005e-41,
       "global_effect_ema": 9.38618427809089e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -26229,7 +26331,7 @@
         "T": 4,
         "X": 0
       },
-      "effect_ema": 1.4070769367371044e-06,
+      "effect_ema": 1.241351756975863e-06,
       "global_effect_ema": 0.00020213653909534655,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -26353,7 +26455,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 5.603760511228729e-08,
+      "effect_ema": 4.943750959643108e-08,
       "global_effect_ema": 3.5495610223105544e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -26478,7 +26580,7 @@
         "T": 4,
         "X": 0
       },
-      "effect_ema": 3.286785563794251e-61,
+      "effect_ema": 2.8996687586111773e-61,
       "global_effect_ema": 3.312806779563653e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -26603,7 +26705,7 @@
         "T": 11,
         "X": 0
       },
-      "effect_ema": 8.65860809916646e-61,
+      "effect_ema": 7.638799340845096e-61,
       "global_effect_ema": 8.683521811959367e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -26711,7 +26813,7 @@
     },
     "T^5*B^5": {
       "breeding_score_ema": 0.0,
-      "count": 134,
+      "count": 135,
       "counts": {
         "A": 0,
         "B": 5,
@@ -26723,20 +26825,20 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 54,
+        "T": 55,
         "X": 80
       },
-      "effect_ema": 0.00028168298042535094,
-      "global_effect_ema": 0.00028168298042535094,
+      "effect_ema": 0.00030992236599454854,
+      "global_effect_ema": 0.00031147976481864177,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
       "last_generation": 3,
       "last_generation_role": "SHEAR",
-      "last_tick": 71531,
-      "local_effect_ema": 0.0002584247526838082,
+      "last_tick": 71631,
+      "local_effect_ema": 0.0002857612521271943,
       "max_generation": 3,
       "min_generation": 3,
-      "raw_effect_ema": 0.0002584247526838082,
+      "raw_effect_ema": 0.0002857612521271943,
       "regulation": {
         "axes_active": 2,
         "break_even_ticks": 5.951,
@@ -26751,37 +26853,37 @@
         },
         "dominance": 0.5,
         "dynamic_thresholds": {
-          "breeding_min": 0.123845,
-          "effect_min": 0.000164594,
+          "breeding_min": 0.122964,
+          "effect_min": 0.000131832,
           "evidence_min": 10,
-          "inheritance_min": 0.280554,
+          "inheritance_min": 0.280174,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.403466,
-              "gradient": 1.168827
+              "factor": 0.400595,
+              "gradient": 1.52164
             },
             "dominant_axis": "T",
             "effect": {
-              "factor": 1.507828,
-              "gradient": -0.4973
+              "factor": 1.207696,
+              "gradient": -0.14443
             },
             "evidence": {
-              "factor": 0.400655,
-              "gradient": 1.502419
+              "factor": 0.400112,
+              "gradient": 1.855259
             },
             "inheritance": {
-              "factor": 0.400655,
-              "gradient": 1.502419
+              "factor": 0.400112,
+              "gradient": 1.855259
             },
             "relation": {
-              "factor": 0.400655,
-              "gradient": 1.502419
+              "factor": 0.400112,
+              "gradient": 1.855259
             }
           },
-          "relation_min": 0.191904
+          "relation_min": 0.191644
         },
-        "effect_score": 0.785035,
-        "effect_score_raw": 0.785035,
+        "effect_score": 1.0,
+        "effect_score_raw": 1.0,
         "enabled": true,
         "evidence_complete": true,
         "evidence_min": 10,
@@ -26793,7 +26895,7 @@
         "persistence_tax_factor": 1.219709,
         "persistence_tax_per_tick": 0.792811,
         "relation_score": 0.833333,
-        "representation_score": 0.738651,
+        "representation_score": 0.813889,
         "requirement_coverage": 1.0,
         "scale_depth_index": 0.6,
         "strictness_index": 0.405,
@@ -26811,23 +26913,23 @@
       "semantic_thresholds": {
         "pressure_regulation": {
           "confidence": {
-            "factor": 0.654614,
-            "gradient": 0.262369
+            "factor": 0.5,
+            "gradient": 0.615212
           },
           "count": {
-            "factor": 0.654614,
-            "gradient": 0.262369
+            "factor": 0.452927,
+            "gradient": 0.615212
           },
           "dominant_axis": "T"
         },
-        "promote_confidence": 0.425499,
-        "promote_min_count": 16
+        "promote_confidence": 0.325,
+        "promote_min_count": 11
       },
-      "semantic_translation": "At gen 3, this coupling expresses signal shaping in shear mode (local=0.000258, scope=1.090, conf=0.900).",
-      "semantic_version": 62,
+      "semantic_translation": "At gen 3, this coupling expresses signal shaping in shear mode (local=0.000286, scope=1.090, conf=0.900).",
+      "semantic_version": 63,
       "signature": "T^5*B^5",
       "top_origins": {
-        "(T^4*B^4)x(T^1*B^1)": 134
+        "(T^4*B^4)x(T^1*B^1)": 135
       }
     },
     "T^5*B^5*A^1": {
@@ -26847,7 +26949,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 1.1055329501851607e-08,
+      "effect_ema": 9.753235479002578e-09,
       "global_effect_ema": 6.5281466484573335e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -26972,7 +27074,7 @@
         "T": 3,
         "X": 0
       },
-      "effect_ema": 2.246721840990667e-16,
+      "effect_ema": 1.9821034883971642e-16,
       "global_effect_ema": 4.6470312279675243e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -27097,7 +27199,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 4.235356966965051e-35,
+      "effect_ema": 3.736517652370805e-35,
       "global_effect_ema": 2.2527989591307553e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -27222,7 +27324,7 @@
         "T": 12,
         "X": 31
       },
-      "effect_ema": 5.288036644486378e-06,
+      "effect_ema": 4.665212973220934e-06,
       "global_effect_ema": 0.00020948512422409496,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -27345,7 +27447,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 9.300265046892838e-36,
+      "effect_ema": 8.204882089158045e-36,
       "global_effect_ema": 9.349674423562639e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -27470,7 +27572,7 @@
         "T": 53,
         "X": 92
       },
-      "effect_ema": 4.30344599831726e-05,
+      "effect_ema": 3.7965871741524994e-05,
       "global_effect_ema": 9.453501131604297e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -27593,7 +27695,7 @@
         "T": 15,
         "X": 5
       },
-      "effect_ema": 5.834589564100426e-14,
+      "effect_ema": 5.14739302274722e-14,
       "global_effect_ema": 0.0005313930856588861,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -27714,7 +27816,7 @@
         "T": 27,
         "X": 17
       },
-      "effect_ema": 0.00011472538848062729,
+      "effect_ema": 0.00010121306009777462,
       "global_effect_ema": 0.00013536234591525503,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -27840,7 +27942,7 @@
         "T": 1,
         "X": 2
       },
-      "effect_ema": 6.160735192085846e-07,
+      "effect_ema": 5.435125297905204e-07,
       "global_effect_ema": 8.250545302237077e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -27965,7 +28067,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 5.490711490937292e-35,
+      "effect_ema": 4.844016825496468e-35,
       "global_effect_ema": 2.8057287827695193e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -28090,7 +28192,7 @@
         "T": 33,
         "X": 19
       },
-      "effect_ema": 1.347761496325576e-60,
+      "effect_ema": 1.1890224747253894e-60,
       "global_effect_ema": 9.564305344280395e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -28213,7 +28315,7 @@
         "T": 28,
         "X": 5
       },
-      "effect_ema": 4.682854913112606e-55,
+      "effect_ema": 4.13130939914019e-55,
       "global_effect_ema": 6.162014183049507e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -28336,7 +28438,7 @@
         "T": 3,
         "X": 0
       },
-      "effect_ema": 2.709271785014342e-08,
+      "effect_ema": 2.390174412389685e-08,
       "global_effect_ema": 1.6078580491656026e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -28461,7 +28563,7 @@
         "T": 32,
         "X": 4
       },
-      "effect_ema": 3.773578290977659e-16,
+      "effect_ema": 3.329127156652633e-16,
       "global_effect_ema": 8.043427729840697e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -28585,7 +28687,7 @@
         "T": 84,
         "X": 17
       },
-      "effect_ema": 7.62400287799604e-06,
+      "effect_ema": 6.726049671268026e-06,
       "global_effect_ema": 0.004390527139070738,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -28712,7 +28814,7 @@
         "T": 2,
         "X": 1
       },
-      "effect_ema": 2.4712269501081e-08,
+      "effect_ema": 2.1801664403059934e-08,
       "global_effect_ema": 1.306888747496096e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -28838,7 +28940,7 @@
         "T": 0,
         "X": 4
       },
-      "effect_ema": 1.7286794000886839e-16,
+      "effect_ema": 1.525075960326827e-16,
       "global_effect_ema": 3.138635191034008e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -28965,7 +29067,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 4.642409995851943e-22,
+      "effect_ema": 4.0956280744084447e-22,
       "global_effect_ema": 4.3531142064849526e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -29090,7 +29192,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 9.955404627496054e-07,
+      "effect_ema": 8.782859489123186e-07,
       "global_effect_ema": 1.0500523850228801e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -29215,7 +29317,7 @@
         "T": 24,
         "X": 1
       },
-      "effect_ema": 1.4545019325220103e-60,
+      "effect_ema": 1.2831910482790687e-60,
       "global_effect_ema": 7.756580298170697e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -29338,7 +29440,7 @@
         "T": 89,
         "X": 25
       },
-      "effect_ema": 1.1858850863533902e-07,
+      "effect_ema": 1.0462118289920481e-07,
       "global_effect_ema": 6.967611043961777e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -29463,7 +29565,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 7.703206167859736e-08,
+      "effect_ema": 6.795924416893923e-08,
       "global_effect_ema": 4.369928972019638e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -29590,7 +29692,7 @@
         "T": 226,
         "X": 83
       },
-      "effect_ema": 1.883036450045182e-34,
+      "effect_ema": 1.661252874440308e-34,
       "global_effect_ema": 0.0001458680200107746,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -29713,7 +29815,7 @@
         "T": 1324,
         "X": 515
       },
-      "effect_ema": 1.0139409526012527e-05,
+      "effect_ema": 8.945192335396158e-06,
       "global_effect_ema": 0.00010482310908240489,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -29844,7 +29946,7 @@
         "T": 0,
         "X": 32
       },
-      "effect_ema": 3.374233513652681e-07,
+      "effect_ema": 2.976817110180654e-07,
       "global_effect_ema": 0.00017315682188701333,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -29970,7 +30072,7 @@
         "T": 7,
         "X": 16
       },
-      "effect_ema": 8.631568280745099e-16,
+      "effect_ema": 7.614944265668107e-16,
       "global_effect_ema": 0.00015593340927518278,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -30094,7 +30196,7 @@
         "T": 0,
         "X": 12
       },
-      "effect_ema": 1.1546252309587883e-20,
+      "effect_ema": 1.0186337517712777e-20,
       "global_effect_ema": 0.00010611821473957561,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -30218,7 +30320,7 @@
         "T": 3,
         "X": 2
       },
-      "effect_ema": 1.5854522852797243e-06,
+      "effect_ema": 1.3987181003032108e-06,
       "global_effect_ema": 7.791470611365129e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -30344,7 +30446,7 @@
         "T": 1,
         "X": 3
       },
-      "effect_ema": 1.058752354250374e-06,
+      "effect_ema": 9.340527591893804e-07,
       "global_effect_ema": 4.6598123280533294e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -30469,7 +30571,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 2.304426443324874e-07,
+      "effect_ema": 2.0330116566877118e-07,
       "global_effect_ema": 1.2087293314970683e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -30595,7 +30697,7 @@
         "T": 4,
         "X": 3
       },
-      "effect_ema": 1.1810711017688068e-06,
+      "effect_ema": 1.0419648343422852e-06,
       "global_effect_ema": 6.257431337126852e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -30721,7 +30823,7 @@
         "T": 0,
         "X": 4
       },
-      "effect_ema": 1.2968583178944205e-06,
+      "effect_ema": 1.1441146602829895e-06,
       "global_effect_ema": 5.679232514984985e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -30846,7 +30948,7 @@
         "T": 3,
         "X": 2
       },
-      "effect_ema": 1.626787276781691e-06,
+      "effect_ema": 1.4351846665483623e-06,
       "global_effect_ema": 7.954632283034746e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -30972,7 +31074,7 @@
         "T": 1,
         "X": 3
       },
-      "effect_ema": 1.622567719072464e-06,
+      "effect_ema": 1.4314620873209912e-06,
       "global_effect_ema": 7.894329575254936e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -31098,7 +31200,7 @@
         "T": 2,
         "X": 3
       },
-      "effect_ema": 9.987510914898637e-07,
+      "effect_ema": 8.811184305795676e-07,
       "global_effect_ema": 4.417822097619292e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -31223,7 +31325,7 @@
         "T": 0,
         "X": 13
       },
-      "effect_ema": 2.1485598585632552e-06,
+      "effect_ema": 1.8955030004117177e-06,
       "global_effect_ema": 0.00027504597614257125,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -31346,7 +31448,7 @@
         "T": 1,
         "X": 4
       },
-      "effect_ema": 1.5375632547816617e-06,
+      "effect_ema": 1.356469428182627e-06,
       "global_effect_ema": 6.699666582203678e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -31471,7 +31573,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 5.750358424497427e-35,
+      "effect_ema": 5.073082606302807e-35,
       "global_effect_ema": 2.9237151576141004e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -31596,7 +31698,7 @@
         "T": 3,
         "X": 1
       },
-      "effect_ema": 3.9124823004068977e-35,
+      "effect_ema": 3.4516710855978586e-35,
       "global_effect_ema": 1.8544522709493867e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -31721,7 +31823,7 @@
         "T": 14,
         "X": 45
       },
-      "effect_ema": 3.677401115423158e-06,
+      "effect_ema": 3.244277705468811e-06,
       "global_effect_ema": 0.00019000999939783734,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -31845,7 +31947,7 @@
         "T": 1,
         "X": 8
       },
-      "effect_ema": 2.326224970293089e-06,
+      "effect_ema": 2.0522427584455367e-06,
       "global_effect_ema": 0.00012448745865425696,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -31969,7 +32071,7 @@
         "T": 11,
         "X": 12
       },
-      "effect_ema": 4.003682855303984e-06,
+      "effect_ema": 3.5321300612962304e-06,
       "global_effect_ema": 0.00020378131651709324,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -32093,7 +32195,7 @@
         "T": 1,
         "X": 6
       },
-      "effect_ema": 1.90393886224238e-06,
+      "effect_ema": 1.6796934056071364e-06,
       "global_effect_ema": 0.00010395241027201222,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -32218,7 +32320,7 @@
         "T": 2,
         "X": 1
       },
-      "effect_ema": 2.4701539268647283e-07,
+      "effect_ema": 2.179219797479536e-07,
       "global_effect_ema": 1.2891792557735714e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -32344,7 +32446,7 @@
         "T": 1,
         "X": 5
       },
-      "effect_ema": 8.772502883093149e-07,
+      "effect_ema": 7.739279624791498e-07,
       "global_effect_ema": 0.00014720921522922244,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -32468,7 +32570,7 @@
         "T": 14,
         "X": 67
       },
-      "effect_ema": 9.172893498420836e-06,
+      "effect_ema": 8.09251233072031e-06,
       "global_effect_ema": 0.0003157994321063512,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -32590,7 +32692,7 @@
         "T": 116,
         "X": 158
       },
-      "effect_ema": 8.249197608500767e-05,
+      "effect_ema": 7.277609118304218e-05,
       "global_effect_ema": 9.492168660353178e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 3,
@@ -32714,7 +32816,7 @@
         "T": 12,
         "X": 58
       },
-      "effect_ema": 1.0197101876326073e-05,
+      "effect_ema": 8.996089694706064e-06,
       "global_effect_ema": 0.0003528244482144156,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -32836,7 +32938,7 @@
         "T": 2,
         "X": 21
       },
-      "effect_ema": 6.403678107641581e-34,
+      "effect_ema": 5.649454455889476e-34,
       "global_effect_ema": 0.0003440453946696927,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -32957,7 +33059,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 7.140398878115552e-07,
+      "effect_ema": 6.299404433002449e-07,
       "global_effect_ema": 0.0001128264490372521,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -33082,7 +33184,7 @@
         "T": 12,
         "X": 38
       },
-      "effect_ema": 9.168330553185702e-06,
+      "effect_ema": 8.088486808066403e-06,
       "global_effect_ema": 0.00031564234148775353,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -33203,7 +33305,7 @@
         "T": 5,
         "X": 7
       },
-      "effect_ema": 6.2079732635892435e-27,
+      "effect_ema": 5.476799680823365e-27,
       "global_effect_ema": 0.00032617907343237044,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -33327,7 +33429,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 9.182339708501084e-07,
+      "effect_ema": 8.10084596847225e-07,
       "global_effect_ema": 5.166500030145686e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -33452,7 +33554,7 @@
         "T": 132,
         "X": 436
       },
-      "effect_ema": 3.8223823146285646e-06,
+      "effect_ema": 3.3721830542548144e-06,
       "global_effect_ema": 0.00012516125926529236,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -33575,7 +33677,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 4.7327722964637286e-17,
+      "effect_ema": 4.175347525207586e-17,
       "global_effect_ema": 1.1843084433807802e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -33700,7 +33802,7 @@
         "T": 12,
         "X": 37
       },
-      "effect_ema": 9.159148619610401e-06,
+      "effect_ema": 8.080386320396863e-06,
       "global_effect_ema": 0.00031532623082875487,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -33821,7 +33923,7 @@
         "T": 28,
         "X": 39
       },
-      "effect_ema": 0.0004385660654909925,
+      "effect_ema": 0.0003869118608465634,
       "global_effect_ema": 0.00048481205452965184,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -33943,7 +34045,7 @@
         "T": 0,
         "X": 4
       },
-      "effect_ema": 2.522094948561018e-06,
+      "effect_ema": 2.2250432182594455e-06,
       "global_effect_ema": 0.0001155449112437091,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -34068,7 +34170,7 @@
         "T": 15,
         "X": 2
       },
-      "effect_ema": 0.00013718092184186048,
+      "effect_ema": 0.00012102378619526665,
       "global_effect_ema": 0.00015785104308373114,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -34191,7 +34293,7 @@
         "T": 2,
         "X": 4
       },
-      "effect_ema": 0.00033617494059274894,
+      "effect_ema": 0.0002965803377630338,
       "global_effect_ema": 0.00037162397288465474,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -34315,7 +34417,7 @@
         "T": 15,
         "X": 2
       },
-      "effect_ema": 0.00013718092184186048,
+      "effect_ema": 0.00012102378619526665,
       "global_effect_ema": 0.00015785104308373114,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -34438,7 +34540,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.632496992467349e-06,
+      "effect_ema": 1.4402218933077323e-06,
       "global_effect_ema": 7.902925586387384e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -34563,7 +34665,7 @@
         "T": 15,
         "X": 2
       },
-      "effect_ema": 0.00013718092184186048,
+      "effect_ema": 0.00012102378619526665,
       "global_effect_ema": 0.00015785104308373114,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -34686,7 +34788,7 @@
         "T": 3,
         "X": 10
       },
-      "effect_ema": 5.134420394320544e-06,
+      "effect_ema": 4.5296896076787505e-06,
       "global_effect_ema": 0.0002033996294720144,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -34809,7 +34911,7 @@
         "T": 40,
         "X": 142
       },
-      "effect_ema": 7.212636483273731e-05,
+      "effect_ema": 6.363133910575137e-05,
       "global_effect_ema": 0.0002377939641308536,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 3,
@@ -34931,7 +35033,7 @@
         "T": 36,
         "X": 104
       },
-      "effect_ema": 3.420307649590253e-06,
+      "effect_ema": 3.0174646455811564e-06,
       "global_effect_ema": 0.0001732179712560413,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -35055,7 +35157,7 @@
         "T": 122,
         "X": 415
       },
-      "effect_ema": 6.047745506455032e-06,
+      "effect_ema": 5.335443509997279e-06,
       "global_effect_ema": 0.00019802923438794757,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -35178,7 +35280,7 @@
         "T": 26,
         "X": 119
       },
-      "effect_ema": 0.00014397164534531398,
+      "effect_ema": 0.00012701469993428157,
       "global_effect_ema": 0.00019546501736398194,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -35301,7 +35403,7 @@
         "T": 61,
         "X": 169
       },
-      "effect_ema": 5.845856868024232e-06,
+      "effect_ema": 5.157333266352256e-06,
       "global_effect_ema": 0.00019141853086918965,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -35425,7 +35527,7 @@
         "T": 120,
         "X": 399
       },
-      "effect_ema": 6.0947030378032136e-06,
+      "effect_ema": 5.376870394711547e-06,
       "global_effect_ema": 0.00019956682620157472,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -35546,7 +35648,7 @@
         "T": 0,
         "X": 4
       },
-      "effect_ema": 1.5037628840000885e-06,
+      "effect_ema": 1.3266500568599481e-06,
       "global_effect_ema": 6.923818448615775e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -35671,7 +35773,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 2.102430796738912e-06,
+      "effect_ema": 1.8548070082820438e-06,
       "global_effect_ema": 9.535802816380866e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -35796,7 +35898,7 @@
         "T": 5,
         "X": 30
       },
-      "effect_ema": 3.365363932491857e-30,
+      "effect_ema": 2.9689921861340997e-30,
       "global_effect_ema": 0.000358326262803474,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -35917,7 +36019,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 3.6543482484554535e-17,
+      "effect_ema": 3.223939999571896e-17,
       "global_effect_ema": 8.107987775526985e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -36042,7 +36144,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 4.290032480675208e-22,
+      "effect_ema": 3.7847534973595294e-22,
       "global_effect_ema": 4.722571752150212e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -36167,7 +36269,7 @@
         "T": 7,
         "X": 14
       },
-      "effect_ema": 7.052711074290794e-06,
+      "effect_ema": 6.222044477408525e-06,
       "global_effect_ema": 0.00030120946456283035,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -36289,7 +36391,7 @@
         "T": 0,
         "X": 4
       },
-      "effect_ema": 3.347345847636717e-06,
+      "effect_ema": 2.953096266935725e-06,
       "global_effect_ema": 0.0001326048225184517,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -36414,7 +36516,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 4.15322200038942e-07,
+      "effect_ema": 3.6640565222038613e-07,
       "global_effect_ema": 5.45164515795122e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -36539,7 +36641,7 @@
         "T": 5,
         "X": 28
       },
-      "effect_ema": 6.578964668766604e-06,
+      "effect_ema": 5.804095808430853e-06,
       "global_effect_ema": 0.00026062512867407807,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -36661,7 +36763,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 3.270262632725413e-27,
+      "effect_ema": 2.8850918943494006e-27,
       "global_effect_ema": 9.091177632921234e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -36786,7 +36888,7 @@
         "T": 2,
         "X": 1
       },
-      "effect_ema": 7.472799932197304e-07,
+      "effect_ema": 6.592655371690892e-07,
       "global_effect_ema": 3.239862912072774e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -36911,7 +37013,7 @@
         "T": 0,
         "X": 13
       },
-      "effect_ema": 4.213311905526462e-30,
+      "effect_ema": 3.7170690529126316e-30,
       "global_effect_ema": 0.00019816747520059495,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -37032,7 +37134,7 @@
         "T": 3,
         "X": 0
       },
-      "effect_ema": 2.310787513484101e-07,
+      "effect_ema": 2.0386235215489997e-07,
       "global_effect_ema": 3.303011409492316e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -37157,7 +37259,7 @@
         "T": 2,
         "X": 3
       },
-      "effect_ema": 2.266890537932891e-06,
+      "effect_ema": 1.999896721113494e-06,
       "global_effect_ema": 0.00011365917184114166,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -37281,7 +37383,7 @@
         "T": 1,
         "X": 6
       },
-      "effect_ema": 2.5610155881730848e-06,
+      "effect_ema": 2.259379794393726e-06,
       "global_effect_ema": 0.00012335899014661274,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -37406,7 +37508,7 @@
         "T": 119,
         "X": 409
       },
-      "effect_ema": 5.8263616962207315e-06,
+      "effect_ema": 5.140134231147445e-06,
       "global_effect_ema": 0.00019078017498229107,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -37529,7 +37631,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 1.2476144088620266e-06,
+      "effect_ema": 1.1006706868926822e-06,
       "global_effect_ema": 6.414147100297562e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -37654,7 +37756,7 @@
         "T": 3,
         "X": 10
       },
-      "effect_ema": 5.141248729603186e-06,
+      "effect_ema": 4.535713703290739e-06,
       "global_effect_ema": 0.00020367013339645714,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -37777,7 +37879,7 @@
         "T": 75,
         "X": 293
       },
-      "effect_ema": 3.843548095903909e-07,
+      "effect_ema": 3.390855934953749e-07,
       "global_effect_ema": 0.0002843884125873937,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -37898,7 +38000,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 2.2493409013444263e-06,
+      "effect_ema": 1.984414076458755e-06,
       "global_effect_ema": 0.00010151118875652995,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -38023,7 +38125,7 @@
         "T": 3,
         "X": 10
       },
-      "effect_ema": 1.8986231833037283e-30,
+      "effect_ema": 1.675003806042442e-30,
       "global_effect_ema": 0.000202155417182927,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -38144,7 +38246,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.1839046913728978e-06,
+      "effect_ema": 1.0444646844512237e-06,
       "global_effect_ema": 5.005822251381412e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -38269,7 +38371,7 @@
         "T": 1,
         "X": 3
       },
-      "effect_ema": 2.2378450313322016e-06,
+      "effect_ema": 1.9742721872236615e-06,
       "global_effect_ema": 0.00011108364140964582,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -38394,7 +38496,7 @@
         "T": 0,
         "X": 7
       },
-      "effect_ema": 3.5947167383335276e-30,
+      "effect_ema": 3.171331874224725e-30,
       "global_effect_ema": 0.00016907268108076694,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -38518,7 +38620,7 @@
         "T": 3,
         "X": 10
       },
-      "effect_ema": 1.8986231833037283e-30,
+      "effect_ema": 1.675003806042442e-30,
       "global_effect_ema": 0.00020215541718292702,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -38639,7 +38741,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 4.842290603670215e-22,
+      "effect_ema": 4.271966792798635e-22,
       "global_effect_ema": 5.303858327177733e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -38764,7 +38866,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 3.9746602713631336e-17,
+      "effect_ema": 3.506525750240932e-17,
       "global_effect_ema": 8.774578181260457e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -38889,7 +38991,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.264421615694724e-06,
+      "effect_ema": 1.1154983449879154e-06,
       "global_effect_ema": 5.319535056807871e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -39014,7 +39116,7 @@
         "T": 4,
         "X": 38
       },
-      "effect_ema": 5.7289449188770564e-05,
+      "effect_ema": 5.054191178172018e-05,
       "global_effect_ema": 0.00021302348795168314,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -39135,7 +39237,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 4.2563734614415347e-07,
+      "effect_ema": 3.7550588292337803e-07,
       "global_effect_ema": 5.615120496621698e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -39260,7 +39362,7 @@
         "T": 3,
         "X": 11
       },
-      "effect_ema": 5.541144669641642e-06,
+      "effect_ema": 4.888509996665704e-06,
       "global_effect_ema": 0.00021951197722388423,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -39381,7 +39483,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 4.433796506300113e-28,
+      "effect_ema": 3.911585030973633e-28,
       "global_effect_ema": 1.0983585259383959e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -39506,7 +39608,7 @@
         "T": 1,
         "X": 2
       },
-      "effect_ema": 1.9045425612091742e-06,
+      "effect_ema": 1.6802260010562902e-06,
       "global_effect_ema": 8.857493272534918e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -39630,7 +39732,7 @@
         "T": 16,
         "X": 25
       },
-      "effect_ema": 7.659718572112927e-06,
+      "effect_ema": 6.757558779608911e-06,
       "global_effect_ema": 0.0003271337370133387,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -39752,7 +39854,7 @@
         "T": 45,
         "X": 128
       },
-      "effect_ema": 6.124054816222079e-06,
+      "effect_ema": 5.402765127799221e-06,
       "global_effect_ema": 0.00020052792983961848,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -39875,7 +39977,7 @@
         "T": 0,
         "X": 5
       },
-      "effect_ema": 2.1347168681074265e-06,
+      "effect_ema": 1.8832904340086377e-06,
       "global_effect_ema": 8.49915860311588e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -39999,7 +40101,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 8.335217661954663e-07,
+      "effect_ema": 7.353497750760782e-07,
       "global_effect_ema": 3.559831705177977e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -40124,7 +40226,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.3370797504111798e-06,
+      "effect_ema": 1.1795988222496732e-06,
       "global_effect_ema": 5.767979013863563e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -40249,7 +40351,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 3.799365514902133e-07,
+      "effect_ema": 3.351877167608257e-07,
       "global_effect_ema": 4.839405295787944e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -40374,7 +40476,7 @@
         "T": 0,
         "X": 6
       },
-      "effect_ema": 2.3334868443323367e-06,
+      "effect_ema": 2.058649330724705e-06,
       "global_effect_ema": 9.431304492966131e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 2,
@@ -40499,7 +40601,7 @@
         "T": 0,
         "X": 9
       },
-      "effect_ema": 1.0075235136040359e-06,
+      "effect_ema": 8.888576389483824e-07,
       "global_effect_ema": 0.00012515595346489886,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -40625,7 +40727,7 @@
         "T": 0,
         "X": 6
       },
-      "effect_ema": 2.494686932210573e-06,
+      "effect_ema": 2.2008633114160117e-06,
       "global_effect_ema": 8.502902655118244e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -40751,7 +40853,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 4.2102650686995735e-07,
+      "effect_ema": 3.714381071786989e-07,
       "global_effect_ema": 1.6595534797272032e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -40877,7 +40979,7 @@
         "T": 1,
         "X": 3
       },
-      "effect_ema": 1.4973487526702176e-06,
+      "effect_ema": 1.3209913803598037e-06,
       "global_effect_ema": 5.698575987757538e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -41003,7 +41105,7 @@
         "T": 1,
         "X": 11
       },
-      "effect_ema": 2.630927146936907e-06,
+      "effect_ema": 2.3210571867512746e-06,
       "global_effect_ema": 9.764895601690057e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -41127,7 +41229,7 @@
         "T": 15,
         "X": 86
       },
-      "effect_ema": 6.424987053920729e-06,
+      "effect_ema": 5.668253639652849e-06,
       "global_effect_ema": 0.00021038174736062818,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -41251,7 +41353,7 @@
         "T": 15,
         "X": 6
       },
-      "effect_ema": 0.00015951761329704712,
+      "effect_ema": 0.00014072966755753386,
       "global_effect_ema": 0.00018355337834945586,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -41372,7 +41474,7 @@
         "T": 131,
         "X": 451
       },
-      "effect_ema": 3.901632366043609e-06,
+      "effect_ema": 3.442099053867899e-06,
       "global_effect_ema": 0.00012775624726374193,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 4,
@@ -41496,7 +41598,7 @@
         "T": 5,
         "X": 6
       },
-      "effect_ema": 5.9990471148060626e-27,
+      "effect_ema": 5.292480803085508e-27,
       "global_effect_ema": 0.0003152016843985628,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -41620,7 +41722,7 @@
         "T": 1,
         "X": 2
       },
-      "effect_ema": 1.7021438239691844e-06,
+      "effect_ema": 1.5016657379158955e-06,
       "global_effect_ema": 8.036133815456675e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -41745,7 +41847,7 @@
         "T": 5,
         "X": 3
       },
-      "effect_ema": 5.781251018469895e-05,
+      "effect_ema": 5.100336678062514e-05,
       "global_effect_ema": 0.0002486024072092262,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -41869,7 +41971,7 @@
         "T": 14,
         "X": 1
       },
-      "effect_ema": 4.508405489818042e-23,
+      "effect_ema": 3.977406586538983e-23,
       "global_effect_ema": 0.0006373553707562776,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -41995,7 +42097,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 4.7644203080752443e-08,
+      "effect_ema": 4.203268041700344e-08,
       "global_effect_ema": 3.781520976578306e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -42120,7 +42222,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 8.880411350349272e-18,
+      "effect_ema": 7.834478658990424e-18,
       "global_effect_ema": 2.5442461059363585e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -42245,7 +42347,7 @@
         "T": 2,
         "X": 4
       },
-      "effect_ema": 0.0003279755517978039,
+      "effect_ema": 0.0002893466709883258,
       "global_effect_ema": 0.00036255997354600465,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -42369,7 +42471,7 @@
         "T": 77,
         "X": 291
       },
-      "effect_ema": 8.289389062076626e-06,
+      "effect_ema": 7.3130668322423745e-06,
       "global_effect_ema": 0.00032838344628749027,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 5,
@@ -42490,7 +42592,7 @@
         "T": 3,
         "X": 12
       },
-      "effect_ema": 2.4740006343023183e-30,
+      "effect_ema": 2.182613440649679e-30,
       "global_effect_ema": 0.000263418583917184,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -42613,7 +42715,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 6.508108965420632e-08,
+      "effect_ema": 5.741585472610662e-08,
       "global_effect_ema": 4.912946896049508e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -42738,7 +42840,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 1.171576904317742e-16,
+      "effect_ema": 1.0335888611604026e-16,
       "global_effect_ema": 3.24084605709767e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -42863,7 +42965,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 1.9730424235876234e-06,
+      "effect_ema": 1.7406579662857643e-06,
       "global_effect_ema": 8.259262471878407e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -42988,7 +43090,7 @@
         "T": 2,
         "X": 25
       },
-      "effect_ema": 5.439379977615683e-38,
+      "effect_ema": 4.798731125342953e-38,
       "global_effect_ema": 0.0001176830563658392,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -43112,7 +43214,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 8.811905298105323e-08,
+      "effect_ema": 7.774041232936308e-08,
       "global_effect_ema": 5.8980848111577035e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -43237,7 +43339,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 2.972273765011623e-17,
+      "effect_ema": 2.6222000830789018e-17,
       "global_effect_ema": 7.2535970697683094e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -43362,7 +43464,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 8.470577309396367e-07,
+      "effect_ema": 7.472914771812263e-07,
       "global_effect_ema": 3.919730787082364e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -43486,7 +43588,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 6.052639151864274e-35,
+      "effect_ema": 5.339760783039125e-35,
       "global_effect_ema": 3.401913852703315e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -43611,7 +43713,7 @@
         "T": 0,
         "X": 1
       },
-      "effect_ema": 4.832965193777235e-07,
+      "effect_ema": 4.2637397274172524e-07,
       "global_effect_ema": 2.678711795720555e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -43735,7 +43837,7 @@
         "T": 45,
         "X": 128
       },
-      "effect_ema": 6.093213114539157e-06,
+      "effect_ema": 5.3755559542475555e-06,
       "global_effect_ema": 0.0001995180396970894,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -43856,7 +43958,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 2.731790544115199e-06,
+      "effect_ema": 2.4100409175145487e-06,
       "global_effect_ema": 0.00011378246092454466,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -43980,7 +44082,7 @@
         "T": 4,
         "X": 38
       },
-      "effect_ema": 6.0061519310807904e-05,
+      "effect_ema": 5.298748815825507e-05,
       "global_effect_ema": 0.0002233310760783775,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -44101,7 +44203,7 @@
         "T": 15,
         "X": 29
       },
-      "effect_ema": 7.317612906066855e-06,
+      "effect_ema": 6.455746235795582e-06,
       "global_effect_ema": 0.00031252297763184654,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -44222,7 +44324,7 @@
         "T": 2,
         "X": 18
       },
-      "effect_ema": 0.0005136160705302281,
+      "effect_ema": 0.00045312249452558615,
       "global_effect_ema": 0.0005677759452602261,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -44343,7 +44445,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 4.675764304183847e-22,
+      "effect_ema": 4.1250539204084057e-22,
       "global_effect_ema": 6.514570687547667e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -44469,7 +44571,7 @@
         "T": 6,
         "X": 10
       },
-      "effect_ema": 0.00015255984440150556,
+      "effect_ema": 0.00013459138299212753,
       "global_effect_ema": 0.00017642937493038944,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -44592,7 +44694,7 @@
         "T": 6,
         "X": 2
       },
-      "effect_ema": 1.8391050576909101e-16,
+      "effect_ema": 1.622495710804444e-16,
       "global_effect_ema": 3.4583692149795016e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -44717,7 +44819,7 @@
         "T": 11,
         "X": 5
       },
-      "effect_ema": 6.494263782141334e-06,
+      "effect_ema": 5.729370971654328e-06,
       "global_effect_ema": 0.0003050730977664484,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -44840,7 +44942,7 @@
         "T": 4,
         "X": 26
       },
-      "effect_ema": 9.45405725474416e-06,
+      "effect_ema": 8.34056068813227e-06,
       "global_effect_ema": 0.00032547918632905927,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -44962,7 +45064,7 @@
         "T": 9,
         "X": 4
       },
-      "effect_ema": 0.0005695735668306083,
+      "effect_ema": 0.0005024893305065147,
       "global_effect_ema": 0.0006296340571443521,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -45086,7 +45188,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 8.243749211230384e-07,
+      "effect_ema": 7.272802431940657e-07,
       "global_effect_ema": 4.546321819182579e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -45211,7 +45313,7 @@
         "T": 3,
         "X": 9
       },
-      "effect_ema": 5.555395842961692e-06,
+      "effect_ema": 4.9010826702544246e-06,
       "global_effect_ema": 0.000220076536249095,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -45335,7 +45437,7 @@
         "T": 8,
         "X": 2
       },
-      "effect_ema": 4.416429058834124e-05,
+      "effect_ema": 3.8962631172507865e-05,
       "global_effect_ema": 5.081886929189141e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -45459,7 +45561,7 @@
         "T": 1,
         "X": 13
       },
-      "effect_ema": 4.343223903571028e-38,
+      "effect_ema": 3.831680047389474e-38,
       "global_effect_ema": 9.830351179623487e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -45582,7 +45684,7 @@
         "T": 1,
         "X": 1
       },
-      "effect_ema": 7.333036898715705e-08,
+      "effect_ema": 6.469353594337492e-08,
       "global_effect_ema": 5.212524309628016e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -45707,7 +45809,7 @@
         "T": 12,
         "X": 62
       },
-      "effect_ema": 6.0478482139456166e-05,
+      "effect_ema": 5.3355341206245766e-05,
       "global_effect_ema": 0.0004145127337688437,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -45830,7 +45932,7 @@
         "T": 6,
         "X": 79
       },
-      "effect_ema": 1.789218088744448e-06,
+      "effect_ema": 1.5784844169405168e-06,
       "global_effect_ema": 0.00019905238208003855,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -45951,7 +46053,7 @@
         "T": 1,
         "X": 7
       },
-      "effect_ema": 4.365290979691884e-06,
+      "effect_ema": 3.851148068645984e-06,
       "global_effect_ema": 0.0001729306327913873,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -46075,7 +46177,7 @@
         "T": 30,
         "X": 56
       },
-      "effect_ema": 9.125505285163776e-05,
+      "effect_ema": 8.050705489707757e-05,
       "global_effect_ema": 0.00024867995025252393,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -46196,7 +46298,7 @@
         "T": 22,
         "X": 49
       },
-      "effect_ema": 1.0328312893381311e-15,
+      "effect_ema": 9.111846710050093e-16,
       "global_effect_ema": 0.00018658591221695816,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -46318,7 +46420,7 @@
         "T": 15,
         "X": 90
       },
-      "effect_ema": 7.626165661852437e-05,
+      "effect_ema": 6.727957722967263e-05,
       "global_effect_ema": 0.0002308901417345185,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -46439,7 +46541,7 @@
         "T": 51,
         "X": 146
       },
-      "effect_ema": 5.780135204351167e-06,
+      "effect_ema": 5.0993522842596045e-06,
       "global_effect_ema": 0.0001892665205496435,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -46560,7 +46662,7 @@
         "T": 3,
         "X": 11
       },
-      "effect_ema": 6.271965151862237e-06,
+      "effect_ema": 5.533254620042318e-06,
       "global_effect_ema": 0.0002678651153080354,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -46681,7 +46783,7 @@
         "T": 0,
         "X": 8
       },
-      "effect_ema": 4.040653066370179e-05,
+      "effect_ema": 3.5647459298849184e-05,
       "global_effect_ema": 5.0377430247549253e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -46805,7 +46907,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 4.966583513883299e-08,
+      "effect_ema": 4.381620514243635e-08,
       "global_effect_ema": 2.8226346046187047e-06,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -46929,7 +47031,7 @@
         "T": 5,
         "X": 6
       },
-      "effect_ema": 3.915353008057341e-06,
+      "effect_ema": 3.4542036819986675e-06,
       "global_effect_ema": 0.00018300712236703602,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -47051,7 +47153,7 @@
         "T": 12,
         "X": 32
       },
-      "effect_ema": 9.109861476085141e-06,
+      "effect_ema": 8.03690420466176e-06,
       "global_effect_ema": 0.00031520542675675774,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -47172,7 +47274,7 @@
         "T": 0,
         "X": 3
       },
-      "effect_ema": 2.0729017241063183e-06,
+      "effect_ema": 1.8287558626500653e-06,
       "global_effect_ema": 7.136474302222612e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -47297,7 +47399,7 @@
         "T": 10,
         "X": 2
       },
-      "effect_ema": 3.323662883138182e-14,
+      "effect_ema": 2.9322026762420815e-14,
       "global_effect_ema": 0.00016422467324675536,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -47420,7 +47522,7 @@
         "T": 6,
         "X": 9
       },
-      "effect_ema": 0.00012414671795717093,
+      "effect_ema": 0.00010952474767747167,
       "global_effect_ema": 0.0004457072028143773,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -47541,7 +47643,7 @@
         "T": 7,
         "X": 2
       },
-      "effect_ema": 4.361921954436245e-05,
+      "effect_ema": 3.848175846366454e-05,
       "global_effect_ema": 5.019166813526133e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -47665,7 +47767,7 @@
         "T": 1,
         "X": 0
       },
-      "effect_ema": 3.926554275016857e-06,
+      "effect_ema": 3.4640856664570254e-06,
       "global_effect_ema": 4.540903401476174e-06,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -47790,7 +47892,7 @@
         "T": 6,
         "X": 13
       },
-      "effect_ema": 0.00016588254256204,
+      "effect_ema": 0.00014634493700004775,
       "global_effect_ema": 0.00022521263811705128,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -47912,7 +48014,7 @@
         "T": 122,
         "X": 418
       },
-      "effect_ema": 6.032588258642023e-06,
+      "effect_ema": 5.32207147914925e-06,
       "global_effect_ema": 0.00019753292081512328,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 4,
@@ -48033,7 +48135,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.2231393165140189e-24,
+      "effect_ema": 1.0790782649752289e-24,
       "global_effect_ema": 1.729157712907568e-05,
       "inheritance_breach_active": true,
       "inheritance_breach_count": 1,
@@ -48158,7 +48260,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.3275256939565408e-05,
+      "effect_ema": 1.1711700402431155e-05,
       "global_effect_ema": 1.655111981915405e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -48282,7 +48384,7 @@
         "T": 29,
         "X": 7
       },
-      "effect_ema": 0.00011612959467956672,
+      "effect_ema": 0.00010245187923175317,
       "global_effect_ema": 0.0001560921800680875,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -48389,7 +48491,7 @@
     },
     "X^5*B^5": {
       "breeding_score_ema": 0.0,
-      "count": 6,
+      "count": 12,
       "counts": {
         "A": 0,
         "B": 5,
@@ -48401,20 +48503,20 @@
         "A": 0,
         "B": 0,
         "N": 0,
-        "T": 1,
-        "X": 5
+        "T": 6,
+        "X": 6
       },
-      "effect_ema": 6.845114862109342e-05,
-      "global_effect_ema": 8.491575356359245e-05,
-      "inheritance_breach_active": false,
-      "inheritance_breach_count": 0,
+      "effect_ema": 0.00018440266154619054,
+      "global_effect_ema": 0.00018440266154619054,
+      "inheritance_breach_active": true,
+      "inheritance_breach_count": 1,
       "last_generation": 3,
       "last_generation_role": "SHEAR",
-      "last_tick": 71425,
-      "local_effect_ema": 7.7904361067516e-05,
+      "last_tick": 71634,
+      "local_effect_ema": 0.0001691767537121014,
       "max_generation": 3,
       "min_generation": 3,
-      "raw_effect_ema": 7.7904361067516e-05,
+      "raw_effect_ema": 0.0001691767537121014,
       "regulation": {
         "axes_active": 2,
         "break_even_ticks": 4.532,
@@ -48429,53 +48531,52 @@
         },
         "dominance": 0.5,
         "dynamic_thresholds": {
-          "breeding_min": 0.121062,
-          "effect_min": 0.000140081,
-          "evidence_min": 10,
-          "inheritance_min": 0.281669,
+          "breeding_min": 0.160228,
+          "effect_min": 0.000156869,
+          "evidence_min": 12,
+          "inheritance_min": 0.34028,
           "pressure_regulation": {
             "breeding": {
-              "factor": 0.420399,
-              "gradient": 0.81149
+              "factor": 0.556409,
+              "gradient": 0.37959
             },
             "dominant_axis": "X",
             "effect": {
-              "factor": 1.408699,
-              "gradient": -0.332514
+              "factor": 1.577522,
+              "gradient": -0.791723
             },
             "evidence": {
-              "factor": 0.422404,
-              "gradient": 0.792401
+              "factor": 0.510299,
+              "gradient": 0.458093
             },
             "inheritance": {
-              "factor": 0.422404,
-              "gradient": 0.792401
+              "factor": 0.510299,
+              "gradient": 0.458093
             },
             "relation": {
-              "factor": 0.422404,
-              "gradient": 0.792401
+              "factor": 0.510299,
+              "gradient": 0.458093
             }
           },
-          "relation_min": 0.191201
+          "relation_min": 0.230987
         },
-        "effect_score": 0.278069,
-        "effect_score_raw": 0.278069,
+        "effect_score": 0.53923,
+        "effect_score_raw": 0.53923,
         "enabled": true,
-        "evidence_complete": false,
-        "evidence_min": 10,
+        "evidence_complete": true,
+        "evidence_min": 12,
         "formation_burden": 1.560625,
         "inheritance_influence_factor": 1.0,
-        "inheritance_score": 0.310833,
+        "inheritance_score": 0.338333,
         "issues": [
-          "insufficient_evidence",
-          "effect_under_scale_requirement"
+          "inheritance_under_scale_requirement"
         ],
         "maintenance_savings_per_tick": 0.344344,
         "persistence_tax_factor": 1.016424,
         "persistence_tax_per_tick": 0.660676,
         "relation_score": 0.833333,
-        "representation_score": 0.456713,
-        "requirement_coverage": 0.889034,
+        "representation_score": 0.553619,
+        "requirement_coverage": 0.99857,
         "scale_depth_index": 0.375,
         "strictness_index": 0.27,
         "sustainability_score": 0.485637,
@@ -48483,7 +48584,7 @@
       },
       "scope_scale": 1.09,
       "semantic": "boundaryx5 + groundingx5",
-      "semantic_confidence": 0.241382,
+      "semantic_confidence": 0.403164,
       "semantic_lane_ema": {
         "communication": 0.30769230769230765,
         "intelligence": 0.3205128205128205,
@@ -48493,22 +48594,22 @@
         "pressure_regulation": {
           "confidence": {
             "factor": 1.4,
-            "gradient": -1.075722
+            "gradient": -1.211458
           },
           "count": {
-            "factor": 1.594488,
-            "gradient": -1.075722
+            "factor": 1.597198,
+            "gradient": -1.211458
           },
           "dominant_axis": "X"
         },
         "promote_confidence": 0.91,
         "promote_min_count": 38
       },
-      "semantic_translation": "At gen 3, this coupling expresses value grounding in shear mode (local=0.000078, scope=1.090, conf=0.241).",
+      "semantic_translation": "At gen 3, this coupling expresses value grounding in shear mode (local=0.000169, scope=1.090, conf=0.403).",
       "semantic_version": 1,
       "signature": "X^5*B^5",
       "top_origins": {
-        "(X^4*B^4)x(X^1*B^1)": 6
+        "(X^4*B^4)x(X^1*B^1)": 12
       }
     },
     "X^5*T^1*N^1*B^1": {
@@ -48528,7 +48629,7 @@
         "T": 3,
         "X": 9
       },
-      "effect_ema": 5.7290019630542475e-06,
+      "effect_ema": 5.054241503699877e-06,
       "global_effect_ema": 0.00022695392800687925,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -48649,7 +48750,7 @@
         "T": 4,
         "X": 38
       },
-      "effect_ema": 6.699169461590105e-05,
+      "effect_ema": 5.910142909959212e-05,
       "global_effect_ema": 0.0002491000463951134,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
@@ -48770,7 +48871,7 @@
         "T": 15,
         "X": 29
       },
-      "effect_ema": 7.904139131362285e-06,
+      "effect_ema": 6.973191544771564e-06,
       "global_effect_ema": 0.0003375725292740937,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 2,
@@ -48891,7 +48992,7 @@
         "T": 0,
         "X": 6
       },
-      "effect_ema": 3.244456406106944e-05,
+      "effect_ema": 2.8623251188324623e-05,
       "global_effect_ema": 4.404879351314703e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 1,
@@ -49015,7 +49116,7 @@
         "T": 0,
         "X": 2
       },
-      "effect_ema": 1.247874152319148e-05,
+      "effect_ema": 1.1008998378285282e-05,
       "global_effect_ema": 1.5558052630004808e-05,
       "inheritance_breach_active": false,
       "inheritance_breach_count": 0,
