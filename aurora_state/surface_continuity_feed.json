@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "d68f7a2ec4a0477984fb6673139bc319",
-    "created_at": 1783166829.413211,
-    "source": "simulation_live_bridge",
-    "user_input": "What is understanding?",
-    "aurora_response": "understanding, understanding, foundational:understanding, connected to, growth, knowing. seeing.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1ec0a6a393ed478bb661a203714562df",
-    "created_at": 1783166830.9340556,
-    "source": "simulation_live_bridge",
-    "user_input": "What is understanding?",
-    "aurora_response": "understanding, understanding, foundational:understanding, connected to, growth, knowing. seeing.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1aab34fa038a4ab5b56bb3035745749d",
-    "created_at": 1783166834.1000853,
-    "source": "simulation_live_bridge",
-    "user_input": "What is understanding?",
-    "aurora_response": "understanding, understanding, foundational:understanding, connected to, growth, knowing. seeing.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e844f2e3b9594afcb903a1acdc16ae46",
-    "created_at": 1783166837.4194183,
-    "source": "simulation_live_bridge",
-    "user_input": "What is understanding?",
-    "aurora_response": "understanding, understanding, foundational:understanding, connected to, growth, knowing. seeing.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "eeb7f7a593d34e11be010901064481a7",
     "created_at": 1783174328.8408809,
     "source": "simulation_live_bridge",
@@ -478,6 +382,102 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "dffab42a860648e69587e9524c3586f0",
+    "created_at": 1783191934.3440957,
+    "source": "simulation_live_bridge",
+    "user_input": "What is feeling?",
+    "aurora_response": "Active axes: existence=0.31, cost/purpose=0.27, time/belief=0.18. Field state: heat=0.001, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "42462bd6c55843cd9c3d0e771946e872",
+    "created_at": 1783191935.8112671,
+    "source": "simulation_live_bridge",
+    "user_input": "What is feeling?",
+    "aurora_response": "understanding, feeling, foundational:feeling, connected to, experience, i'm. sad.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "51efd23fb5cb45f98eebf1cf0c8f4950",
+    "created_at": 1783191938.37058,
+    "source": "simulation_live_bridge",
+    "user_input": "What is feeling?",
+    "aurora_response": "Active axes: cost/purpose=0.28, existence=0.27, time/belief=0.18. Field state: heat=0.003, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "d3fb7ac8d8a7435bac86bee52434c44d",
+    "created_at": 1783191941.5127692,
+    "source": "simulation_live_bridge",
+    "user_input": "What is feeling?",
+    "aurora_response": "understanding, feeling, foundational:feeling, connected to, experience, i'm. sad.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
