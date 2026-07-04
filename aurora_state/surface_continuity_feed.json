@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "11dc55974b304bfe8c793e50d6f23e0d",
-    "created_at": 1783188109.2387285,
-    "source": "simulation_live_bridge",
-    "user_input": "awareness.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "awareness"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "456d5781f4e54609961df55b6090ac34",
-    "created_at": 1783188109.4682486,
-    "source": "simulation_live_bridge",
-    "user_input": "awareness.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "awareness"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "34e2f5ce03d24e159f2234a72d923cf9",
-    "created_at": 1783188109.7550523,
-    "source": "simulation_live_bridge",
-    "user_input": "awareness.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "awareness"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "27a25e5759814fa1b179f5d79a109609",
-    "created_at": 1783188109.9725857,
-    "source": "simulation_live_bridge",
-    "user_input": "awareness.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "awareness"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "dffab42a860648e69587e9524c3586f0",
     "created_at": 1783191934.3440957,
     "source": "simulation_live_bridge",
@@ -466,6 +370,102 @@
     "user_input": "Tell me about change.",
     "aurora_response": "I don't have a clear sense of that.",
     "response_tone": "honest",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "05e18074ae614208857cf8829cde4011",
+    "created_at": 1783208042.553751,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "seeking",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6184b597b01045ccb80c1bf0545b43f1",
+    "created_at": 1783208042.7629297,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "That's past me right now. What do you mean by it?",
+    "response_tone": "seeking",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "faac9f7c3c9b4bda9eafc17495133f5d",
+    "created_at": 1783208042.974754,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "seeking",
+    "concepts_activated": [
+      "change"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6dacdabc33bd4be3967ed35cd290ee25",
+    "created_at": 1783208043.2285497,
+    "source": "simulation_live_bridge",
+    "user_input": "change.",
+    "aurora_response": "Not sure I'm with you \u2014 what are you getting at?",
+    "response_tone": "seeking",
     "concepts_activated": [
       "change"
     ],
