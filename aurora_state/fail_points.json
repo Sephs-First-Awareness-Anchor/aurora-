@@ -1,5 +1,5 @@
 {
-  "total_fails": 61593,
+  "total_fails": 61605,
   "records": {
     "coherence_maintenance": {
       "fail_count": 4261,
@@ -226,14 +226,14 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 9635,
-      "severity_sum": 4792.678797751722,
+      "fail_count": 9639,
+      "severity_sum": 4794.678797751722,
       "recent": [
-        0.5,
-        0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -450,16 +450,16 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 1994,
-      "severity_sum": 603.1971316552589,
+      "fail_count": 1998,
+      "severity_sum": 605.1971316552589,
       "recent": [
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -628,8 +628,8 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 12710,
-      "severity_sum": 6487.070948331341,
+      "fail_count": 12714,
+      "severity_sum": 6489.070948331341,
       "recent": [
         0.5,
         0.5,
@@ -640,11 +640,11 @@
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
