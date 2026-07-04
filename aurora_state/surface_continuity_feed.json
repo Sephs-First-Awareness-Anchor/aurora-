@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "a32aff84ac60476097f2f0446f2b8ae4",
-    "created_at": 1783118771.1584241,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "5ad205401a8546f588bd8e743bd9f672",
-    "created_at": 1783118771.8573864,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "0bc4068bf09f4e1fa856020b5a4031a0",
-    "created_at": 1783118772.595577,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "e4a069c2718f4bbbac0f4881cd77e00b",
-    "created_at": 1783118774.9018042,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "facba0bf8bc04b6fa167d9468017f5bb",
     "created_at": 1783123187.7058916,
     "source": "simulation_live_bridge",
@@ -482,6 +386,106 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2ac421e3b09b4933bca562d583f89ff1",
+    "created_at": 1783162476.1900861,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand feeling?",
+    "aurora_response": "interpret, understand, starting, present. settle implied.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "understand",
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "709c5e42dd1b4e389a66a698f8ab513e",
+    "created_at": 1783162477.448344,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand feeling?",
+    "aurora_response": "interpret, understand, starting, present. settle implied.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "understand",
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "e55fc3656ebd433095c6b95dfdf49d63",
+    "created_at": 1783162480.3220193,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand feeling?",
+    "aurora_response": "interpret, understand, starting, present. settle implied.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "understand",
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ffd3307462304596928e9c3b880bb0ac",
+    "created_at": 1783162483.1857939,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand feeling?",
+    "aurora_response": "interpret, understand, starting, present. settle implied.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "understand",
+      "feeling"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
