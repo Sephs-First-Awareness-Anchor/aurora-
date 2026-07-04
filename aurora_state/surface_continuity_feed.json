@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "4aeaa1c4e99f41a7b534a98330928b5f",
-    "created_at": 1783131958.9424367,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "75edaf7a6b8241bfb7200c54dec4b820",
-    "created_at": 1783131959.6773036,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2f604cf74ca1490ab08b71ea13b6118b",
-    "created_at": 1783131960.4878821,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "aeacb6b2e3f74d7e944ca4646d71493d",
-    "created_at": 1783131963.0249858,
-    "source": "simulation_live_bridge",
-    "user_input": "Do you experience language?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "language"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "f862ccdd71104ab7be1fbed04b718da4",
     "created_at": 1783145000.7397668,
     "source": "simulation_live_bridge",
@@ -477,6 +381,102 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "eeb7f7a593d34e11be010901064481a7",
+    "created_at": 1783174328.8408809,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience meaning?",
+    "aurora_response": "meaning, boundary, separation. framing law.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "ec95f308a25b4d7596c27fcd3d5db89b",
+    "created_at": 1783174330.2997856,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience meaning?",
+    "aurora_response": "meaning, boundary, separation. framing law.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "9e8074b9333741b2b80b4c206e9348f0",
+    "created_at": 1783174333.3554432,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience meaning?",
+    "aurora_response": "meaning, boundary, separation. framing law.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f238772a0f5641faa91aebbd6e589179",
+    "created_at": 1783174336.457595,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience meaning?",
+    "aurora_response": "meaning, boundary, separation. framing law.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "B",
     "coherence": 0.758,
     "felt_wrong": false,
     "wrong_reason": "",
