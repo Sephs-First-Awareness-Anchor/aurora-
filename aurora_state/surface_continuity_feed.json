@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "135c07f4e68a43fd99d8e8355f79d42b",
-    "created_at": 1783117744.8620095,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about understanding.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4281e602ae35452d907baabd0f95012a",
-    "created_at": 1783117745.0215545,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about understanding.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "ea95664f3a154f43a32416d78aaac0c5",
-    "created_at": 1783117745.2279294,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about understanding.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "26274407cadc4be1a595aa8fbe9dfd88",
-    "created_at": 1783117745.4363718,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about understanding.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "A",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "a32aff84ac60476097f2f0446f2b8ae4",
     "created_at": 1783118771.1584241,
     "source": "simulation_live_bridge",
@@ -482,6 +386,102 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "73134bca7d224cfcb922b61ce91a3e6b",
+    "created_at": 1783154318.5397954,
+    "source": "simulation_live_bridge",
+    "user_input": "What is identity?",
+    "aurora_response": "Active axes: existence=0.31, cost/purpose=0.27, time/belief=0.18. Field state: heat=0.001, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "263ec9cfebdc4cf4978e21f2bfe30fd4",
+    "created_at": 1783154319.933201,
+    "source": "simulation_live_bridge",
+    "user_input": "What is identity?",
+    "aurora_response": "understanding.. identity.. learned:identity.. connected to.. what.. does.. mean.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "951ce2e44e71413e98a97ade0156eac6",
+    "created_at": 1783154322.3647585,
+    "source": "simulation_live_bridge",
+    "user_input": "What is identity?",
+    "aurora_response": "Active axes: cost/purpose=0.28, existence=0.27, time/belief=0.18. Field state: heat=0.003, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "83b00de315444c08aef0ce7711b97558",
+    "created_at": 1783154325.3326375,
+    "source": "simulation_live_bridge",
+    "user_input": "What is identity?",
+    "aurora_response": "understanding.. identity.. learned:identity.. connected to.. what.. does.. mean.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
