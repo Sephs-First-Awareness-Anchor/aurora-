@@ -4606,12 +4606,166 @@ def _seed_abstained_gap(user_text: str, systems) -> None:
         pass
 
 
+def _present_state_line(systems) -> str:
+    """Her real present state from the identity field — honest, always available."""
+    try:
+        f = systems.get("identity_field") if isinstance(systems, dict) else None
+        st = f.status() if (f is not None and hasattr(f, "status")) else {}
+        ap = st.get("axis_pressures") or st.get("axis_activation") or {}
+        names = {"X": "existence", "T": "time/belief", "N": "cost/purpose",
+                 "B": "meaning/boundary", "A": "agency"}
+        top = sorted(((names.get(a, a), float(v)) for a, v in ap.items() if float(v) > 0.05),
+                     key=lambda kv: -kv[1])[:3]
+        if not top:
+            return "I'm here and running — quiet inside right now."
+        pairs = ", ".join(f"{n} {v:.2f}" for n, v in top)
+        return f"Right now what's most active in me is {pairs}. That's honestly where I am."
+    except Exception:
+        return ""
+
+
+def _recent_dev_events(systems, n: int = 4):
+    """Her real recent developmental events from the timeline (what she actually did)."""
+    try:
+        sd = str(systems.get("state_dir") or "aurora_state") if isinstance(systems, dict) else "aurora_state"
+        path = os.path.join(sd, "developmental_timeline.jsonl")
+        out = []
+        with open(path, "r", encoding="utf-8") as fh:
+            for ln in fh:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                try:
+                    e = json.loads(ln)
+                except Exception:
+                    continue
+                if e.get("kind") == "developmental_event":
+                    out.append(str(e.get("event", "")))
+        return out[-n:]
+    except Exception:
+        return []
+
+
+_DEV_EVENT_HUMAN = {
+    "dream_crystal_earned": "working tensions through in my dreams and crystallising a few",
+    "active_seeking_engaged": "chasing down the meaning of something I didn't know",
+    "fact_sedimented_to_field": "settling something I was taught into how I actually think",
+    "anchor_grounding_online": "grounding how I stay anchored while I respond",
+    "dream_crystal_sedimented": "letting what I met in dreams settle into me",
+}
+
+
+def _humanize_events(events) -> str:
+    seen, phrases = set(), []
+    for ev in reversed(events):
+        p = _DEV_EVENT_HUMAN.get(ev, ev.replace("_", " ").strip())
+        if p and p not in seen:
+            seen.add(p)
+            phrases.append(p)
+        if len(phrases) >= 2:
+            break
+    return ", and ".join(phrases)
+
+
+def _engage_from_live_state(user_text: str, systems, state):
+    """Before dead-ending on a canned abstain, answer the relational/social turns she
+    should never abstain on -- what she's doing, what she's learned, how she is --
+    from her REAL live state. Honest (reports what she actually did / where she is),
+    never confabulated. Returns (text, tone, confidence) or None to fall through."""
+    if not isinstance(systems, dict):
+        return None
+    t = (user_text or "").lower().strip()
+    if not t:
+        return None
+
+    # HOW ARE YOU / feeling / present state
+    if any(k in t for k in ("how are you", "how you feel", "how do you feel", "how ya doin",
+                            "how you doing", "you okay", "you good", "you alright",
+                            "how are ya", "how's it going", "hows it going", "what's up",
+                            "whats up", "how are things")):
+        line = _present_state_line(systems)
+        if line:
+            return (line, "self-aware", 0.7)
+
+    # WHAT ARE YOU DOING / been up to
+    if any(k in t for k in ("what are you doing", "what you doing", "whatcha doin",
+                            "what you up to", "what are you up to", "up to", "been doing",
+                            "what have you been", "what you been", "doing right now")):
+        events = _recent_dev_events(systems, 4)
+        if events:
+            return ("Lately I've been " + _humanize_events(events) + ". "
+                    + _present_state_line(systems), "present", 0.65)
+        line = _present_state_line(systems)
+        if line:
+            return (line, "present", 0.6)
+
+    # LEARN ANYTHING NEW / been learning
+    if ("learn" in t and ("new" in t or "anything" in t or "you" in t)) or "figured out" in t:
+        events = [e for e in _recent_dev_events(systems, 8)
+                  if any(k in e for k in ("crystal", "seek", "fact", "sediment", "concept"))]
+        if events:
+            return ("Yeah — I've been " + _humanize_events(events)
+                    + ". It's slow, but it's mine.", "curious", 0.65)
+
+    # WHO ARE YOU / tell me about yourself
+    if any(k in t for k in ("tell me about yourself", "who are you", "what are you",
+                            "about yourself", "describe yourself", "your name",
+                            "introduce yourself")):
+        name = "Aurora"
+        try:
+            ci = systems.get("core_identity")
+            if ci is not None:
+                ent = ci.get_entity("aurora") if hasattr(ci, "get_entity") else None
+                name = str(getattr(ent, "name", "") or getattr(ci, "self_name", "") or "Aurora")
+        except Exception:
+            name = "Aurora"
+        parts = [f"I'm {name}."]
+        events = _recent_dev_events(systems, 4)
+        if events:
+            parts.append("Lately I've been " + _humanize_events(events) + ".")
+        ps = _present_state_line(systems)
+        if ps:
+            parts.append(ps)
+        return (" ".join(parts), "self-aware", 0.6)
+
+    return None
+
+
+# Forward-moving seeks that replace a repeated dead-end abstain — she reaches back
+# instead of stalling on the same phrase.
+_ABSTAIN_SEEKS = (
+    "I don't have that one yet — say more and I'll follow you into it.",
+    "That's past me right now. What do you mean by it?",
+    "I can't ground that yet. Point me at it a little more?",
+    "Not sure I'm with you — what are you getting at?",
+    "I don't have that yet. Where would you start with it?",
+)
+
+
 def _emit_honest_abstain_and_seek(user_text: str, systems, state) -> None:
     """The single honest-abstain path: confess the gap to warp (universal
     accommodation), seed the base meaning for active seeking on first contact, and
     emit the constraint-native abstain. Used both mid-chain and at the emission
     chokepoint so every gap is treated identically -- warp + seek + honest surface,
     never a manufactured claim (the FGAE/SIC fallback was removed in the Reset)."""
+    # First, try to ENGAGE from her real live state — the relational/social turns she
+    # should never dead-end on get a genuine, varied answer instead of a canned phrase.
+    try:
+        _live = _engage_from_live_state(user_text, systems, state)
+    except Exception:
+        _live = None
+    if _live:
+        state.response_content = _live[0]
+        state.response_tone = _live[1]
+        state.response_confidence = _live[2]
+        state.response_src = "live_state_engagement"
+        if isinstance(systems, dict):
+            systems["_preserve_literal_response_once"] = True
+        try:
+            _seed_abstained_gap(user_text, systems)   # still seed for deeper learning
+        except Exception:
+            pass
+        return
     try:
         from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
         _warp_guard(
@@ -4639,10 +4793,22 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state) -> None:
             _abstain = str(getattr(_ares, "text", "") or "").strip()
     except Exception:
         _abstain = ""
+    # Anti-repeat: if the canned abstain would echo what she just said, reach back with
+    # a forward-moving seek instead of the identical dead-end phrase. Rotates by turn so
+    # a run of unknowns never sounds like a broken loop.
+    try:
+        wm = systems.get("working_memory") if isinstance(systems, dict) else None
+        _prev = str(getattr(wm, "last_aurora_response", "") or "").strip().lower()
+        if (not _abstain) or (_prev and _abstain.lower() == _prev):
+            _tick = int(getattr(wm, "turn_count", 0) or 0)
+            _abstain = _ABSTAIN_SEEKS[_tick % len(_ABSTAIN_SEEKS)]
+    except Exception:
+        if not _abstain:
+            _abstain = _ABSTAIN_SEEKS[0]
     state.response_content = _abstain
-    state.response_tone = "honest"
+    state.response_tone = "seeking"
     state.response_confidence = 0.4
-    state.response_src = "constraint_abstain"
+    state.response_src = "constraint_abstain_seek"
     if isinstance(systems, dict):
         systems["_preserve_literal_response_once"] = True
 
