@@ -26086,5 +26086,76 @@
       "compression_op:N:COMPRESSION_59f70109c7",
       "nc_dim:DIFFERENCE"
     ]
+  },
+  "L:e158bda311": {
+    "id": "L:e158bda311",
+    "parents": [
+      "NC:X>N",
+      "NC:X>X"
+    ],
+    "depth": 1,
+    "created_at_tick": 72476,
+    "stats": {
+      "count": 18,
+      "mean_pos_relief": {
+        "X": 0.0002642100870458593,
+        "T": 0.00048630986402003904,
+        "N": 3.554847023211027e-05,
+        "B": -0.0003472052368048946,
+        "A": 4.002247587969933e-05
+      },
+      "mean_relief": {
+        "X": 0.0002642100870458593,
+        "T": 0.00048630986402003904,
+        "N": 3.554847023211027e-05,
+        "B": -0.0003472052368048946,
+        "A": 4.002247587969933e-05
+      },
+      "stdev_relief": {
+        "X": 0.00030853222984381567,
+        "T": 0.00020363803882833393,
+        "N": 5.6414173100237966e-05,
+        "B": 0.0004398902025027755,
+        "A": 5.155124482096167e-05
+      },
+      "mean_cost": {
+        "X": 0.007777777777777778,
+        "T": 0.013888888888888895,
+        "N": 0.011355555555555558,
+        "B": 0.004209722222222222,
+        "A": 0.010000000000000002
+      },
+      "mean_x_risk": 0.007777777777777778
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "signature:X^3*N^1",
+      "dominant_axis:X",
+      "purpose_family:X+N",
+      "origin_signature:X^3*N^1",
+      "operator_action:dream_evidence:leverage_hit",
+      "purpose_lane:communication",
+      "operator_grade:0.839",
+      "purpose_grade:0.839",
+      "overall_grade:0.839",
+      "complexity_axes:3",
+      "complexity_slots:3",
+      "generation:12",
+      "generation_role:BRIDGE",
+      "seed_influence:0.255",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.255",
+      "artificial_seed:true",
+      "seed_lineage_id:episode_37a06be196e4",
+      "steering_target_generation:12",
+      "ontological_status:native_closed",
+      "depth_score:0.0367",
+      "leverage_grade:0.1603",
+      "viable_band_alignment:0.3205",
+      "energetic_footprint:0.0367",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "nc_dim:DIFFERENCE"
+    ]
   }
 }
