@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "70b0e11dfe35473d8d1e212ec08c4c20",
-    "created_at": 1783196205.6792688,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about meaning.",
-    "aurora_response": "meaning, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "meaning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "69689e4f2c634dd5bcc8988272e6ac6d",
-    "created_at": 1783196206.6081421,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about meaning.",
-    "aurora_response": "meaning, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "meaning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3b10963b9bc948999732544c83ad7d95",
-    "created_at": 1783196209.2671282,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about meaning.",
-    "aurora_response": "meaning, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "meaning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6c57136da5574fca9aaa20341fc05c96",
-    "created_at": 1783196211.9230359,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about meaning.",
-    "aurora_response": "meaning, boundary, separation. framing law.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "meaning"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "935c9879f8fb43afbeca6329ae0f0766",
     "created_at": 1783200666.4748013,
     "source": "simulation_live_bridge",
@@ -468,6 +372,102 @@
     "response_tone": "honest",
     "concepts_activated": [
       "connection"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "3bde766dd90f4c4b865c18dd3c3cd37b",
+    "created_at": 1783229656.825488,
+    "source": "simulation_live_bridge",
+    "user_input": "What does identity mean to you?",
+    "aurora_response": "Active axes: cost/purpose=0.26, meaning/boundary=0.21, agency=0.21. Field state: heat=0.001, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "628d6e7f8dbf40d9bb7d6ae2f5187437",
+    "created_at": 1783229657.6343112,
+    "source": "simulation_live_bridge",
+    "user_input": "What does identity mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c1b12e4055854c7f8ca2e85d1ebb61bc",
+    "created_at": 1783229658.4087512,
+    "source": "simulation_live_bridge",
+    "user_input": "What does identity mean to you?",
+    "aurora_response": "Active axes: cost/purpose=0.27, meaning/boundary=0.21, agency=0.21. Field state: heat=0.001, dominant-emotion=calm.",
+    "response_tone": "self-aware",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a4ecd374167946929f226c54061e0c23",
+    "created_at": 1783229660.8863144,
+    "source": "simulation_live_bridge",
+    "user_input": "What does identity mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "identity"
     ],
     "visual_description": "",
     "audio_description": "",
