@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "6dacdabc33bd4be3967ed35cd290ee25",
-    "created_at": 1783208043.2285497,
-    "source": "simulation_live_bridge",
-    "user_input": "change.",
-    "aurora_response": "Not sure I'm with you \u2014 what are you getting at?",
-    "response_tone": "seeking",
-    "concepts_activated": [
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "c33129c714d2442fb6ae750bd499ec6f",
-    "created_at": 1783214436.3628733,
-    "source": "simulation_live_bridge",
-    "user_input": "What does connection mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "connection"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2f8b792dd3b44251824beb33a704b0f7",
-    "created_at": 1783214437.119122,
-    "source": "simulation_live_bridge",
-    "user_input": "What does connection mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "connection"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "943349b1654d43538676fbdbffccfe54",
-    "created_at": 1783214437.867355,
-    "source": "simulation_live_bridge",
-    "user_input": "What does connection mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "connection"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "74ff36e23c0d4ef2b9f5c2b6dcbb62e5",
     "created_at": 1783214440.3294742,
     "source": "simulation_live_bridge",
@@ -478,6 +382,102 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "33909f1d2e0b44bf82d0c1a235fb77a6",
+    "created_at": 1783248053.9870248,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "language"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "24fdc17bec3e48399c4b32b0366cd801",
+    "created_at": 1783248054.99039,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "Understanding learned language understanding connected language.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "language"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "98779e1ce5714b0fb92733a201b4d199",
+    "created_at": 1783248057.1932232,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "Understanding learned language understanding connected language.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "language"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "69df21c7c9e34bd28fae478121e4dd6a",
+    "created_at": 1783248059.3992836,
+    "source": "simulation_live_bridge",
+    "user_input": "What is language?",
+    "aurora_response": "Understanding learned language understanding connected language.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "language"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
