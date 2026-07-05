@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "a26a823dd5e14190a6aa5cd2cdc41bed",
-    "created_at": 1783204257.7522962,
-    "source": "simulation_live_bridge",
-    "user_input": "Tell me about change.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "05e18074ae614208857cf8829cde4011",
-    "created_at": 1783208042.553751,
-    "source": "simulation_live_bridge",
-    "user_input": "change.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "seeking",
-    "concepts_activated": [
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "6184b597b01045ccb80c1bf0545b43f1",
-    "created_at": 1783208042.7629297,
-    "source": "simulation_live_bridge",
-    "user_input": "change.",
-    "aurora_response": "That's past me right now. What do you mean by it?",
-    "response_tone": "seeking",
-    "concepts_activated": [
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "faac9f7c3c9b4bda9eafc17495133f5d",
-    "created_at": 1783208042.974754,
-    "source": "simulation_live_bridge",
-    "user_input": "change.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "seeking",
-    "concepts_activated": [
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "6dacdabc33bd4be3967ed35cd290ee25",
     "created_at": 1783208043.2285497,
     "source": "simulation_live_bridge",
@@ -470,6 +374,106 @@
     "recent_speech": "",
     "dominant_axis": "X",
     "coherence": 0.972,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "45b0cdc6578942bcb271ca7d5796e318",
+    "created_at": 1783240259.2368963,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understand",
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "40612f6d33914bce85c760e61747772a",
+    "created_at": 1783240260.0177464,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understand",
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6984098216e649e291eeef7eef43dcc1",
+    "created_at": 1783240260.8018787,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understand",
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6bc967e7c641491298b80bca7fe0b4de",
+    "created_at": 1783240263.309024,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "understand",
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
