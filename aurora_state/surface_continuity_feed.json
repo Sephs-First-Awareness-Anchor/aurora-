@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "74ff36e23c0d4ef2b9f5c2b6dcbb62e5",
-    "created_at": 1783214440.3294742,
-    "source": "simulation_live_bridge",
-    "user_input": "What does connection mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "connection"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3bde766dd90f4c4b865c18dd3c3cd37b",
-    "created_at": 1783229656.825488,
-    "source": "simulation_live_bridge",
-    "user_input": "What does identity mean to you?",
-    "aurora_response": "Active axes: cost/purpose=0.26, meaning/boundary=0.21, agency=0.21. Field state: heat=0.001, dominant-emotion=calm.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "identity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "628d6e7f8dbf40d9bb7d6ae2f5187437",
-    "created_at": 1783229657.6343112,
-    "source": "simulation_live_bridge",
-    "user_input": "What does identity mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "identity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "c1b12e4055854c7f8ca2e85d1ebb61bc",
-    "created_at": 1783229658.4087512,
-    "source": "simulation_live_bridge",
-    "user_input": "What does identity mean to you?",
-    "aurora_response": "Active axes: cost/purpose=0.27, meaning/boundary=0.21, agency=0.21. Field state: heat=0.001, dominant-emotion=calm.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "identity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "a4ecd374167946929f226c54061e0c23",
     "created_at": 1783229660.8863144,
     "source": "simulation_live_bridge",
@@ -478,6 +382,102 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.69"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "44899c4600ce4df1a17d4436f36e64a1",
+    "created_at": 1783253669.8869047,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c034ceb4038b4db2bd9cf06ca1e936d9",
+    "created_at": 1783253671.4709852,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "25777597f0284b9a90bf367ecdce61cd",
+    "created_at": 1783253674.775326,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "87f77c8d4f62411b89d1573f9965050a",
+    "created_at": 1783253678.0311093,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
     ],
     "resolved_bindings": [],
     "consumed": false,
