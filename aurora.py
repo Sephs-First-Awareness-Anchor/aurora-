@@ -4819,13 +4819,123 @@ def _gather_subsurface_contributions(systems) -> list:
     return out
 
 
+# How each of her typed relation edges reads as meaning-bearing connective language.
+# These are not response templates — they are the literal semantics of her own
+# RelationType enum (aurora_ontological_scaffolding.RelationType), the same edge
+# meanings her graph was built with. Rendering a typed edge into its connective is
+# how structure becomes sayable; the field still shapes final delivery.
+_REL_CONNECTIVE: Dict[str, str] = {
+    "is_a": "a form of", "instance_of": "a form of", "has_a": "holding",
+    "part_of": "part of", "causes": "giving rise to", "implies": "implying",
+    "opposite_of": "as against", "contrasts": "unlike", "precedes": "before",
+    "enables": "enabling", "context_of": "within", "related_to": "bound up with",
+}
+# Concept → the constraint axis she embodies it as, so her live axis state can
+# modulate how forcefully the composed meaning emerges (reasoner fold).
+_CONCEPT_AXIS: Dict[str, str] = {
+    "agency": "A", "understanding": "A", "resolve": "A", "capacity": "A",
+    "existence": "X", "presence": "X", "information": "X", "resolution": "X",
+    "time": "T", "persistence": "T", "continuity": "T",
+    "cost": "N", "purpose": "N", "conservation": "N",
+    "meaning": "B", "boundary": "B", "structure": "B", "separation": "B",
+}
+
+
+def _compose_structural_meaning(concept: str, node: Any, seed: str, web: Any,
+                                systems: Dict[str, Any]) -> str:
+    """Reason the concept's meaning ACROSS her related structure instead of returning
+    a flat definition. Traverse her weighted OETS relation graph out from the concept,
+    rank neighbours by their real depth_contribution (edge weight x strength x
+    confidence), render each strongest edge through its own typed connective, and weave
+    the single strongest DEVELOPED neighbour's meaning in — so the concept is understood
+    by what it is a form of, enables, and stands against, not by a stored string alone.
+    Everything here is her own graph; nothing is invented. Returns the composed content
+    (falls back to seed on any failure)."""
+    try:
+        seed_low = str(seed or "").lower()
+        # Rank her edges by genuine structural weight, strongest per neighbour.
+        best_by_word: Dict[str, tuple] = {}
+        for rel in list(getattr(node, "relations", {}).values() or []):
+            try:
+                src = getattr(rel, "source_word", "")
+                tgt = getattr(rel, "target_word", "")
+                other = tgt if src == concept else src
+                if not other or other == concept:
+                    continue
+                rt = getattr(rel, "relation_type", None)
+                rt_val = getattr(rt, "value", str(rt)).lower()
+                dc = float(rel.depth_contribution())
+                prev = best_by_word.get(other)
+                if prev is None or dc > prev[0]:
+                    best_by_word[other] = (dc, rt_val)
+            except Exception:
+                continue
+        if not best_by_word:
+            return seed
+        ranked = sorted(best_by_word.items(), key=lambda kv: kv[1][0], reverse=True)
+
+        # Weave the top few typed edges into connective phrases — skip neighbours
+        # already named in the seed so the meaning grows rather than echoes.
+        phrases: list = []
+        for word, (dc, rt_val) in ranked:
+            if len(phrases) >= 3 or dc < 0.05:
+                break
+            if word in seed_low:
+                continue
+            conn = _REL_CONNECTIVE.get(rt_val, "tied to")
+            phrases.append(f"{conn} {word}")
+
+        # Reason one hop deeper: fold in the strongest DEVELOPED neighbour's own meaning,
+        # so she draws on what the related concept means, not just its name.
+        neighbour_gloss = ""
+        for word, (dc, _rt) in ranked:
+            try:
+                nn = (getattr(web, "nodes", {}) or {}).get(word)
+                if nn is None or float(getattr(nn, "ontological_depth", 0.0) or 0.0) < 0.4:
+                    continue
+                nm = str(nn.best_definition() or "").strip()
+                if nm and _meaning_text_is_grounded(nm, term=word) and word not in seed_low:
+                    neighbour_gloss = f"{word}, {nm.split(';')[0].strip()}"
+                    break
+            except Exception:
+                continue
+
+        content = seed if seed_low.startswith(concept) else f"{concept} is {seed}"
+        if phrases:
+            content += " — " + ", ".join(phrases)
+        if neighbour_gloss and len(content) < 190:
+            content += f"; and {neighbour_gloss}"
+        return content[:240]
+    except Exception:
+        return seed
+
+
+def _axis_live_pressure(concept: str, base: float, systems: Dict[str, Any]) -> float:
+    """Let her live constraint state set how forcefully the composed meaning emerges.
+    For a concept she embodies as an axis, read that axis's current polarity from the
+    constraint reasoner and scale the crest pressure by how strongly she is being it
+    right now. Structure shapes WHAT the meaning is; her live being shapes the FORCE."""
+    axis = _CONCEPT_AXIS.get(concept)
+    cr = systems.get("constraint_reasoner") if isinstance(systems, dict) else None
+    if axis is None or cr is None:
+        return base
+    try:
+        profile = cr.current_profile() or {}
+        intensity = abs(float(profile.get(axis, 0.5)) - 0.5) * 2.0   # 0 at neutral, 1 at pole
+        return round(min(0.98, max(0.82, base - 0.06 + 0.12 * intensity)), 3)
+    except Exception:
+        return base
+
+
 def _grounded_topic_contribution(user_text: str, systems) -> Optional[dict]:
     """When she is asked about a concept she has genuinely CRYSTALLISED (its meaning
     developed to SEMANTIC in her concept store), that meaning rises as high-salience
     subsurface crest material so it compresses through her field into the answer — her
-    crystal meaning becoming her voice. Read straight from the crystal/OETS node, not
-    the shell sources. Only a genuinely-developed concept qualifies; a real gap still
-    falls to honest abstain + seek. No template — the field shapes delivery."""
+    crystal meaning becoming her voice. She does not retrieve a flat definition: she
+    reasons it across her related structure (weighted relation graph + one-hop neighbour
+    meaning), and her live axis state sets how forcefully it emerges. Only a genuinely-
+    developed concept qualifies; a real gap still falls to honest abstain + seek. No
+    template — the field shapes delivery."""
     if not isinstance(systems, dict):
         return None
     try:
@@ -4868,9 +4978,12 @@ def _grounded_topic_contribution(user_text: str, systems) -> Optional[dict]:
             meaning = str((_defs[0] or {}).get("text", "")) if _defs else ""
         if not _meaning_text_is_grounded(meaning, term=concept):
             return None
-        _content = meaning if meaning.lower().startswith(concept) else f"{concept} is {meaning}"
+        # Reason the meaning across her related structure rather than retrieving flat,
+        # and let her live axis state set the force with which it emerges.
+        _content = _compose_structural_meaning(concept, node, meaning, web, systems)
+        _pressure = _axis_live_pressure(concept, 0.92, systems)
         return {"level": "subsurface", "axis": "B", "content": _content[:240],
-                "pressure": 0.92, "source": "grounded_concept"}
+                "pressure": _pressure, "source": "grounded_concept"}
     except Exception:
         return None
 
