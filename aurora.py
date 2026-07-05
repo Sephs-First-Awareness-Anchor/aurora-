@@ -4665,7 +4665,16 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
         # (no real core) falls through to the honest abstain below, never raw field.
         _lww = str(getattr(state, "response_content", "") or "").strip()
         _crest = _compress_at_crest(user_text, systems, state)
-        _core = _lww if (_lww and len(_lww.split()) >= 3) else (_crest or _lww)
+        # Her own crystallised meaning for a concept she was asked about is authoritative
+        # over a pre-set canned abstain: grounded meaning beats a gap-fallback. Otherwise
+        # a genuine prior content response is preferred over re-compressing.
+        _lww_is_abstain = str(getattr(state, "response_src", "") or "") in (
+            "constraint_abstain", "constraint_abstain_seek")
+        if _crest and systems.get("_last_crest_top_source") == "grounded_concept" and \
+                (not _lww or _lww_is_abstain):
+            _core = _crest
+        else:
+            _core = _lww if (_lww and len(_lww.split()) >= 3) else (_crest or _lww)
         _fused = ""
         if _core and len(_core.split()) >= 2:
             _fused = _field_frame_compress(user_text, systems, state, _core)
@@ -4810,6 +4819,62 @@ def _gather_subsurface_contributions(systems) -> list:
     return out
 
 
+def _grounded_topic_contribution(user_text: str, systems) -> Optional[dict]:
+    """When she is asked about a concept she has genuinely CRYSTALLISED (its meaning
+    developed to SEMANTIC in her concept store), that meaning rises as high-salience
+    subsurface crest material so it compresses through her field into the answer — her
+    crystal meaning becoming her voice. Read straight from the crystal/OETS node, not
+    the shell sources. Only a genuinely-developed concept qualifies; a real gap still
+    falls to honest abstain + seek. No template — the field shapes delivery."""
+    if not isinstance(systems, dict):
+        return None
+    try:
+        m = re.match(
+            r"^\s*(?:what(?:'?s| is| are| were)|who(?:'?s| is)|tell me about|"
+            r"define|definition of)\s+(?:a |an |the |your |my )?(.+?)[\?\.!]*\s*$",
+            str(user_text or ""), re.IGNORECASE,
+        )
+        if not m:
+            return None
+        concept = m.group(1).strip().lower()
+        if len(concept) < 2 or not _definition_lookup_target(user_text, fallback=concept):
+            return None
+        perception = systems.get("perception")
+        oets = getattr(perception, "oets", None) if perception is not None else None
+        web = getattr(oets, "web", None) if oets is not None else None
+        if web is None:
+            return None
+        node = None
+        for key in (concept, concept.capitalize()):
+            try:
+                if hasattr(web, "has_node") and web.has_node(key):
+                    node = web.get_node(key)
+                    break
+            except Exception:
+                continue
+        if node is None:
+            node = (getattr(web, "nodes", {}) or {}).get(concept)
+        if node is None:
+            return None
+        # Only speak concepts she has actually developed to SEMANTIC — else it is a
+        # genuine gap and the honest abstain/seek path should own the turn.
+        if float(getattr(node, "ontological_depth", 0.0) or 0.0) < 0.4:
+            return None
+        meaning = ""
+        try:
+            meaning = str(node.best_definition() or "").strip()
+        except Exception:
+            _defs = getattr(node, "definitions", []) or []
+            meaning = str((_defs[0] or {}).get("text", "")) if _defs else ""
+        if not _meaning_text_is_grounded(meaning, term=concept):
+            return None
+        _content = meaning if meaning.lower().startswith(concept) else f"{concept} is {meaning}"
+        return {"level": "subsurface", "axis": "B", "content": _content[:240],
+                "pressure": 0.92, "source": "grounded_concept"}
+    except Exception:
+        return None
+
+
 def _compress_at_crest(user_text: str, systems, state) -> str:
     """SURFACE CREST. Compress the charged surface waveform together with the
     propagated subsurface crest into the final meaning, ranked by salience
@@ -4819,6 +4884,13 @@ def _compress_at_crest(user_text: str, systems, state) -> str:
     observability. Returns '' when there is nothing to compress."""
     try:
         contribs: list = []
+        # Her own crystallised meaning for a concept she's asked about rises here as
+        # deep, high-salience material — it compresses through the same field path.
+        _gc = _grounded_topic_contribution(user_text, systems)
+        if _gc:
+            _gc_charge = _contribution_charge(_gc["content"], user_text, state, systems)
+            contribs.append({**_gc, "charge": round(_gc_charge, 3),
+                             "salience": round(float(_gc["pressure"]) * (1.0 + _gc_charge), 4)})
         for d in list(getattr(state, "waveform", []) or []):
             content = str(d.get("content", "") or "")
             if not content:
