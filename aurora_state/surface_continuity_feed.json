@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "a4ecd374167946929f226c54061e0c23",
-    "created_at": 1783229660.8863144,
-    "source": "simulation_live_bridge",
-    "user_input": "What does identity mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "identity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b1c99924817045cf8fb53d9d16b90f34",
-    "created_at": 1783238159.6379797,
-    "source": "external_user_turn",
-    "user_input": "what is agency?",
-    "aurora_response": "agency; understanding; capacity to resolve \u2014 a form of constraint, bound up with choose, within real",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "agency"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "586f40fd65f444ec8dccd4be38473719",
-    "created_at": 1783238237.441108,
-    "source": "external_user_turn",
-    "user_input": "what is agency?",
-    "aurora_response": "agency; understanding; capacity to resolve \u2014 a form of constraint, bound up with choose, within real",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "agency"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "a56fd963fade4e0890261058acbc1aa2",
-    "created_at": 1783238310.99968,
-    "source": "external_user_turn",
-    "user_input": "what is agency?",
-    "aurora_response": "agency; understanding; capacity to resolve \u2014 a form of constraint, bound up with choose, within real",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "agency"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "de3b891897564b9eb787007888c9bdd0",
     "created_at": 1783238385.982622,
     "source": "external_user_turn",
@@ -473,6 +377,102 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2152b8a7369b470fa079f82de8f2a298",
+    "created_at": 1783261217.615763,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "5c58404026de47fbbe8c5315d184dd0b",
+    "created_at": 1783261218.41185,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f49fb53bac434b389d97fc9f2c2f313f",
+    "created_at": 1783261219.2033653,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "d5a327d957764a468f768de8f64733da",
+    "created_at": 1783261221.7333648,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience existence?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
     "coherence": 0.758,
     "felt_wrong": false,
     "wrong_reason": "",
