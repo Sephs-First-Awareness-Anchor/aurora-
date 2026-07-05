@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "dffab42a860648e69587e9524c3586f0",
-    "created_at": 1783191934.3440957,
-    "source": "simulation_live_bridge",
-    "user_input": "What is feeling?",
-    "aurora_response": "Active axes: existence=0.31, cost/purpose=0.27, time/belief=0.18. Field state: heat=0.001, dominant-emotion=calm.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "feeling"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "42462bd6c55843cd9c3d0e771946e872",
-    "created_at": 1783191935.8112671,
-    "source": "simulation_live_bridge",
-    "user_input": "What is feeling?",
-    "aurora_response": "understanding, feeling, foundational:feeling, connected to, experience, i'm. sad.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "feeling"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "51efd23fb5cb45f98eebf1cf0c8f4950",
-    "created_at": 1783191938.37058,
-    "source": "simulation_live_bridge",
-    "user_input": "What is feeling?",
-    "aurora_response": "Active axes: cost/purpose=0.28, existence=0.27, time/belief=0.18. Field state: heat=0.003, dominant-emotion=calm.",
-    "response_tone": "self-aware",
-    "concepts_activated": [
-      "feeling"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "d3fb7ac8d8a7435bac86bee52434c44d",
-    "created_at": 1783191941.5127692,
-    "source": "simulation_live_bridge",
-    "user_input": "What is feeling?",
-    "aurora_response": "understanding, feeling, foundational:feeling, connected to, experience, i'm. sad.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "feeling"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "70b0e11dfe35473d8d1e212ec08c4c20",
     "created_at": 1783196205.6792688,
     "source": "simulation_live_bridge",
@@ -473,6 +377,102 @@
     "audio_description": "",
     "recent_speech": "",
     "dominant_axis": "N",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c33129c714d2442fb6ae750bd499ec6f",
+    "created_at": 1783214436.3628733,
+    "source": "simulation_live_bridge",
+    "user_input": "What does connection mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "connection"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2f8b792dd3b44251824beb33a704b0f7",
+    "created_at": 1783214437.119122,
+    "source": "simulation_live_bridge",
+    "user_input": "What does connection mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "connection"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "943349b1654d43538676fbdbffccfe54",
+    "created_at": 1783214437.867355,
+    "source": "simulation_live_bridge",
+    "user_input": "What does connection mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "connection"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "74ff36e23c0d4ef2b9f5c2b6dcbb62e5",
+    "created_at": 1783214440.3294742,
+    "source": "simulation_live_bridge",
+    "user_input": "What does connection mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "connection"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
     "coherence": 0.758,
     "felt_wrong": false,
     "wrong_reason": "",
