@@ -10739,11 +10739,16 @@ def _definition_lookup_target(
     if candidate in weak_labels:
         return ""
 
+    # "What is X" / "what's X" / "who is X" is the most common definition request —
+    # recognise it, not only the "define X" / "what does X mean" forms.
+    _def_starts = ("what is ", "what's ", "whats ", "what are ", "what're ",
+                   "what is a ", "what is an ", "who is ", "who's ", "what's a ")
     if (
         "mean by" in low or
         low.startswith("define ") or
         " definition of " in f" {low} " or
-        ("mean" in low and query_type in {"definition", "clarification"})
+        ("mean" in low and query_type in {"definition", "clarification"}) or
+        any(low.startswith(s) for s in _def_starts)
     ):
         return candidate
     return ""
@@ -21344,6 +21349,21 @@ def boot_aurora(
         systems['_concept_crystal_registry'] = None
         if verbose:
             print(f"  [CCR]  ConceptCrystalRegistry unavailable: {_ccr_e}")
+
+    # ---- CORE CONCEPT CRYSTALLISATION — connect what she IS to what she can SAY ----
+    # Her core axis-concepts (agency, existence, ...) are embodied as live axes but sit
+    # as empty lexical shells. Crystallise them into her concept store from her OWN
+    # authored axis semantics, through her real grounding API, so they cross SEMANTIC
+    # and become articulable. Guarded — only fills shells, never overwrites her own
+    # development.
+    try:
+        from aurora_core_concept_crystallization import crystallize_core_concepts
+        _n_core = crystallize_core_concepts(systems, verbose=verbose)
+        if verbose and _n_core:
+            print(f"  [CORE]  crystallised {_n_core} core-axis concepts from axis embodiment")
+    except Exception as _core_e:
+        if verbose:
+            print(f"  [CORE]  core concept crystallisation unavailable: {_core_e}")
 
     # ---- GEOLOGICAL BASELINE — wave/particle boundary + persistent pressure ----
     try:
