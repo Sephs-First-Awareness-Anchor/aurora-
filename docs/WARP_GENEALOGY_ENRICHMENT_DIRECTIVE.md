@@ -145,11 +145,20 @@ nothing. That's the genuine coverage check, and it's what this bridge runs.
   `aurora_state/tensor_occupancy_warp_components.jsonl`, tracked as a
   dissolving trial. Re-running the driver script with no new entries
   correctly processes 0 (cursor file prevents reprocessing).
-- Cross-run limitation, stated plainly in both files: `WarpGenerator`'s
-  anomaly log and the gap-persistence counter are in-memory per script run
-  only. A gap recurring across separate runs (not within one batch) isn't
-  currently caught — would need cross-run state persistence, which this
-  pass doesn't add.
+- **Cross-run persistence — closed.** `TensorOccupancyWarpBridge.load_state()`/
+  `save_state()` serialize `WarpGenerator._anomaly_log`, the gap-persistence
+  counter, and any live trial/promoted `WarpComponent`s to
+  `aurora_state/tensor_occupancy_warp_bridge_state.json`; the driver script
+  loads on construction and saves at the end of every run, including runs
+  with zero new occupancy entries (so a persisted trial's `TRIAL_TICKS`
+  countdown keeps advancing between deposit bursts instead of stalling).
+  Verified across genuinely separate process invocations, not just within
+  one run: the same gap signature spread over 3 fresh `python3` calls
+  correctly fired a `WarpComponent` on the 3rd (`GAP_PERSISTENCE_REQUIRED`
+  survived the process boundary each time); a further 10 idle runs (also
+  each a fresh process, zero new entries) correctly dissolved that trial
+  rather than falsely promoting it. A missing or corrupt state file is a
+  silent no-op — starts fresh, never blocks processing.
 
 ---
 

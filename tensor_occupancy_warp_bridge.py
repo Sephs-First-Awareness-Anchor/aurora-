@@ -43,24 +43,27 @@ formula_coefficient, then run through aurora_warp_protocol.axes_to_istates()
 depth of their own, so their recursion dimensions are left at 0 -- a real
 modeling limitation (see module docstring below), not swept under the rug.
 
-Cross-run limitation: WarpGenerator's anomaly log and WarpCapable's gap-
-persistence counter are in-memory only. Each occupancy entry processed
-within one run of scripts/bridge_tensor_occupancy_to_warp.py contributes to
-gap-persistence debounce (GAP_PERSISTENCE_REQUIRED consecutive matching
-gaps), but that state does not currently survive between separate runs of
-the script. A gap that occurs twice today and once next week will not be
-caught by the persistence check today; it would need cross-run
-serialization of WarpGenerator/WarpCapable state, which this pass does not
-add. Flagged here rather than silently assumed away.
+Cross-run persistence: WarpGenerator's anomaly log, WarpCapable's gap-
+persistence counter, and any live trial/promoted components are saved to
+aurora_state/tensor_occupancy_warp_bridge_state.json on save_state() (the
+driver script calls this at the end of every run) and restored on
+construction. A gap that occurs twice today and once next week now IS
+caught by GAP_PERSISTENCE_REQUIRED, because the counter survives between
+separate runs of scripts/bridge_tensor_occupancy_to_warp.py -- it does not
+reset to empty each time the way it did before this was added.
 """
 from __future__ import annotations
 
+import json
 import time
+from dataclasses import asdict
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from aurora_constraint_signature_resolver import DIMENSION_ROLE
 import aurora_manifold_lookup
 from aurora_warp_protocol import (
+    ConstraintAnomalyRecord,
     WarpCapable,
     WarpComponent,
     axes_to_istates,
@@ -83,6 +86,8 @@ _DEPTH_LABEL_TO_RECURSION_DIM: Dict[str, str] = {
 
 _MIN_PROFILE_WEIGHT = 0.05  # floor so a near-zero formula_coefficient doesn't zero out a whole profile
 _RECURSION_BASELINE = 0.3   # uniform "not tied to a depth" prior -- see _noncomp_axis_profile
+
+DEFAULT_STATE_PATH = "aurora_state/tensor_occupancy_warp_bridge_state.json"
 
 
 def _noncomp_axis_profile(data: Dict[str, Any]) -> Optional[Dict[str, float]]:
@@ -171,11 +176,67 @@ class TensorOccupancyWarpBridge(WarpCapable):
 
     STATUS_LOG_PATH = "aurora_state/tensor_occupancy_warp_components.jsonl"
 
-    def __init__(self, genealogy: Any = None) -> None:
+    def __init__(self, genealogy: Any = None, state_path: str = DEFAULT_STATE_PATH) -> None:
         self._init_warp(genealogy=genealogy)
         self._known_profiles: Dict[str, Dict[str, float]] = _load_all_noncomp_profiles()
         self._integrated: List[WarpComponent] = []
         self._tick = 0
+        self._state_path = Path(state_path)
+        self.load_state()
+
+    # ── cross-run persistence ─────────────────────────────────────────────────
+
+    def load_state(self, path: Optional[str] = None) -> None:
+        """
+        Restore the anomaly log, gap-persistence counter, and any live
+        trial/promoted components from a prior run. Silent no-op if the
+        state file doesn't exist or fails to parse -- a missing/corrupt
+        state file must never block processing new occupancy entries, it
+        just means starting from a fresh (empty) state like before this
+        existed.
+        """
+        p = Path(path) if path is not None else self._state_path
+        if not p.exists():
+            return
+        try:
+            with open(p, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self._tick = int(data.get("tick", 0) or 0)
+            self._gap_counter = dict(data.get("gap_counter", {}))
+            self._warp_generator._anomaly_log = {
+                k: ConstraintAnomalyRecord(**v)
+                for k, v in data.get("anomaly_log", {}).items()
+            }
+            self._warp_trials = {
+                k: WarpComponent(**v)
+                for k, v in data.get("warp_trials", {}).items()
+            }
+            self._warp_promoted = {
+                k: WarpComponent(**v)
+                for k, v in data.get("warp_promoted", {}).items()
+            }
+            self._integrated = list(self._warp_trials.values()) + list(self._warp_promoted.values())
+        except Exception:
+            pass  # corrupt/incompatible state file -- start fresh rather than crash
+
+    def save_state(self, path: Optional[str] = None) -> None:
+        """Persist the anomaly log, gap-persistence counter, and live trial/
+        promoted components so the next run picks up where this one left
+        off. Best-effort -- never raises."""
+        p = Path(path) if path is not None else self._state_path
+        try:
+            p.parent.mkdir(exist_ok=True)
+            data = {
+                "tick":         self._tick,
+                "gap_counter":  dict(self._gap_counter),
+                "anomaly_log":  {k: asdict(v) for k, v in self._warp_generator._anomaly_log.items()},
+                "warp_trials":  {k: asdict(v) for k, v in self._warp_trials.items()},
+                "warp_promoted": {k: asdict(v) for k, v in self._warp_promoted.items()},
+            }
+            with open(p, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+        except Exception:
+            pass
 
     # ── WarpCapable required overrides ────────────────────────────────────────
 
