@@ -5179,6 +5179,47 @@ class ConstraintGenealogyLogger:
         if nc_dim_tag:
             tags.append(f"nc_dim:{nc_dim_tag}")
 
+        # Anchor a successful promotion to its manifold noncomp, when this
+        # link's (law, dim, target) triple resolves. dominant_constraint /
+        # dominant_dimension only come through on lineage_grade when
+        # aurora_closure_basis's physics-grounded grading actually ran (the
+        # string-frequency heuristic fallback never sets them) -- so this is
+        # a best-effort anchor, not a guaranteed one, exactly like the same
+        # resolution done for aurora_warp_protocol.py's genealogy search.
+        # Gate 2/4/5 rejections above already call the ledger, but keyed on
+        # the raw pair id -- they can't resolve a triple because dom_axis/
+        # lineage_grade aren't computed until a candidate reaches this point.
+        # Promotions themselves had no ledger record at all before this, so
+        # bridge_ledger_to_noncomps.py had nothing of ours to bridge into a
+        # noncomp's development_tracking.history.
+        _law = str(lineage_grade.get("dominant_constraint", "") or "").strip().upper()
+        _dim = str(lineage_grade.get("dominant_dimension", "") or "").strip().upper()
+        if _law in AXES and dom_axis in AXES and _dim:
+            try:
+                from aurora_internal.aurora_pressure_ledger import PressureExperienceLedger as _PEL
+                from genealogy_signature_bridge import emit_genealogy_experience as _emit_genealogy
+                _emit_genealogy(
+                    law=_law,
+                    dim=_dim,
+                    target=dom_axis,
+                    meaning=f"constraint link promoted: {key[0]} -> {key[1]}",
+                    pursuing=f"promote_{reliable_axis}_axis_link",
+                    causal_action=f"Promoted link {link_id} at depth {depth} (count={ps.count})",
+                    consequence={
+                        "tension": float(relief_signal),
+                        "net": float(net),
+                        "cost_signal": float(cost_signal),
+                    },
+                    outcome={
+                        "resolved": True,
+                        "tone": "promoted",
+                        "diverged_from_goal": False,
+                    },
+                    ledger=_PEL.get(),
+                )
+            except Exception:
+                pass
+
         return ConstraintLink(
             id=link_id,
             parents=list(key),
