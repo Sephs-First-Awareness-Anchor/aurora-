@@ -24,13 +24,18 @@ reasoning in each mapping's comment. Treat resolved_nc_name in the log as a
 best-effort annotation, not verified ground truth the way the genealogy
 bridge's anchors are.
 
-Non-invasive: monkeypatches FieldSlot.deposit in place. Does not edit
-aurora_constraint_engine.py.
+Monkeypatches FieldSlot.deposit in place. Auto-installed from
+ConstraintEngine.__init__ (aurora_constraint_engine.py) -- the one
+production FieldSlot() instantiation, which every one of the 19+ modules
+that construct a ConstraintEngine funnels through, so this covers all of
+them without editing any of the 19+. install() is idempotent and wrapped in
+try/except there, so a missing or broken hook module never breaks engine
+construction.
 
-Usage:
+Manual usage (e.g. against a FieldSlot used outside ConstraintEngine) still
+works the same way:
     import tensor_occupancy_hook
-    tensor_occupancy_hook.install()
-    # ... normal Aurora runtime, FieldSlot.deposit() calls now also logged ...
+    tensor_occupancy_hook.install(field_slot_cls=FieldSlot)
 """
 from __future__ import annotations
 import json

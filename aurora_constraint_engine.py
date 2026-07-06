@@ -1169,6 +1169,17 @@ class ConstraintEngine:
         self._payload_types: List[str] = []
         self._last_vector: Optional[ConstraintVector] = None
 
+        # Every ConstraintEngine funnels through this one FieldSlot() -- the
+        # only production instantiation in this file -- so this is the single
+        # choke point to install the occupancy hook from, without editing any
+        # of the 19+ modules that construct a ConstraintEngine. install() is
+        # idempotent and never raises even if the hook module is unavailable.
+        try:
+            import tensor_occupancy_hook as _tensor_occupancy_hook
+            _tensor_occupancy_hook.install(field_slot_cls=FieldSlot)
+        except Exception:
+            pass
+
         # INV-13: engine always boots under repair (snapshot ground truth)
         self._governor.set_repair_signal(
             active=True, intensity=0.30, phase="recognition"

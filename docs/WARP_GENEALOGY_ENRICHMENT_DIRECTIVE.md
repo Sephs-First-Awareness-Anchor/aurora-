@@ -57,13 +57,42 @@
   (constraint, comp, state) combinations resolve to a real manifold
   noncomp, and that an unrecognized label degrades to `resolved_nc_name:
   null` rather than a guess.
-- Still **not** auto-installed anywhere, which is a separate question from
-  the mapping above: `FieldSlot()` is instantiated independently in
-  `ConstraintEngine.__init__` (`aurora_constraint_engine.py:1167`), which
-  itself is constructed
-  independently across 19+ call sites with no shared bootstrap. Left as the
-  manual `import tensor_occupancy_hook; tensor_occupancy_hook.install(...)`
-  its own docstring already describes.
+- **Now auto-installed.** `FieldSlot()` is instantiated in exactly one
+  production location -- `ConstraintEngine.__init__`
+  (`aurora_constraint_engine.py:1167`) -- and every one of the 19+ modules
+  that construct a `ConstraintEngine` funnels through that single point, so
+  that's where `tensor_occupancy_hook.install()` gets called from (wrapped
+  in try/except; a missing or broken hook module never breaks engine
+  construction). Verified live: constructing a real `ConstraintEngine()`
+  installs the hook, and a subsequent `deposit()` logs and resolves
+  correctly. `tests/_engine_integration_test.py` (9/9) and
+  `tests/_pipeline_test.py` (6/6) both still pass with the hook installed.
+
+## A NOTE ON `resolved_nc_name: null`
+
+Asked whether an unresolved deposit is where Aurora would be expanding
+*past* the 125 noncomps into higher-order combinations -- a genuine WARP
+situation. The instinct is right in spirit but doesn't quite hold today:
+
+- `resolved_nc_name: null` currently only fires when a label index falls
+  outside `FieldSlot`'s hardcoded `DIMS = (5, 5, 5, 5)` shape -- i.e. a
+  malformed/out-of-range call, not a live 6th value. `CompositionalSpace`
+  and `State` are each a closed set of exactly 5 labels; nothing in
+  `FieldSlot.deposit()` lets a 6th one emerge at runtime the way a
+  genuinely novel I-state profile can reach `WarpGenerator` today. Growing
+  past 5 would mean changing `FieldSlot.DIMS`/`TOTAL` and adding a label to
+  `COMP_LABELS`/`STATE_LABELS` -- a structural code change, not something
+  that happens dynamically.
+- More importantly: `tensor_occupancy.jsonl` is not wired into
+  `CoverageGap`/`WarpGenerator._record_anomaly()` at all right now. It's
+  its own independent log, exactly as its docstring says. So even a genuine
+  unresolved entry today has nowhere to flow into the 6th-axis anomaly
+  path -- nothing reads this log and feeds it into `WarpGenerator`.
+
+Building that bridge (periodically read unresolved tensor_occupancy entries,
+shape them into a `CoverageGap`-like profile, feed `WarpGenerator`) is a real,
+separate piece of work -- not implied by anything already in this directive.
+Confirm before it's built.
 
 ---
 
