@@ -28,15 +28,38 @@
   unweighted cosine for that link only — verified to reproduce identical
   output to the pre-change code when no link resolves.
 - `bridge_ledger_to_noncomps.py` went to `scripts/` (matches the existing
-  periodic-tool convention there). `genealogy_signature_bridge.py` and
-  `tensor_occupancy_hook.py` stayed at repo root as ready-to-call/ready-to-
-  install modules, per their own docstrings — neither is wired into
-  `constraint_genealogy.py` or `aurora_constraint_engine.py` in this pass,
-  since that's a real behavioral change to code this directive scoped as
-  "do NOT touch." `genealogy_signature_bridge.py` now carries a candidate
-  hook-point note (the `ConstraintLink` construction site in
-  `constraint_genealogy.py`, where dom_axis and the same tags are already in
-  scope) for whoever picks that up next.
+  periodic-tool convention there).
+- `genealogy_signature_bridge.py` **is now wired in**: `constraint_genealogy.py`'s
+  `_try_promote()` calls `emit_genealogy_experience()` right before it
+  constructs the `ConstraintLink`, at the one point where `dom_axis`
+  (Target) and `lineage_grade`'s `dominant_constraint`/`dominant_dimension`
+  (Law/Dimension) are all in scope together — the same fields the warp
+  protocol wiring resolves from, but read here as raw dict values instead of
+  re-parsed tag strings. Guarded exactly like the three existing Gate 2/4/5
+  ledger calls already in that function (try/except, never breaks
+  promotion): fires only when the triple resolves, i.e. when closure-basis
+  grading actually ran for that promotion. Previously, *successful*
+  promotions never wrote to the pressure ledger at all — only the Gate
+  2/4/5 *rejections* did, and those are keyed on the raw pair id rather than
+  nc_name (they can't resolve a triple; dom_axis/lineage_grade aren't
+  computed yet at that point), so `bridge_ledger_to_noncomps.py` never had
+  anything of ours to bridge. Verified end-to-end: a resolvable promotion's
+  `emit_genealogy_experience()` call lands in the ledger anchored to the
+  correct nc_name, and `bridge_ledger_to_noncomps.py` picks it up into that
+  noncomp's `development_tracking.history` on the next pass.
+- `tensor_occupancy_hook.py` stayed at repo root as a ready-to-install
+  module, **not** auto-installed anywhere. Two reasons, not one: (1) unlike
+  the genealogy case, resolving a deposit event to an nc_name has no
+  existing field to hang off of — `FieldSlot.deposit()`'s
+  (comp, state, recursion) indices don't correspond to a Dimension/Target
+  anywhere in the codebase, so wiring that would mean inventing a mapping
+  the hook's own docstring explicitly says not to force; (2) there's no
+  single boot point to install it from even for the raw (non-resolved) log —
+  `FieldSlot()` is instantiated independently in `ConstraintEngine.__init__`
+  (`aurora_constraint_engine.py:1167`), which itself is constructed
+  independently across 19+ call sites with no shared bootstrap. Left as the
+  manual `import tensor_occupancy_hook; tensor_occupancy_hook.install(...)`
+  its own docstring already describes.
 
 ---
 
