@@ -47,16 +47,20 @@
   `emit_genealogy_experience()` call lands in the ledger anchored to the
   correct nc_name, and `bridge_ledger_to_noncomps.py` picks it up into that
   noncomp's `development_tracking.history` on the next pass.
-- `tensor_occupancy_hook.py` stayed at repo root as a ready-to-install
-  module, **not** auto-installed anywhere. Two reasons, not one: (1) unlike
-  the genealogy case, resolving a deposit event to an nc_name has no
-  existing field to hang off of — `FieldSlot.deposit()`'s
-  (comp, state, recursion) indices don't correspond to a Dimension/Target
-  anywhere in the codebase, so wiring that would mean inventing a mapping
-  the hook's own docstring explicitly says not to force; (2) there's no
-  single boot point to install it from even for the raw (non-resolved) log —
-  `FieldSlot()` is instantiated independently in `ConstraintEngine.__init__`
-  (`aurora_constraint_engine.py:1167`), which itself is constructed
+- `tensor_occupancy_hook.py` now resolves deposits to an nc_name too, per an
+  explicitly authorized (not discovered) mapping: `CONSTRAINT_LABELS` are
+  already X/T/N/B/A (Target, direct), and `_STATE_TO_LAW` /
+  `_COMP_TO_DIMENSION` define Law and Dimension by analogy to Aurora's own
+  I-state vocabulary and each dimension's physics role — spelled out in
+  comments in the file itself, since (unlike the genealogy tags) nothing
+  here was pre-labeled with noncomp vocabulary. Verified all 125
+  (constraint, comp, state) combinations resolve to a real manifold
+  noncomp, and that an unrecognized label degrades to `resolved_nc_name:
+  null` rather than a guess.
+- Still **not** auto-installed anywhere, which is a separate question from
+  the mapping above: `FieldSlot()` is instantiated independently in
+  `ConstraintEngine.__init__` (`aurora_constraint_engine.py:1167`), which
+  itself is constructed
   independently across 19+ call sites with no shared bootstrap. Left as the
   manual `import tensor_occupancy_hook; tensor_occupancy_hook.install(...)`
   its own docstring already describes.
