@@ -13531,6 +13531,39 @@ def _refresh_live_dual_strata_runtime(
     except Exception:
         return _read_live_dual_strata_runtime(systems)
 
+    # CERS shadow pass — read-only, never authoritative, same pattern as the
+    # DCEAssembly tick in aurora_consciousness_engine.py. Reuses this tick's
+    # already-computed sub_crests (exposed on subsurface_state["sub_crests"])
+    # so the shared WARP CrestRegistry singleton in subsystem_waveforms.py
+    # only ticks once per turn. Any failure here is swallowed — this path
+    # must never affect the authoritative runtime dict below.
+    try:
+        from aurora_internal.dual_strata import CERSBridge
+        from aurora_internal.dual_strata.crest import Crest as _Crest
+
+        cers_bridge = systems.get("_cers_bridge")
+        if cers_bridge is None:
+            cers_bridge = CERSBridge(state_dir=str(_dual_strata_state_dir(systems)))
+            systems["_cers_bridge"] = cers_bridge
+        _legacy_sub_crest_dicts = dict(snapshot.subsurface_state or {}).get("sub_crests", [])
+        _precomputed = tuple(
+            _Crest(label=d.get("label", "steady"), intensity=float(d.get("intensity", 0.0)), axis=d.get("axis", "X"))
+            for d in _legacy_sub_crest_dicts
+        )
+        cers_bridge.build_snapshot(
+            assembly,
+            payload=payload,
+            payload_type=payload_type,
+            evidence=dict(evidence or {}),
+            contract_snapshot=dict(contract_snapshot or {}),
+            requested_frame=str(requested_frame or "balanced"),
+            thought_intent=None,
+            recursion_weights=_recursion_weights,
+            precomputed_sub_crests=_precomputed,
+        )
+    except Exception:
+        pass
+
     _cf = dict(snapshot.conscious_frame or {})
     runtime = {
         "conscious_frame": _cf,

@@ -119,6 +119,8 @@ from aurora_dimensional_systems import (
     ThoughtBudget,
 )
 from aurora_internal.dual_strata import DualStrataBridge, recursion_weights_from_lattice
+from aurora_internal.dual_strata import CERSBridge
+from aurora_internal.dual_strata.crest import Crest
 
 # External pressure guidance (runtime -> DPME bridge).
 # Keep this abstract: score + channel targets only.
@@ -1130,6 +1132,11 @@ class ConsciousnessEngine:
         self.dce = DCEAssembly(collective, dimensional, self.entropy)
         self.dpme = DPME(self.entropy, lattice, collective, dimensional)
         self.dual_strata = DualStrataBridge()
+        # CERS shadow — runs in parallel, never authoritative. See
+        # ERS_Experiential_Regulation_System_Concept_Spec.md Section 8.
+        # Reads only; result.subsurface_state / result.conscious_frame stay
+        # driven by self.dual_strata exactly as before.
+        self.cers_bridge = CERSBridge()
 
         self.tick_count = 0
 
@@ -1184,6 +1191,34 @@ class ConsciousnessEngine:
         )
         result.subsurface_state = dict(snapshot.subsurface_state or {})
         result.conscious_frame = dict(snapshot.conscious_frame or {})
+
+        # CERS shadow pass — read-only, never authoritative. Reuses the
+        # sub_crests the legacy bridge already computed THIS tick (exposed
+        # on subsurface_state["sub_crests"]) rather than recomputing them,
+        # so the shared WARP CrestRegistry singleton in subsystem_waveforms.py
+        # only ticks once per turn and both bridges are judged on identical
+        # evidence. Any failure here is swallowed — CERS is experimental and
+        # must never be able to break a live turn.
+        try:
+            _legacy_sub_crest_dicts = result.subsurface_state.get("sub_crests", [])
+            _precomputed = tuple(
+                Crest(label=d.get("label", "steady"), intensity=float(d.get("intensity", 0.0)), axis=d.get("axis", "X"))
+                for d in _legacy_sub_crest_dicts
+            )
+            self.cers_bridge.build_snapshot(
+                result,
+                payload=payload,
+                payload_type=payload_type,
+                evidence=evidence,
+                contract_snapshot=contract_snapshot,
+                requested_frame=frame_name,
+                thought_intent=thought_intent,
+                recursion_weights=_recursion_weights,
+                precomputed_sub_crests=_precomputed,
+            )
+        except Exception:
+            pass
+
         return result
 
     def connect_simulation(self, simulation_engine):
