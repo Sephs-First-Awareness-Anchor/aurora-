@@ -8,6 +8,10 @@ from .conscious_frame import ConsciousFrame
 from .contextual_overlay import ContextualOverlay
 from .dce_bridge import DualStrataBridge, DualStrataSnapshot, recursion_weights_from_lattice
 from .downward_traversal import expand_crest
+from .cers_bridge import CERSBridge
+from .cers_regulator import CERSVerdict, CrestConflict, PotentialTracker, cers_converge, detect_conflicts
+from .cers_potential_trial import PotentialTrialBoard, PotentialTrial
+from .cers_deprecation import DeprecationRecommendation, SubsystemDeprecationLedger
 from .micro_reasoning import MicroReasoningHypothesis, generate_micro_reasoning
 from .prediction_field import PredictionPayload, PredictionSignal, build_prediction_signal
 from .subsurface_state import SubsurfaceState
@@ -24,6 +28,16 @@ from .sensory_observation import (
 
 __all__ = [
     "ActivationField",
+    "CERSBridge",
+    "CERSVerdict",
+    "CrestConflict",
+    "DeprecationRecommendation",
+    "PotentialTracker",
+    "PotentialTrial",
+    "PotentialTrialBoard",
+    "SubsystemDeprecationLedger",
+    "cers_converge",
+    "detect_conflicts",
     "Crest",
     "CrestBundle",
     "ConsciousFrame",
