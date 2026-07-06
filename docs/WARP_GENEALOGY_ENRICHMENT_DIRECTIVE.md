@@ -94,6 +94,63 @@ shape them into a `CoverageGap`-like profile, feed `WarpGenerator`) is a real,
 separate piece of work -- not implied by anything already in this directive.
 Confirm before it's built.
 
+## THE BRIDGE — BUILT
+
+Built as `tensor_occupancy_warp_bridge.py` (repo root) + the periodic driver
+`scripts/bridge_tensor_occupancy_to_warp.py`. One correction to the note
+above once this was actually built: the real signal isn't
+`resolved_nc_name: null` (that's a label-scheme lookup — did this deposit's
+comp/state combination match one of the 125 identities) but whether the
+deposit's *actual pressure vector* covers what any known noncomp's own
+identity would look like as a profile in 15D I-state+recursion space — a
+deposit can resolve its label cleanly and still carry a vector that covers
+nothing. That's the genuine coverage check, and it's what this bridge runs.
+
+- `TensorOccupancyWarpBridge(WarpCapable)` builds a 15D profile for each of
+  the 125 manifold noncomps (equal weight spread across its own
+  `nc_law_c`/`nc_target`/`DIMENSION_ROLE[nc_dim]` axis set, scaled by
+  `formula_coefficient` — reusing `axes_to_istates()`, the same 5D→15D
+  recipe `_search_genealogy` already uses for `ConstraintLink` relief, not
+  a new one), then runs each occupancy deposit's vector through the
+  existing `WarpCapable.check_and_extend()` machinery against those 125
+  profiles — the same gap-persistence/anomaly-logging path
+  `_search_genealogy` and every other `WarpCapable` host already share.
+- Found and fixed a real bug while building this: `axes_to_istates()`
+  defaults a *missing* axis key to 0.5, not 0.0 (it's written for callers
+  that always pass a full 5-key dict). An early version of the noncomp
+  profile builder passed a partial dict and silently inflated every
+  "uninvolved" axis to ~0.25. Fixed to always pass a full 5-key dict with
+  explicit 0.0 for inactive axes.
+- Found and fixed a real design gap too: noncomps carry no recursion depth
+  of their own. Leaving their recursion dims at hard 0.0 meant *every* real
+  deposit (which always carries a recursion label) crashed coverage
+  regardless of axis match — verified directly, ~1.0 down to ~0.44 from the
+  recursion term alone — which would've flooded the gap pipeline with noise
+  instead of signal. Gave known profiles a uniform 0.3 recursion baseline
+  instead. Worked out the closed form for a clean axis match: there's no
+  baseline that fully restores coverage (known-profile norm grows
+  quadratically with the baseline while the dot product only grows
+  linearly, so cosine peaks around b≈0.095 and *falls* again above it) —
+  0.3 lands a clean match around ~0.5 coverage: safely above
+  `ANOMALY_THRESHOLD` (won't misread as a 6th-axis candidate) but still a
+  real, honestly-earned gap, since the static manifold genuinely has no
+  opinion on live recursion depth.
+- `_score_trial` returns a fixed score below `PROMOTION_SCORE` — this layer
+  has no real usage signal to score a spawned component against, so trial
+  components observed here dissolve after `TRIAL_TICKS` rather than being
+  falsely promoted into permanent structure without evidence.
+- Verified end-to-end against a real `ConstraintEngine`: deposits →
+  `tensor_occupancy.jsonl` → the driver script → gap detected → persists for
+  `GAP_PERSISTENCE_REQUIRED` ticks → `WarpComponent` spawned, logged to
+  `aurora_state/tensor_occupancy_warp_components.jsonl`, tracked as a
+  dissolving trial. Re-running the driver script with no new entries
+  correctly processes 0 (cursor file prevents reprocessing).
+- Cross-run limitation, stated plainly in both files: `WarpGenerator`'s
+  anomaly log and the gap-persistence counter are in-memory per script run
+  only. A gap recurring across separate runs (not within one batch) isn't
+  currently caught — would need cross-run state persistence, which this
+  pass doesn't add.
+
 ---
 
 ## 1. ASSESS BEFORE ARCHITECT — current state (verified, not assumed)

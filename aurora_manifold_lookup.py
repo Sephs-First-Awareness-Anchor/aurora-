@@ -19,7 +19,7 @@ any miss (unknown nc_name, missing manifold directory, missing _index.json)
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from aurora_manifold_directory_reader import ManifoldDirectory
 
@@ -45,3 +45,12 @@ def load_noncomp(nc_name: str) -> Optional[Dict]:
         return directory.load(nc_name).to_dict()
     except KeyError:
         return None
+
+
+def all_noncomp_names() -> List[str]:
+    """All known nc_names (index lookup only, no disk I/O per name). Returns
+    [] if the manifold directory/index isn't available."""
+    directory = _directory()
+    if directory is None:
+        return []
+    return directory.noncomp_names
