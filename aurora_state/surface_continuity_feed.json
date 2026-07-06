@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "adc8ec2b515e4689871249c8f9fdba49",
-    "created_at": 1783296141.9631855,
-    "source": "simulation_live_bridge",
-    "user_input": "trust.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "trust"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2241655cac4f438eb7598eb06aa50924",
-    "created_at": 1783296142.2320194,
-    "source": "simulation_live_bridge",
-    "user_input": "trust.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "trust"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "2ed6742e50ca4e26b4fbbe8ac540cae3",
-    "created_at": 1783296142.4463499,
-    "source": "simulation_live_bridge",
-    "user_input": "trust.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "trust"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "bc10604a6d754b2394e027cce5868c17",
-    "created_at": 1783296142.6524653,
-    "source": "simulation_live_bridge",
-    "user_input": "trust.",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "trust"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "9c3e2ce0b6c84b13a511313e103181a5",
     "created_at": 1783305815.8680604,
     "source": "simulation_live_bridge",
@@ -470,6 +374,102 @@
     "user_input": "What is trust?",
     "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
     "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6ad8a0aaf06845b4826a76736bd653bc",
+    "created_at": 1783360091.7561228,
+    "source": "simulation_live_bridge",
+    "user_input": "What does trust mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f0c726aeb61e4fb894ccd72419e45f49",
+    "created_at": 1783360092.5698683,
+    "source": "simulation_live_bridge",
+    "user_input": "What does trust mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "14aeb6d22f624f2c972e42dab66b82fc",
+    "created_at": 1783360093.3822117,
+    "source": "simulation_live_bridge",
+    "user_input": "What does trust mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "cc125327489446eb98b8c50d57339e62",
+    "created_at": 1783360095.9932618,
+    "source": "simulation_live_bridge",
+    "user_input": "What does trust mean to you?",
+    "aurora_response": "I don't have a clear sense of that.",
+    "response_tone": "honest",
     "concepts_activated": [
       "trust"
     ],
