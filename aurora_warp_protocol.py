@@ -60,6 +60,9 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+import aurora_manifold_lookup
+from aurora_constraint_signature_resolver import nc_name as _resolve_nc_name
+
 # ─── I-State Space ────────────────────────────────────────────────────────────
 
 # The 10 I-state beings — the actual operational units of the coverage space.
@@ -513,6 +516,52 @@ class WarpGenerator:
 
     # ── private ──────────────────────────────────────────────────────────────
 
+    # Tunable: how much a manifold-sourced formula_coefficient can move a raw
+    # cosine similarity. 0.7 floor keeps the genealogy match itself dominant;
+    # 0.3 span lets a noncomp's own accountability weight nudge it +/-30%.
+    _MANIFOLD_COEFFICIENT_WEIGHT = 0.3
+    _MANIFOLD_COEFFICIENT_FLOOR = 1.0 - _MANIFOLD_COEFFICIENT_WEIGHT
+
+    _DOMINANT_CONSTRAINT_TAG_PREFIX = "dominant_constraint:"
+    _DOMINANT_DIMENSION_TAG_PREFIX = "dominant_dimension:"
+
+    def _resolve_link_nc_name(self, link: Any) -> Optional[str]:
+        """
+        Best-effort resolve this ConstraintLink to a manifold nc_name.
+
+        ConstraintLink itself has no dedicated (law, dim, target) field —
+        the closest it comes is: `dominant_relief_axis` (a real dataclass
+        field — the axis that received the most relief, i.e. the Target C)
+        plus two free-form strings inside `tags` — "dominant_constraint:<axis>"
+        (the Law L) and "dominant_dimension:<DIM>" (the Dimension D) —
+        emitted by constraint_genealogy.py's promotion path when
+        aurora_closure_basis's physics-grounded lineage grading succeeds.
+
+        Those tags are informal and conditional: when closure-basis grading
+        falls back to its string-frequency heuristic (no aurora_closure_basis,
+        or derive_lineage() raised), the payload never sets those keys, so
+        the tag ends up empty/placeholder. Rather than guess in that case,
+        return None per-link so the caller falls back to the unweighted
+        similarity exactly as before — never assume a triple is resolvable
+        just because a tag string happens to be present.
+        """
+        tags = getattr(link, "tags", None) or []
+        law: Optional[str] = None
+        dim: Optional[str] = None
+        for tag in tags:
+            if law is None and tag.startswith(self._DOMINANT_CONSTRAINT_TAG_PREFIX):
+                law = tag[len(self._DOMINANT_CONSTRAINT_TAG_PREFIX):].strip().upper()
+            elif dim is None and tag.startswith(self._DOMINANT_DIMENSION_TAG_PREFIX):
+                dim = tag[len(self._DOMINANT_DIMENSION_TAG_PREFIX):].strip().upper()
+
+        target = getattr(link, "dominant_relief_axis", None)
+        if not law or not dim or not target or law not in _ALL_AXES or target not in _ALL_AXES:
+            return None
+        try:
+            return _resolve_nc_name(law, dim, target)
+        except KeyError:
+            return None
+
     def _search_genealogy(
         self,
         gap: CoverageGap,
@@ -523,8 +572,16 @@ class WarpGenerator:
         resonate with the gap. Each ConstraintLink has mean_relief (5D axis)
         and depth (DAG depth) — converted to 15D for cosine comparison.
 
+        When a link resolves to a known manifold noncomp (see
+        _resolve_link_nc_name), its formula_coefficient secondarily weights
+        the match — proven links whose own noncomp carries a heavier
+        accountability weight bias the derivation a little more strongly.
+        Unresolved links (the common case when manifold data or the
+        closure-basis tags aren't available) use the raw cosine unchanged.
+
         Returns up to 3 I-state profiles from top-matching links (min 0.35
-        cosine) to bias the derived component toward proven territory.
+        adjusted-similarity) to bias the derived component toward proven
+        territory.
         """
         if genealogy is None or not hasattr(genealogy, "links"):
             return []
@@ -562,7 +619,17 @@ class WarpGenerator:
             link_istate.update(rec)
 
             sim = AxisCoverageChecker.cosine(link_istate, gap.axis_profile)
-            results.append((sim, link_istate))
+
+            adjusted_sim = sim
+            resolved_name = self._resolve_link_nc_name(link)
+            if resolved_name is not None:
+                noncomp = aurora_manifold_lookup.load_noncomp(resolved_name)
+                if noncomp is not None:
+                    coeff = float(noncomp.get("formula_coefficient", 0.0) or 0.0)
+                    adjusted_sim = sim * (self._MANIFOLD_COEFFICIENT_FLOOR
+                                           + self._MANIFOLD_COEFFICIENT_WEIGHT * coeff)
+
+            results.append((adjusted_sim, link_istate))
 
         results.sort(key=lambda x: x[0], reverse=True)
         return [prof for sim, prof in results[:3] if sim > 0.35]

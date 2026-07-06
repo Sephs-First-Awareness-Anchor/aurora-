@@ -304,6 +304,10 @@ class NoncompManifold:
     def language_projection(self) -> Dict:
         return dict(self._data.get("language_projection", {}))
 
+    def to_dict(self) -> Dict:
+        """Full raw dict as loaded from disk -- callers must not mutate it."""
+        return self._data
+
     # ── Geometry ──────────────────────────────────────────────────────────────
 
     @property
