@@ -1,101 +1,5 @@
 [
   {
-    "packet_id": "02e2fc99166241988e89213fa4498a12",
-    "created_at": 1783292286.4596374,
-    "source": "simulation_live_bridge",
-    "user_input": "What does understanding mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 1.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "3f0a5dd648fd46a0b81d3b10840b78c6",
-    "created_at": 1783292287.2397435,
-    "source": "simulation_live_bridge",
-    "user_input": "What does understanding mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.986,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "25e48963e57b4e4187ea0d870f1a3e04",
-    "created_at": 1783292288.0361533,
-    "source": "simulation_live_bridge",
-    "user_input": "What does understanding mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "05197924407f48169a53ef565069fb19",
-    "created_at": 1783292290.5625417,
-    "source": "simulation_live_bridge",
-    "user_input": "What does understanding mean to you?",
-    "aurora_response": "I don't have a clear sense of that.",
-    "response_tone": "honest",
-    "concepts_activated": [
-      "understanding"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.758,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "adc8ec2b515e4689871249c8f9fdba49",
     "created_at": 1783296141.9631855,
     "source": "simulation_live_bridge",
@@ -472,6 +376,102 @@
     "concepts_activated": [
       "understand",
       "existence"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.758,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "714b257fc6ca469bbaeab0b850b769a0",
+    "created_at": 1783350246.1034572,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "fbb5593cff8a4fc4a28aee1aa34ae139",
+    "created_at": 1783350247.6846714,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.986,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "c10e6eabaee247c2b14d31d124e4531f",
+    "created_at": 1783350251.1896007,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "2f8fb74ead684faf843020311625ff9e",
+    "created_at": 1783350254.6488633,
+    "source": "simulation_live_bridge",
+    "user_input": "What is trust?",
+    "aurora_response": "understanding, trust, foundational:trust, connected to, emotion, connection. how.",
+    "response_tone": "engaged",
+    "concepts_activated": [
+      "trust"
     ],
     "visual_description": "",
     "audio_description": "",
