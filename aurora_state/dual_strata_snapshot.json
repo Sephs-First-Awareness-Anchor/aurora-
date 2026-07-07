@@ -3,7 +3,7 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.4226,
+      "intensity": 0.6791,
       "label": "explain"
     },
     "dominant_axis": "N",
@@ -19,18 +19,18 @@
       "reinforcement_hint": 0.1047
     },
     "processing_mode": "blended",
-    "readiness": 0.4813,
+    "readiness": 0.5613,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4109,
+      "intensity": 0.7773,
       "label": "steady"
     },
-    "timestamp": 1783439188.3920293
+    "timestamp": 1783447070.6898603
   },
-  "saved_at": 1783439188.3922024,
+  "saved_at": 1783447070.6900835,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
@@ -67,9 +67,9 @@
         "label": "steady_continuation"
       },
       {
-        "axis": "B",
-        "intensity": 0.65,
-        "label": "contradiction"
+        "axis": "N",
+        "intensity": 1.0,
+        "label": "novelty"
       },
       {
         "axis": "T",
@@ -89,7 +89,7 @@
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4109,
+      "intensity": 0.7773,
       "label": "steady"
     }
   }
