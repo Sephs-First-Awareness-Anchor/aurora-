@@ -1,16 +1,16 @@
 {
   "conscious_frame": {
-    "coherence": 0.644,
+    "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.7373,
+      "intensity": 0.6791,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "Do you experience change?",
+      "present_anchor": "What would likely cause that relation to change?",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -18,8 +18,8 @@
       "present_tone": "neutral",
       "reinforcement_hint": 0.1047
     },
-    "processing_mode": "reactive",
-    "readiness": 0.6583,
+    "processing_mode": "blended",
+    "readiness": 0.5613,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
@@ -28,16 +28,16 @@
       "intensity": 0.7773,
       "label": "steady"
     },
-    "timestamp": 1783382630.396494
+    "timestamp": 1783387444.641139
   },
-  "saved_at": 1783382630.3966665,
+  "saved_at": 1783387444.6413083,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "Do you experience change?",
+      "present_anchor": "What would likely cause that relation to change?",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
