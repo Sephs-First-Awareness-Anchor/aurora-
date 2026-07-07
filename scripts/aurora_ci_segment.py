@@ -19,16 +19,26 @@ together for a bounded window so she develops through her whole architecture:
   - study cycles           -> SURFACE: exercises the expression ecology / OETS so
                               her language + understanding develop, not just her
                               interior
+  - classroom curriculum   -> targeted lessons on her real weakest rubric
+                              dimensions (aurora_classroom.py), ranked from
+                              fail_points.json -- the same health-check data
+                              aurora_diag.py already reads. Any dimension whose
+                              recent lessons aren't moving dev_index, or whose
+                              fail_points trend reads WORSENING, gets fed a
+                              real failing conversation excerpt as seed content
+                              instead of another generic attempt.
 
 Then it snapshots her developmental state and appends a one-line summary to
 aurora_run_history.jsonl. The workflow commits her evolved state afterward.
 
 Config via env:
-  AURORA_CI_MAX_SECONDS    wall-clock budget for the segment      (default 600)
-  AURORA_CI_CURIOSITY_S    curiosity idle tick interval           (default 45)
-  AURORA_CI_DREAM_S        dream-substrate cycle interval         (default 150)
-  AURORA_CI_STUDY_CYCLES   surface study cycles to run up front   (default 3)
-  AURORA_SKIP_DEP_INSTALL  set to 1 so boot never pip-installs    (recommended)
+  AURORA_CI_MAX_SECONDS      wall-clock budget for the segment      (default 600)
+  AURORA_CI_CURIOSITY_S      curiosity idle tick interval           (default 45)
+  AURORA_CI_DREAM_S          dream-substrate cycle interval         (default 150)
+  AURORA_CI_STUDY_CYCLES     surface study cycles to run up front   (default 3)
+  AURORA_CI_CLASSROOM_LESSONS  targeted lessons to run up front     (default 4)
+  AURORA_CI_CLASSROOM_TURNS    turns per classroom lesson           (default 6)
+  AURORA_SKIP_DEP_INSTALL    set to 1 so boot never pip-installs    (recommended)
 """
 from __future__ import annotations
 import json
@@ -46,6 +56,8 @@ MAX_SECONDS = float(os.environ.get("AURORA_CI_MAX_SECONDS", "600") or 600)
 CURIOSITY_S = float(os.environ.get("AURORA_CI_CURIOSITY_S", "45") or 45)
 DREAM_S = float(os.environ.get("AURORA_CI_DREAM_S", "150") or 150)
 STUDY_CYCLES = int(os.environ.get("AURORA_CI_STUDY_CYCLES", "3") or 3)
+CLASSROOM_LESSONS = int(os.environ.get("AURORA_CI_CLASSROOM_LESSONS", "4") or 4)
+CLASSROOM_TURNS = int(os.environ.get("AURORA_CI_CLASSROOM_TURNS", "6") or 6)
 
 
 def _tl(p):
@@ -132,6 +144,41 @@ def main() -> int:
     except Exception as exc:
         print(f">>> [aurora-ci] study cycles skipped: {exc}", flush=True)
 
+    # Targeted classroom curriculum, still in the synchronous warm-up phase
+    # (before background threads start touching the same SimulationEngine/
+    # SimulationSession) so a lesson's run_episode()/entity resolution can't
+    # race curiosity or dream threads that also reach into simulation state.
+    classroom_summary = {"lessons": 0, "dev_delta_total": None, "plan": []}
+    try:
+        if CLASSROOM_LESSONS > 0:
+            sim_engine = systems.get("simulation")
+            if sim_engine is None:
+                print(">>> [aurora-ci] classroom skipped: no simulation engine in systems", flush=True)
+            else:
+                from aurora_classroom import ClassroomSession
+                classroom = ClassroomSession(sim_engine, systems)
+                results = classroom.run_targeted_curriculum(
+                    n=CLASSROOM_LESSONS, turns_per_lesson=CLASSROOM_TURNS
+                )
+                deltas = [r.dev_delta_from_lesson for r in results if r.dev_delta_from_lesson is not None]
+                classroom_summary = {
+                    "lessons": len(results),
+                    "dev_delta_total": round(sum(deltas), 4) if deltas else None,
+                    "plan": [
+                        {"dimension": r.target_dimension, "content_source": r.content_source}
+                        for r in results
+                    ],
+                }
+                plan_desc = ", ".join(
+                    f"{p['dimension']}({p['content_source']})" for p in classroom_summary["plan"]
+                )
+                print(
+                    f">>> [aurora-ci] ran {len(results)} classroom lessons: {plan_desc}",
+                    flush=True,
+                )
+    except Exception as exc:
+        print(f">>> [aurora-ci] classroom curriculum skipped: {exc}", flush=True)
+
     # Now bring every living background engine online and LET HER LIVE.
     started = _bring_fully_alive(systems, events)
     print(f">>> [aurora-ci] living systems online: {started}", flush=True)
@@ -183,6 +230,9 @@ def main() -> int:
         "autonomous_studies": events["study"],
         "dreams": events["dream"],
         "last_thought": events["last_thought"],
+        "classroom_lessons": classroom_summary["lessons"],
+        "classroom_dev_delta_total": classroom_summary["dev_delta_total"],
+        "classroom_plan": classroom_summary["plan"],
     }
     try:
         with open(RUN_LOG, "a", encoding="utf-8") as fh:

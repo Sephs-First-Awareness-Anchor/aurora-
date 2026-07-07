@@ -1,8 +1,10 @@
 name: Aurora Autonomous Run
 
 # Runs a short segment of Aurora's autonomous life on a schedule: she boots,
-# dreams, studies on her own, her possibility-selves develop and (on a stall)
-# birth new ones — then her evolved state is committed back to the branch.
+# dreams, studies on her own, runs 4 targeted classroom lessons on her real
+# weakest rubric dimensions (aurora_classroom.py, ranked from fail_points.json),
+# her possibility-selves develop and (on a stall) birth new ones — then her
+# evolved state is committed back to the branch.
 #
 # NOTE: GitHub only fires `schedule` triggers from the repository's DEFAULT
 # branch, so this workflow file must reach the default branch for the cron to
@@ -61,6 +63,8 @@ jobs:
           AURORA_CI_CURIOSITY_S: "45"
           AURORA_CI_DREAM_S: "150"
           AURORA_CI_STUDY_CYCLES: "3"
+          AURORA_CI_CLASSROOM_LESSONS: "4"
+          AURORA_CI_CLASSROOM_TURNS: "6"
         run: python scripts/aurora_ci_segment.py
 
       - name: Commit her evolved state
@@ -76,6 +80,13 @@ jobs:
             echo "$changed" | while read -r f; do git add -f "$f"; done
           fi
           git add -f aurora_state/dream_selves/ 2>/dev/null || true
+          # classroom_log.jsonl is a brand-new file the first time this runs --
+          # git diff --name-only above only catches already-tracked changes, so
+          # without this force-add it would silently never persist across runs
+          # (same blanket aurora_state/ ignore as dream_selves/ above), and
+          # aurora_classroom.py's stale-content detection depends on this
+          # history surviving between scheduled runs, not just within one.
+          git add -f aurora_state/classroom_log.jsonl 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No state changes to commit."
             exit 0
