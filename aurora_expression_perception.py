@@ -824,6 +824,18 @@ class ImpressionCascade:
         self.relics: Dict[str, GhostRelic] = {}
         self.total_energy_processed = 0
 
+    def get_stats(self) -> Dict[str, Any]:
+        """Real cascade statistics from actual internal state. Added to fix
+        InceptionEntity.collapse_to_parent() (aurora_simulation_engine.py),
+        which called this method before it existed — every entity resolution
+        raised AttributeError until this was added."""
+        return {
+            "shard_count": len(self.shards),
+            "seed_count": len(self.seeds),
+            "relic_count": len(self.relics),
+            "total_energy_processed": self.total_energy_processed,
+        }
+
     def energy_to_shard(self, channels: Dict[str, float],
                         mode: ExistenceMode) -> Optional[EmotionShard]:
         """Convert raw emotion channels to an EmotionShard. Requires TRANSIENT+."""
