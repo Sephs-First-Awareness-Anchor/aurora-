@@ -1865,9 +1865,11 @@ class SimulationSession:
         topic["category"] = category
         topic["prompt"] = prompt
         topic["topic"] = prompt
-        topic["expected_tone"] = str(
-            topic.get("expected_tone", TopicGenerator.TONE_MAP.get(category, "neutral")) or "neutral"
-        )
+        # TopicGenerator has no TONE_MAP (never did -- its own generate()
+        # always hardcodes 'neutral' regardless of category too), so this
+        # raised AttributeError on every non-empty seed_prompt before now.
+        # Matches TopicGenerator.generate()'s own category-agnostic fallback.
+        topic["expected_tone"] = str(topic.get("expected_tone") or "neutral")
         return topic
 
     def run_episode(self, turns: int = 5,
