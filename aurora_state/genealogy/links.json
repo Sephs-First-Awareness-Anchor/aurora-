@@ -27070,5 +27070,77 @@
       "compression_op:N:COMPRESSION_3305e3fba7",
       "nc_dim:DIFFERENCE"
     ]
+  },
+  "L:f5ce6c44b7": {
+    "id": "L:f5ce6c44b7",
+    "parents": [
+      "N:DRAIN_BASELINE",
+      "B:PARTITION_SHIFT"
+    ],
+    "depth": 1,
+    "created_at_tick": 76722,
+    "stats": {
+      "count": 8,
+      "mean_pos_relief": {
+        "X": 2.778532006460864e-06,
+        "T": 0.00022482728377174165,
+        "N": -6.286140208156754e-06,
+        "B": -0.0002602566494101448,
+        "A": 4.697090603271966e-05
+      },
+      "mean_relief": {
+        "X": 2.778532006460864e-06,
+        "T": 0.00022482728377174165,
+        "N": -6.286140208156754e-06,
+        "B": -0.0002602566494101448,
+        "A": 4.697090603271966e-05
+      },
+      "stdev_relief": {
+        "X": 6.792739845517089e-05,
+        "T": 0.0004043936665311731,
+        "N": 1.5886551449427348e-05,
+        "B": 0.00025444155707128564,
+        "A": 8.988750850528462e-05
+      },
+      "mean_cost": {
+        "X": 0.004623307882746257,
+        "T": 0.03610213950846635,
+        "N": 0.1943090457257415,
+        "B": 0.18978171394738946,
+        "A": 1.3723226579872103
+      },
+      "mean_x_risk": 0.014777925642949788
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "signature:N^1*B^1",
+      "dominant_axis:N",
+      "purpose_family:N+B",
+      "origin_signature:N^1*B^1",
+      "operator_action:dream_evidence:leverage_hit",
+      "purpose_lane:communication",
+      "operator_grade:0.809",
+      "purpose_grade:0.817",
+      "overall_grade:0.813",
+      "complexity_axes:3",
+      "complexity_slots:3",
+      "generation:11",
+      "generation_role:SHEAR",
+      "seed_influence:0.057",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.057",
+      "artificial_seed:true",
+      "seed_lineage_id:episode_2a40bdd01e0a",
+      "steering_target_generation:11",
+      "ontological_status:native_closed",
+      "depth_score:0.0900",
+      "leverage_grade:0.4103",
+      "viable_band_alignment:0.8205",
+      "energetic_footprint:0.0900",
+      "dominant_constraint:B",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_d302df45b9",
+      "nc_dim:DIFFERENCE"
+    ]
   }
 }
