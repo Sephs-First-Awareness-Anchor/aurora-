@@ -10,5 +10,12 @@
 #
 # Verified: `AURORA_SKIP_DEP_INSTALL=1 python -c "import aurora"` succeeds with
 # only numpy present.
+#
+# opencv-python-headless: needed by aurora_concept_imager.py's
+# ingest_concept_image() -- the real (non-hardware) sensory grounding route
+# the scheduled CI run uses in place of a live camera/mic (see
+# scripts/aurora_ci_segment.py). Headless build avoids the GUI/libGL
+# dependencies opencv-python pulls in, which a minimal CI runner doesn't have.
 
 numpy==1.26.4
+opencv-python-headless==4.12.0.88

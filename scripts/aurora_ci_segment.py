@@ -38,6 +38,7 @@ Config via env:
   AURORA_CI_STUDY_CYCLES     surface study cycles to run up front   (default 3)
   AURORA_CI_CLASSROOM_LESSONS  targeted lessons to run up front     (default 4)
   AURORA_CI_CLASSROOM_TURNS    turns per classroom lesson           (default 6)
+  AURORA_CI_CONCEPT_IMAGES     concept images to fetch+ground/run   (default 6)
   AURORA_SKIP_DEP_INSTALL    set to 1 so boot never pip-installs    (recommended)
 """
 from __future__ import annotations
@@ -58,6 +59,7 @@ DREAM_S = float(os.environ.get("AURORA_CI_DREAM_S", "150") or 150)
 STUDY_CYCLES = int(os.environ.get("AURORA_CI_STUDY_CYCLES", "3") or 3)
 CLASSROOM_LESSONS = int(os.environ.get("AURORA_CI_CLASSROOM_LESSONS", "4") or 4)
 CLASSROOM_TURNS = int(os.environ.get("AURORA_CI_CLASSROOM_TURNS", "6") or 6)
+CONCEPT_IMAGES = int(os.environ.get("AURORA_CI_CONCEPT_IMAGES", "6") or 6)
 
 
 def _tl(p):
@@ -179,6 +181,34 @@ def main() -> int:
     except Exception as exc:
         print(f">>> [aurora-ci] classroom curriculum skipped: {exc}", flush=True)
 
+    # Concept-image grounding: there's no camera/mic in this headless CI
+    # environment, so AuroraSensoryCrystal.observe_frame() never fires from
+    # real hardware (confirmed dead since real interactive sessions stopped
+    # feeding it -- see crystal-stagnation investigation, 2026-07-09). This
+    # is the real (not fabricated) substitute route that already existed for
+    # exactly this case: fetch an actual Wikipedia image for concepts her
+    # OETS web has already grounded semantically, extract real visual
+    # features from it, and feed those through the same observe_frame() path
+    # hardware would have used. Each concept gets a genuinely distinct
+    # session_id, so usage_count/session_count move for real instead of
+    # replaying the same frozen archetype nodes.
+    concept_images_ingested = 0
+    try:
+        if CONCEPT_IMAGES > 0:
+            oets = systems.get("oets") or getattr(systems.get("perception"), "oets", None)
+            sensory_crystal = systems.get("sensory_crystal")
+            hardware = systems.get("hardware")
+            if oets is None or sensory_crystal is None:
+                print(">>> [aurora-ci] concept imaging skipped: no oets/sensory_crystal in systems", flush=True)
+            else:
+                from aurora_concept_imager import run_concept_image_cycle
+                concept_images_ingested = run_concept_image_cycle(
+                    oets, hardware, sensory_crystal, SD, max_per_run=CONCEPT_IMAGES
+                )
+                print(f">>> [aurora-ci] grounded {concept_images_ingested} concept(s) with real images", flush=True)
+    except Exception as exc:
+        print(f">>> [aurora-ci] concept imaging skipped: {exc}", flush=True)
+
     # Now bring every living background engine online and LET HER LIVE.
     started = _bring_fully_alive(systems, events)
     print(f">>> [aurora-ci] living systems online: {started}", flush=True)
@@ -233,6 +263,7 @@ def main() -> int:
         "classroom_lessons": classroom_summary["lessons"],
         "classroom_dev_delta_total": classroom_summary["dev_delta_total"],
         "classroom_plan": classroom_summary["plan"],
+        "concept_images_ingested": concept_images_ingested,
     }
     try:
         with open(RUN_LOG, "a", encoding="utf-8") as fh:
