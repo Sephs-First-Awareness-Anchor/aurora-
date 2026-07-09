@@ -26,17 +26,6 @@
   "governed_by": "cers_regulator.cers_converge",
   "micro_reasoning": [
     {
-      "confidence": 0.6,
-      "label": "conflict_exposure",
-      "rationale": "The active assembly still contains paradox or unresolved conflict.",
-      "source": "assembly",
-      "tags": [
-        "conflict",
-        "stability"
-      ],
-      "urgency": 0.6
-    },
-    {
       "confidence": 1.0,
       "label": "novelty_attention",
       "rationale": "Novelty is high enough that the frame should stay exploratory.",
@@ -50,7 +39,7 @@
   ],
   "prediction_confidence": 0.4869,
   "prediction_source": "runtime_evidence+manifold",
-  "saved_at": 1783637504.8348775,
+  "saved_at": 1783638527.971598,
   "sub_crests": [
     {
       "axis": "X",
@@ -73,9 +62,9 @@
       "label": "steady_continuation"
     },
     {
-      "axis": "B",
-      "intensity": 0.65,
-      "label": "contradiction"
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "novelty"
     },
     {
       "axis": "T",
