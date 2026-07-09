@@ -49,7 +49,13 @@ from .subsystem_waveforms import emit_subsystem_crests
 from .cers_regulator import CERSVerdict, PotentialTracker, cers_converge
 from .cers_deprecation import DeprecationRecommendation, SubsystemDeprecationLedger
 from .cers_potential_trial import PotentialTrialBoard
-from .cers_tensor_locator import resolve_pressure_coordinate, record_tensor_trace, compute_salience
+from .cers_tensor_locator import (
+    resolve_pressure_coordinate,
+    record_tensor_trace,
+    compute_salience,
+    lookup_tensor_crystal,
+    familiarity_from_crystal,
+)
 
 
 class CERSBridge:
@@ -110,13 +116,30 @@ class CERSBridge:
         sensory_context = dict(getattr(assembly_result, "sensory_context", {}) or {})
         overlay = build_contextual_overlay(payload, evidence, contract_snapshot, sensory_context)
 
-        # 2. Prediction detail — unchanged, reused from prediction_field.py
+        # 2. Prediction detail — reused from prediction_field.py, now fed
+        # from the SAME constraint manifold the tensor-trace pass below
+        # resolves onto (per the user's "predictive frames should honestly
+        # be generated from that same thing" scoping call). Sub_crests
+        # aren't computed yet at this point in the pipeline, so this is a
+        # coarser magnitude-only read of the coordinate than step 4b gets —
+        # a read-only lookup (never creates/mutates a crystal; this tick's
+        # actual visit is recorded once, at step 4b).
+        _pre_coord = resolve_pressure_coordinate(adjusted_axes, ())
+        _pre_crystal = lookup_tensor_crystal(dps, _pre_coord) if dps is not None else None
         prediction_signal = build_prediction_signal(
             payload=payload,
             evidence=evidence,
             contract_snapshot=contract_snapshot,
             sensory_context=sensory_context,
             entropy_state=getattr(assembly_result, "entropy_state", None),
+            manifold_axis=(_pre_coord.target if _pre_coord is not None else None),
+            # None (not 0.0) when dps is unavailable -- "couldn't check" must
+            # stay distinct from "checked, never visited," which is a real
+            # 0.0 read that should legitimately lower confidence.
+            manifold_familiarity=(
+                familiarity_from_crystal(_pre_crystal)
+                if (dps is not None and _pre_coord is not None) else None
+            ),
         )
 
         # 3. Subsystem crests — reused from subsystem_waveforms.py UNLESS
@@ -192,6 +215,8 @@ class CERSBridge:
             "cers_verdict": verdict.to_dict(),
             "governed_by": "cers_regulator.cers_converge",
             "tensor_trace": tensor_trace,
+            "prediction_confidence": round(prediction_signal.confidence, 4),
+            "prediction_source": prediction_signal.source,
         }
 
         subsurface = SubsurfaceState(

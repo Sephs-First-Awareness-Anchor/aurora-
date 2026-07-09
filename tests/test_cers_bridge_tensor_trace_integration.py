@@ -89,6 +89,39 @@ def test_revisiting_same_pressure_geometry_reuses_the_crystal(tmp_path):
     assert len(dps.crystals) == 1, "the same recurring pressure geometry must not spawn multiple crystals"
 
 
+def test_prediction_signal_is_fed_from_the_same_manifold_on_revisit(tmp_path):
+    """CERS Phase 2: prediction, not just the tensor-trace pass itself,
+    should draw on the same constraint manifold. First visit to a
+    coordinate has zero precedent (familiarity 0.0); by the time this
+    exact pressure geometry has been visited several times, prediction's
+    confidence should reflect that real precedent."""
+    dps = CrystalProcessingSystem(EvolutionTracker())
+    bridge = CERSBridge(state_dir=str(tmp_path))
+    sub_crests = (Crest(label="steady", intensity=0.9, axis="N"),)
+    axes = {"X": 0.2, "T": 0.3, "N": 0.9, "B": 0.6, "A": 0.1}
+
+    confidences = []
+    for _ in range(6):
+        bridge.build_snapshot(
+            _assembly_result(axes),
+            payload="hello there",
+            payload_type="text",
+            evidence={},
+            contract_snapshot={},
+            requested_frame="balanced",
+            precomputed_sub_crests=sub_crests,
+            dps=dps,
+        )
+        detail = json.loads((tmp_path / "cers_detail.json").read_text())
+        assert detail["prediction_source"].endswith("+manifold")
+        confidences.append(detail["prediction_confidence"])
+
+    assert confidences[-1] > confidences[0], (
+        "prediction confidence should rise as real precedent accumulates "
+        "at this coordinate, not stay flat"
+    )
+
+
 def test_build_snapshot_without_dps_skips_tensor_trace_gracefully(tmp_path):
     bridge = CERSBridge(state_dir=str(tmp_path))
     sub_crests = (Crest(label="steady", intensity=0.9, axis="N"),)
@@ -107,3 +140,7 @@ def test_build_snapshot_without_dps_skips_tensor_trace_gracefully(tmp_path):
     assert snapshot is not None
     detail = json.loads((tmp_path / "cers_detail.json").read_text())
     assert detail["tensor_trace"] == {}
+    assert not detail["prediction_source"].endswith("+manifold"), (
+        "no dps means 'couldn't check', not 'checked, unfamiliar' -- "
+        "prediction must not be touched at all, same as before this feature existed"
+    )

@@ -122,6 +122,20 @@ def resolve_pressure_coordinate(
     )
 
 
+def lookup_tensor_crystal(dps: Any, coord: Optional[Any]) -> Optional[Any]:
+    """Read-only: return the crystal already recorded at this coordinate,
+    or None if it's never been visited. Unlike record_tensor_trace(), never
+    creates one -- for callers (like the prediction pass, which runs before
+    this tick's own visit is recorded) that need to know "have we been here
+    before" without writing anything themselves."""
+    if dps is None or coord is None or not hasattr(dps, "get_crystal"):
+        return None
+    try:
+        return dps.get_crystal(f"tensor:{coord.slot_id}")
+    except Exception:
+        return None
+
+
 def _axis_distance(a: Dict[str, float], b: Dict[str, float]) -> float:
     """Euclidean distance between two axis-state vectors, each axis in
     [0,1]. Max possible distance across 5 axes is sqrt(5) =~ 2.236."""
@@ -189,6 +203,22 @@ def record_tensor_trace(
     return crystal, distortion, is_new
 
 
+_FAMILIARITY_USAGE_NORM = 10.0
+
+
+def familiarity_from_crystal(crystal: Optional[Any]) -> float:
+    """0..1 read of how well-established a coordinate's crystal is, from
+    usage_count alone -- 0.0 for "never visited" (crystal is None), rising
+    toward 1.0 as it accumulates real precedent. Shared by compute_salience
+    (as the complement, novelty) and by prediction (as a confidence prior:
+    a coordinate Aurora has real history at is one she can predict from;
+    a brand-new one, she genuinely can't yet)."""
+    if crystal is None:
+        return 0.0
+    usage = int(getattr(crystal, "usage_count", 0) or 0)
+    return clip01(usage / _FAMILIARITY_USAGE_NORM)
+
+
 def compute_salience(
     crystal: Any,
     *,
@@ -204,10 +234,6 @@ def compute_salience(
     history, or CERS itself flagged a real conflict here. Low for a
     familiar, on-pattern moment -- deliberately, since that's exactly the
     case that should NOT interrupt the surface."""
-    if is_new:
-        novelty = 1.0
-    else:
-        usage = int(getattr(crystal, "usage_count", 0) or 0)
-        novelty = clip01(1.0 - usage / 10.0)
+    novelty = 1.0 if is_new else clip01(1.0 - familiarity_from_crystal(crystal))
     distortion_component = clip01(distortion / _MAX_AXIS_DISTANCE)
     return round(clip01(max(novelty, distortion_component, clip01(severity))), 4)
