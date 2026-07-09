@@ -33,6 +33,32 @@ def _deep_merge(left: Any, right: Any) -> Any:
         return bool(left or right)
     if isinstance(left, (int, float)) and isinstance(right, (int, float)):
         return max(left, right)
+    if (
+        left is not None
+        and isinstance(right, dict)
+        and not isinstance(left, (dict, list, bool, int, float, str, bytes, tuple))
+    ):
+        # left is a live object already installed in systems (a real engine/
+        # logger instance -- e.g. systems['genealogy']'s ConstraintGenealogyLogger,
+        # already restored with its real abilities/links earlier in boot) and
+        # right is a plain dict from a stored ability-lineage manifest. The
+        # fallback below (`return right`) would silently discard that object
+        # and replace it with the manifest's bare dict -- confirmed happening
+        # for real on every boot via aurora_state/ability_lineages/
+        # aurora_sensory_crystal_v1/selected_activation.json's systems.merge_state
+        # step, which wipes systems['genealogy'] down to {"cross_modal_lanes": [...]}
+        # and loses ~8000 real abilities + 224 real links every single time.
+        # setattr the dict's keys onto the object instead, mirroring what
+        # _merge_state_into_target's own top-level object branch already does
+        # correctly -- the manifest's intent (record cross_modal_lanes, etc.)
+        # still lands, but the object's own real state survives.
+        for key, value in right.items():
+            try:
+                existing = getattr(left, key, None)
+                setattr(left, key, _deep_merge(existing, value) if existing is not None else value)
+            except Exception:
+                continue
+        return left
     return right if right not in (None, "", [], {}) else left
 
 
