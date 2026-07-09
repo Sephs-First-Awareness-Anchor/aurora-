@@ -45,6 +45,7 @@ def _make_bare_engine(state_dir):
     engine.dual_strata = _FakeDualStrata()
     engine.cers_bridge = _RaisingCersBridge(state_dir)
     engine.lattice = None
+    engine.dimensional = types.SimpleNamespace(dps=None)
     return engine
 
 
@@ -73,6 +74,7 @@ def test_cers_success_writes_no_error_log(tmp_path):
     engine = object.__new__(ConsciousnessEngine)
     engine.dual_strata = _FakeDualStrata()
     engine.lattice = None
+    engine.dimensional = types.SimpleNamespace(dps=None)
 
     class _OkCersBridge:
         state_dir = tmp_path

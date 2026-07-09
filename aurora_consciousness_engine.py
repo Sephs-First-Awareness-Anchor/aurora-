@@ -1215,6 +1215,7 @@ class ConsciousnessEngine:
                 thought_intent=thought_intent,
                 recursion_weights=_recursion_weights,
                 precomputed_sub_crests=_precomputed,
+                dps=getattr(self.dimensional, "dps", None),
             )
         except Exception as _cers_exc:
             # Still swallowed -- the surface must never see this. But a

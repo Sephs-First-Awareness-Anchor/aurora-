@@ -49,6 +49,7 @@ from .subsystem_waveforms import emit_subsystem_crests
 from .cers_regulator import CERSVerdict, PotentialTracker, cers_converge
 from .cers_deprecation import DeprecationRecommendation, SubsystemDeprecationLedger
 from .cers_potential_trial import PotentialTrialBoard
+from .cers_tensor_locator import resolve_pressure_coordinate, record_tensor_trace, compute_salience
 
 
 class CERSBridge:
@@ -76,6 +77,7 @@ class CERSBridge:
         thought_intent: Optional[Dict[str, Any]] = None,
         recursion_weights: Optional[Dict[str, float]] = None,
         precomputed_sub_crests: Optional[Tuple[Crest, ...]] = None,
+        dps: Optional[Any] = None,
     ) -> DualStrataSnapshot:
         """
         precomputed_sub_crests: pass the sub_crests tuple already produced by
@@ -91,9 +93,18 @@ class CERSBridge:
         Passing the already-computed tuple keeps both bridges reading the
         exact same evidence for a true apples-to-apples equivalence test,
         and keeps the shared WARP registry ticking once per turn as designed.
+
+        dps: CrystalProcessingSystem (systems["dimensional"].dps), used only
+        for the tensor-trace pass (cers_tensor_locator.py) -- resolves this
+        tick's live pressure onto a real SlotCoord in the constraint
+        manifold and records the visit onto that coordinate's crystal in
+        the SAME registry every other concept already lives in. Optional:
+        the tensor pass is skipped (not faked) when dps is unavailable,
+        same graceful-degradation posture as the rest of CERS.
         """
         evidence = dict(evidence or {})
         contract_snapshot = dict(contract_snapshot or {})
+        adjusted_axes = _extract_adjusted_axes(assembly_result)
 
         # 1. Present overlay — unchanged, reused from dce_bridge.py
         sensory_context = dict(getattr(assembly_result, "sensory_context", {}) or {})
@@ -113,7 +124,6 @@ class CERSBridge:
         if precomputed_sub_crests is not None:
             sub_crests = precomputed_sub_crests
         else:
-            adjusted_axes = _extract_adjusted_axes(assembly_result)
             pressure_snapshot = _extract_pressure_snapshot(dict(evidence.get("pressure_snapshot") or {}))
             projection = dict(evidence.get("subsurface_projection") or {})
 
@@ -137,6 +147,38 @@ class CERSBridge:
         # a surface-layer concern (per ERS spec Section 6).
         subsurface_crest, verdict = cers_converge(sub_crests, self._tracker, self._trial_board)
 
+        # 4b. Tensor-trace pass (Phase 1 of the tensor-recursion upgrade) —
+        # locate this tick's live pressure in the real constraint manifold
+        # and record the visit onto that coordinate's crystal (same
+        # registry every other concept lives in, no separate trace file).
+        # Read-only w.r.t. everything above: never changes subsurface_crest
+        # or verdict, only adds detail for downward traversal / eventual
+        # compressed surfacing. Isolated in its own try/except so a failure
+        # here can never take out the rest of an otherwise-good snapshot.
+        tensor_trace: Dict[str, Any] = {}
+        try:
+            if dps is not None:
+                coord = resolve_pressure_coordinate(adjusted_axes, sub_crests)
+                if coord is not None:
+                    worst_conflict = max((c.severity for c in verdict.conflicts), default=0.0)
+                    crystal, distortion, is_new = record_tensor_trace(
+                        dps, coord,
+                        adjusted_axes=adjusted_axes,
+                        label=str(subsurface_crest.label or "steady"),
+                        severity=worst_conflict,
+                    )
+                    if crystal is not None:
+                        tensor_trace = {
+                            "coord": coord.slot_id,
+                            "distortion": round(distortion, 4),
+                            "is_new_coordinate": is_new,
+                            "salience": compute_salience(
+                                crystal, distortion=distortion, is_new=is_new, severity=worst_conflict,
+                            ),
+                        }
+        except Exception:
+            tensor_trace = {}
+
         # 5. Raw mechanism detail for downward traversal only
         _raw_coherence = getattr(assembly_result, "coherence", None)
         if _raw_coherence is None:
@@ -149,6 +191,7 @@ class CERSBridge:
             "coherence": round(_assembly_coherence, 4),
             "cers_verdict": verdict.to_dict(),
             "governed_by": "cers_regulator.cers_converge",
+            "tensor_trace": tensor_trace,
         }
 
         subsurface = SubsurfaceState(
