@@ -29,70 +29,6 @@
   "issue_possibility_pressure": {},
   "recent_events": [
     {
-      "timestamp": 1782955738.4797478,
-      "issue_category": "unbound_surface_fragment",
-      "logic_tier": "runtime_orchestration",
-      "intervention": "bind_fragment_to_surface_relation",
-      "observed_effect": "resolved_partially",
-      "count": 365,
-      "auto_advance": false,
-      "doctrine_strategy": "",
-      "doctrine_confidence": 0.0,
-      "constraint_context": {
-        "constraint_axes": {
-          "X": 0.2,
-          "T": 0.2,
-          "N": 0.2,
-          "B": 0.2,
-          "A": 0.2
-        },
-        "dominant_axis": "X",
-        "axis_signature": [
-          "X",
-          "T",
-          "N"
-        ],
-        "purpose_lane": "admissibility_grounding",
-        "genealogy_pressure_orientation": {
-          "X": 0.0,
-          "T": 0.0,
-          "N": 0.0,
-          "B": 0.0,
-          "A": 0.0
-        }
-      },
-      "system_pressure": {
-        "source": "aurora.dialogue.articulation",
-        "phase": "dialogue",
-        "system_load": "low",
-        "system_load_score": 0.1292,
-        "io_pressure": "low",
-        "io_pressure_score": 0.0,
-        "background_cycle_density": "low",
-        "background_cycle_density_score": 0.38,
-        "cognitive_coherence": 1.0,
-        "cognitive_stagnation": 0.0,
-        "factors": {
-          "autonomy_running": 0.0,
-          "autosave_active": 0.0,
-          "dreams_used": 6.0,
-          "study_cycles_used": 12.0,
-          "observations_used": 0.0,
-          "pending_spontaneous": 0.0,
-          "exploration_depth": 0.0,
-          "quarantine_depth": 0.0,
-          "search_failure_bias": 0.0,
-          "coherence_deficit": 0.0
-        }
-      },
-      "genealogy_refs": [],
-      "learning_credit": {
-        "credit": 0.1,
-        "global_debt": 0.0,
-        "issue_debt": 0.0
-      }
-    },
-    {
       "ts": 1782955745.696026,
       "source": "user_input_precomp",
       "dominant_axis": "T",
@@ -7665,6 +7601,24 @@
         "B": 0.1,
         "A": 0.1
       }
+    },
+    {
+      "ts": 1783561319.9682662,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_lineage_runtime_activation",
+      "severity": 0.6,
+      "persistence_key": "tests.test_lineage_runtime_activation",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
     }
   ],
   "consultation_history": [],
@@ -8918,5 +8872,5 @@
       ]
     }
   ],
-  "saved_at": 1783555567.453989
+  "saved_at": 1783561333.1723456
 }
