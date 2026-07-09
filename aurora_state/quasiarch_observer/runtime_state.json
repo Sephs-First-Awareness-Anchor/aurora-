@@ -29,144 +29,6 @@
   "issue_possibility_pressure": {},
   "recent_events": [
     {
-      "ts": 1782955745.696026,
-      "source": "user_input_precomp",
-      "dominant_axis": "T",
-      "intensity": 0.65,
-      "coupling_mode": "full",
-      "genealogy_id": "",
-      "tick": 0,
-      "trace": [
-        {
-          "step": "primary",
-          "axis": "N",
-          "amplitude": 0.3774,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "X",
-          "amplitude": 0.176,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "A",
-          "amplitude": 0.1946,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "B",
-          "amplitude": 0.4079,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "T",
-          "amplitude": 0.4504,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "B",
-          "coupling_strength": 0.35,
-          "amplitude": 0.066,
-          "source": "user_input_precomp\u2192N\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0377,
-          "source": "user_input_precomp\u2192N\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "X",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0283,
-          "source": "user_input_precomp\u2192N\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "T",
-          "coupling_strength": 0.3,
-          "amplitude": 0.0264,
-          "source": "user_input_precomp\u2192X\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "B",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0176,
-          "source": "user_input_precomp\u2192X\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0195,
-          "source": "user_input_precomp\u2192A\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "B",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0243,
-          "source": "user_input_precomp\u2192A\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "N",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0146,
-          "source": "user_input_precomp\u2192A\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "N",
-          "coupling_strength": 0.3,
-          "amplitude": 0.0612,
-          "source": "user_input_precomp\u2192B\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "A",
-          "coupling_strength": 0.25,
-          "amplitude": 0.051,
-          "source": "user_input_precomp\u2192B\u2192A"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "X",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0563,
-          "source": "user_input_precomp\u2192T\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "A",
-          "coupling_strength": 0.2,
-          "amplitude": 0.045,
-          "source": "user_input_precomp\u2192T\u2192A"
-        }
-      ],
-      "provenance": "WAVEFORM"
-    },
-    {
       "timestamp": 1782955750.2992663,
       "issue_category": "coherence_maintenance",
       "logic_tier": "runtime_orchestration",
@@ -7619,6 +7481,24 @@
         "B": 0.1,
         "A": 0.1
       }
+    },
+    {
+      "ts": 1783618800.5525885,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_genealogy_atomic_writes",
+      "severity": 0.6,
+      "persistence_key": "tests.test_genealogy_atomic_writes",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
     }
   ],
   "consultation_history": [],
@@ -8872,5 +8752,5 @@
       ]
     }
   ],
-  "saved_at": 1783614449.2620537
+  "saved_at": 1783619019.1838424
 }
