@@ -65,6 +65,7 @@ jobs:
           AURORA_CI_STUDY_CYCLES: "3"
           AURORA_CI_CLASSROOM_LESSONS: "4"
           AURORA_CI_CLASSROOM_TURNS: "6"
+          AURORA_CI_CONCEPT_IMAGES: "6"
         run: python scripts/aurora_ci_segment.py
 
       - name: Commit her evolved state
@@ -87,6 +88,13 @@ jobs:
           # aurora_classroom.py's stale-content detection depends on this
           # history surviving between scheduled runs, not just within one.
           git add -f aurora_state/classroom_log.jsonl 2>/dev/null || true
+          # concept_images_fetched.json (imager tracker) and vision_seeds/ are
+          # also brand-new on first run -- without force-adding them,
+          # run_concept_image_cycle's fetched/grounded tracking never
+          # persists, so every scheduled run would silently re-fetch the same
+          # concept images from scratch instead of moving on to new ones.
+          git add -f aurora_state/concept_images_fetched.json 2>/dev/null || true
+          git add -f aurora_state/vision_seeds/ 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No state changes to commit."
             exit 0
