@@ -14798,7 +14798,18 @@ def _chain_up4_meaning(user_text: str, systems: dict, state: Any) -> None:
         _allow_bypass = True
         if _cf_mode in ("clarify", "research", "observation"):
             _allow_bypass = False
-        
+        # CERS conflict-monitoring veto: a real cluster conflict or a sharp
+        # break from an established pressure pattern (cers_hesitation, see
+        # _read_cers_salience) additionally withholds the fast-path bypass --
+        # the same principle as ACC conflict-monitoring in human cognition:
+        # detected conflict recruits deliberate processing instead of
+        # running on autopilot. Purely additive -- can only withhold a
+        # bypass the legacy gate above would otherwise grant, never grant
+        # one it wouldn't. CERS stays non-authoritative: it has no power to
+        # force the bypass on, only to veto it off.
+        if bool((systems.get("_live_conscious_frame") or {}).get("cers_hesitation", False)):
+            _allow_bypass = False
+
         if _allow_bypass:
             state.a_dominant = True
             if isinstance(ps, dict):
@@ -18112,13 +18123,21 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         _r_tone = str(_reactive.get("tone", "") or "").strip()
         _r_conf = float(_reactive.get("confidence", 0.0) or 0.0)
         _r_mode = str(pipeline_state.get("conscious_frame_mode", "") or "").strip()
+        # CERS conflict-monitoring veto -- same principle as the A-dominant
+        # gate in _chain_up4_meaning: detected conflict/pattern-deviation
+        # suppresses the fast/reactive shortcut and forces the full
+        # analytical pipeline below to run instead, mirroring how conflict
+        # detection recruits deliberate processing in human cognition
+        # rather than running on autopilot. Additive-only veto -- CERS
+        # cannot force the shortcut to fire, only block it.
+        _cers_hesitant = bool((systems.get("_live_conscious_frame") or {}).get("cers_hesitation", False))
 
-        # Authenticity check: reactive response only fires if both signal and 
+        # Authenticity check: reactive response only fires if both signal and
         # subsurface readiness (mode) align toward higher urgency.
-        if _r_text and (_r_conf >= 0.72 or _r_mode in ("survival", "conserve")):
+        if _r_text and (_r_conf >= 0.72 or _r_mode in ("survival", "conserve")) and not _cers_hesitant:
             return (
-                _r_text, 
-                _r_tone or "attentive", 
+                _r_text,
+                _r_tone or "attentive",
                 max(_r_conf, 0.75)
             )
 
