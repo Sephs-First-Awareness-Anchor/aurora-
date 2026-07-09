@@ -65,13 +65,6 @@ _DEFAULT_CANDIDATE_DIMENSIONS: Tuple[str, ...] = (
     "compression_elaboration_fit", "perspective_integration", "multi_turn_stability",
 )
 
-# How many of a dimension's most recent classroom lessons to look at before
-# calling it "not improving." Below this, there isn't enough history to judge
-# staleness one way or the other, so it's treated as fresh/not stale.
-STALE_LESSON_LOOKBACK = 3
-# A lesson's dev_delta at or below this counts as "didn't move the needle."
-STALE_DELTA_THRESHOLD = 0.05
-
 
 @dataclass
 class ClassResult:
@@ -154,58 +147,6 @@ def _load_fail_points(state_dir: Path) -> Dict[str, Any]:
         return {}
 
 
-def _dimension_trend(recent: List[float]) -> str:
-    """Same IMPROVING/WORSENING/stable classification aurora_diag.py's health
-    check already uses (identical thresholds) -- reused by rebuilding it here
-    rather than importing a diagnostic script into production glue code, but
-    kept numerically identical on purpose so 'stale' means the same thing in
-    both places."""
-    if not recent or len(recent) < 5:
-        return "n/a"
-    earlier = sum(recent[:5]) / 5
-    latest = sum(recent[-5:]) / 5
-    if latest < earlier * 0.9:
-        return "IMPROVING"
-    if latest > earlier * 1.1:
-        return "WORSENING"
-    return "stable"
-
-
-def _read_classroom_log(state_dir: Path) -> List[Dict[str, Any]]:
-    path = state_dir / "classroom_log.jsonl"
-    if not path.exists():
-        return []
-    entries = []
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                entries.append(json.loads(line))
-            except json.JSONDecodeError:
-                continue
-    return entries
-
-
-def _is_stale(
-    lessons_for_dim: List[Dict[str, Any]],
-    lookback: int = STALE_LESSON_LOOKBACK,
-    threshold: float = STALE_DELTA_THRESHOLD,
-) -> bool:
-    """A dimension is stale when its last `lookback` classroom lessons all
-    failed to move dev_index by more than `threshold`. Fewer lessons than
-    `lookback` means there isn't enough history to call it stale yet --
-    a dimension is innocent (fresh) until it's actually shown to be stuck."""
-    if len(lessons_for_dim) < lookback:
-        return False
-    recent = lessons_for_dim[-lookback:]
-    deltas = [l.get("dev_delta_from_lesson") for l in recent]
-    if any(d is None for d in deltas):
-        return False
-    return all(float(d) <= threshold for d in deltas)
-
-
 def _real_example_seed(
     fail_records: Dict[str, Any],
     dimension: str,
@@ -244,8 +185,6 @@ def select_curriculum(
     systems: Dict[str, Any],
     n: int = 4,
     state_dir: Optional[str] = None,
-    stale_lookback: int = STALE_LESSON_LOOKBACK,
-    stale_delta_threshold: float = STALE_DELTA_THRESHOLD,
 ) -> List[Tuple[str, str, str]]:
     """
     Build a curriculum plan of `n` (target_dimension, seed_prompt,
@@ -253,15 +192,22 @@ def select_curriculum(
     (fail_count, highest first -- same ranking aurora_diag.py's health check
     already uses).
 
-    When a dimension's recent classroom lessons show it isn't improving
-    (see _is_stale) or fail_points.json's own recent-score trend reads
-    WORSENING, a real failing conversation excerpt for that dimension is
-    fed as seed_prompt instead of leaving the lesson generic -- grounding
-    the next attempt in concrete content instead of repeating whatever
-    generic lesson already isn't moving the needle. Falls back to the full
-    known dimension pool if fail_points.json has no data yet (fresh
-    environment) -- there's no fail history to rank, but the lessons still
-    need to happen.
+    Every lesson that has a real failing-conversation excerpt available in
+    fail_points.json gets it as seed_prompt -- not just stale/WORSENING
+    dimensions. Confirmed empirically (see crystal-stagnation investigation,
+    2026-07-09): with no seed_prompt, run_episode()'s synthetic dialogue
+    only exercises a tiny, repetitive vocabulary (the dimension name plus a
+    handful of connector words like "now"/"feels"/"likely"), all of which
+    Aurora already has crystals for -- so "generic" lessons never introduce
+    a genuinely new concept for the crystal-creation pipeline to catch,
+    which is why her crystal count sat completely flat for weeks despite
+    constant scheduled lesson activity. Real excerpts are actual varied
+    conversation text, so they're what actually lets new vocabulary/concepts
+    reach the crystal registry. Falls back to "generic" only when
+    fail_points.json truly has no example for that dimension yet. Falls
+    back to the full known dimension pool if fail_points.json has no data
+    at all yet (fresh environment) -- there's no fail history to rank, but
+    the lessons still need to happen.
     """
     sd = Path(state_dir) if state_dir else Path(str(systems.get("state_dir") or "aurora_state"))
     fp = _load_fail_points(sd)
@@ -272,21 +218,12 @@ def select_curriculum(
     else:
         ranked = list(_DEFAULT_CANDIDATE_DIMENSIONS)
 
-    log_entries = _read_classroom_log(sd)
-    by_dim: Dict[str, List[Dict[str, Any]]] = {}
-    for entry in log_entries:
-        by_dim.setdefault(entry.get("target_dimension", ""), []).append(entry)
-
     used_example_ids: set = set()
     plan: List[Tuple[str, str, str]] = []
     for dim in ranked:
         if len(plan) >= n:
             break
-        stale = _is_stale(by_dim.get(dim, []), lookback=stale_lookback, threshold=stale_delta_threshold)
-        trend = _dimension_trend((records.get(dim, {}) or {}).get("recent", []))
-        seed_prompt, content_source = "", "generic"
-        if stale or trend == "WORSENING":
-            seed_prompt, content_source = _real_example_seed(records, dim, used_example_ids)
+        seed_prompt, content_source = _real_example_seed(records, dim, used_example_ids)
         plan.append((dim, seed_prompt, content_source))
 
     return plan[:n]
@@ -433,9 +370,9 @@ class ClassroomSession:
     ) -> List[ClassResult]:
         """
         Auto-select `n` lessons via select_curriculum() (ranked by real
-        fail_points.json severity, real failing content fed in for any
-        dimension that's gone stale or is trending WORSENING) and run them
-        in order. This is the entry point the scheduled workflow runs --
+        fail_points.json severity, real failing conversation content fed in
+        for every dimension that has an example on record) and run them in
+        order. This is the entry point the scheduled workflow runs --
         run_curriculum() above stays available for an explicit dimension
         list.
         """
