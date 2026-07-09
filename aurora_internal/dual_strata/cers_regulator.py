@@ -65,6 +65,12 @@ DORMANCY_THRESHOLD = 0.35
 DORMANCY_TICKS = 8
 POTENTIAL_WINDOW = 20
 
+# Deliberately the SAME bar as CONFLICT_SEVERITY_THRESHOLD -- one severity
+# scale for "worth treating as a real event," whether the event is two
+# clusters opposing each other or one established coordinate's own history
+# breaking sharply. Not a coincidence; keep these equal.
+GEOMETRY_DEVIATION_THRESHOLD = CONFLICT_SEVERITY_THRESHOLD
+
 
 @dataclass(frozen=True)
 class CrestConflict:
@@ -88,6 +94,33 @@ class CrestConflict:
         }
 
 
+@dataclass(frozen=True)
+class GeometryDeviation:
+    """A tensor-trace-informed signal, distinct from CrestConflict: not two
+    clusters fighting -- one specific pressure coordinate that has real,
+    established precedent (a crystal already exists there) whose current
+    reading diverges sharply from its own history. detect_conflicts() can
+    never catch this on its own since it only compares live cluster shares
+    against each other, with no memory of what's normal AT this exact
+    location. coord_id is the manifold SlotCoord's slot_id, passed as a
+    plain string so this module stays decoupled from
+    aurora_constraint_manifold_router/cers_tensor_locator -- same pattern
+    prediction_field.py already uses for manifold_axis/manifold_familiarity."""
+
+    coord_id: str
+    axis: str
+    distortion: float
+    severity: float
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "coord_id": self.coord_id,
+            "axis": self.axis,
+            "distortion": round(self.distortion, 4),
+            "severity": round(self.severity, 4),
+        }
+
+
 @dataclass
 class CERSVerdict:
     """What CERS decided about this frame's convergence, and why."""
@@ -98,6 +131,7 @@ class CERSVerdict:
     actively_trialing_potential: List[str] = field(default_factory=list)
     confirmed_potential_benefits: Dict[str, str] = field(default_factory=dict)
     confirmed_inert_potential: List[str] = field(default_factory=list)
+    geometry_deviation: Optional[GeometryDeviation] = None
     intervention_label: Optional[str] = None
     legacy_label: Optional[str] = None
     cers_label: Optional[str] = None
@@ -111,6 +145,7 @@ class CERSVerdict:
             "actively_trialing_potential": list(self.actively_trialing_potential),
             "confirmed_potential_benefits": dict(self.confirmed_potential_benefits),
             "confirmed_inert_potential": list(self.confirmed_inert_potential),
+            "geometry_deviation": self.geometry_deviation.to_dict() if self.geometry_deviation else None,
             "intervention_label": self.intervention_label,
             "legacy_label": self.legacy_label,
             "cers_label": self.cers_label,
@@ -220,6 +255,11 @@ def cers_converge(
     sub_crests: Tuple[Crest, ...],
     tracker: PotentialTracker,
     trial_board: Optional["PotentialTrialBoard"] = None,
+    *,
+    geometry_coord_id: Optional[str] = None,
+    geometry_axis: str = "X",
+    geometry_distortion_normalized: float = 0.0,
+    geometry_is_new: bool = True,
 ) -> Tuple[Crest, CERSVerdict]:
     """ERS-native convergence. Runs the legacy convergence alongside for
     equivalence bookkeeping, but only defers to it when no structural
@@ -230,7 +270,18 @@ def cers_converge(
     dormant this tick gets an active correlation trial opened against it
     (see cers_potential_trial.py) rather than being reported as a static
     fact. Resolved trials (promoted or dissolved) stop appearing in
-    unused_potential/actively_trialing_potential going forward."""
+    unused_potential/actively_trialing_potential going forward.
+
+    geometry_*: read-only tensor-trace context (cers_tensor_locator.py's
+    measure_distortion, called BEFORE this tick's own visit is recorded --
+    see cers_bridge.py). Plain values only (coord_id as a string, not a
+    SlotCoord), same decoupling pattern prediction_field.py already uses.
+    detect_conflicts() only ever compares live cluster shares against each
+    other; it has no memory of what's normal at any specific pressure
+    coordinate. This is what lets CERS's OWN verdict -- not just its
+    downstream trace-recording -- catch "this exact geometry has real
+    precedent and just broke sharply," even when nothing looks like a
+    classic opposed-cluster conflict this tick."""
     tracker.observe(sub_crests)
     unused = tracker.unused_potential()
     conflicts = detect_conflicts(sub_crests)
@@ -247,6 +298,19 @@ def cers_converge(
         confirmed_inert = trial_board.confirmed_inert()
 
     legacy_crest = converge_crests(sub_crests, mode="subsurface")
+
+    geometry_deviation: Optional[GeometryDeviation] = None
+    if (
+        geometry_coord_id
+        and not geometry_is_new
+        and geometry_distortion_normalized >= GEOMETRY_DEVIATION_THRESHOLD
+    ):
+        geometry_deviation = GeometryDeviation(
+            coord_id=geometry_coord_id,
+            axis=geometry_axis,
+            distortion=geometry_distortion_normalized,
+            severity=round(geometry_distortion_normalized, 4),
+        )
 
     if conflicts:
         worst = max(conflicts, key=lambda c: c.severity)
@@ -269,6 +333,32 @@ def cers_converge(
             actively_trialing_potential=actively_trialing,
             confirmed_potential_benefits=confirmed_benefits,
             confirmed_inert_potential=confirmed_inert,
+            geometry_deviation=geometry_deviation,
+            intervention_label=cers_crest.label,
+            legacy_label=legacy_crest.label,
+            cers_label=cers_crest.label,
+            agrees_with_legacy=False,
+        )
+        return cers_crest, verdict
+
+    if geometry_deviation is not None:
+        # No classic cluster-vs-cluster conflict this tick, but a
+        # coordinate with real precedent just diverged sharply from its
+        # own history -- a genuine event detect_conflicts() structurally
+        # cannot see, since it only ever compares clusters to each other.
+        cers_crest = Crest(
+            label="pattern_deviation",
+            intensity=geometry_deviation.severity,
+            axis=geometry_deviation.axis,
+        )
+        verdict = CERSVerdict(
+            permitted=False,
+            conflicts=[],
+            unused_potential=unused,
+            actively_trialing_potential=actively_trialing,
+            confirmed_potential_benefits=confirmed_benefits,
+            confirmed_inert_potential=confirmed_inert,
+            geometry_deviation=geometry_deviation,
             intervention_label=cers_crest.label,
             legacy_label=legacy_crest.label,
             cers_label=cers_crest.label,
@@ -283,6 +373,7 @@ def cers_converge(
         actively_trialing_potential=actively_trialing,
         confirmed_potential_benefits=confirmed_benefits,
         confirmed_inert_potential=confirmed_inert,
+        geometry_deviation=None,
         intervention_label=None,
         legacy_label=legacy_crest.label,
         cers_label=legacy_crest.label,

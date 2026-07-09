@@ -199,7 +199,24 @@ def build_prediction_signal(
     contract_snapshot: Optional[Dict[str, Any]] = None,
     sensory_context: Optional[Dict[str, Any]] = None,
     entropy_state: Optional[Dict[str, Any]] = None,
+    manifold_axis: Optional[str] = None,
+    manifold_familiarity: Optional[float] = None,
 ) -> PredictionSignal:
+    """
+    manifold_axis / manifold_familiarity: read from the SAME constraint
+    manifold CERS's tensor-trace pass resolves the current moment onto
+    (cers_tensor_locator.py) -- entered here as plain values, not a SlotCoord
+    or Crystal, so this module stays decoupled from CERS/crystal internals.
+    manifold_axis backstops axis_signature when no contract/evidence axis is
+    present (previously this was very often blank). manifold_familiarity
+    (0..1, from how many times Aurora's real experience has actually visited
+    this coordinate -- 0.0 for a coordinate she's never been at) blends into
+    projected_accuracy: real precedent at this coordinate is legitimate
+    grounds for more confident prediction; a coordinate with no precedent
+    yet is legitimate grounds for less. Both optional and additive -- when
+    absent (the caller has no dps / the pressure vector wasn't available),
+    behavior is identical to before this parameter existed.
+    """
     evidence = dict(evidence or {})
     contract_snapshot = dict(contract_snapshot or {})
     sensory_context = dict(sensory_context or {})
@@ -239,10 +256,15 @@ def build_prediction_signal(
         contract_pi.get("projected_accuracy", contract_a.get("projected_next", 0.5)),
         default=0.5,
     )
+    used_manifold_confidence = False
+    if manifold_familiarity is not None:
+        projected_accuracy = clip01(0.65 * projected_accuracy + 0.35 * clip01(manifold_familiarity))
+        used_manifold_confidence = True
+
     axis_sig = str(
         contract_p.get("dominant_axis")
         or evidence.get("dominant_axis")
-        or ""
+        or (manifold_axis or "")
     ).strip()
 
     pred_payload = PredictionPayload(
@@ -309,6 +331,7 @@ def build_prediction_signal(
         4,
     )
 
+    base_source = "understanding_contract" if contract_snapshot else "runtime_evidence"
     return PredictionSignal(
         prediction_payload=pred_payload,
         expected_observation=raw_intent_token,   # backward-compat note generation
@@ -317,7 +340,7 @@ def build_prediction_signal(
         confidence=confidence,
         mismatch=mismatch,
         readiness_bias=readiness_bias,
-        source="understanding_contract" if contract_snapshot else "runtime_evidence",
+        source=base_source + ("+manifold" if used_manifold_confidence else ""),
         alerts=alerts,
         preload_context=preload_context,
     )

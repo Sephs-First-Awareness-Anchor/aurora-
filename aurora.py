@@ -13468,6 +13468,33 @@ def _build_live_subsurface_projection(
     return projection
 
 
+def _read_cers_salience(systems: Dict[str, Any]) -> Dict[str, Any]:
+    """Read-only pull of CERS's compressed surface-facing signal from its
+    own private state file (cers_detail.json) -- CERS never touches
+    dual_strata_snapshot.json (see cers_bridge.py's own design doc: "it
+    never touches subsurface_snapshot.json or subsurface_detail.json"), so
+    this is the surface choosing to look at what CERS is reading, not CERS
+    pushing anything into the legacy path. Per the ERS spec: "Surface
+    should receive a relevance/hesitation signal, not a full explanation"
+    -- exactly the two compressed values returned here, nothing else from
+    CERS's much larger private detail crosses this line. Degrades to
+    inert defaults the same way the rest of the shadow pass does when
+    nothing is available yet."""
+    try:
+        detail = _read_dual_strata_json(_dual_strata_state_dir(systems) / "cers_detail.json", {})
+        if not isinstance(detail, dict):
+            return {"cers_salience": 0.0, "cers_hesitation": False}
+        tensor_trace = dict(detail.get("tensor_trace") or {})
+        verdict = dict(detail.get("cers_verdict") or {})
+        salience = float(tensor_trace.get("salience", 0.0) or 0.0)
+        return {
+            "cers_salience": max(0.0, min(1.0, salience)),
+            "cers_hesitation": not bool(verdict.get("permitted", True)),
+        }
+    except Exception:
+        return {"cers_salience": 0.0, "cers_hesitation": False}
+
+
 def _read_live_dual_strata_runtime(systems: Dict[str, Any]) -> Dict[str, Any]:
     snapshot_payload = _read_dual_strata_json(
         _dual_strata_state_dir(systems) / "dual_strata_snapshot.json",
@@ -13476,6 +13503,7 @@ def _read_live_dual_strata_runtime(systems: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(snapshot_payload, dict):
         snapshot_payload = {}
     conscious_frame = dict(snapshot_payload.get("conscious_frame") or {})
+    conscious_frame.update(_read_cers_salience(systems))
     conscious_crest = dict(conscious_frame.get("conscious_crest") or {})
     overlay = dict(conscious_frame.get("overlay") or {})
     return {
@@ -13560,11 +13588,13 @@ def _refresh_live_dual_strata_runtime(
             thought_intent=None,
             recursion_weights=_recursion_weights,
             precomputed_sub_crests=_precomputed,
+            dps=getattr(systems.get("dimensional"), "dps", None),
         )
     except Exception:
         pass
 
     _cf = dict(snapshot.conscious_frame or {})
+    _cf.update(_read_cers_salience(systems))
     runtime = {
         "conscious_frame": _cf,
         "conscious_crest": dict(_cf.get("conscious_crest") or {}),
@@ -14768,7 +14798,18 @@ def _chain_up4_meaning(user_text: str, systems: dict, state: Any) -> None:
         _allow_bypass = True
         if _cf_mode in ("clarify", "research", "observation"):
             _allow_bypass = False
-        
+        # CERS conflict-monitoring veto: a real cluster conflict or a sharp
+        # break from an established pressure pattern (cers_hesitation, see
+        # _read_cers_salience) additionally withholds the fast-path bypass --
+        # the same principle as ACC conflict-monitoring in human cognition:
+        # detected conflict recruits deliberate processing instead of
+        # running on autopilot. Purely additive -- can only withhold a
+        # bypass the legacy gate above would otherwise grant, never grant
+        # one it wouldn't. CERS stays non-authoritative: it has no power to
+        # force the bypass on, only to veto it off.
+        if bool((systems.get("_live_conscious_frame") or {}).get("cers_hesitation", False)):
+            _allow_bypass = False
+
         if _allow_bypass:
             state.a_dominant = True
             if isinstance(ps, dict):
@@ -18082,13 +18123,21 @@ def _build_comprehension_response(user_text: str, intent: str, systems: dict, pi
         _r_tone = str(_reactive.get("tone", "") or "").strip()
         _r_conf = float(_reactive.get("confidence", 0.0) or 0.0)
         _r_mode = str(pipeline_state.get("conscious_frame_mode", "") or "").strip()
+        # CERS conflict-monitoring veto -- same principle as the A-dominant
+        # gate in _chain_up4_meaning: detected conflict/pattern-deviation
+        # suppresses the fast/reactive shortcut and forces the full
+        # analytical pipeline below to run instead, mirroring how conflict
+        # detection recruits deliberate processing in human cognition
+        # rather than running on autopilot. Additive-only veto -- CERS
+        # cannot force the shortcut to fire, only block it.
+        _cers_hesitant = bool((systems.get("_live_conscious_frame") or {}).get("cers_hesitation", False))
 
-        # Authenticity check: reactive response only fires if both signal and 
+        # Authenticity check: reactive response only fires if both signal and
         # subsurface readiness (mode) align toward higher urgency.
-        if _r_text and (_r_conf >= 0.72 or _r_mode in ("survival", "conserve")):
+        if _r_text and (_r_conf >= 0.72 or _r_mode in ("survival", "conserve")) and not _cers_hesitant:
             return (
-                _r_text, 
-                _r_tone or "attentive", 
+                _r_text,
+                _r_tone or "attentive",
                 max(_r_conf, 0.75)
             )
 

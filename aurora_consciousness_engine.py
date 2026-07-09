@@ -1215,9 +1215,24 @@ class ConsciousnessEngine:
                 thought_intent=thought_intent,
                 recursion_weights=_recursion_weights,
                 precomputed_sub_crests=_precomputed,
+                dps=getattr(self.dimensional, "dps", None),
             )
-        except Exception:
-            pass
+        except Exception as _cers_exc:
+            # Still swallowed -- the surface must never see this. But a
+            # silently-swallowed exception is a silently-broken shadow
+            # regulator, so log it privately (never read by the surface
+            # daemon) so a stalled under-mind is at least visible offline.
+            try:
+                import json as _json
+                _err_path = self.cers_bridge.state_dir / "cers_error_log.jsonl"
+                _err_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(_err_path, "a", encoding="utf-8") as _fh:
+                    _fh.write(_json.dumps({
+                        "ts": time.time(),
+                        "error": repr(_cers_exc),
+                    }) + "\n")
+            except Exception:
+                pass
 
         return result
 

@@ -49,6 +49,15 @@ from .subsystem_waveforms import emit_subsystem_crests
 from .cers_regulator import CERSVerdict, PotentialTracker, cers_converge
 from .cers_deprecation import DeprecationRecommendation, SubsystemDeprecationLedger
 from .cers_potential_trial import PotentialTrialBoard
+from .cers_tensor_locator import (
+    resolve_pressure_coordinate,
+    record_tensor_trace,
+    compute_salience,
+    lookup_tensor_crystal,
+    familiarity_from_crystal,
+    measure_distortion,
+    normalize_distortion,
+)
 
 
 class CERSBridge:
@@ -76,6 +85,7 @@ class CERSBridge:
         thought_intent: Optional[Dict[str, Any]] = None,
         recursion_weights: Optional[Dict[str, float]] = None,
         precomputed_sub_crests: Optional[Tuple[Crest, ...]] = None,
+        dps: Optional[Any] = None,
     ) -> DualStrataSnapshot:
         """
         precomputed_sub_crests: pass the sub_crests tuple already produced by
@@ -91,21 +101,47 @@ class CERSBridge:
         Passing the already-computed tuple keeps both bridges reading the
         exact same evidence for a true apples-to-apples equivalence test,
         and keeps the shared WARP registry ticking once per turn as designed.
+
+        dps: CrystalProcessingSystem (systems["dimensional"].dps), used only
+        for the tensor-trace pass (cers_tensor_locator.py) -- resolves this
+        tick's live pressure onto a real SlotCoord in the constraint
+        manifold and records the visit onto that coordinate's crystal in
+        the SAME registry every other concept already lives in. Optional:
+        the tensor pass is skipped (not faked) when dps is unavailable,
+        same graceful-degradation posture as the rest of CERS.
         """
         evidence = dict(evidence or {})
         contract_snapshot = dict(contract_snapshot or {})
+        adjusted_axes = _extract_adjusted_axes(assembly_result)
 
         # 1. Present overlay — unchanged, reused from dce_bridge.py
         sensory_context = dict(getattr(assembly_result, "sensory_context", {}) or {})
         overlay = build_contextual_overlay(payload, evidence, contract_snapshot, sensory_context)
 
-        # 2. Prediction detail — unchanged, reused from prediction_field.py
+        # 2. Prediction detail — reused from prediction_field.py, now fed
+        # from the SAME constraint manifold the tensor-trace pass below
+        # resolves onto (per the user's "predictive frames should honestly
+        # be generated from that same thing" scoping call). Sub_crests
+        # aren't computed yet at this point in the pipeline, so this is a
+        # coarser magnitude-only read of the coordinate than step 4b gets —
+        # a read-only lookup (never creates/mutates a crystal; this tick's
+        # actual visit is recorded once, at step 4b).
+        _pre_coord = resolve_pressure_coordinate(adjusted_axes, ())
+        _pre_crystal = lookup_tensor_crystal(dps, _pre_coord) if dps is not None else None
         prediction_signal = build_prediction_signal(
             payload=payload,
             evidence=evidence,
             contract_snapshot=contract_snapshot,
             sensory_context=sensory_context,
             entropy_state=getattr(assembly_result, "entropy_state", None),
+            manifold_axis=(_pre_coord.target if _pre_coord is not None else None),
+            # None (not 0.0) when dps is unavailable -- "couldn't check" must
+            # stay distinct from "checked, never visited," which is a real
+            # 0.0 read that should legitimately lower confidence.
+            manifold_familiarity=(
+                familiarity_from_crystal(_pre_crystal)
+                if (dps is not None and _pre_coord is not None) else None
+            ),
         )
 
         # 3. Subsystem crests — reused from subsystem_waveforms.py UNLESS
@@ -113,7 +149,6 @@ class CERSBridge:
         if precomputed_sub_crests is not None:
             sub_crests = precomputed_sub_crests
         else:
-            adjusted_axes = _extract_adjusted_axes(assembly_result)
             pressure_snapshot = _extract_pressure_snapshot(dict(evidence.get("pressure_snapshot") or {}))
             projection = dict(evidence.get("subsurface_projection") or {})
 
@@ -130,12 +165,71 @@ class CERSBridge:
                 recursion_weights=recursion_weights,
             )
 
+        # 3b. Tensor-trace read (Stage 3 of the tensor-recursion upgrade) —
+        # resolve this tick's coordinate in the real constraint manifold and
+        # measure (READ-ONLY, no crystal created/mutated yet) how far it
+        # diverges from that coordinate's own established history. Done
+        # BEFORE cers_converge() specifically so CERS's own verdict can be
+        # informed by real geometry history, not just have the tensor pass
+        # read the verdict afterward for severity (all Phase 1 did). This
+        # tick's actual visit is still recorded exactly once, at step 4b,
+        # after the verdict exists.
+        _coord = None
+        _pre_distortion, _pre_is_new = 0.0, True
+        try:
+            if dps is not None:
+                _coord = resolve_pressure_coordinate(adjusted_axes, sub_crests)
+                if _coord is not None:
+                    _pre_distortion, _pre_is_new = measure_distortion(dps, _coord, adjusted_axes)
+        except Exception:
+            _coord = None
+
         # 4. CERS-governed convergence — THE upgrade. Everything above this
         # line is identical to DualStrataBridge.build_snapshot(); everything
         # below reuses legacy helpers again for surface derivation, which
         # stays unchanged because ERS's authority is subsurface-native, not
         # a surface-layer concern (per ERS spec Section 6).
-        subsurface_crest, verdict = cers_converge(sub_crests, self._tracker, self._trial_board)
+        subsurface_crest, verdict = cers_converge(
+            sub_crests, self._tracker, self._trial_board,
+            geometry_coord_id=(_coord.slot_id if _coord is not None else None),
+            geometry_axis=(_coord.target if _coord is not None else "X"),
+            geometry_distortion_normalized=(
+                normalize_distortion(_pre_distortion) if _coord is not None else 0.0
+            ),
+            geometry_is_new=_pre_is_new,
+        )
+
+        # 4b. Tensor-trace write — locate this tick's live pressure in the
+        # real constraint manifold and record the visit onto that
+        # coordinate's crystal (same registry every other concept lives in,
+        # no separate trace file). Reuses the coordinate already resolved
+        # at 3b; only the write happens here. Isolated in its own
+        # try/except so a failure here can never take out the rest of an
+        # otherwise-good snapshot.
+        tensor_trace: Dict[str, Any] = {}
+        try:
+            if dps is not None and _coord is not None:
+                worst_severity = max(
+                    max((c.severity for c in verdict.conflicts), default=0.0),
+                    verdict.geometry_deviation.severity if verdict.geometry_deviation else 0.0,
+                )
+                crystal, distortion, is_new = record_tensor_trace(
+                    dps, _coord,
+                    adjusted_axes=adjusted_axes,
+                    label=str(subsurface_crest.label or "steady"),
+                    severity=worst_severity,
+                )
+                if crystal is not None:
+                    tensor_trace = {
+                        "coord": _coord.slot_id,
+                        "distortion": round(distortion, 4),
+                        "is_new_coordinate": is_new,
+                        "salience": compute_salience(
+                            crystal, distortion=distortion, is_new=is_new, severity=worst_severity,
+                        ),
+                    }
+        except Exception:
+            tensor_trace = {}
 
         # 5. Raw mechanism detail for downward traversal only
         _raw_coherence = getattr(assembly_result, "coherence", None)
@@ -149,6 +243,9 @@ class CERSBridge:
             "coherence": round(_assembly_coherence, 4),
             "cers_verdict": verdict.to_dict(),
             "governed_by": "cers_regulator.cers_converge",
+            "tensor_trace": tensor_trace,
+            "prediction_confidence": round(prediction_signal.confidence, 4),
+            "prediction_source": prediction_signal.source,
         }
 
         subsurface = SubsurfaceState(
