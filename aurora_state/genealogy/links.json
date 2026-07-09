@@ -30878,5 +30878,99 @@
       "compression_op:N:COMPRESSION_226d953820",
       "nc_dim:OPERATOR"
     ]
+  },
+  "L:6bc6f2b48a": {
+    "id": "L:6bc6f2b48a",
+    "parents": [
+      "L:1222d4a7d6",
+      "dream:axis:T"
+    ],
+    "depth": 2,
+    "created_at_tick": 80206,
+    "stats": {
+      "count": 8,
+      "mean_pos_relief": {
+        "X": 0.0,
+        "T": 0.15585923893791961,
+        "N": 0.09399999999999997,
+        "B": 0.09399999999999997,
+        "A": 0.013055555555555553
+      },
+      "mean_relief": {
+        "X": 0.0,
+        "T": 0.15585923893791961,
+        "N": 0.09399999999999997,
+        "B": 0.09399999999999997,
+        "A": 0.013055555555555553
+      },
+      "stdev_relief": {
+        "X": 0.0,
+        "T": 0.09791288848712447,
+        "N": 0.09399999999999997,
+        "B": 0.09399999999999997,
+        "A": 0.013055555555555553
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0011164285714285714,
+        "N": 0.0044657142857142855,
+        "B": 0.0,
+        "A": 0.0
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "origin_signature:0",
+      "operator_action:operator_on_t",
+      "purpose_lane:communication",
+      "operator_grade:0.666",
+      "purpose_grade:0.868",
+      "overall_grade:0.767",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.450",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.450",
+      "artificial_seed:true",
+      "seed_lineage_id:episode_d7fcbb1e8db3",
+      "steering_target_generation:2",
+      "ontological_status:native_closed",
+      "depth_score:0.0467",
+      "leverage_grade:0.0769",
+      "viable_band_alignment:0.1538",
+      "energetic_footprint:0.0467",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_e717633012",
+      "nc_dim:DIFFERENCE",
+      "origin_signature:0",
+      "operator_action:operator_on_t",
+      "purpose_lane:intelligence",
+      "operator_grade:0.666",
+      "purpose_grade:0.300",
+      "overall_grade:0.420",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.450",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.450",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3",
+      "ontological_status:native_closed",
+      "depth_score:0.0467",
+      "leverage_grade:0.0769",
+      "viable_band_alignment:0.1538",
+      "energetic_footprint:0.0467",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_35f1489a50",
+      "nc_dim:DIFFERENCE"
+    ]
   }
 }
