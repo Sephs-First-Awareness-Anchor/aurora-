@@ -1,0 +1,96 @@
+{
+  "conscious_frame": {
+    "coherence": 0.45,
+    "conscious_crest": {
+      "axis": "N",
+      "intensity": 0.4226,
+      "label": "explain"
+    },
+    "dominant_axis": "N",
+    "overlay": {
+      "active_crystals": [],
+      "interaction_state": "present",
+      "present_anchor": "What would likely cause that relation to change?",
+      "present_sensory": {
+        "dominant_facet": "",
+        "maturity": 0.419
+      },
+      "present_tone": "neutral",
+      "reinforcement_hint": 0.1047
+    },
+    "processing_mode": "blended",
+    "readiness": 0.45,
+    "selected_action": "explain",
+    "should_speak": true,
+    "stance": "interpretive_explanation",
+    "subsurface_crest": {
+      "axis": "N",
+      "intensity": 0.4109,
+      "label": "steady"
+    },
+    "timestamp": 1783637504.834477
+  },
+  "saved_at": 1783637504.8346443,
+  "subsurface_state": {
+    "dominant_axis": "N",
+    "frame_request": "observation",
+    "overlay": {
+      "active_crystals": [],
+      "interaction_state": "present",
+      "present_anchor": "What would likely cause that relation to change?",
+      "present_sensory": {
+        "dominant_facet": "",
+        "maturity": 0.419
+      },
+      "present_tone": "neutral",
+      "reinforcement_hint": 0.1047
+    },
+    "sub_crests": [
+      {
+        "axis": "X",
+        "intensity": 0.581,
+        "label": "attentional_drift"
+      },
+      {
+        "axis": "T",
+        "intensity": 0.65,
+        "label": "unfamiliar"
+      },
+      {
+        "axis": "A",
+        "intensity": 0.5,
+        "label": "neutral_affect"
+      },
+      {
+        "axis": "X",
+        "intensity": 0.7875,
+        "label": "steady_continuation"
+      },
+      {
+        "axis": "B",
+        "intensity": 0.65,
+        "label": "contradiction"
+      },
+      {
+        "axis": "T",
+        "intensity": 0.7,
+        "label": "new_thread"
+      },
+      {
+        "axis": "N",
+        "intensity": 1.0,
+        "label": "steady_envelope"
+      },
+      {
+        "axis": "X",
+        "intensity": 1.0,
+        "label": "calm"
+      }
+    ],
+    "subsurface_crest": {
+      "axis": "N",
+      "intensity": 0.4109,
+      "label": "steady"
+    }
+  }
+}
