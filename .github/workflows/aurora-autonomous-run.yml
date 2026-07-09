@@ -95,6 +95,15 @@ jobs:
           # concept images from scratch instead of moving on to new ones.
           git add -f aurora_state/concept_images_fetched.json 2>/dev/null || true
           git add -f aurora_state/vision_seeds/ 2>/dev/null || true
+          # cers_snapshot.json/cers_detail.json (CERSBridge's private shadow
+          # state, aurora_internal/dual_strata/cers_bridge.py) are written
+          # every turn but were never force-added -- same blanket aurora_state/
+          # ignore, so they were being silently produced and discarded on
+          # every scheduled run instead of accumulating the equivalence
+          # history CERS's own deprecation ledger depends on.
+          git add -f aurora_state/cers_snapshot.json 2>/dev/null || true
+          git add -f aurora_state/cers_detail.json 2>/dev/null || true
+          git add -f aurora_state/cers_error_log.jsonl 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No state changes to commit."
             exit 0
