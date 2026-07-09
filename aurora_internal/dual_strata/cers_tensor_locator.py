@@ -145,6 +145,36 @@ def _axis_distance(a: Dict[str, float], b: Dict[str, float]) -> float:
 _MAX_AXIS_DISTANCE = math.sqrt(len(AXES))
 
 
+def normalize_distortion(distortion: float) -> float:
+    """Raw Euclidean axis-distance -> 0..1. Shared so compute_salience and
+    the regulator-facing geometry-deviation check (cers_regulator.py) read
+    the same scale instead of two independently-drifting normalizations."""
+    return clip01(distortion / _MAX_AXIS_DISTANCE)
+
+
+def measure_distortion(
+    dps: Any,
+    coord: Optional[Any],
+    adjusted_axes: Dict[str, float],
+) -> Tuple[float, bool]:
+    """Read-only: how far this tick's pressure reading diverges from the
+    coordinate's own established axis_mean -- without recording anything.
+    Returns (distortion, is_new); is_new=True means no crystal exists yet
+    at this coordinate (distortion is 0.0 -- nothing to diverge from).
+
+    This exists so cers_converge() (cers_regulator.py) can fold real
+    geometry history into its OWN verdict -- not just have the tensor pass
+    read the verdict afterward for severity, which is all Phase 1 did.
+    record_tensor_trace() below calls this internally for the write path;
+    call it directly for a decision that must happen before any write."""
+    if coord is None:
+        return 0.0, True
+    crystal = lookup_tensor_crystal(dps, coord)
+    if crystal is None:
+        return 0.0, True
+    return _axis_distance(adjusted_axes, dict(getattr(crystal, "axis_mean", {}) or {})), False
+
+
 def record_tensor_trace(
     dps: Any,
     coord: Any,
@@ -158,11 +188,11 @@ def record_tensor_trace(
     no separate trace file. Records this tick's visit using the crystal's
     own existing mechanics rather than new bookkeeping:
 
-        - distortion is measured against axis_mean as it stood BEFORE this
-          tick's update (so a crystal's very first visit always reads as
-          zero distortion -- nothing to diverge from yet), then
-          update_axis_mean() folds this tick's reading into that running
-          mean going forward.
+        - distortion is measured (via measure_distortion, against
+          axis_mean as it stood BEFORE this tick's update -- a crystal's
+          very first visit always reads as zero distortion, nothing to
+          diverge from yet) BEFORE update_axis_mean() folds this tick's
+          reading into that running mean going forward.
         - add_facet("cers_visit", ...) logs the qualitative read (label +
           severity) with strengthen()-on-repeat semantics, exactly like
           every other facet in the registry.
@@ -174,12 +204,9 @@ def record_tensor_trace(
     if dps is None or coord is None or not hasattr(dps, "_get_or_create"):
         return None, 0.0, False
 
+    distortion, is_new = measure_distortion(dps, coord, adjusted_axes)
     concept = f"tensor:{coord.slot_id}"
-    is_new = not hasattr(dps, "crystals") or concept not in getattr(dps, "concept_index", {})
-
     crystal = dps._get_or_create(concept)
-    prior_mean = dict(getattr(crystal, "axis_mean", {}) or {})
-    distortion = 0.0 if is_new else _axis_distance(adjusted_axes, prior_mean)
 
     try:
         crystal.update_axis_mean({ax: clip01(adjusted_axes.get(ax, 0.0)) for ax in AXES})
@@ -235,5 +262,5 @@ def compute_salience(
     familiar, on-pattern moment -- deliberately, since that's exactly the
     case that should NOT interrupt the surface."""
     novelty = 1.0 if is_new else clip01(1.0 - familiarity_from_crystal(crystal))
-    distortion_component = clip01(distortion / _MAX_AXIS_DISTANCE)
+    distortion_component = normalize_distortion(distortion)
     return round(clip01(max(novelty, distortion_component, clip01(severity))), 4)

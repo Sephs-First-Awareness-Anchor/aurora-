@@ -89,6 +89,55 @@ def test_revisiting_same_pressure_geometry_reuses_the_crystal(tmp_path):
     assert len(dps.crystals) == 1, "the same recurring pressure geometry must not spawn multiple crystals"
 
 
+def test_established_coordinate_sharp_deviation_flags_geometry_deviation_end_to_end(tmp_path):
+    """CERS Stage 3, full chain: a coordinate with real established
+    precedent whose reading suddenly breaks sharply must be caught by
+    CERS's OWN verdict (not just recorded afterward), even when nothing
+    in sub_crests looks like a classic opposed-cluster conflict."""
+    dps = CrystalProcessingSystem(EvolutionTracker())
+    bridge = CERSBridge(state_dir=str(tmp_path))
+    # Same crest reads throughout -> same resolved coordinate throughout
+    # (crest axis reads win over raw adjusted_axes magnitude in
+    # resolve_pressure_coordinate), isolating pure geometry deviation from
+    # coordinate drift.
+    sub_crests = (Crest(label="steady", intensity=0.9, axis="N"),)
+
+    # Establish real precedent: several steady visits with a consistent
+    # pressure profile. adjusted_axes gets normalized to sum to 1.0
+    # (normalize_axis_map -- a constraint-budget distribution across the 5
+    # axes, not 5 independently-bounded magnitudes), so these are chosen
+    # pre-normalized. The 4 non-target axes are kept equal to each other in
+    # both phases so resolve_pressure_coordinate's tie-breaking picks the
+    # same nc_law_c/law_c both times -- isolating pure axis_mean distortion
+    # at a genuinely fixed coordinate, not coordinate drift from a flipped
+    # tie-break.
+    steady_axes = {"X": 0.0, "T": 0.0, "N": 1.0, "B": 0.0, "A": 0.0}
+    for _ in range(6):
+        bridge.build_snapshot(
+            _assembly_result(steady_axes),
+            payload="hello there", payload_type="text",
+            evidence={}, contract_snapshot={}, requested_frame="balanced",
+            precomputed_sub_crests=sub_crests, dps=dps,
+        )
+
+    # Now a sharply different pressure reading at the SAME coordinate (N
+    # still narrowly dominant so the coordinate itself doesn't drift).
+    deviant_axes = {"X": 0.22, "T": 0.22, "N": 0.34, "B": 0.22, "A": 0.0}
+    bridge.build_snapshot(
+        _assembly_result(deviant_axes),
+        payload="hello there", payload_type="text",
+        evidence={}, contract_snapshot={}, requested_frame="balanced",
+        precomputed_sub_crests=sub_crests, dps=dps,
+    )
+
+    detail = json.loads((tmp_path / "cers_detail.json").read_text())
+    verdict = detail["cers_verdict"]
+    assert verdict["geometry_deviation"] is not None
+    assert verdict["permitted"] is False
+    assert verdict["intervention_label"] == "pattern_deviation"
+    assert len(dps.crystals) == 1, "still the same coordinate, not a new one"
+
+
 def test_prediction_signal_is_fed_from_the_same_manifold_on_revisit(tmp_path):
     """CERS Phase 2: prediction, not just the tensor-trace pass itself,
     should draw on the same constraint manifold. First visit to a

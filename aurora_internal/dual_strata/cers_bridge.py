@@ -55,6 +55,8 @@ from .cers_tensor_locator import (
     compute_salience,
     lookup_tensor_crystal,
     familiarity_from_crystal,
+    measure_distortion,
+    normalize_distortion,
 )
 
 
@@ -163,42 +165,69 @@ class CERSBridge:
                 recursion_weights=recursion_weights,
             )
 
+        # 3b. Tensor-trace read (Stage 3 of the tensor-recursion upgrade) —
+        # resolve this tick's coordinate in the real constraint manifold and
+        # measure (READ-ONLY, no crystal created/mutated yet) how far it
+        # diverges from that coordinate's own established history. Done
+        # BEFORE cers_converge() specifically so CERS's own verdict can be
+        # informed by real geometry history, not just have the tensor pass
+        # read the verdict afterward for severity (all Phase 1 did). This
+        # tick's actual visit is still recorded exactly once, at step 4b,
+        # after the verdict exists.
+        _coord = None
+        _pre_distortion, _pre_is_new = 0.0, True
+        try:
+            if dps is not None:
+                _coord = resolve_pressure_coordinate(adjusted_axes, sub_crests)
+                if _coord is not None:
+                    _pre_distortion, _pre_is_new = measure_distortion(dps, _coord, adjusted_axes)
+        except Exception:
+            _coord = None
+
         # 4. CERS-governed convergence — THE upgrade. Everything above this
         # line is identical to DualStrataBridge.build_snapshot(); everything
         # below reuses legacy helpers again for surface derivation, which
         # stays unchanged because ERS's authority is subsurface-native, not
         # a surface-layer concern (per ERS spec Section 6).
-        subsurface_crest, verdict = cers_converge(sub_crests, self._tracker, self._trial_board)
+        subsurface_crest, verdict = cers_converge(
+            sub_crests, self._tracker, self._trial_board,
+            geometry_coord_id=(_coord.slot_id if _coord is not None else None),
+            geometry_axis=(_coord.target if _coord is not None else "X"),
+            geometry_distortion_normalized=(
+                normalize_distortion(_pre_distortion) if _coord is not None else 0.0
+            ),
+            geometry_is_new=_pre_is_new,
+        )
 
-        # 4b. Tensor-trace pass (Phase 1 of the tensor-recursion upgrade) —
-        # locate this tick's live pressure in the real constraint manifold
-        # and record the visit onto that coordinate's crystal (same
-        # registry every other concept lives in, no separate trace file).
-        # Read-only w.r.t. everything above: never changes subsurface_crest
-        # or verdict, only adds detail for downward traversal / eventual
-        # compressed surfacing. Isolated in its own try/except so a failure
-        # here can never take out the rest of an otherwise-good snapshot.
+        # 4b. Tensor-trace write — locate this tick's live pressure in the
+        # real constraint manifold and record the visit onto that
+        # coordinate's crystal (same registry every other concept lives in,
+        # no separate trace file). Reuses the coordinate already resolved
+        # at 3b; only the write happens here. Isolated in its own
+        # try/except so a failure here can never take out the rest of an
+        # otherwise-good snapshot.
         tensor_trace: Dict[str, Any] = {}
         try:
-            if dps is not None:
-                coord = resolve_pressure_coordinate(adjusted_axes, sub_crests)
-                if coord is not None:
-                    worst_conflict = max((c.severity for c in verdict.conflicts), default=0.0)
-                    crystal, distortion, is_new = record_tensor_trace(
-                        dps, coord,
-                        adjusted_axes=adjusted_axes,
-                        label=str(subsurface_crest.label or "steady"),
-                        severity=worst_conflict,
-                    )
-                    if crystal is not None:
-                        tensor_trace = {
-                            "coord": coord.slot_id,
-                            "distortion": round(distortion, 4),
-                            "is_new_coordinate": is_new,
-                            "salience": compute_salience(
-                                crystal, distortion=distortion, is_new=is_new, severity=worst_conflict,
-                            ),
-                        }
+            if dps is not None and _coord is not None:
+                worst_severity = max(
+                    max((c.severity for c in verdict.conflicts), default=0.0),
+                    verdict.geometry_deviation.severity if verdict.geometry_deviation else 0.0,
+                )
+                crystal, distortion, is_new = record_tensor_trace(
+                    dps, _coord,
+                    adjusted_axes=adjusted_axes,
+                    label=str(subsurface_crest.label or "steady"),
+                    severity=worst_severity,
+                )
+                if crystal is not None:
+                    tensor_trace = {
+                        "coord": _coord.slot_id,
+                        "distortion": round(distortion, 4),
+                        "is_new_coordinate": is_new,
+                        "salience": compute_salience(
+                            crystal, distortion=distortion, is_new=is_new, severity=worst_severity,
+                        ),
+                    }
         except Exception:
             tensor_trace = {}
 
