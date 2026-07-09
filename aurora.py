@@ -13468,6 +13468,33 @@ def _build_live_subsurface_projection(
     return projection
 
 
+def _read_cers_salience(systems: Dict[str, Any]) -> Dict[str, Any]:
+    """Read-only pull of CERS's compressed surface-facing signal from its
+    own private state file (cers_detail.json) -- CERS never touches
+    dual_strata_snapshot.json (see cers_bridge.py's own design doc: "it
+    never touches subsurface_snapshot.json or subsurface_detail.json"), so
+    this is the surface choosing to look at what CERS is reading, not CERS
+    pushing anything into the legacy path. Per the ERS spec: "Surface
+    should receive a relevance/hesitation signal, not a full explanation"
+    -- exactly the two compressed values returned here, nothing else from
+    CERS's much larger private detail crosses this line. Degrades to
+    inert defaults the same way the rest of the shadow pass does when
+    nothing is available yet."""
+    try:
+        detail = _read_dual_strata_json(_dual_strata_state_dir(systems) / "cers_detail.json", {})
+        if not isinstance(detail, dict):
+            return {"cers_salience": 0.0, "cers_hesitation": False}
+        tensor_trace = dict(detail.get("tensor_trace") or {})
+        verdict = dict(detail.get("cers_verdict") or {})
+        salience = float(tensor_trace.get("salience", 0.0) or 0.0)
+        return {
+            "cers_salience": max(0.0, min(1.0, salience)),
+            "cers_hesitation": not bool(verdict.get("permitted", True)),
+        }
+    except Exception:
+        return {"cers_salience": 0.0, "cers_hesitation": False}
+
+
 def _read_live_dual_strata_runtime(systems: Dict[str, Any]) -> Dict[str, Any]:
     snapshot_payload = _read_dual_strata_json(
         _dual_strata_state_dir(systems) / "dual_strata_snapshot.json",
@@ -13476,6 +13503,7 @@ def _read_live_dual_strata_runtime(systems: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(snapshot_payload, dict):
         snapshot_payload = {}
     conscious_frame = dict(snapshot_payload.get("conscious_frame") or {})
+    conscious_frame.update(_read_cers_salience(systems))
     conscious_crest = dict(conscious_frame.get("conscious_crest") or {})
     overlay = dict(conscious_frame.get("overlay") or {})
     return {
@@ -13560,11 +13588,13 @@ def _refresh_live_dual_strata_runtime(
             thought_intent=None,
             recursion_weights=_recursion_weights,
             precomputed_sub_crests=_precomputed,
+            dps=getattr(systems.get("dimensional"), "dps", None),
         )
     except Exception:
         pass
 
     _cf = dict(snapshot.conscious_frame or {})
+    _cf.update(_read_cers_salience(systems))
     runtime = {
         "conscious_frame": _cf,
         "conscious_crest": dict(_cf.get("conscious_crest") or {}),
