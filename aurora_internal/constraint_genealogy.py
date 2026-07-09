@@ -52,6 +52,7 @@ from aurora_simulation_engine import (
     StabilityState,
 )
 from aurora_constraint_stack import score_from_cost, CostDiffScore, DifferenceSnapshot
+from aurora_persistence_utils import atomic_write_json
 
 try:
     from aurora_closure_basis import (
@@ -2205,15 +2206,12 @@ class ConstraintGenealogyLogger:
 
     def _write_tick_state_file(self) -> None:
         """Persist tick_count and _last_promotion_tick so stagnation signal survives restarts."""
+        from pathlib import Path
         path = os.path.join(self.output_dir, "tick_state.json")
-        try:
-            with open(path, "w", encoding="utf-8") as fh:
-                json.dump({
-                    "tick_count": int(self.tick_count),
-                    "last_promotion_tick": int(self._last_promotion_tick),
-                }, fh)
-        except Exception:
-            pass
+        atomic_write_json(Path(path), {
+            "tick_count": int(self.tick_count),
+            "last_promotion_tick": int(self._last_promotion_tick),
+        })
 
     def restore_tick_state(self) -> bool:
         """
@@ -2247,13 +2245,13 @@ class ConstraintGenealogyLogger:
         stays small. The header carries total_count for counter restoration.
         """
         try:
+            from pathlib import Path
             recent = [r.to_jsonl_dict() for r in list(self._event_log)[-500:]]
-            with open(self._events_recent_path, "w", encoding="utf-8") as fh:
-                json.dump({
-                    "total_count": int(self.relief_event_count),
-                    "tick_count": int(self.tick_count),
-                    "records": recent,
-                }, fh)
+            atomic_write_json(Path(self._events_recent_path), {
+                "total_count": int(self.relief_event_count),
+                "tick_count": int(self.tick_count),
+                "records": recent,
+            })
         except Exception:
             pass
 
@@ -2285,11 +2283,8 @@ class ConstraintGenealogyLogger:
                 "x_risk_sum":    float(ps.x_risk_sum),
                 "last_seen_tick":int(ps.last_seen_tick),
             }
-        try:
-            with open(path, "w", encoding="utf-8") as fh:
-                json.dump(out, fh)
-        except Exception:
-            pass
+        from pathlib import Path
+        atomic_write_json(Path(path), out)
 
     def restore_pair_stats(self) -> int:
         """
@@ -5494,8 +5489,14 @@ class ConstraintGenealogyLogger:
                         data[aid] = adict
         except Exception:
             pass
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, indent=2)
+        # Atomic (temp file + os.replace) under a process-wide lock: this file
+        # can exceed 20MB, and flush_files() is called from multiple threads
+        # (autonomy/curiosity/dream_substrate all touch the same genealogy
+        # instance). A bare open(path, "w") truncates immediately, so a racing
+        # writer or an interrupted process could leave a torn/truncated file
+        # that json.load() then fails on at next boot -- restoring nothing.
+        from pathlib import Path
+        atomic_write_json(Path(path), data, indent=2)
 
     def _write_links_file(self) -> None:
         path = os.path.join(self.output_dir, self.cfg.LINKS_FILE)
@@ -5512,8 +5513,8 @@ class ConstraintGenealogyLogger:
                         data[lid] = ldict
         except Exception:
             pass
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, indent=2)
+        from pathlib import Path
+        atomic_write_json(Path(path), data, indent=2)
 
     def _write_couplings_file(self) -> None:
         path = os.path.join(self.output_dir, self.cfg.COUPLINGS_FILE)
@@ -5525,8 +5526,8 @@ class ConstraintGenealogyLogger:
             "origin_counts": dict(self._coupling_origin_counts),
             "experiments": {"trials": list(self._experiment_trials[-256:]), "adoptions": list(self._experiment_adoptions[-128:])},
         }
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(payload, fh, indent=2, sort_keys=True)
+        from pathlib import Path
+        atomic_write_json(Path(path), payload, indent=2)
 
     @staticmethod
     def _make_sig(pv: PressureVec) -> str:
