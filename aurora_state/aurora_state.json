@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783707447.051571,
-  "generation": 5667,
-  "genome_version": 5667,
+  "timestamp": 1783714066.7171135,
+  "generation": 5687,
+  "genome_version": 5687,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,7 +66,7 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
+    "curiosity": 0.4922,
     "caution": 0.41,
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
@@ -75,25 +75,25 @@
     "social_engagement": 0.39,
     "energy_conservation": 0.312
   },
-  "personality_drift": 0.858,
+  "personality_drift": 0.8578,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9653106897020834,
-      "precision": 0.8992612714325328,
-      "depth": 0.6784163669503214,
-      "confidence": 1.0
+      "warmth": 0.9840330978847021,
+      "precision": 0.803444252850431,
+      "depth": 0.6734540398468446,
+      "confidence": 0.9684496181988029
     },
     "cognitive": {
-      "curiosity": 0.9721019916319013,
-      "pattern_matching": 0.5304000000000001,
-      "abstraction": 0.9256312897408566,
-      "risk_assessment": 0.8914712974255649
+      "curiosity": 0.7548309811759413,
+      "pattern_matching": 0.621542058617444,
+      "abstraction": 0.9461421480326799,
+      "risk_assessment": 0.7586016115822654
     },
     "social": {
-      "empathy": 0.6004923049747584,
-      "trust_extension": 0.5397806843055787,
-      "boundary_maintenance": 0.6324185943957907,
-      "engagement": 0.6713889406922617
+      "empathy": 0.7849643263415713,
+      "trust_extension": 0.6298281037559929,
+      "boundary_maintenance": 0.7057946133156989,
+      "engagement": 0.5332578899834279
     }
   },
   "governance_stats": {
@@ -115,9 +115,9 @@
   "total_episodes": 5,
   "understanding_shards": 16,
   "what_aurora_learned": [
-    "what creates friction when approached with warm acknowledgment \u2014 it connects to context, need (B-axis, depth 0.37)."
+    "what creates friction when approached with direct clarity \u2014 it connects to changes, inside (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "389160457f84"
+  "_checksum": "7327548b6ad5"
 }
