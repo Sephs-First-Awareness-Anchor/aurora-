@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783723268.7153835,
-  "generation": 5727,
-  "genome_version": 5727,
+  "timestamp": 1783727935.3746839,
+  "generation": 5747,
+  "genome_version": 5747,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.4988,
-    "caution": 0.41,
-    "emotional_expressiveness": 0.39,
+    "curiosity": 0.492,
+    "caution": 0.4495,
+    "emotional_expressiveness": 0.3976,
     "verbosity": 0.39,
-    "introspection": 0.468,
+    "introspection": 0.4729,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.3127
+    "energy_conservation": 0.3404
   },
-  "personality_drift": 0.8505,
+  "personality_drift": 0.7776,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9942810473032091,
-      "precision": 0.6892621076511468,
-      "depth": 0.6646293532207774,
-      "confidence": 0.9069313086793047
+      "warmth": 0.8512534820764514,
+      "precision": 0.8278056479533417,
+      "depth": 0.5304000000000001,
+      "confidence": 0.7106462172036428
     },
     "cognitive": {
-      "curiosity": 0.585,
+      "curiosity": 0.7862818295449191,
       "pattern_matching": 0.5304000000000001,
-      "abstraction": 0.735186063775246,
-      "risk_assessment": 0.7716967114886228
+      "abstraction": 0.8165979415801445,
+      "risk_assessment": 0.7510876668831659
     },
     "social": {
-      "empathy": 1.0,
-      "trust_extension": 0.5048653760952927,
-      "boundary_maintenance": 0.7008852560688679,
-      "engagement": 0.556778235275746
+      "empathy": 0.9499705498565558,
+      "trust_extension": 0.6328994185309867,
+      "boundary_maintenance": 0.5148,
+      "engagement": 0.6312061646134521
     }
   },
   "governance_stats": {
@@ -115,9 +115,9 @@
   "total_episodes": 5,
   "understanding_shards": 15,
   "what_aurora_learned": [
-    "what creates friction when approached with direct clarity \u2014 it connects to exchanges, no (B-axis, depth 0.37)."
+    "what creates friction when approached with curious inquiry \u2014 it connects to moment.], two (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "be1e34da5ff1"
+  "_checksum": "6699946f4970"
 }
