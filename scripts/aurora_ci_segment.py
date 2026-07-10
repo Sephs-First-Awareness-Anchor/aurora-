@@ -117,9 +117,16 @@ def _bring_fully_alive(systems, events):
 
 
 def _crystal_count(systems):
+    """DPS crystal registry (dimensional.dps.crystals) -- the SAME count
+    dev_index's own "crystals" term reads (aurora_developmental_log.py:
+    snap["crystals"] = len(dps.crystals)) and the same registry
+    dps_crystals.json persists. Was reading systems["_concept_crystal_registry"]
+    (a different, smaller axis-bucket pool -- ConceptCrystalRegistry in
+    concept_crystal.py) instead, which is not what dev_index counts and
+    made this run-summary field meaningless for tracking real growth."""
     try:
-        reg = systems.get("_concept_crystal_registry")
-        return (reg.stats() or {}).get("total") if reg is not None else None
+        dps = getattr(systems.get("dimensional"), "dps", None)
+        return len(getattr(dps, "crystals", {}) or {}) if dps is not None else None
     except Exception:
         return None
 
@@ -236,6 +243,25 @@ def main() -> int:
             autonomy.stop()
         except Exception:
             pass
+
+    # Persist everything this segment actually changed in memory. This
+    # script never called this before -- confirmed by grep, there was no
+    # save_state/save_crystals/_full_save call anywhere in this file.
+    # Genealogy (abilities/links) and a few specific files (classroom_log,
+    # fail_points, developmental_timeline) happen to have their own
+    # periodic/automatic flush paths independent of this, which is why
+    # THOSE grew across scheduled runs while everything routed through
+    # aurora.py's _full_save() -- most importantly dps_crystals.json (the
+    # DPS crystal registry every recent fix funnels real content into:
+    # classroom word-learning, CERS's tensor-trace pass, concept-image
+    # grounding) plus sensory_crystal, autonomy, lexicon, and more --
+    # never reached disk at all. It was accumulating correctly in memory
+    # every run and then discarded when the process exited.
+    try:
+        aurora._full_save(systems, verbose=True)
+        print(">>> [aurora-ci] full state save complete", flush=True)
+    except Exception as exc:
+        print(f">>> [aurora-ci] full state save failed: {exc}", flush=True)
 
     # Summarize what her whole architecture did this segment.
     dev = _tl(os.path.join(SD, "developmental_timeline.jsonl"))[dev_start:]
