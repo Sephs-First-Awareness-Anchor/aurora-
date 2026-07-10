@@ -19,8 +19,8 @@
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
     "conflict_rate": null,
-    "frames_evaluated": 14,
-    "rationale": "Only 14 frames observed; need at least 150 before any recommendation is meaningful.",
+    "frames_evaluated": 15,
+    "rationale": "Only 15 frames observed; need at least 150 before any recommendation is meaningful.",
     "status": "insufficient_data"
   },
   "governed_by": "cers_regulator.cers_converge",
@@ -39,7 +39,7 @@
   ],
   "prediction_confidence": 0.4869,
   "prediction_source": "runtime_evidence+manifold",
-  "saved_at": 1783673618.8712142,
+  "saved_at": 1783684123.977185,
   "sub_crests": [
     {
       "axis": "X",
