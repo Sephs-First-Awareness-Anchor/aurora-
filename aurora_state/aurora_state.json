@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783717998.5193613,
-  "generation": 5707,
-  "genome_version": 5707,
+  "timestamp": 1783723268.7153835,
+  "generation": 5727,
+  "genome_version": 5727,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
+    "curiosity": 0.4988,
     "caution": 0.41,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.4115,
+    "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.4136,
+    "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.3449
+    "energy_conservation": 0.3127
   },
-  "personality_drift": 0.78,
+  "personality_drift": 0.8505,
   "crystal_genomes": {
     "response": {
-      "warmth": 1.0,
-      "precision": 0.8184087479189037,
-      "depth": 0.6050157415491068,
-      "confidence": 0.8479837486444959
+      "warmth": 0.9942810473032091,
+      "precision": 0.6892621076511468,
+      "depth": 0.6646293532207774,
+      "confidence": 0.9069313086793047
     },
     "cognitive": {
-      "curiosity": 0.702179828359512,
-      "pattern_matching": 0.6111657383137961,
-      "abstraction": 0.9196392669091761,
-      "risk_assessment": 0.7458115269999439
+      "curiosity": 0.585,
+      "pattern_matching": 0.5304000000000001,
+      "abstraction": 0.735186063775246,
+      "risk_assessment": 0.7716967114886228
     },
     "social": {
-      "empathy": 0.8487328832811937,
-      "trust_extension": 0.6531149767255217,
-      "boundary_maintenance": 0.8280697574504667,
-      "engagement": 0.5395658704455704
+      "empathy": 1.0,
+      "trust_extension": 0.5048653760952927,
+      "boundary_maintenance": 0.7008852560688679,
+      "engagement": 0.556778235275746
     }
   },
   "governance_stats": {
@@ -113,11 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 16,
+  "understanding_shards": 15,
   "what_aurora_learned": [
-    "what creates friction when approached with thoughtful reflection \u2014 it connects to am, stays (B-axis, depth 0.37)."
+    "what creates friction when approached with direct clarity \u2014 it connects to exchanges, no (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "c026fbdfe334"
+  "_checksum": "be1e34da5ff1"
 }
