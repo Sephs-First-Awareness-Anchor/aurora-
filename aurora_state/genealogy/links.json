@@ -31536,5 +31536,74 @@
       "compression_op:N:COMPRESSION_531951a16e",
       "nc_dim:COST"
     ]
+  },
+  "L:aa63bd4c23": {
+    "id": "L:aa63bd4c23",
+    "parents": [
+      "dream:framing_select",
+      "dream:purpose:communication"
+    ],
+    "depth": 1,
+    "created_at_tick": 81319,
+    "stats": {
+      "count": 6,
+      "mean_pos_relief": {
+        "X": 0.04157296166169848,
+        "T": 0.11638063222783628,
+        "N": 0.06950576372855206,
+        "B": 0.09044123473112797,
+        "A": 0.015575990425916487
+      },
+      "mean_relief": {
+        "X": 0.04157296166169848,
+        "T": 0.11638063222783628,
+        "N": 0.06950576372855206,
+        "B": 0.09044123473112797,
+        "A": 0.015575990425916487
+      },
+      "stdev_relief": {
+        "X": 0.0008021439040000051,
+        "T": 0.11638063222783626,
+        "N": 0.06950576372855206,
+        "B": 0.09044123473112797,
+        "A": 0.015575990425916487
+      },
+      "mean_cost": {
+        "X": 0.000338099246534828,
+        "T": 0.0,
+        "N": 0.001352396986139312,
+        "B": 0.0,
+        "A": 0.0
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "origin_signature:0",
+      "operator_action:operator_on_t",
+      "purpose_lane:communication",
+      "operator_grade:0.666",
+      "purpose_grade:0.828",
+      "overall_grade:0.747",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.183",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.183",
+      "artificial_seed:true",
+      "seed_lineage_id:episode_4928ba912091",
+      "steering_target_generation:2",
+      "ontological_status:native_closed",
+      "depth_score:0.0467",
+      "leverage_grade:0.0769",
+      "viable_band_alignment:0.1538",
+      "energetic_footprint:0.0467",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_838e9eb207",
+      "nc_dim:DIFFERENCE"
+    ]
   }
 }

@@ -18,25 +18,9 @@
     "tracked_surface_emotion": "neutral",
     "tracked_surface_intensity": 0.0
   },
-  "instability_markers": [
-    {
-      "label": "paradox_active",
-      "severity": 0.8
-    }
-  ],
+  "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 0.6,
-      "label": "conflict_exposure",
-      "rationale": "The active assembly still contains paradox or unresolved conflict.",
-      "source": "assembly",
-      "tags": [
-        "conflict",
-        "stability"
-      ],
-      "urgency": 0.6
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -83,7 +67,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.4813,
+  "readiness": 0.5613,
   "recalled_fragments": [
     "What would likely cause that relation to change?"
   ],
@@ -94,7 +78,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1783645914.7317758,
+  "saved_at": 1783661615.4797726,
   "sub_crests": [
     {
       "axis": "X",
@@ -117,9 +101,9 @@
       "label": "steady_continuation"
     },
     {
-      "axis": "B",
-      "intensity": 0.65,
-      "label": "contradiction"
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "novelty"
     },
     {
       "axis": "T",
