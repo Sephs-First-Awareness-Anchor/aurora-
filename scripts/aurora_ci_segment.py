@@ -131,8 +131,30 @@ def _crystal_count(systems):
         return None
 
 
+def _last_dev_index(path):
+    """Most recent dev_index in the timeline, or None if the file is empty.
+
+    NOT `len(entries before)` + slice-by-count-afterward -- that approach
+    (this file's previous logic) silently breaks once
+    developmental_timeline.jsonl hits its rolling cap
+    (aurora_developmental_log.py: _MAX_LINES = 2000, oldest lines trimmed
+    on every write). Once the file is at the cap, appending N new entries
+    also drops N old ones, so len(file) is IDENTICAL before and after a
+    run -- dev[dev_start:] slices to an empty list, and dev_index_start/
+    dev_index_end silently report None forever. Confirmed happening for
+    real: 6 consecutive scheduled runs reported "dev_index None->None"
+    once the timeline first reached 2000 lines, even though the
+    underlying entries were completely healthy (real growth every 20s
+    tick). Reading the last line's value directly, before and after, is
+    immune to the file's length being capped.
+    """
+    lines = _tl(path)
+    return lines[-1].get("dev_index") if lines else None
+
+
 def main() -> int:
-    dev_start = len(_tl(os.path.join(SD, "developmental_timeline.jsonl")))
+    dev_timeline_path = os.path.join(SD, "developmental_timeline.jsonl")
+    dev_index_start = _last_dev_index(dev_timeline_path)
     t0 = time.time()
     print(f">>> [aurora-ci] booting FULL stack @ {time.strftime('%Y-%m-%d %H:%M:%S')}Z", flush=True)
     import aurora
@@ -264,8 +286,7 @@ def main() -> int:
         print(f">>> [aurora-ci] full state save failed: {exc}", flush=True)
 
     # Summarize what her whole architecture did this segment.
-    dev = _tl(os.path.join(SD, "developmental_timeline.jsonl"))[dev_start:]
-    di = [e.get("dev_index") for e in dev if e.get("dev_index") is not None]
+    dev_index_end = _last_dev_index(dev_timeline_path)
     try:
         import aurora_possibility_selves as aps
         council = _tl(os.path.join(SD, "dream_selves", "selves_timeline.jsonl"))
@@ -277,8 +298,8 @@ def main() -> int:
         "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "duration_s": round(time.time() - t0, 1),
         "systems_online": started,
-        "dev_index_start": di[0] if di else None,
-        "dev_index_end": di[-1] if di else None,
+        "dev_index_start": dev_index_start,
+        "dev_index_end": dev_index_end,
         "crystals_start": crystals_before,
         "crystals_end": _crystal_count(systems),
         "study_cycles": STUDY_CYCLES,
