@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783791489.0732422,
-  "generation": 5967,
-  "genome_version": 5967,
+  "timestamp": 1783794944.4577556,
+  "generation": 5987,
+  "genome_version": 5987,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.4594,
+    "caution": 0.41,
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
-    "introspection": 0.468,
+    "introspection": 0.4916,
     "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
-    "energy_conservation": 0.3147
+    "social_engagement": 0.3971,
+    "energy_conservation": 0.312
   },
-  "personality_drift": 0.8059,
+  "personality_drift": 0.8273,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5737231862437525,
-      "precision": 0.5675492316203123,
-      "depth": 0.6162273877700002,
-      "confidence": 0.956971303644306
+      "warmth": 0.5616,
+      "precision": 0.6595666058120262,
+      "depth": 0.668717682819853,
+      "confidence": 0.7990668414693046
     },
     "cognitive": {
-      "curiosity": 0.6701059107547251,
-      "pattern_matching": 0.8025779089526961,
-      "abstraction": 0.6923120153128187,
-      "risk_assessment": 0.8580294381352563
+      "curiosity": 0.69251801835542,
+      "pattern_matching": 0.930031543320084,
+      "abstraction": 0.66862586413363,
+      "risk_assessment": 0.9895758621813853
     },
     "social": {
-      "empathy": 0.6275300867814572,
-      "trust_extension": 0.6585993221769257,
-      "boundary_maintenance": 0.6898827638053816,
-      "engagement": 0.798616694559505
+      "empathy": 0.6186203511183437,
+      "trust_extension": 0.6270507539921788,
+      "boundary_maintenance": 0.7542998418322127,
+      "engagement": 0.5873380455649196
     }
   },
   "governance_stats": {
@@ -113,11 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 15,
+  "understanding_shards": 16,
   "what_aurora_learned": [
-    "what creates friction when approached with warm acknowledgment \u2014 it connects to energy, pattern (B-axis, depth 0.37)."
+    "what creates friction when approached with warm acknowledgment \u2014 it connects to links, surprised (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "9c461f2e4839"
+  "_checksum": "53c1dbf44aed"
 }
