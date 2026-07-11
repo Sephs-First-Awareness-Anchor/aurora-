@@ -137,8 +137,15 @@ class DirectedTrainingCorpusBridge:
                 payload = json.load(handle)
         except Exception:
             return False
-        if dict(payload.get("source_signature", {}) or {}) != self._source_signature():
-            return False
+        # If the source corpus is present, the cache must match its current
+        # signature or we rebuild fresh. If the source is absent (train.txt
+        # is a large gitignored file not shipped to every environment --
+        # e.g. the scheduled CI runner never has it), the cache is the only
+        # real extracted data available -- trust it rather than discarding
+        # genuine dimension-tagged snippets for an empty rebuild.
+        if self.corpus_path.exists():
+            if dict(payload.get("source_signature", {}) or {}) != self._source_signature():
+                return False
         dims = dict(payload.get("dimensions", {}) or {})
         self._cache = {
             str(dim): [str(item) for item in list(lines or []) if str(item).strip()]
