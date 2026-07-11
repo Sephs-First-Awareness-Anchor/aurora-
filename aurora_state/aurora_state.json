@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783746280.6033251,
-  "generation": 5787,
-  "genome_version": 5787,
+  "timestamp": 1783754177.4515603,
+  "generation": 5807,
+  "genome_version": 5807,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.5454,
-    "emotional_expressiveness": 0.3974,
+    "caution": 0.4153,
+    "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
     "introspection": 0.468,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.3338
+    "energy_conservation": 0.3244
   },
-  "personality_drift": 0.7842,
+  "personality_drift": 0.8403,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9495660358517405,
-      "precision": 0.6976233241497557,
-      "depth": 0.5353054146867113,
-      "confidence": 0.7832043696262321
+      "warmth": 0.8807629895384459,
+      "precision": 0.5902094250561496,
+      "depth": 0.5607969590595847,
+      "confidence": 0.9065999419672752
     },
     "cognitive": {
-      "curiosity": 0.59823908943764,
-      "pattern_matching": 0.5693651117346761,
-      "abstraction": 0.8926561888792183,
-      "risk_assessment": 0.7423815263219162
+      "curiosity": 0.5977386398363059,
+      "pattern_matching": 0.5304000000000001,
+      "abstraction": 0.850163534768905,
+      "risk_assessment": 0.8052353754319049
     },
     "social": {
-      "empathy": 0.890449424364428,
-      "trust_extension": 0.5312905493561099,
-      "boundary_maintenance": 0.7201541927374939,
-      "engagement": 0.6370274048295763
+      "empathy": 0.8645979496415043,
+      "trust_extension": 0.6289559434306217,
+      "boundary_maintenance": 0.932307481298875,
+      "engagement": 0.5476217007177482
     }
   },
   "governance_stats": {
@@ -113,11 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 15,
-  "what_aurora_learned": [
-    "what creates friction when approached with direct clarity \u2014 it connects to drifting, sitting (B-axis, depth 0.37)."
-  ],
+  "understanding_shards": 16,
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "92228560c35d"
+  "_checksum": "a157cfaacbc8"
 }
