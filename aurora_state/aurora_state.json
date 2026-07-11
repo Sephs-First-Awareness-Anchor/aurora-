@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783727935.3746839,
-  "generation": 5747,
-  "genome_version": 5747,
+  "timestamp": 1783734872.3484197,
+  "generation": 5767,
+  "genome_version": 5767,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.4495,
-    "emotional_expressiveness": 0.3976,
-    "verbosity": 0.39,
-    "introspection": 0.4729,
+    "caution": 0.41,
+    "emotional_expressiveness": 0.39,
+    "verbosity": 0.4066,
+    "introspection": 0.468,
     "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
-    "energy_conservation": 0.3404
+    "social_engagement": 0.3928,
+    "energy_conservation": 0.3307
   },
-  "personality_drift": 0.7776,
+  "personality_drift": 0.8199,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.8512534820764514,
-      "precision": 0.8278056479533417,
-      "depth": 0.5304000000000001,
-      "confidence": 0.7106462172036428
+      "warmth": 0.9598126559157055,
+      "precision": 0.7503109879231719,
+      "depth": 0.7245366127616863,
+      "confidence": 0.8336130472180228
     },
     "cognitive": {
-      "curiosity": 0.7862818295449191,
-      "pattern_matching": 0.5304000000000001,
-      "abstraction": 0.8165979415801445,
-      "risk_assessment": 0.7510876668831659
+      "curiosity": 0.6543091566467036,
+      "pattern_matching": 0.5663758274239853,
+      "abstraction": 0.8547831983929994,
+      "risk_assessment": 0.6845106700484201
     },
     "social": {
-      "empathy": 0.9499705498565558,
-      "trust_extension": 0.6328994185309867,
-      "boundary_maintenance": 0.5148,
-      "engagement": 0.6312061646134521
+      "empathy": 0.8156149545007552,
+      "trust_extension": 0.5173554727747173,
+      "boundary_maintenance": 0.774143319242349,
+      "engagement": 0.5582749042566764
     }
   },
   "governance_stats": {
@@ -113,11 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 15,
+  "understanding_shards": 16,
   "what_aurora_learned": [
-    "what creates friction when approached with curious inquiry \u2014 it connects to moment.], two (B-axis, depth 0.37)."
+    "what creates friction when approached with curious inquiry \u2014 it connects to axes, pressure (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "6699946f4970"
+  "_checksum": "26d9e4e36652"
 }
