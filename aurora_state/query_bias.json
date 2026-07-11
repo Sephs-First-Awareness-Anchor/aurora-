@@ -30,7 +30,7 @@
     },
     {
       "pressure_type": "knowledge_gap",
-      "priority": 0.2123,
+      "priority": 0.2122,
       "label": "Missing conceptual content",
       "axis": "X (Existence)",
       "signal_mode": "active",
@@ -83,10 +83,10 @@
     }
   ],
   "axis_pressure": {},
-  "last_updated": 1783774673.5166926,
+  "last_updated": 1783779689.6544926,
   "pressure_scores": {
     "code_gap": 0.2725,
-    "knowledge_gap": 0.2123,
+    "knowledge_gap": 0.2122,
     "articulation_gap": 0.2019,
     "stability_gap": 0.154,
     "reasoning_gap": 0.1354,
