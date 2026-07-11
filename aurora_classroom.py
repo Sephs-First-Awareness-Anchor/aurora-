@@ -41,6 +41,7 @@ part of this file to look over most critically.
 from __future__ import annotations
 
 import json
+import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -53,6 +54,9 @@ from aurora_simulation_engine import (
     EpisodeResult,
 )
 from aurora_developmental_log import record_developmental_snapshot
+from aurora_internal.aurora_directed_training_corpus import (
+    get_directed_training_corpus_bridge,
+)
 
 # Fallback candidate pool when fail_points.json is missing/empty (fresh
 # environment) -- the full dimension set _DIMENSION_PERSONALITY_HINTS already
@@ -147,38 +151,112 @@ def _load_fail_points(state_dir: Path) -> Dict[str, Any]:
         return {}
 
 
+_ROTATION_FILE = "classroom_corpus_rotation.json"
+
+
+def _load_rotation_state(state_dir: Path) -> Dict[str, List[str]]:
+    """Per-dimension record of which seed ids have already been fed to a
+    lesson, persisted across scheduled runs. Without this, every curriculum
+    run re-scans from the front of each dimension's example pool and finds
+    the same first usable entry every time -- the pool never grows on its
+    own (fail_points.json's live-diagnostic writer isn't part of the
+    scheduled path, and the directed corpus is static text), so without
+    persisted rotation the same handful of conversation ids just keep
+    getting recycled forever."""
+    try:
+        with open(state_dir / _ROTATION_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if isinstance(data, dict):
+            return {str(dim): [str(i) for i in (ids or [])] for dim, ids in data.items()}
+    except Exception:
+        pass
+    return {}
+
+
+def _save_rotation_state(state_dir: Path, state: Dict[str, List[str]]) -> None:
+    try:
+        state_dir.mkdir(parents=True, exist_ok=True)
+        tmp = state_dir / (_ROTATION_FILE + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2)
+        os.replace(tmp, state_dir / _ROTATION_FILE)
+    except Exception:
+        pass
+
+
 def _real_example_seed(
     fail_records: Dict[str, Any],
     dimension: str,
     already_used: set,
+    rotation_state: Optional[Dict[str, List[str]]] = None,
 ) -> Tuple[str, str]:
     """
-    Pull one real failing conversation excerpt for `dimension` out of
-    fail_points.json's own `examples` (populated by the health-check
-    pipeline from actual corpus/live-turn failures) and turn it into a
-    seed_prompt. Rotates past any conversation_id already used earlier in
-    this same curriculum run so repeated stale dimensions don't just get fed
-    the identical example every time.
+    Pull one real seed for `dimension`, preferring an actually-observed
+    failing conversation excerpt from fail_points.json's own `examples`
+    (populated by the health-check pipeline from real corpus/live-turn
+    failures), then falling back to a real conversational snippet pulled
+    from the directed training corpus (aurora_internal/train.txt via
+    DirectedTrainingCorpusBridge -- a genuinely different, much larger real
+    text pool tagged to this same rubric dimension).
+
+    Rotation is two-layered: `already_used` skips ids already picked earlier
+    in *this* curriculum run (so one run's several lessons don't collide),
+    and the persisted `rotation_state[dimension]` skips ids already fed in
+    *previous* scheduled runs, so the pool actually advances over time
+    instead of the same front-of-list entry recurring every run. Once every
+    id in the combined pool has been used, rotation wraps back to the start
+    for that dimension -- she goes through the whole known set again rather
+    than freezing on nothing.
 
     Returns (seed_prompt, content_source). content_source is
-    "generic" (nothing usable found -- caller falls back to no seed) or
-    "real_failure_example:<conversation_id>" when a real excerpt was used.
+    "generic" (nothing usable found anywhere), "real_failure_example:<id>",
+    or "directed_corpus:<dimension>:<index>".
     """
+    rotation_state = rotation_state if rotation_state is not None else {}
+    persisted_used = set(rotation_state.get(dimension, []) or [])
+
+    candidates: List[Tuple[str, str, str]] = []  # (id, seed_text, content_source)
+
     examples = (fail_records.get(dimension, {}) or {}).get("examples", []) or []
-    for example in examples:
-        conv_id = str(example.get("conversation_id", "") or "")
-        if conv_id and conv_id in already_used:
-            continue
+    for i, example in enumerate(examples):
+        conv_id = str(example.get("conversation_id", "") or "") or f"unindexed_{i}"
         user_turns = [str(t) for t in (example.get("user_turns") or []) if str(t).strip()]
         if not user_turns:
             continue
         # The last user turn is usually the most specific/pointed one in
         # these multi-turn excerpts (see fail_points.json's own examples).
         seed = user_turns[-1].strip()
-        if conv_id:
-            already_used.add(conv_id)
-        return seed, f"real_failure_example:{conv_id or 'unknown'}"
-    return "", "generic"
+        candidates.append((f"fail_point:{conv_id}", seed, f"real_failure_example:{conv_id}"))
+
+    try:
+        bridge = get_directed_training_corpus_bridge()
+        corpus_samples = bridge.samples_for_dimensions([dimension], limit=64).get(dimension, [])
+    except Exception:
+        corpus_samples = []
+    for i, snippet in enumerate(corpus_samples):
+        seed = str(snippet or "").strip()
+        if not seed:
+            continue
+        candidates.append((f"corpus:{dimension}:{i}", seed, f"directed_corpus:{dimension}:{i}"))
+
+    if not candidates:
+        return "", "generic"
+
+    for cand_id, seed, content_source in candidates:
+        if cand_id in already_used or cand_id in persisted_used:
+            continue
+        already_used.add(cand_id)
+        used_list = rotation_state.setdefault(dimension, [])
+        used_list.append(cand_id)
+        return seed, content_source
+
+    # Whole combined pool exhausted across past runs -- wrap around and
+    # start feeding the same real set again rather than going generic.
+    rotation_state[dimension] = []
+    cand_id, seed, content_source = candidates[0]
+    already_used.add(cand_id)
+    rotation_state[dimension].append(cand_id)
+    return seed, content_source
 
 
 def select_curriculum(
@@ -218,13 +296,17 @@ def select_curriculum(
     else:
         ranked = list(_DEFAULT_CANDIDATE_DIMENSIONS)
 
+    rotation_state = _load_rotation_state(sd)
     used_example_ids: set = set()
     plan: List[Tuple[str, str, str]] = []
     for dim in ranked:
         if len(plan) >= n:
             break
-        seed_prompt, content_source = _real_example_seed(records, dim, used_example_ids)
+        seed_prompt, content_source = _real_example_seed(
+            records, dim, used_example_ids, rotation_state=rotation_state
+        )
         plan.append((dim, seed_prompt, content_source))
+    _save_rotation_state(sd, rotation_state)
 
     return plan[:n]
 
