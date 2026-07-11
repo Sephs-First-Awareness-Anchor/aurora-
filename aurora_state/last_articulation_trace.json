@@ -1,14 +1,31 @@
 {
-  "original": "I do am exist. I understand meaning change.",
-  "candidate": "I do am exist. I understand meaning change.",
-  "selected": "I do am exist. I understand meaning change.",
-  "accepted": true,
-  "reason": "already_well_formed",
-  "original_score": 0.74,
-  "candidate_score": 0.74,
-  "original_pressure": 0.232,
-  "candidate_pressure": 0.232,
-  "pressure_relief": 0.0,
-  "safe": true,
-  "metadata": {}
+  "original": "I exist am do. I become can did.",
+  "candidate": "",
+  "selected": "I exist am do. I become can did.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.62,
+  "candidate_score": 0.0,
+  "original_pressure": 0.316,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.684,
+  "safe": false,
+  "metadata": {
+    "prompt_excerpt": "What would likely cause that relation to change?",
+    "input_interpretation": {
+      "raw_prompt": "What would likely cause that relation to change?",
+      "intent_hint": "question",
+      "topic_terms": [
+        "likely",
+        "cause",
+        "relation",
+        "change"
+      ],
+      "entities": []
+    },
+    "tone": "gentle",
+    "source": "no_pattern_matched",
+    "timestamp": 1783813773.301592,
+    "min_relief_used": 0.035
+  }
 }
