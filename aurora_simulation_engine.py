@@ -1916,6 +1916,12 @@ class SimulationSession:
             effective_turns = max(turns, 6)
 
         fitness_scores = []
+        # Governed scores (2026-07-11): fitness fed to the stability governor,
+        # excluding honest null turns ('no_expression').  A null turn is a
+        # hard-failure record, not evidence about conversational fitness —
+        # counting it as failure is what pinned the TimeDilationGovernor at
+        # CRITICAL and floored dilation during the daemon burst loop.
+        governed_fitness_scores = []
         understanding_texts = []
         conversation_trace: List[Dict[str, Any]] = []
         live_response_context = None
@@ -1975,6 +1981,9 @@ class SimulationSession:
                 self._speed_run_slot_cursor += 1
 
             fitness_scores.append(reaction['scaled_fitness'])
+            if (expression_meta.get('generation_path') != 'no_expression'
+                    and str(expression_text or '').strip()):
+                governed_fitness_scores.append(reaction['scaled_fitness'])
 
             # Aurora observes outcome
             observation = self._interpret_reaction(reaction)
@@ -2052,14 +2061,19 @@ class SimulationSession:
                 mode=mode
             )
 
-        # Update governor
-        metrics = StabilityMetrics(
-            fitness_mean=avg_fitness,
-            fitness_variance=self._fitness_variance(fitness_scores),
-            fitness_trend=self.governor.get_fitness_trend(),
-            coherence_score=avg_fitness,
-        )
-        self.governor.update(metrics)
+        # Update governor — governed scores only (null turns excluded).
+        # If every turn was a null turn there is no conversational evidence
+        # at all this episode; skip the update rather than punish silence.
+        if governed_fitness_scores:
+            governed_avg = (sum(governed_fitness_scores)
+                            / len(governed_fitness_scores))
+            metrics = StabilityMetrics(
+                fitness_mean=governed_avg,
+                fitness_variance=self._fitness_variance(governed_fitness_scores),
+                fitness_trend=self.governor.get_fitness_trend(),
+                coherence_score=governed_avg,
+            )
+            self.governor.update(metrics)
 
         # Track divergence — fitness and engagement only; epoch excluded because
         # it is a monotonically increasing counter that inflates the mean-abs-diff
@@ -2285,26 +2299,115 @@ class SimulationSession:
             except Exception:
                 pass
 
-        # perception.express() generates L5 topology sentences (5–6 words, no topic content)
-        # unless a live response bridge is wired in.  Without the bridge, skip it and
-        # build a topic-grounded expression directly so the avatar's relevance +
-        # engagement scores reflect Aurora's actual conceptual engagement.
-        if self.perception and callable(self._live_response_bridge):
+        # Waveform formulation (2026-07-11, corrected same day): the earlier
+        # revision of this fallback used scripted concept frames — a direct
+        # violation of the standing rule this comment block originally
+        # enforced.  Aurora does not speak from scripts.  The turn's input
+        # signal ripples through her perception pipeline (SensoryInput →
+        # PatternDetection → ShadowInference → ImpressionCascade →
+        # ManifoldMapping), those pressures feed her systems, and her
+        # expression ecology formulates whatever she says — including her
+        # reason when her state does not support engaging.  Direct address
+        # always reaches the formulation machinery; what comes out of it is
+        # hers.
+        if self.perception:
+            expr, meta = self._formulate_through_perception(
+                selected, context, mode)
+            if expr:
+                return expr, meta
+
+        # Honest null turn — only when the generative path is unreachable
+        # (no perception engine wired) or her systems formulated nothing.
+        # run_episode() excludes these from governor fitness so honest
+        # silence never reads as conversational failure.  We do not
+        # manufacture words she did not generate.
+        return ("", {'generation_path': 'no_expression'})
+
+    def _formulate_through_perception(
+        self,
+        selected: ConceptualResponse,
+        context: Dict,
+        mode: ExistenceMode,
+    ) -> Tuple[str, Dict[str, Any]]:
+        """
+        Bridge-less formulation through Aurora's own machinery — no scripts.
+
+        1. RIPPLE — the incoming turn signal is ingested through the full
+           perception pipeline (ingest_interaction → perceive), perturbing
+           her pattern detection, shadow inference, impression cascade, and
+           manifold mapping, and feeding new words into her lexicon.
+        2. GROUND — the turn's content words are set as the composer's
+           context field, so composition draws from the actual topic
+           pressure rather than free-floating vocabulary.
+        3. FORMULATE — express() spawns ecology offspring, composes through
+           SentenceComposer + OETS enrichment, evaluates against her
+           pressure system, and selects.  The signal levels are honest:
+           coherence carries selection intensity, intent_match carries her
+           openness.  A low-engagement state produces whatever HER ecology
+           formulates under that pressure — that formulation IS her reason,
+           and a reason is still a response (Sunni, 2026-07-11).
+        """
+        try:
+            topic = str(context.get('topic', '') or '').strip()
+            prompt = str(context.get('prompt', '') or '').strip()
+            signal_text = prompt or topic
+            tone = str(context.get('expected_tone', 'neutral') or 'neutral')
+            concept_key = selected.primary_concept.value
+            intensity = float(getattr(selected, 'intensity', 0.5) or 0.0)
+            openness = float(getattr(selected, 'openness', 0.5) or 0.0)
+
+            # 1. RIPPLE the input signal across her systems.
+            if signal_text:
+                try:
+                    self.perception.ingest_interaction(
+                        {
+                            'input': signal_text,
+                            'tone': tone,
+                            'i_state': concept_key,
+                        },
+                        mode="sim",
+                    )
+                except Exception:
+                    pass  # a failed ripple degrades grounding, not formulation
+
+            # 2. GROUND composition in the turn's content field.
+            try:
+                composer = getattr(self.perception, 'composer', None)
+                if composer is not None and hasattr(composer, 'set_context'):
+                    keywords = (topic or signal_text).split()
+                    if keywords:
+                        composer.set_context(keywords)
+            except Exception:
+                pass
+
+            # 3. FORMULATE through her expression ecology under honest
+            #    signal pressure.
             from aurora_consciousness_engine import AssemblyResult
-            mock_assembly = AssemblyResult(
-                synthesis=None, frame_applied="balanced",
-                adjusted_axes={}, coherence=selected.intensity,
-                entropy_state={}, ds_stats={}
+            assembly = AssemblyResult(
+                synthesis=None,
+                frame_applied="balanced",
+                adjusted_axes={},
+                coherence=intensity,
+                entropy_state={},
+                ds_stats={},
             )
             result = self.perception.express(
-                mock_assembly, i_state=selected.primary_concept.value, mode="sim")
-            expr = result.get('expression', '').strip()
-            if expr:
-                return expr, {'generation_path': 'perception_sim'}
-
-        # No template fallback — if perception/bridge didn't generate, return nothing
-        # so the simulation records a null turn rather than a canned phrase.
-        return ("", {'generation_path': 'no_expression'})
+                assembly,
+                i_state=concept_key,
+                mode="sim",
+                intent_match=openness,
+            )
+            expr = str(result.get('expression', '') or '').strip()
+            if not expr:
+                return ("", {'generation_path': 'no_expression'})
+            return expr, {
+                'generation_path': 'perception_waveform',
+                'concept': concept_key,
+                'signal_intensity': round(intensity, 3),
+                'signal_openness': round(openness, 3),
+            }
+        except Exception:
+            return ("", {'generation_path': 'no_expression'})
 
     def _interpret_reaction(self, reaction: Dict) -> ConversationObservation:
         """Interpret avatar reaction as observation."""

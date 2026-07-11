@@ -6700,7 +6700,18 @@ def _run_grammar_motif_training(systems: Dict[str, Any]) -> None:
         if os.path.exists(motif_path):
             with open(motif_path) as _mf:
                 _md = json.load(_mf)
-            if len(_md.get("promoted", [])) >= 5:
+            # MotifLineage._save() (aurora_grammar_engine.py) persists
+            # {"motifs", "discourse", "saved_at"} -- promotion is a
+            # per-motif "promoted": true bool, not a top-level list. The
+            # phantom "promoted" key always read [] here, so this check
+            # never short-circuited and the 8-epoch AGENTIC training burst
+            # below fired on every daemon cycle regardless of how many
+            # motifs were already promoted.
+            _motifs = _md.get("motifs", {}) or {}
+            _promoted_count = sum(
+                1 for m in _motifs.values() if isinstance(m, dict) and m.get("promoted")
+            )
+            if _promoted_count >= 5:
                 return  # enough motifs already
     except Exception:
         pass
