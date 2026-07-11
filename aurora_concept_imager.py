@@ -134,7 +134,7 @@ def ingest_concept_image(
     try:
         import cv2
         import numpy as np
-        from aurora_expression_perception import LinuxCamera
+        from aurora_hardware_io import LinuxCamera
         from aurora_internal.aurora_sensory_crystal import visual_dict_to_crystal_57d
     except ImportError as e:
         logger.warning(f"[IMAGER] Missing import for ingestion: {e}")
@@ -146,10 +146,13 @@ def ingest_concept_image(
         if frame is None:
             return False
 
-        # Extract features the same way the camera does
-        _tmp_cam = LinuxCamera.__new__(LinuxCamera)
-        _tmp_cam.device_id = -1
-        _tmp_cam.running = False
+        # Extract features the same way the camera does. LinuxCamera.__init__
+        # only sets up state (no hardware access -- device open happens in a
+        # separate start()/open() call), so a real construction is safe here
+        # and gives extract_features() the detector attrs it needs
+        # (_mediapipe, _mp_face_detector, etc.) instead of a half-built
+        # __new__() instance missing them.
+        _tmp_cam = LinuxCamera(device_id=-1)
         _tmp_cam.last_frame = frame
         features = _tmp_cam.extract_features(frame)
 
