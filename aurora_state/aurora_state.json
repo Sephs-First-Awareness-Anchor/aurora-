@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783806591.2920089,
-  "generation": 6047,
-  "genome_version": 6047,
+  "timestamp": 1783810045.9270604,
+  "generation": 6067,
+  "genome_version": 6067,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -68,32 +68,32 @@
   "traits": {
     "curiosity": 0.492,
     "caution": 0.41,
-    "emotional_expressiveness": 0.4119,
+    "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
-    "introspection": 0.483,
+    "introspection": 0.4786,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
     "energy_conservation": 0.312
   },
-  "personality_drift": 0.8212,
+  "personality_drift": 0.8474,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5616,
-      "precision": 0.7217422076431776,
-      "depth": 1.0,
-      "confidence": 0.925122606576283
+      "warmth": 0.6069560220392715,
+      "precision": 0.583645855235367,
+      "depth": 0.824105872598036,
+      "confidence": 0.8321705500132279
     },
     "cognitive": {
-      "curiosity": 0.9424038285080439,
-      "pattern_matching": 1.0,
-      "abstraction": 0.8243954406581924,
-      "risk_assessment": 0.795726374728122
+      "curiosity": 0.6079033034707811,
+      "pattern_matching": 0.9942831523956301,
+      "abstraction": 0.8424289147497795,
+      "risk_assessment": 0.9384730287072882
     },
     "social": {
-      "empathy": 0.585,
-      "trust_extension": 0.6551369788183193,
-      "boundary_maintenance": 0.8739630788232121,
-      "engagement": 0.9986598642656913
+      "empathy": 0.7423454946664679,
+      "trust_extension": 0.8607640309180442,
+      "boundary_maintenance": 1.0,
+      "engagement": 0.9464142680877107
     }
   },
   "governance_stats": {
@@ -113,11 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 16,
+  "understanding_shards": 15,
   "what_aurora_learned": [
-    "what creates friction when approached with curious inquiry \u2014 it connects to reaching, who (B-axis, depth 0.37)."
+    "what creates friction when approached with curious inquiry \u2014 it connects to right, sense (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "5bf92b4785f4"
+  "_checksum": "89794453b971"
 }
