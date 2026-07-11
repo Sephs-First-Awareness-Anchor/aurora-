@@ -57,7 +57,7 @@
     },
     {
       "pressure_type": "articulation_gap",
-      "priority": 0.2019,
+      "priority": 0.202,
       "label": "Expression precision failure",
       "axis": "N (Energy / Resource)",
       "signal_mode": "active",
@@ -83,11 +83,11 @@
     }
   ],
   "axis_pressure": {},
-  "last_updated": 1783811696.528979,
+  "last_updated": 1783812442.1714852,
   "pressure_scores": {
     "code_gap": 0.2725,
     "knowledge_gap": 0.2122,
-    "articulation_gap": 0.2019,
+    "articulation_gap": 0.202,
     "stability_gap": 0.154,
     "reasoning_gap": 0.1353,
     "tool_gap": 0.1276
