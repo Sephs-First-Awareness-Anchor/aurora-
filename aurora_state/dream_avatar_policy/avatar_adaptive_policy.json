@@ -1,54 +1,54 @@
 {
   "version": 1,
-  "samples": 277,
+  "samples": 278,
   "global": {
     "pressure_gain_bias": 0.4,
     "difficulty_bias": 0.35,
     "escalation_bias": 0.3,
     "patience_bias": -0.3,
     "hardness_bias": 0.35,
-    "samples": 277
+    "samples": 278
   },
   "axis": {
     "X": {
-      "pressure_gain": 1.2804070627453992,
-      "difficulty_bias": 0.10430096673565308,
-      "escalation_bias": 0.08950458109424816,
-      "patience_bias": -0.0888448353735924,
-      "hardness_bias": 0.10496883855094076,
-      "samples": 277
+      "pressure_gain": 1.2763771396296038,
+      "difficulty_bias": 0.10280510409451539,
+      "escalation_bias": 0.0882226725650306,
+      "patience_bias": -0.08757047000282127,
+      "hardness_bias": 0.10347262586852637,
+      "samples": 278
     },
     "T": {
-      "pressure_gain": 1.4802740986956429,
-      "difficulty_bias": 0.17841108729650143,
-      "escalation_bias": 0.15310086463722775,
-      "patience_bias": -0.15235264891107234,
-      "hardness_bias": 0.17940483876188415,
-      "samples": 277
+      "pressure_gain": 1.4839153905832214,
+      "difficulty_bias": 0.18030456387704494,
+      "escalation_bias": 0.15479043039871018,
+      "patience_bias": -0.15381237743111037,
+      "hardness_bias": 0.18164629646055666,
+      "samples": 278
     },
     "N": {
-      "pressure_gain": 1.4676988774487818,
-      "difficulty_bias": 0.17277914273819917,
-      "escalation_bias": 0.14815232278835824,
-      "patience_bias": -0.14788218836320818,
-      "hardness_bias": 0.17310883144682168,
-      "samples": 277
+      "pressure_gain": 1.4668365218634682,
+      "difficulty_bias": 0.17264591633795154,
+      "escalation_bias": 0.1480604505565902,
+      "patience_bias": -0.14771417514194662,
+      "hardness_bias": 0.1730919099357365,
+      "samples": 278
     },
     "B": {
-      "pressure_gain": 1.6904424485713527,
-      "difficulty_bias": 0.2543735509776887,
-      "escalation_bias": 0.21803447371714785,
-      "patience_bias": -0.21803446710129454,
-      "hardness_bias": 0.2543735551691103,
-      "samples": 277
+      "pressure_gain": 1.6890166965387492,
+      "difficulty_bias": 0.25384827218369477,
+      "escalation_bias": 0.21758423460581156,
+      "patience_bias": -0.21758422865154356,
+      "hardness_bias": 0.25384827595597415,
+      "samples": 278
     },
     "A": {
-      "pressure_gain": 1.4518045117516707,
-      "difficulty_bias": 0.16688093910396448,
-      "escalation_bias": 0.14308042875563665,
-      "patience_bias": -0.14292857078356322,
-      "hardness_bias": 0.16708008597757684,
-      "samples": 277
+      "pressure_gain": 1.4501111448962811,
+      "difficulty_bias": 0.166358889416644,
+      "escalation_bias": 0.14264642537286826,
+      "patience_bias": -0.1424487476424466,
+      "hardness_bias": 0.16662962993622846,
+      "samples": 278
     }
   },
   "dimensions": {
@@ -58,23 +58,23 @@
       "escalation_bias": 0.3,
       "patience_bias": -0.3,
       "hardness_bias": 0.35,
-      "samples": 277
+      "samples": 278
     },
     "context_carryover": {
-      "pressure_gain": 1.502076370000643,
-      "difficulty_bias": 0.19773548791179985,
-      "escalation_bias": 0.17102686062484224,
-      "patience_bias": -0.1656393121732938,
-      "hardness_bias": 0.20581681058912255,
-      "samples": 277
+      "pressure_gain": 1.5750377985720716,
+      "difficulty_bias": 0.23089977362608555,
+      "escalation_bias": 0.20021143205341366,
+      "patience_bias": -0.19217074074472237,
+      "hardness_bias": 0.24296081058912256,
+      "samples": 278
     },
     "ambiguity_handling": {
-      "pressure_gain": 1.131851061267644,
-      "difficulty_bias": 0.04857670678281751,
-      "escalation_bias": 0.041637177242415016,
-      "patience_bias": -0.041637177242415016,
-      "hardness_bias": 0.04857670678281751,
-      "samples": 277
+      "pressure_gain": 1.1285547847359527,
+      "difficulty_bias": 0.04736228911324707,
+      "escalation_bias": 0.04059624781135464,
+      "patience_bias": -0.04059624781135464,
+      "hardness_bias": 0.04736228911324707,
+      "samples": 278
     },
     "contradiction_handling": {
       "pressure_gain": 1.95,
@@ -82,15 +82,15 @@
       "escalation_bias": 0.3,
       "patience_bias": -0.3,
       "hardness_bias": 0.35,
-      "samples": 277
+      "samples": 278
     },
     "implied_intent_inference": {
-      "pressure_gain": 1.95,
-      "difficulty_bias": 0.35,
-      "escalation_bias": 0.3,
-      "patience_bias": -0.3,
-      "hardness_bias": 0.35,
-      "samples": 277
+      "pressure_gain": 1.9262499999999998,
+      "difficulty_bias": 0.34125,
+      "escalation_bias": 0.2925,
+      "patience_bias": -0.2925,
+      "hardness_bias": 0.34125,
+      "samples": 278
     },
     "misunderstanding_repair": {
       "pressure_gain": 1.0,
@@ -98,15 +98,15 @@
       "escalation_bias": 0.0,
       "patience_bias": 0.0,
       "hardness_bias": 0.0,
-      "samples": 277
+      "samples": 278
     },
     "uncertainty_signaling": {
-      "pressure_gain": 1.381535817893484,
-      "difficulty_bias": 0.14370635396075807,
-      "escalation_bias": 0.12355573196636406,
-      "patience_bias": -0.12222973196636405,
-      "hardness_bias": 0.14569535396075808,
-      "samples": 277
+      "pressure_gain": 1.418935817893484,
+      "difficulty_bias": 0.16070635396075805,
+      "escalation_bias": 0.13851573196636405,
+      "patience_bias": -0.13582973196636405,
+      "hardness_bias": 0.16473535396075809,
+      "samples": 278
     },
     "boundary_calibration": {
       "pressure_gain": 1.95,
@@ -114,47 +114,47 @@
       "escalation_bias": 0.3,
       "patience_bias": -0.3,
       "hardness_bias": 0.35,
-      "samples": 277
+      "samples": 278
     },
     "framing_selection": {
-      "pressure_gain": 1.7285027073380272,
-      "difficulty_bias": 0.270755911404196,
-      "escalation_bias": 0.23236121526907927,
-      "patience_bias": -0.2313646960398898,
-      "hardness_bias": 0.27225069024798026,
-      "samples": 277
+      "pressure_gain": 1.7102901396545764,
+      "difficulty_bias": 0.2639870136190911,
+      "escalation_bias": 0.2265521848873523,
+      "patience_bias": -0.22558057863889255,
+      "hardness_bias": 0.2654444229917807,
+      "samples": 278
     },
     "emotional_calibration": {
-      "pressure_gain": 1.0006447185167455,
-      "difficulty_bias": 0.00025427908968127797,
-      "escalation_bias": 0.000219974286944022,
-      "patience_bias": -0.00016551015198999297,
-      "hardness_bias": 0.00028858389241853504,
-      "samples": 277
+      "pressure_gain": 1.0006286005538267,
+      "difficulty_bias": 0.00024792211243924604,
+      "escalation_bias": 0.00021447492977042144,
+      "patience_bias": -0.00016137239819024313,
+      "hardness_bias": 0.00028136929510807167,
+      "samples": 278
     },
     "semantic_precision": {
-      "pressure_gain": 1.0096459021065936,
-      "difficulty_bias": 0.003889318196203243,
-      "escalation_bias": 0.0033741821426610794,
-      "patience_bias": -0.002627275856984873,
-      "hardness_bias": 0.004404454249745402,
-      "samples": 277
+      "pressure_gain": 1.0094047545539286,
+      "difficulty_bias": 0.0037920852412981617,
+      "escalation_bias": 0.0032898275890945526,
+      "patience_bias": -0.002561593960560251,
+      "hardness_bias": 0.004294342893501767,
+      "samples": 278
     },
     "adaptive_strategy_selection": {
-      "pressure_gain": 1.3528791962599926,
-      "difficulty_bias": 0.13214799335894564,
-      "escalation_bias": 0.11352785145052482,
-      "patience_bias": -0.11262435145052482,
-      "hardness_bias": 0.13350324335894564,
-      "samples": 277
+      "pressure_gain": 1.378362529593326,
+      "difficulty_bias": 0.14373132669227898,
+      "escalation_bias": 0.12372118478385816,
+      "patience_bias": -0.12189101811719148,
+      "hardness_bias": 0.14647657669227898,
+      "samples": 278
     },
     "compression_elaboration_fit": {
-      "pressure_gain": 1.008502714762522,
-      "difficulty_bias": 0.0037274689706774935,
-      "escalation_bias": 0.003266737892994671,
-      "patience_bias": -0.002847627164526773,
-      "hardness_bias": 0.004188200048360313,
-      "samples": 277
+      "pressure_gain": 1.0082901468934589,
+      "difficulty_bias": 0.003634282246410556,
+      "escalation_bias": 0.003185069445669804,
+      "patience_bias": -0.0027764364854136036,
+      "hardness_bias": 0.004083495047151305,
+      "samples": 278
     },
     "perspective_integration": {
       "pressure_gain": 1.95,
@@ -162,17 +162,17 @@
       "escalation_bias": 0.3,
       "patience_bias": -0.3,
       "hardness_bias": 0.35,
-      "samples": 277
+      "samples": 278
     },
     "multi_turn_stability": {
-      "pressure_gain": 1.025664876043292,
-      "difficulty_bias": 0.011423369927921926,
-      "escalation_bias": 0.010028856105377147,
-      "patience_bias": -0.008901601630395887,
-      "hardness_bias": 0.012817883750466738,
-      "samples": 277
+      "pressure_gain": 1.0250232541422095,
+      "difficulty_bias": 0.011137785679723877,
+      "escalation_bias": 0.009778134702742719,
+      "patience_bias": -0.00867906158963599,
+      "hardness_bias": 0.01249743665670507,
+      "samples": 278
     }
   },
-  "last_episode_id": "episode_4a86e3094daf",
-  "last_update_ts": 1783882581.5470712
+  "last_episode_id": "episode_fa59e435c26c",
+  "last_update_ts": 1783886869.2608423
 }
