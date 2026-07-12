@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783875349.3071353,
-  "generation": 6367,
-  "genome_version": 6367,
+  "timestamp": 1783879277.4524713,
+  "generation": 6387,
+  "genome_version": 6387,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -71,29 +71,29 @@
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.4199,
-    "social_engagement": 0.4047,
-    "energy_conservation": 0.3433
+    "pattern_sensitivity": 0.39,
+    "social_engagement": 0.4009,
+    "energy_conservation": 0.312
   },
-  "personality_drift": 0.782,
+  "personality_drift": 0.8471,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.637389320305705,
-      "precision": 0.8595348297559029,
-      "depth": 0.7695459188272892,
-      "confidence": 0.9139796437886578
+      "warmth": 0.5616,
+      "precision": 0.7107853782862612,
+      "depth": 1.0,
+      "confidence": 1.0
     },
     "cognitive": {
-      "curiosity": 0.6330520138770409,
-      "pattern_matching": 0.5405319763597379,
-      "abstraction": 0.8675418041790726,
-      "risk_assessment": 0.5529912838587729
+      "curiosity": 0.627230089699431,
+      "pattern_matching": 0.5368417670928121,
+      "abstraction": 0.9682975856031459,
+      "risk_assessment": 0.6610206236727173
     },
     "social": {
-      "empathy": 0.8764330092698859,
-      "trust_extension": 0.869803310997488,
-      "boundary_maintenance": 0.6678291303016325,
-      "engagement": 0.6724576815235916
+      "empathy": 1.0,
+      "trust_extension": 0.7927234137031546,
+      "boundary_maintenance": 0.5286127424841147,
+      "engagement": 0.9556845817377814
     }
   },
   "governance_stats": {
@@ -113,9 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 14,
-  "what_aurora_learned": [],
+  "understanding_shards": 16,
+  "what_aurora_learned": [
+    "use opened depth when approached with curious inquiry \u2014 it connects to core, that's (T-axis expansion, depth 0.34)."
+  ],
   "time_dilation": 3000.0,
-  "stability_state": "cautious",
-  "_checksum": "647fcf631220"
+  "stability_state": "critical",
+  "_checksum": "f967df56b978"
 }
