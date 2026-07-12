@@ -34390,5 +34390,102 @@
       "compression_op:N:COMPRESSION_2eb466511b",
       "nc_dim:OPERATOR"
     ]
+  },
+  "L:5d610fa406": {
+    "id": "L:5d610fa406",
+    "parents": [
+      "L:ff69a042a0",
+      "T:PHASE_DRIFT"
+    ],
+    "depth": 2,
+    "created_at_tick": 92022,
+    "stats": {
+      "count": 37,
+      "mean_pos_relief": {
+        "X": 0.00015188091628543472,
+        "T": 9.125376613376193e-05,
+        "N": 1.6014429147131502e-07,
+        "B": 5.840713035320082e-08,
+        "A": 2.4050333288006416e-10
+      },
+      "mean_relief": {
+        "X": 0.00015188091628543472,
+        "T": 9.125376613376193e-05,
+        "N": 1.6014429147131502e-07,
+        "B": 5.840713035320082e-08,
+        "A": 2.4050333288006416e-10
+      },
+      "stdev_relief": {
+        "X": 0.0003878787703963707,
+        "T": 0.00010153889061202207,
+        "N": 4.4387831011490424e-07,
+        "B": 1.4066104768449604e-07,
+        "A": 3.58108850573909e-09
+      },
+      "mean_cost": {
+        "X": 0.022099127726681145,
+        "T": 0.1821848314729987,
+        "N": 0.9051872035888466,
+        "B": 1.0289697028982665,
+        "A": 7.8832380702316645
+      },
+      "mean_x_risk": 0.05072250317076097
+    },
+    "dominant_relief_axis": "X",
+    "tags": [
+      "signature:T^3*N^1",
+      "dominant_axis:T",
+      "purpose_family:T+N",
+      "origin_signature:T^3*N^1",
+      "operator_action:dream_evidence:rubric_deficit",
+      "purpose_lane:communication",
+      "operator_grade:0.884",
+      "purpose_grade:0.884",
+      "overall_grade:0.884",
+      "complexity_axes:3",
+      "complexity_slots:3",
+      "generation:419",
+      "generation_role:SHEAR",
+      "seed_influence:0.557",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.557",
+      "artificial_seed:true",
+      "seed_lineage_id:episode_62eebb558cb4",
+      "steering_target_generation:419",
+      "ontological_status:native_closed",
+      "depth_score:0.0300",
+      "leverage_grade:0.1603",
+      "viable_band_alignment:0.3205",
+      "energetic_footprint:0.0300",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "nc_dim:OPERATOR",
+      "signature:T^4*N^1",
+      "origin_signature:T^4*N^1",
+      "operator_action:operator_on_t",
+      "purpose_lane:intelligence",
+      "operator_grade:0.660",
+      "purpose_grade:0.809",
+      "overall_grade:0.540",
+      "complexity_axes:3",
+      "complexity_slots:3",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.557",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.557",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3",
+      "ontological_status:native_closed",
+      "depth_score:0.0300",
+      "leverage_grade:0.1603",
+      "viable_band_alignment:0.3205",
+      "energetic_footprint:0.0300",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_95b8f5f489",
+      "nc_dim:OPERATOR"
+    ]
   }
 }

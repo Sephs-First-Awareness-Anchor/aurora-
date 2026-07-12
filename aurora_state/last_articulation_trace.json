@@ -1,14 +1,14 @@
 {
-  "original": "I did am is. I exist truth change.",
+  "original": "I is. I do.",
   "candidate": "",
-  "selected": "I did am is. I exist truth change.",
+  "selected": "I is. I do.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.256,
+  "original_pressure": 0.456,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.744,
+  "pressure_relief": -0.544,
   "safe": false,
   "metadata": {
     "prompt_excerpt": "What would likely cause that relation to change?",
@@ -25,7 +25,7 @@
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1783865294.4001856,
+    "timestamp": 1783870631.0081742,
     "min_relief_used": 0.035
   }
 }
