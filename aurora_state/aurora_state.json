@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783854563.7330437,
-  "generation": 6267,
-  "genome_version": 6267,
+  "timestamp": 1783855220.2306256,
+  "generation": 6287,
+  "genome_version": 6287,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -70,30 +70,30 @@
     "caution": 0.41,
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
-    "introspection": 0.468,
+    "introspection": 0.5224,
     "pattern_sensitivity": 0.39,
-    "social_engagement": 0.4607,
-    "energy_conservation": 0.3217
+    "social_engagement": 0.5499,
+    "energy_conservation": 0.312
   },
-  "personality_drift": 0.7776,
+  "personality_drift": 0.7434,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6986955769237608,
-      "precision": 0.5304000000000001,
-      "depth": 0.9466786140135872,
-      "confidence": 0.8695768144665144
+      "warmth": 0.5853365766919428,
+      "precision": 0.6655138923836694,
+      "depth": 0.981677805766572,
+      "confidence": 1.0
     },
     "cognitive": {
-      "curiosity": 0.6590593775299382,
-      "pattern_matching": 0.597032214094989,
-      "abstraction": 0.48360000000000003,
-      "risk_assessment": 0.8311475156181398
+      "curiosity": 0.68469604331754,
+      "pattern_matching": 0.5887585142503691,
+      "abstraction": 0.5775091057054321,
+      "risk_assessment": 0.7732736826061722
     },
     "social": {
-      "empathy": 0.8948313814842181,
-      "trust_extension": 0.6735312897698821,
-      "boundary_maintenance": 0.9192612032678286,
-      "engagement": 0.9541207827952114
+      "empathy": 0.9303630862223086,
+      "trust_extension": 0.5688368047255075,
+      "boundary_maintenance": 1.0,
+      "engagement": 0.8027610042688151
     }
   },
   "governance_stats": {
@@ -113,11 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 14,
+  "understanding_shards": 17,
   "what_aurora_learned": [
-    "what creates friction when approached with thoughtful reflection \u2014 it connects to seeing, depth (B-axis, depth 0.37)."
+    "any held attention when approached with warm acknowledgment \u2014 it connects to them, feeling (N-axis resonance, depth 0.25)."
   ],
   "time_dilation": 3000.0,
-  "stability_state": "cautious",
-  "_checksum": "ee486bbd8656"
+  "stability_state": "critical",
+  "_checksum": "73f77a4b5aa7"
 }

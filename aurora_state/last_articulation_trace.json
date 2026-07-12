@@ -1,31 +1,14 @@
 {
-  "original": "I do truth is. I exist want become.",
-  "candidate": "",
-  "selected": "I do truth is. I exist want become.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.62,
-  "candidate_score": 0.0,
-  "original_pressure": 0.316,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "What would likely cause that relation to change?",
-    "input_interpretation": {
-      "raw_prompt": "What would likely cause that relation to change?",
-      "intent_hint": "question",
-      "topic_terms": [
-        "likely",
-        "cause",
-        "relation",
-        "change"
-      ],
-      "entities": []
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1783854291.5029702,
-    "min_relief_used": 0.035
-  }
+  "original": "I exist can do. I become meaning did.",
+  "candidate": "I exist can do. I become meaning did.",
+  "selected": "I exist can do. I become meaning did.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.292,
+  "candidate_pressure": 0.292,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }
