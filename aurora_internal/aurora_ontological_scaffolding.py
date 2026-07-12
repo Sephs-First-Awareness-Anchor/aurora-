@@ -302,6 +302,7 @@ class SemanticNode:
         """Record that Aurora encountered this concept."""
         self.times_encountered += 1
         self.last_accessed = time.time()
+        self._update_comprehension_confidence()
         self._recalculate_priority()
 
     def use_in_expression(self):
@@ -394,7 +395,30 @@ class SemanticNode:
 
         self.ontological_depth = _clamp(def_depth + ex_depth + rel_depth + research_depth)
         self._update_scaffolding_level()
+        self._update_comprehension_confidence()
         self._recalculate_priority()
+
+    def _update_comprehension_confidence(self):
+        """
+        Update comprehension_confidence from real evidence of understanding:
+        ontological depth (the same definitions/examples/relations/research
+        signal driving scaffolding_level) plus accumulated exposure.
+
+        Before this, the field only ever moved via its 0.1 dataclass default
+        or a one-time manual boost for a handful of hand-seeded identity
+        words (seed_identity_into_oets) -- nothing in the real study/
+        consolidation pipeline touched it for ordinary vocabulary, so a word
+        encountered thousands of times (verified: "am" at 1,614 encounters)
+        stayed pinned at 0.1, well under the 0.5 threshold
+        aurora_constraint_emission.py gates "what do you mean by X" on.
+        Uses max() so it only ever grows toward what the evidence supports,
+        never erodes an already-earned or seeded confidence.
+        """
+        encounter_component = min(0.3, math.log1p(self.times_encountered) * 0.05)
+        self.comprehension_confidence = max(
+            self.comprehension_confidence,
+            _clamp(self.ontological_depth + encounter_component),
+        )
 
     def _update_scaffolding_level(self):
         """Update scaffolding level based on ontological depth."""

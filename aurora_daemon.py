@@ -236,6 +236,7 @@ QUIET_WINDOW_ENABLED = False
 STUDY_INTERVAL  = 720        # seconds between study cycles (~2h), jittered ±30%
 WARP_STUDY_INTERVAL = 90    # fast-path study cycle for WARP-priority shallow concepts
 DREAM_INTERVAL  = 90        # seconds between dream bursts (~90s), jittered ±25%
+CLASSROOM_INTERVAL = 1800   # seconds between targeted classroom lessons (~30min), jittered ±25%
 BROWSER_INTERVAL = 10800      # seconds between social API outreach checks (~3h), jittered ±40%
 SAVE_INTERVAL   = 400         # seconds between state saves (10min)
 DISTILL_INTERVAL = 1800      # seconds between pressure-release distillation checks (~30 min)
@@ -725,6 +726,13 @@ def _collect_unresolved_issues(systems: Dict[str, Any]) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 def _auto_reach_out_enabled(systems: Dict[str, Any]) -> bool:
     return bool(systems.get("_auto_reach_out_enabled", False))
+
+
+def _compute_auto_reach_out_enabled(systems: Dict[str, Any]) -> bool:
+    """Subsurface never owns outward communication -- only a surface/full
+    daemon may enable proactive reach-out (_reach_out_to_user's _speak()/
+    _notify()/_save_message() calls are genuinely user-facing)."""
+    return str(systems.get("runtime_profile", "subsurface") or "subsurface") != "subsurface"
 
 
 def _should_reach_out(systems: Dict[str, Any], heat_level: str) -> bool:
@@ -3740,6 +3748,45 @@ def _maybe_research_recurring_issue(systems: Dict[str, Any], heat: str) -> bool:
     return True
 
 
+def _run_classroom_cycle(systems: Dict[str, Any]) -> None:
+    """
+    Run targeted classroom lessons on Aurora's real weakest rubric
+    dimensions -- exactly what scripts/aurora_ci_segment.py already runs
+    for scheduled CI segments, which the local daemon had no equivalent of.
+    Without this, fail_points.json's ranking never moves locally (nothing
+    else drives it down at a real cadence), so her top-ranked weak
+    dimension stays effectively frozen -- which is also why the
+    Poedex gap-topic selector (_reach_out_to_user) kept re-researching the
+    same stale topic: it always grabs the current #1 weakest dimension,
+    and that #1 never changed.
+
+    The ClassroomSession is created once and reused across cycles (stored
+    on systems) rather than rebuilt every call -- ClassroomSession.__init__
+    spawns two InceptionEntity instances via SimulationEngine.spawn_entity(),
+    which are never evicted from SimulationEngine.entities; rebuilding it
+    every ~30 minutes in a long-running daemon process would leak entities
+    without bound.
+    """
+    _log("  [CLASSROOM] Running targeted curriculum...")
+    try:
+        sim_engine = systems.get("simulation")
+        if sim_engine is None:
+            _log("  [CLASSROOM] Skipped: no simulation engine in systems.")
+            return
+        classroom = systems.get("_classroom_session")
+        if classroom is None:
+            from aurora_classroom import ClassroomSession
+            classroom = ClassroomSession(sim_engine, systems)
+            systems["_classroom_session"] = classroom
+        results = classroom.run_targeted_curriculum(n=4, turns_per_lesson=6)
+        plan_desc = ", ".join(
+            f"{r.target_dimension}({r.content_source})" for r in results
+        )
+        _log(f"  [CLASSROOM] Ran {len(results)} lessons: {plan_desc}")
+    except Exception as e:
+        _log(f"  [CLASSROOM] Error: {e}")
+
+
 def _run_dream_burst(systems: Dict[str, Any]) -> None:
     _log("  [DREAM] Running dream burst...")
     _dream_oets_before = 0
@@ -5135,14 +5182,19 @@ def _start_file_ptt_watcher(
 def _classify_ambient(text: str) -> str:
     """Return 'direct', 'mention', or 'ambient' for transcribed speech.
 
-    Since Aurora is in a one-on-one setting, all speech is treated as directed
-    at her unless it's clearly third-person (she/her). Aurora's own pipeline
-    decides whether to respond; if she has nothing to say, _generate_response
-    returns "" and nothing is spoken.
+    _AURORA_DIRECT_RE (name, second-person address, a question, a
+    conversational opener) is the actual evidence of direct address --
+    without checking it, every overheard utterance defaulted to 'direct'
+    regardless of content, so a TV, a podcast, or someone else's
+    conversation in the room would trigger a real spoken response. Only
+    text that shows one of those real signals is 'direct'; a third-person
+    mention is noted silently; everything else is genuinely ambient.
     """
     if _AURORA_MENTION_RE.search(text):
         return 'mention'
-    return 'direct'
+    if _AURORA_DIRECT_RE.search(text):
+        return 'direct'
+    return 'ambient'
 
 
 def _start_ambient_response_listener(
@@ -6756,6 +6808,7 @@ def run(systems: Dict[str, Any]) -> None:
     next_study   = now + _jitter(STUDY_INTERVAL)
     next_warp_study = now + WARP_STUDY_INTERVAL
     next_dream   = now + _jitter(DREAM_INTERVAL, 0.25)
+    next_classroom = now + _jitter(CLASSROOM_INTERVAL, 0.25)
     next_browser = now + _jitter(BROWSER_INTERVAL, 0.40)
     next_save    = now + SAVE_INTERVAL
     next_distill = now + _jitter(DISTILL_INTERVAL, 0.25)
@@ -6779,7 +6832,13 @@ def run(systems: Dict[str, Any]) -> None:
 
     # Enable proactive reach-out — Aurora should speak up on her own when she
     # has something to say (identity field pressure, novel sensory events, etc.)
-    systems["_auto_reach_out_enabled"] = True
+    # Subsurface never owns outward communication (same delegation the
+    # sensory/voice-listener gating below already applies): only the surface
+    # daemon may speak, notify, or write messages to the user. Without this
+    # check, a subsurface-profile boot enables reach-out too and
+    # _reach_out_to_user() ends up calling _speak()/_notify() from a process
+    # that should stay entirely internal.
+    systems["_auto_reach_out_enabled"] = _compute_auto_reach_out_enabled(systems)
 
     # Language Sub-Emergent Field (AURORA_LANGUAGE_EMERGENCE.md)
     # Boot in daemon so autonomous utterances run through the full physics chain.
@@ -7122,6 +7181,25 @@ def run(systems: Dict[str, Any]) -> None:
                 next_dream = now + _jitter(DREAM_INTERVAL, 0.25)
             else:
                 next_dream = now + max(60, int(decision.get("retry_in", 1800) or 1800))
+
+        # Classroom curriculum — targeted lessons on her real weakest rubric
+        # dimensions (same mechanism scripts/aurora_ci_segment.py already
+        # runs for scheduled CI segments; the daemon had no equivalent).
+        if now >= next_classroom:
+            decision = _governed_decision("classroom", now, heat, quiet, state_write_lock, log_tag="CLASSROOM")
+            if decision.get("allowed", False):
+                _run_classroom_cycle(systems)
+                _record_task_run("classroom", now)
+                # Targeted practice generates B+N energy: boundary calibration
+                # + pressure relief from actually working her weak dimensions.
+                try:
+                    governor.note_energy_income("classroom_complete", quality=1.0,
+                                                notes="Targeted classroom curriculum completed")
+                except Exception:
+                    pass
+                next_classroom = now + _jitter(CLASSROOM_INTERVAL, 0.25)
+            else:
+                next_classroom = now + max(60, int(decision.get("retry_in", 900) or 900))
 
         # Social API outreach
         if now >= next_browser:

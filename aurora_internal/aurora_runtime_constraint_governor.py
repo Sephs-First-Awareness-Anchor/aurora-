@@ -48,6 +48,14 @@ _TASK_PROFILES: Dict[str, Dict[str, Any]] = {
         "cost": 0.35,
         "retry": 300,
     },
+    "classroom": {
+        # Targeted curriculum lessons -- real episodes + entity resolution,
+        # comparable weight to a dream burst's simulation_burst().
+        "axes": {"X": 0.15, "T": 0.20, "N": 0.25, "B": 0.20, "A": 0.20},
+        "floor": 0.45,
+        "cost": 0.55,
+        "retry": 900,
+    },
     "dream": {
         "axes": {"X": 0.10, "T": 0.10, "N": 0.15, "B": 0.35, "A": 0.35},
         "floor": 0.50,
