@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783891331.9817033,
-  "generation": 6447,
-  "genome_version": 6447,
+  "timestamp": 1783894945.6124988,
+  "generation": 6467,
+  "genome_version": 6467,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.5007,
-    "caution": 0.41,
+    "curiosity": 0.492,
+    "caution": 0.4139,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.3929,
-    "introspection": 0.474,
-    "pattern_sensitivity": 0.3956,
+    "verbosity": 0.4008,
+    "introspection": 0.468,
+    "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3165
   },
-  "personality_drift": 0.8348,
+  "personality_drift": 0.8389,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6680696339089204,
-      "precision": 0.6776296314362628,
-      "depth": 0.9889078067084753,
-      "confidence": 0.8792538388653697
+      "warmth": 0.7742068847317407,
+      "precision": 0.5653304217639877,
+      "depth": 0.8761826276691776,
+      "confidence": 0.9049510557131605
     },
     "cognitive": {
-      "curiosity": 0.7422311265422832,
-      "pattern_matching": 0.5839567938590046,
-      "abstraction": 0.8904697584055145,
-      "risk_assessment": 0.7618536483058167
+      "curiosity": 0.8872419804784791,
+      "pattern_matching": 0.5553618033701178,
+      "abstraction": 0.7190434118007776,
+      "risk_assessment": 0.6619680686177747
     },
     "social": {
-      "empathy": 0.9372750518068681,
-      "trust_extension": 0.8849820926998815,
-      "boundary_maintenance": 0.9653429335981225,
-      "engagement": 0.8242086257792868
+      "empathy": 0.8673459139991201,
+      "trust_extension": 0.8343079529574029,
+      "boundary_maintenance": 1.0,
+      "engagement": 0.7679289580307284
     }
   },
   "governance_stats": {
@@ -113,11 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 17,
+  "understanding_shards": 16,
   "what_aurora_learned": [
-    "while held attention when approached with warm acknowledgment \u2014 it connects to help, include (N-axis resonance, depth 0.29)."
+    "what creates friction when approached with curious inquiry \u2014 it connects to links, thinking (B-axis, depth 0.38)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "0b57d849d161"
+  "_checksum": "67a0d946cbf5"
 }
