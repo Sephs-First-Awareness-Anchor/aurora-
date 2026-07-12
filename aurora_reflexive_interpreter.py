@@ -88,6 +88,15 @@ except Exception:
     _NONCOMP_LAYER_COMPILER = None
     _NONCOMP_LAYER_AVAILABLE = False
 
+try:
+    from aurora_understanding_sediment import (
+        UnderstandingSedimentOverlay, PersistentWorthLedger,
+        recall_confidence_boost, slot_key as _sediment_slot_key,
+    )
+    _SEDIMENT_AVAILABLE = True
+except ImportError:
+    _SEDIMENT_AVAILABLE = False
+
 SHIFT_COST: Dict[str, float] = {"X":1.0,"T":4.0,"N":10.0,"B":40.0,"A":150.0}
 AXES = ("X","T","N","B","A")
 DIM_NAMES = ("POLARITY","MAGNITUDE","OPERATOR","COST","DIFFERENCE")
@@ -777,12 +786,41 @@ class ReflexiveInterpreter:
     v2: UtteranceParser-backed matching + Worth-formula reconciliation.
     """
     def __init__(self, directory=None, router=None,
-                 band_pos:str=BandPosition.INSIDE) -> None:
+                 band_pos:str=BandPosition.INSIDE,
+                 sedimemory=None, state_dir:Optional[str]=None) -> None:
         self._directory = directory; self._router = router
         self._matcher   = SemanticMatcher(directory)
         self._band_pos  = band_pos
         self._history:  List[UnderstandingState] = []
         self._worth_histories: Dict[str, WorthHistory] = {}
+        self._sedimemory = sedimemory
+
+        # ── Deposition stratum (aurora_understanding_sediment) ──
+        # Overlay: runtime accountability-weight deltas layered over the
+        # read-only compiled manifold. Ledger: worth windows persisted so
+        # trajectory survives sessions instead of resetting to UNKNOWN.
+        self._overlay: Optional["UnderstandingSedimentOverlay"] = None
+        self._worth_ledger: Optional["PersistentWorthLedger"] = None
+        if _SEDIMENT_AVAILABLE:
+            try:
+                self._overlay = UnderstandingSedimentOverlay(state_dir=state_dir)
+                self._worth_ledger = PersistentWorthLedger(state_dir=state_dir)
+            except Exception:
+                self._overlay = None; self._worth_ledger = None
+
+    def _worth_history_for(self, key:str) -> WorthHistory:
+        """WorthHistory for a key, rehydrated from the persisted ledger
+        on first touch so trajectory carries across sessions."""
+        hist = self._worth_histories.get(key)
+        if hist is None:
+            hist = WorthHistory()
+            if self._worth_ledger is not None:
+                try:
+                    for s in self._worth_ledger.scores_for(key):
+                        hist.record(s)
+                except Exception: pass
+            self._worth_histories[key] = hist
+        return hist
 
     def update_band(self, band_pos:str) -> None:
         self._band_pos = band_pos
@@ -804,6 +842,39 @@ class ReflexiveInterpreter:
                         depth_sc = SHIFT_COST.get(idx_e.nc_law_c,1.0)/150.0
             except Exception: pass
 
+        # ── Sediment overlay: bedrock + lived deposits ──
+        # Prior understood expressions densified this neighborhood; the
+        # adjusted weight can shift origin_region sparse → mid → dense,
+        # which feeds _reconcile()'s origin bonus. This is the compounding
+        # edge of the snowball.
+        sediment_delta = 0.0
+        _slot = None
+        if self._overlay is not None:
+            try:
+                _slot = _sediment_slot_key(match.constraint, match.dimension)
+                _fkey = match.nc_name or f"{match.constraint}:{match.dimension}"
+                sediment_delta = self._overlay.delta(_fkey, _slot)
+                if sediment_delta > 0.0:
+                    origin_weight = self._overlay.adjusted_weight(
+                        origin_weight, _fkey, _slot)
+                    origin_region = region_type(origin_weight)
+            except Exception:
+                sediment_delta = 0.0
+
+        # ── Recall coupling: memory lowers the energy cost of re-knowing ──
+        # Resonant SediMemory fragments on the matched axis lift the
+        # confidence term of the worth formula (0.7 + 0.3·conf). Polarity
+        # coherence still judges the raw match.confidence — recall may
+        # cheapen re-understanding, never counterfeit coherence.
+        recall_boost = 0.0
+        if _SEDIMENT_AVAILABLE and self._sedimemory is not None:
+            try:
+                recall_boost = recall_confidence_boost(
+                    self._sedimemory, expression, match.constraint)
+            except Exception:
+                recall_boost = 0.0
+        conf_effective = min(1.0, match.confidence + recall_boost)
+
         # NC target from nc_name (extract constraint from "..._of_Boundary")
         nc_target = match.constraint
         if match.nc_name:
@@ -814,15 +885,17 @@ class ReflexiveInterpreter:
                                  ("B","boundary"),("A","agency")]:
                     if name in dom: nc_target = ax; break
 
-        # Worth score
-        ws = _worth_score(match.constraint, nc_target, match.dimension, depth_sc, match.confidence)
+        # Worth score (confidence term carries the recall boost)
+        ws = _worth_score(match.constraint, nc_target, match.dimension, depth_sc, conf_effective)
 
-        # Worth history
+        # Worth history — rehydrated from the persisted ledger, so
+        # trajectory survives sessions instead of restarting UNKNOWN.
         key = match.nc_name or f"{match.constraint}:{match.dimension}"
-        if key not in self._worth_histories:
-            self._worth_histories[key] = WorthHistory()
-        hist = self._worth_histories[key]
+        hist = self._worth_history_for(key)
         hist.record(ws)
+        if self._worth_ledger is not None:
+            try: self._worth_ledger.record(key, ws)
+            except Exception: pass
         traj = hist.trajectory
 
         # Route
@@ -838,6 +911,22 @@ class ReflexiveInterpreter:
 
         coherent     = _polarity_coherent(match, route_result)
         is_und, summ = _reconcile(ws, traj, origin_region, coherent, match.confidence, route_result)
+
+        # ── Deposition: understanding writes back into the field ──
+        # Every understood expression lays sediment at the slot it landed
+        # in (capped, decaying — see aurora_understanding_sediment).
+        # The next nearby expression reads a denser field.
+        if is_und and self._overlay is not None and _slot is not None:
+            try:
+                sediment_delta = self._overlay.deposit(
+                    match.nc_name or f"{match.constraint}:{match.dimension}",
+                    _slot, ws, threshold=UNDERSTANDING_THRESHOLD)
+                self._overlay.save()
+            except Exception: pass
+        if self._worth_ledger is not None:
+            try: self._worth_ledger.save()
+            except Exception: pass
+
         noncomp_state = _project_noncomp_state(
             match,
             worth_score=ws,
@@ -864,6 +953,14 @@ class ReflexiveInterpreter:
             semantic_override=match.semantic_override,
             noncomp_state=noncomp_state,
         )
+
+        # Surface the deposition physics of this pass so DCE evidence and
+        # the turn chain can see the snowball working.
+        try:
+            state.noncomp_state["sediment_delta"] = round(float(sediment_delta), 4)
+            state.noncomp_state["recall_boost"]   = round(float(recall_boost), 4)
+        except Exception: pass
+
         self._history.append(state)
         return state
 

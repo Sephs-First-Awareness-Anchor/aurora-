@@ -13354,7 +13354,11 @@ def _build_established_strata_evidence(
             from aurora_reflexive_interpreter import ReflexiveInterpreter as _RI
             _ri_dir = systems.get("_manifold_directory")
             _ri_router = systems.get("_manifold_router")
-            _ri = _RI(directory=_ri_dir, router=_ri_router)
+            _ri = _RI(
+                directory=_ri_dir, router=_ri_router,
+                sedimemory=systems.get("sedimemory"),
+                state_dir=str(systems.get("state_dir") or "") or None,
+            )
             systems["_reflexive_interp"] = _ri
         if _ri is not None and user_text:
             _ri_state = _ri.interpret(user_text)
