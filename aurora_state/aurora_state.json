@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783814025.0981357,
-  "generation": 6127,
-  "genome_version": 6127,
+  "timestamp": 1783816238.234719,
+  "generation": 6147,
+  "genome_version": 6147,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
+    "curiosity": 0.5147,
     "caution": 0.41,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.4091,
-    "introspection": 0.468,
+    "verbosity": 0.39,
+    "introspection": 0.4771,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3248
   },
-  "personality_drift": 0.8389,
+  "personality_drift": 0.8133,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.752191549645769,
-      "precision": 0.5745560467608766,
-      "depth": 0.5592051799708546,
-      "confidence": 0.795863661167704
+      "warmth": 0.7538116339319837,
+      "precision": 0.5516238580959322,
+      "depth": 0.6101679657208053,
+      "confidence": 0.549947067381806
     },
     "cognitive": {
-      "curiosity": 0.7519945924743069,
-      "pattern_matching": 0.9346115235387705,
-      "abstraction": 0.8653300857669669,
-      "risk_assessment": 1.0
+      "curiosity": 0.5959556361266874,
+      "pattern_matching": 0.9213656115817405,
+      "abstraction": 0.7140761142617529,
+      "risk_assessment": 0.8038113191129788
     },
     "social": {
-      "empathy": 0.6202804252403986,
-      "trust_extension": 0.8708201627970961,
-      "boundary_maintenance": 1.0,
-      "engagement": 0.5967666159230919
+      "empathy": 0.585,
+      "trust_extension": 0.9331109131589477,
+      "boundary_maintenance": 0.744762974313909,
+      "engagement": 0.4958327793211602
     }
   },
   "governance_stats": {
@@ -114,8 +114,10 @@
   "simulation_epochs": 194,
   "total_episodes": 5,
   "understanding_shards": 16,
-  "what_aurora_learned": [],
+  "what_aurora_learned": [
+    "what creates friction when approached with thoughtful reflection \u2014 it connects to reasoning, think (B-axis, depth 0.37)."
+  ],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "b23288cab897"
+  "_checksum": "f9c378175c13"
 }
