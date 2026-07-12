@@ -27,3 +27,12 @@
 
 numpy==1.26.4
 opencv-python-headless==4.11.0.86
+
+# requests: needed by aurora_concept_imager.py's fetch_concept_image() --
+# the Wikipedia REST API call that fetches the source image before
+# ingest_concept_image() ever runs. Missing from this file since the module
+# was added, so fetch_concept_image() silently returned None every run
+# ("[IMAGER] requests not available") and every SEMANTIC+ candidate got
+# marked permanently "failed" -- concept_images_ingested read 0 on every
+# scheduled run regardless of any other fix to the ingestion path itself.
+requests==2.32.3

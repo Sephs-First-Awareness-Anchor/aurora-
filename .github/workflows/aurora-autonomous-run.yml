@@ -95,6 +95,12 @@ jobs:
           # concept images from scratch instead of moving on to new ones.
           git add -f aurora_state/concept_images_fetched.json 2>/dev/null || true
           git add -f aurora_state/vision_seeds/ 2>/dev/null || true
+          # classroom_corpus_rotation.json (aurora_classroom.py's per-dimension
+          # rotation cursor) is also brand-new on first run -- without
+          # force-adding it, select_curriculum() would always re-pick the
+          # same front-of-pool example every scheduled run instead of
+          # advancing through her real fail-point/directed-corpus content.
+          git add -f aurora_state/classroom_corpus_rotation.json 2>/dev/null || true
           # cers_snapshot.json/cers_detail.json (CERSBridge's private shadow
           # state, aurora_internal/dual_strata/cers_bridge.py) are written
           # every turn but were never force-added -- same blanket aurora_state/
