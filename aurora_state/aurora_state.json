@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783979705.557401,
-  "generation": 6687,
-  "genome_version": 6687,
+  "timestamp": 1783983314.5194378,
+  "generation": 6707,
+  "genome_version": 6707,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.4447,
+    "caution": 0.41,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.4075,
-    "introspection": 0.4921,
-    "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
+    "verbosity": 0.39,
+    "introspection": 0.4733,
+    "pattern_sensitivity": 0.4063,
+    "social_engagement": 0.3951,
     "energy_conservation": 0.312
   },
-  "personality_drift": 0.7817,
+  "personality_drift": 0.8312,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.7681455773852343,
-      "precision": 0.711849658671606,
-      "depth": 0.8281328261918247,
-      "confidence": 0.8107048115609882
+      "warmth": 0.7608319052815505,
+      "precision": 0.6626506838794222,
+      "depth": 0.6907148672912183,
+      "confidence": 0.7477381487772989
     },
     "cognitive": {
-      "curiosity": 0.6208792130437729,
-      "pattern_matching": 0.6591316529058114,
-      "abstraction": 0.7959266600124428,
-      "risk_assessment": 0.6145537349572424
+      "curiosity": 0.6839136554523243,
+      "pattern_matching": 0.5446503880214222,
+      "abstraction": 1.0,
+      "risk_assessment": 0.6208909224807145
     },
     "social": {
-      "empathy": 0.6293886221475078,
-      "trust_extension": 0.4853798075130323,
-      "boundary_maintenance": 0.6028499479080331,
-      "engagement": 0.9040940096637683
+      "empathy": 0.6519124498274855,
+      "trust_extension": 0.7703266879628883,
+      "boundary_maintenance": 0.6874811186070772,
+      "engagement": 0.8777356292326481
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "b57ffdfdf3c3"
+  "_checksum": "2daa55b2c5d7"
 }
