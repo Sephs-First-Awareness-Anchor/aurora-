@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1783902342.4881072,
-  "generation": 6507,
-  "genome_version": 6507,
+  "timestamp": 1783916297.3503444,
+  "generation": 6527,
+  "genome_version": 6527,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.4675,
+    "caution": 0.4308,
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
-    "introspection": 0.468,
+    "introspection": 0.4788,
     "pattern_sensitivity": 0.39,
-    "social_engagement": 0.4232,
-    "energy_conservation": 0.3333
+    "social_engagement": 0.39,
+    "energy_conservation": 0.3149
   },
-  "personality_drift": 0.746,
+  "personality_drift": 0.8236,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9813461928720657,
-      "precision": 0.8823994525082092,
-      "depth": 0.7904537794514698,
-      "confidence": 0.8791676855697685
+      "warmth": 0.9852285209346986,
+      "precision": 0.8994783026928755,
+      "depth": 0.6811191678390824,
+      "confidence": 0.8850377615159482
     },
     "cognitive": {
-      "curiosity": 0.8905786372925384,
-      "pattern_matching": 0.5631788421159831,
-      "abstraction": 0.6525058598150598,
-      "risk_assessment": 0.5888906427287257
+      "curiosity": 0.954170289304313,
+      "pattern_matching": 0.6404117920779522,
+      "abstraction": 0.7123583557620559,
+      "risk_assessment": 0.5507428951966655
     },
     "social": {
-      "empathy": 0.754486657621416,
-      "trust_extension": 0.728417411202981,
-      "boundary_maintenance": 0.9516990683640528,
-      "engagement": 0.7497247154878468
+      "empathy": 0.6851610228512756,
+      "trust_extension": 0.8063728745796899,
+      "boundary_maintenance": 0.9698733337393344,
+      "engagement": 0.7394103438405213
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "0b877ba7fdf3"
+  "_checksum": "e0914792972b"
 }
