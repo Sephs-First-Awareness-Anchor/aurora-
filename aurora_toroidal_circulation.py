@@ -12,8 +12,11 @@ gradients, deviation). This layer detects how a state SUSTAINS itself:
 structured internal motion — closed loops of pressure moving between
 constraint axes even when every static reading looks balanced.
 
-Empirical grounding (aurora_flow_audit.py, 2026-07-12)
-------------------------------------------------------
+HISTORICAL SNAPSHOT — 2026-07-12 audit (aurora_flow_audit.py)
+---------------------------------------------------------------
+These numbers are a dated provenance record, not present truth — the
+tree (and her lived history) keeps moving. Run `aurora_flow_audit.py`
+against the live tree for current values.
   * Compiled bedrock (125 manifolds): ZERO circulation. Potential
     field. Static grids carry structure, not motion.
   * Genealogy fossils (axis level): gradient flow only — N sources,

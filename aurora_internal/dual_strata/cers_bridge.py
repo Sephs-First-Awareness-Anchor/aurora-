@@ -71,7 +71,7 @@ class CERSBridge:
         self._equivalence_log: Deque[Dict[str, Any]] = deque(maxlen=50)
         self._tracker = PotentialTracker()
         self._trial_board = PotentialTrialBoard()
-        self.deprecation_ledger = SubsystemDeprecationLedger()
+        self.deprecation_ledger = SubsystemDeprecationLedger(state_dir=str(self.state_dir))
 
     def build_snapshot(
         self,
