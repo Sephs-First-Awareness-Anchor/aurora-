@@ -13594,6 +13594,24 @@ def _refresh_live_dual_strata_runtime(
             precomputed_sub_crests=_precomputed,
             dps=getattr(systems.get("dimensional"), "dps", None),
         )
+
+        # ── Toroidal Circulation Layer — after CERS snapshot ──
+        # Read-only circulation observer (aurora_toroidal_circulation.py).
+        # Feeds on this tick's sub-crest axis intensities (temporal deltas
+        # only — never static grids, per aurora_flow_audit.py verdict).
+        # Refines classification and genealogy attachment; never generates
+        # states or overrides CERS. First boot seeds from the lived
+        # surface_pressure_log so she wakes knowing her past motion.
+        from aurora_toroidal_circulation import ToroidalCirculationLayer as _TCL
+        _tcl = systems.get("_toroidal")
+        if _tcl is None:
+            _tcl = _TCL(state_dir=str(_dual_strata_state_dir(systems)))
+            if _tcl.stats().get("observations", 0) == 0:
+                _tcl.seed_from_surface_log()
+            systems["_toroidal"] = _tcl
+        _tcl.observe(_TCL.intensity_from_crests(_precomputed))
+        _tcl.save()
+        systems["_toroidal_signature"] = _tcl.current_signature().to_dict()
     except Exception:
         pass
 
