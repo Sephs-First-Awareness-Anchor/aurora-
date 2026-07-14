@@ -47,6 +47,18 @@ _FEEDBACK_INSIGHTS: Optional[Dict[str, Any]] = None
 _FEEDBACK_INSIGHTS_TS: float = 0.0
 _FEEDBACK_INSIGHTS_TTL: float = 1800.0
 
+# MTSL (Phase 5, live-wired 2026-07-14): how much a caution-calling
+# strategy raises the pressure-relief bar for accepting a revision.
+# First-pass, documented magnitudes -- larger for stronger calls for
+# restraint (abstain > clarify > contrast); any strategy not listed here
+# (explain/reflect/act/observe) applies no bump at all. See
+# decide_articulation()'s own comment for the raise-only guarantee.
+_STRATEGY_MIN_RELIEF_BUMP: Dict[str, float] = {
+    "abstain": 0.08,
+    "clarify": 0.05,
+    "contrast": 0.03,
+}
+
 
 @dataclass
 class ArticulationDecision:
@@ -680,13 +692,32 @@ def decide_articulation(
     safe = is_safe_revision(draft_text, candidate_text)
     min_relief = _adaptive_min_relief()
 
+    # MTSL (Phase 5, live-wired 2026-07-14): semantic_strategy is
+    # SemanticIntentionBridge.consume()'s resolved strategy
+    # (aurora_internal/dual_strata/semantic_intention_bridge.py) --
+    # "aurora_articulation.py receives only resolved strategy + confidence"
+    # per the directive. Only actually applied when the caller marks it
+    # semantic_strategy_applied=True (SemanticIntentionBridge's own
+    # IntentionDecision.applied, itself gated by MTSL_AUTHORITY_STAGE) --
+    # articulation never runs its own independent authority check, it
+    # just trusts the caller's. When applied, a strategy calling for
+    # caution (clarify/contrast/abstain -- the coordinator read this turn
+    # as ambiguous or under-evidenced) can only RAISE the pressure-relief
+    # bar required to accept a "smoothed" revision over Aurora's own more
+    # literal draft, never lower it: a strategy that ISN'T in the bump
+    # table (explain/reflect/act/observe) leaves min_relief untouched.
+    semantic_strategy = str((context or {}).get("semantic_strategy") or "")
+    strategy_applied = bool((context or {}).get("semantic_strategy_applied", False))
+    strategy_relief_bump = _STRATEGY_MIN_RELIEF_BUMP.get(semantic_strategy, 0.0) if strategy_applied else 0.0
+    min_relief = round(min_relief + strategy_relief_bump, 4)
+
     accepted = bool(safe and pressure_relief >= min_relief)
     if not candidate_text:
         reason = "no_candidate"
     elif not safe:
         reason = "candidate_failed_preservation"
     elif pressure_relief < min_relief:
-        reason = "candidate_did_not_relieve_pressure"
+        reason = "candidate_did_not_relieve_pressure" if strategy_relief_bump <= 0.0 else "candidate_did_not_clear_semantic_caution_bar"
     else:
         reason = "accepted_pressure_relief"
 
@@ -697,24 +728,14 @@ def decide_articulation(
         "source": source,
         "timestamp": time.time(),
         "min_relief_used": min_relief,
+        "semantic_strategy_relief_bump": strategy_relief_bump,
     }
     if context:
-        # MTSL Phase 5 (2026-07-13): semantic_strategy/semantic_confidence
-        # are SemanticIntentionBridge.consume()'s resolved strategy +
-        # confidence (aurora_internal/dual_strata/semantic_intention_bridge.py)
-        # -- "aurora_articulation.py receives only resolved strategy +
-        # confidence" per the directive. Recorded into metadata only, same
-        # as every other key already whitelisted here: nothing below this
-        # point reads these two keys, so accepted/selected/reason/
-        # pressure_relief are unaffected whether or not a caller supplies
-        # them (no articulation change yet -- authority_stage still gates
-        # whether any future consumer treats the strategy as more than a
-        # record).
         meta["expression_context"] = {
             k: v for k, v in context.items()
             if k in (
                 "dominant_axis", "coherence", "expression_pressure", "voice_tone", "lineage_id",
-                "semantic_strategy", "semantic_confidence",
+                "semantic_strategy", "semantic_confidence", "semantic_strategy_applied",
             )
         }
 

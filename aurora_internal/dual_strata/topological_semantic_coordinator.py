@@ -89,6 +89,21 @@ _SV_MATCH_SCALE = "meso"
 
 _BASE_MEANING_FLOOR = 0.5  # axis activation floor for deriving a BMF from adjusted_axes
 
+# How often observe_turn() attempts a WARP topology-gap proposal (every
+# Nth fresh observation, not every turn) -- coverage checking is O(existing
+# WARP-visible components) per call, so this bounds the amortized live
+# cost of a mechanism the directive itself frames as "WARP MAY propose,"
+# not "must check constantly." First-pass, documented interval.
+WARP_GAP_CHECK_INTERVAL = 20
+
+# MTSL live-wiring extension (2026-07-14): a bounded in-memory history of
+# recent TopologyFrame instances, so a caller (dream substrate, classroom)
+# can hand PerturbationProbe real recent history instead of synthesizing
+# one. Frames are frozen/plain-data (topology_frame.py) so copying them out
+# via recent_frames() below can never leak a live reference -- the same
+# guarantee PerturbationProbe's own constructor checks for.
+FRAME_HISTORY_MAXLEN = 60
+
 
 def _get_tcl_class():
     """Lazy import of the repo-root toroidal circulation module, same
@@ -101,6 +116,19 @@ def _get_tcl_class():
             sys.path.insert(0, _core)
         from aurora_toroidal_circulation import ToroidalCirculationLayer
         return ToroidalCirculationLayer
+    except Exception:
+        return None
+
+
+def _get_warp_types():
+    """Lazy import of the repo-root WARP protocol module, same sys.path
+    pattern as _get_tcl_class() above."""
+    try:
+        _core = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+        if _core not in sys.path:
+            sys.path.insert(0, _core)
+        from aurora_warp_protocol import axes_to_istates
+        return axes_to_istates
     except Exception:
         return None
 
@@ -149,6 +177,32 @@ class CoordinatorSnapshot:
             "toroidal_signature": self.toroidal_signature,
             "understanding_classification": self.understanding_classification,
         }
+
+    def to_topology_context(self, *, dominant_scale: Optional[str] = None) -> Any:
+        """Build a cers_regulator.TopologyContext from this snapshot, for
+        threading into a LATER tick's cers_converge() call (live-wired
+        2026-07-14 -- see aurora_consciousness_engine.py's
+        _attach_dual_strata_snapshot, the only call site). Lazy import to
+        avoid a module-load-time dependency in either direction between
+        this module and cers_regulator.py -- neither currently imports
+        the other at top level, and this keeps it that way.
+        dominant_scale defaults to this snapshot's own dominant_scale
+        (normally "meso"); overridable for a caller that wants a
+        different window's regime/circulation_fraction."""
+        from .cers_regulator import TopologyContext
+        scale = dominant_scale or self.dominant_scale
+        sig = self.topology_signatures.get(scale, {}) or {}
+        return TopologyContext(
+            schema_version=self.schema_version,
+            turn_id=self.turn_id,
+            manifold_slot_id=self.manifold_slot_id,
+            variant_confidence=float(self.variant_confidence or 0.0),
+            variant_status=self.semantic_variant_status,
+            variant_created=bool(self.variant_created),
+            semantic_ambiguity=(self.understanding_classification == "ambiguous_organization"),
+            circulation_fraction=float(sig.get("circulation_fraction", 0.0) or 0.0),
+            regime=str(sig.get("regime", "quiescent") or "quiescent"),
+        )
 
 
 SCHEMA_VERSION = 1
@@ -204,6 +258,8 @@ class TopologicalSemanticCoordinator:
         self.latest_snapshot: Optional[CoordinatorSnapshot] = None
         self._last_adjusted_axes: Dict[str, float] = {}
         self._observation_log: Deque[Dict[str, Any]] = deque(maxlen=200)
+        self._frame_history: Deque[TopologyFrame] = deque(maxlen=FRAME_HISTORY_MAXLEN)
+        self._warp_gap_check_counter = 0
 
         self._shadow_log_path = (
             os.path.join(self._state_dir, SHADOW_COMPARISON_FILENAME) if self._state_dir else None
@@ -225,6 +281,17 @@ class TopologicalSemanticCoordinator:
             return 0.0
         repeats = sum(1 for e in self._observation_log if not e.get("fresh", True))
         return round(repeats / len(self._observation_log), 4)
+
+    def recent_frames(self, n: Optional[int] = None) -> Tuple[TopologyFrame, ...]:
+        """A plain-data copy (tuple, oldest-first) of up to the last
+        FRAME_HISTORY_MAXLEN observed frames -- safe to hand directly to
+        PerturbationProbe (which only ever accepts plain TopologyFrame
+        instances). n caps how many of the most recent frames to return;
+        None returns everything currently buffered."""
+        frames = tuple(self._frame_history)
+        if n is None or n >= len(frames):
+            return frames
+        return frames[-n:]
 
     # ── observation (single call site: ConsciousnessEngine._attach_dual_strata_snapshot) ──
 
@@ -264,6 +331,7 @@ class TopologicalSemanticCoordinator:
             context_family=context_family,
         )
         self._tracker.observe(frame)
+        self._frame_history.append(frame)
         try:
             self._tracker.save()
         except Exception:
@@ -338,6 +406,19 @@ class TopologicalSemanticCoordinator:
 
         self._log_shadow_comparison(base_forms=base_forms, snapshot=snapshot)
 
+        # WARP topology-gap proposal (live-wired 2026-07-14): throttled to
+        # every WARP_GAP_CHECK_INTERVAL fresh observations -- see that
+        # constant's own comment for why. Isolated in its own try/except;
+        # propose_topology_gap() already degrades gracefully on its own,
+        # this is defense in depth against a dps whose check_and_extend()
+        # raises for reasons outside MTSL's control.
+        self._warp_gap_check_counter += 1
+        if dps is not None and self._warp_gap_check_counter % WARP_GAP_CHECK_INTERVAL == 0:
+            try:
+                self.propose_topology_gap(dps)
+            except Exception:
+                pass
+
         return snapshot
 
     # ── meaning shadow (computed + logged only, never authoritative) ──
@@ -370,20 +451,170 @@ class TopologicalSemanticCoordinator:
 
     # ── post-turn outcome plumbing (no authority: nothing calls this yet) ──
 
+    @staticmethod
+    def _split_variant_id(snap: CoordinatorSnapshot) -> Optional[Tuple[str, str]]:
+        """(manifold_slot_id, topology_id) from snap.semantic_variant_id,
+        or None if there's no matched variant this turn.
+        semantic_variant_id is "<manifold_slot_id>:<topology_id>", but
+        manifold_slot_id itself contains ":" (e.g.
+        "MANIFOLD:X:NC[...]xNC[...]"), so split off only the trailing
+        topology_id by removing the known manifold_slot_id prefix rather
+        than a naive split(":")[-1]."""
+        if snap.manifold_slot_id is None or snap.semantic_variant_id is None:
+            return None
+        prefix = f"{snap.manifold_slot_id}:"
+        if not snap.semantic_variant_id.startswith(prefix):
+            return None
+        return snap.manifold_slot_id, snap.semantic_variant_id[len(prefix):]
+
     def record_turn_outcome(self, *, positive: bool, dps: Any = None) -> Optional[Any]:
         """Route an outcome judgment to the last-matched semantic
         variant. Exposed plumbing only -- deciding what counts as a
         positive/negative outcome is Phase 4/5's job, not this
         coordinator's. Nothing in Phase 3's wiring calls this."""
         snap = self.latest_snapshot
-        if snap is None or snap.manifold_slot_id is None or snap.semantic_variant_id is None or dps is None:
+        if snap is None or dps is None:
             return None
-        # semantic_variant_id is "<manifold_slot_id>:<topology_id>", but
-        # manifold_slot_id itself contains ":" (e.g. "MANIFOLD:X:NC[...]xNC[...]"),
-        # so split off only the trailing topology_id by removing the known
-        # manifold_slot_id prefix rather than a naive split(":")[-1].
-        prefix = f"{snap.manifold_slot_id}:"
-        if not snap.semantic_variant_id.startswith(prefix):
+        split = self._split_variant_id(snap)
+        if split is None:
             return None
-        topology_id = snap.semantic_variant_id[len(prefix):]
-        return self._registry.record_outcome(dps, snap.manifold_slot_id, topology_id, positive=positive)
+        manifold_slot_id, topology_id = split
+        return self._registry.record_outcome(dps, manifold_slot_id, topology_id, positive=positive)
+
+    # ── perturbation probing (live-wired 2026-07-14: dreams/classroom) ──
+
+    @staticmethod
+    def _pick_probe_axis(frames: Sequence[TopologyFrame]) -> str:
+        """The axis with the largest total |delta| across the given
+        frames -- a meaningful choice (the axis actually driving recent
+        change), not an arbitrary fixed one."""
+        totals = {a: 0.0 for a in AXES}
+        for f in frames:
+            for a in AXES:
+                totals[a] += abs(f.delta_vector.get(a, 0.0))
+        return max(totals, key=lambda a: totals[a])
+
+    def run_perturbation_probe(
+        self,
+        dps: Any,
+        *,
+        axis: Optional[str] = None,
+        perturbation: str = "occlude",
+        value: Optional[float] = None,
+        lag: int = 3,
+        source: str = "dream",
+        min_frames: int = 10,
+    ) -> Optional[Any]:
+        """Run a real what-if experiment (PerturbationProbe,
+        perturbation_probe.py) against this coordinator's own recent
+        frame history (recent_frames()) and record the result as
+        simulated evidence (FIX-A012: source-tagged, lower authority,
+        never alone promotes) on whatever semantic variant is currently
+        live at this coordinate. Returns None -- never fakes anything --
+        when there isn't enough real history yet (min_frames) or no
+        variant is currently matched to attach evidence to. Callers:
+        aurora_quantum_dream_substrate.py (source="dream") and
+        aurora_classroom.py (source="classroom"); both isolate this
+        call in their own try/except, same failure-swallowed posture as
+        the rest of MTSL's live wiring.
+
+        perturbation: "occlude" (default), "clamp", or "delay" -- see
+        PerturbationProbe's own methods for what each does. axis
+        defaults to whichever axis drove the most total change across
+        the buffered frames (_pick_probe_axis) when not given
+        explicitly."""
+        frames = self.recent_frames()
+        if len(frames) < min_frames:
+            return None
+        snap = self.latest_snapshot
+        if snap is None or dps is None:
+            return None
+        split = self._split_variant_id(snap)
+        if split is None:
+            return None
+        manifold_slot_id, topology_id = split
+
+        from .perturbation_probe import PerturbationProbe, record_probe_evidence
+
+        probe = PerturbationProbe(frames)
+        chosen_axis = axis if axis in AXES else self._pick_probe_axis(frames)
+        if perturbation == "occlude":
+            result = probe.occlude(chosen_axis)
+        elif perturbation == "clamp":
+            result = probe.clamp(chosen_axis, value if value is not None else 0.5)
+        elif perturbation == "delay":
+            result = probe.delay(chosen_axis, lag)
+        else:
+            return None
+
+        try:
+            record_probe_evidence(
+                self._registry, dps, result,
+                manifold_slot_id=manifold_slot_id, topology_id=topology_id, source=source,
+            )
+        except Exception:
+            pass
+        return result
+
+    # ── WARP topology-gap proposals (live-wired 2026-07-14) ──
+
+    def propose_topology_gap(self, dps: Any, *, scale: Optional[str] = None) -> Optional[Any]:
+        """Feed this coordinator's current topology organization into
+        DPS's own WARP coverage check (CrystalProcessingSystem is
+        WarpCapable, aurora_dimensional_systems.py) as a genuine "does an
+        existing component already cover this organizational pattern"
+        test. dps must expose check_and_extend() (WarpCapable's public
+        interface, aurora_warp_protocol.py).
+
+        NEVER PROMOTES BY DECREE: this only ever calls check_and_extend(),
+        which spawns a TRIAL component at most (promoted=False) after
+        GAP_PERSISTENCE_REQUIRED consecutive matching gaps -- untouched
+        here. Real promotion still only ever happens later, through
+        evaluate_warp_trials()'s own TRIAL_TICKS/PROMOTION_SCORE gate,
+        exactly like every other WARP component. This method's only
+        contribution is WHAT gets checked (this topology's active axes,
+        as a real I-state coverage profile) and a topology_gap_ref
+        provenance tag on anything that trial spawns.
+
+        Returns None -- never fakes a gap -- when there's no dps, no
+        real organizational pattern yet (quiescent regime / no loops),
+        or (the common case) the gap isn't yet persistent enough to
+        fire."""
+        if dps is None or not hasattr(dps, "check_and_extend"):
+            return None
+        chosen_scale = scale or _SV_MATCH_SCALE
+        sig = self._tracker.signature(chosen_scale)
+        if sig.regime == "quiescent" or not sig.loops:
+            return None
+
+        axes_to_istates = _get_warp_types()
+        if axes_to_istates is None:
+            return None
+
+        active_axes = {a for path, _ in sig.loops for a in path} | set(sig.sources) | set(sig.sinks)
+        magnitude = {a: (1.0 if a in active_axes else 0.0) for a in AXES}
+        polarity = {
+            a: (1.0 if a in sig.sources else (-1.0 if a in sig.sinks else 0.0))
+            for a in AXES
+        }
+        istate_profile = axes_to_istates(magnitude, ivm_polarity=polarity)
+
+        from .topology_tracker import TopologyFingerprint
+        fingerprint_id = TopologyFingerprint.from_signature(sig).fingerprint_id
+
+        try:
+            return dps.check_and_extend(
+                istate_profile, source="mtsl_topology", tick=0,
+                topology_gap_ref=fingerprint_id,
+            )
+        except TypeError:
+            # host's check_and_extend predates the topology_gap_ref
+            # parameter (shouldn't happen for the real WarpCapable mixin,
+            # but a test double or older host might not have it) --
+            # degrade to the call without it rather than crash.
+            try:
+                return dps.check_and_extend(istate_profile, source="mtsl_topology", tick=0)
+            except Exception:
+                return None
+        except Exception:
+            return None

@@ -13480,23 +13480,46 @@ def _read_cers_salience(systems: Dict[str, Any]) -> Dict[str, Any]:
     this is the surface choosing to look at what CERS is reading, not CERS
     pushing anything into the legacy path. Per the ERS spec: "Surface
     should receive a relevance/hesitation signal, not a full explanation"
-    -- exactly the two compressed values returned here, nothing else from
+    -- exactly the compressed values returned here, nothing else from
     CERS's much larger private detail crosses this line. Degrades to
     inert defaults the same way the rest of the shadow pass does when
-    nothing is available yet."""
+    nothing is available yet.
+
+    MTSL (live-wired 2026-07-14): also surfaces cers_detail.json's
+    "mtsl_semantic" block (CERSVerdict.surface_compressed_dict(), written
+    by cers_bridge.py) -- semantic_salience/semantic_hesitation/
+    variant_confidence/semantic_mode/response_bias. Same read-only,
+    compressed-only posture as cers_salience/cers_hesitation above; at
+    MTSL_AUTHORITY_STAGE 1 these would have sat at inert defaults, at
+    stage 2 they carry a real, bounded raise when a topology_context was
+    available (see cers_regulator.py's own comments)."""
     try:
         detail = _read_dual_strata_json(_dual_strata_state_dir(systems) / "cers_detail.json", {})
         if not isinstance(detail, dict):
-            return {"cers_salience": 0.0, "cers_hesitation": False}
+            return {
+                "cers_salience": 0.0, "cers_hesitation": False,
+                "semantic_salience": 0.0, "semantic_hesitation": False,
+                "variant_confidence": 0.0, "semantic_mode": None, "response_bias": 0.0,
+            }
         tensor_trace = dict(detail.get("tensor_trace") or {})
         verdict = dict(detail.get("cers_verdict") or {})
+        mtsl_semantic = dict(detail.get("mtsl_semantic") or {})
         salience = float(tensor_trace.get("salience", 0.0) or 0.0)
         return {
             "cers_salience": max(0.0, min(1.0, salience)),
             "cers_hesitation": not bool(verdict.get("permitted", True)),
+            "semantic_salience": max(0.0, min(1.0, float(mtsl_semantic.get("semantic_salience", 0.0) or 0.0))),
+            "semantic_hesitation": bool(mtsl_semantic.get("semantic_hesitation", False)),
+            "variant_confidence": max(0.0, min(1.0, float(mtsl_semantic.get("variant_confidence", 0.0) or 0.0))),
+            "semantic_mode": mtsl_semantic.get("semantic_mode"),
+            "response_bias": max(0.0, min(1.0, float(mtsl_semantic.get("response_bias", 0.0) or 0.0))),
         }
     except Exception:
-        return {"cers_salience": 0.0, "cers_hesitation": False}
+        return {
+            "cers_salience": 0.0, "cers_hesitation": False,
+            "semantic_salience": 0.0, "semantic_hesitation": False,
+            "variant_confidence": 0.0, "semantic_mode": None, "response_bias": 0.0,
+        }
 
 
 def _read_live_dual_strata_runtime(systems: Dict[str, Any]) -> Dict[str, Any]:

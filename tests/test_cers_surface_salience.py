@@ -30,9 +30,18 @@ def _systems(tmp_path):
     return {"state_dir": str(tmp_path)}
 
 
+_MTSL_DEFAULTS = {
+    "semantic_salience": 0.0,
+    "semantic_hesitation": False,
+    "variant_confidence": 0.0,
+    "semantic_mode": None,
+    "response_bias": 0.0,
+}
+
+
 def test_read_cers_salience_defaults_when_no_file(tmp_path):
     result = aurora._read_cers_salience(_systems(tmp_path))
-    assert result == {"cers_salience": 0.0, "cers_hesitation": False}
+    assert result == {"cers_salience": 0.0, "cers_hesitation": False, **_MTSL_DEFAULTS}
 
 
 def test_read_cers_salience_reads_real_detail_file(tmp_path):
@@ -41,7 +50,8 @@ def test_read_cers_salience_reads_real_detail_file(tmp_path):
         "cers_verdict": {"permitted": True},
     }))
     result = aurora._read_cers_salience(_systems(tmp_path))
-    assert result == {"cers_salience": 0.87, "cers_hesitation": False}
+    # no mtsl_semantic block in this fixture -- those fields stay at default.
+    assert result == {"cers_salience": 0.87, "cers_hesitation": False, **_MTSL_DEFAULTS}
 
 
 def test_read_cers_salience_hesitation_when_conflict_not_permitted(tmp_path):
@@ -65,7 +75,7 @@ def test_read_cers_salience_clamps_out_of_range_values(tmp_path):
 def test_read_cers_salience_survives_corrupt_file(tmp_path):
     (tmp_path / "cers_detail.json").write_text("{not valid json")
     result = aurora._read_cers_salience(_systems(tmp_path))
-    assert result == {"cers_salience": 0.0, "cers_hesitation": False}
+    assert result == {"cers_salience": 0.0, "cers_hesitation": False, **_MTSL_DEFAULTS}
 
 
 def test_read_live_dual_strata_runtime_merges_salience_into_conscious_frame(tmp_path):

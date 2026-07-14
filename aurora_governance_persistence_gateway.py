@@ -1394,7 +1394,40 @@ class NSpaceGateway:
             return draft_text
         try:
             from aurora_articulation import smooth_with_decision
-            decision = smooth_with_decision(draft_text, prompt=prompt_text, tone=tone)
+
+            # MTSL, live-wired 2026-07-14: this turn's already-computed
+            # CERSVerdict (CERSBridge.last_verdict, set at the end of
+            # _synthesize()'s CERS-shadow pass, which already ran before
+            # _express() reaches here) feeds SemanticIntentionBridge's
+            # resolved strategy into articulation's own accept/reject
+            # decision -- "aurora_articulation.py receives only resolved
+            # strategy + confidence" per the directive. Isolated in its
+            # own try/except: a failure here must never block articulation
+            # itself, only fall back to context=None (byte-identical to
+            # before this wiring existed).
+            mtsl_context = None
+            try:
+                _cers_bridge = getattr(self.consciousness, "cers_bridge", None)
+                _verdict = getattr(_cers_bridge, "last_verdict", None) if _cers_bridge is not None else None
+                if _verdict is not None and _verdict.semantic_mode is not None:
+                    from aurora_internal.dual_strata.semantic_intention_bridge import SemanticIntentionBridge
+                    from aurora_internal.dual_strata.cers_regulator import MTSL_AUTHORITY_STAGE
+                    _bridge = getattr(self, "_mtsl_intention_bridge", None)
+                    if _bridge is None:
+                        _bridge = SemanticIntentionBridge(state_dir=str(_cers_bridge.state_dir))
+                        self._mtsl_intention_bridge = _bridge
+                    _decision = _bridge.consume(
+                        _verdict, turn_id=f"expr-{time.time()}", authority_stage=MTSL_AUTHORITY_STAGE,
+                    )
+                    mtsl_context = {
+                        "semantic_strategy": _decision.strategy,
+                        "semantic_confidence": _decision.strategy_confidence,
+                        "semantic_strategy_applied": _decision.applied,
+                    }
+            except Exception:
+                mtsl_context = None
+
+            decision = smooth_with_decision(draft_text, prompt=prompt_text, tone=tone, context=mtsl_context)
             if self.perception and hasattr(self.perception, 'ingest_interaction'):
                 self.perception.ingest_interaction({
                     'input': decision.selected,

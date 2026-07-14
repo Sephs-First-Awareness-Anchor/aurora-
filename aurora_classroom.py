@@ -431,7 +431,30 @@ class ClassroomSession:
             seed_prompt=seed_prompt,
         )
         self._persist(result)
+
+        # MTSL perturbation probe (live-wired 2026-07-14): see
+        # _run_mtsl_perturbation_probe's own docstring. Isolated so a
+        # probe failure can never take out a lesson result that already
+        # persisted fine.
+        try:
+            self._run_mtsl_perturbation_probe()
+        except Exception:
+            pass
+
         return result
+
+    def _run_mtsl_perturbation_probe(self) -> None:
+        """A real what-if experiment against the MTSL coordinator's own
+        buffered topology history, recorded as classroom evidence
+        (FIX-A012: source-tagged, lower authority than lived evidence,
+        never alone promotes a variant) on whatever semantic variant is
+        currently live at that coordinate. No-op (never fakes anything)
+        when no coordinator has observed anything yet this session."""
+        dimensional = self.systems.get("dimensional")
+        coordinator = getattr(dimensional, "_mtsl_coordinator", None)
+        if coordinator is None:
+            return
+        coordinator.run_perturbation_probe(getattr(dimensional, "dps", None), source="classroom")
 
     def run_curriculum(
         self,
