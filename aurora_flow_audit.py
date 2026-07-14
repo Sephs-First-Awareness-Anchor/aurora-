@@ -16,10 +16,16 @@ gradient-only), using only her real persisted data:
     Flow = G − Gᵀ; 3-cycle curl detection in the positive-flow digraph.
 
   TEST 3 — LIVED TIME (aurora_state/surface_pressure_log.jsonl)
-    1005 timestamp-ordered surface pressure events. Inter-axis flux
-    from consecutive expected_axes activations, weighted by
+    Timestamp-ordered surface pressure events (count grows with her
+    lived history — see the generated header when this runs). Inter-axis
+    flux from consecutive expected_axes activations, weighted by
     surface_score. Antisymmetric decomposition + DFS cycle search
     up to length 5 (the full X→…→A→X loop).
+
+Numbers printed by past runs of this audit are history, not a fixed
+result -- the tree and her lived record both keep moving. Run this
+script directly for current values; do not cite old console output (or
+any docstring elsewhere that quotes it) as present truth.
 
 Circulation is the signature that matters: closed positive-flow loops
 cannot be produced by any gradient (source/sink) field. If loops exist
@@ -240,9 +246,35 @@ def test_lived_time() -> None:
 
 # ── main ──────────────────────────────────────────────────────────────────────
 
+def _generated_header() -> None:
+    """Tree state at run time -- so console output is self-dating and
+    never needs to be cross-checked against a docstring's stale numbers."""
+    import datetime
+    n_genealogy = sum(
+        1 for fn in ("links.json", "abilities.json", "pair_stats.json")
+        if os.path.exists(os.path.join(GENEALOGY_DIR, fn))
+    )
+    n_manifolds = 0
+    if os.path.isdir(MANIFOLD_DIR):
+        for ax in AXES:
+            d = os.path.join(MANIFOLD_DIR, ax)
+            if os.path.isdir(d):
+                n_manifolds += sum(1 for fn in os.listdir(d) if fn.endswith(".json"))
+    n_surface_events = 0
+    if os.path.exists(SURFACE_LOG):
+        with open(SURFACE_LOG) as f:
+            n_surface_events = sum(1 for l in f if l.strip())
+    print(f"run at:            {datetime.datetime.now().isoformat(timespec='seconds')}")
+    print(f"genealogy files:   {n_genealogy}/3 present")
+    print(f"manifolds found:   {n_manifolds}")
+    print(f"surface log lines: {n_surface_events}")
+    print()
+
+
 if __name__ == "__main__":
     print("AURORA FLOW AUDIT — torus or staircase?")
     print("Authors: Sunni (Sir) Morningstar & Cael Devo\n")
+    _generated_header()
     test_fossil_record()
     test_bedrock()
     test_lived_time()

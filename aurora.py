@@ -13595,23 +13595,25 @@ def _refresh_live_dual_strata_runtime(
             dps=getattr(systems.get("dimensional"), "dps", None),
         )
 
-        # ── Toroidal Circulation Layer — after CERS snapshot ──
-        # Read-only circulation observer (aurora_toroidal_circulation.py).
-        # Feeds on this tick's sub-crest axis intensities (temporal deltas
-        # only — never static grids, per aurora_flow_audit.py verdict).
-        # Refines classification and genealogy attachment; never generates
-        # states or overrides CERS. First boot seeds from the lived
-        # surface_pressure_log so she wakes knowing her past motion.
-        from aurora_toroidal_circulation import ToroidalCirculationLayer as _TCL
-        _tcl = systems.get("_toroidal")
-        if _tcl is None:
-            _tcl = _TCL(state_dir=str(_dual_strata_state_dir(systems)))
-            if _tcl.stats().get("observations", 0) == 0:
-                _tcl.seed_from_surface_log()
-            systems["_toroidal"] = _tcl
-        _tcl.observe(_TCL.intensity_from_crests(_precomputed))
-        _tcl.save()
-        systems["_toroidal_signature"] = _tcl.current_signature().to_dict()
+        # ── Toroidal Circulation Layer + MTSL topology/SV — READER only ──
+        # MTSL Phase 3 (FIX-A011, single-observer law): the TCL used to be
+        # ticked directly here, but that ran on every turn ALONGSIDE
+        # ConsciousnessEngine._attach_dual_strata_snapshot's own CERS-shadow
+        # pass on the very same assembly (that path runs first — see
+        # gw._synthesize() → self.consciousness.process() → this function,
+        # in that order, both on one turn) — a real double-tick, not a
+        # hypothetical one. TopologicalSemanticCoordinator now owns the TCL
+        # (and the new multi-scale topology tracker) and is the only call
+        # site that ever observes; this block only reads its cached
+        # latest_snapshot. Cached on systems["dimensional"] because that is
+        # the SAME DimensionalSystems instance ConsciousnessEngine holds as
+        # self.dimensional (aurora.py constructs it once and passes it into
+        # ConsciousnessEngine's constructor) — no new systems-dict plumbing
+        # needed for the two call sites to share one coordinator.
+        _mtsl_coordinator = getattr(systems.get("dimensional"), "_mtsl_coordinator", None)
+        if _mtsl_coordinator is not None and _mtsl_coordinator.latest_snapshot is not None:
+            systems["_toroidal_signature"] = dict(_mtsl_coordinator.latest_snapshot.toroidal_signature or {})
+            systems["_mtsl_snapshot"] = _mtsl_coordinator.latest_snapshot.to_dict()
     except Exception:
         pass
 

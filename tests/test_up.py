@@ -2,6 +2,8 @@
 import sys
 sys.path.append('.')
 from aurora_internal.aurora_utterance_parser import UtteranceParser
-up = UtteranceParser()
-p = up.parse('search youtube for lofi hip hop radio')
-print(p.get('query_type'))
+
+if __name__ == "__main__":
+    up = UtteranceParser()
+    p = up.parse('search youtube for lofi hip hop radio')
+    print(p.get('query_type'))

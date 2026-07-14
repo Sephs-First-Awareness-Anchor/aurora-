@@ -21,6 +21,9 @@ separate decision this ledger only surfaces, never makes.
 """
 from __future__ import annotations
 
+import json
+import os
+import time
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Deque, Dict, List, Optional
@@ -29,6 +32,13 @@ MIN_FRAMES_FOR_RECOMMENDATION = 150
 AGREEMENT_THRESHOLD_FOR_MERGE = 0.92
 MAX_CONFLICT_RATE_FOR_MERGE = 0.02
 LEDGER_WINDOW = 500
+
+DEPRECATION_LEDGER_FILENAME = "cers_deprecation_ledger.json"
+# Persisted window is a fixed multiple of the recommendation threshold, not
+# the full in-memory LEDGER_WINDOW -- enough margin past
+# MIN_FRAMES_FOR_RECOMMENDATION to survive restarts without ballooning the
+# state file with history evaluate() will never look at.
+PERSISTED_WINDOW_CAP = MIN_FRAMES_FOR_RECOMMENDATION * 2
 
 
 @dataclass
@@ -64,12 +74,75 @@ class SubsystemDeprecationLedger:
     deprecated in favor of the CERS-governed path — gated by whether any
     channel currently has an UNRESOLVED potential trial open against it."""
 
-    def __init__(self, window: int = LEDGER_WINDOW) -> None:
+    def __init__(self, window: int = LEDGER_WINDOW, state_dir: Optional[str] = None) -> None:
         self._window = window
         self._entries: Deque[Dict[str, Any]] = deque(maxlen=window)
         self._latest_actively_trialing: List[str] = []
         self._latest_confirmed_benefits: Dict[str, str] = {}
         self._latest_confirmed_inert: List[str] = []
+        # Persistence (MTSL Phase 0, P0.2): without this the 150-frame
+        # threshold is unreachable across restarting autonomous runs -- the
+        # ledger reset to empty on every process boot, so evaluate() never
+        # got past "insufficient_data" in practice.
+        self._state_dir = str(state_dir) if state_dir else None
+        self._path = (
+            os.path.join(self._state_dir, DEPRECATION_LEDGER_FILENAME)
+            if self._state_dir else None
+        )
+        if self._path:
+            self._load()
+
+    def _load(self) -> None:
+        try:
+            if not os.path.exists(self._path):
+                return
+            with open(self._path, encoding="utf-8") as fh:
+                raw = json.load(fh)
+            if not isinstance(raw, dict):
+                return
+            for e in list(raw.get("entries", []) or [])[-self._window:]:
+                if isinstance(e, dict):
+                    self._entries.append({
+                        "agrees_with_legacy": bool(e.get("agrees_with_legacy", False)),
+                        "conflicts": list(e.get("conflicts", []) or []),
+                    })
+            self._latest_actively_trialing = list(raw.get("latest_actively_trialing", []) or [])
+            self._latest_confirmed_benefits = dict(raw.get("latest_confirmed_benefits", {}) or {})
+            self._latest_confirmed_inert = list(raw.get("latest_confirmed_inert", []) or [])
+        except Exception:
+            # Corrupt ledger never blocks evaluation -- start clean.
+            pass
+
+    def _save(self) -> None:
+        if not self._path:
+            return
+        try:
+            os.makedirs(self._state_dir, exist_ok=True)
+            # Compact: only the two fields evaluate() reads from historical
+            # frames (agrees_with_legacy, conflicts) -- not the full
+            # equivalence_entry shape, which carries per-tick detail
+            # evaluate() never looks at for anything but the latest entry.
+            persisted_entries = [
+                {
+                    "agrees_with_legacy": bool(e.get("agrees_with_legacy", False)),
+                    "conflicts": list(e.get("conflicts", []) or []),
+                }
+                for e in list(self._entries)[-PERSISTED_WINDOW_CAP:]
+            ]
+            payload = {
+                "schema_version": 1,
+                "entries": persisted_entries,
+                "latest_actively_trialing": list(self._latest_actively_trialing),
+                "latest_confirmed_benefits": dict(self._latest_confirmed_benefits),
+                "latest_confirmed_inert": list(self._latest_confirmed_inert),
+                "saved_at": time.time(),
+            }
+            tmp = self._path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as fh:
+                json.dump(payload, fh, indent=1)
+            os.replace(tmp, self._path)
+        except Exception:
+            pass
 
     def record(self, equivalence_entry: Dict[str, Any]) -> None:
         """equivalence_entry matches the shape CERSBridge.persist() builds,
@@ -82,6 +155,7 @@ class SubsystemDeprecationLedger:
         self._latest_actively_trialing = list(equivalence_entry.get("actively_trialing_potential", []) or [])
         self._latest_confirmed_benefits = dict(equivalence_entry.get("confirmed_potential_benefits", {}) or {})
         self._latest_confirmed_inert = list(equivalence_entry.get("confirmed_inert_potential", []) or [])
+        self._save()
 
     def evaluate(self) -> DeprecationRecommendation:
         frames = list(self._entries)

@@ -29,7 +29,7 @@ convergence step where sub_crests become one subsurface_crest.
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Deque, Dict, List, Optional, Tuple
 
 from .crest import Crest
@@ -70,6 +70,93 @@ POTENTIAL_WINDOW = 20
 # clusters opposing each other or one established coordinate's own history
 # breaking sharply. Not a coincidence; keep these equal.
 GEOMETRY_DEVIATION_THRESHOLD = CONFLICT_SEVERITY_THRESHOLD
+
+# ---------------------------------------------------------------------------
+# MTSL Phase 4 (2026-07-13): TopologyContext + bounded, stage-gated salience/
+# hesitation raise. Field/bound choices below are first-pass, documented
+# decisions -- the external MTSL spec's section 12/22 register-rule detail
+# wasn't available to this implementation, same posture as topology_frame.py's
+# crest/trough axes. Authority staging (directive section 7): stage 1 is the
+# default and means "record only" -- the proposed raise is always computed
+# (for future evidence-based staging decisions) but only actually APPLIED to
+# the surface-facing semantic_salience/semantic_hesitation fields at stage 2+.
+# Stage advancement is manual and evidence-cited, never automatic; nothing in
+# this module changes MTSL_AUTHORITY_STAGE itself.
+# ---------------------------------------------------------------------------
+MTSL_AUTHORITY_STAGE = 1
+
+SEMANTIC_SALIENCE_AMBIGUITY_BOOST = 0.25   # raise when two plausible organizations compete
+SEMANTIC_SALIENCE_NOVELTY_BOOST = 0.15     # raise when this SV was freshly created this turn
+MAX_SEMANTIC_SALIENCE_RAISE = 0.35         # hard bound: this mechanism may never contribute more
+
+
+@dataclass(frozen=True)
+class TopologyContext:
+    """Compact, CERS-facing summary of a coordinator snapshot (spec 12).
+    Plain primitive fields only -- this module never imports
+    topological_semantic_coordinator.py (that would invert the natural
+    producer/consumer direction and risk a cycle); callers build this from
+    whatever CoordinatorSnapshot they have in hand."""
+
+    schema_version: int
+    turn_id: str
+    manifold_slot_id: Optional[str]
+    variant_confidence: float          # 0..1; 0.0 when no variant matched
+    variant_status: Optional[str]      # provisional/reinforced/promoted/merged/retired/None
+    variant_created: bool              # True if this turn's SV match created a brand-new variant
+    semantic_ambiguity: bool           # understanding_classification == "ambiguous_organization"
+    circulation_fraction: float        # dominant-scale TopologySignature's own field
+    regime: str                        # dominant-scale TopologySignature's own field
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "turn_id": self.turn_id,
+            "manifold_slot_id": self.manifold_slot_id,
+            "variant_confidence": round(self.variant_confidence, 4),
+            "variant_status": self.variant_status,
+            "variant_created": self.variant_created,
+            "semantic_ambiguity": self.semantic_ambiguity,
+            "circulation_fraction": round(self.circulation_fraction, 4),
+            "regime": self.regime,
+        }
+
+
+def _semantic_salience_raise(topology_context: TopologyContext) -> float:
+    """Never negative, never exceeds MAX_SEMANTIC_SALIENCE_RAISE -- this
+    mechanism can only ever ADD a bounded signal on top of whatever CERS's
+    own geometry-based salience already is, never suppress it."""
+    raise_amount = 0.0
+    if topology_context.semantic_ambiguity:
+        raise_amount += SEMANTIC_SALIENCE_AMBIGUITY_BOOST
+    if topology_context.variant_created:
+        raise_amount += SEMANTIC_SALIENCE_NOVELTY_BOOST
+    return round(min(MAX_SEMANTIC_SALIENCE_RAISE, raise_amount), 4)
+
+
+def _semantic_mode(topology_context: TopologyContext) -> str:
+    """Descriptive label only -- carries no authority, not stage-gated.
+    Doesn't decide anything; a future Phase 5 SemanticIntentionBridge is
+    what would eventually consume this to select a response strategy."""
+    if topology_context.semantic_ambiguity:
+        return "ambiguous"
+    if topology_context.variant_status is None:
+        return "undetermined"
+    if topology_context.regime == "circulating":
+        return "organized"
+    if topology_context.regime in ("gradient", "mixed"):
+        return "directional"
+    return "undetermined"
+
+
+def _response_bias(topology_context: TopologyContext) -> float:
+    """0..1 "clarification pressure" signal -- higher means a future
+    consumer might lean toward checking/clarifying rather than asserting.
+    Purely informational: does not affect permitted/conflicts/hesitation
+    and is not stage-gated (it never raises anything CERS itself decides)."""
+    if topology_context.semantic_ambiguity:
+        return 0.7
+    return round(clip01((1.0 - topology_context.variant_confidence) * 0.3), 4)
 
 
 @dataclass(frozen=True)
@@ -137,6 +224,23 @@ class CERSVerdict:
     cers_label: Optional[str] = None
     agrees_with_legacy: Optional[bool] = None
 
+    # MTSL Phase 4: absent topology_context, ALL six of these stay at their
+    # dataclass defaults below -- cers_converge()'s existing decision logic
+    # (everything above this comment) never even looks at them, so passing
+    # no context is byte-identical to pre-Phase-4 behavior on every other
+    # field. semantic_salience/semantic_hesitation are the stage-gated,
+    # APPLIED (raise-only) values the surface's compressed dict should read;
+    # the _proposed variants are always computed (when context is given)
+    # regardless of stage, for the evidence future stage-advancement
+    # decisions get cited against -- they are never surface-facing.
+    semantic_salience: float = 0.0
+    semantic_hesitation: bool = False
+    semantic_salience_proposed: float = 0.0
+    semantic_hesitation_proposed: bool = False
+    semantic_mode: Optional[str] = None
+    response_bias: float = 0.0
+    variant_confidence: float = 0.0    # carried through verbatim from TopologyContext, never raised/gated
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "permitted": bool(self.permitted),
@@ -150,6 +254,28 @@ class CERSVerdict:
             "legacy_label": self.legacy_label,
             "cers_label": self.cers_label,
             "agrees_with_legacy": self.agrees_with_legacy,
+            "semantic_salience": round(self.semantic_salience, 4),
+            "semantic_hesitation": bool(self.semantic_hesitation),
+            "semantic_salience_proposed": round(self.semantic_salience_proposed, 4),
+            "semantic_hesitation_proposed": bool(self.semantic_hesitation_proposed),
+            "semantic_mode": self.semantic_mode,
+            "response_bias": round(self.response_bias, 4),
+            "variant_confidence": round(self.variant_confidence, 4),
+        }
+
+    def surface_compressed_dict(self) -> Dict[str, Any]:
+        """The ONLY MTSL-facing values the surface may read (directive
+        section 7): semantic_salience, semantic_hesitation, variant_confidence,
+        semantic_mode, response_bias. Deliberately excludes the _proposed
+        audit fields and everything else this verdict carries -- same
+        "compressed, not full explanation" discipline _read_cers_salience()
+        already applies to cers_salience/cers_hesitation."""
+        return {
+            "semantic_salience": round(self.semantic_salience, 4),
+            "semantic_hesitation": bool(self.semantic_hesitation),
+            "variant_confidence": round(self.variant_confidence, 4),
+            "semantic_mode": self.semantic_mode,
+            "response_bias": round(self.response_bias, 4),
         }
 
 
@@ -251,6 +377,38 @@ def detect_conflicts(sub_crests: Tuple[Crest, ...]) -> List[CrestConflict]:
     return conflicts
 
 
+def _apply_topology_context(
+    cers_crest: Crest,
+    verdict: CERSVerdict,
+    topology_context: Optional[TopologyContext],
+    authority_stage: int,
+) -> Tuple[Crest, CERSVerdict]:
+    """The ONE place topology_context ever touches a verdict. Absent
+    context, returns (cers_crest, verdict) completely unchanged -- the
+    identity path that makes cers_converge()'s pre-Phase-4 behavior
+    byte-identical when no context is supplied. The crest itself is never
+    modified either way; only new CERSVerdict fields are populated."""
+    if topology_context is None:
+        return cers_crest, verdict
+    proposed_salience = _semantic_salience_raise(topology_context)
+    proposed_hesitation = (not verdict.permitted) or bool(topology_context.semantic_ambiguity)
+    mode = _semantic_mode(topology_context)
+    bias = _response_bias(topology_context)
+    applied_salience = proposed_salience if authority_stage >= 2 else 0.0
+    applied_hesitation = proposed_hesitation if authority_stage >= 2 else False
+    augmented = replace(
+        verdict,
+        semantic_salience=applied_salience,
+        semantic_hesitation=applied_hesitation,
+        semantic_salience_proposed=proposed_salience,
+        semantic_hesitation_proposed=proposed_hesitation,
+        semantic_mode=mode,
+        response_bias=bias,
+        variant_confidence=topology_context.variant_confidence,
+    )
+    return cers_crest, augmented
+
+
 def cers_converge(
     sub_crests: Tuple[Crest, ...],
     tracker: PotentialTracker,
@@ -260,11 +418,29 @@ def cers_converge(
     geometry_axis: str = "X",
     geometry_distortion_normalized: float = 0.0,
     geometry_is_new: bool = True,
+    topology_context: Optional[TopologyContext] = None,
+    authority_stage: int = MTSL_AUTHORITY_STAGE,
 ) -> Tuple[Crest, CERSVerdict]:
     """ERS-native convergence. Runs the legacy convergence alongside for
     equivalence bookkeeping, but only defers to it when no structural
     conflict is present. Never mutates or calls into subsurface_state.py's
     private detail — this stays entirely at the crest layer.
+
+    topology_context (MTSL Phase 4): optional. Applied strictly as a
+    post-hoc step AFTER cers_crest/verdict are otherwise fully decided by
+    the exact same logic as before Phase 4 -- absent topology_context (the
+    default), this function's behavior on every pre-Phase-4 field is
+    byte-identical to before. When present, it may only RAISE
+    semantic_salience/semantic_hesitation within configured bounds (see
+    _semantic_salience_raise's MAX_SEMANTIC_SALIENCE_RAISE cap, and
+    semantic_hesitation is combined with the already-decided `permitted`
+    via boolean OR, which can only turn hesitation on, never off).
+    authority_stage: directive section 7's manual staging gate (1..6,
+    default 1 = "record only"). At stage 1 the proposed raise is always
+    computed (verdict.semantic_salience_proposed/semantic_hesitation_proposed)
+    for future evidence-based staging decisions, but NOT applied to the
+    surface-facing semantic_salience/semantic_hesitation fields, which stay
+    at their inert defaults. Applied only at stage 2+.
 
     trial_board: when provided, every channel PotentialTracker flags as
     dormant this tick gets an active correlation trial opened against it
@@ -339,7 +515,7 @@ def cers_converge(
             cers_label=cers_crest.label,
             agrees_with_legacy=False,
         )
-        return cers_crest, verdict
+        return _apply_topology_context(cers_crest, verdict, topology_context, authority_stage)
 
     if geometry_deviation is not None:
         # No classic cluster-vs-cluster conflict this tick, but a
@@ -364,7 +540,7 @@ def cers_converge(
             cers_label=cers_crest.label,
             agrees_with_legacy=False,
         )
-        return cers_crest, verdict
+        return _apply_topology_context(cers_crest, verdict, topology_context, authority_stage)
 
     verdict = CERSVerdict(
         permitted=True,
@@ -379,4 +555,4 @@ def cers_converge(
         cers_label=legacy_crest.label,
         agrees_with_legacy=True,
     )
-    return legacy_crest, verdict
+    return _apply_topology_context(legacy_crest, verdict, topology_context, authority_stage)
