@@ -8,7 +8,8 @@
     "corpus:contradiction_handling:3",
     "corpus:contradiction_handling:4",
     "corpus:contradiction_handling:5",
-    "corpus:contradiction_handling:6"
+    "corpus:contradiction_handling:6",
+    "corpus:contradiction_handling:7"
   ],
   "uncertainty_signaling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -19,44 +20,11 @@
     "corpus:uncertainty_signaling:3",
     "corpus:uncertainty_signaling:4",
     "corpus:uncertainty_signaling:5",
-    "corpus:uncertainty_signaling:6"
+    "corpus:uncertainty_signaling:6",
+    "corpus:uncertainty_signaling:7"
   ],
   "context_carryover": [
-    "fail_point:train_epoch_3:episode_8e8123ca88d8",
-    "fail_point:train_epoch_3:episode_861845cce6c1",
-    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
-    "fail_point:train_epoch_2:episode_c6388e715bc2",
-    "fail_point:train_epoch_3:episode_ca4e4da10b27",
-    "fail_point:train_epoch_3:episode_11d625707dd0",
-    "fail_point:train_epoch_3:episode_cfa449acb78c",
-    "fail_point:train_epoch_1:episode_56922eea6a4a",
-    "fail_point:train_epoch_1:episode_fd0a312e6c50",
-    "fail_point:train_epoch_8:episode_3a346b0dbebf",
-    "fail_point:train_epoch_8:episode_8d8b68844b49",
-    "corpus:context_carryover:0",
-    "corpus:context_carryover:1",
-    "corpus:context_carryover:2",
-    "corpus:context_carryover:3",
-    "corpus:context_carryover:4",
-    "corpus:context_carryover:5",
-    "corpus:context_carryover:6",
-    "corpus:context_carryover:7",
-    "corpus:context_carryover:8",
-    "corpus:context_carryover:9",
-    "corpus:context_carryover:10",
-    "corpus:context_carryover:11",
-    "corpus:context_carryover:12",
-    "corpus:context_carryover:13",
-    "corpus:context_carryover:14",
-    "corpus:context_carryover:15",
-    "corpus:context_carryover:16",
-    "corpus:context_carryover:17",
-    "corpus:context_carryover:18",
-    "corpus:context_carryover:19",
-    "corpus:context_carryover:20",
-    "corpus:context_carryover:21",
-    "corpus:context_carryover:22",
-    "corpus:context_carryover:23"
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
   ],
   "boundary_calibration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -67,6 +35,7 @@
     "corpus:boundary_calibration:3",
     "corpus:boundary_calibration:4",
     "corpus:boundary_calibration:5",
-    "corpus:boundary_calibration:6"
+    "corpus:boundary_calibration:6",
+    "corpus:boundary_calibration:7"
   ]
 }
