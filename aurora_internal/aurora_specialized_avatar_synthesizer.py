@@ -294,6 +294,20 @@ _DIMENSION_TO_BEHAVIOR: Dict[str, Dict[str, float]] = {
 }
 
 
+def behavior_modes_for_dimension(dimension: str) -> Dict[str, float]:
+    """Public accessor for _DIMENSION_TO_BEHAVIOR -- the dimension-specific
+    avatar pressure behaviors (e.g. context_carryover's
+    test_cross_turn_memory) that make a specialized episode actually
+    stress the targeted rubric dimension, instead of just labeling it.
+    Callers outside this module (e.g. aurora_classroom.py's direct
+    lesson-spec queuing, which doesn't route through
+    synthesize_from_summary()) should use this rather than reaching into
+    the private mapping directly. Unknown dimension -> {} (SimulationEngine
+    already treats an empty behavior_modes as "no extra pressure", so this
+    degrades safely)."""
+    return dict(_DIMENSION_TO_BEHAVIOR.get(str(dimension or ""), {}))
+
+
 # ============================================================================
 # DIMENSION -> CONSTRAINT AXIS MAPPING
 # ============================================================================
