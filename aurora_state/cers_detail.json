@@ -2,15 +2,22 @@
   "cers_verdict": {
     "actively_trialing_potential": [],
     "agrees_with_legacy": true,
-    "cers_label": "steady",
+    "cers_label": "continuity_stable",
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
     "conflicts": [],
     "geometry_deviation": null,
     "intervention_label": null,
-    "legacy_label": "steady",
+    "legacy_label": "continuity_stable",
     "permitted": true,
-    "unused_potential": []
+    "response_bias": 0.0,
+    "semantic_hesitation": false,
+    "semantic_hesitation_proposed": false,
+    "semantic_mode": null,
+    "semantic_salience": 0.0,
+    "semantic_salience_proposed": 0.0,
+    "unused_potential": [],
+    "variant_confidence": 0.0
   },
   "coherence": 0.45,
   "deprecation_recommendation": {
@@ -19,12 +26,23 @@
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
     "conflict_rate": null,
-    "frames_evaluated": 15,
-    "rationale": "Only 15 frames observed; need at least 150 before any recommendation is meaningful.",
+    "frames_evaluated": 31,
+    "rationale": "Only 31 frames observed; need at least 150 before any recommendation is meaningful.",
     "status": "insufficient_data"
   },
   "governed_by": "cers_regulator.cers_converge",
   "micro_reasoning": [
+    {
+      "confidence": 1.0,
+      "label": "callback_pressure",
+      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
+      "source": "memory_resonance",
+      "tags": [
+        "continuity",
+        "context"
+      ],
+      "urgency": 0.45
+    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -37,9 +55,9 @@
       "urgency": 0.4
     }
   ],
-  "prediction_confidence": 0.4869,
-  "prediction_source": "runtime_evidence+manifold",
-  "saved_at": 1784003331.772006,
+  "prediction_confidence": 0.53,
+  "prediction_source": "understanding_contract+manifold",
+  "saved_at": 1784011143.3749237,
   "sub_crests": [
     {
       "axis": "X",
@@ -48,18 +66,18 @@
     },
     {
       "axis": "T",
-      "intensity": 0.65,
-      "label": "unfamiliar"
+      "intensity": 1.0,
+      "label": "continuity_pull"
     },
     {
       "axis": "A",
-      "intensity": 0.5,
-      "label": "neutral_affect"
+      "intensity": 0.55,
+      "label": "warmth"
     },
     {
       "axis": "X",
-      "intensity": 0.7875,
-      "label": "steady_continuation"
+      "intensity": 0.49,
+      "label": "surprise"
     },
     {
       "axis": "N",
@@ -68,8 +86,8 @@
     },
     {
       "axis": "T",
-      "intensity": 0.7,
-      "label": "new_thread"
+      "intensity": 1.0,
+      "label": "thread_holds"
     },
     {
       "axis": "N",
@@ -80,10 +98,20 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8003,
+      "label": "surface"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8212,
+      "label": "surface"
     }
   ],
   "tensor_trace": {
-    "coord": "MANIFOLD:X:NC[N:COST]xNC[T:DIFFERENCE]",
+    "coord": "MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
     "distortion": 0.0,
     "is_new_coordinate": false,
     "salience": 0.0
