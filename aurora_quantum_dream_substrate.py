@@ -423,7 +423,30 @@ class QuantumDreamSubstrate:
         #    place they touch her; the pressure reaches her as their influence.
         self._dream_encounter_with_selves(systems)
 
+        # 7. MTSL perturbation probe (live-wired 2026-07-14): a real what-if
+        #    experiment (occlude the axis that drove the most recent real
+        #    change) against her own buffered topology history, recorded as
+        #    dream evidence on whatever semantic variant is currently live
+        #    at that coordinate. FIX-A012 discipline: source-tagged, lower
+        #    authority than lived evidence, never alone promotes a variant.
+        #    Fully defensive -- a dream must never crash the substrate
+        #    thread over an experimental probe.
+        try:
+            self._run_mtsl_perturbation_probe(systems)
+        except Exception as exc:
+            log.debug("quantum_dream: MTSL perturbation probe skipped: %s", exc)
+
         log.info("quantum_dream: cycle %d complete", self._cycle_count)
+
+    def _run_mtsl_perturbation_probe(self, systems: Dict[str, Any]) -> None:
+        dimensional = systems.get("dimensional")
+        coordinator = getattr(dimensional, "_mtsl_coordinator", None)
+        if coordinator is None:
+            return  # nothing observed yet this session -- skip, don't fake
+        dps = getattr(dimensional, "dps", None)
+        result = coordinator.run_perturbation_probe(dps, source="dream")
+        if result is not None:
+            log.debug("quantum_dream: MTSL probe -> %s", result.summary_note())
 
     # ------------------------------------------------------------------
     # Dream encounter with the inception-born possibility-selves

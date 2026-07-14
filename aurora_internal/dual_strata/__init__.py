@@ -26,6 +26,7 @@ from .sensory_observation import (
     sensory_gate_state_update,
 )
 from .topological_semantic_coordinator import CoordinatorSnapshot, TopologicalSemanticCoordinator
+from .lifecycle_catalog import catalog_lifecycle, catalog_lifecycle_from_systems, collect_warp_hosts
 
 __all__ = [
     "ActivationField",
@@ -39,6 +40,9 @@ __all__ = [
     "PotentialTrialBoard",
     "SubsystemDeprecationLedger",
     "TopologicalSemanticCoordinator",
+    "catalog_lifecycle",
+    "catalog_lifecycle_from_systems",
+    "collect_warp_hosts",
     "cers_converge",
     "detect_conflicts",
     "Crest",

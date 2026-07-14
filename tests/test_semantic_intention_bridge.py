@@ -196,9 +196,12 @@ def test_strategy_change_is_a_shift():
     assert decision.strategy == "clarify"
 
 
-def test_default_authority_stage_never_applies():
+def test_stage_1_never_applies():
     bridge = SemanticIntentionBridge(state_dir=None)
-    decision = bridge.consume(_verdict(semantic_mode="organized", variant_confidence=0.9, response_bias=0.1), turn_id="t1")
+    decision = bridge.consume(
+        _verdict(semantic_mode="organized", variant_confidence=0.9, response_bias=0.1),
+        turn_id="t1", authority_stage=1,
+    )
     assert decision.applied is False
 
 
@@ -208,6 +211,16 @@ def test_stage_2_applies():
         _verdict(semantic_mode="organized", variant_confidence=0.9, response_bias=0.1),
         turn_id="t1", authority_stage=2,
     )
+    assert decision.applied is True
+
+
+def test_default_authority_stage_now_applies_2026_07_14():
+    # MTSL_AUTHORITY_STAGE was advanced from 1 to 2 (see cers_regulator.py's
+    # comment on the constant) -- consume()'s own default parameter is
+    # bound to that constant, so calling without an explicit
+    # authority_stage now applies by default.
+    bridge = SemanticIntentionBridge(state_dir=None)
+    decision = bridge.consume(_verdict(semantic_mode="organized", variant_confidence=0.9, response_bias=0.1), turn_id="t1")
     assert decision.applied is True
 
 

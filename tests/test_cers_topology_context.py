@@ -34,8 +34,13 @@ def _ctx(**overrides):
 
 # ---- absent context: byte-identical guarantee ----
 
-def test_default_authority_stage_is_1_record_only():
-    assert MTSL_AUTHORITY_STAGE == 1
+def test_authority_stage_advanced_to_2_2026_07_14():
+    # Advanced from the original default of 1 ("record only") to 2
+    # ("applied") -- a manual, evidence-cited decision (directive
+    # section 7's own bar), made explicitly by the user after reviewing
+    # this session's Phase 0-8 acceptance-report evidence. See
+    # cers_regulator.py's own comment on this constant for the record.
+    assert MTSL_AUTHORITY_STAGE == 2
 
 
 def test_absent_context_new_fields_stay_at_inert_defaults():

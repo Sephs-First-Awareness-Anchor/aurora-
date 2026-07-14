@@ -221,3 +221,44 @@ def test_tracker_and_registry_state_persist_across_fresh_coordinator_instances(t
     coord2 = TopologicalSemanticCoordinator(state_dir=state_dir)
     sig2 = coord2._tracker.signature("meso")
     assert sig2.observations == snaps[-1].topology_signatures["meso"]["observations"]
+
+
+# ---- frame-history buffer (feeds PerturbationProbe with real recent history) ----
+
+def test_recent_frames_empty_before_any_observation():
+    coord = TopologicalSemanticCoordinator(state_dir=None)
+    assert coord.recent_frames() == ()
+
+
+def test_recent_frames_grows_with_observations():
+    coord = TopologicalSemanticCoordinator(state_dir=None)
+    dps = _dps()
+    _drive(coord, dps, n=10)
+    assert len(coord.recent_frames()) == 10
+
+
+def test_recent_frames_caps_at_maxlen():
+    from aurora_internal.dual_strata.topological_semantic_coordinator import FRAME_HISTORY_MAXLEN
+    coord = TopologicalSemanticCoordinator(state_dir=None)
+    dps = _dps()
+    _drive(coord, dps, n=FRAME_HISTORY_MAXLEN + 20)
+    assert len(coord.recent_frames()) == FRAME_HISTORY_MAXLEN
+
+
+def test_recent_frames_n_returns_only_the_tail():
+    coord = TopologicalSemanticCoordinator(state_dir=None)
+    dps = _dps()
+    _drive(coord, dps, n=20)
+    all_frames = coord.recent_frames()
+    last5 = coord.recent_frames(5)
+    assert last5 == all_frames[-5:]
+
+
+def test_recent_frames_are_real_topology_frames_usable_by_perturbation_probe():
+    from aurora_internal.dual_strata.perturbation_probe import PerturbationProbe
+    coord = TopologicalSemanticCoordinator(state_dir=None)
+    dps = _dps()
+    _drive(coord, dps, n=30)
+    probe = PerturbationProbe(coord.recent_frames())
+    result = probe.occlude("N")
+    assert result.perturbation_type == "occlusion"

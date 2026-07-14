@@ -1215,6 +1215,28 @@ class ConsciousnessEngine:
                 Crest(label=d.get("label", "steady"), intensity=float(d.get("intensity", 0.0)), axis=d.get("axis", "X"))
                 for d in _legacy_sub_crest_dicts
             )
+
+            # MTSL — TopologicalSemanticCoordinator, the single observer of
+            # topology (FIX-A011). Cached on self.dimensional (the same
+            # DimensionalSystems instance aurora.py's own
+            # _refresh_live_dual_strata_runtime reaches via
+            # systems["dimensional"]) so both call sites share one
+            # coordinator instance without new systems-dict plumbing.
+            # Fetched/constructed HERE, BEFORE cers_bridge.build_snapshot(),
+            # so its PREVIOUS-turn latest_snapshot (this tick's own
+            # observation hasn't happened yet) can be threaded into THIS
+            # tick's CERS convergence below (live-wired 2026-07-14) --
+            # same "pre-tick history informs this tick's verdict" pattern
+            # already used for geometry_distortion/tensor-trace inside
+            # cers_bridge.py itself.
+            _mtsl_coordinator = getattr(self.dimensional, "_mtsl_coordinator", None)
+            if _mtsl_coordinator is None:
+                from aurora_internal.dual_strata import TopologicalSemanticCoordinator
+                _mtsl_coordinator = TopologicalSemanticCoordinator(state_dir=str(self.cers_bridge.state_dir))
+                self.dimensional._mtsl_coordinator = _mtsl_coordinator
+            _mtsl_prior_snapshot = _mtsl_coordinator.latest_snapshot
+            _mtsl_context = _mtsl_prior_snapshot.to_topology_context() if _mtsl_prior_snapshot is not None else None
+
             self.cers_bridge.build_snapshot(
                 result,
                 payload=payload,
@@ -1226,25 +1248,18 @@ class ConsciousnessEngine:
                 recursion_weights=_recursion_weights,
                 precomputed_sub_crests=_precomputed,
                 dps=getattr(self.dimensional, "dps", None),
+                mtsl_topology_context=_mtsl_context,
             )
 
-            # MTSL Phase 3 — TopologicalSemanticCoordinator, the single
-            # observer of topology (FIX-A011). Cached on self.dimensional
-            # (the same DimensionalSystems instance aurora.py's own
-            # _refresh_live_dual_strata_runtime reaches via
-            # systems["dimensional"]) so both call sites share one
-            # coordinator instance without new systems-dict plumbing.
             # This is the ONLY call site that ever calls observe_turn() --
             # aurora.py's path reads latest_snapshot instead. Same
             # failure-swallowed posture as the CERS tick just above; a
             # coordinator failure degrades to "no snapshot yet," never a
-            # broken turn.
-            _mtsl_coordinator = getattr(self.dimensional, "_mtsl_coordinator", None)
-            if _mtsl_coordinator is None:
-                from aurora_internal.dual_strata import TopologicalSemanticCoordinator
-                _mtsl_coordinator = TopologicalSemanticCoordinator(state_dir=str(self.cers_bridge.state_dir))
-                self.dimensional._mtsl_coordinator = _mtsl_coordinator
-            self._mtsl_turn_counter += 1
+            # broken turn. Runs AFTER build_snapshot() so this tick's own
+            # observation becomes available to the NEXT tick's context
+            # above, not this one -- observing before using it here would
+            # make the "raise" self-referential within a single tick.
+            self._mtsl_turn_counter = getattr(self, "_mtsl_turn_counter", 0) + 1
             _mtsl_turn_id = f"{int(time.time() * 1000)}-{self._mtsl_turn_counter}"
             _mtsl_coordinator.observe_turn(
                 turn_id=_mtsl_turn_id,

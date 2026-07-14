@@ -46,7 +46,7 @@ from .prediction_field import build_prediction_signal
 from .subsurface_state import AXES, SubsurfaceState, clip01, normalize_axis_map
 from .subsystem_waveforms import emit_subsystem_crests
 
-from .cers_regulator import CERSVerdict, PotentialTracker, cers_converge
+from .cers_regulator import CERSVerdict, MTSL_AUTHORITY_STAGE, PotentialTracker, TopologyContext, cers_converge
 from .cers_deprecation import DeprecationRecommendation, SubsystemDeprecationLedger
 from .cers_potential_trial import PotentialTrialBoard
 from .cers_tensor_locator import (
@@ -72,6 +72,14 @@ class CERSBridge:
         self._tracker = PotentialTracker()
         self._trial_board = PotentialTrialBoard()
         self.deprecation_ledger = SubsystemDeprecationLedger(state_dir=str(self.state_dir))
+        # MTSL, live-wired 2026-07-14: this tick's CERSVerdict, kept in
+        # memory so a same-tick, later-pipeline-stage caller (e.g.
+        # NSpaceGateway._articulate_user_response, which runs AFTER
+        # _synthesize()'s CERS-shadow pass) can read semantic_mode/
+        # response_bias/variant_confidence/semantic_hesitation without a
+        # disk round-trip through cers_detail.json. None until the first
+        # build_snapshot() call.
+        self.last_verdict: Optional[CERSVerdict] = None
 
     def build_snapshot(
         self,
@@ -86,8 +94,22 @@ class CERSBridge:
         recursion_weights: Optional[Dict[str, float]] = None,
         precomputed_sub_crests: Optional[Tuple[Crest, ...]] = None,
         dps: Optional[Any] = None,
+        mtsl_topology_context: Optional[TopologyContext] = None,
     ) -> DualStrataSnapshot:
         """
+        mtsl_topology_context (MTSL, live-wired 2026-07-14): the caller's
+        MTSL coordinator's PREVIOUS-turn snapshot, converted to a
+        TopologyContext -- see aurora_consciousness_engine.py's
+        _attach_dual_strata_snapshot, the only call site. This tick's own
+        coordinator observation hasn't happened yet at this point in the
+        pipeline (the coordinator observes AFTER this call returns), so
+        what's threaded into THIS tick's convergence is necessarily last
+        tick's topology read -- the same "pre-tick history informs this
+        tick's verdict" pattern already used for geometry_distortion/
+        tensor-trace below. Passed straight through to cers_converge() at
+        MTSL_AUTHORITY_STAGE; see that constant's own comment in
+        cers_regulator.py for why it's no longer stage 1.
+
         precomputed_sub_crests: pass the sub_crests tuple already produced by
         a legacy DualStrataBridge.build_snapshot() call THIS SAME TICK (they
         are exposed on the returned snapshot's subsurface_state["sub_crests"]
@@ -197,6 +219,8 @@ class CERSBridge:
                 normalize_distortion(_pre_distortion) if _coord is not None else 0.0
             ),
             geometry_is_new=_pre_is_new,
+            topology_context=mtsl_topology_context,
+            authority_stage=MTSL_AUTHORITY_STAGE,
         )
 
         # 4b. Tensor-trace write — locate this tick's live pressure in the
@@ -246,6 +270,13 @@ class CERSBridge:
             "tensor_trace": tensor_trace,
             "prediction_confidence": round(prediction_signal.confidence, 4),
             "prediction_source": prediction_signal.source,
+            # MTSL, live-wired: the ONLY MTSL-facing values a surface
+            # consumer may read (directive section 7) -- same compression
+            # discipline as cers_salience/cers_hesitation above. Present
+            # whether or not mtsl_topology_context was supplied this tick
+            # (absent -> verdict's fields sit at their inert defaults, see
+            # CERSVerdict's own field comments).
+            "mtsl_semantic": verdict.surface_compressed_dict(),
         }
 
         subsurface = SubsurfaceState(
@@ -306,6 +337,7 @@ class CERSBridge:
         )
         self.persist(snapshot, verdict)
         self.persist_cers_detail(_subsurface_detail)
+        self.last_verdict = verdict
         return snapshot
 
     def persist(self, snapshot: DualStrataSnapshot, verdict: CERSVerdict) -> None:

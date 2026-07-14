@@ -76,14 +76,23 @@ GEOMETRY_DEVIATION_THRESHOLD = CONFLICT_SEVERITY_THRESHOLD
 # hesitation raise. Field/bound choices below are first-pass, documented
 # decisions -- the external MTSL spec's section 12/22 register-rule detail
 # wasn't available to this implementation, same posture as topology_frame.py's
-# crest/trough axes. Authority staging (directive section 7): stage 1 is the
-# default and means "record only" -- the proposed raise is always computed
-# (for future evidence-based staging decisions) but only actually APPLIED to
-# the surface-facing semantic_salience/semantic_hesitation fields at stage 2+.
-# Stage advancement is manual and evidence-cited, never automatic; nothing in
-# this module changes MTSL_AUTHORITY_STAGE itself.
+# crest/trough axes. Authority staging (directive section 7): the proposed
+# raise is always computed (for future evidence-based staging decisions) but
+# only actually APPLIED to the surface-facing semantic_salience/
+# semantic_hesitation fields at stage 2+; stage 1 is "record only."
+#
+# ADVANCED 2026-07-14: manual, evidence-cited decision (directive section 7's
+# own bar for this) to move from stage 1 to stage 2, made explicitly by the
+# user after reviewing this session's Phase 0-8 implementation and its
+# acceptance-report evidence (mtsl_acceptance_report.py confirmed
+# applied_strategy_shift_count stayed 0 through 30 real turns at stage 1,
+# and that the summarizer WOULD have detected it if raised). This is the one
+# line that turns MTSL from a pure observer into something that actually
+# raises real hesitation/salience -- every live call site that reads it
+# (cers_bridge.py, aurora_articulation.py) still only ever RAISES bounded
+# signals, never lowers or overrides a base decision outright.
 # ---------------------------------------------------------------------------
-MTSL_AUTHORITY_STAGE = 1
+MTSL_AUTHORITY_STAGE = 2
 
 SEMANTIC_SALIENCE_AMBIGUITY_BOOST = 0.25   # raise when two plausible organizations compete
 SEMANTIC_SALIENCE_NOVELTY_BOOST = 0.15     # raise when this SV was freshly created this turn

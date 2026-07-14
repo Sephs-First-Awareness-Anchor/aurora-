@@ -809,6 +809,13 @@ class WarpCapable:
         self._sedimemory: Any = None  # L3.5 SediMemory or None — injected via connect_sedimemory
         self._gap_counter:    Dict[str, int] = {}   # gap_sig → consecutive count
         self._last_gap:       Optional[CoverageGap] = None
+        # MTSL, live-wired 2026-07-14: a failed trial is pruned from
+        # _warp_trials by evaluate_warp_trials() itself (WarpCapable
+        # discipline -- dissolved components aren't archived), so this
+        # running counter is the only "it happened" record left for the
+        # alive/dead catalog (lifecycle_catalog.py) to read. Purely
+        # additive bookkeeping -- changes no lifecycle decision.
+        self._warp_dissolved_count: int = 0
 
     def connect_sedimemory(self, sedimemory: Any) -> None:
         """
@@ -940,6 +947,7 @@ class WarpCapable:
         data_axes: Dict[str, float],
         source: str = "",
         tick: int = 0,
+        topology_gap_ref: Optional[str] = None,
     ) -> Optional[WarpComponent]:
         """
         Check coverage of data_axes. If a persistent gap exists, generate
@@ -947,6 +955,12 @@ class WarpCapable:
 
         The gap must persist for GAP_PERSISTENCE_REQUIRED consecutive checks
         before WARP fires — single-tick anomalies are not acted on.
+
+        topology_gap_ref (MTSL, live-wired 2026-07-14): optional
+        provenance tag threaded straight through to WarpGenerator.generate()
+        -- see that method's own docstring. Purely a label on whatever
+        component this call spawns; changes nothing about detection,
+        trial scoring, or promotion.
         """
         profiles = self._get_axis_profiles()
         # Include already-promoted warp components in coverage
@@ -975,6 +989,7 @@ class WarpCapable:
             level=self._warp_level_name(),
             level_params_fn=lambda g, pids: self._warp_params(g, pids),
             genealogy=getattr(self, "_warp_genealogy", None),
+            topology_gap_ref=topology_gap_ref,
         )
 
         if new_comp is None:
@@ -1029,6 +1044,7 @@ class WarpCapable:
                 self._dissolve_warp(comp_id)
                 del self._warp_trials[comp_id]
                 dissolved.append(comp_id)
+                self._warp_dissolved_count = getattr(self, "_warp_dissolved_count", 0) + 1
 
         return promoted, dissolved
 
@@ -1038,6 +1054,7 @@ class WarpCapable:
             "level":    self._warp_level_name() if hasattr(self, "_warp_generator") else "?",
             "trials":   len(getattr(self, "_warp_trials", {})),
             "promoted": len(getattr(self, "_warp_promoted", {})),
+            "dissolved": getattr(self, "_warp_dissolved_count", 0),
             "anomalies": (
                 len(self._warp_generator._anomaly_log)
                 if hasattr(self, "_warp_generator") else 0
