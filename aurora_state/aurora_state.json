@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784049206.0837927,
-  "generation": 7012,
-  "genome_version": 7012,
+  "timestamp": 1784054778.4077902,
+  "generation": 7047,
+  "genome_version": 7047,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.6711,
+    "caution": 0.5235,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.39,
+    "verbosity": 0.3925,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.39,
+    "pattern_sensitivity": 0.4011,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3452
   },
-  "personality_drift": 0.9391,
+  "personality_drift": 0.7447,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9305384634026377,
-      "precision": 0.8557956661613182,
-      "depth": 0.5616701630471652,
-      "confidence": 0.9795384898237303
+      "warmth": 1.0,
+      "precision": 0.8885452521814816,
+      "depth": 0.9189820206137064,
+      "confidence": 0.8551444933902963
     },
     "cognitive": {
-      "curiosity": 0.5906078018676812,
-      "pattern_matching": 0.8602391219769412,
-      "abstraction": 0.9078379547848263,
-      "risk_assessment": 0.7657921279659803
+      "curiosity": 0.756403316738825,
+      "pattern_matching": 0.6674480056448918,
+      "abstraction": 0.6673184404764868,
+      "risk_assessment": 0.7098159902484364
     },
     "social": {
-      "empathy": 0.6885640107848912,
-      "trust_extension": 0.5087426257056232,
-      "boundary_maintenance": 0.9337897002219935,
-      "engagement": 0.8971387841185288
+      "empathy": 0.793867150458696,
+      "trust_extension": 0.6706710184108088,
+      "boundary_maintenance": 0.7494918442802859,
+      "engagement": 0.7873973701432833
     }
   },
   "governance_stats": {
@@ -113,11 +113,11 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 15,
+  "understanding_shards": 16,
   "what_aurora_learned": [
-    "what creates friction when approached with direct clarity \u2014 it connects to meaning, need (B-axis, depth 0.37)."
+    "what creates friction when approached with thoughtful reflection \u2014 it connects to will, working (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "d2905139411a"
+  "_checksum": "a11cf1e79fe5"
 }
