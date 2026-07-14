@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784031345.7399473,
-  "generation": 6907,
-  "genome_version": 6907,
+  "timestamp": 1784039527.112331,
+  "generation": 6942,
+  "genome_version": 6942,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.9267,
-    "emotional_expressiveness": 0.3981,
+    "caution": 0.7534,
+    "emotional_expressiveness": 0.3949,
     "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.3959,
+    "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
     "energy_conservation": 0.312
   },
-  "personality_drift": 1.1806,
+  "personality_drift": 1.0165,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.739703989474191,
-      "precision": 0.7975025970920123,
-      "depth": 0.8202801438645874,
-      "confidence": 0.760317957978479
+      "warmth": 0.717580600094903,
+      "precision": 0.7790309084308972,
+      "depth": 0.5784497640263906,
+      "confidence": 0.9098374717801938
     },
     "cognitive": {
-      "curiosity": 0.8581660743856108,
-      "pattern_matching": 1.0,
-      "abstraction": 0.692742788670065,
-      "risk_assessment": 0.6685889088400067
+      "curiosity": 0.6343342032745415,
+      "pattern_matching": 0.832709510065361,
+      "abstraction": 1.0,
+      "risk_assessment": 0.52896206958138
     },
     "social": {
-      "empathy": 0.9003328634000651,
-      "trust_extension": 0.667596117399686,
-      "boundary_maintenance": 1.0,
-      "engagement": 0.982771548750431
+      "empathy": 1.0,
+      "trust_extension": 0.72054246799886,
+      "boundary_maintenance": 0.9347666242527463,
+      "engagement": 0.8471350954926165
     }
   },
   "governance_stats": {
@@ -114,10 +114,8 @@
   "simulation_epochs": 194,
   "total_episodes": 5,
   "understanding_shards": 16,
-  "what_aurora_learned": [
-    "what creates friction when approached with curious inquiry \u2014 it connects to without, versus (B-axis, depth 0.37)."
-  ],
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "critical",
-  "_checksum": "62a08f20765c"
+  "_checksum": "7b54cdf51826"
 }

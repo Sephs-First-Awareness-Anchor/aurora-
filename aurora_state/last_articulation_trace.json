@@ -1,14 +1,14 @@
 {
-  "original": "I exist can did. I is am change.",
+  "original": "I exist want do. I did am is.",
   "candidate": "",
-  "selected": "I exist can did. I is am change.",
+  "selected": "I exist want do. I did am is.",
   "accepted": false,
   "reason": "no_candidate",
   "original_score": 0.62,
   "candidate_score": 0.0,
-  "original_pressure": 0.256,
+  "original_pressure": 0.316,
   "candidate_pressure": 1.0,
-  "pressure_relief": -0.744,
+  "pressure_relief": -0.684,
   "safe": false,
   "metadata": {
     "prompt_excerpt": "What would likely cause that relation to change?",
@@ -25,7 +25,7 @@
     },
     "tone": "gentle",
     "source": "no_pattern_matched",
-    "timestamp": 1784031094.79634,
+    "timestamp": 1784039256.0860362,
     "min_relief_used": 0.035,
     "semantic_strategy_relief_bump": 0.0,
     "expression_context": {

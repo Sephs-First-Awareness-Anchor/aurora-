@@ -21,14 +21,14 @@
   },
   "coherence": 0.45,
   "deprecation_recommendation": {
-    "agreement_rate": null,
+    "agreement_rate": 1.0,
     "blocking_potential": [],
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
-    "conflict_rate": null,
-    "frames_evaluated": 124,
-    "rationale": "Only 124 frames observed; need at least 150 before any recommendation is meaningful.",
-    "status": "insufficient_data"
+    "conflict_rate": 0.0,
+    "frames_evaluated": 155,
+    "rationale": "100.0% agreement across 155 frames with 0.00% conflict rate. All potential trials in this window resolved \u2014 none still open \u2014 so CERS-governed convergence is producing equivalent or better results without losing anything the legacy path was doing.",
+    "status": "recommend_merge"
   },
   "governed_by": "cers_regulator.cers_converge",
   "micro_reasoning": [
@@ -64,7 +64,7 @@
   },
   "prediction_confidence": 0.53,
   "prediction_source": "understanding_contract+manifold",
-  "saved_at": 1784031094.7921054,
+  "saved_at": 1784039256.0816855,
   "sub_crests": [
     {
       "axis": "X",
