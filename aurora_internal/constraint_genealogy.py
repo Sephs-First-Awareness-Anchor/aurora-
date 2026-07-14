@@ -505,6 +505,18 @@ class AbilityProfile:
     risk: Dict[str, float]                     # axes where failure risk is nonzero
     effect_tags: Tuple[str, ...]               # semantic labels (informational only)
     notes: str = ""
+    # MTSL Phase 7 (2026-07-13): compact refs into the topology/semantic-
+    # variant layer (aurora_internal/dual_strata/). Optional, default None
+    # -- nothing currently populates these at construction time; genealogy's
+    # pair-accumulation/promotion logic has no live connection to MTSL's
+    # coordinator yet (that live wiring is deferred, same posture as
+    # Phase 4/5/6's deferred integrations). What IS real here: the fields
+    # exist, are typed, round-trip through to_dict(), and are propagated
+    # from a promoted ConstraintLink onto its resulting AbilityProfile in
+    # _register_link_ability() below -- so once something upstream starts
+    # populating a link's refs, they flow through to the ability for free.
+    topology_id: Optional[str] = None
+    semantic_variant_id: Optional[str] = None
 
     def x_risk(self) -> float:
         """Return the X (existence admissibility) risk component."""
@@ -533,7 +545,7 @@ class AbilityProfile:
         return score_from_cost(self.total_cost(), snapshot)
 
     def to_dict(self) -> Dict:
-        return {
+        d = {
             "id": self.id,
             "axis": self.axis,
             "requires": list(self.requires),
@@ -542,6 +554,11 @@ class AbilityProfile:
             "effect_tags": list(self.effect_tags),
             "notes": self.notes,
         }
+        if self.topology_id is not None:
+            d["topology_id"] = self.topology_id
+        if self.semantic_variant_id is not None:
+            d["semantic_variant_id"] = self.semantic_variant_id
+        return d
 
 
 def _canonical_axis_token(raw: str) -> Optional[str]:
@@ -1131,9 +1148,15 @@ class ConstraintLink:
     stdev_relief: Dict[str, float]
     dominant_relief_axis: Optional[str]
     tags: List[str] = field(default_factory=list)
+    # MTSL Phase 7: compact refs into the topology/semantic-variant layer --
+    # see AbilityProfile's matching fields above for the full rationale.
+    # Optional, default None; propagated onto the resulting AbilityProfile
+    # when a link is promoted (_register_link_ability below).
+    topology_id: Optional[str] = None
+    semantic_variant_id: Optional[str] = None
 
     def to_dict(self) -> Dict:
-        return {
+        d = {
             "id": self.id,
             "parents": self.parents,
             "depth": self.depth,
@@ -1149,6 +1172,11 @@ class ConstraintLink:
             "dominant_relief_axis": self.dominant_relief_axis,
             "tags": self.tags,
         }
+        if self.topology_id is not None:
+            d["topology_id"] = self.topology_id
+        if self.semantic_variant_id is not None:
+            d["semantic_variant_id"] = self.semantic_variant_id
+        return d
 
     def base_cost(self) -> float:
         """Total mean operational cost across all five axes."""
@@ -3502,6 +3530,12 @@ class ConstraintGenealogyLogger:
             risk=risk,
             effect_tags=dedup_tags,
             notes="",
+            # MTSL Phase 7: carry the promoted link's topology/semantic-
+            # variant refs onto its resulting ability, if the link has any
+            # (nothing populates them yet -- see ConstraintLink's field
+            # comment -- but the propagation itself is real).
+            topology_id=getattr(link, "topology_id", None),
+            semantic_variant_id=getattr(link, "semantic_variant_id", None),
         ))
         return True
 

@@ -699,9 +699,23 @@ def decide_articulation(
         "min_relief_used": min_relief,
     }
     if context:
+        # MTSL Phase 5 (2026-07-13): semantic_strategy/semantic_confidence
+        # are SemanticIntentionBridge.consume()'s resolved strategy +
+        # confidence (aurora_internal/dual_strata/semantic_intention_bridge.py)
+        # -- "aurora_articulation.py receives only resolved strategy +
+        # confidence" per the directive. Recorded into metadata only, same
+        # as every other key already whitelisted here: nothing below this
+        # point reads these two keys, so accepted/selected/reason/
+        # pressure_relief are unaffected whether or not a caller supplies
+        # them (no articulation change yet -- authority_stage still gates
+        # whether any future consumer treats the strategy as more than a
+        # record).
         meta["expression_context"] = {
             k: v for k, v in context.items()
-            if k in ("dominant_axis", "coherence", "expression_pressure", "voice_tone", "lineage_id")
+            if k in (
+                "dominant_axis", "coherence", "expression_pressure", "voice_tone", "lineage_id",
+                "semantic_strategy", "semantic_confidence",
+            )
         }
 
     return ArticulationDecision(
