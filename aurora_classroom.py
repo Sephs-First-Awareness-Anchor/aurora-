@@ -57,6 +57,9 @@ from aurora_developmental_log import record_developmental_snapshot
 from aurora_internal.aurora_directed_training_corpus import (
     get_directed_training_corpus_bridge,
 )
+from aurora_internal.aurora_specialized_avatar_synthesizer import (
+    behavior_modes_for_dimension,
+)
 
 # Fallback candidate pool when fail_points.json is missing/empty (fresh
 # environment) -- the full dimension set _DIMENSION_PERSONALITY_HINTS already
@@ -374,10 +377,21 @@ class ClassroomSession:
         dev_before_snap = record_developmental_snapshot(self.systems, force=True)
         dev_before = dev_before_snap.get("dev_index") if dev_before_snap else None
 
+        # behavior_modes (2026-07-14 fix): without this, _shape_topic_for_turn()
+        # never activates the dimension-specific pressure behavior (e.g.
+        # context_carryover's test_cross_turn_memory, the "Earlier you
+        # said..." callback prompt) -- every turn silently fell through to
+        # the same static one-line prompt (the dimension name itself), so
+        # a lesson could never actually exercise the targeted competency.
+        # This is the same _DIMENSION_TO_BEHAVIOR mapping
+        # synthesize_from_summary() already uses for dream-triggered
+        # specialized episodes; classroom lessons were the one path that
+        # bypassed it.
         queued = self.engine.session.queue_avatar_specs([
             {
                 "avatar_id": lesson_id,
                 "pressure_targets": {target_dimension: 1.0},
+                "behavior_modes": behavior_modes_for_dimension(target_dimension),
             }
         ])
         if queued < 1:
