@@ -235,6 +235,13 @@ class MemoryEvent:
     transition_mapping: Dict[str, Any] = field(default_factory=dict)
     language_projection: Dict[str, Any] = field(default_factory=dict)
     memory_contract: Dict[str, Any] = field(default_factory=dict)
+    # MTSL Phase 7 (2026-07-13, spec section 17): a TopologyFingerprint.to_dict()
+    # snapshot, when the caller has one. Empty by default -- nothing live
+    # populates this yet (same deferred-population posture as
+    # constraint_genealogy.py's topology_id/semantic_variant_id refs); the
+    # field, its propagation onto deposited SedimentFragments, and
+    # recall_by_topology() below are all real and tested regardless.
+    topology_fingerprint: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.lineage_signature:
@@ -355,6 +362,11 @@ class SedimentFragment:
     pressure_history:  List[Dict[str, Any]] = field(default_factory=list)
     tolerance_snapshot: Dict[str, Any] = field(default_factory=dict)
     transition_mapping: Dict[str, Any] = field(default_factory=dict)
+    # MTSL Phase 7: see MemoryEvent.topology_fingerprint above -- propagated
+    # from the depositing event when it carries one (both deposit sites
+    # below pass event.topology_fingerprint through, same as
+    # lineage_signature/pressure_history/etc. already do).
+    topology_fingerprint: Dict[str, Any] = field(default_factory=dict)
 
     def tick(self, delta_t: float) -> bool:
         """Advance decay. Returns True when compression-eligible."""
@@ -970,6 +982,7 @@ class NCStrainFilter:
                     pressure_history=list(event.pressure_history),
                     tolerance_snapshot=dict(event.tolerance_snapshot),
                     transition_mapping=dict(event.transition_mapping),
+                    topology_fingerprint=dict(event.topology_fingerprint),
                 )
 
         return fragments
@@ -1115,6 +1128,35 @@ class SedimentBasin:
             "total_deposited":   self.total_deposited,
             "total_compressed":  self.total_compressed,
         }
+
+
+# ============================================================================
+# MTSL Phase 7 (2026-07-13): topology-similarity recall support
+# ============================================================================
+
+def topology_fingerprint_similarity(a: Dict[str, Any], b: Dict[str, Any]) -> float:
+    """Compare two TopologyFingerprint.to_dict()-shaped dicts
+    (aurora_internal/dual_strata/topology_tracker.py). An exact
+    fingerprint_id match scores 1.0. Otherwise a coarse partial-
+    similarity fallback over shared axes_key characters -- deliberately
+    capped well below 1.0 so it can never be confused with a genuine
+    exact match. Real signal, not a stub, but coarse: full loop/order/
+    pattern-aware similarity is semantic_variant_registry.py's
+    topology_similarity(), which needs the richer TopologyProfile this
+    module doesn't have; this is the lighter-weight version appropriate
+    for a fragment-recall filter, not variant matching."""
+    if not a or not b:
+        return 0.0
+    fid_a = str(a.get("fingerprint_id", "") or "")
+    fid_b = str(b.get("fingerprint_id", "") or "")
+    if fid_a and fid_a == fid_b:
+        return 1.0
+    axes_a = set(str(a.get("axes_key", "") or ""))
+    axes_b = set(str(b.get("axes_key", "") or ""))
+    union = axes_a | axes_b
+    if not union:
+        return 0.0
+    return round(0.6 * (len(axes_a & axes_b) / len(union)), 4)
 
 
 # ============================================================================
@@ -1286,6 +1328,7 @@ class SedimentColumn:
                 pressure_history=list(event.pressure_history),
                 tolerance_snapshot=dict(event.tolerance_snapshot),
                 transition_mapping=dict(event.transition_mapping),
+                topology_fingerprint=dict(event.topology_fingerprint),
             )
             basin.deposit(fragment)
             self._event_index[event.event_id].append(basin_id)
@@ -1348,6 +1391,28 @@ class SedimentColumn:
             if basin:
                 results.extend([f for f in basin.fragments if f.event_id == event_id])
         return results
+
+    def recall_by_topology(
+        self,
+        fingerprint:     Dict[str, Any],
+        min_similarity:  float = 0.5,
+        max_results:     int   = 32,
+    ) -> List[SedimentFragment]:
+        """MTSL Phase 7 (spec section 17): topology-similarity recall,
+        parallel to recall_by_axis/recall_by_vector but keyed on a
+        TopologyFingerprint.to_dict()-shaped dict instead of a
+        constraint vector. Nothing populates a fragment's own
+        topology_fingerprint yet (see the field's own comment), so this
+        returns nothing until something upstream starts depositing
+        events with one -- graceful, not fake."""
+        scored: List["tuple[float, SedimentFragment]"] = []
+        for basin in self._basins.values():
+            for frag in basin.fragments:
+                sim = topology_fingerprint_similarity(frag.topology_fingerprint, fingerprint)
+                if sim >= min_similarity:
+                    scored.append((sim, frag))
+        scored.sort(key=lambda pair: pair[0], reverse=True)
+        return [frag for _sim, frag in scored[:max_results]]
 
     # ------------------------------------------------------------------
     # DECOMPRESSION
@@ -1535,6 +1600,17 @@ class SediMemory:
 
     def recall_event(self, event_id: str) -> List[SedimentFragment]:
         return self._column.recall_event(event_id)
+
+    def recall_topology(
+        self,
+        fingerprint:     Dict[str, Any],
+        min_similarity:  float = 0.5,
+        max_results:     int   = 32,
+    ) -> List[SedimentFragment]:
+        """MTSL Phase 7: topology-similarity recall -- see
+        topology_fingerprint_similarity()'s docstring and
+        SedimentColumn.recall_by_topology()."""
+        return self._column.recall_by_topology(fingerprint, min_similarity, max_results)
 
     def get_recent_fragments(self, n: int = 5) -> List[SedimentFragment]:
         """Return n most recently deposited active fragments (for fidelity feedback)."""

@@ -321,6 +321,18 @@ class WarpComponent:
     dissolved:       bool                   = False
     created_at:      float                  = field(default_factory=time.time)
     sixth_axis_signal: float                = 0.0  # residual after best 5D projection
+    # MTSL Phase 7 (2026-07-13): when a coverage gap was surfaced from an
+    # MTSL topology observation (a real, persistent organization pattern
+    # existing components don't cover), the resulting trial component's
+    # provenance is tagged here -- WarpComponent.promoted still only ever
+    # flips via evaluate_warp_trials()'s own TRIAL_TICKS/PROMOTION_SCORE
+    # gate below, exactly as for every other component. This field never
+    # grants any component a shortcut past that gate; it's provenance, not
+    # authority ("never promote by decree" per the directive). Optional,
+    # default None -- nothing currently calls generate() with one (see
+    # WarpGenerator.generate()'s own docstring for the deferred live-
+    # wiring note).
+    topology_gap_ref: Optional[str]         = None
 
 
 @dataclass
@@ -483,6 +495,7 @@ class WarpGenerator:
         level: str,
         level_params_fn: Optional[Callable[[CoverageGap, List[str]], Dict[str, Any]]] = None,
         genealogy: Any = None,
+        topology_gap_ref: Optional[str] = None,
     ) -> Optional[WarpComponent]:
         """
         Generate a new component from the coverage gap.
@@ -490,6 +503,16 @@ class WarpGenerator:
         genealogy: optional ConstraintGenealogyLogger — if provided, its link
         fossil record is searched first to bias the derived profile toward
         proven constraint pairings before purely fresh synthesis.
+
+        topology_gap_ref (MTSL Phase 7): optional provenance tag when this
+        gap was surfaced from an MTSL topology observation rather than
+        this level's own axis-coverage check. Purely a label on the
+        resulting WarpComponent (see its field comment) -- does not
+        change generation, trial scoring, or promotion in any way. Not
+        called with one anywhere yet: wiring a live caller that surfaces
+        topology gaps FROM the coordinator's snapshot into check_and_extend()
+        is deferred, same posture as this session's other Phase 4-6
+        live-wiring deferrals.
 
         Returns None if the gap is a 6th-axis anomaly — it is logged but
         no structural piece is created until sufficient evidence accumulates.
@@ -512,6 +535,7 @@ class WarpGenerator:
             name=name,
             parameters=params,
             sixth_axis_signal=round(1.0 - gap.best_coverage, 4),
+            topology_gap_ref=topology_gap_ref,
         )
 
     # ── private ──────────────────────────────────────────────────────────────
