@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784020163.3292844,
-  "generation": 6837,
-  "genome_version": 6837,
+  "timestamp": 1784026621.1259186,
+  "generation": 6872,
+  "genome_version": 6872,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.5108,
-    "caution": 0.5544,
+    "curiosity": 0.492,
+    "caution": 0.677,
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
     "introspection": 0.468,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.4259
+    "energy_conservation": 0.334
   },
-  "personality_drift": 0.7415,
+  "personality_drift": 0.923,
   "crystal_genomes": {
     "response": {
       "warmth": 1.0,
-      "precision": 0.7943325817286367,
-      "depth": 0.7528964627184228,
-      "confidence": 0.8664494959207318
+      "precision": 0.6620091471778673,
+      "depth": 0.7090189978050897,
+      "confidence": 0.8041844014598165
     },
     "cognitive": {
-      "curiosity": 0.6727835896376779,
-      "pattern_matching": 0.908791766259969,
-      "abstraction": 0.9564783738377112,
-      "risk_assessment": 0.6519321438165363
+      "curiosity": 0.6222694993428023,
+      "pattern_matching": 0.8239683670237655,
+      "abstraction": 0.9334118235072735,
+      "risk_assessment": 0.5685670050466408
     },
     "social": {
-      "empathy": 0.6798257782939947,
-      "trust_extension": 0.6713316111856366,
-      "boundary_maintenance": 0.5953861954409249,
-      "engagement": 0.4895788700758861
+      "empathy": 0.8070234427738117,
+      "trust_extension": 0.667362738755155,
+      "boundary_maintenance": 0.6276316492781941,
+      "engagement": 0.6869195734705886
     }
   },
   "governance_stats": {
@@ -115,10 +115,9 @@
   "total_episodes": 5,
   "understanding_shards": 16,
   "what_aurora_learned": [
-    "any held attention when approached with curious inquiry \u2014 it connects to not, don't (N-axis resonance, depth 0.24).",
-    "any held attention when approached with thoughtful reflection \u2014 it connects to not, don't (N-axis resonance, depth 0.24)."
+    "what creates friction when approached with direct clarity \u2014 it connects to work, notice (B-axis, depth 0.38)."
   ],
   "time_dilation": 3000.0,
-  "stability_state": "cautious",
-  "_checksum": "dd9baa0c52a1"
+  "stability_state": "critical",
+  "_checksum": "148ff8aba284"
 }
