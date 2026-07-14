@@ -25,17 +25,20 @@ from .sensory_observation import (
     run_sensory_observation_cycle,
     sensory_gate_state_update,
 )
+from .topological_semantic_coordinator import CoordinatorSnapshot, TopologicalSemanticCoordinator
 
 __all__ = [
     "ActivationField",
     "CERSBridge",
     "CERSVerdict",
+    "CoordinatorSnapshot",
     "CrestConflict",
     "DeprecationRecommendation",
     "PotentialTracker",
     "PotentialTrial",
     "PotentialTrialBoard",
     "SubsystemDeprecationLedger",
+    "TopologicalSemanticCoordinator",
     "cers_converge",
     "detect_conflicts",
     "Crest",

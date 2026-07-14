@@ -1164,6 +1164,16 @@ class ConsciousnessEngine:
         self._idle_sim_interval = 10  # Ticks between dream cycles
         self._idle_sim_counter = 0
 
+        # MTSL (Phase 3): monotonic counter for the turn_id nonce
+        # (P0.5: f"{int(ts*1000)}-{monotonic_counter}"), fed to
+        # TopologicalSemanticCoordinator.observe_turn() below. This engine's
+        # own CERS-shadow pass is the single observer of topology per the
+        # coordinator's single-observer law -- see
+        # topological_semantic_coordinator.py's module docstring for why
+        # that's this call site and not aurora.py's, despite the directive's
+        # prose suggesting the reverse.
+        self._mtsl_turn_counter = 0
+
     def _attach_dual_strata_snapshot(
         self,
         result: AssemblyResult,
@@ -1215,6 +1225,33 @@ class ConsciousnessEngine:
                 thought_intent=thought_intent,
                 recursion_weights=_recursion_weights,
                 precomputed_sub_crests=_precomputed,
+                dps=getattr(self.dimensional, "dps", None),
+            )
+
+            # MTSL Phase 3 — TopologicalSemanticCoordinator, the single
+            # observer of topology (FIX-A011). Cached on self.dimensional
+            # (the same DimensionalSystems instance aurora.py's own
+            # _refresh_live_dual_strata_runtime reaches via
+            # systems["dimensional"]) so both call sites share one
+            # coordinator instance without new systems-dict plumbing.
+            # This is the ONLY call site that ever calls observe_turn() --
+            # aurora.py's path reads latest_snapshot instead. Same
+            # failure-swallowed posture as the CERS tick just above; a
+            # coordinator failure degrades to "no snapshot yet," never a
+            # broken turn.
+            _mtsl_coordinator = getattr(self.dimensional, "_mtsl_coordinator", None)
+            if _mtsl_coordinator is None:
+                from aurora_internal.dual_strata import TopologicalSemanticCoordinator
+                _mtsl_coordinator = TopologicalSemanticCoordinator(state_dir=str(self.cers_bridge.state_dir))
+                self.dimensional._mtsl_coordinator = _mtsl_coordinator
+            self._mtsl_turn_counter += 1
+            _mtsl_turn_id = f"{int(time.time() * 1000)}-{self._mtsl_turn_counter}"
+            _mtsl_coordinator.observe_turn(
+                turn_id=_mtsl_turn_id,
+                timestamp=time.time(),
+                adjusted_axes=dict(getattr(result, "adjusted_axes", {}) or {}),
+                sub_crests=_precomputed,
+                context_family=None,
                 dps=getattr(self.dimensional, "dps", None),
             )
         except Exception as _cers_exc:

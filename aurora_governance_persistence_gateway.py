@@ -1045,7 +1045,8 @@ class NSpaceGateway:
     def _synthesize(self, packet: InboundPacket,
                     content: str,
                     mode: ExistenceMode,
-                    thought_intent: Optional[Dict[str, Any]] = None) -> GatewaySynthesis:
+                    thought_intent: Optional[Dict[str, Any]] = None,
+                    extra_evidence: Optional[Dict[str, Any]] = None) -> GatewaySynthesis:
         """
         Synthesize validated data through the full consciousness stack.
 
@@ -1057,6 +1058,15 @@ class NSpaceGateway:
         GAP 3/8: Passes thought_intent to L4 for moral assessment.
         Thoughts that fail moral evaluation are killed before assembly.
 
+        extra_evidence: caller-supplied evidence (e.g. aurora.py's
+        _run_reasoning_pipeline threads dual-strata evidence -- subsurface
+        projection, activation field, understanding contract -- through
+        here) merged on top of _build_evidence()'s base dict so it reaches
+        L4/L5 and, downstream, the CERS shadow pass. Merged rather than
+        replacing: _build_evidence()'s ontological-mode keys always win on
+        conflict, since they encode a contract the caller must not be able
+        to silently override.
+
         The correct flow is:
             L1 lattice.admit() → envelope at proper mode
             L2 collective.process(envelope) → 10-being synthesis
@@ -1067,6 +1077,8 @@ class NSpaceGateway:
 
         # Build evidence that achieves the requested ExistenceMode
         evidence = self._build_evidence(packet, mode)
+        if extra_evidence:
+            evidence = {**extra_evidence, **evidence}
 
         # Select frame based on mode
         frame = self._mode_to_frame(mode)

@@ -119,6 +119,11 @@ jobs:
           git add -f aurora_state/topology_tracker_state.json     2>/dev/null || true
           git add -f aurora_state/semantic_variant_index.json     2>/dev/null || true
           git add -f aurora_state/cers_deprecation_ledger.json    2>/dev/null || true
+          # MTSL Phase 3: the meaning-shadow comparison log
+          # (topological_semantic_coordinator.py) is brand-new under the
+          # same blanket aurora_state/ ignore -- same silent-discard class
+          # as the Phase 0 files above until force-added here.
+          git add -f aurora_state/mtsl_shadow_comparison.jsonl    2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No state changes to commit."
             exit 0
