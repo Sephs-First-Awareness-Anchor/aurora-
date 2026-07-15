@@ -16,6 +16,7 @@ file itself (not in-memory state) so it trips correctly across separate
 scheduled runs too.
 """
 import json
+import time
 
 import pytest
 
@@ -27,6 +28,7 @@ from aurora_classroom import (
     _DIMENSION_I_STATE_PAIRS,
     _FLAT_DIVERGENCE_HALT_THRESHOLD,
     _consecutive_zero_divergence_tail,
+    acknowledge_flat_divergence_watchdog,
 )
 from aurora_simulation_engine import SimulationEngine
 
@@ -88,11 +90,18 @@ def test_run_lesson_falls_back_to_default_pair_for_unmapped_dimension(tmp_path):
     assert pair == _DEFAULT_I_STATE_PAIR
 
 
-def _write_zero_divergence_lessons(log_path, count):
+def _write_zero_divergence_lessons(log_path, count, start_ts=None):
     log_path.parent.mkdir(parents=True, exist_ok=True)
+    # Comfortably in the past by default, so ack calls (stamped with real
+    # wall-clock time.time() at call time) always land after these unless
+    # a test explicitly wants otherwise.
+    base = start_ts if start_ts is not None else (time.time() - 100000.0)
     with open(log_path, "a", encoding="utf-8") as f:
         for i in range(count):
-            f.write(json.dumps({"lesson_id": f"lesson_{i}", "divergence_score": 0.0}) + "\n")
+            f.write(json.dumps({
+                "lesson_id": f"lesson_{i}", "divergence_score": 0.0, "timestamp": base + i,
+            }) + "\n")
+    return base + count - 1 if count else base
 
 
 def test_consecutive_zero_divergence_tail_counts_correctly(tmp_path):
@@ -137,3 +146,50 @@ def test_watchdog_does_not_halt_below_threshold(tmp_path):
 
     result = session.run_lesson("context_carryover", turns=2)
     assert result.lesson_id
+
+
+def test_acknowledge_clears_a_tripped_watchdog(tmp_path):
+    """The chicken-and-egg case this mechanism exists for: a real fix just
+    landed, but the persisted log tail still shows the pre-fix dead
+    streak. Without an explicit ack, the watchdog would permanently
+    block every future lesson, including the ones needed to prove the
+    fix works."""
+    log_path = tmp_path / "classroom_log.jsonl"
+    _write_zero_divergence_lessons(log_path, _FLAT_DIVERGENCE_HALT_THRESHOLD)
+    assert _consecutive_zero_divergence_tail(tmp_path) == _FLAT_DIVERGENCE_HALT_THRESHOLD
+
+    acknowledge_flat_divergence_watchdog(tmp_path, reason="fix verified, testing")
+    assert _consecutive_zero_divergence_tail(tmp_path) == 0
+
+    engine = SimulationEngine(state_dir=str(tmp_path))
+    systems = {"state_dir": str(tmp_path)}
+    session = ClassroomSession(engine, systems, state_dir=str(tmp_path))
+    result = session.run_lesson("context_carryover", turns=2)
+    assert result.lesson_id
+
+
+def test_acknowledge_does_not_raise_the_bar_for_a_fresh_dead_streak(tmp_path):
+    """Acknowledging resets where counting starts -- it must not permanently
+    disable the watchdog. If the SAME dead-signal condition recurs for
+    another full threshold's worth of lessons after the ack, it must trip
+    again."""
+    log_path = tmp_path / "classroom_log.jsonl"
+    _write_zero_divergence_lessons(log_path, _FLAT_DIVERGENCE_HALT_THRESHOLD)
+
+    acknowledge_flat_divergence_watchdog(tmp_path, reason="fix verified, testing")
+    assert _consecutive_zero_divergence_tail(tmp_path) == 0
+
+    # New lessons written strictly AFTER the ack's own wall-clock timestamp.
+    _write_zero_divergence_lessons(log_path, _FLAT_DIVERGENCE_HALT_THRESHOLD, start_ts=time.time() + 10.0)
+    assert _consecutive_zero_divergence_tail(tmp_path) == _FLAT_DIVERGENCE_HALT_THRESHOLD
+
+    engine = SimulationEngine(state_dir=str(tmp_path))
+    systems = {"state_dir": str(tmp_path)}
+    session = ClassroomSession(engine, systems, state_dir=str(tmp_path))
+    with pytest.raises(ClassroomHaltedError):
+        session.run_lesson("context_carryover", turns=2)
+
+
+def test_no_ack_file_behaves_identically_to_before_the_ack_feature(tmp_path):
+    _write_zero_divergence_lessons(tmp_path / "classroom_log.jsonl", 5)
+    assert _consecutive_zero_divergence_tail(tmp_path) == 5

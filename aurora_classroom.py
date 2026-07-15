@@ -115,19 +115,57 @@ class ClassroomHaltedError(RuntimeError):
     watchdog trips (FIX-A019). Dead signal = stop, not continue."""
 
 
+_WATCHDOG_ACK_FILE = "classroom_watchdog_ack.json"
+
+
+def acknowledge_flat_divergence_watchdog(state_dir: Path, reason: str) -> None:
+    """Deliberately, explicitly clear a tripped watchdog -- NOT an auto-heal.
+    A halt caused by a genuinely dead signal must stay halted until a human
+    looks at it and says why it's safe to continue (the directive's own
+    "halts and flags" language); this is that flag being cleared on
+    purpose, not the watchdog silently forgiving itself.
+
+    Every zero-divergence lesson written on or before this ack timestamp
+    stops counting toward the threshold; the streak starts fresh from
+    here. If the same dead-signal condition recurs for another 20
+    consecutive lessons AFTER this point, the watchdog trips again --
+    acknowledging does not raise the bar, it only resets where counting
+    starts."""
+    state_dir = Path(state_dir)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    ack = {"acked_at": time.time(), "reason": str(reason or "")}
+    tmp = state_dir / (_WATCHDOG_ACK_FILE + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(ack, f, indent=2)
+    os.replace(tmp, state_dir / _WATCHDOG_ACK_FILE)
+
+
+def _watchdog_ack_timestamp(state_dir: Path) -> Optional[float]:
+    """None means no acknowledgment has ever been recorded -- distinct
+    from an ack at epoch 0.0, which must not silently swallow every
+    lesson whose own timestamp defaults to 0.0 (e.g. malformed entries)."""
+    try:
+        with open(state_dir / _WATCHDOG_ACK_FILE, "r", encoding="utf-8") as f:
+            return float(json.load(f).get("acked_at", 0.0) or 0.0)
+    except Exception:
+        return None
+
+
 def _consecutive_zero_divergence_tail(state_dir: Path) -> int:
     """Count consecutive divergence_score==0.0 lessons at the END of
-    classroom_log.jsonl, walking backward from the most recent entry.
-    Degrades to 0 (never blocks the classroom) on any read/parse failure --
-    the same failure-isolation discipline as every other guard in this
-    codebase; a broken watchdog must never be the thing that halts real
-    lessons."""
+    classroom_log.jsonl, walking backward from the most recent entry and
+    stopping at any entry timestamped before the last acknowledged halt
+    (see acknowledge_flat_divergence_watchdog). Degrades to 0 (never
+    blocks the classroom) on any read/parse failure -- the same
+    failure-isolation discipline as every other guard in this codebase; a
+    broken watchdog must never be the thing that halts real lessons."""
     log_path = state_dir / "classroom_log.jsonl"
     try:
         with open(log_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
     except Exception:
         return 0
+    ack_ts = _watchdog_ack_timestamp(state_dir)
     count = 0
     for line in reversed(lines):
         line = line.strip()
@@ -136,7 +174,10 @@ def _consecutive_zero_divergence_tail(state_dir: Path) -> int:
         try:
             entry = json.loads(line)
             score = float(entry.get("divergence_score"))
+            entry_ts = float(entry.get("timestamp", 0.0) or 0.0)
         except Exception:
+            break
+        if ack_ts is not None and entry_ts <= ack_ts:
             break
         if abs(score) < _ZERO_DIVERGENCE_EPS:
             count += 1
