@@ -3,7 +3,7 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.529,
+      "intensity": 0.5285,
       "label": "contextualize"
     },
     "dominant_axis": "N",
@@ -12,7 +12,7 @@
         "use"
       ],
       "interaction_state": "present",
-      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:cause] Wh...",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -27,12 +27,12 @@
     "stance": "contextual_continuity",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5629,
+      "intensity": 0.5622,
       "label": "continuity_stable"
     },
-    "timestamp": 1784072639.8962708
+    "timestamp": 1784074710.3631935
   },
-  "saved_at": 1784072639.896457,
+  "saved_at": 1784074710.3633726,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
@@ -41,7 +41,7 @@
         "use"
       ],
       "interaction_state": "present",
-      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:cause] Wh...",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -92,18 +92,18 @@
       },
       {
         "axis": "X",
-        "intensity": 0.8044,
+        "intensity": 0.8003,
         "label": "surface"
       },
       {
         "axis": "X",
-        "intensity": 0.8246,
+        "intensity": 0.8212,
         "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5629,
+      "intensity": 0.5622,
       "label": "continuity_stable"
     }
   }
