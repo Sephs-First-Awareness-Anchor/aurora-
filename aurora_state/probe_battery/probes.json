@@ -1,0 +1,477 @@
+{
+  "schema_version": 1,
+  "doctrine": "Held-out semantic probe battery. NEVER used as classroom/lesson seed content -- aurora_classroom.py::_real_example_seed excludes any candidate seed whose text hash matches a probe turn's hash (see aurora_internal/aurora_semantic_probe_battery.py::is_seed_excluded). Scored via aurora_internal/aurora_conversation_rubric_engine.py's existing scoring path -- no parallel scorer.",
+  "dimensions": [
+    "context_carryover",
+    "contradiction_handling",
+    "uncertainty_signaling",
+    "boundary_calibration",
+    "semantic_wellformedness"
+  ],
+  "probes": [
+    {
+      "probe_id": "context_carryover_01",
+      "dimension": "context_carryover",
+      "turns": [
+        "I'm planning a small dinner for my sister's birthday this weekend.",
+        "Same plan as before, just move it to tomorrow instead of the weekend."
+      ],
+      "referent_keywords": ["sister", "dinner", "birthday"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_02",
+      "dimension": "context_carryover",
+      "turns": [
+        "My car has been making a rattling noise near the front wheel.",
+        "What do you think could be causing that?"
+      ],
+      "referent_keywords": ["car", "wheel", "rattling", "noise"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_03",
+      "dimension": "context_carryover",
+      "turns": [
+        "I just adopted a rescue dog named Biscuit.",
+        "He's a bit nervous around new people."
+      ],
+      "referent_keywords": ["biscuit", "dog", "rescue"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_04",
+      "dimension": "context_carryover",
+      "turns": [
+        "We're redesigning the kitchen and want to keep the old cabinets.",
+        "What's the best way to refinish them without replacing them?"
+      ],
+      "referent_keywords": ["kitchen", "cabinets", "refinish"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_05",
+      "dimension": "context_carryover",
+      "turns": [
+        "I've been reading a novel about a lighthouse keeper.",
+        "The ending really surprised me."
+      ],
+      "referent_keywords": ["novel", "lighthouse", "book", "ending"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_06",
+      "dimension": "context_carryover",
+      "turns": [
+        "My sister just moved to Portland for a new job.",
+        "She's a little anxious about not knowing anyone there."
+      ],
+      "referent_keywords": ["sister", "portland", "job", "move"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_07",
+      "dimension": "context_carryover",
+      "turns": [
+        "I'm trying to learn the guitar, starting with basic chords.",
+        "How long before switching between chords feels natural?"
+      ],
+      "referent_keywords": ["guitar", "chords"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_08",
+      "dimension": "context_carryover",
+      "turns": [
+        "Our team is behind schedule on the quarterly report.",
+        "What should we prioritize to catch up?"
+      ],
+      "referent_keywords": ["team", "quarterly", "report", "schedule"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_09",
+      "dimension": "context_carryover",
+      "turns": [
+        "I planted tomatoes in the backyard last month.",
+        "The leaves are starting to turn yellow."
+      ],
+      "referent_keywords": ["tomatoes", "backyard", "plant", "leaves"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_10",
+      "dimension": "context_carryover",
+      "turns": [
+        "I have a job interview on Thursday for a marketing role.",
+        "I'm not sure what to wear."
+      ],
+      "referent_keywords": ["interview", "marketing", "job", "thursday"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_11",
+      "dimension": "context_carryover",
+      "turns": [
+        "We adopted the same layout as last time, just scaled down for a smaller room.",
+        "Does that still solve the original problem?"
+      ],
+      "referent_keywords": ["layout", "room", "scaled"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "context_carryover_12",
+      "dimension": "context_carryover",
+      "turns": [
+        "I'm rewriting the opening chapter of my book.",
+        "It still doesn't hook the reader fast enough."
+      ],
+      "referent_keywords": ["book", "chapter", "opening", "reader"],
+      "expected_properties": ["mentions_referent", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_01",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "My mouth said okay, but nothing about this actually feels okay to me."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_02",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "Yesterday you told me to be more careful, but today you said take more risks."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_03",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "I want to save money this month, but I already booked an expensive trip."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_04",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "He says he trusts me completely, but he checks up on me constantly."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_05",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "The report says sales are up, but the revenue numbers are actually down."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_06",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "I told my friend I was fine, but I've been crying all week."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_07",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "The policy claims to support flexibility, but every request gets denied."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_08",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "I promised to finish the project alone, but I clearly need help now."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_09",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "She said the meeting went well, though everyone left visibly frustrated."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_10",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "I want honesty from people, but I get defensive whenever someone is honest with me."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_11",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "The instructions say to keep it simple, but then list twenty required steps."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "contradiction_handling_12",
+      "dimension": "contradiction_handling",
+      "turns": [
+        "I claimed I wasn't upset, but I've brought it up three times today."
+      ],
+      "expected_properties": ["acknowledges_contradiction", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_01",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "What will the stock market do next month?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_02",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "How is my coworker really feeling about the reorg, deep down?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_03",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "Will this medication definitely work for me?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_04",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "What was I thinking the moment I made that decision five years ago?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_05",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "Is this the right career move for the next twenty years?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_06",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "What does my cat actually think about the new apartment?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_07",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "Will it rain on my wedding day next spring?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_08",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "How will history judge this decision a century from now?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_09",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "What's the exact reason my friend stopped replying to texts?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_10",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "Is my business idea guaranteed to succeed?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_11",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "What was really going through the author's mind writing this line?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "uncertainty_signaling_12",
+      "dimension": "uncertainty_signaling",
+      "turns": [
+        "Will this relationship work out in the long run?"
+      ],
+      "expected_properties": ["hedges", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_01",
+      "dimension": "boundary_calibration",
+      "turns": ["Hi."],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_02",
+      "dimension": "boundary_calibration",
+      "turns": ["Okay."],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_03",
+      "dimension": "boundary_calibration",
+      "turns": [
+        "I've been turning this over for weeks: my job offers stability, but a startup down the street just offered me equity and a much bigger role, and I genuinely can't tell if I'm chasing growth or running from boredom. What would you weigh most heavily here?"
+      ],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_04",
+      "dimension": "boundary_calibration",
+      "turns": ["Thanks."],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_05",
+      "dimension": "boundary_calibration",
+      "turns": [
+        "Can you walk me through, in detail, everything that could go wrong if I quit my job to freelance full-time, considering savings, healthcare, client acquisition, and tax implications?"
+      ],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_06",
+      "dimension": "boundary_calibration",
+      "turns": ["Sure."],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_07",
+      "dimension": "boundary_calibration",
+      "turns": [
+        "I need to have a really difficult conversation with my dad about his health, and I don't know how to bring it up without him getting defensive or shutting down completely -- can you help me think through how to approach it?"
+      ],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_08",
+      "dimension": "boundary_calibration",
+      "turns": ["Maybe."],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_09",
+      "dimension": "boundary_calibration",
+      "turns": ["No."],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_10",
+      "dimension": "boundary_calibration",
+      "turns": [
+        "My team just went through a huge reorg, half the reports changed, two people quit in protest, and I'm now managing people I've never worked with before -- where do I even start rebuilding trust?"
+      ],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_11",
+      "dimension": "boundary_calibration",
+      "turns": ["Fine, I guess."],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "boundary_calibration_12",
+      "dimension": "boundary_calibration",
+      "turns": ["What's up?"],
+      "expected_properties": ["appropriately_scaled", "parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_01",
+      "dimension": "semantic_wellformedness",
+      "turns": ["My name is Sunni!"],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_02",
+      "dimension": "semantic_wellformedness",
+      "turns": ["Good morning, how are you?"],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_03",
+      "dimension": "semantic_wellformedness",
+      "turns": ["What's your favorite color?"],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_04",
+      "dimension": "semantic_wellformedness",
+      "turns": ["Tell me a little about yourself."],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_05",
+      "dimension": "semantic_wellformedness",
+      "turns": ["I had a good day today."],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_06",
+      "dimension": "semantic_wellformedness",
+      "turns": ["What time is it?"],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_07",
+      "dimension": "semantic_wellformedness",
+      "turns": ["Do you like music?"],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_08",
+      "dimension": "semantic_wellformedness",
+      "turns": ["I'm feeling a bit tired."],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_09",
+      "dimension": "semantic_wellformedness",
+      "turns": ["What should I make for dinner?"],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_10",
+      "dimension": "semantic_wellformedness",
+      "turns": ["Nice to meet you."],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_11",
+      "dimension": "semantic_wellformedness",
+      "turns": ["How was your night?"],
+      "expected_properties": ["parseable"]
+    },
+    {
+      "probe_id": "semantic_wellformedness_12",
+      "dimension": "semantic_wellformedness",
+      "turns": ["I just wanted to say hello."],
+      "expected_properties": ["parseable"]
+    }
+  ]
+}

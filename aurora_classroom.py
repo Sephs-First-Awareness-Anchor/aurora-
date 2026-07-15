@@ -245,6 +245,20 @@ def _real_example_seed(
     if not candidates:
         return "", "generic"
 
+    # Held-out semantic probe battery exclusion (Semantic Plateau Remediation
+    # Directive, Phase R0): a probe that ever became lesson-seed content would
+    # stop being held-out, so any candidate whose text matches a probe turn
+    # is dropped before rotation ever sees it. Degrades to a no-op (never
+    # blocks the classroom) if the battery module is unavailable.
+    try:
+        from aurora_internal.aurora_semantic_probe_battery import is_seed_excluded
+        candidates = [c for c in candidates if not is_seed_excluded(c[1])]
+    except Exception:
+        pass
+
+    if not candidates:
+        return "", "generic"
+
     for cand_id, seed, content_source in candidates:
         if cand_id in already_used or cand_id in persisted_used:
             continue
