@@ -126,6 +126,32 @@ def test_chain_integrity_tamper_freezes_and_logs_violation(tmp_path):
     assert any(e["reason"] == "entry_hash_mismatch" for e in entries)
 
 
+def test_corrupt_ledger_line_freezes_with_evidence_preserved_not_reset(tmp_path):
+    """A corrupt/truncated line is tamper evidence -- the chain must
+    freeze with whatever parsed cleanly before it, not silently discard
+    everything and let __init__ append a fresh genesis onto the same
+    damaged file (Codex review, PR #128)."""
+    ledger = make_icc_ledger(state_dir=str(tmp_path))
+    for i in range(5):
+        ledger.mint_from_contradiction_resolution(tick=i, contradiction_id=f"c{i}", minted=0.05)
+    assert len(ledger._entries) == 6  # genesis + 5
+
+    ledger_path = tmp_path / "icc_ledger.jsonl"
+    lines = ledger_path.read_text().splitlines()
+    lines[3] = "{not valid json at all"
+    ledger_path.write_text("\n".join(lines) + "\n")
+
+    reloaded = make_icc_ledger(state_dir=str(tmp_path))
+    assert reloaded.is_frozen() is True
+    # entries before the corrupt line survive -- not reset to a fresh genesis-only chain
+    assert len(reloaded._entries) == 3
+    assert reloaded.mint_from_contradiction_resolution(tick=99, contradiction_id="c99", minted=0.1) is None
+
+    violations_path = tmp_path / "icc_violations.jsonl"
+    entries = [json.loads(l) for l in violations_path.read_text().splitlines() if l.strip()]
+    assert any(e["reason"] == "corrupt_ledger_line" for e in entries)
+
+
 def test_frozen_ledger_refuses_new_mints(tmp_path):
     ledger = make_icc_ledger(state_dir=str(tmp_path))
     ledger.mint_from_contradiction_resolution(tick=1, contradiction_id="c1", minted=0.1)
@@ -231,6 +257,27 @@ def test_mint_if_eligible_degrades_gracefully_on_missing_inputs(tmp_path):
     assert ledger.mint_if_eligible("x", 1, worth_evaluator=make_worth_evaluator()) is None
 
 
+def test_minted_intake_ids_survive_reload(tmp_path):
+    """The never-mint-twice guard must persist across restarts (Codex
+    review, PR #128) -- rebuild _minted_intake_ids from loaded
+    worth_survival entries' evidence, not just track it in memory."""
+    ledger = make_icc_ledger(state_dir=str(tmp_path))
+    ev, report, score, eligible_tick = _drive_to_horizon(intake_id="intake_persist")
+    first = ledger.mint_if_eligible(
+        "intake_persist", eligible_tick, worth_evaluator=ev, worth_report=report,
+        depth_weight=0.5, worth_score=score,
+    )
+    assert first is not None
+
+    reloaded = make_icc_ledger(state_dir=str(tmp_path))
+    assert "intake_persist" in reloaded._minted_intake_ids
+    second = reloaded.mint_if_eligible(
+        "intake_persist", eligible_tick, worth_evaluator=ev, worth_report=report,
+        depth_weight=0.5, worth_score=score,
+    )
+    assert second is None
+
+
 # ---- minting gates: contradiction_resolution ----
 
 def test_mint_from_contradiction_resolution_mints_directly(tmp_path):
@@ -309,6 +356,23 @@ def test_historical_weight_decays_with_age():
     hw_close = ledger_recent._historical_weight(current_tick=101)
     hw_far = ledger_recent._historical_weight(current_tick=1000)
     assert hw_close > hw_far > 0.0
+
+
+def test_historical_weight_excludes_future_mints(tmp_path):
+    """balance_trajectory()'s historical points must not be inflated by
+    mints that hadn't happened yet as of that point in time (Codex
+    review, PR #128)."""
+    ledger = make_icc_ledger(state_dir=str(tmp_path))
+    early = ledger.mint_from_contradiction_resolution(tick=1, contradiction_id="early", minted=0.2)
+    assert early is not None
+
+    hw_before_future_mint = ledger._historical_weight(current_tick=1)
+
+    late = ledger.mint_from_contradiction_resolution(tick=1000, contradiction_id="late", minted=50.0)
+    assert late is not None
+
+    hw_still_at_tick_1 = ledger._historical_weight(current_tick=1)
+    assert hw_still_at_tick_1 == hw_before_future_mint
 
 
 def test_balance_trajectory_returns_a_list_of_floats(tmp_path):
@@ -392,11 +456,11 @@ def test_verify_chain_on_corrupt_json_line_does_not_raise(tmp_path):
     ledger_path = tmp_path / "icc_ledger.jsonl"
     ledger_path.write_text(ledger_path.read_text() + "{not valid json\n")
     reloaded = make_icc_ledger(str(tmp_path))
-    # corrupt trailing line means the loader's own except-Exception clears
-    # entries entirely (matches semantic_variant_registry.py's own
-    # "index lost -> degrade to no candidates" posture) -- must not raise,
-    # and a fresh genesis reappears on next use.
+    # A corrupt trailing line freezes the chain (tamper-evident discipline
+    # -- see test_corrupt_ledger_line_freezes_with_evidence_preserved_not_reset
+    # for the full behavior); must not raise either way.
     assert isinstance(reloaded._entries, list)
+    assert reloaded.is_frozen() is True
 
 
 # ---- public surface / privacy ----

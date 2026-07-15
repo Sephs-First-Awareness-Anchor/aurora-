@@ -229,7 +229,7 @@ class ICCLedger:
         self._guard_pass_window: Deque[bool] = deque(maxlen=_INTENT_INTEGRITY_WINDOW)
 
         self._load()
-        if not self._entries:
+        if not self._entries and not self._frozen:
             self._append_genesis()
 
     # ------------------------------------------------------------------
@@ -237,21 +237,55 @@ class ICCLedger:
     # ------------------------------------------------------------------
 
     def _load(self) -> None:
+        if not os.path.exists(self._ledger_path):
+            return
         try:
-            if not os.path.exists(self._ledger_path):
-                return
-            entries: List[ICCEntry] = []
             with open(self._ledger_path, encoding="utf-8") as fh:
-                for line in fh:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    entries.append(ICCEntry.from_dict(json.loads(line)))
-            self._entries = entries
-            if not self._verify_loaded_chain():
-                self._frozen = True
-        except Exception:
+                lines = fh.readlines()
+        except Exception as exc:
+            # An EXISTING ledger file that can't even be read is not a
+            # fresh-boot case (that's handled by the not-exists branch
+            # above) -- it's evidence something is wrong with a ledger
+            # that DID have history. Freeze rather than silently starting
+            # a fresh chain over it.
             self._entries = []
+            self._frozen = True
+            self._log_violation("ledger_unreadable", {"error": str(exc)})
+            return
+
+        entries: List[ICCEntry] = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entries.append(ICCEntry.from_dict(json.loads(line)))
+            except Exception:
+                # A corrupt/truncated line is tamper evidence, not a
+                # reason to discard the chain and quietly start over --
+                # freeze with whatever parsed cleanly before it, and log
+                # the violation, per the tamper-evident chain discipline.
+                self._entries = entries
+                self._rebuild_minted_intake_ids()
+                self._frozen = True
+                self._log_violation("corrupt_ledger_line", {"raw": line[:200]})
+                return
+
+        self._entries = entries
+        self._rebuild_minted_intake_ids()
+        if not self._verify_loaded_chain():
+            self._frozen = True
+
+    def _rebuild_minted_intake_ids(self) -> None:
+        """Restore the never-mint-twice guard across restarts -- without
+        this, a process restart would forget which intakes already minted
+        worth_survival credit and could double-mint on the next eligible
+        offer."""
+        for e in self._entries:
+            if e.source == "worth_survival":
+                intake_id = e.evidence.get("intake_id")
+                if intake_id:
+                    self._minted_intake_ids.add(intake_id)
 
     def _append_genesis(self) -> None:
         genesis = _mint_entry(
@@ -468,7 +502,12 @@ class ICCLedger:
         try:
             total = 0.0
             for e in self._entries:
-                age = max(0.0, float(current_tick - e.tick))
+                if e.tick > current_tick:
+                    # Not yet minted as of current_tick -- excluding this
+                    # keeps balance_trajectory()'s historical points from
+                    # being inflated by mints that hadn't happened yet.
+                    continue
+                age = float(current_tick - e.tick)
                 total += e.minted * math.exp(-_HISTORICAL_DECAY_LAMBDA * age)
             return total / (1.0 + total)
         except Exception:
