@@ -3,7 +3,7 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.5285,
+      "intensity": 0.529,
       "label": "contextualize"
     },
     "dominant_axis": "N",
@@ -12,7 +12,7 @@
         "use"
       ],
       "interaction_state": "present",
-      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:corpus] U...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -27,12 +27,12 @@
     "stance": "contextual_continuity",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5622,
+      "intensity": 0.5629,
       "label": "continuity_stable"
     },
-    "timestamp": 1784104817.046311
+    "timestamp": 1784105467.9580748
   },
-  "saved_at": 1784104817.046494,
+  "saved_at": 1784105467.958245,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
@@ -41,7 +41,7 @@
         "use"
       ],
       "interaction_state": "present",
-      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:corpus] U...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -67,8 +67,8 @@
       },
       {
         "axis": "X",
-        "intensity": 0.49,
-        "label": "surprise"
+        "intensity": 0.45,
+        "label": "low_certainty"
       },
       {
         "axis": "N",
@@ -92,18 +92,18 @@
       },
       {
         "axis": "X",
-        "intensity": 0.8003,
+        "intensity": 0.8044,
         "label": "surface"
       },
       {
         "axis": "X",
-        "intensity": 0.8212,
+        "intensity": 0.8246,
         "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5622,
+      "intensity": 0.5629,
       "label": "continuity_stable"
     }
   }
