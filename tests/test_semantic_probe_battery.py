@@ -168,6 +168,35 @@ def test_run_battery_produces_one_result_per_probe_and_json_safe_report():
     assert "per_dimension" in as_dict
 
 
+def test_overall_pass_rate_counts_blocked_probes_as_failures():
+    """Codex review (PR #130): a run with 1 passed scored probe and 59
+    blocked probes must NOT report overall_pass_rate == 1.0. Blocked
+    probes are unknown/failed measurements for this competence
+    instrument and must count against the denominator."""
+    probes = load_probes()
+    first_probe_id = probes[0].probe_id
+
+    def factory(probe: Probe):
+        def _stub(turn_text):
+            if probe.probe_id == first_probe_id:
+                return {"response_text": "That's a fair point, however it could go either way."}
+            return {"response_text": ""}  # blocked: empty response
+        return _stub
+
+    report = run_battery(factory, run_id="pytest_blocked_run")
+    ok_count = sum(1 for r in report.probe_results if r.status == "ok")
+    blocked_count = sum(1 for r in report.probe_results if r.status == "blocked")
+    assert ok_count == 1
+    assert blocked_count == len(report.probe_results) - 1
+    assert report.overall_pass_rate() < 1.0
+    assert report.overall_pass_rate() <= 1.0 / len(report.probe_results) + 1e-9
+
+    dim_summary = report.per_dimension_summary()
+    for dim, summ in dim_summary.items():
+        assert summ["pass_rate"] == summ["pass_count"] / summ["probe_count"]
+        assert summ["blocked_count"] == summ["probe_count"] - summ["scored_count"]
+
+
 def test_battery_never_used_as_classroom_seed_is_enforceable():
     """The specific chokepoint this exists to protect: any candidate seed
     text pulled from a probe turn must be excludable before it reaches

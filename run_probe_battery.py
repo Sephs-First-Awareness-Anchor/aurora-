@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Dict
@@ -36,6 +38,7 @@ from aurora_internal.aurora_semantic_probe_battery import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parent
+STATE_DIR = REPO_ROOT / "aurora_state"
 RESULTS_DIR_PATH = Path(RESULTS_DIR)
 
 
@@ -56,6 +59,13 @@ def _make_process_turn_fn_factory(systems: Dict[str, Any]):
 
     def factory(probe: Probe):
         session_id = f"probe_battery_{probe.probe_id}"
+        # aurora.py's recent-context injection reads systems["_session_turn_buffer"]
+        # as one flat, unscoped list -- session_id alone does not isolate it. Clear
+        # it before each probe starts so probe N can never see probe N-1's last
+        # exchange (held-out scores must not depend on run order). A held-out
+        # probe's OWN turns still see each other normally within the probe, since
+        # the buffer accumulates turn-by-turn as this same probe's calls run.
+        systems["_session_turn_buffer"] = []
 
         def _process(turn_text: str) -> Dict[str, Any]:
             response = dict(
@@ -92,41 +102,58 @@ def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
     if not run_id:
         run_id = f"run_{int(time.time())}"
 
-    systems = boot_aurora(verbose=verbose, runtime_profile="surface")
-
+    # Boot against a throwaway COPY of aurora_state, not the live directory.
+    # process_external_user_turn's live-learning path (conversation memory,
+    # dream-trainer fail ledger, recommendations) writes real side effects
+    # into state_dir regardless of record_exchange/track_evolutionary_trace,
+    # so a probe battery run against the real directory would feed held-out
+    # probe content back into Aurora's training signal -- exactly the leak
+    # is_seed_excluded() exists to prevent, just via a different door. The
+    # copy starts as an exact snapshot of the real state so responses stay
+    # representative of Aurora's actual current competence; every write
+    # during the run lands in the scratch copy and is discarded after.
+    scratch_root = tempfile.mkdtemp(prefix="aurora_probe_battery_")
+    scratch_state_dir = str(Path(scratch_root) / "aurora_state")
     try:
-        pre_snapshot = record_developmental_snapshot(systems, force=True)
-    except Exception as exc:
-        pre_snapshot = {"status": "unavailable", "reason": str(exc)}
+        shutil.copytree(str(STATE_DIR), scratch_state_dir)
 
-    try:
-        probes = load_probes(PROBES_PATH)
-        probe_count = len(probes)
-    except Exception as exc:
-        return {
-            "run_id": run_id,
-            "status": "blocked",
-            "reason": f"could not load probe manifest: {exc}",
-            "timestamp": time.time(),
-        }
+        systems = boot_aurora(state_dir=scratch_state_dir, verbose=verbose, runtime_profile="surface")
 
-    report = run_battery(_make_process_turn_fn_factory(systems), run_id=run_id, probes_path=PROBES_PATH)
+        try:
+            pre_snapshot = record_developmental_snapshot(systems, force=True)
+        except Exception as exc:
+            pre_snapshot = {"status": "unavailable", "reason": str(exc)}
 
-    try:
-        post_snapshot = record_developmental_snapshot(systems, force=True)
-    except Exception as exc:
-        post_snapshot = {"status": "unavailable", "reason": str(exc)}
+        try:
+            probes = load_probes(PROBES_PATH)
+            probe_count = len(probes)
+        except Exception as exc:
+            return {
+                "run_id": run_id,
+                "status": "blocked",
+                "reason": f"could not load probe manifest: {exc}",
+                "timestamp": time.time(),
+            }
 
-    result = report.to_dict()
-    result.update({
-        "status": "ok",
-        "probe_count": probe_count,
-        # dev_index is bracketed here for cross-reference only -- per the
-        # directive, it is never the verdict. The probe score is.
-        "dev_index_pre": (pre_snapshot or {}).get("dev_index"),
-        "dev_index_post": (post_snapshot or {}).get("dev_index"),
-    })
-    return result
+        report = run_battery(_make_process_turn_fn_factory(systems), run_id=run_id, probes_path=PROBES_PATH)
+
+        try:
+            post_snapshot = record_developmental_snapshot(systems, force=True)
+        except Exception as exc:
+            post_snapshot = {"status": "unavailable", "reason": str(exc)}
+
+        result = report.to_dict()
+        result.update({
+            "status": "ok",
+            "probe_count": probe_count,
+            # dev_index is bracketed here for cross-reference only -- per the
+            # directive, it is never the verdict. The probe score is.
+            "dev_index_pre": (pre_snapshot or {}).get("dev_index"),
+            "dev_index_post": (post_snapshot or {}).get("dev_index"),
+        })
+        return result
+    finally:
+        shutil.rmtree(scratch_root, ignore_errors=True)
 
 
 def main() -> int:

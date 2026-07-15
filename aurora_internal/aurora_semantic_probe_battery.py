@@ -351,6 +351,12 @@ class BatteryReport:
     probe_results: List[ProbeResult] = field(default_factory=list)
 
     def per_dimension_summary(self) -> Dict[str, Dict[str, Any]]:
+        """Pass rate is measured against every LOADED probe for the
+        dimension, not just the ones that happened to score. A blocked
+        probe is an unknown/failed measurement for this competence
+        instrument -- it counts against the score, never gets excluded
+        from the denominator (a run that blocks 59/60 probes and passes
+        the 1 it scored must not report 100%)."""
         by_dim: Dict[str, List[ProbeResult]] = {}
         for r in self.probe_results:
             by_dim.setdefault(r.dimension, []).append(r)
@@ -364,15 +370,16 @@ class BatteryReport:
                 "scored_count": len(scored),
                 "blocked_count": len(blocked),
                 "pass_count": len(passed),
-                "pass_rate": (len(passed) / len(scored)) if scored else 0.0,
+                "pass_rate": (len(passed) / len(results)) if results else 0.0,
             }
         return summary
 
     def overall_pass_rate(self) -> float:
-        scored = [r for r in self.probe_results if r.status == "ok"]
-        if not scored:
+        """Denominator is every loaded probe, blocked or not -- see
+        per_dimension_summary()'s docstring for why."""
+        if not self.probe_results:
             return 0.0
-        return sum(1 for r in scored if r.passed) / len(scored)
+        return sum(1 for r in self.probe_results if r.passed) / len(self.probe_results)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
