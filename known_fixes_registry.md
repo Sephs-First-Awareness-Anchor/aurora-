@@ -639,3 +639,35 @@ both traced to the exact same generic rewrite-on-None branch suggests this
 is systemic across every `_aurora_assign_target`-wrapped method whose real
 contract legitimately returns `None` — worth a dedicated sweep, not just
 one-off guards, whenever this gets picked up.
+
+---
+
+## ICC LANDING DIRECTIVE (2026-07-14) — cross-phase items flagged, not
+## fabricated
+
+Two of the directive's own cross-phase requirements couldn't be honestly
+completed as literally stated, per the "flag rather than guess" discipline
+the directive itself sets:
+
+1. **"Append the audit's drafted 'Dimension Proposal Without Codebase
+   Grounding' entry (pending Sunni's confirmation)"** (requirement 4) --
+   this implementation was given only the directive text itself, not the
+   Dimensional Expansion Validation Audit 2026-07-14 that drafted this
+   entry. Its actual content was never provided, so it cannot be
+   transcribed here without fabricating it. Whoever has the audit
+   document should append it directly.
+2. **"Snapshot bracketing: call record_developmental_snapshot(force=True)
+   before Phase 1 first activation and after its first 100 ticks"**
+   (requirement 5) -- Phases 0-2 (`aurora_internal/aurora_icc_ledger.py`,
+   `aurora_internal/aurora_strategic_horizon.py`,
+   `aurora_internal/aurora_operator_composer.py`) all landed as complete,
+   tested, standalone modules — matching the existing standalone posture
+   of `aurora_worth_evaluator.py`/`aurora_entropy_detector.py`/
+   `aurora_variant_promotion.py`, none of which this directive asked to
+   be wired into `boot_aurora()`'s live systems dict either. No phase of
+   this directive instructs where/how to wire Strategic Horizon into a
+   live tick loop, so there is no real "first activation" to bracket yet
+   -- fabricating one would produce a meaningless snapshot pair. This
+   mirrors the MTSL directive's own precedent: land the mechanism
+   standalone and tested first, wire it live only under a later,
+   explicit directive that says so.
