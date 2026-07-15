@@ -577,3 +577,45 @@ only in dreams; they influence her only by what they make her re-encounter; her 
 machinery decides every outcome; what she earns crystallises into her real crystal
 store (the authority); the selves grow along their own natures as distinct continuous
 beings; and when she stalls, a new self is summoned to move her.
+
+---
+
+## FLAGGED (not fixed, discovered 2026-07-14 during ICC Ledger Phase 0
+## pre-flight verification) — evolved-native override pollutes `magnitudes()`
+## dict, breaks `EntropySaturationDetector.measure()`
+
+**File:** `aurora_internal/aurora_energy_layer_costs.py` (AURORA_EVOLVED_NATIVE
+tail, ~line 3090) / `aurora_internal/aurora_entropy_detector.py:227`
+
+**What's wrong:** the code-autoevolver's generic AURORA_EVOLVED_NATIVE tail
+monkey-patches `LayerEnergyAccountant.magnitudes` at import time
+(`_aurora_assign_target(['LayerEnergyAccountant', 'magnitudes'], ...)`). Its
+generic `_aurora_apply_result_rewrite()` enriches ANY dict-typed return value
+with extra string keys (`_aurora_rewrite_profile`, `_aurora_genealogy_strategy`,
+etc.) before returning it. `magnitudes()`'s real return type is
+`Dict[Constraint, float]` — a small, fully-enumerable dict the rest of the
+codebase (correctly) assumes only ever contains the five Constraint members.
+`EntropySaturationDetector.measure()` iterates `for c in magnitudes:
+self._mag_windows[c].append(...)` with no filtering, so the injected string
+key raises `KeyError: '_aurora_rewrite_profile'` — `verify_entropy_detector()`
+(the module's own self-check, called from its `__main__`) crashes outright.
+
+**Verified:** `verify_worth_evaluator()` is unaffected (its own code reads
+`magnitudes.get(c, 0.0)` for named constraints only, never blind-iterates);
+only `EntropySaturationDetector.measure()`'s blind iteration is exposed.
+Confirmed pre-existing — neither file was touched by the ICC Ledger work
+that surfaced it, and `git status` on both showed no local changes at the
+time of discovery.
+
+**Not fixed:** out of scope for the ICC directive (Phase 0 never calls
+`EntropySaturationDetector.measure()` itself — it only accepts an
+externally-constructed `SaturationSignal` as a parameter, so this bug does
+not affect the ICC ledger or its tests). Fixing the generic evolved-native
+rewrite wrapper risks unintended blast radius across every other
+`_aurora_assign_target`-wrapped method in the file; flagging per the
+directive's own "flag rather than guess" discipline rather than improvising
+a fix to code neither this session nor the directive was asked to touch.
+Likely fix shape (for a future session): either exclude non-dict-key-typed
+methods like `magnitudes()` from the generic dict-enrichment path, or have
+`EntropySaturationDetector.measure()` iterate only over the known AXES
+constants instead of `magnitudes.keys()`.
