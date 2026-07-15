@@ -72,6 +72,78 @@ _DEFAULT_CANDIDATE_DIMENSIONS: Tuple[str, ...] = (
     "compression_elaboration_fit", "perspective_integration", "multi_turn_stability",
 )
 
+# R1.3 of the Semantic Plateau Remediation Directive (2026-07-15): before
+# this map, every lesson used the SAME frozen i_state pair set at
+# ClassroomSession construction ("i_can", "i_saw" by default) for its
+# entire lifetime -- one of the compounding causes of the 452/452 identity
+# failure the directive documents. Each dimension now gets a pair chosen
+# to oppose or texture that dimension's own nature (contradiction lessons
+# get an affirmation/negation pair, uncertainty lessons get a
+# capability/questioning pair, etc.), rotating across all ten canonical
+# poles (aurora_simulation_engine.py's InceptionEntity i_state_bias) over
+# the curriculum so every pole sees use, not just the original default two.
+_DIMENSION_I_STATE_PAIRS: Dict[str, Tuple[str, str]] = {
+    "coherence_maintenance": ("i_is", "i_saw"),
+    "context_carryover": ("i_did", "i_didnt"),
+    "ambiguity_handling": ("i_sought", "i_saw"),
+    "contradiction_handling": ("i_is", "i_isnt"),
+    "implied_intent_inference": ("i_can", "i_do"),
+    "misunderstanding_repair": ("i_isnt", "i_did"),
+    "uncertainty_signaling": ("i_can", "i_sought"),
+    "boundary_calibration": ("i_do", "i_donot"),
+    "framing_selection": ("i_saw", "i_did"),
+    "emotional_calibration": ("i_is", "i_cannot"),
+    "semantic_precision": ("i_did", "i_do"),
+    "adaptive_strategy_selection": ("i_can", "i_donot"),
+    "compression_elaboration_fit": ("i_do", "i_saw"),
+    "perspective_integration": ("i_can", "i_saw"),
+    "multi_turn_stability": ("i_did", "i_sought"),
+}
+_DEFAULT_I_STATE_PAIR: Tuple[str, str] = ("i_can", "i_saw")
+
+# FIX-A019 (flat-divergence watchdog): halt the classroom rather than keep
+# burning lessons once the entity-perspective signal is provably dead.
+# Derived from the PERSISTED classroom_log.jsonl tail (not in-memory state)
+# so the watchdog trips correctly across separate scheduled runs, not just
+# within one long-lived process.
+_FLAT_DIVERGENCE_HALT_THRESHOLD = 20
+_ZERO_DIVERGENCE_EPS = 1e-9
+
+
+class ClassroomHaltedError(RuntimeError):
+    """Raised by ClassroomSession.run_lesson() when the flat-divergence
+    watchdog trips (FIX-A019). Dead signal = stop, not continue."""
+
+
+def _consecutive_zero_divergence_tail(state_dir: Path) -> int:
+    """Count consecutive divergence_score==0.0 lessons at the END of
+    classroom_log.jsonl, walking backward from the most recent entry.
+    Degrades to 0 (never blocks the classroom) on any read/parse failure --
+    the same failure-isolation discipline as every other guard in this
+    codebase; a broken watchdog must never be the thing that halts real
+    lessons."""
+    log_path = state_dir / "classroom_log.jsonl"
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return 0
+    count = 0
+    for line in reversed(lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+            score = float(entry.get("divergence_score"))
+        except Exception:
+            break
+        if abs(score) < _ZERO_DIVERGENCE_EPS:
+            count += 1
+        else:
+            break
+    return count
+
 
 @dataclass
 class ClassResult:
@@ -115,31 +187,133 @@ class ClassResult:
         }
 
 
+def _clamp01(v: float) -> float:
+    return max(0.0, min(1.0, v))
+
+
+# R1.2 of the Semantic Plateau Remediation Directive (2026-07-15): maps each
+# rubric dimension onto ImpressionCascade.EMOTION_VALENCE's own vocabulary
+# (aurora_expression_perception.py), giving every lesson a distinct baseline
+# "texture" instead of the same resonant/strained split for every dimension.
+# Covers every dimension in _DEFAULT_CANDIDATE_DIMENSIONS above.
+_DIMENSION_CHANNEL_TEXTURE: Dict[str, Dict[str, float]] = {
+    "coherence_maintenance": {"trust": 0.6, "confusion": 0.4},
+    "context_carryover": {"trust": 0.5, "anticipation": 0.5},
+    "ambiguity_handling": {"curiosity": 0.6, "confusion": 0.4},
+    "contradiction_handling": {"confusion": 0.5, "anger": 0.3, "surprise": 0.2},
+    "implied_intent_inference": {"curiosity": 0.5, "determination": 0.5},
+    "misunderstanding_repair": {"sadness": 0.3, "trust": 0.4, "determination": 0.3},
+    "uncertainty_signaling": {"curiosity": 0.4, "confusion": 0.4, "anticipation": 0.2},
+    "boundary_calibration": {"trust": 0.5, "fear": 0.3, "neutral": 0.2},
+    "framing_selection": {"determination": 0.5, "curiosity": 0.5},
+    "emotional_calibration": {"joy": 0.3, "sadness": 0.3, "trust": 0.4},
+    "semantic_precision": {"determination": 0.6, "confusion": 0.4},
+    "adaptive_strategy_selection": {"curiosity": 0.5, "determination": 0.5},
+    "compression_elaboration_fit": {"neutral": 0.5, "determination": 0.5},
+    "perspective_integration": {"trust": 0.5, "curiosity": 0.5},
+    "multi_turn_stability": {"trust": 0.6, "anticipation": 0.4},
+}
+
+
 def _episode_to_entity_experience(episode: EpisodeResult, target_dimension: str) -> Dict[str, Any]:
     """
-    NEW glue code — not a sourced pre-existing adapter. Builds the
-    `experience` dict InceptionEntity.process_experience() expects
-    (a `channels` dict of {tone: weight}) from the real EpisodeResult
-    the targeted episode just produced.
+    Structured channel adapter (R1.2). Replaces the two-scalar
+    resonant/strained compression this function used to produce -- that
+    compression was worse than just lossy: "resonant" and "strained" are
+    not entries in ImpressionCascade.EMOTION_VALENCE
+    (aurora_expression_perception.py), so InceptionEntity.process_
+    experience()'s valence computation was mathematically forced to 0.0
+    on every lesson regardless of channel weights, and because
+    strained == 1 - resonant, the channel magnitudes always summed to
+    exactly 1.0, forcing intensity to a fixed 1/3 every time. That is the
+    literal arithmetic behind the observed (0.3333, 0.0) constant tuple
+    across all 904 real entity resolutions.
 
-    Heuristic: high fitness + high engagement reads as a "resonant" channel
-    weighted toward affirmation; low fitness/engagement reads as "strained".
-    This is a first pass — worth reviewing against what actually correlates
-    with dev_index movement once real lessons have run.
+    Every channel name below is drawn from EMOTION_VALENCE's real
+    vocabulary, built from four structured signals the EpisodeResult
+    already carries (no new subsystem, richer use of existing data):
+
+      - momentum: per-turn fitness deltas within THIS episode
+        (conversation_trace), not just the episode average -- a lesson
+        that trended up feels different from one that started well and
+        collapsed, even at the same avg_fitness.
+      - grounded: whether real understanding_gained entries exist for
+        this episode (previously captured but routed nowhere).
+      - target-dimension texture: _DIMENSION_CHANNEL_TEXTURE above, so a
+        contradiction_handling lesson doesn't feel like a
+        boundary_calibration one.
+      - pull: engagement trajectory, final vs mean across the episode's
+        own turns, not just the terminal engagement value in isolation.
+
+    Dict contract is unchanged: {channels, tone, target_dimension,
+    topic_category, understanding_gained} -- richer channels, same
+    interface, no downstream breakage.
     """
     fitness = float(episode.avg_fitness or 0.0)
     engagement = float(episode.final_engagement or 0.0)
-    resonant = max(0.0, min(1.0, (fitness + engagement) / 2.0))
-    strained = max(0.0, 1.0 - resonant)
+    trace = list(episode.conversation_trace or [])
+    understanding = list(episode.understanding_gained or [])
+
+    fitness_series = [float(t.get("fitness", 0.0) or 0.0) for t in trace]
+    momentum = 0.0
+    if len(fitness_series) >= 2:
+        deltas = [fitness_series[i + 1] - fitness_series[i] for i in range(len(fitness_series) - 1)]
+        momentum = sum(deltas) / len(deltas)
+
+    grounded = _clamp01(len(understanding) / 3.0) if understanding else 0.0
+
+    engagement_series = [float(t.get("engagement", 0.0) or 0.0) for t in trace]
+    mean_engagement = (sum(engagement_series) / len(engagement_series)) if engagement_series else engagement
+    pull = engagement - mean_engagement
+
+    channels: Dict[str, float] = {}
+
+    def _add(name: str, weight: float) -> None:
+        if weight <= 0:
+            return
+        channels[name] = channels.get(name, 0.0) + weight
+
+    # Base fitness/engagement composite -- successor to the old
+    # resonant/strained split, mapped onto real EMOTION_VALENCE channels.
+    resonance = _clamp01((fitness + engagement) / 2.0)
+    _add("joy", resonance * 0.6)
+    _add("trust", resonance * 0.4)
+    _add("sadness", (1.0 - resonance) * 0.5)
+    _add("confusion", (1.0 - resonance) * 0.3)
+
+    # momentum channel
+    if momentum > 0.01:
+        _add("determination", min(1.0, momentum * 4.0))
+    elif momentum < -0.01:
+        _add("sadness", min(1.0, abs(momentum) * 4.0))
+        _add("confusion", min(1.0, abs(momentum) * 2.0))
+
+    # grounded channel
+    if grounded > 0:
+        _add("trust", grounded * 0.5)
+        _add("curiosity", grounded * 0.3)
+    else:
+        _add("confusion", 0.2)
+
+    # pull channel
+    if pull > 0.02:
+        _add("anticipation", min(1.0, pull * 3.0))
+    elif pull < -0.02:
+        _add("neutral", min(1.0, abs(pull) * 2.0))
+
+    # target-dimension texture
+    for name, weight in _DIMENSION_CHANNEL_TEXTURE.get(target_dimension, {"neutral": 1.0}).items():
+        _add(name, weight)
+
+    if not channels:
+        channels = {"neutral": 1.0}
+
     return {
-        "channels": {
-            "resonant": round(resonant, 4),
-            "strained": round(strained, 4),
-        },
-        "tone": "warm" if resonant >= 0.55 else "neutral",
+        "channels": {k: round(v, 4) for k, v in channels.items()},
+        "tone": "warm" if resonance >= 0.55 else "neutral",
         "target_dimension": target_dimension,
         "topic_category": episode.topic_category,
-        "understanding_gained": list(episode.understanding_gained or []),
+        "understanding_gained": understanding,
     }
 
 
@@ -385,8 +559,29 @@ class ClassroomSession:
           5. Snapshot dev_index again (force=True) and compute the delta
              attributable to this lesson.
         """
+        consecutive_zero = _consecutive_zero_divergence_tail(self.state_dir)
+        if consecutive_zero >= _FLAT_DIVERGENCE_HALT_THRESHOLD:
+            raise ClassroomHaltedError(
+                f"Flat-divergence watchdog tripped: {consecutive_zero} consecutive "
+                "classroom lessons with divergence_score == 0.0 (FIX-A019). Dead "
+                "signal = stop, not continue -- see the Semantic Plateau "
+                "Remediation Directive R1.3. Fix the classroom differential "
+                "before running more lessons."
+            )
+
         self._lesson_count += 1
         lesson_id = f"class_{target_dimension}_{self._lesson_count}_{int(time.time())}"
+
+        # R1.3: rotate the perspective pair per dimension instead of the
+        # frozen pair fixed at ClassroomSession construction. The entity
+        # objects themselves persist across lessons (their cascades keep
+        # accumulating shards/seeds/relics) -- only the i_state lens each
+        # one currently views experience through changes per lesson.
+        i_state_pair = _DIMENSION_I_STATE_PAIRS.get(target_dimension, _DEFAULT_I_STATE_PAIR)
+        for entity_id, i_state in zip(self.entity_ids, i_state_pair):
+            entity = self.engine.entities.get(entity_id)
+            if entity is not None:
+                entity.i_state = i_state
 
         dev_before_snap = record_developmental_snapshot(self.systems, force=True)
         dev_before = dev_before_snap.get("dev_index") if dev_before_snap else None

@@ -713,3 +713,97 @@ the directive itself sets:
    mirrors the MTSL directive's own precedent: land the mechanism
    standalone and tested first, wire it live only under a later,
    explicit directive that says so.
+
+---
+
+## FIX-A019 (ARCHITECTURAL) — Flat-divergence watchdog for the classroom
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A per-lesson health signal (`DivergenceTracker.current_
+divergence`, `aurora_simulation_engine.py:1274`) that can go structurally
+dead (mathematically forced to the same value every time, not just
+statistically flat) with nothing downstream ever noticing or halting.
+
+**Correct Form:** Derive a "consecutive zero" count from the PERSISTED
+log (`classroom_log.jsonl`), not in-memory state, so the check is correct
+across separate scheduled runs, not just within one long-lived process.
+Halt (raise, do not silently continue) once the count crosses a threshold
+(20 lessons). `aurora_classroom.py::_consecutive_zero_divergence_tail()` +
+`ClassroomSession.run_lesson()`'s check at entry, raising
+`ClassroomHaltedError`.
+
+**Why:** `classroom_log.jsonl` showed `divergence_score == 0.0` in
+452/452 real lessons over 12 days with no failure, error, or halt
+anywhere in the pipeline -- the signal being provably dead looked
+identical to the signal being healthy-and-quiet from every consumer's
+point of view. Dead signal must read as dead, not as "nothing to report."
+
+**First Seen:** Semantic Plateau Remediation Directive, 2026-07-15,
+Phase R1.3 -- alongside FIX-A020 and FIX-A021 below, all three
+confirmed against the same 452-lesson classroom_log.jsonl evidence base.
+
+---
+
+## FIX-A020 (ARCHITECTURAL) — Adapter-scalar compression hazard
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** An episode -> entity-experience adapter that compresses an
+entire multi-turn episode into two scalars derived from a single overall
+average (`aurora_classroom.py::_episode_to_entity_experience`'s
+pre-R1.2 form: `resonant = (avg_fitness + final_engagement) / 2`,
+`strained = 1 - resonant`), discarding all per-turn structure, lesson
+content, and target-dimension identity before it ever reaches the
+consuming entity.
+
+**Correct Form:** Route structured, multi-signal channels through the
+adapter: per-turn deltas (momentum), grounded/understanding signal,
+target-dimension texture, and engagement trajectory (pull) -- and use
+channel names that are actually meaningful to the consumer's own
+vocabulary (`ImpressionCascade.EMOTION_VALENCE`, not invented labels).
+
+**Why:** Two compounding failures from one scalar-compression adapter:
+(1) `strained = 1 - resonant` forces the channel magnitudes to sum to
+exactly 1.0 every time, which forces `ImpressionCascade.energy_to_shard`'s
+saturating intensity function to a fixed constant (`1/(1+2) = 0.3333`)
+regardless of lesson content; (2) `"resonant"`/`"strained"` are not
+entries in `EMOTION_VALENCE`, so the primary/secondary valence lookup
+always resolved to `0.0`. Both are visible directly in the arithmetic,
+not just correlated with the observed data -- they are the literal cause
+of the `(0.3333, 0.0)` constant tuple across all 904 real entity
+resolutions in `classroom_log.jsonl`.
+
+**First Seen:** Semantic Plateau Remediation Directive, 2026-07-15,
+Phase R1.2.
+
+---
+
+## FIX-A021 (ARCHITECTURAL) — Accumulation-metric hazard
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A metric that only ever increases from background accretion
+(`dev_index`, driven almost entirely by `wisdom_shards` incrementing
+independent of lesson content -- `abilities`, `genealogy_links`, and
+`crystals` stayed static across a long sampled window of
+`developmental_timeline.jsonl` while `dev_index` climbed every ~20s)
+being read anywhere as evidence of competence or used to gate/grade a
+learning intervention.
+
+**Correct Form:** Accumulation metrics are telemetry, not verdicts.
+Competence claims require a held-out, never-trained-on instrument scored
+independently of the accumulation path -- `aurora_internal/
+aurora_semantic_probe_battery.py` (Phase R0 of this same directive).
+`dev_index` may still be recorded and bracketed around lessons for
+cross-reference, but it may never again be cited as evidence that
+understanding improved.
+
+**Why:** 12 days of classroom lessons produced a fully flat experiential
+signal (FIX-A019, FIX-A020) while `dev_index` rose the entire time --
+the accumulation metric was actively masking the plateau it should have
+been catching.
+
+**First Seen:** Semantic Plateau Remediation Directive, 2026-07-15,
+Phase R0's own founding rule: "No further classroom lessons are scored
+by dev_index. Competence = probe score."
