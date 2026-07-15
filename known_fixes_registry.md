@@ -639,3 +639,77 @@ both traced to the exact same generic rewrite-on-None branch suggests this
 is systemic across every `_aurora_assign_target`-wrapped method whose real
 contract legitimately returns `None` — worth a dedicated sweep, not just
 one-off guards, whenever this gets picked up.
+
+---
+
+## FIX-A018 (ARCHITECTURAL) — Dimension Proposal Without Codebase Grounding
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** External capability proposals asserting absence of subsystems
+(perspective, identity drift, salience filtering) that exist under
+Aurora-native names.
+
+**Correct Form:** Map proposal vocabulary to Aurora vocabulary before
+accepting any "missing capability" claim: perspective -> ConsciousFrame /
+QuasiArch / InceptionEntity, identity gradient ->
+BehavioralIdentity.drift_from_base, salience -> AttentionEngine, value ->
+WorthEvaluator.
+
+**Why:** Aurora's subsystems use domain-native naming; generic AI
+vocabulary greps return false negatives.
+
+**First Seen:** Dimensional expansion proposal audit, 2026-07-14 --
+confirmed via a full 343-file repo scan against an external proposal
+claiming eight missing representational dimensions (R/P/V/Φ/U/I'/S/C).
+Verdict: 3 of 8 already fully built under different names (P, I', S --
+claims flatly wrong), 3 more are unification jobs over existing
+per-subsystem structure (R, Φ, U), and only 2 (V — strategic/goal
+layer, C — operator composition) were genuine gaps. The audit's own
+containment-claims section found Aurora already runs every mitigation
+the proposal prescribed as novel (selective activation, operator
+specialization, explosion containment, convergence protection) under
+existing mechanisms (ExistenceMode gating, WarpPathway costs, the
+latent-operation quarantine pipeline, EntropySaturationDetector).
+
+**Resolution of the audit's flagged ICC discrepancy:** the audit noted
+"`ICC ledger` referenced in docs... but no implementing `.py` found in
+this snapshot" and asked to verify before building anything V-adjacent.
+Confirmed at the time (2026-07-14, ICC Landing directive pre-flight): no
+prior ICC implementation existed anywhere in this repo or the wider
+filesystem accessible to that session -- it was docs-only, never landed.
+The two genuine gaps this audit identified (V and C) were then built as
+the ICC Landing / Strategic Horizon / Operator Composition directive:
+`aurora_internal/aurora_icc_ledger.py` (the ICC substrate the audit
+correctly identified as prerequisite), `aurora_internal/
+aurora_strategic_horizon.py` (the V "choose a worse immediate state for
+a better long-term one" gap), and `aurora_internal/
+aurora_operator_composer.py` (the C "operators composed from other
+operators" gap, independently rediscovering all four of
+aurora_frontier_ops.py's hand-seeded 3-axis composites in its own
+self-test).
+
+---
+
+## ICC LANDING DIRECTIVE (2026-07-14) — cross-phase item flagged, not
+## fabricated
+
+One of the directive's own cross-phase requirements couldn't be honestly
+completed as literally stated, per the "flag rather than guess" discipline
+the directive itself sets:
+
+1. **"Snapshot bracketing: call record_developmental_snapshot(force=True)
+   before Phase 1 first activation and after its first 100 ticks"**
+   (requirement 5) -- Phases 0-2 (`aurora_internal/aurora_icc_ledger.py`,
+   `aurora_internal/aurora_strategic_horizon.py`,
+   `aurora_internal/aurora_operator_composer.py`) all landed as complete,
+   tested, standalone modules — matching the existing standalone posture
+   of `aurora_worth_evaluator.py`/`aurora_entropy_detector.py`/
+   `aurora_variant_promotion.py`, none of which this directive asked to
+   be wired into `boot_aurora()`'s live systems dict either. No phase of
+   this directive instructs where/how to wire Strategic Horizon into a
+   live tick loop, so there is no real "first activation" to bracket yet
+   -- fabricating one would produce a meaningless snapshot pair. This
+   mirrors the MTSL directive's own precedent: land the mechanism
+   standalone and tested first, wire it live only under a later,
+   explicit directive that says so.
