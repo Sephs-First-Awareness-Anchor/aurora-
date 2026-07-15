@@ -52,11 +52,13 @@ def _json_safe(value: Any) -> Any:
 
 
 def _make_process_turn_fn_factory(systems: Dict[str, Any]):
+    aurora_gateway = systems.get("aurora")
+
     def factory(probe: Probe):
         session_id = f"probe_battery_{probe.probe_id}"
 
         def _process(turn_text: str) -> Dict[str, Any]:
-            return dict(
+            response = dict(
                 process_external_user_turn(
                     systems,
                     turn_text,
@@ -65,6 +67,21 @@ def _make_process_turn_fn_factory(systems: Dict[str, Any]):
                     run_periodic_maintenance=False,
                 ) or {}
             )
+            response_text = str(response.get("response_text") or "").strip()
+            # Same fallback run_full_competency_gauntlet.py uses -- the
+            # canonical bridge sometimes returns no text depending on which
+            # subsystems are live under a given runtime profile; falling
+            # through to the gateway keeps this the SAME path the gauntlet
+            # already relies on, not a shortcut invented for this script.
+            if not response_text and aurora_gateway is not None and hasattr(aurora_gateway, "speak_to_aurora"):
+                try:
+                    gateway_response = aurora_gateway.speak_to_aurora(turn_text)
+                    response_text = str(getattr(gateway_response, "content", "") or "").strip()
+                    response["response_src"] = str(response.get("response_src") or "") or "gateway_fallback"
+                except Exception as exc:
+                    response["response_src"] = f"gateway_error:{exc.__class__.__name__}"
+            response["response_text"] = response_text
+            return response
 
         return _process
 
