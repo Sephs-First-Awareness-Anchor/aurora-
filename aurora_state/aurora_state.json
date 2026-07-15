@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784125681.641335,
-  "generation": 7523,
-  "genome_version": 7523,
+  "timestamp": 1784131762.7736752,
+  "generation": 7558,
+  "genome_version": 7558,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.5588,
-    "emotional_expressiveness": 0.39,
-    "verbosity": 0.4032,
-    "introspection": 0.4776,
-    "pattern_sensitivity": 0.3977,
+    "caution": 0.4945,
+    "emotional_expressiveness": 0.4001,
+    "verbosity": 0.39,
+    "introspection": 0.468,
+    "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.3875
+    "energy_conservation": 0.312
   },
-  "personality_drift": 0.7208,
+  "personality_drift": 0.7634,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.7257271943916558,
-      "precision": 0.9543199556283077,
-      "depth": 0.6381495598937548,
-      "confidence": 0.633779750399045
+      "warmth": 0.6655812826215252,
+      "precision": 0.7122341719940082,
+      "depth": 0.6519915024397005,
+      "confidence": 0.5863791475548437
     },
     "cognitive": {
-      "curiosity": 0.7922754688293625,
-      "pattern_matching": 0.9726947930955333,
-      "abstraction": 0.8882046670188064,
-      "risk_assessment": 0.769797737002768
+      "curiosity": 0.6279286838139181,
+      "pattern_matching": 0.6815542906755712,
+      "abstraction": 0.8078439631053228,
+      "risk_assessment": 0.9622978992780006
     },
     "social": {
-      "empathy": 0.6506133614863727,
-      "trust_extension": 0.578332388200595,
-      "boundary_maintenance": 0.903294911873408,
-      "engagement": 0.899309481974347
+      "empathy": 0.6336293145465262,
+      "trust_extension": 0.6860158305322431,
+      "boundary_maintenance": 0.9506522094482454,
+      "engagement": 0.8794673788633489
     }
   },
   "governance_stats": {
@@ -115,9 +115,9 @@
   "total_episodes": 5,
   "understanding_shards": 16,
   "what_aurora_learned": [
-    "multi creates friction when approached with warm acknowledgment \u2014 it connects to track, hold (B-axis, depth 0.30)."
+    "what creates friction when approached with warm acknowledgment \u2014 it connects to sure, [recalled:stability] (B-axis, depth 0.37)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "6d25cdd8de58"
+  "_checksum": "dd74be541ba1"
 }
