@@ -619,3 +619,23 @@ Likely fix shape (for a future session): either exclude non-dict-key-typed
 methods like `magnitudes()` from the generic dict-enrichment path, or have
 `EntropySaturationDetector.measure()` iterate only over the known AXES
 constants instead of `magnitudes.keys()`.
+
+**SECOND OCCURRENCE (2026-07-14, Phase 1 — Strategic Horizon Layer):**
+the same corruption class hit `SaturationSignal.urgency_ticks()`, which
+this phase's `_projected_gain()` calls directly. `urgency_ticks()`'s real
+contract is `Optional[int]`, and returning `None` (no crossing projected)
+is the common, legitimate case — but the evolved-native override wraps
+the original call, and its generic `_aurora_apply_result_rewrite()`'s
+`if result is None and isinstance(reflection, dict): return fallback`
+branch turns that legitimate `None` into a dict, which then blew up a
+`urgency / float(remaining)` division with `TypeError: unsupported
+operand type(s) for /: 'dict' and 'float'`. Same fix posture as before:
+not touching the generated override machinery; `aurora_strategic_horizon.py`
+now validates `isinstance(urgency, (int, float))` before using the
+return value arithmetically, rather than trusting the documented type.
+Two independent hits on two different methods in two different files
+(`aurora_energy_layer_costs.py`, `aurora_internal/aurora_entropy_detector.py`)
+both traced to the exact same generic rewrite-on-None branch suggests this
+is systemic across every `_aurora_assign_target`-wrapped method whose real
+contract legitimately returns `None` — worth a dedicated sweep, not just
+one-off guards, whenever this gets picked up.
