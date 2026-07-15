@@ -3,47 +3,47 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.4375,
+      "intensity": 0.5119,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
+      "present_anchor": "I just wanted to say hello.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
-      "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "present_tone": "neutral",
+      "reinforcement_hint": 0.1047
     },
     "processing_mode": "blended",
-    "readiness": 0.5555,
+    "readiness": 0.5613,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4322,
+      "intensity": 0.5384,
       "label": "steady"
     },
-    "timestamp": 1784132500.4269679
+    "timestamp": 1784132686.4710927
   },
-  "saved_at": 1784132500.4287503,
+  "saved_at": 1784132686.4712877,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
+      "present_anchor": "I just wanted to say hello.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
-      "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "present_tone": "neutral",
+      "reinforcement_hint": 0.1047
     },
     "sub_crests": [
       {
@@ -58,13 +58,13 @@
       },
       {
         "axis": "A",
-        "intensity": 0.55,
-        "label": "warmth"
+        "intensity": 0.5,
+        "label": "neutral_affect"
       },
       {
         "axis": "X",
-        "intensity": 0.45,
-        "label": "low_certainty"
+        "intensity": 0.7875,
+        "label": "steady_continuation"
       },
       {
         "axis": "N",
@@ -73,8 +73,8 @@
       },
       {
         "axis": "T",
-        "intensity": 1.0,
-        "label": "thread_slipping"
+        "intensity": 0.7,
+        "label": "new_thread"
       },
       {
         "axis": "N",
@@ -88,28 +88,28 @@
       },
       {
         "axis": "X",
-        "intensity": 0.7616,
+        "intensity": 0.7575,
         "label": "derived"
       },
       {
         "axis": "X",
-        "intensity": 0.7938,
+        "intensity": 0.7904,
         "label": "surface"
       },
       {
         "axis": "X",
-        "intensity": 0.8079,
+        "intensity": 0.8048,
         "label": "surface"
       },
       {
         "axis": "X",
-        "intensity": 0.8232,
+        "intensity": 0.8204,
         "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.4322,
+      "intensity": 0.5384,
       "label": "steady"
     }
   }
