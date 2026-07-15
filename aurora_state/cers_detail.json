@@ -2,18 +2,18 @@
   "cers_verdict": {
     "actively_trialing_potential": [],
     "agrees_with_legacy": true,
-    "cers_label": "continuity_stable",
+    "cers_label": "steady",
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
     "conflicts": [],
     "geometry_deviation": null,
     "intervention_label": null,
-    "legacy_label": "continuity_stable",
+    "legacy_label": "steady",
     "permitted": true,
-    "response_bias": 0.0,
+    "response_bias": 0.3,
     "semantic_hesitation": false,
     "semantic_hesitation_proposed": false,
-    "semantic_mode": null,
+    "semantic_mode": "undetermined",
     "semantic_salience": 0.0,
     "semantic_salience_proposed": 0.0,
     "unused_potential": [],
@@ -26,23 +26,12 @@
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
     "conflict_rate": 0.0,
-    "frames_evaluated": 301,
-    "rationale": "100.0% agreement across 301 frames with 0.00% conflict rate. All potential trials in this window resolved \u2014 none still open \u2014 so CERS-governed convergence is producing equivalent or better results without losing anything the legacy path was doing.",
+    "frames_evaluated": 442,
+    "rationale": "100.0% agreement across 442 frames with 0.00% conflict rate. All potential trials in this window resolved \u2014 none still open \u2014 so CERS-governed convergence is producing equivalent or better results without losing anything the legacy path was doing.",
     "status": "recommend_merge"
   },
   "governed_by": "cers_regulator.cers_converge",
   "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -56,15 +45,15 @@
     }
   ],
   "mtsl_semantic": {
-    "response_bias": 0.0,
+    "response_bias": 0.3,
     "semantic_hesitation": false,
-    "semantic_mode": null,
+    "semantic_mode": "undetermined",
     "semantic_salience": 0.0,
     "variant_confidence": 0.0
   },
-  "prediction_confidence": 0.53,
+  "prediction_confidence": 0.5889,
   "prediction_source": "understanding_contract+manifold",
-  "saved_at": 1784096049.0142672,
+  "saved_at": 1784132500.433079,
   "sub_crests": [
     {
       "axis": "X",
@@ -73,8 +62,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.65,
+      "label": "unfamiliar"
     },
     {
       "axis": "A",
@@ -83,8 +72,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.49,
-      "label": "surprise"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
       "axis": "N",
@@ -94,7 +83,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
@@ -108,12 +97,22 @@
     },
     {
       "axis": "X",
-      "intensity": 0.8003,
+      "intensity": 0.7616,
+      "label": "derived"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.7938,
       "label": "surface"
     },
     {
       "axis": "X",
-      "intensity": 0.8212,
+      "intensity": 0.8079,
+      "label": "surface"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8232,
       "label": "surface"
     }
   ],
