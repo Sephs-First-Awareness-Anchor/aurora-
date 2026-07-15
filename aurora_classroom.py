@@ -21,10 +21,17 @@ but have never been run together for this purpose:
        process the SAME lesson content Aurora's episode just generated,
        from different perspectives.
 
-    3. DivergenceTracker (aurora_simulation_engine.py, already instantiated
-       as SimulationSession.divergence) — captures whether the two entities'
-       resolved perspectives are pulling apart or converging. Reused as-is,
-       not reimplemented.
+    3. DivergenceTracker (aurora_simulation_engine.py) — captures whether the
+       two entities' resolved perspectives are pulling apart or converging.
+       ClassroomSession owns a DEDICATED instance (self._divergence_tracker),
+       not SimulationSession.divergence: that tracker also receives an
+       {avg_fitness, engagement} snapshot on every run_episode() call
+       (including the one this classroom triggers), and DivergenceTracker's
+       first-vs-last comparison only counts KEYS PRESENT IN BOTH snapshots --
+       sharing it with episode-shaped snapshots that never share a key with
+       this classroom's entity_N_valence/entity_N_intensity snapshots forced
+       divergence_score to 0.0 on every lesson regardless of real entity
+       state (discovered during R1.4 verification, fixed same day as R1.1-3).
 
     4. record_developmental_snapshot (aurora_developmental_log.py) — called
        force=True immediately before and after the lesson so the dev_index
@@ -52,6 +59,7 @@ from aurora_simulation_engine import (
     SimulationEngine,
     EntityDepth,
     EpisodeResult,
+    DivergenceTracker,
 )
 from aurora_developmental_log import record_developmental_snapshot
 from aurora_internal.aurora_directed_training_corpus import (
@@ -582,6 +590,23 @@ class ClassroomSession:
             )
         self.entity_ids: Tuple[str, str] = (entity_a.entity_id, entity_b.entity_id)
 
+        # Dedicated tracker -- NOT engine.session.divergence. That tracker is
+        # shared general-purpose episode instrumentation: SimulationSession.
+        # run_episode() captures {avg_fitness, engagement} into it on every
+        # single episode (aurora_simulation_engine.py, ~line 2125), including
+        # the one this classroom's own run_lesson() triggers via
+        # engine.run_episode() just before its entity-pair capture. Since
+        # DivergenceTracker.current_divergence compares snapshots[0] against
+        # snapshots[-1] by matching dict keys, and the episode-shaped keys
+        # never overlap with this classroom's entity_N_valence/entity_N_
+        # intensity keys, sharing the tracker forced divergence_score to 0.0
+        # on every lesson regardless of how different the two entities'
+        # resolved state actually was -- a second, independent cause of the
+        # flat classroom signal, on top of R1.1/R1.2's fixes. A dedicated
+        # instance, touched only by this class, keeps the comparison
+        # apples-to-apples.
+        self._divergence_tracker = DivergenceTracker()
+
     def run_lesson(
         self,
         target_dimension: str,
@@ -665,9 +690,9 @@ class ClassroomSession:
         for idx, resolution in enumerate(entity_resolutions):
             divergence_stats[f"entity_{idx}_valence"] = float(resolution.get("avg_valence", 0.0) or 0.0)
             divergence_stats[f"entity_{idx}_intensity"] = float(resolution.get("avg_intensity", 0.0) or 0.0)
-        self.engine.session.divergence.capture(divergence_stats)
-        divergence_score = self.engine.session.divergence.current_divergence
-        is_diverging = self.engine.session.divergence.is_diverging()
+        self._divergence_tracker.capture(divergence_stats)
+        divergence_score = self._divergence_tracker.current_divergence
+        is_diverging = self._divergence_tracker.is_diverging()
 
         dev_after_snap = record_developmental_snapshot(self.systems, force=True)
         dev_after = dev_after_snap.get("dev_index") if dev_after_snap else None
