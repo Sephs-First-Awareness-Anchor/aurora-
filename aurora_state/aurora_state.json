@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784141184.274989,
-  "generation": 7628,
-  "genome_version": 7628,
+  "timestamp": 1784146363.7506988,
+  "generation": 7663,
+  "genome_version": 7663,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.4425,
+    "curiosity": 0.5107,
+    "caution": 0.4299,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.4163,
-    "introspection": 0.4837,
-    "pattern_sensitivity": 0.6485,
+    "verbosity": 0.39,
+    "introspection": 0.468,
+    "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3287
   },
-  "personality_drift": 0.822,
+  "personality_drift": 0.8027,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9507011206692595,
-      "precision": 0.9201485610593968,
-      "depth": 0.7169623351845453,
-      "confidence": 0.8596141607845287
+      "warmth": 0.8631885727914794,
+      "precision": 0.9407278411271689,
+      "depth": 0.9113723691393952,
+      "confidence": 0.9469803882867789
     },
     "cognitive": {
-      "curiosity": 0.9638727003451402,
-      "pattern_matching": 0.6028772237062713,
-      "abstraction": 0.5741235039724777,
-      "risk_assessment": 0.9944696731771352
+      "curiosity": 0.6475170694368034,
+      "pattern_matching": 0.7594239743901058,
+      "abstraction": 0.5607744377813344,
+      "risk_assessment": 0.9620443762219746
     },
     "social": {
-      "empathy": 0.7421229743821676,
-      "trust_extension": 0.7765150797485003,
-      "boundary_maintenance": 0.9892007321717768,
-      "engagement": 1.0
+      "empathy": 0.6096993572145704,
+      "trust_extension": 0.8924080751986521,
+      "boundary_maintenance": 1.0,
+      "engagement": 0.8964841610232127
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "a31b8114c41f"
+  "_checksum": "6438eec3d6ba"
 }
