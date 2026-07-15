@@ -399,6 +399,43 @@ def _mint_message_id(text: str) -> str:
     return "corr:" + _sha256(f"{text}|{time.time()}")[:16]
 
 
+_NOTIFIED_FILE = "notified_message_ids.json"
+
+
+def unnotified_reply_expecting_messages(state_dir: Optional[Path] = None) -> List[Dict[str, Any]]:
+    """Reply-expecting outbound messages (expects_reply=True) that a
+    notification channel hasn't marked as delivered yet. Deliberately
+    separate from the "read" field -- "read" reflects whether an
+    interactive session displayed it, which is a different event from
+    whether a push notification fired for it."""
+    notified_path = _correspondence_dir(state_dir) / _NOTIFIED_FILE
+    try:
+        notified = set(json.loads(notified_path.read_text(encoding="utf-8")))
+    except Exception:
+        notified = set()
+    messages = _load_outbound_messages(state_dir)
+    return [
+        m for m in messages
+        if m.get("expects_reply") and str(m.get("message_id", "")) and str(m["message_id"]) not in notified
+    ]
+
+
+def mark_notified(message_ids: List[str], state_dir: Optional[Path] = None) -> None:
+    """Record that a notification channel has delivered these message_ids
+    -- idempotent, never re-notifies for the same id."""
+    notified_path = _correspondence_dir(state_dir) / _NOTIFIED_FILE
+    try:
+        existing = set(json.loads(notified_path.read_text(encoding="utf-8")))
+    except Exception:
+        existing = set()
+    existing.update(str(m) for m in message_ids)
+    notified_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = str(notified_path) + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(sorted(existing), f, indent=2)
+    os.replace(tmp, str(notified_path))
+
+
 def draft_correspondence_message(systems: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Draft a reply-expecting outbound message from REAL internal
     content only -- curiosity engine's last completed exploration, or an

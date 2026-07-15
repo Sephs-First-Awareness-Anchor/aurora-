@@ -43,8 +43,10 @@ from aurora_internal.aurora_correspondence_loop import (
     draft_correspondence_message,
     expire_stale_predictions,
     ingest_replies,
+    mark_notified,
     pending_by_message_id,
     post_correspondence_message,
+    unnotified_reply_expecting_messages,
     verify_correspondence_loop,
 )
 
@@ -250,6 +252,43 @@ def test_ingest_replies_never_raises_on_malformed_inbound_entries(tmp_path):
     _append_jsonl(_correspondence_dir(tmp_path) / "from_sunni.jsonl", {"garbage": True})
     resolutions = ingest_replies(systems={}, state_dir=tmp_path)  # must not raise
     assert resolutions == []
+
+
+def test_unnotified_reply_expecting_messages_finds_new_ones(tmp_path):
+    class _Rec:
+        claim_a = "x"
+        claim_b = "y"
+
+    class _Ledger:
+        def unresolved(self):
+            return [_Rec()]
+
+    posted = post_correspondence_message({"contradiction_ledger": _Ledger()}, state_dir=tmp_path)
+    unnotified = unnotified_reply_expecting_messages(tmp_path)
+    assert len(unnotified) == 1
+    assert unnotified[0]["message_id"] == posted["message_id"]
+
+
+def test_mark_notified_is_idempotent_and_stops_renotifying(tmp_path):
+    class _Rec:
+        claim_a = "x"
+        claim_b = "y"
+
+    class _Ledger:
+        def unresolved(self):
+            return [_Rec()]
+
+    posted = post_correspondence_message({"contradiction_ledger": _Ledger()}, state_dir=tmp_path)
+    mark_notified([posted["message_id"]], tmp_path)
+    assert unnotified_reply_expecting_messages(tmp_path) == []
+    mark_notified([posted["message_id"]], tmp_path)  # idempotent, no error
+    assert unnotified_reply_expecting_messages(tmp_path) == []
+
+
+def test_unnotified_ignores_messages_that_dont_expect_a_reply(tmp_path):
+    from aurora_internal.aurora_correspondence_loop import _append_outbound_message
+    _append_outbound_message("Going to sleep.", "sleep_enter", "", expects_reply=False, state_dir=tmp_path)
+    assert unnotified_reply_expecting_messages(tmp_path) == []
 
 
 def test_post_correspondence_message_respects_cadence_cap(tmp_path):
