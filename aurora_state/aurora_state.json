@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784074961.01397,
-  "generation": 7250,
-  "genome_version": 7250,
+  "timestamp": 1784087589.2403755,
+  "generation": 7285,
+  "genome_version": 7285,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.4786,
-    "emotional_expressiveness": 0.39,
+    "caution": 0.41,
+    "emotional_expressiveness": 0.4113,
     "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.39,
-    "social_engagement": 0.39,
-    "energy_conservation": 0.3125
+    "pattern_sensitivity": 0.4118,
+    "social_engagement": 0.3992,
+    "energy_conservation": 0.312
   },
-  "personality_drift": 0.789,
+  "personality_drift": 0.8057,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5843883455376745,
-      "precision": 0.8140088694968457,
-      "depth": 0.8438946232299349,
-      "confidence": 0.9855207544601586
+      "warmth": 0.8159263025095609,
+      "precision": 0.7534734080958143,
+      "depth": 0.7602367504573541,
+      "confidence": 0.9652924262581116
     },
     "cognitive": {
       "curiosity": 0.585,
-      "pattern_matching": 0.6989144362169517,
-      "abstraction": 0.6233173553617565,
-      "risk_assessment": 0.7746452320083317
+      "pattern_matching": 0.5304000000000001,
+      "abstraction": 0.7095633004521987,
+      "risk_assessment": 0.9117107193884258
     },
     "social": {
-      "empathy": 0.798591023314432,
-      "trust_extension": 0.8536230806090038,
-      "boundary_maintenance": 0.7608027583549988,
-      "engagement": 0.5580568490627968
+      "empathy": 0.8383939034782516,
+      "trust_extension": 0.8472464081572152,
+      "boundary_maintenance": 0.6489149884137839,
+      "engagement": 0.7878441084666008
     }
   },
   "governance_stats": {
@@ -113,11 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 14,
-  "what_aurora_learned": [
-    "what creates friction when approached with warm acknowledgment \u2014 it connects to shifts, exist (B-axis, depth 0.38)."
-  ],
+  "understanding_shards": 16,
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "152dc40ca417"
+  "_checksum": "1e32c6a066ad"
 }
