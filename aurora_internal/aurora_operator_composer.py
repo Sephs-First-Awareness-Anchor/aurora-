@@ -264,8 +264,14 @@ class OperatorComposer:
     # composite construction (2.2)
     # ------------------------------------------------------------------
 
-    def _mint_op_id(self, op_a_id: str, op_b_id: str, tick: float) -> str:
-        raw = f"compose:{op_a_id}:{op_b_id}:{tick}"
+    def _mint_op_id(self, op_a_id: str, op_b_id: str) -> str:
+        # Stable on (parents) alone -- NOT tick. The same eligible pair
+        # proposed again on a later tick (its gap still uncovered) must
+        # mint the SAME op_id, so _persist()'s existing-op_id dedup check
+        # actually catches the repeat instead of accumulating duplicate
+        # composites of the same parents every tick.
+        parents_key = ":".join(sorted((op_a_id, op_b_id)))
+        raw = f"compose:{parents_key}"
         return "latent.compose_" + hashlib.sha1(raw.encode()).hexdigest()[:10]
 
     def _compose_one(
@@ -283,7 +289,7 @@ class OperatorComposer:
             signals["loop_id"] = "->".join(candidate["tcl_loop"]["path"])
             signals["loop_strength"] = candidate["tcl_loop"]["strength"]
         return ComposedOperator(
-            op_id=self._mint_op_id(oid_a, oid_b, current_tick),
+            op_id=self._mint_op_id(oid_a, oid_b),
             parents=(oid_a, oid_b),
             generation=max(gen_a, gen_b) + 1,
             composed_at_tick=current_tick,
@@ -316,8 +322,15 @@ class OperatorComposer:
         VariantPromoter's exclusive path.
         """
         try:
-            if self._current_latent_count() > self._boot_latent_count + LATENT_POOL_CEILING_MARGIN:
+            ceiling = self._boot_latent_count + LATENT_POOL_CEILING_MARGIN
+            current_latent = self._current_latent_count()
+            if current_latent >= ceiling:
                 return []
+            # Cap this tick's accepted count to whatever headroom remains
+            # below the ceiling -- checking only at entry (as before) let
+            # a tick starting AT the ceiling still persist up to max_new
+            # more composites, writing past the documented hard ceiling.
+            effective_max_new = min(max(0, int(max_new)), ceiling - current_latent)
 
             state = self._load_descriptor_state() if operations is None else None
             ops = list(state.get("operations", []) or []) if state is not None else list(operations)
@@ -331,7 +344,7 @@ class OperatorComposer:
 
             accepted: List[ComposedOperator] = []
             for cand in candidates:
-                if len(accepted) >= max(0, int(max_new)):
+                if len(accepted) >= effective_max_new:
                     break
                 op_a, op_b = cand["op_a"], cand["op_b"]
                 if not self._both_parents_promoted(op_a, op_b, promoted_ids):
