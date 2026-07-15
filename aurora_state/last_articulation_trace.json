@@ -1,37 +1,14 @@
 {
-  "original": "I do. I exist.",
-  "candidate": "",
-  "selected": "I do. I exist.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.62,
-  "candidate_score": 0.0,
-  "original_pressure": 0.396,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.604,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "What would likely cause that relation to change?",
-    "input_interpretation": {
-      "raw_prompt": "What would likely cause that relation to change?",
-      "intent_hint": "question",
-      "topic_terms": [
-        "likely",
-        "cause",
-        "relation",
-        "change"
-      ],
-      "entities": []
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1784154987.48013,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "I exist meaning is. I become can understand.",
+  "candidate": "I exist meaning is. I become can understand.",
+  "selected": "I exist meaning is. I become can understand.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.292,
+  "candidate_pressure": 0.292,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }
