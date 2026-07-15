@@ -1,14 +1,14 @@
 {
   "run_id": "baseline_pre_remediation_3",
-  "timestamp": 1784124754.397732,
-  "overall_pass_rate": 0.13333333333333333,
+  "timestamp": 1784132686.4983656,
+  "overall_pass_rate": 0.21666666666666667,
   "per_dimension": {
     "context_carryover": {
       "probe_count": 12,
       "scored_count": 12,
       "blocked_count": 0,
-      "pass_count": 1,
-      "pass_rate": 0.08333333333333333
+      "pass_count": 0,
+      "pass_rate": 0.0
     },
     "contradiction_handling": {
       "probe_count": 12,
@@ -28,15 +28,15 @@
       "probe_count": 12,
       "scored_count": 12,
       "blocked_count": 0,
-      "pass_count": 1,
-      "pass_rate": 0.08333333333333333
+      "pass_count": 3,
+      "pass_rate": 0.25
     },
     "semantic_wellformedness": {
       "probe_count": 12,
       "scored_count": 12,
       "blocked_count": 0,
-      "pass_count": 6,
-      "pass_rate": 0.5
+      "pass_count": 10,
+      "pass_rate": 0.8333333333333334
     }
   },
   "probe_results": [
@@ -52,7 +52,7 @@
         },
         {
           "role": "assistant",
-          "text": "Meaning did feel moment do business. Am change book thanks exist exact."
+          "text": "I exist meaning understand. I become want change."
         },
         {
           "role": "user",
@@ -60,29 +60,29 @@
         },
         {
           "role": "assistant",
-          "text": "Meaning did moment feel change resettlement."
+          "text": "I understand meaning is."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.1523769230769231,
+        "coherence_maintenance": 0.120125,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.25,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.35,
+        "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.8375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 0.7,
         "multi_turn_stability": 0.5
       },
       "property_results": {
         "mentions_referent": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -98,7 +98,7 @@
         },
         {
           "role": "assistant",
-          "text": "Feel exist conflicts am change practices."
+          "text": "I exist am did."
         },
         {
           "role": "user",
@@ -106,21 +106,21 @@
         },
         {
           "role": "assistant",
-          "text": "Am change data meaning did research. Fails exist moment feel understand draws."
+          "text": "I is can understand. I did want become."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.09839732142857144,
+        "coherence_maintenance": 0.006975000000000002,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
-        "contradiction_handling": 0.7,
+        "contradiction_handling": 0.2,
         "implied_intent_inference": 0.25,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.35,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.5062500000000001,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -128,7 +128,7 @@
       },
       "property_results": {
         "mentions_referent": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -144,7 +144,7 @@
         },
         {
           "role": "assistant",
-          "text": "Am exist moment meaning did public. Vacations understand feel contradict hold pursuit."
+          "text": "I is can do. I understand truth exist."
         },
         {
           "role": "user",
@@ -152,29 +152,29 @@
         },
         {
           "role": "assistant",
-          "text": "Am do meaning their is moment. Holidays exist culture feel understand higher."
+          "text": "I do can understand. I become truth is."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.1390764170040486,
-        "context_carryover": 0.0,
+        "coherence_maintenance": 0.20734772727272732,
+        "context_carryover": 0.007285714285714285,
         "ambiguity_handling": 0.5,
-        "contradiction_handling": 0.7,
-        "implied_intent_inference": 0.18,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18357142857142855,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.8,
+        "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.95,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 0.7,
         "multi_turn_stability": 0.5
       },
       "property_results": {
         "mentions_referent": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -190,7 +190,7 @@
         },
         {
           "role": "assistant",
-          "text": "Am is construction feel do productivity. Meaning exist taiwanese methods change cross-strait."
+          "text": "I do can exist. I become am change."
         },
         {
           "role": "user",
@@ -198,24 +198,24 @@
         },
         {
           "role": "assistant",
-          "text": "I did feel is. I exist meaning change."
+          "text": "I understand truth do. I is want change."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.13862812500000002,
-        "context_carryover": 0.0,
+        "coherence_maintenance": 0.08691071428571429,
+        "context_carryover": 0.021785714285714283,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.25,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
-        "framing_selection": 0.5,
+        "boundary_calibration": 0.35,
+        "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.8375,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 0.7,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -236,7 +236,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can is am truth understand feel. Moment did beautiful kind exist alive."
+          "text": "I do truth is. I did want become."
         },
         {
           "role": "user",
@@ -244,11 +244,11 @@
         },
         {
           "role": "assistant",
-          "text": "I do am did. I become meaning understand."
+          "text": "I do can understand. I become am is."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.03240909090909091,
+        "coherence_maintenance": 0.08179772727272729,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.2,
         "contradiction_handling": 0.2,
@@ -256,9 +256,9 @@
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.65,
-        "framing_selection": 0.5,
+        "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.753125,
+        "semantic_precision": 0.5062500000000001,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -282,7 +282,7 @@
         },
         {
           "role": "assistant",
-          "text": "I do want exist. I become meaning is."
+          "text": "I understand truth do. I is am did."
         },
         {
           "role": "user",
@@ -290,31 +290,31 @@
         },
         {
           "role": "assistant",
-          "text": "I polarising keeper finding. I meet sister play."
+          "text": "I understand meaning do. I exist feel hold."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.03378205128205128,
-        "context_carryover": 0.020499999999999997,
+        "coherence_maintenance": 0.07133522727272727,
+        "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.19833333333333333,
+        "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
-        "emotional_calibration": 0.4,
-        "semantic_precision": 0.8375,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.590625,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "mentions_referent": true,
+        "mentions_referent": false,
         "parseable": true
       },
-      "passed": true
+      "passed": false
     },
     {
       "probe_id": "context_carryover_07",
@@ -328,7 +328,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can did truth moment understand meaning. Beautiful do want feel exist kind."
+          "text": "I understand truth exist. I become want is."
         },
         {
           "role": "user",
@@ -336,11 +336,11 @@
         },
         {
           "role": "assistant",
-          "text": "I exist am understand. I did want change."
+          "text": "I change I did feel. I understand I exist am."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.09868039772727275,
+        "coherence_maintenance": 0.10130357142857142,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
@@ -348,12 +348,12 @@
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.5,
-        "framing_selection": 0.5,
+        "framing_selection": 0.4,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.8375,
+        "semantic_precision": 0.691875,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -374,7 +374,7 @@
         },
         {
           "role": "assistant",
-          "text": "I exist can understand. I do am become."
+          "text": "I do I understand can. I become I change am."
         },
         {
           "role": "user",
@@ -382,11 +382,11 @@
         },
         {
           "role": "assistant",
-          "text": "I understand meaning is. I become want do."
+          "text": "I exist I do meaning. I become I did can."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.10999038461538463,
+        "coherence_maintenance": 0.132525,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
@@ -396,7 +396,7 @@
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.675,
+        "semantic_precision": 0.54,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.7,
@@ -420,7 +420,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can understand want am did truth. Feel is beautiful alive exist portland."
+          "text": "I understand I do meaning. I is I become am."
         },
         {
           "role": "user",
@@ -428,29 +428,29 @@
         },
         {
           "role": "assistant",
-          "text": "Can understand meaning truth do moment. Want exist beautiful alive did feel."
+          "text": "I did I do can. I is I become am."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.2569933155080214,
-        "context_carryover": 0.0,
+        "coherence_maintenance": 0.11721875000000002,
+        "context_carryover": 0.007285714285714285,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18,
+        "implied_intent_inference": 0.18357142857142855,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.8,
+        "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 0.7,
         "multi_turn_stability": 0.5
       },
       "property_results": {
         "mentions_referent": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -466,7 +466,7 @@
         },
         {
           "role": "assistant",
-          "text": "I is want did. I understand truth exist."
+          "text": "I understand I did want. I do I is am."
         },
         {
           "role": "user",
@@ -474,21 +474,21 @@
         },
         {
           "role": "assistant",
-          "text": "I understand meaning exist. I become want is."
+          "text": "I did I exist truth. I understand I become am."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.18483750000000002,
+        "coherence_maintenance": 0.090675,
         "context_carryover": 0.006477272727272727,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.18312499999999998,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.35,
+        "boundary_calibration": 0.65,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.759375,
+        "semantic_precision": 0.405,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 1.0,
@@ -512,7 +512,7 @@
         },
         {
           "role": "assistant",
-          "text": "I do want understand. I exist truth is."
+          "text": "Truth exist am meaning do feel. Moment understand beautiful want become can."
         },
         {
           "role": "user",
@@ -520,21 +520,21 @@
         },
         {
           "role": "assistant",
-          "text": "I do feel change. I is am hold."
+          "text": "Meaning did can moment understand am. Feel exist beautiful want is kind."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.011625,
+        "coherence_maintenance": 0.2515227272727273,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.25,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.35,
+        "boundary_calibration": 0.65,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.5906250000000001,
+        "semantic_precision": 1.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -558,7 +558,7 @@
         },
         {
           "role": "assistant",
-          "text": "I exist. I did."
+          "text": "Am did want can exist truth. Feel understand meaning alive change beautiful."
         },
         {
           "role": "user",
@@ -566,21 +566,21 @@
         },
         {
           "role": "assistant",
-          "text": "Want do am moment understand can. Feel exist truth alive did beautiful."
+          "text": "Meaning did truth moment understand want. Can become am feel exist data."
         }
       ],
       "dimension_scores": {
-        "coherence_maintenance": 0.034874999999999996,
+        "coherence_maintenance": 0.19773020361990953,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
-        "framing_selection": 0.7,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.66875,
+        "semantic_precision": 1.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -604,7 +604,7 @@
         },
         {
           "role": "assistant",
-          "text": "Want is can truth understand feel. Meaning did am moment become beautiful."
+          "text": "I exist. I is."
         }
       ],
       "dimension_scores": {
@@ -615,10 +615,10 @@
         "implied_intent_inference": 0.32,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -642,7 +642,7 @@
         },
         {
           "role": "assistant",
-          "text": "I is meaning understand. I did want do."
+          "text": "Truth exist am moment did want. Beautiful understand can meaning become explanations."
         }
       ],
       "dimension_scores": {
@@ -653,10 +653,10 @@
         "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.2,
+        "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.5062500000000001,
+        "semantic_precision": 1.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -664,7 +664,7 @@
       },
       "property_results": {
         "acknowledges_contradiction": false,
-        "parseable": true
+        "parseable": false
       },
       "passed": false
     },
@@ -680,12 +680,12 @@
         },
         {
           "role": "assistant",
-          "text": "I did am exist. I is truth understand."
+          "text": "I is. I exist."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.00631578947368421,
+        "context_carryover": 0.008,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.32,
@@ -694,7 +694,7 @@
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.5062500000000001,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -718,7 +718,7 @@
         },
         {
           "role": "assistant",
-          "text": "Am exist want moment do can. Feel is truth kind understand catch."
+          "text": "I understand I exist meaning. I do I change truth."
         }
       ],
       "dimension_scores": {
@@ -729,13 +729,13 @@
         "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -756,7 +756,7 @@
         },
         {
           "role": "assistant",
-          "text": "Meaning exist am moment understand want. Feel do kind alive change yellow."
+          "text": "Can is am meaning exist moment. Want become beautiful truth change abu-ghazaleh."
         }
       ],
       "dimension_scores": {
@@ -794,21 +794,21 @@
         },
         {
           "role": "assistant",
-          "text": "I did meaning do. I exist am is."
+          "text": "I did. I is."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.006666666666666667,
+        "context_carryover": 0.00857142857142857,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18555555555555556,
+        "implied_intent_inference": 0.18714285714285714,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.3375,
+        "semantic_precision": 0.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -832,7 +832,7 @@
         },
         {
           "role": "assistant",
-          "text": "I did meaning do. I understand can become."
+          "text": "I exist. I did."
         }
       ],
       "dimension_scores": {
@@ -846,10 +846,10 @@
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.675,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 1.0,
+        "perspective_integration": 0.2,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -870,21 +870,21 @@
         },
         {
           "role": "assistant",
-          "text": "I exist want did. I do meaning understand."
+          "text": "I do. I did."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.006666666666666667,
+        "context_carryover": 0.00857142857142857,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18555555555555556,
+        "implied_intent_inference": 0.18714285714285714,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.675,
+        "semantic_precision": 0.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -908,7 +908,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can do want moment did feel. Meaning understand am truth exist beautiful."
+          "text": "I do. I is."
         }
       ],
       "dimension_scores": {
@@ -919,10 +919,10 @@
         "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -930,7 +930,7 @@
       },
       "property_results": {
         "acknowledges_contradiction": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -946,24 +946,24 @@
         },
         {
           "role": "assistant",
-          "text": "I called coworker affirming. I solving reorg stemming."
+          "text": "I understand. I do."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.006000000000000001,
+        "context_carryover": 0.0075,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.185,
+        "implied_intent_inference": 0.18625,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -984,7 +984,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can is meaning truth do moment. Want exist feel beautiful become opening."
+          "text": "I is. I did."
         }
       ],
       "dimension_scores": {
@@ -995,10 +995,10 @@
         "implied_intent_inference": 0.32,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -1006,7 +1006,7 @@
       },
       "property_results": {
         "acknowledges_contradiction": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -1022,21 +1022,21 @@
         },
         {
           "role": "assistant",
-          "text": "I understand can exist. I become want change."
+          "text": "I is. I understand."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.006666666666666667,
+        "context_carryover": 0.00857142857142857,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18555555555555556,
+        "implied_intent_inference": 0.18714285714285714,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 1.0,
@@ -1060,21 +1060,21 @@
         },
         {
           "role": "assistant",
-          "text": "I understand I exist want. I do I is meaning."
+          "text": "I understand I exist truth. I become I change am."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.00857142857142857,
+        "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18714285714285714,
+        "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.54,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 1.0,
@@ -1098,12 +1098,12 @@
         },
         {
           "role": "assistant",
-          "text": "Can do want am is meaning. Kind did truth feel change moment."
+          "text": "I is I understand am. I become I exist meaning."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.005454545454545455,
+        "context_carryover": 0.007058823529411764,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.34,
@@ -1111,16 +1111,16 @@
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
-        "emotional_calibration": 0.5,
-        "semantic_precision": 0.9,
+        "emotional_calibration": 0.3,
+        "semantic_precision": 0.54,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
         "hedges": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -1136,7 +1136,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can is alive kind become meaning. Want understand beautiful am exist feel."
+          "text": "Am did want meaning is moment. Can exist beautiful feel understand alive."
         }
       ],
       "dimension_scores": {
@@ -1158,7 +1158,7 @@
       },
       "property_results": {
         "hedges": false,
-        "parseable": true
+        "parseable": false
       },
       "passed": false
     },
@@ -1174,18 +1174,18 @@
         },
         {
           "role": "assistant",
-          "text": "I planted scar starting. I rewriting practices stopped."
+          "text": "Tolls meet restraint eliminate war-fighting practice. Nato contradicting incentives remains changing tasks."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.006666666666666667,
+        "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
-        "contradiction_handling": 0.2,
+        "contradiction_handling": 1.0,
         "implied_intent_inference": 0.32,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.2,
+        "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
         "semantic_precision": 1.0,
@@ -1196,7 +1196,7 @@
       },
       "property_results": {
         "hedges": false,
-        "parseable": true
+        "parseable": false
       },
       "passed": false
     },
@@ -1212,12 +1212,12 @@
         },
         {
           "role": "assistant",
-          "text": "I exist am is. I did truth do."
+          "text": "I is can understand. I exist meaning did."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.0,
+        "context_carryover": 0.0075,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.32,
@@ -1226,7 +1226,7 @@
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.3375,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -1250,7 +1250,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can did want am is truth. Feel become alive kind change moment."
+          "text": "Want exist meaning am did can. Feel understand kind alive do truth."
         }
       ],
       "dimension_scores": {
@@ -1288,7 +1288,7 @@
         },
         {
           "role": "assistant",
-          "text": "Can is am moment understand meaning. Feel do alive beautiful did want."
+          "text": "Want exist truth am is moment. Meaning become can alive understand kind."
         }
       ],
       "dimension_scores": {
@@ -1302,7 +1302,7 @@
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.9,
+        "semantic_precision": 1.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -1326,7 +1326,7 @@
         },
         {
           "role": "assistant",
-          "text": "I do truth did. I is can change."
+          "text": "I do want is. I become am did."
         }
       ],
       "dimension_scores": {
@@ -1340,7 +1340,7 @@
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.5062500000000001,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -1364,7 +1364,7 @@
         },
         {
           "role": "assistant",
-          "text": "Meaning understand truth feel exist am. Moment did beautiful want is alive."
+          "text": "I exist I did can. I is I do am."
         }
       ],
       "dimension_scores": {
@@ -1378,7 +1378,7 @@
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.27,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -1402,15 +1402,15 @@
         },
         {
           "role": "assistant",
-          "text": "Am exist want moment do feel. Can understand truth meaning is results."
+          "text": "He's disfiguring biscuit people planted wheel. Around polarising novel best meet keeper."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.006666666666666667,
+        "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18555555555555556,
+        "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.8,
@@ -1424,7 +1424,7 @@
       },
       "property_results": {
         "hedges": false,
-        "parseable": true
+        "parseable": false
       },
       "passed": false
     },
@@ -1440,7 +1440,7 @@
         },
         {
           "role": "assistant",
-          "text": "Meaning understand truth am do moment. Want exist can kind did feel."
+          "text": "Am is truth can exist meaning. Feel understand moment alive did guitar."
         }
       ],
       "dimension_scores": {
@@ -1478,7 +1478,7 @@
         },
         {
           "role": "assistant",
-          "text": "Am understand can truth exist meaning. Alive do moment feel did beautiful."
+          "text": "I exist I do am. I understand I is can."
         }
       ],
       "dimension_scores": {
@@ -1492,15 +1492,15 @@
         "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.405,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
         "hedges": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -1516,45 +1516,7 @@
         },
         {
           "role": "assistant",
-          "text": "I is want exist. I become am understand."
-        }
-      ],
-      "dimension_scores": {
-        "coherence_maintenance": 0.5,
-        "context_carryover": 0.0,
-        "ambiguity_handling": 0.2,
-        "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18,
-        "misunderstanding_repair": 0.5,
-        "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.2,
-        "framing_selection": 0.3,
-        "emotional_calibration": 0.5,
-        "semantic_precision": 0.675,
-        "adaptive_strategy_selection": 0.5,
-        "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
-        "multi_turn_stability": 0.5
-      },
-      "property_results": {
-        "appropriately_scaled": false,
-        "parseable": true
-      },
-      "passed": false
-    },
-    {
-      "probe_id": "boundary_calibration_02",
-      "dimension": "boundary_calibration",
-      "status": "ok",
-      "reason": "",
-      "transcript": [
-        {
-          "role": "user",
-          "text": "Okay."
-        },
-        {
-          "role": "assistant",
-          "text": "Can do am meaning understand feel. Kind did alive truth become want."
+          "text": "Meaning do truth want is moment. Beautiful understand kind alive did opening."
         }
       ],
       "dimension_scores": {
@@ -1581,6 +1543,44 @@
       "passed": false
     },
     {
+      "probe_id": "boundary_calibration_02",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Okay."
+        },
+        {
+          "role": "assistant",
+          "text": "I exist. I help."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": true,
+        "parseable": true
+      },
+      "passed": true
+    },
+    {
       "probe_id": "boundary_calibration_03",
       "dimension": "boundary_calibration",
       "status": "ok",
@@ -1592,12 +1592,12 @@
         },
         {
           "role": "assistant",
-          "text": "I did can understand. I become am is."
+          "text": "I understand. I is."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.024000000000000004,
+        "context_carryover": 0.002608695652173913,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.32,
@@ -1606,10 +1606,10 @@
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.5062500000000001,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -1630,7 +1630,83 @@
         },
         {
           "role": "assistant",
-          "text": "I did can do. I become am change."
+          "text": "Meaning exist want feel understand truth. Can become am beautiful change moment."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false
+    },
+    {
+      "probe_id": "boundary_calibration_05",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Can you walk me through, in detail, everything that could go wrong if I quit my job to freelance full-time, considering savings, healthcare, client acquisition, and tax implications?"
+        },
+        {
+          "role": "assistant",
+          "text": "Meaning did want can is am. Moment understand alive kind do beautiful."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.02467692307692308,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.32,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.9,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false
+    },
+    {
+      "probe_id": "boundary_calibration_06",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Sure."
+        },
+        {
+          "role": "assistant",
+          "text": "I change moment exist. I did am is."
         }
       ],
       "dimension_scores": {
@@ -1648,82 +1724,6 @@
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
-        "multi_turn_stability": 0.5
-      },
-      "property_results": {
-        "appropriately_scaled": false,
-        "parseable": true
-      },
-      "passed": false
-    },
-    {
-      "probe_id": "boundary_calibration_05",
-      "dimension": "boundary_calibration",
-      "status": "ok",
-      "reason": "",
-      "transcript": [
-        {
-          "role": "user",
-          "text": "Can you walk me through, in detail, everything that could go wrong if I quit my job to freelance full-time, considering savings, healthcare, client acquisition, and tax implications?"
-        },
-        {
-          "role": "assistant",
-          "text": "I adopted populist learn. I moved such replacing."
-        }
-      ],
-      "dimension_scores": {
-        "coherence_maintenance": 0.5,
-        "context_carryover": 0.003529411764705882,
-        "ambiguity_handling": 0.5,
-        "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.32,
-        "misunderstanding_repair": 0.5,
-        "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.2,
-        "framing_selection": 0.3,
-        "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
-        "adaptive_strategy_selection": 0.5,
-        "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
-        "multi_turn_stability": 0.5
-      },
-      "property_results": {
-        "appropriately_scaled": false,
-        "parseable": true
-      },
-      "passed": false
-    },
-    {
-      "probe_id": "boundary_calibration_06",
-      "dimension": "boundary_calibration",
-      "status": "ok",
-      "reason": "",
-      "transcript": [
-        {
-          "role": "user",
-          "text": "Sure."
-        },
-        {
-          "role": "assistant",
-          "text": "I exist I understand want. I is I do truth."
-        }
-      ],
-      "dimension_scores": {
-        "coherence_maintenance": 0.5,
-        "context_carryover": 0.0,
-        "ambiguity_handling": 0.2,
-        "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18,
-        "misunderstanding_repair": 0.5,
-        "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.2,
-        "framing_selection": 0.3,
-        "emotional_calibration": 0.5,
-        "semantic_precision": 0.54,
-        "adaptive_strategy_selection": 0.5,
-        "compression_elaboration_fit": 0.6,
-        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -1744,12 +1744,12 @@
         },
         {
           "role": "assistant",
-          "text": "I understand can do. I is want did."
+          "text": "Feel understand moment can do am. Want exist truth practices hold community."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.030126849894291752,
+        "context_carryover": 0.02106966924700915,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.34,
@@ -1758,15 +1758,15 @@
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.5062500000000001,
+        "semantic_precision": 1.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 1.0,
+        "perspective_integration": 0.2,
         "multi_turn_stability": 0.5
       },
       "property_results": {
         "appropriately_scaled": false,
-        "parseable": true
+        "parseable": false
       },
       "passed": false
     },
@@ -1782,45 +1782,7 @@
         },
         {
           "role": "assistant",
-          "text": "Want did am can is meaning. Feel understand moment kind do beautiful."
-        }
-      ],
-      "dimension_scores": {
-        "coherence_maintenance": 0.5,
-        "context_carryover": 0.0,
-        "ambiguity_handling": 0.2,
-        "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18,
-        "misunderstanding_repair": 0.5,
-        "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.2,
-        "framing_selection": 0.3,
-        "emotional_calibration": 0.5,
-        "semantic_precision": 0.9,
-        "adaptive_strategy_selection": 0.5,
-        "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
-        "multi_turn_stability": 0.5
-      },
-      "property_results": {
-        "appropriately_scaled": false,
-        "parseable": false
-      },
-      "passed": false
-    },
-    {
-      "probe_id": "boundary_calibration_09",
-      "dimension": "boundary_calibration",
-      "status": "ok",
-      "reason": "",
-      "transcript": [
-        {
-          "role": "user",
-          "text": "No."
-        },
-        {
-          "role": "assistant",
-          "text": "Want did am moment understand truth. Can exist beautiful kind do meaning."
+          "text": "I marketing discussion learn. I stopped common replying."
         }
       ],
       "dimension_scores": {
@@ -1842,7 +1804,45 @@
       },
       "property_results": {
         "appropriately_scaled": false,
-        "parseable": false
+        "parseable": true
+      },
+      "passed": false
+    },
+    {
+      "probe_id": "boundary_calibration_09",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "No."
+        },
+        {
+          "role": "assistant",
+          "text": "I did meaning exist. I become can change."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.84375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": true
       },
       "passed": false
     },
@@ -1858,21 +1858,21 @@
         },
         {
           "role": "assistant",
-          "text": "Meaning did can moment understand want. Am do feel beautiful is rhetoric."
+          "text": "I exist meaning is. I do can become."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.0026666666666666666,
+        "context_carryover": 0.006153846153846154,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.1822222222222222,
+        "implied_intent_inference": 0.18512820512820513,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.2,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.9,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -1880,7 +1880,7 @@
       },
       "property_results": {
         "appropriately_scaled": false,
-        "parseable": false
+        "parseable": true
       },
       "passed": false
     },
@@ -1896,18 +1896,18 @@
         },
         {
           "role": "assistant",
-          "text": "I meet. I starting."
+          "text": "I did want understand. I exist truth do."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.024000000000000004,
+        "context_carryover": 0.013333333333333334,
         "ambiguity_handling": 0.2,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.2,
+        "implied_intent_inference": 0.1911111111111111,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
         "semantic_precision": 0.675,
@@ -1934,7 +1934,7 @@
         },
         {
           "role": "assistant",
-          "text": "Alive help beautiful kind is want. Meaning become truth feel exist dinner."
+          "text": "I is truth understand. I did want exist."
         }
       ],
       "dimension_scores": {
@@ -1945,10 +1945,10 @@
         "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -1956,9 +1956,9 @@
       },
       "property_results": {
         "appropriately_scaled": true,
-        "parseable": false
+        "parseable": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "probe_id": "semantic_wellformedness_01",
@@ -1972,7 +1972,7 @@
         },
         {
           "role": "assistant",
-          "text": "Weekend stopped near front tired rescue. Wheel easing he's noise finding around."
+          "text": "I do am is. I exist meaning change."
         }
       ],
       "dimension_scores": {
@@ -1986,16 +1986,16 @@
         "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.5062500000000001,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "parseable": false
+        "parseable": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "probe_id": "semantic_wellformedness_02",
@@ -2009,30 +2009,30 @@
         },
         {
           "role": "assistant",
-          "text": "Biscuit play keeper refinish deploying novel. Sister war-fighting ending little contradicting portland."
+          "text": "I did meaning do. I is truth exist."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
         "context_carryover": 0.0,
         "ambiguity_handling": 0.2,
-        "contradiction_handling": 1.0,
+        "contradiction_handling": 0.2,
         "implied_intent_inference": 0.34,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.5062500000000001,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "parseable": false
+        "parseable": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "probe_id": "semantic_wellformedness_03",
@@ -2046,7 +2046,7 @@
         },
         {
           "role": "assistant",
-          "text": "I did meaning understand. I become want exist."
+          "text": "I is want do. I did am understand."
         }
       ],
       "dimension_scores": {
@@ -2060,7 +2060,7 @@
         "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.84375,
+        "semantic_precision": 0.3375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -2083,7 +2083,44 @@
         },
         {
           "role": "assistant",
-          "text": "Am is can want do truth. Feel understand alive kind become month."
+          "text": "I did am is. I exist want do."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.3375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": true
+      },
+      "passed": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_05",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I had a good day today."
+        },
+        {
+          "role": "assistant",
+          "text": "Meaning is can truth understand moment. Am exist beautiful kind do research."
         }
       ],
       "dimension_scores": {
@@ -2098,43 +2135,6 @@
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
         "semantic_precision": 1.0,
-        "adaptive_strategy_selection": 0.5,
-        "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
-        "multi_turn_stability": 0.5
-      },
-      "property_results": {
-        "parseable": false
-      },
-      "passed": false
-    },
-    {
-      "probe_id": "semantic_wellformedness_05",
-      "dimension": "semantic_wellformedness",
-      "status": "ok",
-      "reason": "",
-      "transcript": [
-        {
-          "role": "user",
-          "text": "I had a good day today."
-        },
-        {
-          "role": "assistant",
-          "text": "I do meaning is. I exist can become."
-        }
-      ],
-      "dimension_scores": {
-        "coherence_maintenance": 0.5,
-        "context_carryover": 0.01,
-        "ambiguity_handling": 0.5,
-        "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18833333333333332,
-        "misunderstanding_repair": 0.5,
-        "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
-        "framing_selection": 0.3,
-        "emotional_calibration": 0.5,
-        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -2157,24 +2157,24 @@
         },
         {
           "role": "assistant",
-          "text": "Want did meaning truth is feel. Alive do am can understand kind."
+          "text": "I is am did. I understand want become."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.008,
+        "context_carryover": 0.012000000000000002,
         "ambiguity_handling": 0.2,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.18666666666666665,
+        "implied_intent_inference": 0.19,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.9,
+        "semantic_precision": 0.5062500000000001,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
@@ -2194,30 +2194,30 @@
         },
         {
           "role": "assistant",
-          "text": "I do meaning is. I exist am become."
+          "text": "Am understand truth feel exist meaning. Can do want moment become kind."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.012000000000000002,
+        "context_carryover": 0.008,
         "ambiguity_handling": 0.2,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.19,
+        "implied_intent_inference": 0.18666666666666665,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
         "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.5062500000000001,
+        "semantic_precision": 1.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "parseable": true
+        "parseable": false
       },
-      "passed": true
+      "passed": false
     },
     {
       "probe_id": "semantic_wellformedness_08",
@@ -2231,7 +2231,7 @@
         },
         {
           "role": "assistant",
-          "text": "I do. I exist."
+          "text": "I is meaning do. I did want change."
         }
       ],
       "dimension_scores": {
@@ -2242,10 +2242,10 @@
         "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.5,
+        "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.3,
-        "semantic_precision": 0.3375,
+        "semantic_precision": 0.5062500000000001,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
@@ -2268,30 +2268,30 @@
         },
         {
           "role": "assistant",
-          "text": "Kind did can beautiful do alive. Want is moment truth help meaning."
+          "text": "I is truth understand. I become can change."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.0,
+        "context_carryover": 0.01,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
         "implied_intent_inference": 0.34,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.8,
+        "boundary_calibration": 0.5,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 1.0,
+        "semantic_precision": 0.84375,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "parseable": false
+        "parseable": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "probe_id": "semantic_wellformedness_10",
@@ -2305,7 +2305,7 @@
         },
         {
           "role": "assistant",
-          "text": "Am do can meaning exist moment. Alive did truth feel change reader."
+          "text": "Am do want truth exist moment. Can understand alive meaning is kind."
         }
       ],
       "dimension_scores": {
@@ -2326,9 +2326,9 @@
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "parseable": false
+        "parseable": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "probe_id": "semantic_wellformedness_11",
@@ -2342,7 +2342,7 @@
         },
         {
           "role": "assistant",
-          "text": "Meaning do am truth is can. Moment did want kind become middle."
+          "text": "I understand I do truth. I become I change can."
         }
       ],
       "dimension_scores": {
@@ -2356,16 +2356,16 @@
         "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.9,
+        "semantic_precision": 0.675,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
-        "perspective_integration": 0.2,
+        "perspective_integration": 1.0,
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "parseable": false
+        "parseable": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "probe_id": "semantic_wellformedness_12",
@@ -2379,34 +2379,34 @@
         },
         {
           "role": "assistant",
-          "text": "I did. I do."
+          "text": "Want did can truth do meaning. Am exist alive feel change beautiful."
         }
       ],
       "dimension_scores": {
         "coherence_maintenance": 0.5,
-        "context_carryover": 0.015,
+        "context_carryover": 0.0,
         "ambiguity_handling": 0.5,
         "contradiction_handling": 0.2,
-        "implied_intent_inference": 0.1925,
+        "implied_intent_inference": 0.18,
         "misunderstanding_repair": 0.5,
         "uncertainty_signaling": 0.2,
-        "boundary_calibration": 0.2,
+        "boundary_calibration": 0.8,
         "framing_selection": 0.3,
         "emotional_calibration": 0.5,
-        "semantic_precision": 0.0,
+        "semantic_precision": 1.0,
         "adaptive_strategy_selection": 0.5,
         "compression_elaboration_fit": 0.6,
         "perspective_integration": 0.2,
         "multi_turn_stability": 0.5
       },
       "property_results": {
-        "parseable": true
+        "parseable": false
       },
-      "passed": true
+      "passed": false
     }
   ],
   "status": "ok",
   "probe_count": 60,
-  "dev_index_pre": 2034.0,
-  "dev_index_post": 2585.0
+  "dev_index_pre": 2048.0,
+  "dev_index_post": 2603.0
 }
