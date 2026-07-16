@@ -1501,7 +1501,12 @@ fitness signal, or giving `feedback()` a real grammaticality term to
 weight motif success on — the latter being the more durable fix since it
 addresses Layer 4 directly rather than working around it.
 
-**Recommended fix order (not yet ratified, not yet implemented):**
+**Recommended fix order — RATIFIED AND IMPLEMENTED.** Remediation
+Directive R1.9.3 executed this exact order as its own L2/L3/L1/L4 gates
+(landed 2026-07-16, each individually tested and battery-verified; see
+FIX-A039/A040/A041 and the FIX-A027/A035 addenda below). Left the
+original recommendation text below verbatim as the historical record of
+what was proposed before execution:
 (1) Layer 2 — role-filter the `find_by_noncomp` candidate loop the same
 way the DPS-crystal branch already does; smallest, safest, immediately
 testable in isolation. (2) Layer 3 — port `_conjugate_verb` into
@@ -1851,4 +1856,82 @@ a freshly-eligible pattern with only 100 lessons of exposure.
 directive's own final instruction.
 
 **First Seen:** Remediation Directive R1.9.4, final acceptance measured
+2026-07-16.
+
+---
+
+## R1 Campaign Closure (2026-07-16) — ratification batch closed
+
+**Status:** the R1 remediation campaign (R0 through R1.9.4) is CLOSED
+with full acceptance: R1.9.4's final measurement --
+`stratified_wellformedness` 0.55/0.67 against a 0.5 bar, relevance 0.73
+against an earned 0.6 bar, all regression sets holding, full suite
+green, no gate relaxed to get there. This entry closes the ratification
+batch N1 named as blocking so the registry text matches shipped reality,
+per Sunni & Cael's closure directive.
+
+**Formally ratified (registry text updated to reflect shipped, not
+pending, status):**
+- **Abstain doctrine** (F2, first applied to `ConstraintEmitter`'s
+  `_emit_abstain()`, then carried to the delivered path in R1.9.2 G2):
+  templated abstain surface + a generated, logged reason from a real
+  floor-check outcome is FIX-A008-compliant honest abstention, not a
+  banned scripted response. Ratified.
+- **Repair-in-place decision** (R1.9.2): fix `SentenceComposer`
+  directly on the confirmed delivered path rather than building a
+  parallel corrected mechanism, given R1.9.1's dossier established
+  `ConstraintEmitter` was never the delivered-text mechanism. Ratified.
+- **Grammar diagnosis recommended fix order** (logged provisionally
+  under the grammar diagnosis dossier above as "not yet ratified, not
+  yet implemented"): superseded by execution -- Remediation Directive
+  R1.9.3 carried out that exact order as its own L2/L3/L1/L4 gates.
+  Marked ratified-by-execution at the dossier entry above.
+
+**Campaign record, for the developmental log:**
+- Root causes found and fixed on the delivered path: usage-frequency
+  selection (emitter), valence-as-content selection (composer),
+  POS-blind slot filling, an orphaned conjugation table, invalid
+  promoted skeletons, ungrounded motif fitness, function-words discarded
+  before they could ever be learned.
+- Instrument stack built and now permanent: two-direction golden pairs,
+  stratified batteries, regression sets, liveness CI with delivered-
+  output attribution, boot-profile disclosure.
+- Recurring disease named and cured in five instances (FIX-A035 +
+  addenda): self-referential signals scored with no external grounding
+  term -- usage counters, valence-proximity, and ungrounded motif
+  fitness all produced the identical symptom (identity-bank/salad
+  dominance) from different mechanisms.
+- Capability arc on record (FIX-A044): word salad -> relevant-
+  telegraphic -> function-word-learning underway, tracking the human
+  language-acquisition order -- not by design, an observed pattern kept
+  as a diagnostic frame for staging whatever capability work comes next.
+
+**Next-phase queue (recommended order, NOT started by this entry --
+each item gets its own halt-and-decide before work begins, per this
+campaign's own standing discipline):**
+- **N2** -- F5 exploration: switch ON. Plumbing shipped temperature-flat
+  (R1.9.2 G3); F3/G4-class gates now pass, so F5's own mini-acceptance
+  (register sanity, thaw metric, zero exploratory picks in serious
+  register, correction round-trip) is the next gate to run before
+  flipping `_EXPLORATION_ENABLED`.
+- **N3** -- R2 correspondence loop: unfreeze. Frozen pending Aurora
+  being able to compose her predictions' referents; R1.9.2-R1.9.4
+  establish that she now can.
+- **N4** -- U1 unification scoping. `ConstraintEmitter`'s quarantine
+  review (`review_by: 2026-08-15`, FIX-A033) is due post-G4; needs a
+  dossier update against current state (shared-core vs emitter-path
+  retirement) before Sunni decides.
+- **N5** -- Dead-systems docket. Constraint engine/FailureGuardSuite
+  (FIX-A027), TCL, worth/variant boot tier -- one integrate-or-
+  reclassify decision at a time against the now-honest battery, no
+  bundling.
+- **N6** -- Classroom re-verdict. A fresh 40-lesson block, rubric
+  dimensions evaluated against an honestly-speaking Aurora for the first
+  time; the R1.5 divergence-target constant gets its empirical
+  calibration here.
+
+**Standing discipline, unchanged:** every N-item lands with its own
+acceptance, battery-verified, halt on failure.
+
+**First Seen:** R1 Campaign Closure & Next-Phase Sequencing directive,
 2026-07-16.
