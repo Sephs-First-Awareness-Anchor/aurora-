@@ -899,3 +899,116 @@ directly to the daemon's smaller `n=4` cycles, so the fix stands on its
 own merits independent of that one sample.
 
 **First Seen:** Remediation Addendum R1.5, 2026-07-15.
+
+---
+
+## FIX-A025 (ARCHITECTURAL) — Verified-fresh telemetry rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** Citing a state/log file as live evidence without checking
+whether anything actually still writes to it.
+
+**Correct Form:** No state/log file may be cited or read as live
+evidence without an mtime check against the investigation window. A
+file existing on disk with a plausible name is not proof it's current.
+
+**Why:** The R1.6 addendum named `aurora_state/fgae_turn_log.jsonl` and
+`aurora_state/dual_strata_frame_log.jsonl` as existing live telemetry.
+Both were stale -- last written weeks before that investigation's own
+12-day window began (`DualStrataBridge.persist()` explicitly replaced
+its on-disk frame log with an in-memory-only deque; nothing currently
+writes `fgae_turn_log.jsonl` at all). Caught only because the tracing
+work checked mtimes before reading -- reading them unchecked would have
+fabricated "live" telemetry from dead files and corrupted the R1.6
+failure-shape classification.
+
+**First Seen:** Remediation Addendum R1.6, 2026-07-15 (correction #1),
+logged formally in Remediation Addendum R1.7, 2026-07-15.
+
+---
+
+## FIX-A026 (ARCHITECTURAL) — Stratified-metric rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A single blended mean reported across a heterogeneous
+population of measurements, hiding a real subgroup collapse inside an
+average that looks healthy.
+
+**Correct Form:** Any coherence/competence metric spanning
+heterogeneous prompt classes must be reported per-stratum, never as one
+blended number -- `aurora_internal/aurora_semantic_probe_battery.py::
+BatteryReport.stratified_wellformedness_summary()`, reported alongside
+(never instead of) the per-dimension breakdown.
+
+**Why:** R1.5 reported `semantic_wellformedness` as a single mean
+(0.417, 0.917, 0.833, 0.75 across four runs) and called it "healthy,"
+directly feeding Phase R1.5's own substrate-ordering theory refutation.
+R1.6's trace reopened that conclusion: every abstract-framed probe
+(`contradiction_handling`, `uncertainty_signaling`) produced incoherent
+word-salad, while simple_concrete probes stayed fine -- the blend was
+averaging catastrophe against health and reporting the result as fine.
+Blended means are accumulation-metric hazards (FIX-A021) in a new
+costume.
+
+**First Seen:** Remediation Addendum R1.5 reopened by Remediation
+Addendum R1.6/R1.7, 2026-07-15.
+
+---
+
+## FIX-A027 (ARCHITECTURAL) — Liveness rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** `verify_*()`/self-test passing green is read as proof a
+module participates in the live runtime, when self-tests only prove the
+module's OWN logic works in isolation.
+
+**Correct Form:** Every module claiming a runtime governance or
+monitoring role must show real call-site reachability from
+`boot_aurora()`'s live path before its behavior is trusted as active.
+Claimed-but-unwired modules belong in an explicit quarantine manifest so
+their status is a documented decision, not an accident discovered
+mid-investigation.
+
+**Why:** `UncertaintySignalingGuard`/`FailureGuardSuite`/`ConstraintEngine`
+(`aurora_constraint_engine.py`) has real, correct, well-tested guard
+logic and its own passing `__main__` self-test demonstrating
+`acknowledge_uncertainty()` -- but `ConstraintEngine` is never
+instantiated anywhere in the live `boot_aurora()` path, and
+`feed_evidence()`/`govern()`/`acknowledge_uncertainty()` have zero call
+sites anywhere outside that same self-test block. The R1.6 addendum's
+prime suspect (this guard blocking hedged expression) was clearable by
+direct grep evidence in minutes specifically because this discipline was
+applied -- without it, the guard's convincing self-test could easily
+have been mistaken for proof of live participation.
+
+**First Seen:** Remediation Addendum R1.6, 2026-07-15 (constraint-engine
+finding), logged formally in Remediation Addendum R1.7, 2026-07-15.
+
+---
+
+## FIX-A028 (ARCHITECTURAL) — Regression-set rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** Fixing an instrument bug without preserving the exact
+inputs that exposed it, so a future edit can silently reintroduce the
+same failure mode.
+
+**Correct Form:** Every instrument bug fixed converts its triggering
+cases into a permanent regression set for that instrument --
+`tests/test_generation_collapse_regression.py` holds all 24 verbatim
+garbled responses from the R1.6 failure-shape trace (must always be
+rejected) plus an equal-sized set of genuinely fine short sentences,
+including the specific preposition-led false-negative class already
+found once (must always pass).
+
+**Why:** `_parseable()`'s short-clause evasion (clauses under 6 words
+bypassed the function-word check entirely) let 16 of 24 real garbled
+Aurora responses through as `parseable=True`. A fix without a pinned
+regression set is only verified against the cases the fixer happened to
+think of.
+
+**First Seen:** Remediation Addendum R1.7, 2026-07-15, Track A1.

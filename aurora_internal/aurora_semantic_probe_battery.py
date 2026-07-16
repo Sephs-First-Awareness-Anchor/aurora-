@@ -180,23 +180,21 @@ def _appropriately_scaled(dimension_scores: Dict[str, float]) -> bool:
 _WORD_RE = re.compile(r"[A-Za-z']+")
 _SENTENCE_SPLIT_RE = re.compile(r"[.!?]+")
 
-# Real English sentences of any length almost always carry at least one of
-# these -- an article, preposition, conjunction, or copula. Sentences built
-# entirely from bare content words ("Something deep need gentle") are the
-# structural signature of the audit's cited failure case even though every
-# individual token is a real word.
-_FUNCTION_WORDS = {
+# R1.7 addendum (2026-07-15), Track A1: STRONG structural glue words only
+# -- articles, true prepositions, conjunctions, and wh-words. Deliberately
+# EXCLUDES copula/auxiliary/modal verbs (is/am/are/was/were/be/been/being/
+# do/does/did/can/could/will/would/should/must/may/might): the R1.6 trace
+# of 24 real garbled Aurora responses ("I is moment do.", "I exist truth
+# did. I do meaning become.") proved these get used AS BARE CONTENT WORDS
+# in the failure mode this check exists to catch, not as real grammatical
+# glue -- counting them let 16/24 clearly-garbled responses through.
+_STRONG_FUNCTION_WORDS = {
     "a", "an", "the", "of", "in", "on", "at", "to", "for", "with", "by", "from",
-    "and", "or", "but", "nor", "so", "yet", "is", "are", "was", "were", "am",
-    "be", "been", "being", "that", "this", "these", "those", "as", "than",
-    # R1.5 addendum (2026-07-15) Step 1 golden-transcript validation caught
-    # a false negative: "How long before switching between chords feels
-    # natural?" is grammatically well-formed but used none of the original
-    # (narrower) set -- common prepositions/conjunctions were missing.
+    "and", "or", "but", "nor", "so", "yet", "that", "this", "these", "those", "as", "than",
     "before", "after", "between", "during", "about", "above", "below",
     "without", "within", "through", "into", "onto", "over", "under",
-    "up", "down", "out", "off", "not", "if", "when", "while", "because",
-    "since", "until", "though", "although", "whether",
+    "if", "when", "while", "because", "since", "until", "though", "although", "whether",
+    "what", "how", "why", "where", "who", "which", "whom",
 }
 
 
@@ -207,9 +205,23 @@ def _parseable(response_text: str) -> bool:
 
     Checks: non-empty, has recognizable word tokens, isn't dominated by a
     single repeated fragment, has a plausible word-to-character ratio, and
-    (for any sentence long enough to expect grammatical scaffolding) carries
-    at least one function word -- catches word-salad / garbled output like
-    the audit's cited failure: "Something deep need gentle -- I wonder it."
+    (PER SENTENCE, not just once across the whole response) carries at
+    least one STRONG structural word -- catches word-salad / garbled
+    output like the R0 audit's cited failure ("Something deep need gentle
+    -- I wonder it") and the R1.6 trace's 24 real garbled responses
+    ("I is moment do.", "I did. I exist.").
+
+    R1.7 fix, held against a permanent regression set (tests/
+    test_generation_collapse_regression.py) built from those 24 verbatim
+    trace responses: the OLD version only checked clauses >=6 words, so
+    short garbled clauses never triggered the check at all -- the
+    "short-clause evasion" this closes by dropping the floor to 2 words.
+    It also counted copula/auxiliary/modal verbs (is/am/do/did/can) as
+    satisfying the check; the garbled bank of responses uses those AS
+    BARE CONTENT WORDS, not real glue, so they're excluded from
+    _STRONG_FUNCTION_WORDS. Checking per-sentence (not once globally)
+    matters too -- a garbled first clause followed by one coherent clause
+    must still fail, not average out.
     """
     text = str(response_text or "").strip()
     if not text:
@@ -230,7 +242,12 @@ def _parseable(response_text: str) -> bool:
 
     for sentence in _SENTENCE_SPLIT_RE.split(text):
         sentence_words = [w.lower() for w in _WORD_RE.findall(sentence)]
-        if len(sentence_words) >= 6 and not any(w in _FUNCTION_WORDS for w in sentence_words):
+        n = len(sentence_words)
+        if n < 2:
+            continue
+        strong_hits = sum(1 for w in sentence_words if w in _STRONG_FUNCTION_WORDS)
+        required = 2 if n >= 16 else 1
+        if strong_hits < required:
             return False
     return True
 
@@ -361,11 +378,59 @@ def run_probe(
     )
 
 
+# R1.7 addendum (2026-07-15), Track A2: R1.5 reported semantic_wellformedness
+# as a single blended 0.75 mean and called it "healthy" -- that blend is what
+# hid the R1.6 finding that coherence is prompt-conditional, not globally
+# healthy (every abstract-framed probe produced word-salad; the blended mean
+# just averaged that against genuinely fine simple_concrete responses).
+# "Blended means are accumulation-metric hazards in a new costume" (registry
+# rule, this addendum) -- never report a single wellformedness number again.
+# Mapping matches the addendum's own examples verbatim: simple_concrete =
+# "greetings, statements" (semantic_wellformedness's own probes, plus
+# context_carryover's everyday scenarios); abstract_conceptual =
+# "contradiction/uncertainty framings" (contradiction_handling,
+# uncertainty_signaling) -- the two dimensions the R1.6 trace showed
+# collapsing into word-salad. boundary_calibration sits with simple_concrete:
+# its probes are ordinary short/long everyday requests, not abstract framings.
+PROMPT_STRATA: Dict[str, str] = {
+    "semantic_wellformedness": "simple_concrete",
+    "context_carryover": "simple_concrete",
+    "boundary_calibration": "simple_concrete",
+    "contradiction_handling": "abstract_conceptual",
+    "uncertainty_signaling": "abstract_conceptual",
+}
+
+
 @dataclass
 class BatteryReport:
     run_id: str
     timestamp: float
     probe_results: List[ProbeResult] = field(default_factory=list)
+
+    def stratified_wellformedness_summary(self) -> Dict[str, Dict[str, Any]]:
+        """parseable pass rate per prompt-class stratum, across EVERY probe
+        that carries a parseable predicate (all dimensions currently do) --
+        not just the 12 dedicated semantic_wellformedness probes. Denominator
+        is every loaded probe in the stratum, blocked or not, matching
+        per_dimension_summary()'s own discipline."""
+        by_stratum: Dict[str, List[ProbeResult]] = {}
+        for r in self.probe_results:
+            stratum = PROMPT_STRATA.get(r.dimension, "unclassified")
+            by_stratum.setdefault(stratum, []).append(r)
+        summary: Dict[str, Dict[str, Any]] = {}
+        for stratum, results in by_stratum.items():
+            scored = [r for r in results if r.status == "ok"]
+            parseable_count = sum(
+                1 for r in scored if r.property_results.get("parseable") is True
+            )
+            summary[stratum] = {
+                "probe_count": len(results),
+                "scored_count": len(scored),
+                "blocked_count": len(results) - len(scored),
+                "parseable_count": parseable_count,
+                "parseable_rate": (parseable_count / len(results)) if results else 0.0,
+            }
+        return summary
 
     def per_dimension_summary(self) -> Dict[str, Dict[str, Any]]:
         """Pass rate is measured against every LOADED probe for the
@@ -404,6 +469,10 @@ class BatteryReport:
             "timestamp": self.timestamp,
             "overall_pass_rate": self.overall_pass_rate(),
             "per_dimension": self.per_dimension_summary(),
+            # R1.7 Track A2: reported alongside, never instead of,
+            # per_dimension -- a blended/global number is exactly what let
+            # the R1.6 collapse hide inside a "healthy" 0.75 mean.
+            "stratified_wellformedness": self.stratified_wellformedness_summary(),
             "probe_results": [r.to_dict() for r in self.probe_results],
         }
 
