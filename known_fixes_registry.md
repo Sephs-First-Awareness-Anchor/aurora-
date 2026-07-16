@@ -1678,3 +1678,177 @@ wanted; not started here.
 
 **First Seen:** Remediation Directive R1.9.3, final acceptance measured
 2026-07-16.
+
+---
+
+## FIX-A043 (ARCHITECTURAL) — Two-direction golden rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** An instrument/predicate is refined to admit cases it
+previously (wrongly) rejected, and only the "does it now accept the
+new-valid cases" direction gets checked -- the "does it still reject
+everything it correctly rejected before" direction is assumed to hold
+because nothing about THAT logic was touched.
+
+**Correct Form:** Any predicate refinement re-validates BOTH directions
+before going live: (1) failure retention -- every existing regression
+case that correctly failed before must still fail, verified against the
+UNCHANGED permanent regression set; (2) new-validity admission -- a
+freshly hand-authored golden set of both newly-valid and still-invalid
+cases must separate cleanly. Loosening a check and tightening a check
+are both guarded by the same discipline; a refinement is only "live"
+once both directions hold simultaneously.
+
+**Why:** R1.9.4 Step 1 replaced `_parseable`'s function-word-presence
+requirement with a real clause-structure check specifically so it would
+stop rejecting valid telegraphic sentences ("She sings well.") -- a pure
+loosening in intent. Applied blind, that loosening could easily have also
+let real word salad back through (a bare-verb-count check alone doesn't
+distinguish "I did. I exist." from "I understand completely." without
+the missing-determiner/strong-word interplay this directive explicitly
+required testing for). Building the golden set in both directions at
+once (10 valid-telegraphic-must-pass, 5 malformed-must-fail) caught this
+by construction rather than after the fact.
+
+**First Seen:** Remediation Directive R1.9.4 Step 1, 2026-07-16.
+
+---
+
+## FIX-A044 (COMMENTARY) — Acquisition-sequence diagnostic frame
+
+**Category:** COMMENTARY
+
+Delivered-output quality in this campaign progressed through stages that
+track the human language-acquisition order, not by design but as an
+observed pattern worth recording for future capability staging:
+
+1. **Salad** (pre-R1.9.2): word-salad, wrong parts of speech in
+   arbitrary slots, no reliable subject or verb.
+2. **Relevant-telegraphic** (post-R1.9.2/R1.9.3, L1-L4): correct parts
+   of speech in correct slots, valid minimal subject-verb(-object)
+   clause shapes, topically relevant to the turn -- but bare, missing
+   function words (articles, most prepositions).
+3. **Function-word-complete** (R1.9.4 target): determiners/prepositions
+   present where clause structure demands them.
+
+Each stage is a genuinely different capability floor, not a single
+"grammar" axis -- R1.9.2/R1.9.3 fixed word-selection and clause-skeleton
+validity; R1.9.4 addressed the function-word layer, first by discovering
+the instrument itself was conflating salad-detection with function-word-
+presence (Step 1), then by building the schema for function-word slots to
+even be learnable (Step 3b). Recorded so a future diagnosis at any later
+stage can check "which acquisition stage are we actually at" before
+assuming the next fix is more word-selection or more skeleton-validity
+work when it might be a different capability entirely.
+
+**First Seen:** Remediation Directive R1.9.4 trigger note, 2026-07-16.
+
+---
+
+## FIX-A045 (ARCHITECTURAL) — Earned-floor rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** An acceptance floor set early in a remediation campaign (when
+a capability was known to be weak or entirely absent) is left unchanged
+as later fixes land, so the floor stops functioning as a real bar once
+the system has clearly outgrown it -- or, in the other failure direction,
+a floor gets raised without evidence the underlying capability actually
+improved, silently hiding a regression as a "known limitation."
+
+**Correct Form:** Acceptance floors ratchet upward only as evidence
+justifies it, and the ratchet is recorded, not silent: when a capability
+genuinely improves (verified against real measurement, not assumed), its
+floor rises to match; the new floor is stated explicitly alongside the
+evidence that earned it, so a future reviewer can see the floor's history,
+not just its current value.
+
+**Why:** R1.9.2 G4 set relevance's floor at 0.3, appropriate when
+relevance-primary selection had just landed and headroom was unknown.
+By R1.9.4, three full remediation phases later, relevance had held at
+0.5-0.75 consistently across a dozen+ battery runs with zero regressions
+-- R1.9.4 raised the floor to 0.6 explicitly BECAUSE of that track record
+("it's earned a higher floor than 0.3 now"), not as an arbitrary
+tightening. The same discipline applies to stratified_wellformedness: G4
+set it at 0.3 (already failing), R1.9.3 raised it to 0.5 (still failing,
+honestly reported), R1.9.4's Step 1 instrument fix revealed the true
+number was 0.5-0.7 all along, masked by an over-strict predicate -- the
+floor didn't change, but the honest reading of it did, which is exactly
+the failure mode this rule exists to keep visible instead of silently
+absorbed into "well, it's close enough."
+
+**First Seen:** Remediation Directive R1.9.4 acceptance criteria,
+2026-07-16 (relevance floor 0.3 -> 0.6, explicit and evidenced).
+
+---
+
+## FIX-A046 (VERIFICATION) — R1.9.4 function-word gate, full acceptance
+
+**Category:** VERIFICATION
+
+All three steps landed as three separate commits, each individually
+tested and battery-verified, per the directive's process.
+
+**Step 1 (predicate refinement):** `_parseable` reworked from
+function-word-presence to clause-structure assessment (a plausible
+subject + single verb + complement/modifier shape via coarse POS
+categories, plus a missing-determiner check) with strong-word presence
+demoted to one path to pass rather than the only one. Two-direction
+golden guard (FIX-A043) confirmed clean: the unchanged 24-case + original-
+audit regression set stays green, the 4 grammar micro-regression cases
+still fail, 10 new hand-authored telegraphic-valid sentences now pass,
+5 new hand-authored article-malformed sentences correctly fail.
+
+**Step 2 (honest re-baseline):** 3x battery under the refined predicate
+with ZERO composer changes. Delta decomposition, reported exactly as
+measured: R1.9.3's final 0.0-0.06 stratified_wellformedness reading was
+overwhelmingly INSTRUMENT over-strictness, not a real capability gap --
+simple_concrete jumped to a 0.71 mean, abstract_conceptual to 0.58,
+relevance held at 0.72. Both strata already cleared the directive's 0.35
+narrow-gap fork threshold by a wide margin before any Step 3 work.
+
+**Step 3 (gap fix, narrow-gap branch -- 3b only, 3a shelved):**
+Investigation confirmed connector's category gate already accepted
+"preposition" but the miner/observer (`RoleTagger`) threw prepositions
+AND determiners away entirely during pattern extraction -- no mined or
+observed motif could ever contain either slot type regardless of fitness
+grounding. Added `TokenRole.DETERMINER` as a genuine sibling to
+CONNECTOR, routed true prepositions into the existing CONNECTOR role,
+added the missing DETERMINER->OBJECT positional fallback, widened
+`_select_constraint_word`'s last-resort search to a slot's full category
+(not a single lex_role string), and added two determiner-inclusive
+shapes to L1's whitelist -- eligibility only, no forced promotion. 100
+post-fix classroom lessons ran clean (0 errors, divergence mean 0.222,
+99/100 nonzero) and the mining loop organically observed 10
+determiner-inclusive motifs for the first time this campaign has ever
+recorded -- none force-promoted, exactly "the loop earns it."
+
+**Final acceptance, measured 3x, reported exactly as run:**
+- Step 1 golden separation + regression retention: **PASS** (both
+  directions clean, verified above).
+- Stratified wellformedness >=0.5/stratum under the REFINED predicate:
+  **PASS** -- simple_concrete 0.64/0.42/0.58 (mean 0.55), abstract_
+  conceptual 0.67/0.54/0.79 (mean 0.67).
+- Relevance >=0.6 (raised floor, FIX-A045): **PASS** -- 0.67/0.77/0.75
+  (mean 0.73), every individual run clearing 0.6 on its own.
+- Grammar micro-regression set holds: **PASS** (unchanged from Step 1,
+  reverified in the full suite).
+- Suite green: **PASS** -- 771 passed, 1 pre-existing unrelated failure
+  (baseline unchanged throughout this entire campaign).
+
+R1.9.2/R1.9.3/R1.9.4 together resolve the full grammar diagnosis this
+sub-campaign opened with: word selection, clause-skeleton validity,
+surface conjugation, motif-fitness grounding, the wellformedness
+instrument itself, and the function-word slot schema. Remaining known
+gap: function-word-complete generation (stage 3 of FIX-A044's
+acquisition sequence) is schema-eligible but not yet the DOMINANT
+composition pattern -- the 10 observed determiner-inclusive motifs are
+real but unpromoted, exactly the state "the loop earns it" predicts for
+a freshly-eligible pattern with only 100 lessons of exposure.
+
+**Disposition:** halting for U1/exploration sequencing, per the
+directive's own final instruction.
+
+**First Seen:** Remediation Directive R1.9.4, final acceptance measured
+2026-07-16.
