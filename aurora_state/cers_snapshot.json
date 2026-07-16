@@ -3,58 +3,62 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.4883,
-      "label": "explain"
+      "intensity": 0.5428,
+      "label": "contextualize"
     },
     "dominant_axis": "N",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "use"
+      ],
       "interaction_state": "present",
-      "present_anchor": "search youtube for lofi hip hop radio",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:recalled:...",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.0
+        "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.0
+      "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
     "readiness": 0.45,
-    "selected_action": "explain",
+    "selected_action": "contextualize",
     "should_speak": true,
-    "stance": "interpretive_explanation",
+    "stance": "contextual_continuity",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5047,
-      "label": "steady"
+      "intensity": 0.5826,
+      "label": "continuity_stable"
     },
-    "timestamp": 1784195009.1028903
+    "timestamp": 1784233929.0958538
   },
-  "saved_at": 1784195009.1030428,
+  "saved_at": 1784233929.0960689,
   "subsurface_state": {
     "dominant_axis": "N",
-    "frame_request": "balanced",
+    "frame_request": "observation",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "use"
+      ],
       "interaction_state": "present",
-      "present_anchor": "search youtube for lofi hip hop radio",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:recalled:...",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.0
+        "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.0
+      "reinforcement_hint": 0.6514
     },
     "sub_crests": [
       {
         "axis": "X",
-        "intensity": 0.5,
+        "intensity": 0.581,
         "label": "attentional_drift"
       },
       {
         "axis": "T",
-        "intensity": 0.65,
-        "label": "unfamiliar"
+        "intensity": 1.0,
+        "label": "continuity_pull"
       },
       {
         "axis": "A",
@@ -63,18 +67,18 @@
       },
       {
         "axis": "X",
-        "intensity": 0.8875,
-        "label": "steady_continuation"
+        "intensity": 0.49,
+        "label": "surprise"
       },
       {
-        "axis": "X",
-        "intensity": 0.5,
-        "label": "alignment"
+        "axis": "N",
+        "intensity": 1.0,
+        "label": "novelty"
       },
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_slipping"
+        "label": "thread_holds"
       },
       {
         "axis": "N",
@@ -85,12 +89,27 @@
         "axis": "X",
         "intensity": 1.0,
         "label": "calm"
+      },
+      {
+        "axis": "X",
+        "intensity": 0.7817,
+        "label": "surface"
+      },
+      {
+        "axis": "X",
+        "intensity": 0.8055,
+        "label": "surface"
+      },
+      {
+        "axis": "X",
+        "intensity": 0.821,
+        "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5047,
-      "label": "steady"
+      "intensity": 0.5826,
+      "label": "continuity_stable"
     }
   }
 }

@@ -2394,3 +2394,118 @@ queue, 2026-07-16. Closes the N5 dead-systems docket (items 1-3 all
 resolved: FailureGuardSuite/ConstraintEngine RECLASSIFY-recommended,
 ToroidalCirculationLayer CONFIRMED LIVE via corrected wiring test,
 worth/variant tier CONFIRMED LIVE via corrected manifest evidence).
+
+---
+
+## N6 — Classroom re-verdict: fresh 45-lesson block, honest divergence calibration
+
+**Status:** final item of the R1 Campaign Closure directive's next-phase
+queue. Closes the entire N-item queue (N1-N6). Live data-collection run
+plus analysis; no production code changed.
+
+**A note on "the four rubric dimensions":** the closure directive's own
+text says N6 should evaluate "the four rubric dimensions." Investigation
+found no set of exactly four anywhere in the actual codebase —
+`aurora_classroom.py`'s `_DEFAULT_CANDIDATE_DIMENSIONS` and
+`aurora_internal/aurora_conversation_rubric_engine.py`'s
+`RUBRIC_DIMENSIONS` both enumerate the same 15 canonical dimensions
+(coherence_maintenance, context_carryover, ambiguity_handling,
+contradiction_handling, implied_intent_inference, misunderstanding_repair,
+uncertainty_signaling, boundary_calibration, framing_selection,
+emotional_calibration, semantic_precision, adaptive_strategy_selection,
+compression_elaboration_fit, perspective_integration,
+multi_turn_stability). Rather than guess which four were meant and
+under-report the rest, all 15 were run and evaluated — the honest choice
+per this campaign's own "report honestly, never fudge" discipline.
+
+**What ran:** a fresh 45-lesson classroom block (3 segments of 15 --
+`select_curriculum()` only draws from the known candidate-dimension pool
+once per call with no cycling, so multiple segments are needed to reach a
+real total past 15; this is the exact methodology R1.4 itself used to
+reach its own 45-lesson total, chosen here deliberately to make this an
+apples-to-apples before/after comparison). All 15 canonical dimensions
+got exactly 3 lessons each. Ran against the real repo `aurora_state`
+under `runtime_profile="full"` (not a scratch copy) — `classroom_log.jsonl`
+and `developmental_timeline.jsonl` growth from this run is genuine
+developmental accumulation, the actual point of the exercise, not
+incidental test pollution.
+
+**Self-reported process error (mid-task, not silently absorbed):** the
+first attempt ran only 15 lessons in one `select_curriculum()` call
+(hitting the same one-call-per-15-dimension ceiling described above,
+not yet understood at that point) and a reflexive `git checkout --
+aurora_state/` cleanup pass -- applied out of habit from this campaign's
+established "revert incidental pollution" discipline, without checking
+whether these particular changes were pollution or the actual intended
+data -- reverted those 15 real, freshly-generated lessons before they
+were committed. They are not recoverable byte-for-byte. Corrected by
+re-running the complete 45-lesson block cleanly in one process this
+time, and by NOT blanket-reverting `aurora_state/` afterward -- the full
+diff is committed as one state-churn commit, matching the same pattern
+this campaign's own git history already established for every prior
+genuine classroom/training run (R1.4, R1.6, R1.9.1, R1.9.2 G4, etc. --
+all committed their full `aurora_state/` diff as "State churn from
+<phase>," not a surgically filtered subset).
+
+**Results (45 lessons, this run) vs R1.4 pre-fix baseline (45 lessons,
+2026-07-15, before any of this campaign's grammar/relevance work):**
+
+| Metric | R1.4 pre-fix | N6 (this run) |
+|---|---|---|
+| divergence mean | 0.0993 | 0.1116 |
+| divergence nonzero | 42/45 | 44/45 |
+| divergence stdev | (not recorded) | 0.0284 |
+| R1.3's original target | >0.15 (never met) | >0.15 (still not met) |
+
+A real, modest improvement (+12.4% relative on the mean, and one fewer
+flat lesson out of 45) — consistent with, but smaller than, the grammar/
+relevance gains this campaign delivered elsewhere, because
+`divergence_score` measures entity-perspective DIFFERENTIATION (via
+`DivergenceTracker`), a downstream consequence of richer episode content
+reaching two differently-lensed entities, not a direct measurement of
+delivered-text grammar itself. Per-dimension divergence ranged narrowly,
+0.0725 (contradiction_handling) to 0.1375 (implied_intent_inference) —
+no dimension collapsed to nowhere near zero, and no dimension spiked
+implausibly high; a believable, non-flat spread across all 15.
+
+`episode_avg_fitness` (a SimulationEngine-internal pressure/avatar
+metric, distinct from delivered-text quality) stayed essentially flat
+for at least one directly comparable case:
+`uncertainty_signaling` fitness 0.0893 here vs R1.4's recorded 0.0871 --
+expected, since this campaign's fixes targeted `SentenceComposer`'s
+grammar/relevance path, not the classroom's internal pressure-fitness
+scoring, a genuinely separate subsystem. No regression implied; noted so
+"divergence improved" isn't overread as "everything the classroom
+measures improved."
+
+**Divergence-target empirical calibration (the "suspended constant from
+R1.5" this item exists to calibrate):** R1.3's original >0.15 bar was
+never empirically derived -- it was a provisional target set before any
+real post-fix data existed. This run is the first real data honestly
+speaking Aurora has produced against it. Per the earned-floor rule
+(FIX-A045: floors ratchet upward only as evidence justifies it, and the
+ratchet is recorded explicitly, never silent), a defensible, EARNED floor
+from this data would sit near the observed mean minus roughly one
+standard deviation (~0.08), not the ungrounded 0.15 -- but adopting a new
+formal acceptance floor is a decision for Sunni, exactly as FIX-A045
+requires, not something to silently substitute here. This entry records
+the calibration evidence; it does not itself change any gate.
+
+**Verification:** the run itself IS the acceptance evidence for this
+item (a live 45-lesson block against the honest instrument stack, per
+N6's own description). No code was changed, so no pytest regression risk
+was introduced; a targeted re-run of the affected test files
+(`tests/test_governance_liveness.py`, `tests/test_flow_audit_and_tcl_
+wiring.py`) plus the full suite were already confirmed green earlier in
+this session (N5 items 2-3), and this item touches no code path those
+tests exercise.
+
+**Closes the R1 Campaign Closure directive's entire next-phase queue
+(N1-N6), all landed with their own acceptance, battery-verified, halt
+documented where a judgment call was left to Sunni rather than taken
+unilaterally (N2's redesign path, N4's ConstraintEmitter fate, N5 item
+1's FailureGuardSuite reclassification, and now N6's divergence-floor
+ratchet).**
+
+**First Seen:** N6, R1 Campaign Closure directive's next-phase queue,
+2026-07-16.
