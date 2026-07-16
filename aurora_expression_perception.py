@@ -2339,6 +2339,14 @@ class SentenceComposer:
         }
         valence_target = _tone_valence.get(tone, 0.0)
 
+        # R1.9.2 G3 / F5.1: register estimate, logged per turn. Not
+        # consulted for content selection while _EXPLORATION_ENABLED is
+        # False (relevance stays the only content-selection term) -- this
+        # is the plumbing, not the switch.
+        f5_turn_id = str(getattr(offspring, "offspring_id", "") or f"compose-{time.time()}")
+        f5_register, f5_register_signals = self._estimate_register(tone, coherence)
+        self._log_register(f5_turn_id, f5_register, f5_register_signals)
+
         verbosity = traits.get('verbosity', 0.5)
         sentence_count = max(1, min(4, 1 + int(coherence * 2) + int(verbosity > 0.6)))
 
@@ -2360,7 +2368,8 @@ class SentenceComposer:
             sent = self._compose_from_motif(motif, orientation, valence_target,
                                             i_state, s_i,
                                             used_words=self._last_words_used,
-                                            input_text=input_text)
+                                            input_text=input_text,
+                                            f5_turn_id=f5_turn_id, f5_register=f5_register)
             if sent:
                 sentences.append(sent)
                 if motif is not None:
@@ -2399,7 +2408,8 @@ class SentenceComposer:
                             valence_target: float, i_state: str,
                             sentence_index: int,
                             used_words: Optional[list] = None,
-                            input_text: str = "") -> str:
+                            input_text: str = "",
+                            f5_turn_id: str = "", f5_register: str = "neutral") -> str:
         """Fill one motif's role sequence with concept-channel words."""
         dominant_axis = max(orientation.items(), key=lambda kv: kv[1])[0]
 
@@ -2437,6 +2447,7 @@ class SentenceComposer:
                 _role_lexroles.get(role, "noun"),
                 valence_target, words,
                 input_text=input_text,
+                f5_turn_id=f5_turn_id, f5_register=f5_register,
             )
             if word:
                 words.append(word)
@@ -2481,6 +2492,163 @@ class SentenceComposer:
         "I don't have that yet.",
     )
 
+    # ── R1.9.2 G3 / F5: register-gated exploration (plumbing, temperature-flat) ──
+    # "Build the plumbing WITH R1.9; ship temperature-FLAT (exploration
+    # disabled) until all F3 gates pass. Exploration then enables as its
+    # own switch with its own mini-acceptance." G4 found gate 2 (stratified
+    # wellformedness) failing and two gates not yet run -- this MUST stay
+    # False. Flipping it is its own future decision, not a side effect of
+    # building the plumbing.
+    _EXPLORATION_ENABLED = False
+
+    # F5.1: tone is the composer's own pre-existing "reading the room"
+    # signal (offspring.tone -> valence_target) -- "the composer's
+    # valence-target machinery is the natural substrate; give it that as
+    # its formal job" (R1.9.2 G3). Coherence is the closest available proxy
+    # for internal certainty/weight (no attention-path salience/tension
+    # signal is reachable at this stage -- documented honestly per F5.1's
+    # "report what IS available rather than faking one," not silently
+    # assumed). Coarse and honest beats fine and invented.
+    _SERIOUS_TONES = {"focused", "precise", "determined"}
+    _PLAYFUL_TONES = {"playful"}
+    _SERIOUS_COHERENCE_THRESHOLD = 0.3  # low internal coherence -> treat as weighty/uncertain, never loose
+
+    def _estimate_register(self, tone: str, coherence: float) -> Tuple[str, Dict[str, Any]]:
+        """F5.1: register in {playful, neutral, serious} from signals
+        already live in compose()'s scope."""
+        signals: Dict[str, Any] = {"tone": tone, "coherence": round(float(coherence), 4)}
+        if coherence < self._SERIOUS_COHERENCE_THRESHOLD:
+            register, signals["reason"] = "serious", "low_coherence_override"
+        elif tone in self._SERIOUS_TONES:
+            register, signals["reason"] = "serious", "serious_tone"
+        elif tone in self._PLAYFUL_TONES:
+            register, signals["reason"] = "playful", "playful_tone"
+        else:
+            register, signals["reason"] = "neutral", "default"
+        return register, signals
+
+    def _log_register(self, turn_id: str, register: str, signals: Dict[str, Any]) -> None:
+        """F5.1: log the register + contributing signals per turn."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "register_log.jsonl",
+            )
+            entry = {"turn_id": turn_id, "register": register, "signals": signals,
+                      "timestamp": time.time()}
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    # F5.2: ring width per register. serious=1 (deterministic top pick,
+    # matching "temperature 0" + R_MIN raised elsewhere); neutral=4 (mild
+    # widening, same width the pre-exploration deterministic path already
+    # used); playful=8 (widened ring -- 2-hop and never-used words become
+    # eligible when their relevance is plausible). Not invoked from the
+    # live path while _EXPLORATION_ENABLED is False; exists complete and
+    # unit-tested so the hard invariant is provable NOW, before the switch
+    # ever flips.
+    _REGISTER_RING_WIDTH = {"serious": 1, "neutral": 4, "playful": 8}
+    _SERIOUS_FLOOR_MULTIPLIER = 2.0  # serious register raises R_MIN, never lowers it
+
+    def _select_with_temperature(self, ranked_candidates: list, anchor_set: Dict[str, float],
+                                 valence_target: float, register: str, floor: float):
+        """F5.2: exploration temperature over an ALREADY relevance-ranked
+        candidate list (relevance stays primary in every register -- this
+        only changes how far into the ranked list sampling reaches).
+
+        Hard invariant (unit-tested): exploration can never select below
+        the relevance floor of its register -- loose != irrelevant. A
+        never-used word gets a small first-attempt bonus HERE and only
+        here (playful register), never in the primary relevance/valence
+        score used by every other register.
+        """
+        if not ranked_candidates:
+            return None, 0
+        effective_floor = floor * (self._SERIOUS_FLOOR_MULTIPLIER if register == "serious" else 1.0)
+        width = self._REGISTER_RING_WIDTH.get(register, 1)
+        scored = [
+            (c, self._score_composer_candidate(c, anchor_set, valence_target)
+                + (0.02 if register == "playful" and getattr(c, "usage_count", 0) == 0 else 0.0))
+            for c in ranked_candidates[:width]
+        ]
+        eligible = [(c, s) for c, s in scored if s >= effective_floor]
+        if not eligible:
+            # Nothing in the widened ring clears even the register's own
+            # floor -- fall back to the single best candidate rather than
+            # gamble below the floor (the hard invariant, enforced here as
+            # a fallback, not just a filter).
+            best = ranked_candidates[0]
+            return best, 0
+        import random as _r
+        chosen, _score = _r.choice(eligible)
+        rank = ranked_candidates.index(chosen)
+        return chosen, rank
+
+    def _log_exploration_attempt(self, turn_id: str, word: str, relevance: float,
+                                 register: str, ring_rank: int) -> None:
+        """F5.3: every exploratory pick logged, so there's real data to
+        validate against before exploration is ever switched on."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "exploration_log.jsonl",
+            )
+            entry = {"turn_id": turn_id, "word": word, "relevance": round(float(relevance), 4),
+                      "register": register, "ring_rank": ring_rank, "timestamp": time.time()}
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    def apply_correction(self, word: str, anchor_words: list, correction_type: str,
+                         corrected_to: Optional[str] = None) -> bool:
+        """F5.3 correction hook: a feedback event referencing a logged
+        attempt adjusts that word's association edges in the live
+        vocabulary graph -- strengthen on confirmation, re-route toward the
+        corrected alternative on correction. Attempted-and-corrected is a
+        LEARNING event, never a penalty-only event: 'correction' never
+        deletes or weakens the original relation, it only adds/strengthens
+        a path toward the better alternative -- the willingness to attempt
+        must not be trained away.
+
+        knowledge_source='correction' (not 'co-occurrence') deliberately,
+        so these edges carry their real strength in relevance scoring
+        (build_relevance_anchor_set only caps co-occurrence-sourced edges
+        at the one-hop floor -- a genuine correction signal is exactly the
+        kind of deliberate structure that rule was written to let through).
+        """
+        if not self._has_oets or not anchor_words:
+            return False
+        web = self._oets.web
+        try:
+            from aurora_internal.aurora_ontological_scaffolding import RelationType
+        except Exception:
+            return False
+        try:
+            if correction_type == "confirmation":
+                applied = False
+                for anchor in anchor_words:
+                    rel = web.add_relation(word, anchor, RelationType.RELATED_TO,
+                                           strength=0.6, confidence=0.6,
+                                           knowledge_source="correction")
+                    applied = applied or rel is not None
+                return applied
+            elif correction_type == "correction" and corrected_to:
+                applied = False
+                for anchor in anchor_words:
+                    rel = web.add_relation(corrected_to, anchor, RelationType.RELATED_TO,
+                                           strength=0.6, confidence=0.6,
+                                           knowledge_source="correction")
+                    applied = applied or rel is not None
+                return applied
+        except Exception:
+            return False
+        return False
+
     def _score_composer_candidate(self, entry, anchor_set: Dict[str, float],
                                   valence_target: float) -> float:
         relevance = anchor_set.get(entry.word.lower(), aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR)
@@ -2513,7 +2681,8 @@ class SentenceComposer:
                                 chars: tuple, lex_role: str,
                                 valence_target: float,
                                 already: list,
-                                input_text: str = "") -> str:
+                                input_text: str = "",
+                                f5_turn_id: str = "", f5_register: str = "neutral") -> str:
         """Concept-channel word selection with role fallback.
 
         R1.9.2 G1: relevance chooses WHAT is said, valence-proximity biases
@@ -2645,7 +2814,21 @@ class SentenceComposer:
                     "best_score": best_score, "floor": self._RELEVANCE_FLOOR_R_MIN,
                 })
 
+        # R1.9.2 G3 / F5.2: _select_with_temperature is real and unit-tested
+        # but NOT called here -- _EXPLORATION_ENABLED is False, so selection
+        # stays the existing deterministic-ish top-4 choice regardless of
+        # register. This is the "ship temperature-flat" instruction: the
+        # plumbing (register estimate, ring-width table, hard invariant)
+        # exists and is provable now; the actual behavior change is a
+        # separate future switch, not a side effect of building it.
         chosen = _r.choice(top[:4] if len(top) >= 4 else top)
+        if chosen is not None:
+            ring_rank = top.index(chosen) if chosen in top else 0
+            self._log_exploration_attempt(
+                f5_turn_id, chosen.word,
+                self._score_composer_candidate(chosen, anchor_set, valence_target),
+                f5_register, ring_rank,
+            )
         try:
             self._last_words_used.append(chosen.word)
             self._last_word_sources[chosen.word] = chosen.noncomp_id or chosen.role

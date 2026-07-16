@@ -134,7 +134,7 @@ def _make_relevance_scorer(systems: Dict[str, Any]):
     return scorer
 
 
-def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
+def run_probe_battery(run_id: str = "", verbose: bool = True, runtime_profile: str = "surface") -> Dict[str, Any]:
     if not run_id:
         run_id = f"run_{int(time.time())}"
 
@@ -153,7 +153,7 @@ def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
     try:
         shutil.copytree(str(STATE_DIR), scratch_state_dir)
 
-        systems = boot_aurora(state_dir=scratch_state_dir, verbose=verbose, runtime_profile="surface")
+        systems = boot_aurora(state_dir=scratch_state_dir, verbose=verbose, runtime_profile=runtime_profile)
 
         try:
             pre_snapshot = record_developmental_snapshot(systems, force=True)
@@ -185,6 +185,11 @@ def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
         result.update({
             "status": "ok",
             "probe_count": probe_count,
+            # Boot-profile disclosure rule (FIX-A037): every measurement
+            # states the boot profile it ran under, since worth_evaluator/
+            # VariantPromoter and the rest of the intake-metabolism tier are
+            # only reachable under a non-"surface" profile.
+            "runtime_profile": runtime_profile,
             # dev_index is bracketed here for cross-reference only -- per the
             # directive, it is never the verdict. The probe score is.
             "dev_index_pre": (pre_snapshot or {}).get("dev_index"),
@@ -393,6 +398,15 @@ def main() -> int:
              "VOCABULARY/UNCLASSIFIED. Writes per-probe traces under "
              "aurora_state/probe_battery/traces/.",
     )
+    parser.add_argument(
+        "--full-profile", action="store_true",
+        help="R1.9.2 G4 gate 4 (dual boot-profile check): boot with the full "
+             "runtime profile instead of 'surface', reaching the intake-metabolism "
+             "tier (worth_evaluator, VariantPromoter, accountant, bias_engine, "
+             "solidification) that every prior campaign measurement has silently "
+             "excluded. Report states runtime_profile so results are never "
+             "mistaken for the surface-profile baseline.",
+    )
     args = parser.parse_args()
 
     if args.golden:
@@ -426,7 +440,10 @@ def main() -> int:
                 print(f"  VOCABULARY [{v['probe_id']}]: {v['response_text']!r}")
         return 0
 
-    result = run_probe_battery(run_id=str(args.run_id or ""), verbose=not args.quiet)
+    result = run_probe_battery(
+        run_id=str(args.run_id or ""), verbose=not args.quiet,
+        runtime_profile="full" if args.full_profile else "surface",
+    )
 
     RESULTS_DIR_PATH.mkdir(parents=True, exist_ok=True)
     run_id = result.get("run_id") or f"run_{int(time.time())}"
