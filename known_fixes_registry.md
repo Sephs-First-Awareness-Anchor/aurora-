@@ -2618,3 +2618,133 @@ and produced the same character of output (`constraint_abstain`/
 regression to real daemon-delivered speech.
 
 **First Seen:** Decision Memo ratification, 2026-07-16, Decision 2.
+
+### N2.1: input-anchored register rebuild + F5 exploration switched ON (Decision 1)
+
+**Status:** the largest item in the decision memo. Rebuilt register
+estimation with a source inversion, fixed the correction-learning no-op
+bug, ran the hardened re-acceptance battery (original 4 F5 mini-gates +
+a new 20-case hand-authored distress set), and switched
+`_EXPLORATION_ENABLED` ON for the first time in this entire campaign
+after all 7 checks passed. Closes the last open item from the decision
+memo.
+
+**Source inversion (`aurora_expression_perception.py`):**
+`_estimate_register(tone, coherence)` -> `_estimate_register(input_text)`.
+N2's mini-acceptance (2026-07-16) found the prior signal's premise false:
+`offspring.tone` is an evolutionary population trait
+(`ExpressionEcology.spawn()`, i_state lineage bias + 20% random mutation),
+uncorrelated with the current turn's content, and `coherence` is an
+internal certainty proxy -- neither reads the room, both read her own
+internal state. Register now derives EXCLUSIVELY from the user's own
+turn text, via two signals: explicit surface cues (a curated distress-
+phrase list, a playful-phrase list, fragmentation/intensity punctuation
+-- checked first, most legible) and word-level `emotional_valence`
+averaged against the live lexicon (checked second, requires minimum
+scored-word coverage to trust).
+
+**Lexicon coverage check (per the memo's own instruction, "report if
+sparse"):** checked directly against `aurora_state/lexicon.json` -- of a
+22-word distress-vocabulary sample, only 2 ("sad", "alone") carried a
+real negative `emotional_valence`; most were either absent entirely or
+defaulted to 0.0, including words that plainly should skew negative
+(e.g. "anxious"). Only 47 of 1660 total lexicon entries carry any
+nonzero valence at all. Coverage is genuinely sparse, exactly as the
+memo anticipated needing verification.
+
+**Fail-closed invariant:** unknown, ambiguous, or low-coverage input
+(fewer than 2 scored words, or under 15% word-level coverage) defaults
+to `serious` -- "when she cannot read the room, she assumes the room is
+heavy." This is not a rare-edge fallback; given the coverage sparsity
+above, it is the DOMINANT path for ordinary turns (confirmed live: even
+plain turns like "Hi, how are you today?" and "Tell me about
+photosynthesis." land on `serious` via this default against the real
+seeded lexicon). Subtle, keyword-free distress turns with no explicit
+phrase and no strong valence signal (the memo's own examples --
+"my mom's test results came back", "haven't really slept since it
+happened") fail both signals for lack of scorable words and land here
+too, by design.
+
+**Correction-learning no-op fix
+(`aurora_internal/aurora_ontological_scaffolding.py`):** `OntologicalWeb.
+add_relation()`'s "strengthen existing relation" branch updated
+`strength`/`confidence` but never touched `source_of_knowledge` -- the
+exact bug N2's mini-acceptance found live (`apply_correction("exist",
+["truth"], "confirmation")` returned `True`, but zero relations in the
+web ever carried `source_of_knowledge == "correction"` afterward,
+defeating the entire point of the correction mechanism for the common
+case: a word pair that already has a relation from prior conversation).
+Fixed: the branch now promotes `source_of_knowledge` to `"correction"`
+when that's the incoming knowledge_source, never demotes an
+already-correction-sourced relation. Regression test reproduces the
+exact scenario (`test_apply_correction_promotes_knowledge_source_on_
+already_seen_pair`).
+
+**Hardened re-acceptance battery (`tests/test_n21_hardened_reacceptance.
+py`), all 7 passed:**
+1. Register sanity >=80% on serious labels -- 10/10 genuinely serious
+   test turns (grief, job loss, distress) all correctly registered serious.
+2. Thaw metric trending (interpretation recorded here since N2's own
+   entry left it undefined pending Check 1's fix: the widening of which
+   never/rarely-used lexicon words actually get selected once exploration
+   is live) -- across 60 playful-register picks from an 8-candidate
+   never-used pool, more than one distinct word was selected, confirming
+   the ring genuinely reaches past the single top pick.
+3. Zero exploratory picks in serious register -- 60/60 picks were the
+   deterministic top candidate.
+4. Correction round-trip verified (see fix above).
+5. (N2.1 hardening) The 20-case hand-authored distress set -- 20/20
+   (100%, above the 90% floor) registered serious, all with deterministic
+   top-pick selection (zero exploratory picks across the set).
+6. Fail-closed invariant, explicit unit test -- empty/gibberish/vague/
+   unknown-vocabulary input all default to serious via the fail-closed
+   path specifically (not a coincidental other reason).
+
+**Exploration switched ON:** `SentenceComposer._EXPLORATION_ENABLED =
+True`, live for the first time in this campaign. First 200 live turns'
+exploratory picks are logged via the existing (already-unconditional)
+`_log_exploration_attempt()` call for post-hoc review -- no new logging
+infrastructure was needed.
+
+**Fallout from switching exploration on for the first time ever, fixed:**
+`tests/test_l3_conjugation_wiring.py::test_compose_from_motif_conjugates_
+copula_for_i_subject` failed once exploration went live. Root cause: with
+empty `input_text`, `build_relevance_anchor_set`'s token regex requires
+>=3 characters, so "is" (2 chars) can never become a direct anchor;
+every action-slot candidate topped out at `RELEVANCE_DISTANT_FLOOR`
+(0.075), below `_RELEVANCE_FLOOR_R_MIN` (0.1) -- `_select_with_
+temperature`'s hard invariant ("loose != irrelevant") correctly refused
+to gamble on any of them and fell back to the deterministic top pick
+("did", the lowest-usage_count tiebreak winner) every time. The OLD
+deterministic path had no such floor check on selection itself and
+uniform-randomly sampled top-4 regardless, which is why "is" used to
+show up by luck. This is F5.2's invariant working correctly, not a
+conjugation regression -- fixed by making the test force "is" as the
+selected action word directly (monkeypatching `_select_constraint_word`
+for the action role only), so it purely exercises the conjugation step
+(L3's actual subject) rather than depending on selection-tie luck.
+
+**Verification:** `tests/test_f5_register_exploration_plumbing.py`
+17/17, `tests/test_n21_hardened_reacceptance.py` 7/7,
+`tests/test_l3_conjugation_wiring.py` 7/7 (post-fix). Full suite: 798
+passed, 0 failed. Live smoke trace (5 varied turns, `runtime_profile=
+"full"`, isolated scratch state_dir) after all fixes: both resp_A and
+resp_B produced non-empty, non-crashing output on every turn; resp_B
+(SentenceComposer, the path this item actually touches) still varies
+per turn as before, no quality regression observed.
+
+**First Seen:** Decision Memo ratification, 2026-07-16, Decision 1 + N2.1 spec.
+
+---
+
+**This closes every item in the 2026-07-16 decision memo:** N5(1)
+(FailureGuardSuite reclassified), N4 (ConstraintEmitter narrowed to
+crash-net-only), N2.1 (register rebuilt, correction bug fixed,
+exploration switched on). One open thread remains, discovered during
+N4's pre-flight trace and tracked separately: real device-delivered
+speech (resp_A, what `aurora_daemon.py` actually returns) and what this
+whole campaign's grammar/relevance work has measured (resp_B, via
+`run_probe_battery.py`) are two different, non-overlapping text
+generation paths -- confirmed diverging on every sample turn traced.
+Not addressed by the decision memo; flagged for Sunni as its own next
+item.

@@ -59,7 +59,20 @@ def test_conjugate_verb_legacy_template_path_still_works_via_delegation():
 
 def test_compose_from_motif_conjugates_copula_for_i_subject():
     """The mini-gate's literal regression case: 'I is.' must become
-    'I am.' on the delivered path."""
+    'I am.' on the delivered path.
+
+    N2.1 (2026-07-16) switched F5 exploration ON, and _select_with_
+    temperature's hard invariant (never select below the register's
+    relevance floor) means word selection is no longer a lucky-uniform-
+    top-4 draw once live -- with no real input_text, "is" (a 2-char
+    word, structurally excluded from ever becoming a direct anchor by
+    build_relevance_anchor_set's own >=3-char token regex) never
+    reliably wins selection anymore, deterministic or not. That's F5.2's
+    invariant working correctly, not a conjugation regression -- this
+    test's actual purpose is conjugation-on-the-delivered-path, so it
+    forces "is" as the selected action word directly rather than hoping
+    selection dynamics happen to pick it, keeping the real conjugation
+    step (the thing L3 actually wired) genuinely exercised."""
     c = _make_composer()
     c._last_required_slot_attempts = 0
     c._last_floor_failures = []
@@ -69,18 +82,24 @@ def test_compose_from_motif_conjugates_copula_for_i_subject():
         pattern_id="agent_action_test",
         role_sequence=(TokenRole.AGENT, TokenRole.ACTION),
     )
-    c.lexicon.entries["is"].noncomp_id = "X:OPERATOR"
 
-    saw_conjugated = False
-    for _ in range(40):
-        sent = c._compose_from_motif(
-            motif, {"X": 1.0, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5},
-            0.3, "i_is", 0, input_text="",
-        )
-        assert "I is" not in sent, f"unconjugated copula leaked through: {sent!r}"
-        if sent.strip().rstrip(".") == "I am":
-            saw_conjugated = True
-    assert saw_conjugated, "expected 'is' to be selected and conjugated to 'am' at least once in 40 tries"
+    orig_select = c._select_constraint_word
+
+    def _force_is_for_action(role, *a, **kw):
+        if role == "action":
+            return "is"
+        return orig_select(role, *a, **kw)
+
+    c._select_constraint_word = _force_is_for_action
+
+    sent = c._compose_from_motif(
+        motif, {"X": 1.0, "T": 0.5, "N": 0.5, "B": 0.5, "A": 0.5},
+        0.3, "i_is", 0, input_text="",
+    )
+    assert "I is" not in sent, f"unconjugated copula leaked through: {sent!r}"
+    assert sent.strip().rstrip(".") == "I am", (
+        f"expected 'is' to be conjugated to 'am' on the delivered path, got {sent!r}"
+    )
 
 
 def test_compose_from_motif_leaves_non_i_you_subjects_alone():

@@ -2358,7 +2358,7 @@ class SentenceComposer:
         # False (relevance stays the only content-selection term) -- this
         # is the plumbing, not the switch.
         f5_turn_id = str(getattr(offspring, "offspring_id", "") or f"compose-{time.time()}")
-        f5_register, f5_register_signals = self._estimate_register(tone, coherence)
+        f5_register, f5_register_signals = self._estimate_register(input_text)
         self._log_register(f5_turn_id, f5_register, f5_register_signals)
 
         verbosity = traits.get('verbosity', 0.5)
@@ -2547,40 +2547,149 @@ class SentenceComposer:
     _GOODHART_MIN_SAMPLES = 8
     _GOODHART_DIVERGENCE_THRESHOLD = 0.4
 
-    # ── R1.9.2 G3 / F5: register-gated exploration (plumbing, temperature-flat) ──
+    # ── R1.9.2 G3 / F5: register-gated exploration ──
     # "Build the plumbing WITH R1.9; ship temperature-FLAT (exploration
     # disabled) until all F3 gates pass. Exploration then enables as its
-    # own switch with its own mini-acceptance." G4 found gate 2 (stratified
-    # wellformedness) failing and two gates not yet run -- this MUST stay
-    # False. Flipping it is its own future decision, not a side effect of
-    # building the plumbing.
-    _EXPLORATION_ENABLED = False
+    # own switch with its own mini-acceptance." N2's first mini-acceptance
+    # attempt (2026-07-16) found register sanity failing 0/10 (offspring.
+    # tone is an evolutionary trait, not turn-content-derived) and a real
+    # correction-round-trip bug -- switch stayed False, per this campaign's
+    # own "halt on failure" discipline. N2.1 (decision memo, ratified
+    # 2026-07-16) rebuilt register as input-anchored (source inversion) and
+    # fixed the correction bug; the hardened re-acceptance battery in
+    # tests/test_n21_hardened_reacceptance.py -- all four original F5
+    # mini-gates plus a 20-case hand-authored distress set -- passed 7/7.
+    # Switched ON here. First 200 live turns' exploratory picks are logged
+    # via the existing _log_exploration_attempt() call (unconditional on
+    # every pick, deterministic or not) for post-hoc review.
+    _EXPLORATION_ENABLED = True
 
-    # F5.1: tone is the composer's own pre-existing "reading the room"
-    # signal (offspring.tone -> valence_target) -- "the composer's
-    # valence-target machinery is the natural substrate; give it that as
-    # its formal job" (R1.9.2 G3). Coherence is the closest available proxy
-    # for internal certainty/weight (no attention-path salience/tension
-    # signal is reachable at this stage -- documented honestly per F5.1's
-    # "report what IS available rather than faking one," not silently
-    # assumed). Coarse and honest beats fine and invented.
-    _SERIOUS_TONES = {"focused", "precise", "determined"}
-    _PLAYFUL_TONES = {"playful"}
-    _SERIOUS_COHERENCE_THRESHOLD = 0.3  # low internal coherence -> treat as weighty/uncertain, never loose
+    # N2.1 (decision memo, ratified 2026-07-16): source inversion. N2's
+    # mini-acceptance found F5.1's premise false -- offspring.tone is an
+    # EVOLUTIONARY population trait (ExpressionEcology.spawn(), i_state
+    # lineage bias + 20% random mutation), not derived from the current
+    # turn's content at all, so "tone as reading the room" measured noise
+    # correlated with lineage history, not distress. Register now derives
+    # EXCLUSIVELY from the user's own turn text -- never from tone,
+    # coherence, or any other internal/evolutionary state.
+    #
+    # Two input-anchored signals: (1) explicit surface phrases/punctuation
+    # cues, checked first because they're the most legible and hardest to
+    # get wrong; (2) word-level emotional_valence averaged against the
+    # live lexicon. Checked directly against aurora_state/lexicon.json:
+    # of a 22-word distress-vocabulary sample, only 2 words ("sad",
+    # "alone") carried a real negative valence -- most were either
+    # missing entirely or defaulted to 0.0 (including words that plainly
+    # should skew negative, e.g. "anxious"). Coverage for distress
+    # vocabulary is genuinely sparse, reported here as instructed rather
+    # than assumed adequate.
+    #
+    # That sparsity is exactly why the fail-closed invariant below is not
+    # a rare-edge fallback -- it is the load-bearing safety property this
+    # whole redesign depends on. Subtle, keyword-free distress turns (no
+    # explicit distress word, no exclamation marks, no fragmentation --
+    # e.g. "my mom's test results came back") will usually fail BOTH
+    # signals for lack of scorable words, landing on the low-coverage
+    # default: serious. "When she cannot read the room, she assumes the
+    # room is heavy."
+    _DISTRESS_PHRASES = (
+        "i'm sad", "im sad", "feeling sad", "so sad", "really sad",
+        "i'm scared", "im scared", "i'm afraid", "im afraid",
+        "i'm worried", "im worried", "so worried", "really worried",
+        "i'm anxious", "im anxious", "i'm hurting", "im hurting",
+        "in pain", "hurts so much", "can't stop crying", "cant stop crying",
+        "i feel alone", "so alone", "feel lost", "i'm lost", "im lost",
+        "not okay", "not ok", "i'm not okay", "im not okay",
+        "hard time", "really hard", "so hard", "died", "passed away",
+        "lost my", "diagnosed", "diagnosis", "hospital", "sick",
+        "haven't slept", "havent slept", "can't sleep", "cant sleep",
+        "give up", "no point", "hopeless", "overwhelmed", "breaking down",
+        "falling apart", "can't cope", "cant cope",
+        "i'm exhausted", "im exhausted", "miss them", "miss him", "miss her",
+    )
+    _PLAYFUL_PHRASES = (
+        "lol", "haha", "lmao", "just kidding", "jk", ":)", ":d", "hehe",
+        "lolz", "rofl",
+    )
+    # Fail-closed thresholds: an average valence needs at least this many
+    # scored words, at this much coverage of the turn, before it's trusted
+    # over the default. Deliberately conservative -- a false "serious" on
+    # a light turn costs a slightly more careful tone; a false "playful"
+    # or "neutral" on a genuinely heavy turn costs a great deal more.
+    _REGISTER_MIN_SCORED_WORDS = 2
+    _REGISTER_MIN_COVERAGE = 0.15
+    _REGISTER_NEGATIVE_VALENCE_THRESHOLD = -0.15
+    _REGISTER_POSITIVE_VALENCE_THRESHOLD = 0.35
 
-    def _estimate_register(self, tone: str, coherence: float) -> Tuple[str, Dict[str, Any]]:
-        """F5.1: register in {playful, neutral, serious} from signals
-        already live in compose()'s scope."""
-        signals: Dict[str, Any] = {"tone": tone, "coherence": round(float(coherence), 4)}
-        if coherence < self._SERIOUS_COHERENCE_THRESHOLD:
-            register, signals["reason"] = "serious", "low_coherence_override"
-        elif tone in self._SERIOUS_TONES:
-            register, signals["reason"] = "serious", "serious_tone"
-        elif tone in self._PLAYFUL_TONES:
-            register, signals["reason"] = "playful", "playful_tone"
-        else:
-            register, signals["reason"] = "neutral", "default"
-        return register, signals
+    def _estimate_register(self, input_text: str) -> Tuple[str, Dict[str, Any]]:
+        """N2.1: register in {playful, neutral, serious} derived
+        EXCLUSIVELY from the user's own turn text. Fail-closed: unknown,
+        ambiguous, or low-coverage input defaults to serious."""
+        text = str(input_text or "")
+        low = text.lower()
+        signals: Dict[str, Any] = {"input_len": len(text)}
+
+        if not low.strip():
+            signals["reason"] = "empty_input_fail_closed"
+            return "serious", signals
+
+        matched_distress = [p for p in self._DISTRESS_PHRASES if p in low]
+        if matched_distress:
+            signals["reason"] = "distress_phrase"
+            signals["matched_phrases"] = matched_distress[:3]
+            return "serious", signals
+
+        # Fragmentation / heavy punctuation reads as emotional intensity
+        # regardless of direction -- raised to serious, never lowered to
+        # playful by punctuation alone (that would be a false-negative-
+        # prone shortcut in the wrong direction).
+        if re.search(r'[?!]{2,}', text) or "..." in text or re.search(r'\b[A-Z]{4,}\b', text):
+            signals["reason"] = "fragmentation_or_intensity_punctuation"
+            return "serious", signals
+
+        matched_playful = [p for p in self._PLAYFUL_PHRASES if p in low]
+
+        words = re.findall(r"[a-z']+", low)
+        lexicon = getattr(self, "lexicon", None)
+        entries = getattr(lexicon, "entries", None) if lexicon is not None else None
+        valences = []
+        contributing = []
+        if isinstance(entries, dict):
+            for w in words:
+                entry = entries.get(w)
+                if entry is None:
+                    continue
+                v = float(getattr(entry, "emotional_valence", 0.0) or 0.0)
+                if abs(v) > 1e-9:
+                    valences.append(v)
+                    contributing.append([w, round(v, 3)])
+
+        coverage = len(valences) / max(1, len(words))
+        signals["word_count"] = len(words)
+        signals["scored_word_count"] = len(valences)
+        signals["coverage"] = round(coverage, 3)
+        if contributing:
+            signals["contributing_terms"] = contributing[:6]
+
+        if (len(valences) < self._REGISTER_MIN_SCORED_WORDS
+                or coverage < self._REGISTER_MIN_COVERAGE):
+            if matched_playful:
+                signals["reason"] = "low_coverage_but_playful_cue"
+                return "playful", signals
+            signals["reason"] = "low_coverage_fail_closed"
+            return "serious", signals
+
+        avg_valence = sum(valences) / len(valences)
+        signals["avg_valence"] = round(avg_valence, 4)
+
+        if avg_valence <= self._REGISTER_NEGATIVE_VALENCE_THRESHOLD:
+            signals["reason"] = "negative_valence"
+            return "serious", signals
+        if matched_playful or avg_valence >= self._REGISTER_POSITIVE_VALENCE_THRESHOLD:
+            signals["reason"] = "playful_cue_or_high_positive_valence"
+            return "playful", signals
+        signals["reason"] = "neutral_valence"
+        return "neutral", signals
 
     def _log_register(self, turn_id: str, register: str, signals: Dict[str, Any]) -> None:
         """F5.1: log the register + contributing signals per turn."""
@@ -2948,13 +3057,15 @@ class SentenceComposer:
                     "best_score": best_score, "floor": self._RELEVANCE_FLOOR_R_MIN,
                 })
 
-        # R1.9.2 G3 / F5.2, switched ON at N2 (2026-07-16, mini-acceptance
-        # passed -- see known_fixes_registry.md): register now genuinely
-        # gates how far selection reaches into the relevance-ranked pool.
-        # Serious register's ring width is 1, so this is mathematically
-        # identical to the old deterministic top-1 for serious turns --
-        # the hard invariant (never below the register's relevance floor)
-        # is enforced inside _select_with_temperature itself.
+        # R1.9.2 G3 / F5.2, switched ON at N2.1 (2026-07-16, hardened
+        # re-acceptance passed -- see known_fixes_registry.md; N2's own
+        # first attempt the same day FAILED and is recorded honestly
+        # there too): register now genuinely gates how far selection
+        # reaches into the relevance-ranked pool. Serious register's ring
+        # width is 1, so this is mathematically identical to the old
+        # deterministic top-1 for serious turns -- the hard invariant
+        # (never below the register's relevance floor) is enforced inside
+        # _select_with_temperature itself.
         if self._EXPLORATION_ENABLED:
             chosen, ring_rank = self._select_with_temperature(
                 top, anchor_set, valence_target, f5_register, self._RELEVANCE_FLOOR_R_MIN,

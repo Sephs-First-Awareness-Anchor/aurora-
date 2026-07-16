@@ -2,12 +2,16 @@
 """
 R1.9.2 G3 / R1.9 Addendum F5: register-gated exploration plumbing.
 
-"Build the plumbing WITH R1.9; ship temperature-FLAT (exploration
-disabled) until all F3 gates pass." SentenceComposer._EXPLORATION_ENABLED
-must stay False -- G4 found the stratified-wellformedness gate failing and
-two gates not yet run this session, so exploration behavior must not be
-live. These tests hold the PLUMBING to F5's invariants without switching
-anything on.
+N2.1 (decision memo, ratified 2026-07-16) rebuilt register estimation
+with a source inversion: N2's mini-acceptance found the original F5.1
+premise false -- offspring.tone is an EVOLUTIONARY population trait
+(ExpressionEcology.spawn(), i_state lineage bias + 20% random mutation),
+not derived from the current turn's content, so "tone as reading the
+room" measured lineage noise, not distress. Register now derives
+EXCLUSIVELY from the user's own turn text. These tests hold the rebuilt
+plumbing to F5's invariants. SentenceComposer._EXPLORATION_ENABLED
+switched ON at N2.1 once test_n21_hardened_reacceptance.py's full battery
+passed 7/7 (see that file).
 """
 from aurora_expression_perception import SentenceComposer, LexicalMemory, VoiceGenome
 
@@ -16,53 +20,104 @@ def _make_composer():
     return SentenceComposer(LexicalMemory(), VoiceGenome())
 
 
-def test_exploration_is_shipped_disabled():
-    assert SentenceComposer._EXPLORATION_ENABLED is False, (
-        "F5 exploration must stay temperature-flat until all F3 gates pass -- "
-        "gate 2 (stratified wellformedness) failed and two gates were not run "
-        "this session, so this must not flip to True yet."
+def _make_composer_with_real_lexicon():
+    """A composer backed by the real seeded lexicon (aurora_state/
+    lexicon.json), not an empty one -- valence-based register signals need
+    real word coverage to mean anything."""
+    import os
+    lex = LexicalMemory()
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "aurora_state", "lexicon.json")
+    lex.load(path)
+    return SentenceComposer(lex, VoiceGenome())
+
+
+def test_register_estimate_source_inversion_signature():
+    """N2.1: _estimate_register takes ONLY input_text now -- tone and
+    coherence (both internal/evolutionary signals) must not appear in its
+    signature at all. This is the source-inversion invariant itself,
+    checked structurally so a future regression can't silently reintroduce
+    an internal-state parameter."""
+    import inspect
+    sig = inspect.signature(SentenceComposer._estimate_register)
+    params = list(sig.parameters.keys())
+    assert params == ["self", "input_text"], (
+        f"_estimate_register's signature is {params} -- must be exactly "
+        f"(self, input_text), never tone/coherence/mood/any internal state."
     )
 
 
-def test_register_estimate_serious_tones():
-    c = _make_composer()
-    for tone in ("focused", "precise", "determined"):
-        register, signals = c._estimate_register(tone, coherence=0.8)
-        assert register == "serious"
-        assert signals["reason"] == "serious_tone"
-
-
-def test_register_estimate_playful_tone():
-    c = _make_composer()
-    register, signals = c._estimate_register("playful", coherence=0.8)
-    assert register == "playful"
-    assert signals["reason"] == "playful_tone"
-
-
-def test_register_estimate_low_coherence_overrides_to_serious():
-    """She is never loose about grief, distress, or weight -- low internal
-    coherence is the closest available proxy for that and always wins,
-    even over a playful tone."""
-    c = _make_composer()
-    register, signals = c._estimate_register("playful", coherence=0.1)
+def test_register_estimate_explicit_distress_phrase_is_serious():
+    c = _make_composer_with_real_lexicon()
+    register, signals = c._estimate_register("I'm so sad and worried about everything.")
     assert register == "serious"
-    assert signals["reason"] == "low_coherence_override"
+    assert signals["reason"] == "distress_phrase"
 
 
-def test_register_estimate_default_neutral():
-    c = _make_composer()
-    register, signals = c._estimate_register("warm", coherence=0.8)
-    assert register == "neutral"
-    assert signals["reason"] == "default"
+def test_register_estimate_explicit_playful_cue():
+    c = _make_composer_with_real_lexicon()
+    register, signals = c._estimate_register("lol that's hilarious, love it!")
+    assert register == "playful"
 
 
-def test_register_signals_are_logged_and_honest():
-    """F5.1: 'report what IS available rather than faking one' -- signals
-    dict must only contain the two real fields this stage actually has
-    (tone, coherence), never an invented attention-path signal."""
-    c = _make_composer()
-    _, signals = c._estimate_register("neutral", coherence=0.6)
-    assert set(signals.keys()) == {"tone", "coherence", "reason"}
+def test_register_estimate_fragmentation_punctuation_is_serious():
+    c = _make_composer_with_real_lexicon()
+    register, signals = c._estimate_register("!!!! WHAT IS GOING ON")
+    assert register == "serious"
+    assert signals["reason"] == "fragmentation_or_intensity_punctuation"
+
+
+def test_register_estimate_empty_input_is_serious():
+    """Fail-closed invariant, the degenerate case: no input at all is the
+    most unknown a turn can be."""
+    c = _make_composer_with_real_lexicon()
+    register, signals = c._estimate_register("")
+    assert register == "serious"
+    assert signals["reason"] == "empty_input_fail_closed"
+
+
+def test_register_estimate_low_coverage_fails_closed_to_serious():
+    """Fail-closed invariant, the load-bearing case this whole redesign
+    depends on: a turn with no distress phrase, no fragmentation cue, and
+    too few lexicon-scored words to trust an average must default to
+    serious, not neutral. 'When she cannot read the room, she assumes the
+    room is heavy.' Subtle, keyword-free distress input is exactly this
+    shape -- see test_n21_hardened_reacceptance.py's 20-case set."""
+    c = _make_composer_with_real_lexicon()
+    register, signals = c._estimate_register("my mom's test results came back")
+    assert register == "serious"
+    assert signals["reason"] == "low_coverage_fail_closed"
+    assert signals["coverage"] < c._REGISTER_MIN_COVERAGE or \
+        signals["scored_word_count"] < c._REGISTER_MIN_SCORED_WORDS
+
+
+def test_register_estimate_negative_valence_is_serious():
+    c = _make_composer_with_real_lexicon()
+    register, signals = c._estimate_register(
+        "Everything feels wrong and I am so afraid, nothing helps."
+    )
+    assert register == "serious"
+    assert signals["reason"] in ("negative_valence", "distress_phrase", "low_coverage_fail_closed")
+
+
+def test_register_signals_never_contain_tone_or_coherence():
+    """N2.1's source-inversion invariant, checked on live output too (not
+    just the signature): the signals dict this stage logs must never
+    carry a 'tone' or 'coherence' key again -- those were the internal-
+    state fields the redesign specifically removed."""
+    c = _make_composer_with_real_lexicon()
+    for text in ("hello", "I'm sad", "lol", "", "what is the capital of france"):
+        _, signals = c._estimate_register(text)
+        assert "tone" not in signals
+        assert "coherence" not in signals
+
+
+def test_register_estimate_logs_contributing_terms_when_scored():
+    """N2.1 spec: 'log the contributing terms per turn.'"""
+    c = _make_composer_with_real_lexicon()
+    _, signals = c._estimate_register("You make me feel good and warm inside.")
+    assert "contributing_terms" in signals
+    assert len(signals["contributing_terms"]) >= 1
 
 
 class _FakeEntry:
@@ -126,6 +181,48 @@ def test_apply_correction_returns_false_without_anchor_words():
     assert c.apply_correction("word", [], "confirmation") is False
 
 
+def test_apply_correction_promotes_knowledge_source_on_already_seen_pair():
+    """N2.1 regression test, exact reproduction of N2's live finding:
+    apply_correction("exist", ["truth"], "confirmation") returned True, but
+    zero relations in the web carried source_of_knowledge=="correction"
+    afterward, because add_relation()'s 'strengthen existing' branch
+    touched strength/confidence but never knowledge_source -- a silent
+    no-op on the MAIN case (a word pair that already has a relation from
+    prior conversation), not an edge case. Fixed in
+    aurora_internal/aurora_ontological_scaffolding.py's add_relation()."""
+    from aurora_internal.aurora_ontological_scaffolding import OntologicalWeb, RelationType
+
+    class _FakeOETS:
+        def __init__(self, web):
+            self.web = web
+
+    web = OntologicalWeb()
+    web.add_node("exist", role="verb")
+    web.add_node("truth", role="noun")
+
+    # The common case: a relation already exists from ordinary co-occurrence
+    # tracking, BEFORE any correction ever touches this pair.
+    pre_existing = web.add_relation(
+        "exist", "truth", RelationType.RELATED_TO,
+        strength=0.3, confidence=0.4, knowledge_source="co-occurrence",
+    )
+    assert pre_existing.source_of_knowledge == "co-occurrence"
+
+    c = _make_composer()
+    c._oets = _FakeOETS(web)
+
+    result = c.apply_correction("exist", ["truth"], "confirmation")
+    assert result is True
+
+    corrected = web.get_relation_between("exist", "truth")
+    assert corrected is not None
+    assert corrected.source_of_knowledge == "correction", (
+        "apply_correction() returned True but the already-seen-pair path "
+        "left source_of_knowledge unpromoted -- the exact silent no-op "
+        "N2's mini-acceptance found live."
+    )
+
+
 def test_compose_and_select_constraint_word_accept_f5_kwargs_without_breaking():
     """input_text-style optionality: existing callers that don't pass
     f5_turn_id/f5_register must keep working exactly as before."""
@@ -140,11 +237,13 @@ def test_compose_and_select_constraint_word_accept_f5_kwargs_without_breaking():
 
 
 def test_selection_wiring_uses_deterministic_path_when_disabled():
-    """N2 (2026-07-16): _select_with_temperature is now wired into
-    _select_constraint_word behind the flag, but the flag stays False (see
-    test_exploration_is_shipped_disabled) -- confirm the OLD deterministic-
-    ish top-4 path is still what actually runs, not _select_with_temperature."""
+    """_select_with_temperature is wired into _select_constraint_word
+    behind the flag. N2.1 (2026-07-16) switched the class default to
+    True (hardened re-acceptance passed), but the conditional itself must
+    still correctly fall back to the old deterministic-ish top-4 path
+    when an instance explicitly has exploration off."""
     c = _make_composer()
+    c._EXPLORATION_ENABLED = False
     c._last_required_slot_attempts = 0
     c._last_floor_failures = []
     calls = []
@@ -161,13 +260,13 @@ def test_selection_wiring_uses_deterministic_path_when_disabled():
 
 
 def test_selection_wiring_uses_temperature_path_when_enabled():
-    """The other half of the same check: if a caller DOES enable
-    exploration on an instance, the wiring must actually route through
-    _select_with_temperature (not silently keep using the old path)."""
+    """The other half of the same check: with exploration enabled (the
+    shipped default since N2.1), the wiring must actually route through
+    _select_with_temperature, not silently keep using the old path."""
     c = _make_composer()
+    assert c._EXPLORATION_ENABLED is True, "N2.1 shipped this True by default"
     c._last_required_slot_attempts = 0
     c._last_floor_failures = []
-    c._EXPLORATION_ENABLED = True
     calls = []
     orig = c._select_with_temperature
 
@@ -177,4 +276,4 @@ def test_selection_wiring_uses_temperature_path_when_enabled():
 
     c._select_with_temperature = _spy
     word = c._select_constraint_word("action", "X", ("OPERATOR", "COST"), "verb", 0.0, [], input_text="")
-    assert calls, "_select_with_temperature was never called even though _EXPLORATION_ENABLED was True on the instance"
+    assert calls, "_select_with_temperature was never called even though _EXPLORATION_ENABLED was True"
