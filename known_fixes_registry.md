@@ -2212,3 +2212,90 @@ answers no to.
 
 **First Seen:** N5 item 1, R1 Campaign Closure directive's next-phase
 queue, 2026-07-16.
+
+## N5 (item 2 of 3) — ToroidalCirculationLayer: ALREADY LIVE, quarantine entry and test were stale
+
+**Status:** dead-systems docket item 2 of 3, per N5's "one at a time, no
+bundling" instruction. Verdict differs in kind from item 1: this is not
+an integrate-or-reclassify judgment call, it's a correction of a stale
+manifest entry and a stale test. Two test files fixed (assertions only,
+zero production code changed); full pytest run confirms no regression.
+
+**What the quarantine manifest claimed:** `test_governance_liveness.py`'s
+`QUARANTINE_STALE` bucket and `test_flow_audit_and_tcl_wiring.py`'s
+`test_aurora_py_wires_toroidal_layer_into_cers_snapshot_pass` both said
+`ToroidalCirculationLayer` has "zero references in aurora.py" and framed
+the failing test as a "known regression," out of scope, tracked
+separately — a claim that had persisted, unquestioned, through every
+full pytest run of this entire campaign (R1.9.2 through N5 item 1) as
+"1 pre-existing unrelated failure."
+
+**What investigation actually found:** the claim's premise was wrong.
+`ToroidalCirculationLayer` is not dead — it moved. MTSL Phase 3
+(2026-07-13, FIX-A011, single-observer law — predates this whole R1
+campaign) deliberately relocated TCL ownership out of aurora.py's CERS
+shadow pass and into `TopologicalSemanticCoordinator`
+(`aurora_internal/dual_strata/topological_semantic_coordinator.py`):
+- The coordinator's `__init__` constructs the TCL instance and seeds it
+  from the real surface log on first touch
+  (`self._tcl = _TCL(state_dir=self._state_dir)`, then
+  `self._tcl.seed_from_surface_log()` when `stats()["observations"] == 0`)
+  — the exact seed-once-on-first-touch behavior the old test expected,
+  just relocated.
+- `observe_turn()` ticks it every turn (`self._tcl.observe(intensity)`,
+  `self._tcl.save()`, `self._tcl.current_signature().to_dict()`) and is
+  called from exactly one site in the entire codebase:
+  `aurora_consciousness_engine.py`'s `_attach_dual_strata_snapshot`
+  (confirmed by grep — zero other `.observe_turn(` call sites).
+- `aurora.py`'s own CERS shadow pass was correctly changed to a READER:
+  it fetches `systems["dimensional"]._mtsl_coordinator` (the same
+  `DimensionalSystems` instance `ConsciousnessEngine` holds, so both
+  call sites share one coordinator without new systems-dict plumbing)
+  and copies out `latest_snapshot.toroidal_signature` — it deliberately
+  never imports or constructs `ToroidalCirculationLayer` itself anymore.
+- The module's own docstring names the reason: ticking TCL from both
+  aurora.py AND `_attach_dual_strata_snapshot` on the same assembly
+  (the real call order every turn takes) was "a real double-tick, not a
+  hypothetical one." The coordinator's single-observer law — enforced
+  structurally (one call site) and by an idempotency check
+  (`observe_turn()` returns the cached snapshot object, verified by
+  identity, on a repeat `turn_id`) — is what fixed that bug.
+
+**Why the test kept failing anyway:** the stale test was asserting the
+PRE-Phase-3 pattern verbatim (`from aurora_toroidal_circulation import
+ToroidalCirculationLayer as _TCL` inline in aurora.py, direct
+`_tcl.observe(...)`/`_tcl.seed_from_surface_log()` calls there). That
+code never existed in the post-Phase-3 architecture this campaign
+inherited — the test was checking for an implementation that had been
+intentionally moved 3 days before this campaign's R0 baseline, not one
+that regressed during it. This is the mirror image of this campaign's
+recurring disease (self-referential signals / measurement artifacts
+masquerading as capability facts, FIX-A032/A035 and four prior
+instances): here a stale INSTRUMENT masqueraded as a dead CAPABILITY.
+
+**Fix applied (test-only, no production code changed):**
+- `tests/test_flow_audit_and_tcl_wiring.py`: replaced the single stale
+  structural test with three tests against current reality — the
+  coordinator owns construction/seeding/observe/save; aurora.py reads
+  the coordinator's cached signature and never references
+  `ToroidalCirculationLayer` directly; `_attach_dual_strata_snapshot` is
+  confirmed the sole `observe_turn()` call site.
+- `tests/test_governance_liveness.py`: moved
+  `aurora_toroidal_circulation.ToroidalCirculationLayer` out of
+  `QUARANTINE_STALE` into `LIVE_CONFIRMED` with the corrected evidence
+  above; replaced the old "must stay unreferenced in aurora.py" check
+  (which was actually still true, just for the wrong reason — TCL was
+  never supposed to be referenced there again) with a positive liveness
+  assertion pinned to the coordinator.
+- Full `pytest` run: all suites green, including the two files above
+  (8/8 and 9/9 respectively) — the long-standing "1 pre-existing
+  unrelated failure" baseline that has appeared in every full run since
+  R1.9.2 is gone.
+
+**Recommendation:** no further action needed. TCL is live, correctly
+architected, and now correctly reflected in both the quarantine manifest
+and its regression coverage. No integration decision is pending for this
+item — unlike N5 item 1, there is nothing here for Sunni to decide.
+
+**First Seen:** N5 item 2, R1 Campaign Closure directive's next-phase
+queue, 2026-07-16.

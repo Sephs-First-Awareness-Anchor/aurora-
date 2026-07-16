@@ -53,14 +53,9 @@ QUARANTINE_STALE = {
         "own probe-battery/ledger tooling (run_probe_battery.py, "
         "aurora_internal/aurora_icc_ledger.py, "
         "aurora_internal/aurora_semantic_probe_battery.py) -- confirmed R1.6, "
-        "reconfirmed R1.8.1."
-    ),
-    "aurora_toroidal_circulation.ToroidalCirculationLayer": (
-        "Zero references in aurora.py. Independently caught by the "
-        "pre-existing failing test "
-        "test_flow_audit_and_tcl_wiring.py::test_aurora_py_wires_toroidal_layer_into_cers_snapshot_pass "
-        "(confirmed pre-existing and unrelated to this remediation's changes "
-        "-- out of scope to fix here, tracked as its own known regression)."
+        "reconfirmed R1.8.1. N5 item 1 (R1 Campaign Closure, 2026-07-16) "
+        "recommends RECLASSIFY (superseded by generation-time fixes) over "
+        "integration -- see known_fixes_registry.md, decision pending Sunni."
     ),
 }
 
@@ -136,6 +131,27 @@ LIVE_CONFIRMED = {
         "Explicitly documented as read-only/advisory/non-authoritative by "
         "design -- this is a design decision, not staleness."
     ),
+    "aurora_toroidal_circulation.ToroidalCirculationLayer": (
+        "N5 item 2 (R1 Campaign Closure, 2026-07-16) correction: this entry "
+        "was WRONGLY filed under QUARANTINE_STALE. Re-investigation found "
+        "the module fully live -- just not where the original 'zero "
+        "references in aurora.py' check looked. MTSL Phase 3 (2026-07-13, "
+        "FIX-A011, predates this campaign) moved TCL ownership out of "
+        "aurora.py and into TopologicalSemanticCoordinator "
+        "(aurora_internal/dual_strata/topological_semantic_coordinator.py): "
+        "constructed + seeded from the surface log in the coordinator's own "
+        "__init__, observed/saved every turn inside observe_turn(), called "
+        "from exactly one site (aurora_consciousness_engine.py's "
+        "_attach_dual_strata_snapshot, the single-observer law) to prevent "
+        "a real double-tick that direct dual-call-site wiring would cause. "
+        "aurora.py correctly only READS the coordinator's cached, "
+        "compressed toroidal_signature -- it was never supposed to "
+        "reference ToroidalCirculationLayer directly again. The failing "
+        "test (test_flow_audit_and_tcl_wiring.py::test_aurora_py_wires_"
+        "toroidal_layer_into_cers_snapshot_pass) was asserting the "
+        "superseded pre-Phase-3 pattern, not a genuine regression -- fixed "
+        "by rewriting the test to check the current (correct) wiring."
+    ),
 }
 
 # R1.9.1 correction: two verdict tiers replace the single LIVE bucket for
@@ -186,11 +202,27 @@ def test_quarantine_stale_modules_remain_unreferenced_in_aurora_py():
         "wiring, move it out of QUARANTINE_STALE and add a LIVE assertion; "
         "if it's an incidental string match, this assertion needs updating."
     )
-    assert "ToroidalCirculationLayer" not in source, (
-        "ToroidalCirculationLayer now appears in aurora.py -- check whether "
-        "test_flow_audit_and_tcl_wiring.py's known pre-existing failure has "
-        "been fixed; if so this module graduated out of quarantine."
+
+
+def test_toroidal_circulation_layer_is_live_via_the_coordinator():
+    """N5 item 2 correction: TCL is live, just not by direct reference in
+    aurora.py -- TopologicalSemanticCoordinator owns it exclusively (FIX-
+    A011, single-observer law). aurora.py must keep reading the cached
+    signature and must never reference ToroidalCirculationLayer directly
+    again (that would reintroduce the double-tick bug the coordinator was
+    built to eliminate). See test_flow_audit_and_tcl_wiring.py for the
+    full structural proof of the coordinator-side wiring."""
+    aurora_source = _aurora_source()
+    assert "ToroidalCirculationLayer" not in aurora_source
+    assert '_mtsl_coordinator.latest_snapshot.toroidal_signature' in aurora_source
+
+    coord_path = os.path.join(
+        REPO_ROOT, "aurora_internal", "dual_strata", "topological_semantic_coordinator.py"
     )
+    with open(coord_path, "r", encoding="utf-8") as f:
+        coord_source = f.read()
+    assert "from aurora_toroidal_circulation import ToroidalCirculationLayer" in coord_source
+    assert "self._tcl.observe(intensity)" in coord_source
 
 
 def test_constraint_emitter_is_wired_at_boot_but_only_live_parallel():
