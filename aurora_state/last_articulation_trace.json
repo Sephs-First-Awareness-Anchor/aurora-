@@ -1,40 +1,14 @@
 {
-  "original": "I exist want is.",
-  "candidate": "",
-  "selected": "I exist want is.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.62,
-  "candidate_score": 0.0,
-  "original_pressure": 0.316,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "[AFTERTHOUGHT] Hi Aurora, how are you doing today?",
-    "input_interpretation": {
-      "raw_prompt": "[AFTERTHOUGHT] Hi Aurora, how are you doing today?",
-      "intent_hint": "question",
-      "topic_terms": [
-        "afterthought",
-        "aurora",
-        "doing",
-        "today"
-      ],
-      "entities": [
-        "AFTERTHOUGHT",
-        "Aurora"
-      ]
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1784191683.240129,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "Am energy right and did how.",
+  "candidate": "Am energy right and did how.",
+  "selected": "Am energy right and did how.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.92,
+  "candidate_score": 0.92,
+  "original_pressure": 0.256,
+  "candidate_pressure": 0.256,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }

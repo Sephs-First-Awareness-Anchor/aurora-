@@ -3,10 +3,10 @@
   "gate_confidence": 0.82,
   "advisory_confidence": 0.62,
   "issue_counts": {
-    "meaning_tension": 32,
-    "unbound_surface_fragment": 392,
+    "meaning_tension": 38,
+    "unbound_surface_fragment": 398,
     "meaning_momentum": 22,
-    "coherence_maintenance": 457,
+    "coherence_maintenance": 463,
     "context_carryover_instability": 207,
     "understanding_contract_self_audit": 4,
     "abstract_meaning_continuity_gap": 2,
@@ -28,1124 +28,6 @@
   "possibility_pressure": 0.0,
   "issue_possibility_pressure": {},
   "recent_events": [
-    {
-      "ts": 1783854171.9205515,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_daemon_subsurface_and_ambient",
-      "severity": 0.6,
-      "persistence_key": "tests.test_daemon_subsurface_and_ambient",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854179.6751916,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_oets_comprehension_confidence_growth",
-      "severity": 0.6,
-      "persistence_key": "tests.test_oets_comprehension_confidence_growth",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854182.5202146,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_reflexive_interpreter_deposition_integration",
-      "severity": 0.6,
-      "persistence_key": "tests.test_reflexive_interpreter_deposition_inte",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854185.2911708,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_understanding_sediment_overlay",
-      "severity": 0.6,
-      "persistence_key": "tests.test_understanding_sediment_overlay",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972629.623394,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "aurora_flow_audit",
-      "severity": 0.6,
-      "persistence_key": "aurora_flow_audit",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972762.2153437,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "aurora_toroidal_circulation",
-      "severity": 0.6,
-      "persistence_key": "aurora_toroidal_circulation",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972837.588566,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_flow_audit_and_tcl_wiring",
-      "severity": 0.6,
-      "persistence_key": "tests.test_flow_audit_and_tcl_wiring",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783972850.6976078,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_toroidal_circulation_layer",
-      "severity": 0.6,
-      "persistence_key": "tests.test_toroidal_circulation_layer",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011026.753972,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_cers_topology_context",
-      "severity": 0.6,
-      "persistence_key": "tests.test_cers_topology_context",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011042.8040507,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_acceptance_report",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_acceptance_report",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011043.6498652,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_phase0_plumbing",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_phase0_plumbing",
-      "profile": {
-        "X": 0.1,
-        "T": 0.8,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011044.4213398,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_phase7_extensions",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_phase7_extensions",
-      "profile": {
-        "X": 0.1,
-        "T": 0.8,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011047.782582,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_perturbation_probe",
-      "severity": 0.6,
-      "persistence_key": "tests.test_perturbation_probe",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011052.81609,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_semantic_intention_bridge",
-      "severity": 0.6,
-      "persistence_key": "tests.test_semantic_intention_bridge",
-      "profile": {
-        "X": 0.1,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.8,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011053.6587613,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_semantic_variant_registry",
-      "severity": 0.6,
-      "persistence_key": "tests.test_semantic_variant_registry",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011055.3489323,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topological_semantic_coordinator",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topological_semantic_coordinator",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011056.1984904,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topology_cycle_decomposition",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topology_cycle_decomposition",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011057.0564747,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topology_frame",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topology_frame",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011057.9150007,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_topology_tracker",
-      "severity": 0.6,
-      "persistence_key": "tests.test_topology_tracker",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784011061.2408683,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_variant_transition_predictor",
-      "severity": 0.6,
-      "persistence_key": "tests.test_variant_transition_predictor",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784026275.1836212,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_articulation_semantic_strategy",
-      "severity": 0.6,
-      "persistence_key": "tests.test_articulation_semantic_strategy",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784026296.7890708,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_lifecycle_catalog",
-      "severity": 0.6,
-      "persistence_key": "tests.test_lifecycle_catalog",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784026300.25243,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_live_wiring",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_live_wiring",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784026301.117878,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_perturbation_live_wiring",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_perturbation_live_wiring",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784026303.7152746,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_mtsl_warp_gap_proposal",
-      "severity": 0.6,
-      "persistence_key": "tests.test_mtsl_warp_gap_proposal",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784072554.6939638,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_classroom_behavior_modes_wiring",
-      "severity": 0.6,
-      "persistence_key": "tests.test_classroom_behavior_modes_wiring",
-      "profile": {
-        "X": 0.1,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.8
-      }
-    },
-    {
-      "ts": 1784124693.3916237,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "run_probe_battery",
-      "severity": 0.6,
-      "persistence_key": "run_probe_battery",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784124768.686478,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_icc_ledger",
-      "severity": 0.6,
-      "persistence_key": "tests.test_icc_ledger",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784124785.1588495,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_operator_composer",
-      "severity": 0.6,
-      "persistence_key": "tests.test_operator_composer",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784124795.1076257,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_semantic_probe_battery",
-      "severity": 0.6,
-      "persistence_key": "tests.test_semantic_probe_battery",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784124797.627937,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_strategic_horizon",
-      "severity": 0.6,
-      "persistence_key": "tests.test_strategic_horizon",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1784124813.2632186,
-      "source": "user_input_precomp",
-      "dominant_axis": "T",
-      "intensity": 0.65,
-      "coupling_mode": "full",
-      "genealogy_id": "",
-      "tick": 0,
-      "trace": [
-        {
-          "step": "primary",
-          "axis": "X",
-          "amplitude": 0.2217,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "N",
-          "amplitude": 0.4174,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "A",
-          "amplitude": 0.1314,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "B",
-          "amplitude": 0.4284,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "T",
-          "amplitude": 0.4501,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "T",
-          "coupling_strength": 0.3,
-          "amplitude": 0.0332,
-          "source": "user_input_precomp\u2192X\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "B",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0222,
-          "source": "user_input_precomp\u2192X\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "B",
-          "coupling_strength": 0.35,
-          "amplitude": 0.073,
-          "source": "user_input_precomp\u2192N\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0417,
-          "source": "user_input_precomp\u2192N\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "X",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0313,
-          "source": "user_input_precomp\u2192N\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0131,
-          "source": "user_input_precomp\u2192A\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "B",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0164,
-          "source": "user_input_precomp\u2192A\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "N",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0099,
-          "source": "user_input_precomp\u2192A\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "N",
-          "coupling_strength": 0.3,
-          "amplitude": 0.0643,
-          "source": "user_input_precomp\u2192B\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "A",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0536,
-          "source": "user_input_precomp\u2192B\u2192A"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "X",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0563,
-          "source": "user_input_precomp\u2192T\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "A",
-          "coupling_strength": 0.2,
-          "amplitude": 0.045,
-          "source": "user_input_precomp\u2192T\u2192A"
-        }
-      ],
-      "provenance": "WAVEFORM"
-    },
-    {
-      "timestamp": 1784124821.675176,
-      "issue_category": "meaning_tension",
-      "logic_tier": "runtime_orchestration",
-      "intervention": "meaning_surface_alignment",
-      "observed_effect": "resolved_partially",
-      "count": 24,
-      "auto_advance": true,
-      "doctrine_strategy": "",
-      "doctrine_confidence": 0.0,
-      "constraint_context": {
-        "constraint_axes": {
-          "X": 0.2,
-          "T": 0.2,
-          "N": 0.2,
-          "B": 0.2,
-          "A": 0.2
-        },
-        "dominant_axis": "X",
-        "axis_signature": [
-          "X",
-          "T",
-          "N"
-        ],
-        "purpose_lane": "admissibility_grounding",
-        "genealogy_pressure_orientation": {
-          "X": 1.1038,
-          "T": 1.1038,
-          "N": 1.1038,
-          "B": 1.1038,
-          "A": 1.1038
-        }
-      },
-      "system_pressure": {
-        "source": "aurora.dialogue.self_repair",
-        "phase": "dialogue",
-        "system_load": "low",
-        "system_load_score": 0.1867,
-        "io_pressure": "low",
-        "io_pressure_score": 0.0,
-        "background_cycle_density": "low",
-        "background_cycle_density_score": 0.24,
-        "cognitive_coherence": 0.416,
-        "cognitive_stagnation": 0.0,
-        "factors": {
-          "autonomy_running": 0.0,
-          "autosave_active": 0.0,
-          "dreams_used": 3.0,
-          "study_cycles_used": 3.0,
-          "observations_used": 0.0,
-          "pending_spontaneous": 0.0,
-          "exploration_depth": 0.0,
-          "quarantine_depth": 0.0,
-          "search_failure_bias": 0.0,
-          "coherence_deficit": 0.584
-        }
-      },
-      "genealogy_refs": [],
-      "learning_credit": {
-        "credit": 0.1,
-        "global_debt": 0.0,
-        "issue_debt": 0.0
-      }
-    },
-    {
-      "ts": 1784124821.9934654,
-      "source": "user_input_precomp",
-      "dominant_axis": "T",
-      "intensity": 0.65,
-      "coupling_mode": "full",
-      "genealogy_id": "",
-      "tick": 0,
-      "trace": [
-        {
-          "step": "primary",
-          "axis": "X",
-          "amplitude": 0.2241,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "N",
-          "amplitude": 0.4176,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "A",
-          "amplitude": 0.1295,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "B",
-          "amplitude": 0.4286,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "T",
-          "amplitude": 0.4502,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "T",
-          "coupling_strength": 0.3,
-          "amplitude": 0.0336,
-          "source": "user_input_precomp\u2192X\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "B",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0224,
-          "source": "user_input_precomp\u2192X\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "B",
-          "coupling_strength": 0.35,
-          "amplitude": 0.0731,
-          "source": "user_input_precomp\u2192N\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0418,
-          "source": "user_input_precomp\u2192N\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "X",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0313,
-          "source": "user_input_precomp\u2192N\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0129,
-          "source": "user_input_precomp\u2192A\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "B",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0162,
-          "source": "user_input_precomp\u2192A\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "N",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0097,
-          "source": "user_input_precomp\u2192A\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "N",
-          "coupling_strength": 0.3,
-          "amplitude": 0.0643,
-          "source": "user_input_precomp\u2192B\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "A",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0536,
-          "source": "user_input_precomp\u2192B\u2192A"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "X",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0563,
-          "source": "user_input_precomp\u2192T\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "A",
-          "coupling_strength": 0.2,
-          "amplitude": 0.045,
-          "source": "user_input_precomp\u2192T\u2192A"
-        }
-      ],
-      "provenance": "WAVEFORM"
-    },
-    {
-      "ts": 1784124845.500281,
-      "source": "user_input_precomp",
-      "dominant_axis": "T",
-      "intensity": 0.65,
-      "coupling_mode": "full",
-      "genealogy_id": "",
-      "tick": 0,
-      "trace": [
-        {
-          "step": "primary",
-          "axis": "X",
-          "amplitude": 0.2332,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "N",
-          "amplitude": 0.4179,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "A",
-          "amplitude": 0.1286,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "B",
-          "amplitude": 0.4287,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "primary",
-          "axis": "T",
-          "amplitude": 0.4501,
-          "source": "user_input_precomp"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "T",
-          "coupling_strength": 0.3,
-          "amplitude": 0.035,
-          "source": "user_input_precomp\u2192X\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "X",
-          "to": "B",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0233,
-          "source": "user_input_precomp\u2192X\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "B",
-          "coupling_strength": 0.35,
-          "amplitude": 0.0731,
-          "source": "user_input_precomp\u2192N\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0418,
-          "source": "user_input_precomp\u2192N\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "N",
-          "to": "X",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0313,
-          "source": "user_input_precomp\u2192N\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "T",
-          "coupling_strength": 0.2,
-          "amplitude": 0.0129,
-          "source": "user_input_precomp\u2192A\u2192T"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "B",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0161,
-          "source": "user_input_precomp\u2192A\u2192B"
-        },
-        {
-          "step": "coupling",
-          "from": "A",
-          "to": "N",
-          "coupling_strength": 0.15,
-          "amplitude": 0.0096,
-          "source": "user_input_precomp\u2192A\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "N",
-          "coupling_strength": 0.3,
-          "amplitude": 0.0643,
-          "source": "user_input_precomp\u2192B\u2192N"
-        },
-        {
-          "step": "coupling",
-          "from": "B",
-          "to": "A",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0536,
-          "source": "user_input_precomp\u2192B\u2192A"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "X",
-          "coupling_strength": 0.25,
-          "amplitude": 0.0563,
-          "source": "user_input_precomp\u2192T\u2192X"
-        },
-        {
-          "step": "coupling",
-          "from": "T",
-          "to": "A",
-          "coupling_strength": 0.2,
-          "amplitude": 0.045,
-          "source": "user_input_precomp\u2192T\u2192A"
-        }
-      ],
-      "provenance": "WAVEFORM"
-    },
-    {
-      "timestamp": 1784124864.8168712,
-      "issue_category": "coherence_maintenance",
-      "logic_tier": "runtime_orchestration",
-      "intervention": "active_self_repair_orientation",
-      "observed_effect": "resolved_partially",
-      "count": 449,
-      "auto_advance": false,
-      "doctrine_strategy": "",
-      "doctrine_confidence": 0.0,
-      "constraint_context": {
-        "constraint_axes": {
-          "X": 0.1852,
-          "T": 0.1852,
-          "N": 0.1852,
-          "B": 0.1852,
-          "A": 0.2593
-        },
-        "dominant_axis": "A",
-        "axis_signature": [
-          "A",
-          "X",
-          "T"
-        ],
-        "purpose_lane": "repair_commitment",
-        "genealogy_pressure_orientation": {
-          "X": 1.15,
-          "T": 1.15,
-          "N": 1.15,
-          "B": 1.15,
-          "A": 1.15
-        }
-      },
-      "system_pressure": {
-        "source": "aurora.dialogue.self_repair",
-        "phase": "dialogue",
-        "system_load": "low",
-        "system_load_score": 0.0816,
-        "io_pressure": "low",
-        "io_pressure_score": 0.0,
-        "background_cycle_density": "low",
-        "background_cycle_density_score": 0.24,
-        "cognitive_coherence": 1.0,
-        "cognitive_stagnation": 0.0,
-        "factors": {
-          "autonomy_running": 0.0,
-          "autosave_active": 0.0,
-          "dreams_used": 3.0,
-          "study_cycles_used": 3.0,
-          "observations_used": 0.0,
-          "pending_spontaneous": 0.0,
-          "exploration_depth": 0.0,
-          "quarantine_depth": 0.0,
-          "search_failure_bias": 0.0,
-          "coherence_deficit": 0.0
-        }
-      },
-      "genealogy_refs": [],
-      "learning_credit": {
-        "credit": 0.1,
-        "global_debt": 0.0,
-        "issue_debt": 0.0
-      }
-    },
-    {
-      "ts": 1784133299.4609149,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_classroom_perspective_rotation_and_watchdog",
-      "severity": 0.6,
-      "persistence_key": "tests.test_classroom_perspective_rotation_and_wa",
-      "profile": {
-        "X": 0.1,
-        "T": 0.8,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
     {
       "ts": 1784133300.5837133,
       "provenance": "WARP",
@@ -6191,6 +5073,3660 @@
         "global_debt": 0.0,
         "issue_debt": 0.0
       }
+    },
+    {
+      "ts": 1784193048.6515863,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4181,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2229,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4289,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1288,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0334,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0223,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0643,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0129,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0161,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0097,
+          "source": "user_input_precomp\u2192A\u2192N"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784193054.5207121,
+      "issue_category": "meaning_tension",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "meaning_surface_alignment",
+      "observed_effect": "resolved_partially",
+      "count": 33,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.1038,
+          "T": 1.1038,
+          "N": 1.1038,
+          "B": 1.1038,
+          "A": 1.1038
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.2163,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 0.516,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.484
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784193054.810906,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4184,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2252,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4291,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1269,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0338,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0225,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0127,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0159,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "ts": 1784193074.7762854,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4186,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2341,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4293,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1261,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0733,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0419,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0351,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0234,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0537,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0126,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0158,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784193095.3490078,
+      "issue_category": "coherence_maintenance",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "active_self_repair_orientation",
+      "observed_effect": "resolved_partially",
+      "count": 458,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1852,
+          "T": 0.1852,
+          "N": 0.1852,
+          "B": 0.1852,
+          "A": 0.2593
+        },
+        "dominant_axis": "A",
+        "axis_signature": [
+          "A",
+          "X",
+          "T"
+        ],
+        "purpose_lane": "repair_commitment",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "timestamp": 1784193095.3574338,
+      "issue_category": "unbound_surface_fragment",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "bind_fragment_to_surface_relation",
+      "observed_effect": "resolved_partially",
+      "count": 393,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.articulation",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784193159.548227,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_composer_relevance_selection",
+      "severity": 0.6,
+      "persistence_key": "tests.test_composer_relevance_selection",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784193162.7532897,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1288,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4181,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4289,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2229,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0129,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0161,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0097,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0643,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0334,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0223,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784193169.6626682,
+      "issue_category": "meaning_tension",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "meaning_surface_alignment",
+      "observed_effect": "resolved_partially",
+      "count": 34,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.1038,
+          "T": 1.1038,
+          "N": 1.1038,
+          "B": 1.1038,
+          "A": 1.1038
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.2163,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 0.516,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.484
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784193169.9711232,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1269,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4184,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4291,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2252,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0127,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0159,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0338,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0225,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "ts": 1784193190.8220572,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1261,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4186,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4293,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2341,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0126,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0158,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0733,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0419,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0537,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0351,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0234,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784193211.9157317,
+      "issue_category": "coherence_maintenance",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "active_self_repair_orientation",
+      "observed_effect": "resolved_partially",
+      "count": 459,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1852,
+          "T": 0.1852,
+          "N": 0.1852,
+          "B": 0.1852,
+          "A": 0.2593
+        },
+        "dominant_axis": "A",
+        "axis_signature": [
+          "A",
+          "X",
+          "T"
+        ],
+        "purpose_lane": "repair_commitment",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "timestamp": 1784193211.9259765,
+      "issue_category": "unbound_surface_fragment",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "bind_fragment_to_surface_relation",
+      "observed_effect": "resolved_partially",
+      "count": 394,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.articulation",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194009.8225288,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4289,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1288,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4181,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2229,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0643,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0129,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0161,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0097,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0334,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0223,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194016.7645695,
+      "issue_category": "meaning_tension",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "meaning_surface_alignment",
+      "observed_effect": "resolved_partially",
+      "count": 35,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.1038,
+          "T": 1.1038,
+          "N": 1.1038,
+          "B": 1.1038,
+          "A": 1.1038
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.2163,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 0.516,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.484
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194017.0684893,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4291,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1269,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4184,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2252,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0127,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0159,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0338,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0225,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "ts": 1784194038.7861247,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4293,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1261,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4186,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2341,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0537,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0126,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0158,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0733,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0419,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0351,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0234,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194061.4294221,
+      "issue_category": "coherence_maintenance",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "active_self_repair_orientation",
+      "observed_effect": "resolved_partially",
+      "count": 460,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1852,
+          "T": 0.1852,
+          "N": 0.1852,
+          "B": 0.1852,
+          "A": 0.2593
+        },
+        "dominant_axis": "A",
+        "axis_signature": [
+          "A",
+          "X",
+          "T"
+        ],
+        "purpose_lane": "repair_commitment",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "timestamp": 1784194061.438719,
+      "issue_category": "unbound_surface_fragment",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "bind_fragment_to_surface_relation",
+      "observed_effect": "resolved_partially",
+      "count": 395,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.articulation",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194131.6890554,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4181,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1288,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4289,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2229,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0129,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0161,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0097,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0643,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0334,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0223,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194137.9665446,
+      "issue_category": "meaning_tension",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "meaning_surface_alignment",
+      "observed_effect": "resolved_partially",
+      "count": 36,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.0769,
+          "T": 1.0769,
+          "N": 1.0769,
+          "B": 1.0769,
+          "A": 1.0769
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.2343,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 0.416,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.584
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194138.2311938,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4184,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1269,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4291,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2252,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0127,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0159,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0338,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0225,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "ts": 1784194160.3059838,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4186,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1261,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4293,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2341,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0733,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0419,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0126,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0158,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0537,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0351,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0234,
+          "source": "user_input_precomp\u2192X\u2192B"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194182.065844,
+      "issue_category": "coherence_maintenance",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "active_self_repair_orientation",
+      "observed_effect": "resolved_partially",
+      "count": 461,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1852,
+          "T": 0.1852,
+          "N": 0.1852,
+          "B": 0.1852,
+          "A": 0.2593
+        },
+        "dominant_axis": "A",
+        "axis_signature": [
+          "A",
+          "X",
+          "T"
+        ],
+        "purpose_lane": "repair_commitment",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "timestamp": 1784194182.075221,
+      "issue_category": "unbound_surface_fragment",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "bind_fragment_to_surface_relation",
+      "observed_effect": "resolved_partially",
+      "count": 396,
+      "auto_advance": true,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.articulation",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194760.8160617,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2229,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1288,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4289,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4181,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0334,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0223,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0129,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0161,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0097,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0643,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194767.2888408,
+      "issue_category": "meaning_tension",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "meaning_surface_alignment",
+      "observed_effect": "resolved_partially",
+      "count": 37,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.0769,
+          "T": 1.0769,
+          "N": 1.0769,
+          "B": 1.0769,
+          "A": 1.0769
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.2163,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 0.516,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.484
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194767.5431948,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2252,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1269,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4291,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4184,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0338,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0225,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0127,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0159,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "ts": 1784194789.069574,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2341,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1261,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4293,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4186,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0351,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0234,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0126,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0158,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0537,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0733,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0419,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194811.0687695,
+      "issue_category": "coherence_maintenance",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "active_self_repair_orientation",
+      "observed_effect": "resolved_partially",
+      "count": 462,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1852,
+          "T": 0.1852,
+          "N": 0.1852,
+          "B": 0.1852,
+          "A": 0.2593
+        },
+        "dominant_axis": "A",
+        "axis_signature": [
+          "A",
+          "X",
+          "T"
+        ],
+        "purpose_lane": "repair_commitment",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "timestamp": 1784194811.0787864,
+      "issue_category": "unbound_surface_fragment",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "bind_fragment_to_surface_relation",
+      "observed_effect": "resolved_partially",
+      "count": 397,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.articulation",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194946.709495,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4289,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1288,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4181,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2229,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0643,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0129,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0161,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0097,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0334,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0223,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194953.3971052,
+      "issue_category": "meaning_tension",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "meaning_surface_alignment",
+      "observed_effect": "resolved_partially",
+      "count": 38,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.0769,
+          "T": 1.0769,
+          "N": 1.0769,
+          "B": 1.0769,
+          "A": 1.0769
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.2163,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 0.516,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.484
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "ts": 1784194953.679631,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4291,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1269,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4184,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2252,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0536,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0127,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0159,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0732,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0418,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0338,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0225,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "ts": 1784194974.9881618,
+      "source": "user_input_precomp",
+      "dominant_axis": "T",
+      "intensity": 0.65,
+      "coupling_mode": "full",
+      "genealogy_id": "",
+      "tick": 0,
+      "trace": [
+        {
+          "step": "primary",
+          "axis": "B",
+          "amplitude": 0.4293,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "A",
+          "amplitude": 0.1261,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "N",
+          "amplitude": 0.4186,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "X",
+          "amplitude": 0.2341,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "primary",
+          "axis": "T",
+          "amplitude": 0.4501,
+          "source": "user_input_precomp"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "N",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0644,
+          "source": "user_input_precomp\u2192B\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "B",
+          "to": "A",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0537,
+          "source": "user_input_precomp\u2192B\u2192A"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0126,
+          "source": "user_input_precomp\u2192A\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "B",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0158,
+          "source": "user_input_precomp\u2192A\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "A",
+          "to": "N",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0095,
+          "source": "user_input_precomp\u2192A\u2192N"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "B",
+          "coupling_strength": 0.35,
+          "amplitude": 0.0733,
+          "source": "user_input_precomp\u2192N\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "T",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0419,
+          "source": "user_input_precomp\u2192N\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "N",
+          "to": "X",
+          "coupling_strength": 0.15,
+          "amplitude": 0.0314,
+          "source": "user_input_precomp\u2192N\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "T",
+          "coupling_strength": 0.3,
+          "amplitude": 0.0351,
+          "source": "user_input_precomp\u2192X\u2192T"
+        },
+        {
+          "step": "coupling",
+          "from": "X",
+          "to": "B",
+          "coupling_strength": 0.2,
+          "amplitude": 0.0234,
+          "source": "user_input_precomp\u2192X\u2192B"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "X",
+          "coupling_strength": 0.25,
+          "amplitude": 0.0563,
+          "source": "user_input_precomp\u2192T\u2192X"
+        },
+        {
+          "step": "coupling",
+          "from": "T",
+          "to": "A",
+          "coupling_strength": 0.2,
+          "amplitude": 0.045,
+          "source": "user_input_precomp\u2192T\u2192A"
+        }
+      ],
+      "provenance": "WAVEFORM"
+    },
+    {
+      "timestamp": 1784194996.3937988,
+      "issue_category": "coherence_maintenance",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "active_self_repair_orientation",
+      "observed_effect": "resolved_partially",
+      "count": 463,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.1852,
+          "T": 0.1852,
+          "N": 0.1852,
+          "B": 0.1852,
+          "A": 0.2593
+        },
+        "dominant_axis": "A",
+        "axis_signature": [
+          "A",
+          "X",
+          "T"
+        ],
+        "purpose_lane": "repair_commitment",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.self_repair",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
+    },
+    {
+      "timestamp": 1784194996.4019973,
+      "issue_category": "unbound_surface_fragment",
+      "logic_tier": "runtime_orchestration",
+      "intervention": "bind_fragment_to_surface_relation",
+      "observed_effect": "resolved_partially",
+      "count": 398,
+      "auto_advance": false,
+      "doctrine_strategy": "",
+      "doctrine_confidence": 0.0,
+      "constraint_context": {
+        "constraint_axes": {
+          "X": 0.2,
+          "T": 0.2,
+          "N": 0.2,
+          "B": 0.2,
+          "A": 0.2
+        },
+        "dominant_axis": "X",
+        "axis_signature": [
+          "X",
+          "T",
+          "N"
+        ],
+        "purpose_lane": "admissibility_grounding",
+        "genealogy_pressure_orientation": {
+          "X": 1.15,
+          "T": 1.15,
+          "N": 1.15,
+          "B": 1.15,
+          "A": 1.15
+        }
+      },
+      "system_pressure": {
+        "source": "aurora.dialogue.articulation",
+        "phase": "dialogue",
+        "system_load": "low",
+        "system_load_score": 0.1292,
+        "io_pressure": "low",
+        "io_pressure_score": 0.0,
+        "background_cycle_density": "low",
+        "background_cycle_density_score": 0.38,
+        "cognitive_coherence": 1.0,
+        "cognitive_stagnation": 0.0,
+        "factors": {
+          "autonomy_running": 0.0,
+          "autosave_active": 0.0,
+          "dreams_used": 4.0,
+          "study_cycles_used": 8.0,
+          "observations_used": 0.0,
+          "pending_spontaneous": 0.0,
+          "exploration_depth": 0.0,
+          "quarantine_depth": 0.0,
+          "search_failure_bias": 0.0,
+          "coherence_deficit": 0.0
+        }
+      },
+      "genealogy_refs": [],
+      "learning_credit": {
+        "credit": 0.1,
+        "global_debt": 0.0,
+        "issue_debt": 0.0
+      }
     }
   ],
   "consultation_history": [],
@@ -7444,5 +9980,5 @@
       ]
     }
   ],
-  "saved_at": 1784191675.0571804
+  "saved_at": 1784194996.4020205
 }
