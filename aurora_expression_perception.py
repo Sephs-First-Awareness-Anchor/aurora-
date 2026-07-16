@@ -2440,6 +2440,7 @@ class SentenceComposer:
 
         words = list(used_words or [])  # cross-sentence diversity pressure
         _new_start = len(words)
+        sentence_roles = []
         for r_i, role in enumerate(roles):
             word = self._select_constraint_word(
                 role, dominant_axis,
@@ -2451,11 +2452,30 @@ class SentenceComposer:
             )
             if word:
                 words.append(word)
+                sentence_roles.append(role)
 
         # Need at least subject+verb-grade content to emit
         words = words[_new_start:]
         if len(words) < 2:
             return ""
+
+        # R1.9.3 L3: subject-driven conjugation for this sentence's own
+        # action slots -- reuses _CONJUGATIONS via _conjugate_for_subject,
+        # the same table _conjugate_verb has always used, just reachable
+        # from the delivered motif path now instead of only the retired
+        # template-string path. Agent is always exactly "I" or "you"
+        # (_select_constraint_word's agent branch), so the most recent
+        # preceding agent word in THIS sentence is the subject for every
+        # action word after it; an action with no preceding agent in this
+        # sentence is left unconjugated (matches _conjugate_verb's own
+        # "no recognized subject -> return verb unchanged" behavior).
+        current_subject = None
+        for i, r in enumerate(sentence_roles):
+            if r == "agent":
+                current_subject = words[i]
+            elif r == "action" and current_subject is not None:
+                words[i] = self._conjugate_for_subject(words[i], current_subject)
+
         sent = " ".join(words)
         sent = sent[0].upper() + sent[1:]
         if not sent.endswith((".", "!", "?")):
@@ -3295,15 +3315,19 @@ class SentenceComposer:
 
         return frame
 
-    def _conjugate_verb(self, verb: str, template_so_far: str,
-                       slot_marker: str) -> str:
-        """Conjugate a verb based on the subject found in the template so far."""
-        idx = template_so_far.find(slot_marker)
-        before = template_so_far[:idx].rstrip().lower() if idx > 0 else ""
+    def _conjugate_for_subject(self, verb: str, subject: str) -> str:
+        """R1.9.3 L3: subject-driven verb conjugation -- the reusable core
+        of _conjugate_verb's I/you switch, factored out so the delivered
+        motif-composition path (which always knows its subject word
+        directly: agent is always exactly "I" or "you", never scanned out
+        of a template string) can call it without needing a template
+        string to scan backward through. _conjugate_verb below now
+        delegates here; behavior for its existing callers is unchanged."""
         v = verb.lower()
+        subj = subject.lower().rstrip(".,!?;:")
 
         # --- First person 'I' ---
-        if before.endswith('i') or before.endswith('i '):
+        if subj == "i":
             if v in self._CONJUGATIONS:
                 return self._CONJUGATIONS[v]
             if v.endswith('es') and len(v) > 3:
@@ -3315,7 +3339,7 @@ class SentenceComposer:
                 return v[:-1]
 
         # --- Second person 'you' ---
-        elif before.endswith('you') or before.endswith('you '):
+        elif subj == "you":
             # 'be'
             if v in ('am', 'is', 'are', 'be', 'being'):
                 return 'are'
@@ -3332,6 +3356,19 @@ class SentenceComposer:
                 return v[:-2]
             if v.endswith('s') and not v.endswith('ss') and len(v) > 2:
                 return v[:-1]
+
+        return verb
+
+    def _conjugate_verb(self, verb: str, template_so_far: str,
+                       slot_marker: str) -> str:
+        """Conjugate a verb based on the subject found in the template so far."""
+        idx = template_so_far.find(slot_marker)
+        before = template_so_far[:idx].rstrip().lower() if idx > 0 else ""
+
+        if before.endswith('i') or before.endswith('i '):
+            return self._conjugate_for_subject(verb, "I")
+        elif before.endswith('you') or before.endswith('you '):
+            return self._conjugate_for_subject(verb, "you")
 
         return verb
 
