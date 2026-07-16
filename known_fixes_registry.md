@@ -2320,3 +2320,77 @@ other affected files.
 
 **First Seen:** N5 item 2, R1 Campaign Closure directive's next-phase
 queue, 2026-07-16.
+
+## N5 (item 3 of 3) — worth/variant boot tier: CONFIRMED LIVE, quarantine reason is a real performance tradeoff
+
+**Status:** dead-systems docket item 3 of 3, closes the N5 docket.
+Evidence only, no production code changed; test manifest text updated
+with corroborating evidence already on record from R1.9.2's G4 gate.
+
+**What QUARANTINE_PROFILE_GATED already claimed (accurate as far as it
+went):** `aurora_internal.aurora_worth_evaluator` and
+`aurora_internal.aurora_variant_promotion.VariantPromoter` have "never
+actually participated in any measurement this campaign has taken"
+because `run_probe_battery.py` and `run_full_competency_gauntlet.py`
+both boot with `runtime_profile="surface"` unconditionally, and the
+whole intake-metabolism tier (Steps 9-14: accountant, bias_engine,
+metabolizer, worth_eval, solidification, variant_promoter, strand_lib)
+is deliberately skipped under that profile (aurora.py's boot sets all
+eight to `None` and prints "Intake metabolism deferred to subsurface
+runtime" when `surface_profile` is true). That claim was narrow and
+correct; it was never actually a claim of deadness.
+
+**What this investigation added:** checked what profile REAL entry
+points actually use. `boot_aurora()`'s own signature defaults
+`runtime_profile` to `"full"`, and grepping every non-test caller in the
+repo confirms `aurora_daemon.py` (the actual live daemon process),
+`aurora_bridge.py` (the Flutter mobile app's real production bridge),
+`run_gauntlet.py`, `aurora_conversation_trainer.py`,
+`aurora_experiential_sim.py`, `corpus_runner.py`, and
+`aurora_core_concept_crystallization.py` all call `boot_aurora()` with
+no `runtime_profile` override — i.e. `"full"`. Only this campaign's own
+measurement tooling (`run_probe_battery.py`,
+`run_full_competency_gauntlet.py`) forces `"surface"`, for speed. So the
+worth/variant tier is not dead in any sense that matters: it runs, for
+real, on every turn, in the profile actual production use defaults to.
+It was simply never exercised by this campaign's OWN fast-path
+instruments — a scope gap in the measurement tooling, not in the
+capability.
+
+**Already-verified evidence (R1.9.2 G4 / FIX-A039, re-surfaced here
+rather than re-run):** the full 60-probe battery under
+`runtime_profile="full"` timed out at 600s (confirms the ~10x per-turn
+slowdown the tier's real execution causes — this is WHY the campaign's
+own tools default to "surface", a genuine practicality tradeoff, not
+neglect). A stratified 10-probe subset run under both profiles found: no
+exceptions, no crash, relevance 0.445 (surface) vs 0.520 (full),
+parseable_rate 0.0 in both (the pre-existing grammar gap reproduced
+identically regardless of profile — confirming the intake-metabolism
+tier is a separate, decoupled subsystem from the SentenceComposer text-
+generation path this campaign's grammar work actually fixed, not
+entangled with it). 10 post-fix classroom lessons also completed clean
+under the same conditions.
+
+**Verdict: CONFIRMED LIVE.** No integrate action needed — it's already
+integrated and already running in the profile production uses by
+default. Reclassifying the manifest entry's framing (not its bucket) to
+make this explicit: `QUARANTINE_PROFILE_GATED` now documents WHY the
+quarantine is a deliberate, evidenced tradeoff (test-suite runtime cost)
+rather than reading as "maybe dead, never checked."
+
+**Decision left to Sunni (not taken here):** the closure directive noted
+the parked Phase 0–2 directive (ICC ledger, strategic horizon, operator
+composer — all three already built and unit-tested this campaign, tasks
+#13-19) "re-enters scope only after that docket item resolves." This
+item has now resolved (CONFIRMED LIVE). Whether to actually resume that
+parked directive — i.e., wire the already-built ICC ledger/strategic
+horizon/operator composer into this now-confirmed-live tier for real —
+is a scope/priority decision, not a technical blocker anymore, and is
+left to Sunni rather than resumed unilaterally here, consistent with how
+N4 and N5 item 1 both left their larger judgment calls to Sunni.
+
+**First Seen:** N5 item 3, R1 Campaign Closure directive's next-phase
+queue, 2026-07-16. Closes the N5 dead-systems docket (items 1-3 all
+resolved: FailureGuardSuite/ConstraintEngine RECLASSIFY-recommended,
+ToroidalCirculationLayer CONFIRMED LIVE via corrected wiring test,
+worth/variant tier CONFIRMED LIVE via corrected manifest evidence).

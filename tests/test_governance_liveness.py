@@ -71,11 +71,28 @@ QUARANTINE_PROFILE_GATED = {
         "L22920) only when NOT booted with runtime_profile='surface'. "
         "run_probe_battery.py boots with runtime_profile='surface' "
         "unconditionally, so this has been unreachable in every measurement "
-        "R0-R1.8 took."
+        "R0-R1.8 took. N5 item 3 (R1 Campaign Closure, 2026-07-16) verdict: "
+        "NOT dead -- 'surface' is a deliberate fast-boot performance profile "
+        "this campaign's own tooling chose for speed, not the profile real "
+        "entry points default to. boot_aurora()'s own signature defaults "
+        "runtime_profile to 'full', and that is what aurora_daemon.py, the "
+        "Flutter mobile bridge (aurora_bridge.py), run_gauntlet.py, and "
+        "most training scripts actually call with no override -- this tier "
+        "runs for real, every turn, in normal production use. R1.9.2's G4 "
+        "gate (FIX-A039) already ran a stratified probe subset under "
+        "runtime_profile='full' and confirmed the whole intake-metabolism "
+        "tier (worth_evaluator, VariantPromoter, accountant, bias_engine, "
+        "solidification) executes with no exceptions and no material "
+        "behavior shift to delivered text beyond the expected ~10x per-turn "
+        "slowdown (it's a separate depth/solidification subsystem, "
+        "decoupled from the SentenceComposer path this campaign's grammar "
+        "work targeted). Quarantined here for a real, already-evidenced "
+        "reason -- the full 60-probe battery times out at 600s under "
+        "'full' -- not because the tier is unused or broken."
     ),
     "aurora_internal.aurora_variant_promotion.VariantPromoter": (
         "Same gating as worth_evaluator (aurora.py L22988, "
-        "variant_promoter.process_solidified(...))."
+        "variant_promoter.process_solidified(...)); same N5 item 3 verdict."
     ),
 }
 
