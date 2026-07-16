@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784204723.8122396,
-  "generation": 7978,
-  "genome_version": 7978,
+  "timestamp": 1784212852.496975,
+  "generation": 8013,
+  "genome_version": 8013,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.4645,
+    "caution": 0.5542,
     "emotional_expressiveness": 0.39,
     "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.39,
-    "social_engagement": 0.3907,
-    "energy_conservation": 0.3673
+    "pattern_sensitivity": 0.4338,
+    "social_engagement": 0.39,
+    "energy_conservation": 0.312
   },
-  "personality_drift": 0.7474,
+  "personality_drift": 0.7784,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.7479712180954632,
-      "precision": 1.0,
-      "depth": 0.5304000000000001,
-      "confidence": 0.9660717991491736
+      "warmth": 0.5824252243924933,
+      "precision": 0.7966093301325421,
+      "depth": 0.6210464747410015,
+      "confidence": 0.9200417542963772
     },
     "cognitive": {
-      "curiosity": 0.7737499359761316,
-      "pattern_matching": 1.0,
-      "abstraction": 0.7386867410140354,
-      "risk_assessment": 1.0
+      "curiosity": 0.9476993291555975,
+      "pattern_matching": 0.7177494003132552,
+      "abstraction": 0.8417693569296786,
+      "risk_assessment": 0.9410895279565129
     },
     "social": {
-      "empathy": 0.8771165236339558,
-      "trust_extension": 0.6759357522711684,
-      "boundary_maintenance": 0.7911183538401775,
-      "engagement": 0.7754181655894181
+      "empathy": 0.8052135624399064,
+      "trust_extension": 0.7484466597814712,
+      "boundary_maintenance": 0.5594158215413021,
+      "engagement": 0.7298069755738362
     }
   },
   "governance_stats": {
@@ -115,9 +115,9 @@
   "total_episodes": 5,
   "understanding_shards": 15,
   "what_aurora_learned": [
-    "what creates friction when approached with warm acknowledgment \u2014 it connects to see, use (B-axis, depth 0.38)."
+    "while held attention when approached with curious inquiry \u2014 it connects to perspectives, thinking (N-axis resonance, depth 0.30)."
   ],
   "time_dilation": 3000.0,
-  "stability_state": "cautious",
-  "_checksum": "bf4d72acdec9"
+  "stability_state": "critical",
+  "_checksum": "2148519bedc1"
 }
