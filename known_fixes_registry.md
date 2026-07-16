@@ -2159,3 +2159,56 @@ above, not a decision -- Sunni decides, per N4's own framing.
 
 **First Seen:** N4, R1 Campaign Closure directive's next-phase queue,
 2026-07-16.
+
+---
+
+## N5 (item 1 of 3) — FailureGuardSuite/ConstraintEngine: RECLASSIFY recommended
+
+**Status:** dead-systems docket item 1 of 3 (constraint engine/
+FailureGuardSuite, TCL, worth/variant boot tier), per N5's own "one at a
+time, no bundling" instruction. Evidence only; no code changed.
+
+**Reconfirmed, broader than the original QUARANTINE_STALE scope:** the
+original finding (R1.6/R1.8.1) was "zero references in aurora.py."
+Re-checked against the FULL codebase this time, not just aurora.py:
+`FailureGuardSuite`/`ConstraintEngine(` (the guard classes specifically
+-- `UncertaintySignalingGuard`, `BoundaryCalibrationGuard`,
+`ContextCarryoverGuard`, `PerspectiveIntegrationGuard`,
+`CoherenceMaintenanceGuard`) appear in exactly zero production modules.
+Several OTHER modules (`aurora_expression_perception.py`,
+`aurora_dream_trainer.py`, `aurora_internal/aurora_runtime_constraint_
+governor.py`, etc.) import from `aurora_constraint_engine.py` the FILE,
+but only its lightweight data types (`ConstraintVector`,
+`FoundationalContract`, `ExistenceMode`, `GovernorWeights`) -- never the
+guard suite. The only non-test references anywhere are this campaign's
+own tooling (`run_probe_battery.py`, `aurora_internal/aurora_icc_ledger.
+py`, `aurora_internal/aurora_semantic_probe_battery.py`).
+
+**Why integration isn't a clean fit against the now-honest battery:**
+the guard suite's thresholds are calibrated against data explicitly
+labeled stale in its own docstrings -- "dream avg=0.343, 10/10 episodes
+fail" for uncertainty, "dream avg=0.365, 10/10 episodes fail" for
+boundary -- both from BEFORE this entire remediation campaign, back when
+dev_index/dream-episode scoring was the (since-discredited) instrument.
+More fundamentally: this campaign's actual fixes to the rubric dimensions
+these guards claim to protect (relevance-primary selection, POS-gating,
+skeleton validity, grounded fitness) all landed as POST-hoc corrections
+INSIDE `SentenceComposer`'s generation process, not as PRE-expression
+guard-blocking on a separately-computed signal. Wiring this suite in now
+would mean building an entirely new live signal feed (nothing currently
+computes real per-turn `boundary_pressure`/uncertainty-level values for
+these `.update()` calls to consume) for a different remediation strategy
+than the one already verified working -- not a small integration, a
+second mechanism.
+
+**Recommendation (not a decision):** RECLASSIFY as formally superseded --
+keep the code (real, tested, no reason to delete), but retire it from
+"awaiting integration" status to "documented historical guard-rail
+design, superseded by generation-time fixes." If a future capability gap
+specifically needs pre-expression blocking (not post-hoc correction),
+this is a reasonable starting point to revisit -- but that's a different
+question than "should this be wired in now," which the evidence above
+answers no to.
+
+**First Seen:** N5 item 1, R1 Campaign Closure directive's next-phase
+queue, 2026-07-16.
