@@ -13,6 +13,7 @@ State → EXPRESSION (this) → RE-ENTRY → RECONCILIATION → UNDERSTANDING
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 import time
 import uuid
@@ -57,6 +58,55 @@ MAGNITUDE_PRESENT   = 0.10   # below magnitude, axis isn't really firing
 MAGNITUDE_HEDGE     = 0.30   # below magnitude on A+, hedge the assertion
 MIN_RELATIONS       = 2      # OETS depth check minimum typed relations
 MIN_USAGE_EXAMPLES  = 1      # OETS depth check minimum recorded examples
+
+# ── R1.9 F1: relevance-primary content-slot scoring (registry FIX-A029/A032) ──
+# score(w) = relevance(w) * quality(w) * (1 + FREQUENCY_TIEBREAK_EPSILON * log(1 + uses(w)))
+# relevance is the dominant term; frequency is demoted to a bounded log
+# tie-breaker that cannot outweigh a one-hop relevance difference. Derived
+# against the live aurora_oets_web.json count distribution (R1.9 F1
+# pre-flight, 2026-07-15/16): the eight-word garbled-response cluster's
+# times_used_in_expression tops out at 2934 ("am"); the worst-case defense
+# is a RELEVANCE_DISTANT candidate at max real-world frequency beating a
+# RELEVANCE_ONE_HOP_FLOOR candidate at zero uses:
+#   RELEVANCE_DISTANT_FLOOR * (1 + EPS * log(1+2934)) < RELEVANCE_ONE_HOP_FLOOR
+#   0.05 * (1 + EPS * 7.98) < 0.2  =>  EPS < 0.376
+# FREQUENCY_TIEBREAK_EPSILON is set an order of magnitude under that bound.
+# quality(w) is intentionally the constant 1.0, not comprehension_confidence
+# or ontological_depth -- both were checked against the live graph and both
+# are themselves usage/encounter-history-correlated (cold-start topic words
+# sit at a floor on BOTH: comprehension_confidence=0.100, ontological_depth
+# ~0.06, vs ~0.68-0.92 / ~0.38 for the reinforced identity cluster), so
+# either would silently reintroduce the frequency-dominance bug through a
+# second door. No non-frequency quality signal exists in the live schema,
+# so per F1.2 ("if none exists, constant 1.0 -- do not invent one") this is
+# deliberately flat.
+RELEVANCE_DIRECT_ANCHOR   = 1.0    # word is a content word of the input itself (or a perception-bound concept)
+RELEVANCE_ONE_HOP_FLOOR   = 0.2    # minimum meaningful one-hop relation strength observed live
+RELEVANCE_DISTANT_FLOOR   = 0.05   # no anchor-set path found -- can still be selected, but only via abstain-gate-cleared floor
+FREQUENCY_TIEBREAK_EPSILON = 0.05  # << 0.376 bound above, ample safety margin
+_ANCHOR_TOKEN_STOPWORDS: Set[str] = {
+    "the", "a", "an", "and", "or", "but", "is", "am", "are", "was", "were",
+    "be", "been", "being", "do", "does", "did", "have", "has", "had",
+    "will", "would", "should", "could", "can", "may", "might", "must",
+    "this", "that", "these", "those", "i", "you", "he", "she", "it", "we",
+    "they", "me", "him", "her", "us", "them", "my", "your", "his", "its",
+    "our", "their", "what", "which", "who", "whom", "how", "why", "when",
+    "where", "not", "no", "yes", "to", "of", "in", "on", "at", "for",
+    "with", "by", "from", "as", "so", "if", "than", "then", "just",
+    # Contractions -- the apostrophe-preserving tokenizer regex matches
+    # these as standalone tokens, and several (i've/been-equivalents) were
+    # found live to carry saturated co-occurrence edges into the identity
+    # cluster (R1.9 F1 pre-flight) precisely because they appear in nearly
+    # every sentence Aurora has ever produced, broken or not.
+    "i'm", "i've", "i'll", "i'd", "you're", "you've", "you'll", "you'd",
+    "we're", "we've", "we'll", "we'd", "they're", "they've", "they'll",
+    "they'd", "he's", "he'll", "he'd", "she's", "she'll", "she'd",
+    "it's", "it'll", "it'd", "that's", "that'll", "there's", "there'll",
+    "who's", "what's", "here's", "don't", "doesn't", "didn't", "isn't",
+    "aren't", "wasn't", "weren't", "won't", "wouldn't", "can't", "cannot",
+    "couldn't", "shouldn't", "mustn't", "haven't", "hasn't", "hadn't",
+    "let's",
+}
 
 _IDENTITY_TOPICS: Set[str] = {"self", "name", "identity", "you", "aurora"}
 _MODAL_TOKENS:    Tuple[str, ...] = ("can", "can't", "don't", "won't", "think", "could", "would")
@@ -503,6 +553,89 @@ class ConstraintEmitter:
         elif heat >= HEAT_MILD_FOCUS:
             slots.intensifier = "actually"
 
+    # ── R1.9 F1.1: relevance anchor set ───────────────────────────────────────
+    @staticmethod
+    def _build_anchor_set(ctx: "EmissionContext") -> Dict[str, float]:
+        """Direct anchor members (input content words, recent_words, and
+        perception-bound concept tokens) score RELEVANCE_DIRECT_ANCHOR;
+        their one-hop graph neighbors score their relation strength (floored
+        at RELEVANCE_ONE_HOP_FLOOR); everything else is left unlisted and
+        falls to RELEVANCE_DISTANT_FLOOR at scoring time."""
+        oets = ctx.oets
+        anchor: Dict[str, float] = {}
+
+        direct: Set[str] = set()
+        text = (ctx.input_frame.text if ctx.input_frame is not None else "") or ""
+        for tok in re.findall(r"[a-zA-Z][a-zA-Z']{2,}", text.lower()):
+            if tok not in _ANCHOR_TOKEN_STOPWORDS:
+                direct.add(tok)
+        direct |= {str(w).lower() for w in (ctx.recent_words or [])}
+
+        # F1.1 allows perception-derived concepts (QAO's recent_events) to
+        # join the anchor set with equal standing "if the emitter already
+        # receives an internal concept/pressure payload for the turn." That
+        # channel is deliberately NOT wired in here: QAO's recent_events is
+        # Aurora's own generic self-monitoring stream (issue categories like
+        # "coherence_maintenance"/"meaning_tension" -- see
+        # aurora_state/quasiarch_observer/indexes/), not turn-specific
+        # topical content, and empirically it fires the SAME small
+        # coherence/identity vocabulary on every turn regardless of what the
+        # turn is about (verified live: probing "guitar chords" pulled
+        # "meaning"/"coherence"/"tension" in as equal-standing direct
+        # anchors, which then won the frequency tie-breaker over "guitar"
+        # itself). Wiring this in would silently reopen the same
+        # feedback-loop bug through the anchor set instead of through
+        # comprehension_confidence. The existing self-referential branch
+        # above already uses QAO recent_events correctly -- gated to
+        # fr.is_self_referential, where Aurora's own internal state genuinely
+        # IS the topic. General-turn anchors stay input-text-only.
+
+        if oets is None or not hasattr(oets, "nodes"):
+            return {w: RELEVANCE_DIRECT_ANCHOR for w in direct}
+
+        for w in direct:
+            if w in oets.nodes:
+                anchor[w] = RELEVANCE_DIRECT_ANCHOR
+
+        get_all = getattr(oets, "get_all_relations_for", None)
+        if callable(get_all):
+            for w in list(anchor.keys()):
+                try:
+                    rels = get_all(w) or []
+                except Exception:
+                    continue
+                for rel in rels:
+                    other = rel.target_word if rel.source_word == w else rel.source_word
+                    if other in anchor:
+                        continue  # direct membership always wins
+                    raw_strength = min(1.0, float(getattr(rel, "strength", 0.0) or 0.0))
+                    # 86% of this graph's relations are "co-occurrence"-sourced
+                    # and 84% of those sit at strength 1.0 -- verified live
+                    # (R1.9 F1 pre-flight): near-universal function words like
+                    # "i've"/"been" carry strength-1.0 co-occurrence edges to
+                    # the identity-bank cluster simply because both appear in
+                    # nearly every one of Aurora's historical (broken)
+                    # responses. That strength is a saturated frequency proxy,
+                    # not a semantic-relevance signal -- the exact same
+                    # reinforcement-imbalance pattern FIX-A032 found in
+                    # times_used_in_expression, encoded as an edge weight
+                    # instead of a node counter. Co-occurrence edges are
+                    # therefore capped at the one-hop floor regardless of
+                    # their nominal strength; only relation sources that
+                    # reflect deliberate structure (category_sharing,
+                    # research, definition_analysis, foundational,
+                    # conversation, adjacency, co-expression, axis_embodiment
+                    # -- together under 15% of all relations) carry their
+                    # real strength.
+                    source = str(getattr(rel, "source_of_knowledge", "") or "")
+                    if source == "co-occurrence":
+                        strength = RELEVANCE_ONE_HOP_FLOOR
+                    else:
+                        strength = max(RELEVANCE_ONE_HOP_FLOOR, raw_strength)
+                    anchor[other] = max(anchor.get(other, 0.0), strength)
+
+        return anchor
+
     # ── OETS content slot resolution (§5, §2.3) ──────────────────────────────
     def _resolve_content_slot(
         self,
@@ -564,33 +697,44 @@ class ConstraintEmitter:
         if oets is None:
             return self._resolve_content_slot_from_staged(ctx, slot_name, slots, roles)
 
-        recent: Set[str]   = set(ctx.recent_words)
         axis_vec           = ctx.axis_polarities
         prefer_strong      = bool(slots.intensifier)
+        anchor_set         = self._build_anchor_set(ctx)
 
         best_word:      Optional[str] = None
         best_resonance: float         = 0.0
+        best_relevance: float         = 0.0
 
         for word, node in oets.nodes.items():
             if node.role not in roles:
                 continue
 
-            activation = node.comprehension_confidence
-            if word in recent:
-                activation = min(1.0, activation + 0.4)
-            if activation <= 0.0:
-                continue
+            # R1.9 F1: relevance-primary scoring. relevance is the dominant
+            # term; frequency is a bounded log tie-breaker that cannot
+            # outweigh a one-hop relevance difference (see the constants'
+            # derivation comment above). quality is deliberately constant --
+            # see FREQUENCY_TIEBREAK_EPSILON comment for why
+            # comprehension_confidence/ontological_depth were rejected as
+            # quality candidates.
+            relevance = anchor_set.get(word, RELEVANCE_DISTANT_FLOOR)
+            uses      = int(getattr(node, "times_used_in_expression", 0) or 0)
+            freq_term = 1.0 + FREQUENCY_TIEBREAK_EPSILON * math.log(1.0 + max(0, uses))
+            resonance = relevance * freq_term
 
-            alignment   = self._axis_alignment(node, axis_vec)
-            depth_bonus = 1.0 + node.ontological_depth
-            resonance   = activation * alignment * depth_bonus
+            alignment  = self._axis_alignment(node, axis_vec)
+            resonance *= alignment
 
             if prefer_strong:
                 resonance *= (1.0 + abs(node.emotional_valence) * 0.3)
 
             if resonance > best_resonance:
                 best_resonance = resonance
+                best_relevance = relevance
                 best_word      = word
+
+        # Stash the winning candidate's relevance on the context for F2's
+        # abstain-floor check to read without re-deriving it.
+        ctx._last_content_slot_relevance = best_relevance
 
         if best_word is None:
             # CBU Directive Alignment: Resolve content from the 125-law manifold
