@@ -2,20 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1*T^1",
-      "change_id": "MC:6ddb0491cd64",
-      "dominant_axis": "X",
-      "file": "aurora_internal/dual_strata/cers_regulator.py",
-      "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_internal.dual_strata.cers_regulator",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_ea333df508",
-      "source": "aurora.boot",
-      "timestamp": 1784124556.856606
-    },
-    {
-      "axis_signature": "X^1*T^1",
       "change_id": "MC:4842ddf6f593",
       "dominant_axis": "X",
       "file": "aurora_internal/dual_strata/cers_tensor_locator.py",
@@ -3359,10 +3345,24 @@
       "registered_ability_id": "X:CODE_LINEAGE_a12f815ff0",
       "source": "aurora.boot",
       "timestamp": 1784164535.4599254
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:06aa41a32df2",
+      "dominant_axis": "X",
+      "file": "tests/test_governance_liveness.py",
+      "matched_ability_id": "",
+      "matched_score": 0.66,
+      "mode": "created_manual_branch",
+      "module_name": "tests.test_governance_liveness",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "X:CODE_LINEAGE_a5ea34bdc8",
+      "source": "aurora.boot",
+      "timestamp": 1784166788.400728
     }
   ],
   "initialized": true,
-  "last_run_at": 1784164535.6681058,
+  "last_run_at": 1784166788.5642245,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781923577991269291,
@@ -4659,6 +4659,10 @@
     "tests/test_golden_transcript_validation.py": {
       "mtime_ns": 1784160808166051660,
       "size": 6614
+    },
+    "tests/test_governance_liveness.py": {
+      "mtime_ns": 1784166774748918486,
+      "size": 7425
     },
     "tests/test_grammar_motif_depletion_check.py": {
       "mtime_ns": 1783810369316367901,
