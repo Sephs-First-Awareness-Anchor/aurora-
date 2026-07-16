@@ -20100,7 +20100,18 @@ def boot_aurora(
     except Exception:
         pass
 
-    # Constraint emitter — replaces FGAE/StateVoice/SentenceComposer emission path
+    # Constraint emitter — the 2026-06-30 migration intended this to replace
+    # FGAE/StateVoice/SentenceComposer, but that migration was never
+    # completed: SentenceComposer (aurora_expression_perception.py) was
+    # neither removed nor quarantined, and gateway._express() still routes
+    # delivered output through it (ExpressionPerceptionEngine.express() ->
+    # self.composer), not through ConstraintEmitter. Backward-traced from
+    # the actual delivered artifact (R1.9.1): ConstraintEmitter genuinely
+    # executes on this turn's path but does NOT produce what resp_B (the
+    # text a user or the probe battery receives) contains. Both paths are
+    # live in parallel -- see tests/test_governance_liveness.py
+    # (LIVE_PARALLEL vs LIVE_DELIVERING) before trusting this comment's
+    # "replaces" framing for anything architecture-critical.
     try:
         from aurora_constraint_emission import ConstraintEmitter
         systems['constraint_emitter'] = ConstraintEmitter()

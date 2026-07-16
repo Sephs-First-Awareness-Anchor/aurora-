@@ -1,11 +1,24 @@
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 """
-R1.8/R1.8.1 Track C: governance liveness inventory, automated.
+R1.8/R1.8.1/R1.9.1 Track C: governance liveness inventory, automated.
 
 "verify_*() green != wired. Every module claiming a runtime role must show
 boot-path reachability; claimed-but-unwired modules live in an explicit
 quarantine manifest so their status is a decision, never an accident."
 (liveness rule, R1.7 addendum)
+
+R1.9.1 correction (backward-attribution rule): reachability from
+boot_aurora() is necessary but NOT sufficient to claim a module produces
+delivered output. R1.8.1 Step 3 forward-inferred from aurora.py's boot
+comment ("Constraint emitter -- replaces ... SentenceComposer emission
+path") that ConstraintEmitter was live and SentenceComposer was dead. Both
+halves of that claim were wrong: SentenceComposer is still reachable and
+IS what produces resp_B (the text run_probe_battery.py actually scores),
+while ConstraintEmitter, though genuinely live and executing, sits on a
+parallel path whose output is not what gets delivered. R1.9.1 fixed this
+by tracing backward from the actual delivered artifact (instrumenting the
+real return chain) instead of forward from architecture/comments -- see
+test_delivered_output_attribution_traces_to_sentence_composer below.
 
 This encodes the C1 inventory's verdicts as regression checks against
 aurora.py's source, mirroring the pattern already established by
@@ -14,8 +27,12 @@ unwired fails CI; a module quietly becoming reachable without updating the
 quarantine manifest is exactly as much a decision that should be visible.
 """
 import os
+import shutil
+import sys
+import tempfile
 
 AURORA_PY = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora.py")
+REPO_ROOT = os.path.dirname(AURORA_PY)
 
 
 def _aurora_source() -> str:
@@ -80,12 +97,6 @@ QUARANTINE_ALTERNATE_ENTRYPOINT_ONLY = {
 }
 
 LIVE_CONFIRMED = {
-    "aurora_constraint_emission.ConstraintEmitter": (
-        "Instantiated unconditionally at boot (aurora.py L20103-20108, "
-        "all runtime profiles). Called from _field_frame_compress and "
-        "_emit_honest_abstain_and_seek. Confirmed executing live via "
-        "instrumented single-turn trace, R1.8.1 Step 3."
-    ),
     "ContradictionLedger": (
         "Instantiated at boot (aurora.py L20452-20453), wired to "
         "working_memory at both initial wiring and the final re-assert pass."
@@ -98,6 +109,43 @@ LIVE_CONFIRMED = {
         "Instantiated and called in aurora.py (CERS shadow pass). "
         "Explicitly documented as read-only/advisory/non-authoritative by "
         "design -- this is a design decision, not staleness."
+    ),
+}
+
+# R1.9.1 correction: two verdict tiers replace the single LIVE bucket for
+# these two, because reachability and delivered-output attribution turned
+# out to diverge -- exactly the case the backward-attribution rule exists
+# to catch.
+LIVE_PARALLEL = {
+    "aurora_constraint_emission.ConstraintEmitter": (
+        "Instantiated unconditionally at boot (aurora.py L20103-20108, "
+        "all runtime profiles). Called from _field_frame_compress and "
+        "_emit_honest_abstain_and_seek, and genuinely executes (confirmed "
+        "R1.8.1 Step 3's instrumented trace, and R1.9's live relevance-fix "
+        "verification). BUT: backward-traced from the actual delivered "
+        "artifact (R1.9.1), its output is NOT what reaches resp_B / what "
+        "run_probe_battery.py scores -- that comes from SentenceComposer "
+        "(see LIVE_DELIVERING). ConstraintEmitter sits on a real, executing, "
+        "but non-delivering parallel path. The R1.9 F1 relevance-primary fix "
+        "applied to it is a genuine improvement to a live mechanism, just "
+        "not (yet) to the one a user actually receives text from."
+    ),
+}
+
+LIVE_DELIVERING = {
+    "aurora_expression_perception.SentenceComposer": (
+        "R1.8.1 Step 3 called this 'orphaned dead code, bypassed since "
+        "2026-06-30' based on aurora.py's boot comment. That was WRONG: "
+        "instantiated at aurora_expression_perception.py L3296 "
+        "(self.composer = SentenceComposer(...)), reachable via "
+        "gateway._express() -> ExpressionPerceptionEngine.express() -> "
+        "self.composer.compose(). R1.9.1 confirmed via backward-instrumented "
+        "live trace that gateway._express()'s returned .content is BYTE-FOR-"
+        "BYTE what ends up in resp_B.content -- the exact field "
+        "run_probe_battery.py scores. This is the actual delivered-output "
+        "mechanism; the 6/30 'replacement' migration never removed or "
+        "quarantined it, leaving both paths alive (migration-completion "
+        "rule, R1.9.1)."
     ),
 }
 
@@ -119,10 +167,92 @@ def test_quarantine_stale_modules_remain_unreferenced_in_aurora_py():
     )
 
 
-def test_constraint_emitter_is_wired_at_boot():
+def test_constraint_emitter_is_wired_at_boot_but_only_live_parallel():
+    """Reachable and executing (LIVE_PARALLEL) -- NOT the same claim as
+    delivering output. See test_delivered_output_attribution_traces_to_
+    sentence_composer for the actual delivered-path proof."""
     source = _aurora_source()
     assert "from aurora_constraint_emission import ConstraintEmitter" in source
     assert "constraint_emitter" in source
+
+
+def test_sentence_composer_is_reachable_from_gateway_express():
+    """SentenceComposer was wrongly quarantined as dead in R1.8.1. Source-level
+    reachability check; the byte-for-byte delivered-output proof is the live
+    trace test below."""
+    with open(
+        os.path.join(REPO_ROOT, "aurora_expression_perception.py"),
+        "r", encoding="utf-8",
+    ) as f:
+        aep_source = f.read()
+    assert "self.composer = SentenceComposer(self.lexicon, self.voice)" in aep_source
+    with open(
+        os.path.join(REPO_ROOT, "aurora_governance_persistence_gateway.py"),
+        "r", encoding="utf-8",
+    ) as f:
+        gw_source = f.read()
+    assert "self.perception.express(" in gw_source
+
+
+def test_delivered_output_attribution_traces_to_sentence_composer():
+    """R1.9.1 Step 2: backward attribution, not forward inference. Boots a
+    real (throwaway-copy-isolated) Aurora instance, instruments the actual
+    return chain, and asserts gateway._express()'s returned .content is
+    IDENTICAL to resp_B.content for a real turn -- proving byte-for-byte
+    which stage the delivered/scored text actually comes from, rather than
+    inferring liveness from a boot comment or import graph (the exact
+    methodology error that produced the R1.8.1 orphaned-composer mistake)."""
+    sys.path.insert(0, REPO_ROOT)
+    import aurora_governance_persistence_gateway as agpg
+    import inspect
+
+    target_cls = None
+    for _name, obj in vars(agpg).items():
+        if inspect.isclass(obj) and "_express" in getattr(obj, "__dict__", {}):
+            target_cls = obj
+            break
+    assert target_cls is not None, "no class in aurora_governance_persistence_gateway defines _express"
+
+    captured = {"calls": []}
+    orig_express = target_cls._express
+
+    def _patched(self, packet, synthesis, mode):
+        result = orig_express(self, packet, synthesis, mode)
+        captured["calls"].append(result.content)
+        return result
+
+    target_cls._express = _patched
+    scratch = tempfile.mkdtemp(prefix="aurora_liveness_attribution_")
+    try:
+        shutil.copytree(
+            os.path.join(REPO_ROOT, "aurora_state"),
+            os.path.join(scratch, "aurora_state"),
+        )
+        import aurora as A
+        systems = A.boot_aurora(state_dir=os.path.join(scratch, "aurora_state"), verbose=False)
+        systems["_session_turn_buffer"] = []
+        result = A.process_external_user_turn(
+            systems, "Hi Aurora, how are you doing today?",
+            source_label="liveness_attribution_test",
+        )
+        resp_b = result.get("resp_B")
+        assert resp_b is not None, "process_external_user_turn returned no resp_B"
+        assert captured["calls"], "gateway._express() was never called for this turn"
+        # gateway._express() can be called more than once per turn (e.g. a
+        # discarded earlier draft) -- resp_B is attributed to SentenceComposer
+        # if it matches ANY call's returned content, not necessarily the
+        # first. If it matches none, the attribution genuinely doesn't hold.
+        assert resp_b.content in captured["calls"], (
+            f"resp_B.content matched none of the {len(captured['calls'])} "
+            "gateway._express() call(s) captured this turn -- the delivered-"
+            "output attribution no longer holds and this test's "
+            "LIVE_DELIVERING verdict for SentenceComposer needs "
+            f"re-verification. resp_B.content={resp_b.content!r} "
+            f"captured_calls={captured['calls']!r}"
+        )
+    finally:
+        target_cls._express = orig_express
+        shutil.rmtree(scratch, ignore_errors=True)
 
 
 def test_contradiction_ledger_is_wired_at_boot():

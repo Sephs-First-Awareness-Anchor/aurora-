@@ -1161,6 +1161,68 @@ directly rather than inferred.
 
 ---
 
+## FIX-A033 (ARCHITECTURAL) — Migration-completion rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A path is "replaced" in a commit message or boot comment, but
+the old path is neither removed nor explicitly quarantined -- both paths
+stay live, and later diagnosis inherits whichever one a boot comment
+happened to name, not whichever one actually delivers output.
+
+**Correct Form:** A path replacement is complete only when the old path is
+removed, or explicitly quarantined with a documented liveness verdict.
+Dual-alive paths surviving a claimed "replacement" are a defect class in
+their own right, independent of whether either path individually works.
+
+**Why:** The 2026-06-30 introduction of `ConstraintEmitter` was documented
+in `aurora.py` as replacing "FGAE/StateVoice/SentenceComposer emission
+path." `SentenceComposer` was never removed or quarantined; it remained
+reachable via `gateway._express() -> ExpressionPerceptionEngine.express()
+-> self.composer`, and R1.9.1 confirmed by backward trace that THIS path,
+not `ConstraintEmitter`, produces the text a user or the probe battery
+actually receives. R1.8.1's own Step 3 finding ("SentenceComposer is
+orphaned dead code") inherited the incomplete-migration's framing and was
+wrong as a result.
+
+**First Seen:** Remediation Directive R1.9.1, 2026-07-16 (origin: the
+6/30 incomplete swap).
+
+---
+
+## FIX-A034 (ARCHITECTURAL) — Backward-attribution rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** Claiming a module is live (or dead) by forward inference --
+reading a boot comment, following an import graph, or confirming a
+function executes -- without checking whether that function's output is
+what actually reaches the delivered artifact.
+
+**Correct Form:** Liveness and output-attribution claims require a
+backward trace from the delivered artifact: instrument the actual return
+chain for a real turn and confirm, byte-for-byte, which stage's output
+the delivered text equals. Forward inference from design intent, boot
+comments, or "this function executes" is insufficient evidence that a
+function's output is what gets delivered -- a module can be fully live
+and executing on a path that is not the one a user's text comes from.
+
+**Why:** R1.8.1 Step 3 confirmed `ConstraintEmitter._resolve_content_slot`
+executes on every live turn and forward-inferred this made it the
+delivered-text mechanism. R1.9.1's live instrumented trace
+(`tests/test_governance_liveness.py::
+test_delivered_output_attribution_traces_to_sentence_composer`) proved by
+byte-for-byte comparison that `resp_B.content` (what
+`run_probe_battery.py` scores) instead equals `gateway._express()`'s
+returned content, sourced from `SentenceComposer`, not
+`ConstraintEmitter`. Both modules are genuinely live; only one delivers.
+Retained as the working example of why this rule exists.
+
+**First Seen:** Remediation Directive R1.9.1, 2026-07-16 (origin: the
+Halt-Point-3 orphaned-composer error).
+
+---
+
 ## Falsified-prediction log
 
 R1.7's Track A2 falsifiable prediction ("simple_concrete stays moderately
