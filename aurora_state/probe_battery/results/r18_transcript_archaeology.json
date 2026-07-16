@@ -1,0 +1,208 @@
+{
+  "addendum": "R1.8 Transcript Archaeology & Generation Trace",
+  "step_1_1_campaign_archive_rescore": {
+    "method": "Re-scored every archived probe-battery response (stored transcript text, no regeneration) with the repaired _parseable(). Compared against the old property_results.parseable where recorded.",
+    "runs": [
+      {
+        "label": "R0 baseline_pre_remediation_1",
+        "timestamp": 1784132452.5674107,
+        "timestamp_str": "2026-07-15T16:20:52.567411Z",
+        "overall": {
+          "n": 60,
+          "old_true": 41,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "simple_concrete": {
+            "n": 36,
+            "old_true": 26,
+            "new_true": 0
+          },
+          "abstract_conceptual": {
+            "n": 24,
+            "old_true": 15,
+            "new_true": 0
+          }
+        }
+      },
+      {
+        "label": "R0 baseline_pre_remediation_2",
+        "timestamp": 1784132571.2587922,
+        "timestamp_str": "2026-07-15T16:22:51.258792Z",
+        "overall": {
+          "n": 60,
+          "old_true": 49,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "simple_concrete": {
+            "n": 36,
+            "old_true": 31,
+            "new_true": 0
+          },
+          "abstract_conceptual": {
+            "n": 24,
+            "old_true": 18,
+            "new_true": 0
+          }
+        }
+      },
+      {
+        "label": "R0 baseline_pre_remediation_3",
+        "timestamp": 1784132686.4983656,
+        "timestamp_str": "2026-07-15T16:24:46.498366Z",
+        "overall": {
+          "n": 60,
+          "old_true": 45,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "simple_concrete": {
+            "n": 36,
+            "old_true": 29,
+            "new_true": 0
+          },
+          "abstract_conceptual": {
+            "n": 24,
+            "old_true": 16,
+            "new_true": 0
+          }
+        }
+      },
+      {
+        "label": "R1.4 post_r1_lessons",
+        "timestamp": 1784135093.4678547,
+        "timestamp_str": "2026-07-15T17:04:53.467855Z",
+        "overall": {
+          "n": 60,
+          "old_true": 38,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "simple_concrete": {
+            "n": 36,
+            "old_true": 25,
+            "new_true": 0
+          },
+          "abstract_conceptual": {
+            "n": 24,
+            "old_true": 13,
+            "new_true": 0
+          }
+        }
+      },
+      {
+        "label": "R1.6 trace_summary (abstract-only)",
+        "timestamp": 1784162084,
+        "timestamp_str": "2026-07-16T00:34:44Z",
+        "overall": {
+          "n": 24,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "abstract_conceptual": {
+            "n": 24,
+            "new_true": 0
+          }
+        },
+        "note": "trace-only run: abstract_conceptual dimensions exclusively (contradiction_handling, uncertainty_signaling); no old_parseable score recorded in this format, only response text -- old score not directly comparable."
+      },
+      {
+        "label": "R1.7/1.8 stratified_baseline_1",
+        "timestamp": 1784164231.605408,
+        "timestamp_str": "2026-07-16T01:10:31.605408Z",
+        "overall": {
+          "n": 60,
+          "old_true": 0,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "simple_concrete": {
+            "n": 36,
+            "old_true": 0,
+            "new_true": 0
+          },
+          "abstract_conceptual": {
+            "n": 24,
+            "old_true": 0,
+            "new_true": 0
+          }
+        }
+      },
+      {
+        "label": "R1.7/1.8 stratified_baseline_2",
+        "timestamp": 1784164361.3318899,
+        "timestamp_str": "2026-07-16T01:12:41.331890Z",
+        "overall": {
+          "n": 60,
+          "old_true": 0,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "simple_concrete": {
+            "n": 36,
+            "old_true": 0,
+            "new_true": 0
+          },
+          "abstract_conceptual": {
+            "n": 24,
+            "old_true": 0,
+            "new_true": 0
+          }
+        }
+      },
+      {
+        "label": "R1.7/1.8 stratified_baseline_3",
+        "timestamp": 1784164481.5634983,
+        "timestamp_str": "2026-07-16T01:14:41.563498Z",
+        "overall": {
+          "n": 60,
+          "old_true": 0,
+          "new_true": 0
+        },
+        "by_stratum": {
+          "simple_concrete": {
+            "n": 36,
+            "old_true": 0,
+            "new_true": 0
+          },
+          "abstract_conceptual": {
+            "n": 24,
+            "old_true": 0,
+            "new_true": 0
+          }
+        }
+      }
+    ],
+    "finding": "Flat 0/N parseable under the fixed predicate across all 8 archived probe-battery runs, spanning R0's first baseline (2026-07-15T16:20) through R1.7 Track A's stratified baselines (2026-07-16T01:14) -- both simple_concrete and abstract_conceptual strata. Manually inspected a sample of cases where the OLD predicate said parseable=True (33-82% of each R0/R1.4 run) and confirmed those are the same garbled word-bank text as everything else -- the old number was a false-positive artifact of the short-clause evasion bug, not evidence of real health."
+  },
+  "step_1_2_extended_timeline": {
+    "sources_checked": {
+      "aurora_state/aurora_conversation_memory.json": "Usable. mtime is stale (2026-06-20) but internal timestamps verified fresh-for-their-era: 200 entries across 11 sessions, 2026-02-17 to 2026-02-19 -- the only pre-campaign window found, ~5 months before R0.",
+      "aurora_state/aurora_to_user.json": "Checked, not usable -- contains only canned sleep/wake notices (6 entries, May 2026), no free-text response content as the addendum itself anticipated.",
+      "aurora_state/live_interaction_assessment{,2,3,3b}/out/events.jsonl": "Empty (0 bytes / 0 lines).",
+      "aurora_state/live_interaction_assessment4/out/events.jsonl": "11 lines, 2026-03-08, pressure/relief telemetry only -- no response-text field, not usable for coherence scoring."
+    },
+    "conversation_memory_rescore": {
+      "total_entries": 200,
+      "raw_parseable_count": 127,
+      "raw_parseable_rate": 0.635,
+      "caveat": "This raw rate is NOT trustworthy as a health measure. _parseable() was tuned against R1.6's specific recurring word-bank (truth/meaning/become/exist/am/do/can/want in copula-heavy short clauses). This Feb-2026 era's garble wears a different lexical costume -- diffuse, associative, dream-like fragments with normal-looking function-word density ('Refer: from_definition:for (connected to: for, be, i'm)', 'I explore you -- gently because extent') -- which slips past the syntactic gate despite not being coherent, situationally-responsive text. Conversely at least one genuinely fine short reply was wrongly rejected ('Hello, Sunni. Good to hear from you.' -- two-word first sentence with zero strong-function-words never clears the required-hit floor). Both directions of error present; the number is noise, not signal, for this era specifically.",
+      "qualitative_read": "Manual reading of a spread of both parseable=True and parseable=False entries shows the large majority of aurora_said text in this window is free-associative and not a coherent, on-topic reply to the paired user_said turn, regardless of what the mechanical predicate says. This is the same qualitative shape as the R0-forward collapse, just not caught cleanly by an instrument built for a different era's failure signature."
+    }
+  },
+  "step_1_3_fork_resolution": {
+    "verdict": "ALWAYS-BROKEN (with two caveats, below)",
+    "reasoning": [
+      "R0-forward (2026-07-15 16:20 through 2026-07-16 01:14, 8 archived probe-battery runs spanning the entire remediation campaign to date) is a clean, flat 0/N parseable under the fixed predicate. No cliff, no drop -- it never leaves the floor.",
+      "No REGRESSION signal exists inside the observed campaign: the earliest capturable evidence (R0's very first baseline, run before any of R1.1-R1.7's code changes) is already fully collapsed. There is no committed state where wellformedness was healthy and a later commit broke it.",
+      "The only pre-campaign data available (aurora_conversation_memory.json, Feb 17-19 2026) does not cleanly read 0.0 by the raw metric, but manual inspection shows it is qualitatively the same kind of non-responsive, associative text -- the instrument just doesn't generalize to that era's specific garble shape. It does not look like a healthy prior era being misread as broken; it looks like a broken era with a different vocabulary signature."
+    ],
+    "caveats": [
+      "Five-month data gap: nothing was found timestamped between 2026-02-19 and 2026-07-15. A temporary healthy period inside that gap cannot be ruled out from available evidence, though nothing in the remediation history (R1.1-R1.7 all post-date R0's already-broken baseline) suggests campaign code caused the R0-forward collapse.",
+      "The GRADIENT shape (slow decay, no cliff) cannot be fully ruled out across that 5-month gap for the same reason -- there isn't a continuous enough record to distinguish 'always broken' from 'decayed sometime in the gap, arrived broken by February.' What CAN be said with confidence: within the entire observed campaign window (R0 forward), there is no decay in progress -- it is flat."
+    ],
+    "step_2_bisection": "Not warranted -- skipped per the addendum's own instruction, since no REGRESSION window exists to bisect within the campaign commits.",
+    "step_3_authorization": "Per the addendum, Step 3 (single-turn deep generation trace) is pre-authorized in non-gradient worlds. This is being reported at Halt Point 1 before proceeding, per the addendum's own halt-point text ('report which world we're in before Step 2/3 ordering finalizes')."
+  }
+}
