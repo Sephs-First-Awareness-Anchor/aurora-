@@ -2,48 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1*T^1",
-      "change_id": "MC:0ba50090e8f0",
-      "dominant_axis": "X",
-      "file": "aurora_internal/aurora_worth_evaluator.py",
-      "matched_ability_id": "X:CODE_LINEAGE_4745de7b6a",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_internal.aurora_worth_evaluator",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_4745de7b6a",
-      "source": "aurora.boot",
-      "timestamp": 1784124547.865417
-    },
-    {
-      "axis_signature": "B^1",
-      "change_id": "MC:0e86797e14a4",
-      "dominant_axis": "B",
-      "file": "aurora_internal/constraint_genealogy.py",
-      "matched_ability_id": "B:CODE_LINEAGE_15122fb7e8",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_internal.constraint_genealogy",
-      "purpose_lane": "distinction_branching",
-      "registered_ability_id": "B:CODE_LINEAGE_15122fb7e8",
-      "source": "aurora.boot",
-      "timestamp": 1784124549.1722233
-    },
-    {
-      "axis_signature": "X^1*T^1",
-      "change_id": "MC:bbf3ccae1b2b",
-      "dominant_axis": "X",
-      "file": "aurora_internal/dual_strata/__init__.py",
-      "matched_ability_id": "X:CODE_LINEAGE_ea333df508",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_internal.dual_strata.__init__",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_ea333df508",
-      "source": "aurora.boot",
-      "timestamp": 1784124550.4936824
-    },
-    {
-      "axis_signature": "X^1*T^1",
       "change_id": "MC:aac2baf6414b",
       "dominant_axis": "X",
       "file": "aurora_internal/dual_strata/activation_field.py",
@@ -3359,10 +3317,52 @@
       "registered_ability_id": "X:CODE_LINEAGE_da29f987bb",
       "source": "aurora.boot",
       "timestamp": 1784160943.5178823
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:42b8f5ce48b0",
+      "dominant_axis": "X",
+      "file": "aurora_internal/aurora_semantic_probe_battery.py",
+      "matched_ability_id": "X:CODE_LINEAGE_87ea95e73a",
+      "matched_score": 1.0,
+      "mode": "attached_existing_family",
+      "module_name": "aurora_internal.aurora_semantic_probe_battery",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "X:CODE_LINEAGE_87ea95e73a",
+      "source": "aurora.boot",
+      "timestamp": 1784162246.9236512
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:f35030a59699",
+      "dominant_axis": "X",
+      "file": "run_probe_battery.py",
+      "matched_ability_id": "X:CODE_LINEAGE_5702905795",
+      "matched_score": 1.0,
+      "mode": "attached_existing_family",
+      "module_name": "run_probe_battery",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "X:CODE_LINEAGE_5702905795",
+      "source": "aurora.boot",
+      "timestamp": 1784162248.5921104
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:255e4f2afd5e",
+      "dominant_axis": "X",
+      "file": "tests/test_failure_shape_tracing.py",
+      "matched_ability_id": "",
+      "matched_score": 0.66,
+      "mode": "created_manual_branch",
+      "module_name": "tests.test_failure_shape_tracing",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "X:CODE_LINEAGE_45f682a614",
+      "source": "aurora.boot",
+      "timestamp": 1784162250.3555422
     }
   ],
   "initialized": true,
-  "last_run_at": 1784160943.724572,
+  "last_run_at": 1784162250.5642662,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781923577991269291,
@@ -3853,8 +3853,8 @@
       "size": 17437
     },
     "aurora_internal/aurora_semantic_probe_battery.py": {
-      "mtime_ns": 1784160842270052132,
-      "size": 26169
+      "mtime_ns": 1784161953482067498,
+      "size": 33797
     },
     "aurora_internal/aurora_sensory_crystal.py": {
       "mtime_ns": 1781923578056263411,
@@ -4397,8 +4397,8 @@
       "size": 2669
     },
     "run_probe_battery.py": {
-      "mtime_ns": 1784160767790051102,
-      "size": 9697
+      "mtime_ns": 1784162032786068595,
+      "size": 18913
     },
     "scripts/append_to_doc.py": {
       "mtime_ns": 1781923578945620613,
@@ -4635,6 +4635,10 @@
     "tests/test_episode_to_entity_experience.py": {
       "mtime_ns": 1784132920079620028,
       "size": 5979
+    },
+    "tests/test_failure_shape_tracing.py": {
+      "mtime_ns": 1784162075138069180,
+      "size": 5740
     },
     "tests/test_flow_audit_and_tcl_wiring.py": {
       "mtime_ns": 1783916740612149973,
