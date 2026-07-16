@@ -1421,3 +1421,97 @@ falsified rather than quietly revised when the data disagrees.
 
 **First Seen:** Remediation Addendum R1.7 (prediction), falsified by
 Track A, logged formally in Remediation Addendum R1.8, 2026-07-15.
+
+---
+
+## Grammar diagnosis dossier — `_compose_from_motif` word-salad root cause (evidence only, halt after — Sunni decides)
+
+F4's own non-goals explicitly deferred this: "NO grammar/syntax overhaul
+beyond word selection... that's the NEXT diagnosis with its own trace, and
+it will be a cleaner one." This is that trace, run 2026-07-16 against the
+live stack (delivered path confirmed in R1.9.1: `compose()` ->
+`_compose_from_motif()` -> `_select_constraint_word()`). Evidence-only,
+matching the halt-after-diagnosis pattern already used for the R1.9.1
+dual-path dossier -- no code changed by this entry. Four independent,
+compounding root causes, confirmed by live instrumented trace (motif
+`role_sequence` + each output word's actual lexicon POS captured together
+for the same turn) and by direct inspection of the live promoted-motif
+lineage (1038 total motifs, 18 promoted).
+
+**Layer 1 — actively promoted motifs with no subject.** The two
+highest-ranked promoted motifs in the live lineage are structurally
+malformed regardless of what words fill them:
+`('descriptor','action','object','descriptor','action','object','connector')`
+(success=3264, fail=748, **composability=0.8136 — the single highest of
+any promoted motif**) has no AGENT role at all. `('agent','action',
+'descriptor','action')` (success=3732 — the highest raw success count of
+any motif) has two ACTION slots and no OBJECT. These are not valid
+English clause shapes by construction. The 7-role motif is what produced
+every "word salad" example seen live, e.g. `'Photosynthesis expressed
+weight terms need defensive.'`
+
+**Layer 2 — role-blind candidate collection (the biggest lever).**
+`_select_constraint_word`'s PRIMARY candidate source (the `chars`-based
+`self.lexicon.find_by_noncomp(f"{dominant_axis}:{ch}", ...)` loop, ~line
+2745) adds every word crystallized onto that concept-axis channel to the
+candidate pool with **no check that `entry.role` matches the slot's
+`lex_role`** — unlike the DPS-crystal branch just above it, which does
+filter (`_e.role == lex_role or not chars`). Confirmed live: for
+`role="action"` (expects `lex_role="verb"`), the composer selected
+`'energy'` (noun), `'cost'` (noun), and `'interesting'` (verb-tagged but
+semantically adjectival) — producing `'I energy.'`, `'I cost.'`,
+`'I interesting.'` as complete "sentences." This is the same class of bug
+G1 fixed for RELEVANCE (role-blind selection there was fixed by scoring
+on `build_relevance_anchor_set`); here it's role-blind on POS, a
+different axis of the same word-selection call.
+
+**Layer 3 — zero grammatical post-processing on the delivered path.**
+`_compose_from_motif` does `" ".join(words)`, capitalizes, and punctuates
+— no conjugation, no article/determiner insertion, no plural or
+subject-verb agreement. Confirmed live: `'I is.'` (should be `'I am.'`).
+The needed machinery already exists in the SAME class — `_CONJUGATIONS`
+(a hand-built I/you conjugation table) and `_conjugate_verb()` — but is
+only ever called from `_fill_template()`, which is itself unreachable
+dead code: FIX-A016 removed template-string composition from `compose()`
+entirely in favor of the "template-free" `_compose_from_motif` path, and
+nothing ported the conjugation call over. `_conjugate_verb`'s own logic
+(scan back to the subject, conjugate) generalizes cleanly to
+`_compose_from_motif`'s word-list shape since its only two subjects are
+also "I"/"you" (`_select_constraint_word`'s agent branch, line ~2700-2703)
+— this is a narrower gap to close than it first looks.
+
+**Layer 4 — the reinforcement loop that produces Layer 1 is grammar-blind
+by construction.** `StructuralMotif.composability_score()` = `success_rate
+x context_diversity` (`aurora_grammar_engine.py` ~line 338), where
+"success" is `SentenceComposer.feedback(fitness)` reporting `fitness >=
+0.5` back to whichever motif produced that turn's output. That fitness
+number comes from the same downstream evolutionary-fitness signal this
+entire campaign has repeatedly found uncorrelated with actual response
+quality (dev_index/classroom fitness, not a grammar or parseability
+score) — R0's own founding finding. So motif promotion has never
+selected against ungrammatical structure; the subject-less 7-role motif
+outscores the correct `('agent','action','object')` motif
+(composability 0.4467) simply because it has been used and randomly
+scored >=0.5 more often. Fixing Layers 2/3 alone would make individual
+word fills more grammatical without ever correcting the malformed
+structures Layer 1 keeps selecting; fixing Layer 1 requires either
+demoting/retiring structurally-invalid motifs on a rule (e.g. "must
+contain exactly one AGENT, at least one ACTION") independent of the
+fitness signal, or giving `feedback()` a real grammaticality term to
+weight motif success on — the latter being the more durable fix since it
+addresses Layer 4 directly rather than working around it.
+
+**Recommended fix order (not yet ratified, not yet implemented):**
+(1) Layer 2 — role-filter the `find_by_noncomp` candidate loop the same
+way the DPS-crystal branch already does; smallest, safest, immediately
+testable in isolation. (2) Layer 3 — port `_conjugate_verb` into
+`_compose_from_motif`'s word-list assembly (agent is always I/you here,
+so the existing table needs no extension). (3) Layer 1/4 — either a
+structural validity gate on motif promotion (independent of fitness) or
+a grammaticality term added to the fitness signal `feedback()` receives;
+this is the architecturally biggest piece and the one most likely to need
+its own acceptance gates before shipping, given this campaign's repeated
+experience with fitness-adjacent changes.
+
+**First Seen:** Remediation Directive R1.9.2 F4 non-goals (deferred),
+diagnosed 2026-07-16 following that deferral.
