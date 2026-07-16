@@ -39,6 +39,7 @@ import shutil
 import hashlib
 import random
 from aurora_warp_protocol import WarpCapable
+import aurora_constraint_emission
 import re
 import numpy as np
 from enum import Enum, IntEnum, auto
@@ -2279,7 +2280,8 @@ class SentenceComposer:
                 assembly: 'AssemblyResult',
                 i_state: str,
                 personality: Optional[Dict[str, float]] = None,
-                sensory_context: Optional[Dict[str, Any]] = None) -> str:
+                sensory_context: Optional[Dict[str, Any]] = None,
+                input_text: str = "") -> str:
         """
         FIX-A016: TEMPLATE-FREE constraint composition.
 
@@ -2354,7 +2356,8 @@ class SentenceComposer:
                     motif = None
             sent = self._compose_from_motif(motif, orientation, valence_target,
                                             i_state, s_i,
-                                            used_words=self._last_words_used)
+                                            used_words=self._last_words_used,
+                                            input_text=input_text)
             if sent:
                 sentences.append(sent)
                 if motif is not None:
@@ -2373,7 +2376,8 @@ class SentenceComposer:
     def _compose_from_motif(self, motif, orientation: Dict[str, float],
                             valence_target: float, i_state: str,
                             sentence_index: int,
-                            used_words: Optional[list] = None) -> str:
+                            used_words: Optional[list] = None,
+                            input_text: str = "") -> str:
         """Fill one motif's role sequence with concept-channel words."""
         dominant_axis = max(orientation.items(), key=lambda kv: kv[1])[0]
 
@@ -2410,6 +2414,7 @@ class SentenceComposer:
                 _role_chars.get(role, ()),
                 _role_lexroles.get(role, "noun"),
                 valence_target, words,
+                input_text=input_text,
             )
             if word:
                 words.append(word)
@@ -2424,16 +2429,40 @@ class SentenceComposer:
             sent += "."
         return sent
 
+    # R1.9.2 G1: valence-proximity's bonus is bounded so no valence match,
+    # however perfect, can outweigh one hop of relevance. Derived the same
+    # way as F1's FREQUENCY_TIEBREAK_EPSILON: worst case is a
+    # RELEVANCE_DISTANT candidate at a perfect valence match (distance 0)
+    # against a RELEVANCE_ONE_HOP_FLOOR candidate at the worst valence match
+    # (distance >= 1) --
+    #   RELEVANCE_DISTANT_FLOOR * (1 + W) < RELEVANCE_ONE_HOP_FLOOR
+    #   0.05 * (1 + W) < 0.2  =>  W < 3.0
+    # Set well under that bound so it stays a genuine tone tie-breaker
+    # without ever approaching the invariant.
+    _VALENCE_TIEBREAK_WEIGHT = 0.5
+
+    def _score_composer_candidate(self, entry, anchor_set: Dict[str, float],
+                                  valence_target: float) -> float:
+        relevance = anchor_set.get(entry.word.lower(), aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR)
+        valence_distance = min(1.0, abs(entry.emotional_valence - valence_target))
+        return relevance * (1.0 + self._VALENCE_TIEBREAK_WEIGHT * (1.0 - valence_distance))
+
     def _select_constraint_word(self, role: str, dominant_axis: str,
                                 chars: tuple, lex_role: str,
                                 valence_target: float,
-                                already: list) -> str:
+                                already: list,
+                                input_text: str = "") -> str:
         """Concept-channel word selection with role fallback.
 
-        Priority: words SHE crystallized into the dominant axis's channels
-        (find_by_noncomp) -> any axis with the right character -> lexicon
-        role lookup. Diversity pressure: avoid repeating words within a
-        sentence and prefer lower usage_count among the top candidates.
+        R1.9.2 G1: relevance chooses WHAT is said, valence-proximity biases
+        HOW (tone) -- the same doctrine as F1.4/F5. Priority: words SHE
+        crystallized into the dominant axis's channels (find_by_noncomp) ->
+        any axis with the right character -> lexicon role lookup, ranked by
+        relevance-primary score (see _score_composer_candidate) with
+        ascending-usage diversity preserved as the final tie-break among
+        top-ranked candidates. The 6-candidate cutoff that used to behead
+        the pool during valence-only collection now applies AFTER relevance
+        ranking, so it trims the irrelevant tail instead of the diverse one.
         """
         import random as _r
 
@@ -2474,11 +2503,14 @@ class SentenceComposer:
                         _e = self.lexicon.entries.get(_wd)
                         if _e is not None and (_e.role == lex_role or not chars):
                             candidates.append(_e)
-                    if len(candidates) >= 6:
-                        break
             except Exception:
                 pass
 
+        # R1.9.2 G1: no early-exit here -- collect from every char before
+        # the cutoff, so relevance ranking sees the full pool rather than
+        # whichever ~6 entries find_by_noncomp's valence-only sort put
+        # first (that early exit was the mechanism that let the identity
+        # cluster win before diversity ever got a chance to matter).
         for ch in chars:
             try:
                 found = self.lexicon.find_by_noncomp(
@@ -2487,8 +2519,6 @@ class SentenceComposer:
                                   if e.word.lower() not in seen)
             except Exception:
                 pass
-            if len(candidates) >= 6:
-                break
 
         if not candidates and chars:
             # Cross-axis: same character, any axis (concept family first)
@@ -2502,8 +2532,6 @@ class SentenceComposer:
                                       if e.word.lower() not in seen)
                 except Exception:
                     pass
-                if len(candidates) >= 4:
-                    break
 
         if not candidates:
             try:
@@ -2515,11 +2543,28 @@ class SentenceComposer:
         if not candidates:
             return ""
 
-        # Valence proximity then usage diversity among the top few
-        candidates.sort(key=lambda e: (abs(e.emotional_valence - valence_target),
-                                       e.usage_count))
-        top = candidates[:4]
-        chosen = _r.choice(top)
+        # Belt-and-suspenders on the recent-words channel: the explicitly
+        # threaded input_text (from gateway._express() -> ... -> compose())
+        # is the direct, traceable source, unioned with self._context_keywords
+        # -- the composer's existing "Feed context keywords to composer --
+        # shapes next expression" mechanism (set_context(), fed from the
+        # perception side on ingest) that was already collecting real
+        # per-turn content words but, before this fix, was never actually
+        # consulted by word SELECTION -- only by template/OETS enrichment.
+        recent_for_anchor = list(already) + list(getattr(self, "_context_keywords", []) or [])
+        anchor_set = aurora_constraint_emission.build_relevance_anchor_set(
+            input_text, recent_for_anchor, self._oets.web if self._has_oets else None,
+        )
+
+        # Relevance-primary score descending, then ascending usage_count as
+        # the diversity tie-break the docstring always promised -- now
+        # operating on a pool that's actually worth diversifying.
+        candidates.sort(
+            key=lambda e: (-self._score_composer_candidate(e, anchor_set, valence_target),
+                           e.usage_count)
+        )
+        top = candidates[:6]
+        chosen = _r.choice(top[:4] if len(top) >= 4 else top)
         try:
             self._last_words_used.append(chosen.word)
             self._last_word_sources[chosen.word] = chosen.noncomp_id or chosen.role
@@ -3510,7 +3555,8 @@ class ExpressionPerceptionEngine(WarpCapable):
                 i_state: str = "i_is",
                 mode: str = "sim",
                 moral_alignment: float = 0.5,
-                intent_match: float = 0.5) -> Dict[str, Any]:
+                intent_match: float = 0.5,
+                input_text: str = "") -> Dict[str, Any]:
         """
         Full expression pipeline.
         Takes assembly result from L4, produces expression output.
@@ -3518,13 +3564,20 @@ class ExpressionPerceptionEngine(WarpCapable):
         GAP 4: moral_alignment and intent_match are now selection criteria.
         Transcript: "Does this response match the Moral Pillars Does it
         match the energetic intent of the original thought"
+
+        R1.9.2 G1: input_text (the raw turn text, when the caller has it)
+        threads through to SentenceComposer's word selector so relevance can
+        be computed against what was actually said, not just against tone/
+        axis state. Optional and defaults to "" so existing callers that
+        don't have a live turn's text (dream/simulation/training paths)
+        keep their prior behavior unchanged.
         """
         # 1. Spawn offspring
         base_fitness = assembly.coherence if assembly.coherence else 0.5
         offspring = self.ecology.spawn(i_state, base_fitness)
 
         # 2. Build expression signature
-        expression = self._build_expression(offspring, assembly, i_state)
+        expression = self._build_expression(offspring, assembly, i_state, input_text=input_text)
 
         # 3. Evaluate pressure - NOW WITH MORAL + INTENT
         eval_result = self.pressure.evaluate(
@@ -3620,7 +3673,8 @@ class ExpressionPerceptionEngine(WarpCapable):
 
     def _build_expression(self, offspring: ExpressionOffspring,
                           assembly: AssemblyResult,
-                          i_state: str) -> str:
+                          i_state: str,
+                          input_text: str = "") -> str:
         """Build expression text using SentenceComposer with OETS enrichment."""
         # OETS: Enrich context keywords with semantically related concepts,
         # and bridge studied knowledge into the lexicon so it can be spoken.
@@ -3680,7 +3734,8 @@ class ExpressionPerceptionEngine(WarpCapable):
 
         # Gather personality traits if identity engine is connected
         personality = getattr(self, '_personality_traits', None)
-        return self.composer.compose(offspring, assembly, i_state, personality)
+        return self.composer.compose(offspring, assembly, i_state, personality,
+                                     input_text=input_text)
 
     # ====================================================================
     # INGESTION (feeds perception from interaction data)

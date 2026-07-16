@@ -213,6 +213,94 @@ class EmissionResult:
     timestamp:        float                                = field(default_factory=time.time)
 
 
+def build_relevance_anchor_set(
+    text: str,
+    recent_words: Optional[List[str]],
+    oets: Any,
+) -> Dict[str, float]:
+    """Shared F1.1 anchor-set builder (R1.9.2 G1: extracted from
+    ConstraintEmitter._build_anchor_set so SentenceComposer's selector can
+    reuse the identical, contamination-fixed logic rather than duplicating
+    it -- the seed of the eventual unified word-selection core, U1).
+
+    Direct anchor members (input content words and recent_words) score
+    RELEVANCE_DIRECT_ANCHOR; their one-hop graph neighbors score their
+    relation strength (floored at RELEVANCE_ONE_HOP_FLOOR, with
+    co-occurrence-sourced edges capped there regardless of nominal
+    strength -- see the inline comment below); everything else is left
+    unlisted and falls to RELEVANCE_DISTANT_FLOOR at scoring time.
+
+    Perception-derived concepts (QAO's recent_events) are deliberately NOT
+    wired in here: QAO's recent_events is Aurora's own generic
+    self-monitoring stream (issue categories like
+    "coherence_maintenance"/"meaning_tension" -- see
+    aurora_state/quasiarch_observer/indexes/), not turn-specific topical
+    content, and empirically it fires the SAME small coherence/identity
+    vocabulary on every turn regardless of what the turn is about (verified
+    live: probing "guitar chords" pulled "meaning"/"coherence"/"tension" in
+    as equal-standing direct anchors, which then won the frequency
+    tie-breaker over "guitar" itself). Wiring this in would silently reopen
+    the same feedback-loop bug through the anchor set instead of through
+    comprehension_confidence. ConstraintEmitter's self-referential branch
+    uses QAO recent_events correctly elsewhere -- gated to
+    fr.is_self_referential, where Aurora's own internal state genuinely IS
+    the topic. General-turn anchors stay input-text-only."""
+    anchor: Dict[str, float] = {}
+
+    direct: Set[str] = set()
+    text = text or ""
+    for tok in re.findall(r"[a-zA-Z][a-zA-Z']{2,}", text.lower()):
+        if tok not in _ANCHOR_TOKEN_STOPWORDS:
+            direct.add(tok)
+    direct |= {str(w).lower() for w in (recent_words or [])}
+
+    if oets is None or not hasattr(oets, "nodes"):
+        return {w: RELEVANCE_DIRECT_ANCHOR for w in direct}
+
+    for w in direct:
+        if w in oets.nodes:
+            anchor[w] = RELEVANCE_DIRECT_ANCHOR
+
+    get_all = getattr(oets, "get_all_relations_for", None)
+    if callable(get_all):
+        for w in list(anchor.keys()):
+            try:
+                rels = get_all(w) or []
+            except Exception:
+                continue
+            for rel in rels:
+                other = rel.target_word if rel.source_word == w else rel.source_word
+                if other in anchor:
+                    continue  # direct membership always wins
+                raw_strength = min(1.0, float(getattr(rel, "strength", 0.0) or 0.0))
+                # 86% of this graph's relations are "co-occurrence"-sourced
+                # and 84% of those sit at strength 1.0 -- verified live
+                # (R1.9 F1 pre-flight): near-universal function words like
+                # "i've"/"been" carry strength-1.0 co-occurrence edges to
+                # the identity-bank cluster simply because both appear in
+                # nearly every one of Aurora's historical (broken)
+                # responses. That strength is a saturated frequency proxy,
+                # not a semantic-relevance signal -- the exact same
+                # reinforcement-imbalance pattern FIX-A032 found in
+                # times_used_in_expression, encoded as an edge weight
+                # instead of a node counter. Co-occurrence edges are
+                # therefore capped at the one-hop floor regardless of
+                # their nominal strength; only relation sources that
+                # reflect deliberate structure (category_sharing,
+                # research, definition_analysis, foundational,
+                # conversation, adjacency, co-expression, axis_embodiment
+                # -- together under 15% of all relations) carry their
+                # real strength.
+                source = str(getattr(rel, "source_of_knowledge", "") or "")
+                if source == "co-occurrence":
+                    strength = RELEVANCE_ONE_HOP_FLOOR
+                else:
+                    strength = max(RELEVANCE_ONE_HOP_FLOOR, raw_strength)
+                anchor[other] = max(anchor.get(other, 0.0), strength)
+
+    return anchor
+
+
 # ── main emitter ──────────────────────────────────────────────────────────────
 class ConstraintEmitter:
     """
@@ -556,85 +644,14 @@ class ConstraintEmitter:
     # ── R1.9 F1.1: relevance anchor set ───────────────────────────────────────
     @staticmethod
     def _build_anchor_set(ctx: "EmissionContext") -> Dict[str, float]:
-        """Direct anchor members (input content words, recent_words, and
-        perception-bound concept tokens) score RELEVANCE_DIRECT_ANCHOR;
-        their one-hop graph neighbors score their relation strength (floored
-        at RELEVANCE_ONE_HOP_FLOOR); everything else is left unlisted and
-        falls to RELEVANCE_DISTANT_FLOOR at scoring time."""
-        oets = ctx.oets
-        anchor: Dict[str, float] = {}
-
-        direct: Set[str] = set()
+        """Thin wrapper over the shared build_relevance_anchor_set() --
+        R1.9.2 G1 extracted the implementation to module level so
+        SentenceComposer (aurora_expression_perception.py) can share it
+        instead of duplicating it, per the 'shared helper preferred over
+        duplication' instruction. This method stays for existing callers
+        that already hold an EmissionContext."""
         text = (ctx.input_frame.text if ctx.input_frame is not None else "") or ""
-        for tok in re.findall(r"[a-zA-Z][a-zA-Z']{2,}", text.lower()):
-            if tok not in _ANCHOR_TOKEN_STOPWORDS:
-                direct.add(tok)
-        direct |= {str(w).lower() for w in (ctx.recent_words or [])}
-
-        # F1.1 allows perception-derived concepts (QAO's recent_events) to
-        # join the anchor set with equal standing "if the emitter already
-        # receives an internal concept/pressure payload for the turn." That
-        # channel is deliberately NOT wired in here: QAO's recent_events is
-        # Aurora's own generic self-monitoring stream (issue categories like
-        # "coherence_maintenance"/"meaning_tension" -- see
-        # aurora_state/quasiarch_observer/indexes/), not turn-specific
-        # topical content, and empirically it fires the SAME small
-        # coherence/identity vocabulary on every turn regardless of what the
-        # turn is about (verified live: probing "guitar chords" pulled
-        # "meaning"/"coherence"/"tension" in as equal-standing direct
-        # anchors, which then won the frequency tie-breaker over "guitar"
-        # itself). Wiring this in would silently reopen the same
-        # feedback-loop bug through the anchor set instead of through
-        # comprehension_confidence. The existing self-referential branch
-        # above already uses QAO recent_events correctly -- gated to
-        # fr.is_self_referential, where Aurora's own internal state genuinely
-        # IS the topic. General-turn anchors stay input-text-only.
-
-        if oets is None or not hasattr(oets, "nodes"):
-            return {w: RELEVANCE_DIRECT_ANCHOR for w in direct}
-
-        for w in direct:
-            if w in oets.nodes:
-                anchor[w] = RELEVANCE_DIRECT_ANCHOR
-
-        get_all = getattr(oets, "get_all_relations_for", None)
-        if callable(get_all):
-            for w in list(anchor.keys()):
-                try:
-                    rels = get_all(w) or []
-                except Exception:
-                    continue
-                for rel in rels:
-                    other = rel.target_word if rel.source_word == w else rel.source_word
-                    if other in anchor:
-                        continue  # direct membership always wins
-                    raw_strength = min(1.0, float(getattr(rel, "strength", 0.0) or 0.0))
-                    # 86% of this graph's relations are "co-occurrence"-sourced
-                    # and 84% of those sit at strength 1.0 -- verified live
-                    # (R1.9 F1 pre-flight): near-universal function words like
-                    # "i've"/"been" carry strength-1.0 co-occurrence edges to
-                    # the identity-bank cluster simply because both appear in
-                    # nearly every one of Aurora's historical (broken)
-                    # responses. That strength is a saturated frequency proxy,
-                    # not a semantic-relevance signal -- the exact same
-                    # reinforcement-imbalance pattern FIX-A032 found in
-                    # times_used_in_expression, encoded as an edge weight
-                    # instead of a node counter. Co-occurrence edges are
-                    # therefore capped at the one-hop floor regardless of
-                    # their nominal strength; only relation sources that
-                    # reflect deliberate structure (category_sharing,
-                    # research, definition_analysis, foundational,
-                    # conversation, adjacency, co-expression, axis_embodiment
-                    # -- together under 15% of all relations) carry their
-                    # real strength.
-                    source = str(getattr(rel, "source_of_knowledge", "") or "")
-                    if source == "co-occurrence":
-                        strength = RELEVANCE_ONE_HOP_FLOOR
-                    else:
-                        strength = max(RELEVANCE_ONE_HOP_FLOOR, raw_strength)
-                    anchor[other] = max(anchor.get(other, 0.0), strength)
-
-        return anchor
+        return build_relevance_anchor_set(text, ctx.recent_words, ctx.oets)
 
     # ── OETS content slot resolution (§5, §2.3) ──────────────────────────────
     def _resolve_content_slot(

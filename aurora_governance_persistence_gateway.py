@@ -1135,10 +1135,14 @@ class NSpaceGateway:
         if self.perception and synthesis.assembly:
             # GAP 4: Extract moral alignment for fitness evaluation
             moral_alignment = getattr(synthesis.assembly, 'moral_alignment', 1.0)
+            # R1.9.2 G1: thread the raw turn text through so SentenceComposer's
+            # word selector can score candidates by relevance to what was
+            # actually said, not just by axis/tone state.
             expr_result = self.perception.express(
                 synthesis.assembly,
                 i_state="i_is",
-                mode="gateway"
+                mode="gateway",
+                input_text=str(getattr(packet, "content", "") or ""),
             )
             expression_text = expr_result.get('expression', '')
             emotional_tone = expr_result.get('tone', 'neutral')
