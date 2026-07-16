@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784163963.2851963,
-  "generation": 7803,
-  "genome_version": 7803,
+  "timestamp": 1784174786.6500876,
+  "generation": 7838,
+  "genome_version": 7838,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.41,
-    "emotional_expressiveness": 0.4188,
+    "caution": 0.4168,
+    "emotional_expressiveness": 0.4003,
     "verbosity": 0.39,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.4203,
+    "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3472
   },
-  "personality_drift": 0.7989,
+  "personality_drift": 0.8058,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6928657612648631,
-      "precision": 0.9049947821868418,
-      "depth": 0.8899830989280821,
-      "confidence": 0.8256766579451522
+      "warmth": 0.6050437905577544,
+      "precision": 0.9547827989016303,
+      "depth": 0.8297040533976497,
+      "confidence": 0.9230064897902438
     },
     "cognitive": {
-      "curiosity": 0.985435337413155,
-      "pattern_matching": 0.8689672721700953,
-      "abstraction": 0.8016250401400538,
-      "risk_assessment": 0.7245979615840492
+      "curiosity": 0.9557853015096244,
+      "pattern_matching": 0.7653488452398585,
+      "abstraction": 0.7999385884241236,
+      "risk_assessment": 0.6792168881845054
     },
     "social": {
-      "empathy": 0.985478858868921,
-      "trust_extension": 0.9310087541043208,
-      "boundary_maintenance": 0.8297018005128431,
-      "engagement": 0.5379804758582009
+      "empathy": 0.6834520027706061,
+      "trust_extension": 0.9166423061725062,
+      "boundary_maintenance": 0.9878749037819268,
+      "engagement": 0.524508349519894
     }
   },
   "governance_stats": {
@@ -114,8 +114,10 @@
   "simulation_epochs": 194,
   "total_episodes": 5,
   "understanding_shards": 16,
-  "what_aurora_learned": [],
+  "what_aurora_learned": [
+    "now creates friction when approached with curious inquiry \u2014 it connects to [recalled:out], present (B-axis, depth 0.33)."
+  ],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "be383f96616d"
+  "_checksum": "ad27246f4605"
 }
