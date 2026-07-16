@@ -1223,6 +1223,143 @@ Halt-Point-3 orphaned-composer error).
 
 ---
 
+## FIX-A035 (ARCHITECTURAL) — Grounding-term rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A selection mechanism scored primarily or entirely by its own
+past outputs (usage counters, co-occurrence edge weights, valence tuned
+through repeated exposure) with no external grounding term measuring
+relevance to the CURRENT input/state.
+
+**Correct Form:** Any such mechanism must carry a dominant external
+grounding term. Pure self-referential scoring is a feedback-loop hazard
+class: whatever the mechanism said most in the past becomes what it says
+most in the future, regardless of current input, and the loop is
+invisible from inside the mechanism itself.
+
+**Why:** Two independent instances found in this campaign, in two
+different modules, scored by two different self-referential signals:
+ConstraintEmitter's `comprehension_confidence`/`times_used_in_expression`
+(FIX-A032) and SentenceComposer's `emotional_valence`-proximity, tuned
+toward common targets purely by repeated exposure (R1.9.2 G1). Both
+produced the identical symptom (identity-bank dominance) from different
+mechanisms, confirming this is a class of bug, not a single bug.
+
+**First Seen:** Remediation Directive R1.9, 2026-07-16 (origin: FIX-A032's
+mechanism), generalized in R1.9.2 G1.
+
+---
+
+## FIX-A036 (ARCHITECTURAL) — Safe-path reachability rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A safety/abstain fallback exists in the code, is correctly
+implemented, and is even architecturally reachable in principle -- but
+nothing confirms it can actually fire from the LIVE path under real
+conditions, so it silently never executes while looking present in a code
+review.
+
+**Correct Form:** Every safety/abstain fallback needs a reachability test
+proving it can actually fire from the live path, not just that its
+function body is well-formed and callable.
+
+**Why:** ConstraintEmitter's `_emit_abstain()` was correct and
+vocabulary-free (FIX-A031) but effectively unreachable because
+`_field_frame_compress` ran unconditionally before the emptiness check
+that would fall through to it. R1.9.2 G2 built SentenceComposer's abstain
+gate with this rule applied from the start: a permanent unit test
+(`test_abstain_fires_when_every_required_slot_fails_the_floor`) proves the
+trigger condition actually engages, rather than trusting that the
+floor-check code being present means it fires.
+
+**First Seen:** Remediation Addendum R1.9, 2026-07-16 (origin: unreachable
+`_emit_abstain()`), applied in Remediation Directive R1.9.2 G2.
+
+---
+
+## FIX-A037 (ARCHITECTURAL) — Boot-profile disclosure rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A measurement is reported as if it characterizes the system,
+when it actually characterizes the system under one specific boot
+configuration -- and other configurations exist that reach different code
+paths entirely.
+
+**Correct Form:** Every measurement states the boot profile it ran under.
+When a metric could plausibly differ across profiles, run it under more
+than one and report both rather than letting one profile's number stand
+in for "the system."
+
+**Why:** `run_probe_battery.py` boots with `runtime_profile="surface"`
+unconditionally, which skips the entire intake-metabolism tier
+(worth_evaluator, VariantPromoter, accountant, bias_engine, solidification)
+-- meaning every probe-battery measurement this ENTIRE campaign has taken
+(R0 through R1.9.2) has been silently profile-scoped without saying so
+until Track C's liveness audit found it. R1.9.2 G4's dual-boot-profile
+gate operationalizes this rule for the composer-relevance fix specifically
+(not yet run this session -- flagged as a following item, not skipped
+silently).
+
+**First Seen:** Remediation Directive R1.8.1 Track C, 2026-07-16 (origin:
+the surface-profile discovery), formalized in Remediation Directive R1.9.
+
+---
+
+## FIX-A038 (ARCHITECTURAL) — Content-selection doctrine: relevance chooses WHAT, everything else shapes HOW
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A self-referential or affective signal (usage habit, register/
+mood, valence-proximity) is allowed to influence WHICH content word gets
+selected, not just how that content gets phrased/paced/toned.
+
+**Correct Form:** Relevance to the current input/state is the only
+legitimate primary term for CONTENT-slot selection. Usage-habit, register/
+looseness, and valence-proximity may all legitimately bias STYLE and TONE
+-- phrasing rhythm, function-word preference, temperature of exploration,
+warmth of delivery -- but never override relevance as the reason a
+specific content word was chosen.
+
+**Why:** Third confirmed instance of the same pattern in this campaign: F1.4
+(usage-habit -> style, not content), F5 (register -> exploration looseness,
+not content), and now valence-proximity -> tone (R1.9.2 G1, demoted from
+SentenceComposer's PRIMARY sort key to a bounded secondary tie-break that
+provably cannot outweigh a relevance difference of one hop). Recorded as a
+standing doctrine, not a one-off fix, because it keeps recurring under
+different signal names.
+
+**First Seen:** Remediation Addendum R1.9 F1.4/F5 (design note), instance 3
+confirmed and implemented in Remediation Directive R1.9.2 G1.
+
+---
+
+## New finding (not yet a registry-numbered fix): state-dir isolation gap
+
+Discovered live during R1.9.2 G2 verification, not part of this
+directive's ratified scope to fix, but important enough to record here so
+it isn't lost: `LexicalMemory.save()`/`.load()`
+(`aurora_expression_perception.py`) and at least
+`aurora_state/surface_pressure_log.jsonl`'s write path default to
+hardcoded paths anchored to `os.path.dirname(os.path.abspath(__file__))`,
+NOT to the `state_dir` parameter `boot_aurora()` receives. Confirmed live:
+booting against a `shutil.copytree`'d throwaway scratch directory (the
+isolation pattern this entire campaign has relied on since R0) still reads
+and writes the REAL repository's `aurora_state/lexicon.json` and
+`aurora_state/surface_pressure_log.jsonl`. Every live turn processed via
+`process_external_user_turn` across this whole campaign -- not just this
+session's ad-hoc debugging -- has been writing real usage-count and
+pressure-log data back into the actual repo state. Concretely broke
+`tests/test_toroidal_circulation_layer.py::test_seed_from_surface_log_against_real_repo_data`
+during this session's G2 debugging (restored via `git checkout`).
+Recommend a dedicated audit of every `aurora_state/*` read/write path for
+the same `state_dir`-bypass pattern before trusting isolation claims for
+any file not explicitly verified. Not scoped to fix within R1.9.2.
+
+---
+
 ## Falsified-prediction log
 
 R1.7's Track A2 falsifiable prediction ("simple_concrete stays moderately

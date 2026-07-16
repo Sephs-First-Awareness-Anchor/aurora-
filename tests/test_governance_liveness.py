@@ -96,6 +96,32 @@ QUARANTINE_ALTERNATE_ENTRYPOINT_ONLY = {
     ),
 }
 
+# U1 (R1.9.2): scheduled quarantine, not indefinite dual-alive. R1.9.1's
+# dossier found ConstraintEmitter genuinely live but non-delivering
+# (LIVE_PARALLEL); R1.9.2 repaired the delivering path (SentenceComposer)
+# in place rather than migrating to ConstraintEmitter, per the
+# migration-completion rule this addendum itself introduced: dual-alive
+# paths are only compliant with a dated resolution plan, never as a
+# permanent resting state.
+QUARANTINE_SCHEDULED_REVIEW = {
+    "aurora_constraint_emission.ConstraintEmitter": {
+        "review_by": "2026-08-15",
+        "reason": (
+            "LIVE_PARALLEL, not delivering (see LIVE_PARALLEL above). R1.9.2 "
+            "repaired SentenceComposer (the delivering path) in place rather "
+            "than migrating to ConstraintEmitter -- the composer serves both "
+            "live delivery and the training stack (dream/conversation/"
+            "simulation trainers), so fixing it healed both without a "
+            "train/serve skew risk. ConstraintEmitter's F1 relevance-primary "
+            "fix stays committed and real, but the module itself is now "
+            "formally quarantined pending U1's unification scoping: merge "
+            "into a single shared word-selection core, retire, or keep both "
+            "with a permanent role split. Review by the date above or "
+            "immediately after U1 is scoped, whichever comes first."
+        ),
+    },
+}
+
 LIVE_CONFIRMED = {
     "ContradictionLedger": (
         "Instantiated at boot (aurora.py L20452-20453), wired to "
@@ -292,4 +318,21 @@ def test_quarantine_manifest_is_non_empty_and_documented():
     for name, reason in all_quarantined.items():
         assert isinstance(reason, str) and len(reason) > 20, (
             f"{name} is quarantined without a real documented reason"
+        )
+
+
+def test_scheduled_quarantine_entries_have_a_real_review_date():
+    """R1.9.2 U1: dual-alive paths are only compliant with a DATED
+    resolution plan (migration-completion rule) -- an entry here without a
+    real review_by date is exactly the indefinite-limbo state that rule
+    exists to forbid."""
+    import datetime
+
+    assert len(QUARANTINE_SCHEDULED_REVIEW) >= 1
+    for name, entry in QUARANTINE_SCHEDULED_REVIEW.items():
+        assert "review_by" in entry, f"{name} has no review_by date"
+        # Must parse as a real date -- catches placeholder/malformed values.
+        datetime.date.fromisoformat(entry["review_by"])
+        assert isinstance(entry.get("reason"), str) and len(entry["reason"]) > 20, (
+            f"{name} is scheduled for review without a real documented reason"
         )
