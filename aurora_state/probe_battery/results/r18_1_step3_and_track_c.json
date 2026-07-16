@@ -1,0 +1,227 @@
+{
+  "addendum": "R1.8.1 Supplement -- Step 3 Sharpenings (Post-Archaeology)",
+  "s3_plus_1_test_coverage_audit": {
+    "method": "Inventoried every test file touching the composition/articulation/emission path.",
+    "classification": {
+      "not_pytest_collected_manual_scripts": [
+        "tests/test_emitter_crash.py (no test_* function; guarded by if __name__=='__main__')",
+        "tests/run_interaction_test.py (no test_* function, no asserts)",
+        "tests/run_intelligence_test_surface.py (no test_* function, no asserts)",
+        "tests/test_round.py (no test_* function, no asserts)"
+      ],
+      "exists_no_assertion": [
+        "tests/test_conversation_desktop.py::test_conversation -- pytest-collected, prints response text, zero assert statements; passes identically whether Aurora replies with a sentence or an empty string."
+      ],
+      "structural_shape_only": [
+        "tests/test_oets_comprehension_confidence_growth.py -- numeric bounds/monotonicity of comprehension_confidence field",
+        "tests/test_direct_address_formulation.py -- coherence_score is a mocked/propagated parameter, not scored real text",
+        "tests/test_articulation_semantic_strategy.py -- decision metadata (accepted/reason/relief_bump), not text",
+        "tests/test_mtsl_live_wiring.py -- topology/semantic-mode wiring flags, not text",
+        "tests/test_failure_shape_tracing.py -- tests the diagnostic classifier's logic against synthetic inputs, not real generated text"
+      ],
+      "linguistic_coherence_of_actual_output": [
+        "tests/test_semantic_probe_battery.py (built R0)",
+        "tests/test_generation_collapse_regression.py (built R1.7)",
+        "tests/test_stratified_wellformedness.py (built R1.7)"
+      ]
+    },
+    "linguistic_coherence_count": 3,
+    "finding": "Zero tests asserted linguistic coherence of Aurora's actual generated text before this remediation campaign (R0, 2026-07-15). All 3 that now exist were built by this campaign. This is the direct explanation for '693+ tests green against 5 months of word-salad': the suite was never capable of catching it. Registry entry FIX-A030 (end-to-end assertion rule) logged."
+  },
+  "s3_plus_2_composer_implementation_history": {
+    "method": "Full (not campaign-window-limited) git log --follow on the actual live composition/assembly stage.",
+    "finding_the_live_stage_is_not_SentenceComposer": "aurora.py boots 'from aurora_constraint_emission import ConstraintEmitter' with the comment 'Constraint emitter -- replaces FGAE/StateVoice/SentenceComposer emission path' (aurora.py L20103-20108). SentenceComposer (aurora_expression_perception.py) is orphaned dead code on the live path -- present since the repo's initial commits, never removed, simply bypassed.",
+    "aurora_constraint_emission_py_full_history": [
+      {
+        "commit": "ca69b210",
+        "date": "2026-06-30",
+        "summary": "Merge PR #100 -- module's introduction as the live emission path"
+      },
+      {
+        "commit": "1097d7d0",
+        "date": "2026-07-02",
+        "summary": "Validation-through-use + relation formation: earn resonance toward crystallization"
+      },
+      {
+        "commit": "6e309724",
+        "date": "2026-07-02",
+        "summary": "Discourse-marker classifiers for use-outcome split (FIX-A008b)"
+      },
+      {
+        "commit": "9e04ee8a",
+        "date": "2026-07-03",
+        "summary": "Grounding feeds assertion confidence: crystallized topic raises I_IS (FIX-A009)"
+      },
+      {
+        "commit": "657c1ae8",
+        "date": "2026-07-03",
+        "summary": "Complete possibility-selves: dialogue loop, feedback split, per-self persistence"
+      },
+      {
+        "commit": "d085d343",
+        "date": "2026-07-03",
+        "summary": "The possibility-selves develop too -- their own slow, earned arcs"
+      }
+    ],
+    "verdict": "'Never finished' is the best-supported reading, not 'broken' or purely 'starved.' The module was introduced 2026-06-30, had 5 follow-up commits over 3 days (through 2026-07-03), and then received ZERO further changes before the remediation campaign began 2026-07-15. The specific mechanism this investigation found responsible for the collapse (_resolve_content_slot's resonance scoring, favoring historically-reinforced nodes over topically-relevant ones) has had no iteration at all since it was first written -- it was wired in as the new live path and never revisited against real behavioral output."
+  },
+  "step_3_core_live_generation_trace": {
+    "method": "Live single-turn trace via instrumented boot_aurora() (throwaway state-dir copy, same isolation pattern as run_probe_battery.py), monkeypatching ConstraintEmitter._resolve_content_slot to log every content-slot resolution, then sending one neutral greeting through process_external_user_turn.",
+    "input": "Hi Aurora, how are you doing today?",
+    "final_delivered_text": "Am exist want can understand truth. Moment did kind feel is alive.",
+    "response_src_label": "constraint_abstain (misleading -- see silent-fallback finding below; the honest abstain templates were NOT what was delivered)",
+    "call_sequence_confirmed": [
+      "process_external_user_turn -> _run_live_response_turn",
+      "-> _enforce_emission_discipline (the single emission chokepoint)",
+      "-> _compress_at_crest (ranks waveform/subsurface contributions by salience)",
+      "-> _field_frame_compress -> ConstraintEmitter.emit(ctx)  [runs UNCONDITIONALLY, before the abstain-fallback emptiness check]",
+      "-> emit() -> _resolve_content_slot() for entity and predicate slots, per candidate SVO frame",
+      "-> _resolve_content_slot reads ctx.oets.nodes (773-node graph loaded from aurora_state/aurora_oets_web.json via OntologicalScaffoldingEngine)",
+      "-> only if ALL of the above produce empty text does control fall through to _emit_honest_abstain_and_seek()'s clean template responses"
+    ],
+    "content_slot_resolution_trace_sample": [
+      {
+        "slot_name": "entity",
+        "roles": [
+          "noun",
+          "proper_noun"
+        ],
+        "oets_present": true,
+        "oets_node_count": 773,
+        "filled": true,
+        "chosen_entity": "coherence",
+        "chosen_predicate": ""
+      },
+      {
+        "slot_name": "predicate",
+        "roles": [
+          "verb"
+        ],
+        "oets_present": true,
+        "oets_node_count": 773,
+        "filled": true,
+        "chosen_entity": "coherence",
+        "chosen_predicate": "repair"
+      },
+      {
+        "slot_name": "entity",
+        "roles": [
+          "noun",
+          "proper_noun"
+        ],
+        "oets_present": true,
+        "oets_node_count": 773,
+        "filled": true,
+        "chosen_entity": "coherence",
+        "chosen_predicate": ""
+      },
+      {
+        "slot_name": "predicate",
+        "roles": [
+          "verb"
+        ],
+        "oets_present": true,
+        "oets_node_count": 773,
+        "filled": true,
+        "chosen_entity": "coherence",
+        "chosen_predicate": "repair"
+      },
+      {
+        "slot_name": "entity",
+        "roles": [
+          "noun",
+          "proper_noun"
+        ],
+        "oets_present": true,
+        "oets_node_count": 773,
+        "filled": true,
+        "chosen_entity": "meaning",
+        "chosen_predicate": ""
+      },
+      {
+        "slot_name": "predicate",
+        "roles": [
+          "verb"
+        ],
+        "oets_present": true,
+        "oets_node_count": 773,
+        "filled": true,
+        "chosen_entity": "meaning",
+        "chosen_predicate": "am"
+      }
+    ],
+    "state_file_health_check": {
+      "aurora_state/lexeme_bindings.json": "0 bytes -- JSON parse failure. HOWEVER confirmed via grep + live trace this file is NOT part of the live word-selection path -- only referenced by aurora_crystal_state_bridge.py's checkpoint-file inventory list. It is dead/irrelevant to the collapse, not the cause. (This rules out the addendum's literal 'emptied bindings store' framing, but the underlying background-radiation hypothesis it was meant to test is confirmed via the real mechanism below.)",
+      "aurora_state/lexicon.json": "275,810 bytes, parses fine, 2 top-level keys (version, entries). Not the live selection path either -- ConstraintEmitter reads aurora_oets_web.json via the OntologicalScaffoldingEngine, not lexicon.json directly.",
+      "aurora_state/aurora_oets_web.json": "7,512,931 bytes, parses fine, 773 word nodes -- THIS is the real live vocabulary store. Structurally healthy (no corruption), but see background-radiation finding: content is severely skewed.",
+      "aurora_state/language_state.json": "685 bytes, parses fine, 7 keys.",
+      "aurora_state/language_highway.json": "8,096 bytes, parses fine, 5 keys.",
+      "aurora_state/articulation_habits.json": "157,530 bytes, parses fine, 4 keys."
+    },
+    "background_radiation_hypothesis": {
+      "verdict": "CONFIRMED directly, not inferred",
+      "top_20_nodes_by_times_used_in_expression": [
+        "am(2934) exist(2740) real(2709) meaning(2440) what(2390) moment(2244) feel(1836) understand(1693) is(1667) want(1649) do(1536) did(1524) truth(1438) can(1345) change(874) always(859) choose(520) isn't(421) tell(418) become(408)"
+      ],
+      "observed_r16_garbled_bank_ranks": {
+        "am": 1,
+        "exist": 2,
+        "meaning": 4,
+        "want": 10,
+        "do": 11,
+        "truth": 13,
+        "can": 14,
+        "become": 20
+      },
+      "topic_word_comparison": {
+        "dinner": {
+          "comprehension_confidence": 0.1,
+          "times_used_in_expression": 0,
+          "times_encountered": 0
+        },
+        "birthday": {
+          "comprehension_confidence": 0.1,
+          "times_used_in_expression": 0,
+          "times_encountered": 0
+        },
+        "guitar": {
+          "comprehension_confidence": 0.1,
+          "times_used_in_expression": 0,
+          "times_encountered": 0
+        },
+        "chords": {
+          "comprehension_confidence": 0.1,
+          "times_used_in_expression": 0,
+          "times_encountered": 0
+        },
+        "note": "present as nodes in the graph, never once actually used or encountered -- cold-start placeholders that cannot win a resonance competition against a cluster with 6-9x their confidence."
+      },
+      "explanation": "resonance = comprehension_confidence * axis_alignment * depth_bonus in _resolve_content_slot(). Real topic words score near zero on the confidence term regardless of alignment; the identity/existence cluster (am/exist/meaning/want/do/truth/can/become, plus close cousins is/did/understand/feel/moment/real/what) wins almost every content-slot competition on almost every turn, independent of what the turn is actually about. Live-confirmed: the neutral greeting trace above selected 'meaning'/'am'/'coherence'/'repair' -- words with zero relevance to a 'how are you doing' greeting."
+    },
+    "silent_fallback_finding": "The honest-abstain safety valve (ConstraintEmitter._emit_abstain(), fully template-based -- 'I'm not sure.' / 'I can't say.' / 'Mm.' -- NO vocabulary lookup, cannot produce word-salad) is architecturally correct and was in fact selected on this traced turn (response_src='constraint_abstain'). But _field_frame_compress calls ConstraintEmitter.emit() (the normal, vocabulary-dependent path) UNCONDITIONALLY before the emptiness check that would fall through to the honest abstain ever runs. Because emit() essentially always returns some text, the honest abstain templates are almost never what actually reaches a user, despite being correct and available. Registry entry FIX-A031 logged."
+  },
+  "s3_plus_3_failure_signature_evolution_mapping": {
+    "feb_2026_salad_signature": "Diffuse, associative fragments, occasionally leaking intermediate-representation-looking tokens verbatim (\"Refer: from_definition:for (connected to: for, be, i'm)\") -- resembles an EARLIER pipeline stage's raw output escaping unassembled, i.e. pre-_assemble() structured fragments or slot-labels never making it through final surface formatting.",
+    "jul_2026_salad_signature": "Clean, grammatically-formatted short sentences built from a narrow ~15-20 word bank (am/exist/meaning/want/do/truth/can/become/is/did/understand/feel/moment/real/what) -- resembles the FINAL _assemble() stage's output exactly: correct SVO structure, correct contractions/capitalization/punctuation (via _fmt()), just filled with the wrong (over-reinforced, under-relevant) content words.",
+    "stage_resemblance_conclusion": "The Jul-2026 salad is not raw/unassembled -- it is the pipeline's LAST stage (_assemble/_fmt) operating exactly as designed, on content words chosen by a resonance formula that lost the relevance competition to reinforcement history. This is a content-selection failure downstream of assembly, not an assembly-stage failure. The Feb-2026 salad's different texture (structural markers leaking, colons, 'from_definition:for') suggests that era's failure mode was upstream of Feb-2026's own then-current assembly logic -- consistent with S3+2's 'never finished, wired in mid-2026' finding: the current ConstraintEmitter (introduced 2026-06-30) postdates the Feb-2026 archive entirely, so Feb-2026's garble was produced by a DIFFERENT (likely SentenceComposer-era) pipeline, not the one traced here. The two eras are not directly comparable stage-for-stage; they are different pipelines with the same qualitative outcome (non-responsive output), which is itself evidence that this has been a persistent architectural pattern across at least two full generation-pipeline generations, not one bug in one version."
+  },
+  "track_c_liveness_inventory": {
+    "LIVE": {
+      "ConstraintEmitter (aurora_constraint_emission)": "Instantiated unconditionally at boot, all profiles. Called from _field_frame_compress and _emit_honest_abstain_and_seek. Confirmed executing live via this session's instrumented trace.",
+      "ContradictionLedger": "Instantiated at boot, wired to working_memory at both initial wiring and a final re-assert pass.",
+      "attention_engine": "'.tick()' and '.get_meaning_nucleus()' called every turn inside _run_live_response_turn.",
+      "CERSBridge / dual_strata shadow pass": "Instantiated and called; explicitly documented as read-only/advisory/non-authoritative BY DESIGN -- this is a design decision, not staleness."
+    },
+    "STALE": {
+      "FailureGuardSuite / ConstraintEngine (aurora_constraint_engine.py)": "Zero references in aurora.py. Only referenced by this remediation's own probe-battery/ledger tooling. Reconfirms the R1.6/R1.7 finding.",
+      "ToroidalCirculationLayer (TCL)": "Zero references in aurora.py. Independently confirmed by the pre-existing FAILING test test_flow_audit_and_tcl_wiring.py -- a real, already-caught regression, out of scope to fix here."
+    },
+    "PROFILE_GATED (real code, unreachable from this campaign's own boot configuration)": {
+      "worth_evaluator / VariantPromoter": "Genuine call sites in aurora.py (worth_eval.evaluate(...) L22920, variant_promoter.process_solidified(...) L22988) -- but only reached when boot_aurora() runs a NON-'surface' runtime_profile. run_probe_battery.py boots with runtime_profile='surface' unconditionally, so these have been unreachable from every single measurement R0-R1.8 has taken. Methodological caveat for the whole campaign, not a staleness verdict on these modules themselves."
+    },
+    "ALTERNATE_ENTRYPOINT_ONLY (not verified either way)": {
+      "EntropyDetector": "Not referenced in aurora.py. Referenced by aurora_runtime.py and aurora_daemon.py, which this investigation did not boot or trace -- genuinely unknown whether live in production if those are the actual deployed entry points."
+    },
+    "automated_check": "tests/test_governance_liveness.py -- 5 tests, all passing, encoding the LIVE/STALE verdicts above plus an explicit quarantine manifest so a module's status is a decision, never an accident."
+  }
+}

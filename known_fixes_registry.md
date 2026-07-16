@@ -1012,3 +1012,164 @@ regression set is only verified against the cases the fixer happened to
 think of.
 
 **First Seen:** Remediation Addendum R1.7, 2026-07-15, Track A1.
+
+---
+
+## FIX-A029 (ARCHITECTURAL) — Archive-first rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** Investigating a capability question (is X broken, when did it
+break) by running new live measurements first, when stored historical
+outputs already on disk could answer the always-broken-vs-regressed
+question without any risk of the investigation itself contaminating the
+evidence.
+
+**Correct Form:** When a capability's history is in question, re-score
+every archived stored output with the current instrument BEFORE doing any
+live investigation. Archived text cannot be changed by anything done after
+it was written, so it is the one source immune to observer effects from
+the investigation itself, and is often already sufficient to resolve
+always-broken vs regressed vs gradient-decay.
+
+**Why:** R1.8's transcript archaeology re-scored 8 archived probe-battery
+runs plus 200 archived conversation-memory entries (the earliest available
+record, ~5 months before the remediation campaign began) entirely from
+stored text, and that alone resolved the campaign's central open question
+(ALWAYS-BROKEN, not regressed) before a single new live turn was run.
+
+**First Seen:** Remediation Addendum R1.8, 2026-07-15.
+
+---
+
+## FIX-A030 (ARCHITECTURAL) — End-to-end assertion rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A generative pipeline accumulates hundreds of passing tests
+that check structural/numeric properties (parameter propagation, field
+bounds, monotonicity, crash-safety) while zero tests assert anything about
+the linguistic coherence of the pipeline's own actual output -- so a full
+green suite coexists with months of word-salad in production.
+
+**Correct Form:** Every generative pipeline must carry at least one test
+asserting output quality in the output's own terms (for language:
+parseability + on-topic referent overlap, not merely that output exists or
+that generation ran without raising).
+
+**Why:** R1.8.1's S3+1 audit inventoried every test touching the
+composition/articulation path. `tests/test_emitter_crash.py` and
+`tests/run_interaction_test.py` have no `test_*` function pytest ever
+collects. `tests/test_conversation_desktop.py::test_conversation` is
+collected and always passes -- it has zero assert statements, so it would
+pass identically whether Aurora replied with a sentence or an empty
+string. `tests/test_oets_comprehension_confidence_growth.py`,
+`tests/test_direct_address_formulation.py`, and
+`tests/test_mtsl_live_wiring.py` assert real things, but about internal
+numeric/structural state, never about whether emitted text itself makes
+sense. Before this remediation campaign (R0 onward), the count of tests
+asserting linguistic coherence of Aurora's actual generated text was
+zero -- `tests/test_semantic_probe_battery.py`,
+`tests/test_generation_collapse_regression.py`, and
+`tests/test_stratified_wellformedness.py` are the first three, and this
+campaign built all of them.
+
+**First Seen:** Remediation Addendum R1.8.1, 2026-07-15, S3+1.
+
+---
+
+## FIX-A031 (ARCHITECTURAL) — Silent-fallback / safety-valve override rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A genuinely honest, safe response path exists
+(`ConstraintEmitter._emit_abstain()` -- template text like "I'm not sure."
+/ "I can't say.", no vocabulary lookup, cannot produce word-salad) but a
+later stage in the same turn's emission chokepoint
+(`_enforce_emission_discipline` -> `_field_frame_compress` ->
+`ConstraintEmitter.emit()`) runs UNCONDITIONALLY before the abstain
+fallback is ever checked, and its output overrides the honest abstain text
+whenever it produces any non-empty "core," regardless of whether that core
+is actually coherent. The result: the honest, safe path exists in the
+code and is architecturally correct, but is rarely what a user actually
+receives, because the unconditional generation stage almost always
+produces *something*.
+
+**Correct Form:** A safety-valve response path (honest abstain, "I don't
+know," refusal) must be checked for override-worthiness, not merely
+existence -- if a later stage's output is going to replace it, that
+later stage's output needs its own coherence gate before it's allowed to
+win, or the safety valve should run LAST and only be skippable by content
+that has passed a real quality check, not merely non-emptiness.
+
+**Why:** R1.8.1 Step 3's live single-turn trace on a plain greeting ("Hi
+Aurora, how are you doing today?") showed `state.response_src` labeled
+`"constraint_abstain"` (the honest path had been selected) while the
+actual text delivered was `"Am exist want can understand truth. Moment
+did kind feel is alive."` -- word-salad from `ConstraintEmitter.emit()`'s
+normal content-resolution path, not the abstain templates at all. The
+honest abstain templates in `_emit_abstain()` are correct and
+vocabulary-free; they were simply never what got sent, because
+`_field_frame_compress` runs before the emptiness check that would fall
+through to them, and `emit()` essentially never returns fully empty (see
+FIX-A032, background-radiation).
+
+**First Seen:** Remediation Addendum R1.8.1, 2026-07-15, Step 3.
+
+---
+
+## FIX-A032 (ARCHITECTURAL) — Background-radiation / reinforcement-imbalance rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A word-selection mechanism scores candidate vocabulary by
+`comprehension_confidence` (raised only by prior usage/research) rather
+than by relevance to the current turn's actual topic. When most of the
+vocabulary graph's nodes are cold-start placeholders (confidence stuck at
+the 0.1 floor, `times_encountered=0`, `times_used_in_expression=0`) and a
+small cluster of self-referential/existential words (am, exist, meaning,
+want, do, truth, can, become...) has been reinforced thousands of times,
+that small cluster wins the content-slot competition on essentially every
+turn, independent of what the turn is actually about -- because
+relevance never gets a chance to outweigh a 6-9x confidence gap.
+
+**Correct Form:** Confirm this diagnosis is real (verified below) before
+choosing a fix, per the shape-before-fix rule. A fix needs to either (a)
+raise the floor / accelerate confidence growth for topic-relevant but
+under-encountered nodes, (b) weight relevance more heavily relative to
+historical confidence in the resonance formula, or (c) both -- but no fix
+is authorized yet; this is the confirmed root-cause finding the branch
+discussion (Sunni, post-Track-B/C) will choose from.
+
+**Why:** R1.8.1 Step 3 ranked all 773 `aurora_oets_web.json` nodes by
+`times_used_in_expression`. All 8 words of the observed R1.6 garbled bank
+(truth/meaning/become/exist/am/do/can/want) rank in the top 20 of 773 --
+am is #1 (2,934 uses), exist is #2 (2,740). Meanwhile every probe-topic
+word checked (dinner, birthday, guitar, chords, weekend, schedule,
+tomatoes, backyard) is present in the graph as a node but sits at
+`comprehension_confidence=0.100` (the floor), `times_encountered=0`,
+`times_used_in_expression=0` -- never once actually used. A live
+instrumented single-turn trace on a neutral greeting reproduced the exact
+mechanism in real time: `_resolve_content_slot()` repeatedly selected
+"meaning"/"am"/"coherence"/"repair" -- words with no relevance to the
+input -- because their `comprehension_confidence` (~0.65-0.92) dominates
+the near-zero confidence of every node that would actually be on-topic.
+This is the R1.7 addendum's "background-radiation hypothesis," confirmed
+directly rather than inferred.
+
+**First Seen:** Remediation Addendum R1.8.1, 2026-07-15, Step 3.
+
+---
+
+## Falsified-prediction log
+
+R1.7's Track A2 falsifiable prediction ("simple_concrete stays moderately
+healthy; abstract_conceptual collapses toward 0") was FALSIFIED by Track
+A's own live stratified baselines: both strata collapsed to 0.0 parseable
+in all 3 runs. Retained here as a working example that the prediction
+discipline this remediation campaign runs on actually functions --
+predictions get written down before the data exists, and get logged as
+falsified rather than quietly revised when the data disagrees.
+
+**First Seen:** Remediation Addendum R1.7 (prediction), falsified by
+Track A, logged formally in Remediation Addendum R1.8, 2026-07-15.
