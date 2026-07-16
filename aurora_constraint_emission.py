@@ -247,18 +247,49 @@ def build_relevance_anchor_set(
     the topic. General-turn anchors stay input-text-only."""
     anchor: Dict[str, float] = {}
 
-    direct: Set[str] = set()
+    direct_from_text: Set[str] = set()
     text = text or ""
     for tok in re.findall(r"[a-zA-Z][a-zA-Z']{2,}", text.lower()):
         if tok not in _ANCHOR_TOKEN_STOPWORDS:
-            direct.add(tok)
-    direct |= {str(w).lower() for w in (recent_words or [])}
+            direct_from_text.add(tok)
+    direct_from_recent: Set[str] = {str(w).lower() for w in (recent_words or [])} - direct_from_text
 
     if oets is None or not hasattr(oets, "nodes"):
-        return {w: RELEVANCE_DIRECT_ANCHOR for w in direct}
+        return {w: RELEVANCE_DIRECT_ANCHOR for w in (direct_from_text | direct_from_recent)}
 
-    for w in direct:
+    # Words the user actually said THIS turn are always trusted as direct
+    # anchors, independent of how much OETS already knows about them --
+    # ingest hasn't necessarily run yet for this turn's text, and "the user
+    # is talking about this" doesn't require prior grounding to be true.
+    for w in direct_from_text:
         if w in oets.nodes:
+            anchor[w] = RELEVANCE_DIRECT_ANCHOR
+
+    # recent_words (self._context_keywords, carried across turns) DOES need
+    # a hollow-node guard (R1.9.2 G2 fix, found live): OETS auto-creates a
+    # fresh node the instant any novel word is encountered
+    # (get_or_create_node), AND ingest immediately wires same-sentence
+    # co-occurrence relations + usage_examples for every word in a burst --
+    # so even pure nonsense input ("Xqzv florble teeplemunk...") passes a
+    # naive relations/usage_examples count check within the same turn.
+    # Unlike direct_from_text, recent_words isn't "the user just said this"
+    # -- it's residue that could be exactly that kind of one-turn-old
+    # fabricated stub, so it's held to ConstraintEmitter._is_depth_hollow's
+    # same real-grounding bar (typed relations, a cluster membership, or a
+    # recorded usage example).
+    for w in direct_from_recent:
+        node = oets.nodes.get(w)
+        if node is None:
+            continue
+        relations = getattr(node, "relations", {}) or {}
+        cluster_ids = getattr(node, "cluster_ids", None) or set()
+        usage_examples = getattr(node, "usage_examples", []) or []
+        is_hollow = (
+            len(relations) < MIN_RELATIONS
+            and not cluster_ids
+            and len(usage_examples) < MIN_USAGE_EXAMPLES
+        )
+        if not is_hollow:
             anchor[w] = RELEVANCE_DIRECT_ANCHOR
 
     get_all = getattr(oets, "get_all_relations_for", None)

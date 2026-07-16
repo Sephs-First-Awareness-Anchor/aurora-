@@ -2314,6 +2314,9 @@ class SentenceComposer:
         self._last_word_sources = {}
         self._last_templates_used = []      # legacy field, kept for callers
         self._last_motifs_used = []
+        # R1.9.2 G2: reset per-compose() floor-failure tracking.
+        self._last_floor_failures = []
+        self._last_required_slot_attempts = 0
 
         # Live constraint orientation from the assembly's adjusted axes
         orientation = {}
@@ -2370,6 +2373,25 @@ class SentenceComposer:
             text = " ".join(sentences[:2])
 
         self._expression_count += 1
+
+        # R1.9.2 G2: abstain gate. Only when EVERY required-content-slot
+        # selection across the whole response failed the relevance floor --
+        # a partial failure is a different, better problem (relevant-but-
+        # ungrammatical, F4 non-goal) than a response with no topically-
+        # grounded content anywhere in it. Ratified doctrine: templated
+        # abstain surface + this generated, logged reason counts as
+        # FIX-A008-compliant honest abstention, not a banned scripted
+        # response -- the DECISION to abstain is generated from the real
+        # floor-check outcome.
+        if (self._last_required_slot_attempts > 0 and
+                len(self._last_floor_failures) == self._last_required_slot_attempts):
+            worst = min(self._last_floor_failures, key=lambda f: f["best_score"])
+            turn_id = str(getattr(offspring, "offspring_id", "") or f"compose-{time.time()}")
+            self._log_abstain(
+                turn_id=turn_id, floor=self._RELEVANCE_FLOOR_R_MIN,
+                best_candidate=worst["best_candidate"], best_score=worst["best_score"],
+            )
+            return random.choice(self._ABSTAIN_TEMPLATES)
 
         return text
 
@@ -2441,11 +2463,51 @@ class SentenceComposer:
     # without ever approaching the invariant.
     _VALENCE_TIEBREAK_WEIGHT = 0.5
 
+    # R1.9.2 G2: relevance floor for required content slots ("action",
+    # "object" -- not "connector"/"agent", which are structural, not
+    # content-bearing). Derived from the same score formula's own bounds
+    # (R1.9.2 pre-flight): a RELEVANCE_DISTANT_FLOOR candidate tops out at
+    # 0.075 (perfect valence match), a RELEVANCE_ONE_HOP_FLOOR candidate
+    # starts at 0.2 (worst valence match) -- R_MIN=0.1 sits strictly between
+    # them, nearer the salad (distant) side per F2's placement instruction.
+    # Below this floor, no candidate is meaningfully connected to the turn's
+    # anchor set at all -- the composer honestly doesn't have a
+    # topically-grounded word to offer for that slot.
+    _RELEVANCE_FLOOR_R_MIN = 0.1
+
+    _ABSTAIN_TEMPLATES = (
+        "I'm not sure.",
+        "I don't have a clear sense of that.",
+        "I don't have that yet.",
+    )
+
     def _score_composer_candidate(self, entry, anchor_set: Dict[str, float],
                                   valence_target: float) -> float:
         relevance = anchor_set.get(entry.word.lower(), aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR)
         valence_distance = min(1.0, abs(entry.emotional_valence - valence_target))
         return relevance * (1.0 + self._VALENCE_TIEBREAK_WEIGHT * (1.0 - valence_distance))
+
+    def _log_abstain(self, turn_id: str, floor: float, best_candidate: str, best_score: float) -> None:
+        """R1.9.2 G2: generated, logged abstain reason -- the decision to
+        abstain is generated from the real floor-check outcome even though
+        the surface phrasing is templated (ratified FIX-A008 scope
+        clarification, ported from the same doctrine applied to
+        ConstraintEmitter's _emit_abstain())."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "abstain_log.jsonl",
+            )
+            entry = {
+                "turn_id": turn_id, "floor": floor,
+                "best_candidate": best_candidate, "best_score": round(best_score, 4),
+                "timestamp": time.time(), "path": "sentence_composer",
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
 
     def _select_constraint_word(self, role: str, dominant_axis: str,
                                 chars: tuple, lex_role: str,
@@ -2543,17 +2605,21 @@ class SentenceComposer:
         if not candidates:
             return ""
 
-        # Belt-and-suspenders on the recent-words channel: the explicitly
-        # threaded input_text (from gateway._express() -> ... -> compose())
-        # is the direct, traceable source, unioned with self._context_keywords
-        # -- the composer's existing "Feed context keywords to composer --
-        # shapes next expression" mechanism (set_context(), fed from the
-        # perception side on ingest) that was already collecting real
-        # per-turn content words but, before this fix, was never actually
-        # consulted by word SELECTION -- only by template/OETS enrichment.
-        recent_for_anchor = list(already) + list(getattr(self, "_context_keywords", []) or [])
+        # R1.9.2 G2 fix: deliberately NOT unioning `already` (words already
+        # chosen earlier in THIS SAME response) into the anchor set. It was
+        # unioned in an earlier draft of this fix and created a self-
+        # reinforcing bug found live: if slot 1 picks a low-relevance word
+        # (correctly, because nothing else was available), that word then
+        # became a DIRECT anchor for slot 2 via `already`, letting slot 2
+        # inherit slot 1's irrelevance as if it were topically grounded --
+        # snowballing false relevance through a response with zero real
+        # connection to the input. `self._context_keywords` (genuine
+        # pre-turn context, fed by set_context() on ingest, independent of
+        # anything chosen so far in this response) stays unioned -- that IS
+        # legitimate cross-turn relevance, not self-reference.
         anchor_set = aurora_constraint_emission.build_relevance_anchor_set(
-            input_text, recent_for_anchor, self._oets.web if self._has_oets else None,
+            input_text, list(getattr(self, "_context_keywords", []) or []),
+            self._oets.web if self._has_oets else None,
         )
 
         # Relevance-primary score descending, then ascending usage_count as
@@ -2564,6 +2630,21 @@ class SentenceComposer:
                            e.usage_count)
         )
         top = candidates[:6]
+        best_score = self._score_composer_candidate(top[0], anchor_set, valence_target) if top else 0.0
+
+        # R1.9.2 G2: required content slots (action/object) that can't clear
+        # the relevance floor get recorded for compose() to check -- no
+        # candidate here is a genuine topical fit, so the honest answer is
+        # to abstain rather than assemble a sentence around the least-bad
+        # of a pool of irrelevant words.
+        if role in ("action", "object"):
+            self._last_required_slot_attempts += 1
+            if best_score < self._RELEVANCE_FLOOR_R_MIN:
+                self._last_floor_failures.append({
+                    "role": role, "best_candidate": top[0].word if top else "",
+                    "best_score": best_score, "floor": self._RELEVANCE_FLOOR_R_MIN,
+                })
+
         chosen = _r.choice(top[:4] if len(top) >= 4 else top)
         try:
             self._last_words_used.append(chosen.word)
