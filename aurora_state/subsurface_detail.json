@@ -6,7 +6,7 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.45,
+  "coherence": 0.872,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
@@ -14,42 +14,56 @@
   ],
   "contract_signals": {
     "active_topic": "",
-    "ambiguity": 0.0,
-    "cost_total": 0.0,
+    "ambiguity": 0.545,
+    "cost_total": 0.1493,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
-    "tracked_surface_intensity": 0.0
+    "tracked_surface_intensity": 0.419
   },
   "instability_markers": [],
   "law_bindings": [],
-  "micro_reasoning": [],
+  "micro_reasoning": [
+    {
+      "confidence": 1.0,
+      "label": "novelty_attention",
+      "rationale": "Novelty is high enough that the frame should stay exploratory.",
+      "source": "entropy",
+      "tags": [
+        "novelty",
+        "exploration"
+      ],
+      "urgency": 0.4
+    }
+  ],
   "origin_systems": [
     "incoming_input",
     "DimensionalSystems.process_synthesis",
     "DCEAssembly"
   ],
   "prediction_signal": {
-    "alerts": [],
-    "confidence": 0.6356,
+    "alerts": [
+      "novelty_shift"
+    ],
+    "confidence": 0.4473,
     "expected_observation": "followup",
     "expected_user_continuation": "",
-    "likely_affect_shift": "neutral",
-    "mismatch": 0.1125,
+    "likely_affect_shift": "curiosity",
+    "mismatch": 0.325,
     "prediction_payload": {
-      "affect": "neutral",
-      "axis_signature": "",
-      "certainty_band": "medium",
+      "affect": "curiosity",
+      "axis_signature": "X",
+      "certainty_band": "low",
       "intent_type": "followup",
       "topic": ""
     },
     "preload_context": [
       "followup"
     ],
-    "readiness_bias": 0.6344,
-    "source": "runtime_evidence"
+    "readiness_bias": 0.3627,
+    "source": "understanding_contract"
   },
   "pressure_map": {
     "A": 0.0,
@@ -58,28 +72,28 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.6192,
+  "readiness": 0.7665,
   "recalled_fragments": [
-    "search youtube for lofi hip hop radio"
+    "I've been practicing guitar chords all week.\n[recalled:practicing] I've been practicing guitar chords all week. [recalled:week] I've been..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.0,
-    "N": 1.0,
+    "B": 0.4762,
+    "N": 0.5238,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784185758.1939266,
+  "saved_at": 1784191054.7559733,
   "sub_crests": [
     {
       "axis": "X",
-      "intensity": 0.5,
+      "intensity": 0.581,
       "label": "attentional_drift"
     },
     {
       "axis": "T",
-      "intensity": 0.65,
-      "label": "unfamiliar"
+      "intensity": 0.55,
+      "label": "continuity_stable"
     },
     {
       "axis": "A",
@@ -88,13 +102,13 @@
     },
     {
       "axis": "X",
-      "intensity": 0.8875,
-      "label": "steady_continuation"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
-      "axis": "X",
-      "intensity": 0.5,
-      "label": "alignment"
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "novelty"
     },
     {
       "axis": "T",

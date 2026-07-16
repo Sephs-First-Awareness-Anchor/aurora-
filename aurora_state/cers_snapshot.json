@@ -1,60 +1,60 @@
 {
   "conscious_frame": {
-    "coherence": 0.45,
+    "coherence": 0.872,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.4883,
+      "intensity": 0.5749,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "search youtube for lofi hip hop radio",
+      "present_anchor": "I've been practicing guitar chords all week.\n[recalled:practicing] I've been practicing guitar chords all week. [recalled:week] I've been...",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.0
+        "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.0
+      "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.45,
+    "readiness": 0.872,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5047,
+      "intensity": 0.4476,
       "label": "steady"
     },
-    "timestamp": 1784185758.1948261
+    "timestamp": 1784191054.7565918
   },
-  "saved_at": 1784185758.195047,
+  "saved_at": 1784191054.7567184,
   "subsurface_state": {
     "dominant_axis": "N",
-    "frame_request": "balanced",
+    "frame_request": "observation",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "search youtube for lofi hip hop radio",
+      "present_anchor": "I've been practicing guitar chords all week.\n[recalled:practicing] I've been practicing guitar chords all week. [recalled:week] I've been...",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.0
+        "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.0
+      "reinforcement_hint": 0.2514
     },
     "sub_crests": [
       {
         "axis": "X",
-        "intensity": 0.5,
+        "intensity": 0.581,
         "label": "attentional_drift"
       },
       {
         "axis": "T",
-        "intensity": 0.65,
-        "label": "unfamiliar"
+        "intensity": 0.55,
+        "label": "continuity_stable"
       },
       {
         "axis": "A",
@@ -63,13 +63,13 @@
       },
       {
         "axis": "X",
-        "intensity": 0.8875,
-        "label": "steady_continuation"
+        "intensity": 0.45,
+        "label": "low_certainty"
       },
       {
-        "axis": "X",
-        "intensity": 0.5,
-        "label": "alignment"
+        "axis": "N",
+        "intensity": 1.0,
+        "label": "novelty"
       },
       {
         "axis": "T",
@@ -89,7 +89,7 @@
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5047,
+      "intensity": 0.4476,
       "label": "steady"
     }
   }
