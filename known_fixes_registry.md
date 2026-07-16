@@ -2062,3 +2062,100 @@ forward.
 
 **First Seen:** N3, R1 Campaign Closure directive's next-phase queue,
 2026-07-16.
+
+---
+
+## N4 — U1 unification scoping dossier (evidence only, decision to Sunni)
+
+**Status:** `ConstraintEmitter`'s quarantine (`review_by: 2026-08-15`,
+scheduled in R1.9.2) is due for review -- the closure directive's trigger
+condition (post-G4) is met. This is that review: current-state evidence
+for the three options the quarantine itself named (merge into a shared
+core, retire, or keep both with a permanent role split). No code changed
+by this entry -- the decision belongs to Sunni, per N4's own framing.
+
+**What's unchanged since R1.9.1/R1.9.2:** `ConstraintEmitter`'s two call
+sites in `aurora.py` (`_field_frame_compress`, `_emit_honest_abstain_
+and_seek`) are exactly as they were. `aurora_constraint_emission.
+build_relevance_anchor_set()`, extracted in G1 specifically as "the seed
+of the eventual unified word-selection core," remains the one piece of
+infrastructure genuinely shared between `ConstraintEmitter` and
+`SentenceComposer`.
+
+**What's new since R1.9.2 (the gap widened, not narrowed):** R1.9.3's
+L1-L4 and R1.9.4's Step 3b landed six real grammar fixes on
+`SentenceComposer` alone -- POS-category gating, skeleton clause-shape
+validity, subject-driven conjugation, grammaticality-grounded motif
+fitness, the refined wellformedness predicate, and determiner/preposition
+motif slots. None were ported to `ConstraintEmitter`. Every future
+grammar fix to the delivered path now has to be separately considered
+for the parallel path too, or the two diverge further -- exactly the
+train/serve-skew risk the quarantine's own text flagged, now measurably
+larger than when U1 was scheduled.
+
+**A finding that changes the calculus (traced, not assumed):**
+`ConstraintEmitter`'s abstain path is NOT simply redundant dead weight.
+`_emit_honest_abstain_and_seek()` fires at the tail of `_enforce_emission_
+discipline()` -- "the SINGLE EMISSION CHOKEPOINT... nothing outputs
+without passing this gate" -- and ONLY when `state.response_content` is
+still empty at that point. Immediately after this chokepoint, `aurora.py`
+builds `resp_A` DIRECTLY from `state.response_content`
+(`resp_A = _MiniResp(state.response_content, ...)`) with no further call
+back into `SentenceComposer`. So if `SentenceComposer.compose()` ever
+returns a genuinely empty string (`text = ""`) rather than one of its own
+`_ABSTAIN_TEMPLATES` -- possible when every sentence's `_compose_from_
+motif()` call returns `""` (fewer than 2 words assembled) AND G2's own
+abstain condition never triggered (`_last_required_slot_attempts == 0`,
+i.e. no sentence ever attempted an action/object slot at all) --
+`ConstraintEmitter`'s abstain text becomes the actual delivered resp_A,
+not SentenceComposer's. This is a genuine, if narrow, last-resort safety
+net, not a fully-redundant parallel abstain.
+
+**That gap has likely narrowed on its own, though not to zero:** L1's
+skeleton-validity gate requires every composition-eligible skeleton to
+contain AGENT + ACTION, and `_compose_from_motif`'s own no-motif fallback
+(`roles = ["agent","action","object"]`) always does too -- meaning
+`_last_required_slot_attempts` should now be >0 on almost every turn,
+which routes most true content-gap cases through G2's own abstain
+template instead of falling all the way through to an empty `text`. Not
+verified to zero occurrence (would need a live trace across many turns
+specifically hunting for this edge case, not attempted here) -- flagged
+honestly as likely-rarer, not proven-impossible.
+
+**Three options, with this evidence:**
+1. **Retire `ConstraintEmitter` entirely.** Requires replacing its
+   narrow last-resort abstain role with something else at the emission
+   chokepoint first (even a bare templated fallback matching
+   `_ABSTAIN_TEMPLATES` would do -- the value isn't ConstraintEmitter's
+   specific machinery, just SOME non-empty floor under `resp_A`).
+   Removes the growing dual-maintenance burden entirely. Risk: the exact
+   frequency of the edge case it currently guards is unverified, so
+   retiring without a replacement floor first is not safe as a first step.
+2. **Merge into a shared core.** G1's relevance-anchor-set extraction is
+   the precedent and the seed. But L1-L4's fixes are built as
+   `SentenceComposer` methods operating on motif `role_sequence`s
+   (`_pos_ok`, `_conjugate_for_subject`, `is_valid_clause_shape`) --
+   `ConstraintEmitter` has a different candidate-collection architecture
+   entirely (no motif/role-sequence concept), so this is a genuinely
+   larger undertaking than G1's anchor-set extraction was, not a
+   mechanical repeat of it.
+3. **Keep both, permanent role split, formally documented.** Given the
+   abstain-fallback finding above, this now has a real, defensible
+   rationale (last-resort non-empty-response floor) rather than just
+   "dual-alive because migration is unfinished" -- but the ROLE would
+   need to be narrowed explicitly to just that (the abstain path), with
+   `ConstraintEmitter`'s non-abstain word-selection machinery (which
+   genuinely executes but delivers nothing, per LIVE_PARALLEL) formally
+   marked for retirement separately, since that part has no equivalent
+   safety-net justification.
+
+**Recommendation (not a decision):** option 3, narrowed -- keep only
+`_emit_abstain()`'s last-resort role, formally documented as the
+emission chokepoint's non-empty-response floor; retire or fold in the
+rest of `ConstraintEmitter`'s word-selection machinery, which has no
+comparable justification and is the part actually accruing
+dual-maintenance debt. This is a recommendation grounded in the evidence
+above, not a decision -- Sunni decides, per N4's own framing.
+
+**First Seen:** N4, R1 Campaign Closure directive's next-phase queue,
+2026-07-16.
