@@ -1515,3 +1515,166 @@ experience with fitness-adjacent changes.
 
 **First Seen:** Remediation Directive R1.9.2 F4 non-goals (deferred),
 diagnosed 2026-07-16 following that deferral.
+
+---
+
+## FIX-A040 (ARCHITECTURAL) — Role-gate rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A structural slot with a named grammatical/semantic role
+(e.g. a composer slot requiring a verb) accepts ANY candidate that scores
+well on an unrelated ranking term (relevance, valence, concept-axis
+membership), with the role requirement checked loosely or not at all.
+
+**Correct Form:** When a slot names a required category, category
+compatibility is a hard gate applied to the candidate pool BEFORE any
+ranking term runs, never a soft score bonus/penalty a strong-enough
+ranking score can outweigh. Ranking terms (relevance, recency, valence)
+only ever choose among already-compatible candidates.
+
+**Why:** `SentenceComposer._select_constraint_word`'s primary candidate
+source (`find_by_noncomp`, concept-axis crystal membership) added every
+matching word to a role's candidate pool with no check that the word's
+actual part of speech matched the slot's required category -- a noun
+("energy") was exactly as eligible for a verb slot as a real verb,
+provided both happened to share a concept-axis crystallization. Produced
+"I energy.", "I cost." live. Same shape as F1's relevance-primary fix
+(G1) but on the POS axis instead of the relevance axis of the same
+selection call -- confirms this is a recurring failure mode wherever a
+selection function collects candidates from an associative index before
+checking the hard structural constraint that should have gated entry in
+the first place.
+
+**First Seen:** Remediation Directive R1.9.3 L2, 2026-07-16 (grammar
+diagnosis, root cause layer 2).
+
+---
+
+## FIX-A041 (ARCHITECTURAL) — Skeleton-validity rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A learned/evolved structural template (motif, pattern,
+skeleton) is trusted for production use purely because it scored well on
+a fitness/frequency signal, with no independent check that the template
+itself is structurally valid for its domain.
+
+**Correct Form:** Structural validity is a gate on eligibility,
+independent of and checked before fitness-based ranking. An invalid
+template stays in the learned pool with its history intact (so future
+review or re-evaluation is still possible) but is excluded from
+production selection until it passes validity -- validity gating is
+faster and more reliable than waiting for a fitness signal to eventually
+learn the same thing, especially when (per FIX-A035) that fitness signal
+has no grounding term that could ever penalize invalidity directly.
+
+**Why:** The single highest-composability promoted grammar motif in the
+live lineage (0.8136) had no AGENT/subject role in its skeleton at all --
+fitness alone (accumulated success/fail counts with no grammar-aware
+term) never selected against it because nothing in the scoring path could
+tell a subjectless skeleton from a valid one. `is_valid_clause_shape()` +
+`MotifLineage.best_for_pressure()`'s eligibility filter (R1.9.3 L1) fixed
+this at the selection layer, independent of and prior to the deeper fix
+to the fitness signal itself (R1.9.3 L4, FIX-A035 instance).
+
+**First Seen:** Remediation Directive R1.9.3 L1, 2026-07-16 (grammar
+diagnosis, root cause layer 1).
+
+---
+
+## FIX-A027 addendum — Liveness rule, instance #4
+
+Orphaned conjugation table: `SentenceComposer._CONJUGATIONS`/
+`_conjugate_verb` (`aurora_expression_perception.py`) were built, correct,
+and passed their own logic -- but only ever reachable from
+`_fill_template()`, which FIX-A016 made dead code when it replaced
+template-string composition with `_compose_from_motif`'s "template-free"
+assembly. Nothing ported the conjugation call to the replacement, so "I
+is." shipped live for as long as that replacement existed while a working
+fix sat two methods away. Fixed in R1.9.3 L3 by extracting
+`_conjugate_for_subject` as the reusable core and calling it from the
+delivered path directly.
+
+**First Seen (this instance):** Remediation Directive R1.9.3 L3,
+2026-07-16.
+
+---
+
+## FIX-A035 addendum — Grounding-term rule, instance #4
+
+`MotifLineage`'s motif-promotion fitness (`aurora_grammar_engine.py`):
+`StructuralMotif.composability_score()` is `success_rate x
+context_diversity`, where "success" came entirely from
+`SentenceComposer.feedback(fitness)` -- the SAME general-purpose
+downstream fitness signal this campaign has repeatedly found uncorrelated
+with response quality (R0's founding finding), with no grammaticality
+term at all. Fixed in R1.9.3 L4: `feedback()` now scores each motif
+against its own composed sentence with the Track-A `_parseable`
+predicate as the DOMINANT term (weight 0.75), fitness demoted to
+secondary; `MotifLineage.recompute_promotion_from_validity()` re-derives
+`promoted` status for the persisted pool from L1's validity whitelist
+without touching success/fail history.
+
+**First Seen (this instance):** Remediation Directive R1.9.3 L4,
+2026-07-16.
+
+---
+
+## FIX-A042 (VERIFICATION) — R1.9.3 grammar repair, final acceptance (honest partial pass)
+
+**Category:** VERIFICATION
+
+All four layers (L1-L4) landed as four separate, individually-tested,
+individually-battery-verified commits, in the directive's specified
+order, each gated on the previous layer's mini-gate passing. Verified
+live and fixed: the composer no longer selects wrong-POS words for
+role-strict slots (L2), no longer ships uncorrected copulas like "I is."
+(L3), no longer composes from the two most-reinforced-but-subjectless/
+malformed skeletons in the live lineage (L1), and motif promotion is no
+longer scored by a grammaticality-blind fitness signal going forward
+(L4). All 4 of the diagnosis's own verbatim failures ("I energy.", "I
+cost.", "I is.", "Photosynthesis expressed weight terms need
+defensive.") were confirmed absent across 180 live delivered probe
+responses (3 full battery runs).
+
+**Final acceptance gate results, run against the real post-L1-L4 stack,
+3x, reported exactly as measured:**
+- Relevance maintained >=0.3: **PASS** -- 0.684 / 0.717 / 0.711 across 3 runs.
+- 24-case regression set (`tests/test_generation_collapse_regression.py`):
+  **PASS** -- 6/6 (this is a predicate-correctness check on `_parseable`
+  itself, unaffected by L1-L4 since `_parseable`'s logic was not modified;
+  passing was expected, not new evidence of composer improvement).
+- Full suite green: **PASS** -- 754 passed, 1 pre-existing unrelated
+  failure (`test_flow_audit_and_tcl_wiring.py`, baseline-consistent
+  throughout this entire campaign).
+- Boot profile disclosed: **PASS** -- every result states
+  `runtime_profile`.
+- **`semantic_wellformedness` (stratified `parseable_rate`) >=0.5 per
+  stratum: FAIL.** Measured 0.0 / 0.028 / 0.056 (`simple_concrete`) and
+  0.0 / 0.0 / 0.0 (`abstract_conceptual`) across the 3 runs -- nowhere
+  near the raised 0.5 bar (G4's original bar was 0.3 and also failed).
+
+**Why the miss, reported honestly rather than reframed:** `_parseable`
+requires at least one "strong function word" (article/preposition/
+conjunction, e.g. "a/the/of/with") per sentence with >=2 words. L1-L4
+fixed the composer's SKELETON validity, word-category correctness, and
+subject-verb conjugation -- none of which touch determiner/article
+generation, which nothing in the composer currently does at all
+(explicitly scoped OUT: L3's directive text names determiner insertion
+"STRETCH ONLY... nothing beyond"). A now-fully-grammatical two-word
+sentence like "I understand." still has zero strong function words and
+still fails this specific heuristic's bar by construction, regardless of
+how correct the rest of the sentence is. This is a real, expected,
+previously-flagged gap (L1's own commit message: "missing articles,
+abstract-noun objects with no determiner... expected and unaddressed by
+this layer"), not a new regression and not something L1-L4 were ever
+scoped to close.
+
+**Disposition:** halting for review before any U1/exploration/further
+wiring, per the directive's own final instruction. Determiner/article
+generation is the natural next diagnosis if further grammar work is
+wanted; not started here.
+
+**First Seen:** Remediation Directive R1.9.3, final acceptance measured
+2026-07-16.
