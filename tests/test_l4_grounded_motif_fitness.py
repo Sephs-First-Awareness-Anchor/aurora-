@@ -75,9 +75,14 @@ def test_ungrammatical_sentence_can_fail_even_with_high_fitness():
 
     c.grammar_engine = _FakeEngine()
     motif = _FakeMotif("bad_shape", (TokenRole.DESCRIPTOR, TokenRole.ACTION, TokenRole.OBJECT))
-    # No strong function word anywhere -- _parseable rejects this.
-    c._last_motif_sentences = [(motif, "Photosynthesis expressed weight.")]
-    c._last_words_used = ["photosynthesis", "expressed", "weight"]
+    # R1.9.4: _parseable is now a clause-structure check, not just
+    # strong-word presence -- "Photosynthesis expressed weight." alone is
+    # actually valid SVO and would now pass. Use the diagnosis's full
+    # verbatim salad sentence instead: two verbs (expressed, need) with no
+    # coordinating structure between them, which the refined predicate
+    # still correctly rejects.
+    c._last_motif_sentences = [(motif, "Photosynthesis expressed weight terms need defensive.")]
+    c._last_words_used = ["photosynthesis", "expressed", "weight", "terms", "need", "defensive"]
 
     c.feedback(1.0)  # fitness alone would have succeeded pre-L4
 

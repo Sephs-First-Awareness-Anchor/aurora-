@@ -198,30 +198,295 @@ _STRONG_FUNCTION_WORDS = {
 }
 
 
-def _parseable(response_text: str) -> bool:
-    """Lightweight wellformedness heuristic -- no NLP library assumed
-    available, matches the regex/wordlist heuristic style already used
-    throughout aurora_conversation_rubric_engine.py.
+# R1.9.4 Step 1: coarse POS categories for clause-structure assessment.
+# These lists exist so _parseable can tell "She sings well." (valid,
+# article-less, telegraphic) from "I is moment do." (word salad) by
+# STRUCTURE -- subject/verb/complement shape -- rather than by presence
+# of an article/preposition, which the pre-refinement version required
+# and which penalized every valid telegraphic sentence equally.
+
+_PRONOUNS = {
+    "i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
+    "this", "that", "these", "those", "who", "what", "which",
+    "someone", "something", "anyone", "anything", "everyone", "everything",
+    "nobody", "nothing", "myself", "yourself", "himself", "herself", "itself",
+}
+
+_DETERMINERS = {
+    "a", "an", "the", "this", "that", "these", "those",
+    "my", "your", "his", "her", "its", "our", "their",
+    "some", "any", "no", "each", "every", "either", "neither", "which", "whose",
+}
+
+_MODALS_AUX = {
+    "am", "is", "are", "was", "were", "be", "been", "being",
+    "do", "does", "did", "have", "has", "had",
+    "will", "would", "can", "could", "shall", "should", "may", "might", "must",
+}
+
+# Common verb base/inflected forms -- not an exhaustive English verb list,
+# a wordlist-heuristic bank in the same style this module already uses
+# for _STRONG_FUNCTION_WORDS, sized to cover ordinary conversational verbs
+# plus Aurora's own generated vocabulary.
+_COMMON_VERBS = {
+    "go", "goes", "went", "going", "gone",
+    "come", "comes", "came", "coming",
+    "see", "sees", "saw", "seeing", "seen",
+    "want", "wants", "wanted", "wanting",
+    "need", "needs", "needed", "needing",
+    "make", "makes", "made", "making",
+    "take", "takes", "took", "taking", "taken",
+    "give", "gives", "gave", "giving", "given",
+    "find", "finds", "found", "finding",
+    "think", "thinks", "thought", "thinking",
+    "know", "knows", "knew", "knowing", "known",
+    "feel", "feels", "felt", "feeling",
+    "become", "becomes", "became", "becoming",
+    "seem", "seems", "seemed",
+    "look", "looks", "looked", "looking",
+    "sound", "sounds", "sounded",
+    "work", "works", "worked", "working",
+    "help", "helps", "helped", "helping",
+    "talk", "talks", "talked", "talking",
+    "tell", "tells", "told", "telling",
+    "ask", "asks", "asked", "asking",
+    "hear", "hears", "heard", "hearing",
+    "meet", "meets", "met", "meeting",
+    "understand", "understands", "understood",
+    "exist", "exists", "existed",
+    "hold", "holds", "held", "holding",
+    "start", "starts", "started", "starting",
+    "change", "changes", "changed", "changing",
+    "learn", "learns", "learned", "learning",
+    "play", "plays", "played", "playing",
+    "sing", "sings", "sang", "sung", "singing",
+    "happen", "happens", "happened", "happening",
+    "depend", "depends", "depended", "depending",
+    "follow", "follows", "followed", "following",
+    "switch", "switches", "switched", "switching",
+    "expect", "expects", "expected", "expecting",
+    "appreciate", "appreciates", "appreciated", "appreciating",
+    "matter", "matters", "mattered", "mattering",
+    "try", "tries", "tried", "trying",
+    "grow", "grows", "grew", "growing",
+    "live", "lives", "lived", "living",
+    "move", "moves", "moved", "moving",
+    "call", "calls", "called", "calling",
+    "keep", "keeps", "kept", "keeping",
+    "let", "lets", "letting",
+    "write", "writes", "wrote", "writing", "written",
+    "sit", "sits", "sat", "sitting",
+    "stand", "stands", "stood", "standing",
+    "open", "opens", "opened", "opening",
+    "turn", "turns", "turned", "turning",
+    "wait", "waits", "waited", "waiting",
+    "stop", "stops", "stopped", "stopping",
+    "put", "puts", "putting",
+    "run", "runs", "ran", "running",
+    "bring", "brings", "brought", "bringing",
+    "wonder", "wonders", "wondered", "wondering",
+    "imagine", "imagines", "imagined", "imagining",
+    "remember", "remembers", "remembered", "remembering",
+    "believe", "believes", "believed", "believing",
+    "connect", "connects", "connected", "connecting",
+    "create", "creates", "created", "creating",
+    "explore", "explores", "explored", "exploring",
+    "dream", "dreams", "dreamed", "dreaming",
+    "choose", "chooses", "chose", "choosing", "chosen",
+    "discover", "discovers", "discovered", "discovering",
+    "notice", "notices", "noticed", "noticing",
+    "reflect", "reflects", "reflected", "reflecting",
+    "experience", "experiences", "experienced", "experiencing",
+}
+
+_COMMON_ADJECTIVES = {
+    "glad", "good", "great", "nice", "sure", "clear", "real", "alive", "kind",
+    "natural", "bright", "warm", "gentle", "calm", "happy", "sad", "afraid",
+    "angry", "tired", "curious", "honest", "brave", "wise", "strong", "weak",
+    "soft", "hard", "light", "heavy", "young", "old", "new", "fresh", "quiet", "loud",
+}
+
+_COMMON_ADVERBS = {
+    "well", "again", "otherwise", "carefully", "honestly", "tonight", "later",
+    "here", "there", "now", "then", "always", "never", "sometimes", "often",
+    "really", "truly", "actually", "probably", "maybe", "perhaps", "away",
+}
+
+# Deliberately NARROW allowlist for the missing-determiner check -- unlike
+# every other category here, a false positive on this specific list
+# directly causes a valid sentence to be wrongly rejected, so only
+# unambiguous singular countable common nouns go in it. A word only
+# reaching "noun" via the generic fallback is exempt from the determiner
+# check entirely -- better to miss a real violation than reject a valid
+# sentence over an uncertain classification.
+_COMMON_COUNT_NOUNS = {
+    "answer", "question", "chair", "dog", "book", "moment", "story", "pattern",
+    "connection", "day", "way", "thing", "heart", "mind", "place", "idea",
+    "plan", "reason", "problem", "solution", "choice", "decision", "mistake",
+    "chance", "opportunity", "friend", "person", "word", "sentence", "letter",
+    "message", "call", "meeting", "appointment", "gift", "picture",
+    "photo", "song", "movie", "game", "job", "task", "point", "example",
+}
+
+# Deliberately conservative, generously stocked: a false negative here (a
+# genuine mass noun not listed) just causes a valid sentence to be
+# over-strictly flagged for a missing determiner, so err toward inclusion.
+_MASS_NOUNS = {
+    "truth", "light", "darkness", "silence", "meaning", "beauty", "depth",
+    "space", "nature", "energy", "purpose", "consciousness", "awareness",
+    "presence", "curiosity", "wonder", "courage", "life", "time", "people",
+    "wisdom", "love", "hope", "trust", "freedom", "growth", "peace", "water",
+    "air", "music", "art", "knowledge", "understanding", "information",
+    "advice", "news", "furniture", "equipment", "research", "evidence",
+    "breakfast", "lunch", "dinner", "brunch",
+}
+
+# Real lexicon/OETS role strings (L2's POS tags) -> this module's coarse
+# categories, for when a caller supplies a live pos_lookup.
+_NORMALIZE_LEXICON_ROLE = {
+    "adjective": "adj", "adverb": "adv",
+    "preposition": "func", "connector": "func", "determiner": "det",
+}
+
+
+def _coarse_pos(word: str, pos_lookup=None) -> str:
+    """One of pronoun/verb/noun/adj/adv/det/func/unknown. `pos_lookup`,
+    if given, is consulted first (e.g. a live lexicon's real role for
+    composer-generated text); the wordlist/suffix heuristics below are
+    the standalone fallback used for hand-authored text with no live
+    lexicon behind it (golden/regression tests, arbitrary user-facing
+    strings)."""
+    w = word.lower().strip(".,!?;:'\"-")
+    if not w:
+        return "unknown"
+    if pos_lookup is not None:
+        looked_up = pos_lookup(w)
+        if looked_up:
+            return _NORMALIZE_LEXICON_ROLE.get(looked_up, looked_up)
+    if w in _PRONOUNS:
+        return "pronoun"
+    if w in _DETERMINERS:
+        return "det"
+    if w in _MODALS_AUX or w in _COMMON_VERBS:
+        return "verb"
+    if w in _COMMON_ADJECTIVES:
+        return "adj"
+    if w in _COMMON_ADVERBS:
+        return "adv"
+    if w in _STRONG_FUNCTION_WORDS:
+        return "func"
+    if w.endswith("ly") and len(w) > 3:
+        return "adv"
+    if (w.endswith("ed") or w.endswith("ing")) and len(w) > 4:
+        return "verb"
+    if any(w.endswith(s) for s in ("ful", "ous", "ive", "able", "ible", "ent", "ant", "less")) and len(w) > 4:
+        return "adj"
+    return "noun"
+
+
+def _is_missing_determiner_violation(raw_words: List[str], tags: List[str]) -> bool:
+    """R1.9.4 Step 1 / Step 3's precursor: a singular countable common
+    noun in post-verb (object/complement) position with no determiner
+    within the preceding few tokens -- "I need answer to question." class.
+    Scoped to post-verb position only and to the narrow _COMMON_COUNT_NOUNS
+    allowlist deliberately: subject-position bare nouns are common and
+    often correct (proper nouns, generic/mass-noun subjects, imperatives),
+    and the generic noun fallback catches too many words to safely gate on."""
+    first_verb_idx = None
+    for i, t in enumerate(tags):
+        if t == "verb":
+            first_verb_idx = i
+            break
+    if first_verb_idx is None:
+        return False
+    for i in range(first_verb_idx + 1, len(tags)):
+        w = raw_words[i]
+        wl = w.lower()
+        if wl not in _COMMON_COUNT_NOUNS or wl in _MASS_NOUNS:
+            continue
+        if wl.endswith("s") and not wl.endswith("ss") and len(wl) > 3:
+            continue  # plural, exempt
+        if w[:1].isupper() and i != 0:
+            continue  # likely proper noun
+        found_det = False
+        for back in range(1, 4):
+            j = i - back
+            if j <= first_verb_idx:
+                break
+            if tags[j] == "det":
+                found_det = True
+                break
+            if tags[j] in ("verb", "pronoun", "func"):
+                break
+        if not found_det:
+            return True
+    return False
+
+
+def _sentence_parseable(sentence: str, pos_lookup=None) -> bool:
+    """R1.9.4 Step 1: a sentence is parseable if it has a plausible
+    subject+predicate shape (exactly one verb, plus at least one other
+    role-tagged word -- object/complement/modifier/function word) with no
+    missing-determiner violation, OR if it carries the old strong-function-
+    word signal (now evidence FOR parseability, no longer the only path --
+    salvages complex/compound sentences this coarse single-verb check
+    can't structurally classify, e.g. multi-clause replies joined by
+    "and"/"but"/a dash)."""
+    raw_words = _WORD_RE.findall(sentence)
+    n = len(raw_words)
+    if n < 2:
+        return True  # too short to judge -- caller's outer checks already gate this
+    tags = [_coarse_pos(w, pos_lookup) for w in raw_words]
+
+    if _is_missing_determiner_violation(raw_words, tags):
+        return False
+
+    verb_count = sum(1 for t in tags if t == "verb")
+    other_count = sum(1 for t in tags if t not in ("verb", "pronoun"))
+    structural_ok = (verb_count == 1 and other_count >= 1)
+
+    lower_words = [w.lower() for w in raw_words]
+    strong_hits = sum(1 for w in lower_words if w in _STRONG_FUNCTION_WORDS)
+    required = 2 if n >= 16 else 1
+    strong_ok = strong_hits >= required
+
+    return structural_ok or strong_ok
+
+
+def _parseable(response_text: str, pos_lookup=None) -> bool:
+    """Wellformedness check -- no NLP library assumed available, matches
+    the regex/wordlist heuristic style already used throughout
+    aurora_conversation_rubric_engine.py.
 
     Checks: non-empty, has recognizable word tokens, isn't dominated by a
-    single repeated fragment, has a plausible word-to-character ratio, and
-    (PER SENTENCE, not just once across the whole response) carries at
-    least one STRONG structural word -- catches word-salad / garbled
-    output like the R0 audit's cited failure ("Something deep need gentle
-    -- I wonder it") and the R1.6 trace's 24 real garbled responses
-    ("I is moment do.", "I did. I exist.").
+    single repeated fragment, has a plausible word-to-character ratio,
+    and (PER SENTENCE, not just once across the whole response) has a
+    plausible clause-structure shape or carries the old strong-word
+    signal as a fallback.
 
-    R1.7 fix, held against a permanent regression set (tests/
-    test_generation_collapse_regression.py) built from those 24 verbatim
-    trace responses: the OLD version only checked clauses >=6 words, so
-    short garbled clauses never triggered the check at all -- the
-    "short-clause evasion" this closes by dropping the floor to 2 words.
-    It also counted copula/auxiliary/modal verbs (is/am/do/did/can) as
-    satisfying the check; the garbled bank of responses uses those AS
-    BARE CONTENT WORDS, not real glue, so they're excluded from
-    _STRONG_FUNCTION_WORDS. Checking per-sentence (not once globally)
-    matters too -- a garbled first clause followed by one coherent clause
-    must still fail, not average out.
+    R1.9.4 Step 1 refinement: the R1.7 version required >=1 STRONG
+    structural word (article/preposition/conjunction/wh-word) per
+    sentence -- this caught word salad ("I is moment do.") but also
+    rejected every valid article-less/telegraphic sentence equally
+    ("She sings well." has zero strong words and is perfectly
+    grammatical). L1/L2's clause-shape and POS-gate work made real
+    structural assessment possible: _sentence_parseable() now checks for
+    a plausible subject+single-verb+complement shape (using the L2 POS
+    categories via an optional `pos_lookup`, or a standalone wordlist
+    fallback for text with no live lexicon behind it) and a missing-
+    determiner check ("I need answer to question." class). Strong-word
+    presence is now evidence FOR parseability -- one path to pass, not
+    the only one -- which is what makes it possible to accept telegraphic
+    sentences without accepting salad: salad fails BOTH the structural
+    check (multiple bare verbs, no real complement) AND the strong-word
+    fallback (the salad vocabulary bank has no articles/prepositions).
+
+    Held against the R1.7 permanent regression set (tests/
+    test_generation_collapse_regression.py, unchanged) AND R1.9.4's
+    two-direction golden set (tests/test_function_word_gate_golden.py):
+    the 24 traced garbled responses and the grammar micro-regression set
+    must still fail, the new telegraphic-but-valid golden cases must now
+    pass, and the article-dependent malformed golden cases must fail.
     """
     text = str(response_text or "").strip()
     if not text:
@@ -241,13 +506,10 @@ def _parseable(response_text: str) -> bool:
         return False
 
     for sentence in _SENTENCE_SPLIT_RE.split(text):
-        sentence_words = [w.lower() for w in _WORD_RE.findall(sentence)]
-        n = len(sentence_words)
-        if n < 2:
+        sentence_words = _WORD_RE.findall(sentence)
+        if len(sentence_words) < 2:
             continue
-        strong_hits = sum(1 for w in sentence_words if w in _STRONG_FUNCTION_WORDS)
-        required = 2 if n >= 16 else 1
-        if strong_hits < required:
+        if not _sentence_parseable(sentence, pos_lookup):
             return False
     return True
 
