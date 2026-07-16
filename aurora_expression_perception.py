@@ -2677,6 +2677,65 @@ class SentenceComposer:
         except Exception:
             pass
 
+    # R1.9.3 L2: structural role -> allowed grammatical categories. A hard
+    # gate on candidate pools, applied BEFORE relevance ranking -- G1's
+    # relevance stays the ranking term among POS-compatible candidates,
+    # never a way to let an incompatible part of speech outrank its way
+    # into a slot it doesn't belong in.
+    _ROLE_POS_CATEGORIES = {
+        "agent": frozenset({"pronoun", "noun"}),
+        "object": frozenset({"noun", "pronoun"}),
+        "action": frozenset({"verb"}),
+        "descriptor": frozenset({"adjective", "adverb"}),
+        "connector": frozenset({"connector", "conjunction", "preposition"}),
+    }
+    # Every POS tag the lexicon/OETS actually use. Anything outside this
+    # set (e.g. OETS's "training_gap" placeholder, or a missing role) is
+    # genuinely unknown, not just POS-mismatched -- handled separately
+    # below so a real category violation and an ungrounded word don't get
+    # silently conflated.
+    _KNOWN_POS = frozenset({
+        "pronoun", "noun", "verb", "adjective", "adverb",
+        "preposition", "determiner", "connector", "conjunction",
+    })
+
+    def _pos_ok(self, entry, role: str) -> bool:
+        """R1.9.3 L2: True iff `entry`'s grammatical category is compatible
+        with the structural `role` it's being considered for. Unknown POS
+        (not a category-mismatch, no real tag at all) is excluded from
+        role-strict slots (agent/action/object/connector), permitted only
+        in descriptor slots, and logged -- an honest worklist, not silent
+        salad."""
+        allowed = self._ROLE_POS_CATEGORIES.get(role)
+        if allowed is None:
+            return True
+        pos = getattr(entry, "role", None)
+        if pos in allowed:
+            return True
+        if not pos or pos not in self._KNOWN_POS:
+            self._log_pos_unknown(getattr(entry, "word", ""), role, pos)
+            return role == "descriptor"
+        return False
+
+    def _log_pos_unknown(self, word: str, role: str, pos) -> None:
+        """R1.9.3 L2: every unknown-POS word considered for a slot gets
+        logged -- makes the seeding gap a visible worklist instead of a
+        silently-swallowed one."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "pos_unknown_log.jsonl",
+            )
+            entry = {
+                "word": word, "slot_role": role, "lexicon_pos": pos,
+                "timestamp": time.time(),
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
     def _select_constraint_word(self, role: str, dominant_axis: str,
                                 chars: tuple, lex_role: str,
                                 valence_target: float,
@@ -2732,7 +2791,7 @@ class SentenceComposer:
                         if not _wd or _wd in seen:
                             continue
                         _e = self.lexicon.entries.get(_wd)
-                        if _e is not None and (_e.role == lex_role or not chars):
+                        if _e is not None and self._pos_ok(_e, role):
                             candidates.append(_e)
             except Exception:
                 pass
@@ -2742,12 +2801,17 @@ class SentenceComposer:
         # whichever ~6 entries find_by_noncomp's valence-only sort put
         # first (that early exit was the mechanism that let the identity
         # cluster win before diversity ever got a chance to matter).
+        # R1.9.3 L2: this loop used to add every concept-axis match
+        # regardless of grammatical role -- a noun crystallized onto the
+        # same axis/character as a verb was just as eligible for an
+        # "action" slot as an actual verb. self._pos_ok() gates that here,
+        # BEFORE relevance ranking (a hard filter, not a score term).
         for ch in chars:
             try:
                 found = self.lexicon.find_by_noncomp(
                     f"{dominant_axis}:{ch}", valence_target)
                 candidates.extend(e for e in found
-                                  if e.word.lower() not in seen)
+                                  if e.word.lower() not in seen and self._pos_ok(e, role))
             except Exception:
                 pass
 
@@ -2760,14 +2824,15 @@ class SentenceComposer:
                     found = self.lexicon.find_by_noncomp(
                         f"{ax}:{chars[0]}", valence_target)
                     candidates.extend(e for e in found
-                                      if e.word.lower() not in seen)
+                                      if e.word.lower() not in seen and self._pos_ok(e, role))
                 except Exception:
                     pass
 
         if not candidates:
             try:
                 found = self.lexicon.find_by_role(lex_role)
-                candidates = [e for e in found if e.word.lower() not in seen]
+                candidates = [e for e in found
+                              if e.word.lower() not in seen and self._pos_ok(e, role)]
             except Exception:
                 candidates = []
 
