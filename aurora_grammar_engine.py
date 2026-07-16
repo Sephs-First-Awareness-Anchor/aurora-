@@ -608,6 +608,30 @@ class MotifLineage:
         return [m for m in self._motifs.values()
                 if m.promoted and m.composability_score() >= min_composability]
 
+    def recompute_promotion_from_validity(self) -> Dict[str, Any]:
+        """R1.9.3 L4: "re-score the full promoted pool... under the new
+        fitness; recompute promotion status. History/counters untouched --
+        promotion status is a derived verdict, not a stored history edit."
+        Demotes any currently-promoted motif whose skeleton fails the L1
+        clause-shape whitelist -- success_count/fail_count/contexts_seen
+        are never touched, only the derived `promoted` boolean. A
+        skeleton demoted this way stays fully in the pool and can be
+        re-promoted later through the normal should_promote() path if a
+        future review adds its shape to the whitelist. Idempotent."""
+        with self._lock:
+            demoted = []
+            for m in self._motifs.values():
+                if m.promoted and not is_valid_clause_shape(m.role_sequence):
+                    m.promoted = False
+                    demoted.append({
+                        "pattern_id": m.pattern_id,
+                        "role_sequence": [r.value for r in m.role_sequence],
+                        "composability_score": m.composability_score(),
+                    })
+            if demoted:
+                self._save()
+            return {"demoted": demoted, "demoted_count": len(demoted)}
+
     def best_for_pressure(
         self,
         orientation:     Dict[str, float],

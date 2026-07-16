@@ -45,7 +45,7 @@ import numpy as np
 from enum import Enum, IntEnum, auto
 from typing import Dict, List, Any, Optional, Tuple, Set
 from dataclasses import dataclass, field
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
@@ -1744,6 +1744,16 @@ class SentenceComposer:
         self._expression_count = 0
         self._total_scaffolded_fills = 0                # How many fills used OETS
 
+        # R1.9.3 L4: per-skeleton rolling (grammatical, fitness-approved)
+        # agreement history -- the Goodhart-caution instrument. If a
+        # skeleton's grammaticality predicate and the old fitness signal
+        # keep disagreeing, that divergence itself is the alert condition
+        # the directive asks for, not a silent tie-break.
+        self._grounding_history: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=self._GOODHART_WINDOW)
+        )
+        self._goodhart_alerted: Set[str] = set()
+
         # Seed the pool
         self._seed_pool()
 
@@ -2314,6 +2324,10 @@ class SentenceComposer:
         self._last_word_sources = {}
         self._last_templates_used = []      # legacy field, kept for callers
         self._last_motifs_used = []
+        # R1.9.3 L4: (motif, sentence_text) pairs -- feedback() needs each
+        # motif's OWN composed text to score grammaticality per-skeleton,
+        # not just once for the whole (possibly multi-sentence) response.
+        self._last_motif_sentences = []
         # R1.9.2 G2: reset per-compose() floor-failure tracking.
         self._last_floor_failures = []
         self._last_required_slot_attempts = 0
@@ -2374,6 +2388,7 @@ class SentenceComposer:
                 sentences.append(sent)
                 if motif is not None:
                     self._last_motifs_used.append(motif)
+                    self._last_motif_sentences.append((motif, sent))
 
         text = " ".join(sentences)
 
@@ -2511,6 +2526,23 @@ class SentenceComposer:
         "I don't have a clear sense of that.",
         "I don't have that yet.",
     )
+
+    # ── R1.9.3 L4: ground motif promotion fitness in grammaticality ──
+    # "Motif promotion fitness gains a DOMINANT grammaticality term...
+    # existing quality signal demoted to secondary" -- the same
+    # grounding-term doctrine already applied elsewhere in this campaign
+    # (instance #4: a self-referential-only quality signal with no
+    # external anchor). Weight > 0.5 so grammaticality dominates, but
+    # never reaches 1.0 -- the Goodhart caution below explicitly requires
+    # this stay a dominant term, never the sole score.
+    _GRAMMATICALITY_WEIGHT = 0.75
+    # Goodhart-divergence instrument: rolling per-skeleton agreement
+    # between the grammaticality predicate and the old fitness signal's
+    # own pass/fail call. Persistent divergence is itself an alert
+    # condition, not silently absorbed into the blended score.
+    _GOODHART_WINDOW = 20
+    _GOODHART_MIN_SAMPLES = 8
+    _GOODHART_DIVERGENCE_THRESHOLD = 0.4
 
     # ── R1.9.2 G3 / F5: register-gated exploration (plumbing, temperature-flat) ──
     # "Build the plumbing WITH R1.9; ship temperature-FLAT (exploration
@@ -2930,17 +2962,34 @@ class SentenceComposer:
         skeletons, so her expression evolution was optimizing which of
         Sunni's templates scored best — blocking emergence at the
         gradient level.) OETS word feedback unchanged.
+
+        R1.9.3 L4: the diagnosis's own finding was that this exact loop
+        promoted a subjectless skeleton (composability 0.8136) above a
+        valid agent-action-object one (0.4467) because `fitness` alone
+        has no grammaticality term. Each motif is now scored against its
+        OWN composed sentence (self._last_motif_sentences, not a single
+        response-wide fitness number) with the Track-A `_parseable`
+        wellformedness predicate as the DOMINANT term and `fitness`
+        demoted to secondary -- per-skeleton, not per-turn, so a
+        multi-sentence response can credit/blame each skeleton correctly.
         """
         try:
             engine = getattr(self, "grammar_engine", None)
             lineage = getattr(engine, "_lineage", None) if engine else None
-            motifs = getattr(self, "_last_motifs_used", []) or []
-            if lineage is not None and motifs:
+            motif_sentences = getattr(self, "_last_motif_sentences", []) or []
+            if lineage is not None and motif_sentences:
                 import hashlib as _hl
+                from aurora_internal.aurora_semantic_probe_battery import _parseable
                 ctx = _hl.md5(" ".join(self._last_words_used)[:80]
                               .encode("utf-8", errors="replace")).hexdigest()[:8]
-                for m in motifs:
-                    if fitness >= 0.5:
+                for m, sent in motif_sentences:
+                    grammatical = bool(_parseable(sent))
+                    combined = (self._GRAMMATICALITY_WEIGHT * (1.0 if grammatical else 0.0)
+                                + (1.0 - self._GRAMMATICALITY_WEIGHT) * fitness)
+                    success = combined >= 0.5
+                    self._log_motif_grounding(m.pattern_id, sent, grammatical, fitness, combined, success)
+                    self._check_goodhart_divergence(m.pattern_id, grammatical, fitness)
+                    if success:
                         lineage.record_success(
                             m.role_sequence, ctx,
                             len(self._last_words_used),
@@ -2948,6 +2997,59 @@ class SentenceComposer:
                         )
                     else:
                         lineage.record_fail(m.role_sequence)
+        except Exception:
+            pass
+
+    def _log_motif_grounding(self, skeleton_id: str, sentence: str, grammatical: bool,
+                             fitness: float, combined: float, success: bool) -> None:
+        """R1.9.3 L4: every grounding decision logged -- the record a
+        Goodhart-divergence audit (or a human) needs to see whether the
+        blended score is actually tracking real composition quality."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "motif_grounding_log.jsonl",
+            )
+            entry = {
+                "skeleton_id": skeleton_id, "sentence": sentence,
+                "grammatical": grammatical, "fitness": round(float(fitness), 4),
+                "combined": round(float(combined), 4), "success": success,
+                "timestamp": time.time(),
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    def _check_goodhart_divergence(self, skeleton_id: str, grammatical: bool, fitness: float) -> None:
+        """R1.9.3 L4 Goodhart caution: "if promoted-pool composition
+        quality diverges from predicate scores over time, that divergence
+        is itself an alert condition." Tracks, per skeleton, how often the
+        grammaticality predicate and the old fitness signal's own
+        pass/fail DISAGREE over a rolling window; persistent disagreement
+        (not one noisy sample) is logged once as an alert."""
+        try:
+            history = self._grounding_history[skeleton_id]
+            history.append(grammatical == (fitness >= 0.5))
+            if (len(history) >= self._GOODHART_MIN_SAMPLES
+                    and skeleton_id not in self._goodhart_alerted):
+                agreement_rate = sum(history) / len(history)
+                divergence_rate = 1.0 - agreement_rate
+                if divergence_rate > self._GOODHART_DIVERGENCE_THRESHOLD:
+                    self._goodhart_alerted.add(skeleton_id)
+                    import json as _json
+                    path = os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "aurora_state", "motif_grounding_log.jsonl",
+                    )
+                    entry = {
+                        "alert": "goodhart_divergence", "skeleton_id": skeleton_id,
+                        "divergence_rate": round(divergence_rate, 4),
+                        "samples": len(history), "timestamp": time.time(),
+                    }
+                    with open(path, "a", encoding="utf-8") as f:
+                        f.write(_json.dumps(entry) + "\n")
         except Exception:
             pass
 
