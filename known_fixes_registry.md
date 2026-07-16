@@ -1336,6 +1336,55 @@ confirmed and implemented in Remediation Directive R1.9.2 G1.
 
 ---
 
+## FIX-A039 (VERIFICATION) — R1.9.2 G4 gate 4 run to completion + G3 F5 plumbing shipped disabled
+
+**Category:** VERIFICATION
+
+**Pattern:** Closes out the two items FIX-A037 and R1.9.2's own G3
+explicitly flagged as outstanding rather than done: gate 4's dual
+boot-profile comparison, and F5's register-gated exploration plumbing.
+
+**What ran:** Gate 4 (dual boot-profile check, FIX-A037 applied to the G1
+composer fix specifically): the full 60-probe battery under
+`runtime_profile="full"` timed out at 600s -- each turn is roughly 10x
+slower under "full" than "surface" because the intake-metabolism tier
+(worth_evaluator, VariantPromoter, accountant, bias_engine, solidification)
+now actually runs. A stratified 10-probe subset (2 per dimension) was run
+under both profiles instead: relevance 0.445 (surface) vs 0.520 (full),
+parseable_rate 0.0 in both (the pre-existing, out-of-scope grammar issue
+reproduces identically under both profiles -- not profile-dependent). No
+exceptions, no crash, no material behavior shift beyond the expected
+slowdown.
+
+Training-stack propagation check: 10 classroom lessons run post-fix
+against the corrected composer. All 10 completed with no exceptions and no
+flat-divergence-watchdog trip; divergence mean 0.184 (9/10 nonzero,
+against R1.3's >0.15 target and R1.4's pre-fix 0.099 baseline), dev_index
+2093 -> 2170. Episode/classroom machinery still functions end to end under
+the fix; the fitness-landscape shift is the expected consequence of
+changed word selection, not a regression.
+
+G3 (F5 register-gated exploration): plumbing built and unit-tested (12
+tests, including the F5.2-mandated hard invariant that nothing below a
+register's effective relevance floor can ever be selected), but
+`SentenceComposer._EXPLORATION_ENABLED` stays `False` -- gate 4's own
+acceptance-gate run (`r192_g4_acceptance_gates.json`) found the stratified-
+wellformedness gate failing, which is F3's own stated precondition for
+enabling exploration. Plumbing exists and is verified; behavior is
+unchanged until a future directive re-runs the gates and finds them
+passing.
+
+**Explicitly out of scope, not silently dropped:** the grammar/syntax
+overhaul of `_compose_from_motif` (F4's own non-goals section excludes
+this from R1.9.2 -- "that's the NEXT diagnosis with its own trace, and it
+will be a cleaner one"). parseable_rate 0.0 in both boot profiles above is
+this same known, unfixed issue, not a new finding.
+
+**First Seen:** Remediation Directive R1.9.2, gates 3/4 + G3, completed
+2026-07-16 following the directive's own ratified scope.
+
+---
+
 ## New finding (not yet a registry-numbered fix): state-dir isolation gap
 
 Discovered live during R1.9.2 G2 verification, not part of this
