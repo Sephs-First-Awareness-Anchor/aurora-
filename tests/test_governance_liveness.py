@@ -30,6 +30,7 @@ import os
 import shutil
 import sys
 import tempfile
+from typing import Dict
 
 AURORA_PY = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "aurora.py")
 REPO_ROOT = os.path.dirname(AURORA_PY)
@@ -47,15 +48,44 @@ def _aurora_source() -> str:
 # check. If a LIVE module regresses to here, that is exactly the failure
 # mode this file exists to catch.
 # ---------------------------------------------------------------------------
-QUARANTINE_STALE = {
+QUARANTINE_STALE: Dict[str, str] = {}
+
+# N5 item 1 (R1 Campaign Closure, 2026-07-16), ratified by Sunni's decision
+# memo (2026-07-16, "N2/N4/N5 Open Items"): FailureGuardSuite is
+# RECLASSIFIED, not integrated -- a permanent classification, distinct from
+# QUARANTINE_STALE's "confirmed dead, no plan yet" framing. Kept as
+# documented historical guard-rail design (real, tested code -- not
+# deleted), superseded by this campaign's generation-time fixes (relevance-
+# primary selection, POS-gating, skeleton validity, grounded fitness),
+# which land as post-hoc corrections INSIDE SentenceComposer's generation
+# process rather than as pre-expression guard-blocking on a separately-
+# computed signal.
+QUARANTINE_SPEC_REFERENCE = {
     "aurora_constraint_engine.FailureGuardSuite": (
-        "Zero references in aurora.py. Only referenced by this remediation's "
-        "own probe-battery/ledger tooling (run_probe_battery.py, "
-        "aurora_internal/aurora_icc_ledger.py, "
-        "aurora_internal/aurora_semantic_probe_battery.py) -- confirmed R1.6, "
-        "reconfirmed R1.8.1. N5 item 1 (R1 Campaign Closure, 2026-07-16) "
-        "recommends RECLASSIFY (superseded by generation-time fixes) over "
-        "integration -- see known_fixes_registry.md, decision pending Sunni."
+        "RECLASSIFIED (ratified 2026-07-16, decision memo N2/N4/N5, "
+        "Decision 3): thresholds calibrated to pre-campaign signals -- "
+        "'dream avg=0.343, 10/10 episodes fail' for uncertainty, 'dream "
+        "avg=0.365, 10/10 episodes fail' for boundary -- both predating "
+        "this remediation's fixes. Integration against the now-honest "
+        "battery would be liveness theater, not a real gate (N5 item 1's "
+        "dossier, known_fixes_registry.md). "
+        "Revisit trigger (recorded, not scheduled -- decision point "
+        "returns to Sunni with N6 data, not decided here): the suite's "
+        "five guard concepts (uncertainty, boundary, context-carryover, "
+        "perspective-integration, coherence-maintenance) map onto "
+        "dimensions N6's honest classroom re-verdict measured for the "
+        "first time (2026-07-16, 45 lessons, all 15 canonical dimensions). "
+        "N6 data: divergence mean 0.1116, per-dimension range 0.0725-"
+        "0.1375 -- no dimension flat-lined near zero across its 3 lessons. "
+        "episode_avg_fitness for uncertainty_signaling specifically stayed "
+        "close to flat (0.0893 here vs R1.4's pre-fix 0.0871) -- the one "
+        "dimension with a directly comparable prior number, and the "
+        "smallest movement of any metric this campaign recorded. "
+        "Suggestive, not conclusive: fitness is a distinct subsystem "
+        "metric from divergence, and N=1 directly-comparable dimension is "
+        "thin evidence for 'training demonstrably cannot move this.' "
+        "Flagged per the trigger's own text; Sunni decides whether this "
+        "clears the bar for guard-concept reimplementation."
     ),
 }
 
@@ -108,30 +138,44 @@ QUARANTINE_ALTERNATE_ENTRYPOINT_ONLY = {
     ),
 }
 
-# U1 (R1.9.2): scheduled quarantine, not indefinite dual-alive. R1.9.1's
-# dossier found ConstraintEmitter genuinely live but non-delivering
-# (LIVE_PARALLEL); R1.9.2 repaired the delivering path (SentenceComposer)
-# in place rather than migrating to ConstraintEmitter, per the
-# migration-completion rule this addendum itself introduced: dual-alive
-# paths are only compliant with a dated resolution plan, never as a
-# permanent resting state.
-QUARANTINE_SCHEDULED_REVIEW = {
-    "aurora_constraint_emission.ConstraintEmitter": {
-        "review_by": "2026-08-15",
-        "reason": (
-            "LIVE_PARALLEL, not delivering (see LIVE_PARALLEL above). R1.9.2 "
-            "repaired SentenceComposer (the delivering path) in place rather "
-            "than migrating to ConstraintEmitter -- the composer serves both "
-            "live delivery and the training stack (dream/conversation/"
-            "simulation trainers), so fixing it healed both without a "
-            "train/serve skew risk. ConstraintEmitter's F1 relevance-primary "
-            "fix stays committed and real, but the module itself is now "
-            "formally quarantined pending U1's unification scoping: merge "
-            "into a single shared word-selection core, retire, or keep both "
-            "with a permanent role split. Review by the date above or "
-            "immediately after U1 is scoped, whichever comes first."
-        ),
-    },
+# U1 (R1.9.2): scheduled quarantine, not indefinite dual-alive -- resolved.
+# ConstraintEmitter's dual-alive review closed on 2026-07-16 (decision
+# memo, Decision 2): narrowed to a permanent role, not left pending. See
+# LIVE_FALLBACK below. Empty now that the one entry it ever held resolved;
+# a future dual-alive path would land here again with its own dated plan.
+QUARANTINE_SCHEDULED_REVIEW: Dict[str, Dict[str, str]] = {}
+
+# N4 (decision memo, ratified 2026-07-16, Decision 2): ConstraintEmitter is
+# LIVE_FALLBACK -- narrowed from LIVE_PARALLEL (genuinely executing, not
+# delivering) to a single, permanent, documented role: the crash net at
+# the emission chokepoint (_emit_honest_abstain_and_seek), firing
+# exclusively when the main composition path (SentenceComposer) returns
+# literally nothing. All other call sites (the proactive "primary
+# emission path" chain-step, the "IVM pressure lens" seeking/fallback
+# block, the redundant "constraint_fallback" last-resort) retired --
+# "one voice, one documented net." Riders: (a) reachability test below
+# proves the net catches a synthetic empty-output failure (safe-path
+# rule); (b) every catch logs {turn_id, trigger, output} to
+# aurora_state/constraint_fallback_log.jsonl via _log_constraint_fallback
+# (silent-fallback rule -- a net that catches silently is a
+# scripted-response violation in costume). U1's migration-completion rule
+# is now satisfied: this is a decided, dated resolution, not indefinite
+# dual-alive.
+LIVE_FALLBACK = {
+    "aurora_constraint_emission.ConstraintEmitter": (
+        "Narrowed to crash-net-only (decision memo Decision 2, "
+        "2026-07-16). Reachable exclusively via _emit_honest_abstain_"
+        "and_seek(), called from the two points a genuine content gap can "
+        "surface: mid-chain (_chain_down5_understanding's terminal-gap "
+        "fallback, trigger='mid_chain') and the true emission chokepoint "
+        "(_enforce_emission_discipline, trigger='emission_chokepoint'). "
+        "Both call sites already existed pre-narrowing; what changed is "
+        "that ConstraintEmitter no longer has any OTHER call site "
+        "competing to set response content before this net's gate is "
+        "reached. This is the one piece of ConstraintEmitter's original "
+        "role N4's own dossier found to be a genuine, non-redundant "
+        "safety net rather than dead-weight parallel machinery."
+    ),
 }
 
 LIVE_CONFIRMED = {
@@ -175,21 +219,15 @@ LIVE_CONFIRMED = {
 # these two, because reachability and delivered-output attribution turned
 # out to diverge -- exactly the case the backward-attribution rule exists
 # to catch.
-LIVE_PARALLEL = {
-    "aurora_constraint_emission.ConstraintEmitter": (
-        "Instantiated unconditionally at boot (aurora.py L20103-20108, "
-        "all runtime profiles). Called from _field_frame_compress and "
-        "_emit_honest_abstain_and_seek, and genuinely executes (confirmed "
-        "R1.8.1 Step 3's instrumented trace, and R1.9's live relevance-fix "
-        "verification). BUT: backward-traced from the actual delivered "
-        "artifact (R1.9.1), its output is NOT what reaches resp_B / what "
-        "run_probe_battery.py scores -- that comes from SentenceComposer "
-        "(see LIVE_DELIVERING). ConstraintEmitter sits on a real, executing, "
-        "but non-delivering parallel path. The R1.9 F1 relevance-primary fix "
-        "applied to it is a genuine improvement to a live mechanism, just "
-        "not (yet) to the one a user actually receives text from."
-    ),
-}
+#
+# ConstraintEmitter WAS here (LIVE_PARALLEL: genuinely executing via
+# _field_frame_compress and _emit_honest_abstain_and_seek, but not what
+# reaches resp_B) from R1.9.1 through N4's own dossier. Decision memo
+# Decision 2 (2026-07-16) resolved that dual-alive status by narrowing
+# ConstraintEmitter to a single permanent role -- moved to LIVE_FALLBACK
+# below. Bucket kept (even though currently empty) as the live category
+# for any future reachable-but-not-delivering finding.
+LIVE_PARALLEL: Dict[str, str] = {}
 
 LIVE_DELIVERING = {
     "aurora_expression_perception.SentenceComposer": (
@@ -210,15 +248,22 @@ LIVE_DELIVERING = {
 
 
 def test_quarantine_stale_modules_remain_unreferenced_in_aurora_py():
-    """If one of these gains a real reference in aurora.py, it graduated out
-    of quarantine -- update this file's manifest deliberately rather than
+    """QUARANTINE_STALE is currently empty (FailureGuardSuite, its only
+    prior entry, was reclassified to QUARANTINE_SPEC_REFERENCE on
+    2026-07-16 -- see that manifest's own unreferenced-check). Any future
+    QUARANTINE_STALE entry's short module name must stay unreferenced in
+    aurora.py; if one gains a real reference, it graduated out of
+    quarantine -- update this file's manifest deliberately rather than
     letting the assertion silently start failing."""
     source = _aurora_source()
-    assert "FailureGuardSuite" not in source, (
-        "FailureGuardSuite now appears in aurora.py -- if this is real "
-        "wiring, move it out of QUARANTINE_STALE and add a LIVE assertion; "
-        "if it's an incidental string match, this assertion needs updating."
-    )
+    for qualified_name in QUARANTINE_STALE:
+        short_name = qualified_name.rsplit(".", 1)[-1]
+        assert short_name not in source, (
+            f"{short_name} now appears in aurora.py -- if this is real "
+            f"wiring, move it out of QUARANTINE_STALE and add a LIVE "
+            f"assertion; if it's an incidental string match, this "
+            f"assertion needs updating."
+        )
 
 
 def test_toroidal_circulation_layer_is_live_via_the_coordinator():
@@ -242,13 +287,75 @@ def test_toroidal_circulation_layer_is_live_via_the_coordinator():
     assert "self._tcl.observe(intensity)" in coord_source
 
 
-def test_constraint_emitter_is_wired_at_boot_but_only_live_parallel():
-    """Reachable and executing (LIVE_PARALLEL) -- NOT the same claim as
-    delivering output. See test_delivered_output_attribution_traces_to_
-    sentence_composer for the actual delivered-path proof."""
+def test_constraint_emitter_is_wired_at_boot_as_live_fallback():
+    """N4 (decision memo, 2026-07-16): reachable and executing, but now as
+    LIVE_FALLBACK -- a single, narrow, permanent crash-net role, not the
+    LIVE_PARALLEL (genuinely executing but non-delivering, competing-path)
+    status this test asserted before the narrowing. See
+    test_delivered_output_attribution_traces_to_sentence_composer for the
+    actual delivered-path proof (SentenceComposer, unaffected by this
+    narrowing)."""
     source = _aurora_source()
     assert "from aurora_constraint_emission import ConstraintEmitter" in source
     assert "constraint_emitter" in source
+    assert len(LIVE_FALLBACK) >= 1
+
+
+def test_constraint_emitter_non_abstain_call_sites_are_retired():
+    """The three retired call sites (proactive chain-step "primary
+    emission path," the "IVM pressure lens" seeking/fallback block, the
+    redundant "constraint_fallback" last-resort) must not reappear --
+    _emit_abstain is the only ConstraintEmitter method aurora.py may call
+    now; .emit() itself must not be called directly from aurora.py."""
+    source = _aurora_source()
+    assert "_ce.emit(" not in source
+    assert "_emitter.emit(" not in source
+    assert "response_src = \"constraint_emission\"" not in source
+    assert "response_src = \"comprehension_gap_ask\"" not in source
+    assert "response_src = \"constraint_fallback\"" not in source
+    assert "_emitter._emit_abstain(" in source
+
+
+def test_constraint_emitter_fallback_net_catches_synthetic_empty_output():
+    """Safe-path rule: the narrowed crash net must actually catch a
+    synthetic empty-output failure, not just look narrowed in source.
+    Drives _emit_honest_abstain_and_seek directly against a minimal fake
+    emitter and confirms it fills response_content and logs the catch."""
+    import json
+    import sys
+    import tempfile
+    from types import SimpleNamespace
+
+    sys.path.insert(0, os.path.dirname(AURORA_PY))
+    import aurora
+
+    class _FakeAbstainResult:
+        text = "I don't have a clear sense of that."
+
+    class _FakeEmitter:
+        def _emit_abstain(self, ctx):
+            return _FakeAbstainResult()
+
+    with tempfile.TemporaryDirectory() as scratch:
+        systems = {"constraint_emitter": _FakeEmitter(), "state_dir": scratch}
+        state = SimpleNamespace(parsed={}, response_content="")
+
+        aurora._emit_honest_abstain_and_seek(
+            "a synthetic empty-output turn", systems, state, trigger="test_synthetic"
+        )
+
+        assert state.response_content.strip() != ""
+        assert state.response_src == "constraint_abstain"
+
+        log_path = os.path.join(scratch, "constraint_fallback_log.jsonl")
+        assert os.path.exists(log_path), "fallback catch was not logged (silent-fallback rule)"
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = [json.loads(l) for l in f if l.strip()]
+        assert len(lines) == 1
+        entry = lines[0]
+        assert entry["trigger"] == "test_synthetic"
+        assert entry["output"].strip() != ""
+        assert "turn_id" in entry and entry["turn_id"]
 
 
 def test_sentence_composer_is_reachable_from_gateway_express():
@@ -362,6 +469,7 @@ def test_quarantine_manifest_is_non_empty_and_documented():
         **QUARANTINE_STALE,
         **QUARANTINE_PROFILE_GATED,
         **QUARANTINE_ALTERNATE_ENTRYPOINT_ONLY,
+        **QUARANTINE_SPEC_REFERENCE,
     }
     assert len(all_quarantined) >= 4
     for name, reason in all_quarantined.items():
@@ -370,14 +478,31 @@ def test_quarantine_manifest_is_non_empty_and_documented():
         )
 
 
+def test_spec_reference_modules_remain_unreferenced_in_aurora_py():
+    """FailureGuardSuite's RECLASSIFY (N5 item 1, ratified 2026-07-16) is a
+    permanent classification, not a pending integration -- it should stay
+    unreferenced in aurora.py exactly like QUARANTINE_STALE entries, just
+    for a different (decided, not accidental) reason."""
+    source = _aurora_source()
+    assert "FailureGuardSuite" not in source, (
+        "FailureGuardSuite now appears in aurora.py -- this contradicts its "
+        "RECLASSIFIED-as-spec-reference status (N5 item 1); if this is real "
+        "new wiring, that's a deliberate un-reclassification decision that "
+        "needs its own ratification, not a silent drift."
+    )
+    assert len(QUARANTINE_SPEC_REFERENCE) >= 1
+
+
 def test_scheduled_quarantine_entries_have_a_real_review_date():
     """R1.9.2 U1: dual-alive paths are only compliant with a DATED
     resolution plan (migration-completion rule) -- an entry here without a
     real review_by date is exactly the indefinite-limbo state that rule
-    exists to forbid."""
+    exists to forbid. Currently empty (ConstraintEmitter's review resolved
+    2026-07-16, decision memo Decision 2) -- that IS compliant; the rule
+    forbids indefinite dual-alive, not zero pending reviews. Any future
+    entry must still carry a real date."""
     import datetime
 
-    assert len(QUARANTINE_SCHEDULED_REVIEW) >= 1
     for name, entry in QUARANTINE_SCHEDULED_REVIEW.items():
         assert "review_by" in entry, f"{name} has no review_by date"
         # Must parse as a real date -- catches placeholder/malformed values.

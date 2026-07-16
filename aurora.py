@@ -4606,12 +4606,44 @@ def _seed_abstained_gap(user_text: str, systems) -> None:
         pass
 
 
-def _emit_honest_abstain_and_seek(user_text: str, systems, state) -> None:
+def _log_constraint_fallback(systems, trigger: str, output: str) -> None:
+    """N4 (decision memo, ratified 2026-07-16, Decision 2), rider (b): every
+    catch of ConstraintEmitter's narrowed crash-net role logs
+    {turn_id, trigger, output} -- "a net that catches silently is a
+    scripted-response violation in costume" (silent-fallback rule).
+    Respects the actual boot state_dir explicitly (not a __file__-relative
+    default) to avoid the isolation-gap bug class documented elsewhere in
+    this campaign. Best-effort; must never break a live turn."""
+    try:
+        state_dir = Path(str(
+            (systems.get("state_dir") if isinstance(systems, dict) else None)
+            or (Path(__file__).parent / "aurora_state")
+        ))
+        state_dir.mkdir(parents=True, exist_ok=True)
+        entry = {
+            "turn_id": str(int(time.time() * 1000)),
+            "trigger": str(trigger or "unknown"),
+            "output": str(output or "")[:500],
+            "timestamp": time.time(),
+        }
+        with open(state_dir / "constraint_fallback_log.jsonl", "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+
+def _emit_honest_abstain_and_seek(user_text: str, systems, state, trigger: str = "unknown") -> None:
     """The single honest-abstain path: confess the gap to warp (universal
     accommodation), seed the base meaning for active seeking on first contact, and
     emit the constraint-native abstain. Used both mid-chain and at the emission
     chokepoint so every gap is treated identically -- warp + seek + honest surface,
-    never a manufactured claim (the FGAE/SIC fallback was removed in the Reset)."""
+    never a manufactured claim (the FGAE/SIC fallback was removed in the Reset).
+
+    N4 (decision memo, ratified 2026-07-16, Decision 2): this is now
+    ConstraintEmitter's ONLY surviving role -- the narrowed crash-net,
+    firing exclusively when the main composition path returns literally
+    nothing. `trigger` identifies which of the two call sites (mid-chain
+    vs the emission chokepoint) caught the gap, for the fallback log."""
     try:
         from aurora_warp_protocol import warp_guard as _warp_guard, WarpTrigger as _WT
         _warp_guard(
@@ -4645,6 +4677,7 @@ def _emit_honest_abstain_and_seek(user_text: str, systems, state) -> None:
     state.response_src = "constraint_abstain"
     if isinstance(systems, dict):
         systems["_preserve_literal_response_once"] = True
+    _log_constraint_fallback(systems, trigger, _abstain)
 
 
 def _enforce_emission_discipline(user_text: str, systems, state) -> None:
@@ -4656,13 +4689,20 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
     """
     try:
         # ── FIELD-WAVEFORM CREST COMPRESSION ───────────────────────────────────
-        # Compress the charged surface waveform + propagated subsurface crest into a
-        # top-salience core (pressure x charge), then route that core through the
-        # field's own compressor (emit) so the constraint waveform shapes how the
-        # meaning is said. Meaning is never dropped: when the field carries the whole
-        # core its emission IS the response (pure waveform compression); otherwise the
-        # core is preserved and the field's stance frames delivery. A genuine gap
-        # (no real core) falls through to the honest abstain below, never raw field.
+        # Compress the charged surface waveform + propagated subsurface crest into
+        # a top-salience core (pressure x charge). Meaning is never dropped: the
+        # core is preserved as-is here. A genuine gap (no real core) falls through
+        # to the honest abstain below, never raw field.
+        #
+        # N4 (decision memo, ratified 2026-07-16, Decision 2): this used to route
+        # `_core` through ConstraintEmitter.emit() via `_field_frame_compress()`
+        # for field-native stance framing. Retired -- that was ConstraintEmitter's
+        # non-abstain word-selection machinery, which the memo narrows away,
+        # keeping only `_emit_honest_abstain_and_seek`'s crash-net role. `_fused`
+        # is now a plain alias for `_core`; kept (rather than removed outright) so
+        # the `_last_fused_output` bookkeeping and the `_fused != _lww` check below
+        # -- both genuine crest-compression logic, unrelated to ConstraintEmitter
+        # -- don't need restructuring.
         _lww = str(getattr(state, "response_content", "") or "").strip()
         _crest = _compress_at_crest(user_text, systems, state)
         # Her own crystallised meaning for a concept she was asked about is authoritative
@@ -4675,9 +4715,7 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
             _core = _crest
         else:
             _core = _lww if (_lww and len(_lww.split()) >= 3) else (_crest or _lww)
-        _fused = ""
-        if _core and len(_core.split()) >= 2:
-            _fused = _field_frame_compress(user_text, systems, state, _core)
+        _fused = _core if (_core and len(_core.split()) >= 2) else ""
         if isinstance(systems, dict):
             systems["_last_lww_output"] = _lww
             systems["_last_crest_output"] = _crest
@@ -4701,7 +4739,7 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
                 except Exception:
                     pass
         if not str(getattr(state, "response_content", "") or "").strip():
-            _emit_honest_abstain_and_seek(user_text, systems, state)
+            _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
         # Expose this turn's captured waveform for observability.
         if isinstance(systems, dict):
             systems["_last_waveform"] = list(getattr(state, "waveform", []) or [])
@@ -5034,56 +5072,6 @@ def _compress_at_crest(user_text: str, systems, state) -> str:
         return str(contribs[0].get("content", "") or "").strip()
     except Exception:
         return ""
-
-
-def _field_frame_compress(user_text: str, systems, state, core: str) -> str:
-    """Final compression: route the top-salience CORE through the field's own
-    compressor (ConstraintEmitter.emit), so the constraint waveform shapes how the
-    meaning is said. Meaning is never dropped:
-
-      - if the field fully compresses the meaning (its emission carries the core's
-        content words), that field-native utterance IS the response -- pure
-        waveform compression;
-      - otherwise the core is preserved and the field's stance (leading token) frames
-        its delivery.
-
-    The share that becomes pure field compression grows with her grounding: as more
-    is crystallised, emit() resolves more content from the field itself.
-    """
-    core = str(core or "").strip()
-    try:
-        emitter = systems.get("constraint_emitter") if isinstance(systems, dict) else None
-        if emitter is None:
-            return core
-        from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
-        gp = getattr(state, "parsed", {}) or {}
-        iff = _IF(
-            text=str(user_text or ""),
-            is_question=bool(gp.get("is_question", False)),
-            is_directed=True,
-            is_self_referential=bool(gp.get("is_self_referential", False)),
-        )
-        ctx = EmissionContextBuilder().build(systems, input_frame=iff, recent_words=[])
-        res = emitter.emit(ctx)
-        field_text = str(getattr(res, "text", "") or "").strip()
-        lead = str(getattr(getattr(res, "slot_frame", None), "leading", "") or "").strip()
-    except Exception:
-        return core
-
-    def _content_words(s: str) -> set:
-        return {w for w in re.findall(r"[a-z0-9']+", str(s or "").lower()) if len(w) > 3}
-
-    if not core:
-        return field_text  # the field is all there is
-    cw_core = _content_words(core)
-    cw_field = _content_words(field_text)
-    # Pure waveform compression: the field carries the whole core meaning.
-    if field_text and cw_core and cw_core <= cw_field:
-        return field_text
-    # Otherwise preserve the core; let the field's stance frame its delivery.
-    if lead and core[:1].isalpha() and not core.lower().startswith(lead.lower()):
-        return f"{lead}, {core[0].lower()}{core[1:]}"
-    return core
 
 
 def _sediment_validated_fact(systems, claims, user_text: str) -> int:
@@ -15036,42 +15024,13 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
             state.pipeline_state.pop("should_ask_gap", None)
             state.pipeline_state.pop("gap_question", None)
 
-    # Constraint emitter — primary emission path per Language Reset spec.
-    # Runs before comprehension-response so seeking fires instead of generic fallback.
-    if not state.response_content:
-        try:
-            _ce = systems.get("constraint_emitter")
-            if _ce is not None and hasattr(_ce, "emit"):
-                from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
-                _p = getattr(state, "parsed", {}) or {}
-                _if = _IF(
-                    text=str(_user_text_for_comp or ""),
-                    is_question=bool(_p.get("is_question", False)),
-                    is_directed=True,
-                    is_imperative=bool(_p.get("is_imperative", False)),
-                    is_contradiction=bool(_p.get("is_contradiction", False)),
-                    is_statement=bool(_p.get("is_statement", False)),
-                    is_self_referential=bool(_is_aurora_self_question(str(user_text or ""), _p)),
-                    topic_concept=str(_p.get("topic", "") or _p.get("search_query", "") or "").strip() or None,
-                )
-                _ec = EmissionContextBuilder().build(systems, input_frame=_if, recent_words=[])
-                _er = _ce.emit(_ec)
-                if _er is not None:
-                    _et = str(getattr(_er, "text", "") or getattr(_er, "surface_text", "") or "").strip()
-                    if _et:
-                        _is_seeking = getattr(_er, "seeking", False)
-                        if _is_seeking or _constraint_emission_is_substantive(_et, _er, _if):
-                            state.response_content = _et
-                            if _is_seeking:
-                                state.response_src = "comprehension_gap_ask"
-                                state.response_tone = "attentive"
-                                state.response_confidence = 0.70
-                            else:
-                                state.response_src = "constraint_emission"
-                                state.response_tone = "precise"
-                                state.response_confidence = 0.85
-        except Exception:
-            pass
+    # N4 (decision memo, ratified 2026-07-16, Decision 2): ConstraintEmitter's
+    # proactive chain-step call ("primary emission path per Language Reset
+    # spec," running unconditionally before comprehension-response) retired.
+    # This was non-abstain word-selection machinery competing with
+    # comprehension-response rather than a crash net -- narrowed away per the
+    # memo, which keeps only _emit_honest_abstain_and_seek's last-resort role
+    # at the true emission chokepoint further down this pipeline.
 
     if not state.response_content:
         try:
@@ -15922,7 +15881,7 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
         # active seek (warp accommodation + base-meaning seeking). Anchor discipline
         # itself is enforced once at the emission chokepoint (_enforce_emission_
         # discipline, just before resp_A is built) so no path can leak past it.
-        _emit_honest_abstain_and_seek(user_text, systems, state)
+        _emit_honest_abstain_and_seek(user_text, systems, state, trigger="mid_chain")
     # Evolutionary refinement (learning hints woven in)
     try:
         state.response_content = _evolutionary_response_refinement(
@@ -16097,48 +16056,13 @@ def _chain_down1_information(user_text: str, systems: dict, state: Any, *, use_s
             or any(p in _cur_resp_low for p in _INTERNAL_INSTRUCTION_PHRASES)
             or _has_json):
         state.response_content = ""
-    try:
-        _emitter = systems.get("constraint_emitter")
-        if _emitter is not None and hasattr(_emitter, "emit"):
-            from aurora_constraint_emission import EmissionContextBuilder, InputFrame
-            _parsed = getattr(state, "parsed", {}) or {}
-            _input_frame = InputFrame(
-                text=str(user_text or ""),
-                is_question=bool(_parsed.get("is_question", False)),
-                is_directed=True,
-                is_imperative=bool(_parsed.get("is_imperative", False)),
-                is_contradiction=bool(_parsed.get("is_contradiction", False)),
-                is_statement=bool(_parsed.get("is_statement", False)),
-                is_self_referential=bool(_is_aurora_self_question(str(user_text or ""), _parsed)),
-                topic_concept=str(_parsed.get("topic", "") or _parsed.get("search_query", "") or "").strip() or None,
-            )
-            _builder = EmissionContextBuilder()
-            _ectx = _builder.build(
-                systems,
-                input_frame=_input_frame,
-                recent_words=str(state.response_content or "").split()[:12],
-            )
-            _eresult = _emitter.emit(_ectx)
-            if _eresult is not None:
-                _emitted = str(getattr(_eresult, "text", "") or getattr(_eresult, "surface_text", "") or "").strip()
-                _cur_content = str(getattr(state, "response_content", "") or "").strip()
-                _has_real_response = bool(_cur_content) and not any(
-                    p in _cur_content.lower() for p in _INTERNAL_INSTRUCTION_PHRASES
-                )
-                if _emitted and getattr(_eresult, "seeking", False):
-                    # Seeking always takes priority — it's a genuine gap question
-                    state.response_content = _emitted
-                    state.response_src = "comprehension_gap_ask"
-                elif (
-                    _emitted
-                    and not _has_real_response
-                    and _constraint_emission_is_substantive(_emitted, _eresult, _input_frame)
-                ):
-                    # Only fill from emitter when comprehension produced nothing
-                    state.response_content = _emitted
-                    state.response_src = "constraint_emission"
-    except Exception:
-        pass
+    # N4 (decision memo, ratified 2026-07-16, Decision 2): the ConstraintEmitter
+    # call formerly here retired. Its "seeking" branch overrode real response
+    # content unconditionally (not a crash net); its fallback branch duplicated
+    # _emit_honest_abstain_and_seek's last-resort role via a separate, less
+    # disciplined method (.emit() rather than ._emit_abstain()) -- "one voice,
+    # one documented net" per the memo, so this redundant net is retired in
+    # favor of the one at the true emission chokepoint further down.
 
 
 def _record_pressure_experience(state: Any, systems: dict) -> None:
@@ -16934,37 +16858,14 @@ def _run_reasoning_pipeline(
     ):
         state.response_content = ""
 
-    # Final reply guard: Removed per Language Reset spec (§10) — 
-    # ConstraintEmitter is the primary expression path and handles fallback naturally.
-    if not str(getattr(state, "response_content", "") or "").strip():
-        # Last resort: explicitly ask the emitter for a backchannel/abstain 
-        # if the substantive check previously rejected its result.
-        try:
-            _ce = systems.get("constraint_emitter")
-            if _ce is not None:
-                from aurora_constraint_emission import EmissionContextBuilder, InputFrame as _IF
-                _p = getattr(state, "parsed", {}) or {}
-                _ut_low = str(user_text or "").lower()
-                _self_ref = any(tok in _ut_low for tok in
-                                (" you ", " you'", "do you", "are you",
-                                 "your ", "yourself", "how you"))
-                _if = _IF(
-                    text=str(user_text or ""),
-                    is_directed=True,
-                    is_question=_ut_low.endswith("?") or any(
-                        _ut_low.startswith(q) for q in
-                        ("how ", "what ", "when ", "why ", "where ", "do you",
-                         "are you", "can you", "did you")),
-                    is_self_referential=_self_ref,
-                    topic_concept=str(_p.get("topic", "") or "").strip() or None,
-                )
-                _ec = EmissionContextBuilder().build(systems, input_frame=_if)
-                _er = _ce.emit(_ec)
-                if _er and getattr(_er, "text", ""):
-                    state.response_content = str(_er.text).strip()
-                    state.response_src = "constraint_fallback"
-        except Exception:
-            pass
+    # N4 (decision memo, ratified 2026-07-16, Decision 2): the "constraint_
+    # fallback" last-resort call formerly here retired. It duplicated
+    # _emit_honest_abstain_and_seek's role via .emit() (word-selection)
+    # rather than ._emit_abstain() (the disciplined abstain method), and ran
+    # BEFORE the true emission chokepoint (_enforce_emission_discipline)
+    # later in this pipeline -- pre-empting it from ever firing when this
+    # one succeeded first. "One voice, one documented net": an empty
+    # response_content here now falls through naturally to that one net.
 
     if not _preserve_literal_response:
         try:

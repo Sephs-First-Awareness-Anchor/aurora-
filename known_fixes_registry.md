@@ -2509,3 +2509,112 @@ ratchet).**
 
 **First Seen:** N6, R1 Campaign Closure directive's next-phase queue,
 2026-07-16.
+
+---
+
+## Decision Memo Ratification (2026-07-16) — N2/N4/N5 open items
+
+Sunni's decision memo ("Decision Memo — N2/N4/N5 Open Items (+ N2.1
+Register Rebuild Spec)") ratified three decisions and specified a fourth
+workstream (N2.1). Executed in order of size/risk: N5(1) first (below),
+N4 next, N2.1 last (largest).
+
+### N5(1): FailureGuardSuite RECLASSIFIED (Decision 3)
+
+`FailureGuardSuite` moved from `QUARANTINE_STALE` to a new
+`QUARANTINE_SPEC_REFERENCE` category in `tests/test_governance_liveness.
+py` — a permanent classification (documented historical guard-rail
+design, superseded by this campaign's generation-time fixes), not a
+pending integration decision. The revisit trigger from the memo ("any
+dimension training demonstrably cannot move becomes a candidate... after
+N6's data") is recorded against the N6 data that now exists: divergence
+mean 0.1116 across all 15 dimensions, range 0.0725-0.1375, no dimension
+flat-lined. The one directly-comparable prior number —
+`uncertainty_signaling`'s `episode_avg_fitness`, 0.0893 here vs R1.4's
+pre-fix 0.0871 — is the smallest movement of any metric this campaign
+recorded, which is suggestive but thin (N=1, and fitness is a distinct
+subsystem metric from divergence). Recorded per the trigger's own text;
+not decided here — Sunni decides whether this clears the bar for
+guard-concept reimplementation. `tests/test_governance_liveness.py`:
+10/10 passing after the change.
+
+**First Seen:** Decision Memo ratification, 2026-07-16.
+
+### N4: ConstraintEmitter NARROWED to LIVE_FALLBACK (Decision 2)
+
+**Pre-flight discovery that changed the risk picture:** before touching
+any code, a live delivered-path trace (6 varied turns, `runtime_profile=
+"full"`, isolated scratch state_dir) confirmed something the N4 dossier
+hadn't measured: `aurora_daemon.py`'s real production path delivers
+`resp_A`, not `resp_B` (what `run_probe_battery.py` actually scores, via
+a `gateway.speak_to_aurora()` fallback that resembles `resp_B`). resp_A
+and resp_B never matched on any of the 6 turns. Critically, none of the
+6 turns showed `resp_A.src` as `"constraint_emission"` or
+`"comprehension_gap_ask"` -- ConstraintEmitter's proactive chain-step
+machinery was NOT the source of resp_A's content in this sample, meaning
+narrowing it away was confirmed safe (would not regress current
+behavior) before any code was touched. The resp_A/resp_B divergence
+itself is a separate, larger finding, tracked independently (see below).
+
+**What was retired (aurora.py):**
+1. `_field_frame_compress()` -- the whole function deleted. Used to route
+   the crest-compression core through `ConstraintEmitter.emit()` for
+   field-native stance framing on every turn. Its call site in
+   `_enforce_emission_discipline` now uses `_core` directly (`_fused =
+   _core if ... else ""`) -- the surrounding crest-compression logic
+   (CERS-adjacent, not ConstraintEmitter) is otherwise unchanged.
+2. The `_chain_down5_understanding` chain-step ("Constraint emitter --
+   primary emission path per Language Reset spec," ran unconditionally
+   before comprehension-response) -- deleted. Proactive content
+   generation, not a crash net.
+3. The "IVM pressure lens" block (`_emitter.emit()` call with a "seeking"
+   branch that overrode real content unconditionally, plus a
+   `"constraint_emission"` fallback branch gated on `not
+   _has_real_response`) -- deleted. The seeking branch wasn't crash-net
+   behavior; the fallback branch duplicated the one true net.
+4. The `"constraint_fallback"` last-resort block (gated on empty
+   `response_content`, but running BEFORE the true emission chokepoint
+   and using `.emit()` rather than `._emit_abstain()`) -- deleted.
+   Redundant with `_emit_honest_abstain_and_seek`.
+
+**What survives (the one net):** `_emit_honest_abstain_and_seek()`,
+called from exactly two sites -- mid-chain (`trigger="mid_chain"`) and
+the true emission chokepoint, `_enforce_emission_discipline`
+(`trigger="emission_chokepoint"`) -- both pre-existing call sites, now
+the only places ConstraintEmitter executes at all. This is the exact
+mechanism the N4 dossier identified as a genuine, non-redundant safety
+net (fires only when `SentenceComposer` returns truly empty text).
+
+**Riders (both implemented):**
+- (a) Safe-path reachability: `test_constraint_emitter_fallback_net_
+  catches_synthetic_empty_output` drives `_emit_honest_abstain_and_seek`
+  directly against a fake emitter and a synthetic empty-output turn,
+  confirming it fills `response_content` and writes a log entry.
+- (b) Silent-fallback rule: new `_log_constraint_fallback(systems,
+  trigger, output)` writes `{turn_id, trigger, output, timestamp}` to
+  `aurora_state/constraint_fallback_log.jsonl` on every catch, respecting
+  the actual boot `state_dir` explicitly (not a `__file__`-relative
+  default -- the isolation-gap bug class documented elsewhere in this
+  campaign).
+
+**Quarantine manifest (tests/test_governance_liveness.py):**
+`ConstraintEmitter` moved from `QUARANTINE_SCHEDULED_REVIEW` (dual-alive,
+review due 2026-08-15) to a new `LIVE_FALLBACK` category -- U1's
+migration-completion rule is now satisfied by a decided, dated
+resolution rather than an open review. `LIVE_PARALLEL` (ConstraintEmitter's
+prior bucket) is now empty, kept as a live category for any future
+reachable-but-not-delivering finding. Three new tests confirm the
+narrowing structurally (`_ce.emit(`/`_emitter.emit(` no longer appear in
+aurora.py; the three retired `response_src` labels no longer appear;
+`_emitter._emit_abstain(` still does) and functionally (the synthetic
+catch test above).
+
+**Verification:** `tests/test_governance_liveness.py` 12/12 passing
+(was 9, +3 new). Full suite: 787 passed, 0 failed (was 784 before this
+segment's +3 tests). A second live delivered-path trace, identical to
+the pre-flight one, run AFTER the code changes: resp_A stayed non-empty
+and produced the same character of output (`constraint_abstain`/
+`generative` sources, honest short templates) across all 6 turns -- no
+regression to real daemon-delivered speech.
+
+**First Seen:** Decision Memo ratification, 2026-07-16, Decision 2.
