@@ -2003,3 +2003,62 @@ findings for whoever picks N2 back up, not a redesign.
 
 **First Seen:** N2 mini-acceptance gate, run 2026-07-16, following the R1
 Campaign Closure directive's next-phase queue.
+
+---
+
+## N3 — R2 correspondence loop: wired into the daemon, verified in isolation
+
+**Status:** `aurora_internal/aurora_correspondence_loop.py` (built in R2,
+task-complete since the original Semantic Plateau directive) was fully
+implemented and tested but never invoked anywhere outside its own test
+suite and the human-facing `reply_aurora.py` CLI -- its own docstring
+flagged this exactly, as a deliberate SCOPE BOUNDARY: "this module does
+NOT wire itself into aurora_daemon.py's always-on background loop...
+deserves explicit review before it goes live." N3 is that review.
+
+**What was wired:** `aurora_daemon.py`'s tick loop (`run()`) now calls,
+on their own cadence:
+- `ingest_replies()` + `expire_stale_predictions()` every ~10 minutes
+  (`CORRESPONDENCE_INGEST_INTERVAL`), gated only on the same surface-only
+  delegation reach-out already uses (`_auto_reach_out_enabled` --
+  subsurface never owns outward communication) -- NOT gated on quiet
+  hours, since a reply Sunni already sent should never sit unprocessed
+  through the night.
+- `post_correspondence_message()` every ~6 hours
+  (`CORRESPONDENCE_DRAFT_INTERVAL`), gated on surface-only delegation AND
+  quiet hours -- deliberately the more conservative of the two, matching
+  the R2 doctrine's own framing ("minutes per day, not hours"). The
+  module's own `MAX_PENDING=5` cap is the real safety boundary, not this
+  interval.
+
+**Isolation-gap discipline applied on sight:** the module's three entry
+points default `state_dir` to a repo-relative path
+(`aurora_internal/aurora_correspondence_loop.py`'s `DEFAULT_STATE_DIR`),
+not whatever `state_dir` `boot_aurora()` actually received -- exactly the
+bug class this campaign has found and fixed multiple times elsewhere
+(`LexicalMemory`, `surface_pressure_log.jsonl`). All three call sites
+pass `state_dir=systems.get("state_dir")` explicitly.
+
+**Verified, not assumed:** a full live round-trip in an isolated scratch
+state_dir -- a real contradiction recorded on the ledger, drafted into a
+message, hash-sealed and committed as a prediction, posted to a scratch
+`aurora_to_user.json`, a scratch reply appended to `from_sunni.jsonl`,
+and `ingest_replies()` correctly scoring the mismatch (0.47, "mismatched")
+and routing the reply through the standard re-entry loop -- with the
+real repository's `aurora_state/aurora_to_user.json` and `aurora_state/
+correspondence/` confirmed untouched (`git status` empty) throughout.
+6 new structural/functional tests
+(`tests/test_n3_correspondence_daemon_wiring.py`) hold the gating,
+interval sanity, and state_dir pass-through to this.
+
+**What this does and does not mean:** the CODE is now capable of
+autonomous outbound correspondence + reply ingestion whenever
+`aurora_daemon.py`'s tick loop runs on a surface/full-profile boot. This
+commit does not itself send anything -- no daemon process was started
+against real state during this work, and the round-trip verification
+above ran entirely in a throwaway scratch directory. Activation in
+practice depends on however/wherever the daemon is actually run going
+forward.
+
+**First Seen:** N3, R1 Campaign Closure directive's next-phase queue,
+2026-07-16.

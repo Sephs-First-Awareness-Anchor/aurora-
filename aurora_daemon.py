@@ -241,6 +241,14 @@ BROWSER_INTERVAL = 10800      # seconds between social API outreach checks (~3h)
 SAVE_INTERVAL   = 400         # seconds between state saves (10min)
 DISTILL_INTERVAL = 1800      # seconds between pressure-release distillation checks (~30 min)
 USER_REACH_INTERVAL = 60    # minimum seconds between proactive user messages (relaxed from 360s)
+# N3 (R1 Campaign Closure, 2026-07-16): correspondence loop cadence. Draft/
+# post is deliberately much slower than USER_REACH_INTERVAL -- the R2
+# doctrine's own framing is "minutes per day, not hours," and
+# MAX_PENDING=5 in aurora_correspondence_loop.py is the real cap, not this
+# interval. Reply ingestion runs far more often so a reply is never left
+# sitting once Sunni sends one.
+CORRESPONDENCE_DRAFT_INTERVAL = 6 * 3600    # seconds between new outbound prediction attempts (~6h)
+CORRESPONDENCE_INGEST_INTERVAL = 600        # seconds between inbound-reply/expiry sweeps (10min)
 SLEEP_AWAKE_DURATION = 8 * 3600   # Surface stays awake for 8 hours
 SLEEP_DURATION = 2 * 3600         # then sleeps for 2 hours
 VOICE_MODE      = os.environ.get("AURORA_DAEMON_VOICE_MODE", "alt_toggle").strip().lower()
@@ -6816,6 +6824,8 @@ def run(systems: Dict[str, Any]) -> None:
     next_sensory_train     = now + 60     # sensory competency first pass after 1 minute
     next_corpus_hunt       = now + 300    # corpus exhaustion check after 5 minutes
     next_reach   = now + _jitter(USER_REACH_INTERVAL, 0.50)
+    next_correspondence_draft  = now + _jitter(CORRESPONDENCE_DRAFT_INTERVAL, 0.30)
+    next_correspondence_ingest = now + _jitter(CORRESPONDENCE_INGEST_INTERVAL, 0.20)
     next_status      = now + 60          # hub status write every 60s (decoupled from state save)
     next_assim       = now + 600         # assimilation cycle every ~10 min
     next_mutate      = now + 600         # autonomous code mutation every ~10 min
@@ -7783,6 +7793,54 @@ def run(systems: Dict[str, Any]) -> None:
                     next_reach = now + max(60, int(decision.get("retry_in", 900) or 900))
             else:
                 next_reach = now + _jitter(USER_REACH_INTERVAL, 0.50)
+
+        # ---- CORRESPONDENCE LOOP (R2/N3) — asynchronous prediction-vs- ----
+        # reality learning. aurora_internal/aurora_correspondence_loop.py's
+        # own docstring flagged this daemon wiring as a deliberate, deferred
+        # next step ("turning on autonomous outbound correspondence
+        # messages is an ongoing behavior change... deserves explicit
+        # review before it goes live") -- the R1 Campaign Closure directive
+        # (2026-07-16, N3) is that review. Same surface-only delegation as
+        # reach-out: subsurface never owns outward communication. Ingest
+        # runs on its own, more frequent cadence so a reply from Sunni is
+        # never left sitting; drafting a NEW prediction is deliberately
+        # rare and additionally gated on quiet hours, on top of the
+        # module's own MAX_PENDING=5 cap.
+        if _auto_reach_out_enabled(systems) and now >= next_correspondence_ingest:
+            next_correspondence_ingest = now + _jitter(CORRESPONDENCE_INGEST_INTERVAL, 0.20)
+            try:
+                from aurora_internal.aurora_correspondence_loop import (
+                    ingest_replies as _corr_ingest_replies,
+                    expire_stale_predictions as _corr_expire_stale,
+                )
+                # state_dir passed explicitly -- the module's own default
+                # (DEFAULT_STATE_DIR) is repo-relative, not systems'
+                # actual boot state_dir, which would silently write into
+                # the wrong directory under any non-default boot.
+                _corr_state_dir = systems.get("state_dir")
+                _resolutions = _corr_ingest_replies(systems, state_dir=_corr_state_dir)
+                if _resolutions:
+                    _log(f"  [CORRESPONDENCE] ingested {len(_resolutions)} repl"
+                         f"{'y' if len(_resolutions) == 1 else 'ies'} from Sunni.")
+                _expired = _corr_expire_stale(state_dir=_corr_state_dir)
+                if _expired:
+                    _log(f"  [CORRESPONDENCE] {len(_expired)} prediction(s) expired unresolved.")
+            except Exception as _corr_ingest_exc:
+                _log(f"  [CORRESPONDENCE] ingest/expiry sweep failed: {_corr_ingest_exc}")
+
+        if (_auto_reach_out_enabled(systems) and not quiet
+                and now >= next_correspondence_draft):
+            next_correspondence_draft = now + _jitter(CORRESPONDENCE_DRAFT_INTERVAL, 0.30)
+            try:
+                from aurora_internal.aurora_correspondence_loop import (
+                    post_correspondence_message as _corr_post,
+                )
+                _posted = _corr_post(systems, state_dir=systems.get("state_dir"))
+                if _posted:
+                    _log(f"  [CORRESPONDENCE] posted prediction-sealed message "
+                         f"{_posted['message_id']!r} to aurora_to_user.json.")
+            except Exception as _corr_post_exc:
+                _log(f"  [CORRESPONDENCE] draft/post failed: {_corr_post_exc}")
 
         # ---- VISUAL INQUIRY — check if screen observer queued a novel-scene question ----
         # Lives in subsurface; the inquiry question is queued as a surface turn so the
