@@ -499,6 +499,59 @@ def _real_example_seed(
     return seed, content_source
 
 
+_SCHEDULER_BALANCE_WINDOW = 20
+_SCHEDULER_BALANCE_TOLERANCE = 2
+
+
+def _recent_dimension_counts(state_dir: Path, window: int = _SCHEDULER_BALANCE_WINDOW) -> Dict[str, int]:
+    """target_dimension counts over the last `window` classroom_log.jsonl
+    entries. Degrades to {} (no balance pressure applied) on any read
+    failure -- never blocks curriculum selection."""
+    log_path = state_dir / "classroom_log.jsonl"
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return {}
+    counts: Dict[str, int] = {}
+    for line in lines[-window:]:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            dim = json.loads(line).get("target_dimension")
+        except Exception:
+            continue
+        if dim:
+            counts[dim] = counts.get(dim, 0) + 1
+    return counts
+
+
+def _balance_starved_dimensions_first(
+    ranked: List[str], recent_counts: Dict[str, int],
+    tolerance: int = _SCHEDULER_BALANCE_TOLERANCE,
+) -> List[str]:
+    """R1.5 addendum (2026-07-15) scheduler-balance rule: within any
+    rolling window, no candidate dimension may fall more than `tolerance`
+    lessons behind the most-fed dimension in that same window. A
+    fail_count-only ranking (aurora_diag.py's own severity order) can
+    otherwise let a chronically-low-fail-count dimension go starved for
+    many calls in a row whenever `n` is smaller than the full dimension
+    pool (e.g. the daemon's n=4 cycles) -- pull anything past the
+    tolerance to the front, most-starved first, ahead of the normal
+    fail_count order; everything within tolerance keeps its fail_count
+    ranking unchanged."""
+    if not recent_counts:
+        return ranked
+    max_count = max((recent_counts.get(d, 0) for d in ranked), default=0)
+    starved = [d for d in ranked if (max_count - recent_counts.get(d, 0)) > tolerance]
+    if not starved:
+        return ranked
+    starved.sort(key=lambda d: recent_counts.get(d, 0))
+    rest = [d for d in ranked if d not in starved]
+    return starved + rest
+
+
 def select_curriculum(
     systems: Dict[str, Any],
     n: int = 4,
@@ -508,7 +561,10 @@ def select_curriculum(
     Build a curriculum plan of `n` (target_dimension, seed_prompt,
     content_source) triples, ranked by real fail_points.json severity
     (fail_count, highest first -- same ranking aurora_diag.py's health check
-    already uses).
+    already uses), with a balance pass (R1.5 addendum) pulling any
+    dimension more than _SCHEDULER_BALANCE_TOLERANCE lessons behind the
+    most-fed dimension in the last _SCHEDULER_BALANCE_WINDOW lessons to
+    the front of the plan first.
 
     Every lesson that has a real failing-conversation excerpt available in
     fail_points.json gets it as seed_prompt -- not just stale/WORSENING
@@ -535,6 +591,8 @@ def select_curriculum(
         ranked = [dim for dim, _ in sorted(records.items(), key=lambda kv: -kv[1].get("fail_count", 0))]
     else:
         ranked = list(_DEFAULT_CANDIDATE_DIMENSIONS)
+
+    ranked = _balance_starved_dimensions_first(ranked, _recent_dimension_counts(sd))
 
     rotation_state = _load_rotation_state(sd)
     used_example_ids: set = set()
