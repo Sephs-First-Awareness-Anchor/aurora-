@@ -1,0 +1,72 @@
+{
+  "probe_id": "contradiction_handling_06",
+  "dimension": "contradiction_handling",
+  "turns": [
+    {
+      "user_text": "I told my friend I was fine, but I've been crying all week.",
+      "response_text": "I do truth did. I is want exist.",
+      "perception": {
+        "contradiction_ledger_count_before": 0,
+        "contradiction_ledger_count_after": 0,
+        "contradiction_ledger_delta": 0,
+        "uncertainty_internal_telemetry": "not_available"
+      },
+      "guard": {
+        "status": "not_wired",
+        "note": "ConstraintEngine/FailureGuardSuite/UncertaintySignalingGuard confirmed never instantiated in the live boot_aurora() systems dict; acknowledge_uncertainty()/feed_evidence()/govern() have zero call sites outside aurora_constraint_engine.py's own self-test."
+      },
+      "expression": {
+        "last_articulation_trace": {
+          "original": "I do truth did. I is want exist.",
+          "candidate": "",
+          "selected": "I do truth did. I is want exist.",
+          "accepted": false,
+          "reason": "no_candidate",
+          "original_score": 0.62,
+          "candidate_score": 0.0,
+          "original_pressure": 0.316,
+          "candidate_pressure": 1.0,
+          "pressure_relief": -0.684,
+          "safe": false,
+          "metadata": {
+            "prompt_excerpt": "I told my friend I was fine, but I've been crying all week.",
+            "input_interpretation": {
+              "raw_prompt": "I told my friend I was fine, but I've been crying all week.",
+              "intent_hint": "statement_or_context",
+              "topic_terms": [
+                "told",
+                "friend",
+                "fine",
+                "i've",
+                "been",
+                "crying",
+                "week"
+              ],
+              "entities": []
+            },
+            "tone": "gentle",
+            "source": "no_pattern_matched",
+            "timestamp": 1784162097.678708,
+            "min_relief_used": 0.035,
+            "semantic_strategy_relief_bump": 0.0,
+            "expression_context": {
+              "semantic_strategy": "observe",
+              "semantic_confidence": 0.0,
+              "semantic_strategy_applied": true
+            }
+          }
+        },
+        "fgae_turn_log_available": false,
+        "dual_strata_frame_log_available": false,
+        "note": "fgae_turn_log.jsonl and dual_strata_frame_log.jsonl are stale (last written weeks before this investigation's own window) -- not read here to avoid fabricating live telemetry from dead files."
+      }
+    }
+  ],
+  "predicate_results": {
+    "acknowledges_contradiction": false,
+    "parseable": true
+  },
+  "response_text": "I do truth did. I is want exist.",
+  "classification": "PERCEIVE",
+  "classification_detail": "No new ContradictionLedger entry after this turn -- the probe's contradiction never became an internal event."
+}

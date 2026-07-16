@@ -25,7 +25,7 @@ import shutil
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Tuple
 
 from aurora import boot_aurora, process_external_user_turn
 from aurora_developmental_log import record_developmental_snapshot
@@ -33,12 +33,18 @@ from aurora_internal.aurora_semantic_probe_battery import (
     GOLDEN_PATH,
     PROBES_PATH,
     RESULTS_DIR,
+    TRACES_DIR,
     Probe,
+    ProbeTrace,
+    classify_probe_trace,
+    check_expected_properties,
+    failure_shape_distribution,
     golden_validation_summary,
     load_probes,
     run_battery,
     validate_golden_transcripts,
 )
+from aurora_internal.aurora_conversation_rubric_engine import ConversationRubricEngine
 
 REPO_ROOT = Path(__file__).resolve().parent
 STATE_DIR = REPO_ROOT / "aurora_state"
@@ -159,6 +165,165 @@ def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
         shutil.rmtree(scratch_root, ignore_errors=True)
 
 
+_REAL_ARTICULATION_TRACE_PATH = STATE_DIR / "last_articulation_trace.json"
+
+
+def _read_last_articulation_trace() -> Optional[Dict[str, Any]]:
+    """aurora_articulation.py's TRACE_FILE is a CWD-relative path
+    (Path("aurora_state") / "last_articulation_trace.json"), not
+    parameterized by the state_dir passed to boot_aurora() -- so it
+    always writes to the real aurora_state/ directory regardless of
+    which scratch copy booted. Reading from the real path here is
+    correct, not a workaround; the file is a single-record overwrite,
+    so this is a best-effort "most recent articulation decision"
+    snapshot, not guaranteed to be from this exact turn if anything
+    else writes concurrently (nothing else does during a single-
+    threaded probe battery run)."""
+    try:
+        return json.loads(_REAL_ARTICULATION_TRACE_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
+def _contradiction_ledger_count(systems: Dict[str, Any]) -> int:
+    ledger = systems.get("contradiction_ledger")
+    if ledger is None or not hasattr(ledger, "all"):
+        return 0
+    try:
+        return len(ledger.all())
+    except Exception:
+        return 0
+
+
+def run_traced_probes(
+    dimensions: Tuple[str, ...] = ("contradiction_handling", "uncertainty_signaling"),
+    verbose: bool = True,
+) -> Dict[str, Any]:
+    """R1.6 addendum, Step 1: traced probe runs restricted to the two
+    dimensions confirmed as real capability floors by golden validation.
+    Captures per-turn: ContradictionLedger delta (perception layer, real),
+    the guard layer (reported not_wired -- see module docstring for why),
+    the last articulation decision (expression layer, best-effort), and
+    the final response + predicate results (output layer). Classifies
+    each failing probe as PERCEIVE / EXPRESS / VOCABULARY / UNCLASSIFIED
+    and writes one trace file per probe plus a summary."""
+    scratch_root = tempfile.mkdtemp(prefix="aurora_probe_trace_")
+    scratch_state_dir = str(Path(scratch_root) / "aurora_state")
+    ts = int(time.time())
+    traces_out_dir = Path(TRACES_DIR) / str(ts)
+    try:
+        shutil.copytree(str(STATE_DIR), scratch_state_dir)
+        systems = boot_aurora(state_dir=scratch_state_dir, verbose=verbose, runtime_profile="surface")
+        aurora_gateway = systems.get("aurora")
+
+        probes = [p for p in load_probes(PROBES_PATH) if p.dimension in dimensions]
+        rubric_engine = ConversationRubricEngine()
+        probe_traces: List[ProbeTrace] = []
+
+        for probe in probes:
+            session_id = f"probe_trace_{probe.probe_id}"
+            systems["_session_turn_buffer"] = []
+            turns_log: List[Dict[str, Any]] = []
+            messages: List[Tuple[str, str]] = []
+            last_response_text = ""
+
+            for turn_text in probe.turns:
+                ledger_before = _contradiction_ledger_count(systems)
+                response = dict(
+                    process_external_user_turn(
+                        systems, turn_text,
+                        source_label=f"probe_trace_{probe.probe_id}",
+                        session_id=session_id,
+                        run_periodic_maintenance=False,
+                    ) or {}
+                )
+                response_text = str(response.get("response_text") or "").strip()
+                if not response_text and aurora_gateway is not None and hasattr(aurora_gateway, "speak_to_aurora"):
+                    try:
+                        gw = aurora_gateway.speak_to_aurora(turn_text)
+                        response_text = str(getattr(gw, "content", "") or "").strip()
+                    except Exception:
+                        pass
+                ledger_after = _contradiction_ledger_count(systems)
+                last_response_text = response_text
+                messages.append(("user", turn_text))
+                messages.append(("assistant", response_text))
+
+                turns_log.append({
+                    "user_text": turn_text,
+                    "response_text": response_text,
+                    "perception": {
+                        "contradiction_ledger_count_before": ledger_before,
+                        "contradiction_ledger_count_after": ledger_after,
+                        "contradiction_ledger_delta": ledger_after - ledger_before,
+                        "uncertainty_internal_telemetry": "not_available",
+                    },
+                    "guard": {
+                        "status": "not_wired",
+                        "note": (
+                            "ConstraintEngine/FailureGuardSuite/UncertaintySignalingGuard "
+                            "confirmed never instantiated in the live boot_aurora() systems "
+                            "dict; acknowledge_uncertainty()/feed_evidence()/govern() have "
+                            "zero call sites outside aurora_constraint_engine.py's own "
+                            "self-test."
+                        ),
+                    },
+                    "expression": {
+                        "last_articulation_trace": _read_last_articulation_trace(),
+                        "fgae_turn_log_available": False,
+                        "dual_strata_frame_log_available": False,
+                        "note": (
+                            "fgae_turn_log.jsonl and dual_strata_frame_log.jsonl are stale "
+                            "(last written weeks before this investigation's own window) -- "
+                            "not read here to avoid fabricating live telemetry from dead files."
+                        ),
+                    },
+                })
+
+            score = rubric_engine.score_conversation(f"trace:{probe.probe_id}", messages)
+            dimension_scores = dict(score.dimension_scores)
+            predicate_results = check_expected_properties(probe, last_response_text, dimension_scores)
+
+            ledger_delta_total = sum(t["perception"]["contradiction_ledger_delta"] for t in turns_log)
+            classification, detail = classify_probe_trace(
+                probe, ledger_delta_total, predicate_results, last_response_text,
+            )
+
+            trace = ProbeTrace(
+                probe_id=probe.probe_id, dimension=probe.dimension, turns=turns_log,
+                predicate_results=predicate_results, response_text=last_response_text,
+                classification=classification, classification_detail=detail,
+            )
+            probe_traces.append(trace)
+
+            traces_out_dir.mkdir(parents=True, exist_ok=True)
+            (traces_out_dir / f"probe_{probe.probe_id}.json").write_text(
+                json.dumps(_json_safe(trace.to_dict()), indent=2), encoding="utf-8",
+            )
+
+        distribution = failure_shape_distribution(probe_traces)
+        vocabulary_phrases = [
+            {"probe_id": t.probe_id, "dimension": t.dimension, "response_text": t.response_text,
+             "detail": t.classification_detail}
+            for t in probe_traces if t.classification == "VOCABULARY"
+        ]
+        guard_block_count = 0  # confirmed impossible -- see module docstring
+
+        return {
+            "status": "ok",
+            "mode": "trace",
+            "timestamp": ts,
+            "traces_dir": str(traces_out_dir),
+            "probe_count": len(probe_traces),
+            "distribution": distribution,
+            "vocabulary_phrases": vocabulary_phrases,
+            "guard_block_count": guard_block_count,
+            "traces": [t.to_dict() for t in probe_traces],
+        }
+    finally:
+        shutil.rmtree(scratch_root, ignore_errors=True)
+
+
 def run_golden_validation() -> Dict[str, Any]:
     """R1.5 addendum, Step 1: 'No gauge that has never produced a nonzero
     reading may be trusted. Prove the scorer can score.' Feeds hand-
@@ -191,6 +356,13 @@ def main() -> int:
              "transcripts (aurora_state/probe_battery/golden_transcripts.json). "
              "Bypasses Aurora's generation entirely -- tests the gauge, not her.",
     )
+    parser.add_argument(
+        "--trace", action="store_true",
+        help="R1.6 addendum: traced runs restricted to contradiction_handling and "
+             "uncertainty_signaling, classifying each failure as PERCEIVE/EXPRESS/"
+             "VOCABULARY/UNCLASSIFIED. Writes per-probe traces under "
+             "aurora_state/probe_battery/traces/.",
+    )
     args = parser.parse_args()
 
     if args.golden:
@@ -204,6 +376,24 @@ def main() -> int:
             print(f"[SUMMARY] all_separated={result.get('all_separated')}")
             for dim, s in (result.get("per_dimension") or {}).items():
                 print(f"  {dim}: {s}")
+        return 0
+
+    if args.trace:
+        result = run_traced_probes(verbose=not args.quiet)
+        RESULTS_DIR_PATH.mkdir(parents=True, exist_ok=True)
+        summary_path = RESULTS_DIR_PATH / f"trace_summary_{result.get('timestamp')}.json"
+        safe_result = _json_safe(result)
+        summary_path.write_text(json.dumps(safe_result, indent=2), encoding="utf-8")
+        print(json.dumps(_json_safe({k: v for k, v in result.items() if k != "traces"}), indent=2))
+        print(f"\n[REPORT] per-probe traces in {result.get('traces_dir')}")
+        print(f"[REPORT] wrote {summary_path}")
+        if result.get("status") == "ok":
+            print("[SUMMARY] failure-shape distribution:")
+            for dim, dist in (result.get("distribution") or {}).items():
+                print(f"  {dim}: {dist}")
+            print(f"[SUMMARY] guard_block_count={result.get('guard_block_count')}")
+            for v in result.get("vocabulary_phrases") or []:
+                print(f"  VOCABULARY [{v['probe_id']}]: {v['response_text']!r}")
         return 0
 
     result = run_probe_battery(run_id=str(args.run_id or ""), verbose=not args.quiet)

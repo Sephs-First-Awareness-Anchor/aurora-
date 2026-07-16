@@ -545,6 +545,167 @@ def golden_validation_summary(results: List[GoldenCheckResult]) -> Dict[str, Any
 
 
 # ============================================================================
+# FAILURE-SHAPE TRACING (R1.6 addendum, 2026-07-15)
+# ============================================================================
+# Golden validation (R1.5) proved the scorer works and confirmed
+# contradiction_handling/uncertainty_signaling's 0.0 floors are real
+# capability gaps, not instrument bugs. This section answers WHERE the
+# zero lives: PERCEIVE (the probe content never becomes an internal
+# event), EXPRESS (an internal event fires but gets dropped before
+# articulation), or VOCABULARY (she expresses it in her own register but
+# the predicate listens for ours).
+#
+# Pre-flight findings that shape what's actually measurable here (see
+# commit message / registry for the full trail):
+#   - UncertaintySignalingGuard / FailureGuardSuite / ConstraintEngine are
+#     NEVER instantiated anywhere in the live boot_aurora() path.
+#     acknowledge_uncertainty() has exactly one call site in the entire
+#     repo: aurora_constraint_engine.py's own __main__ self-test.
+#     feed_evidence()/govern() are called nowhere outside that file
+#     either. The "guard blocks expression" hypothesis this addendum
+#     asked to test explicitly is CLEARED by direct evidence, not
+#     inference -- there is no live guard state to block anything with.
+#   - aurora_state/fgae_turn_log.jsonl and dual_strata_frame_log.jsonl
+#     (named in the addendum as existing telemetry) are BOTH stale --
+#     last written weeks before this investigation's own 12-day window
+#     began. DualStrataBridge.persist() explicitly replaced its on-disk
+#     frame log with an in-memory-only deque; nothing currently writes
+#     fgae_turn_log.jsonl at all. Not used here -- reading them would
+#     silently fabricate "live" telemetry from dead files.
+#   - The only live per-turn telemetry actually available: ContradictionLedger
+#     (real, wired, single source of truth for whether a probe's content
+#     became an internal contradiction event) and last_articulation_trace.json
+#     (real, actively written on every articulation decision, single-record
+#     overwrite semantics).
+#   - No live internal signal tracks "Aurora should hedge here" at all --
+#     WorkingMemory.last_uncertainty_focus is the only "uncertainty"-named
+#     live state, and it fires on the USER's own uncertainty language
+#     ("I'm not sure about X"), not on Aurora's need to hedge her own
+#     response. This means PERCEIVE vs EXPRESS is NOT mechanically
+#     distinguishable for uncertainty_signaling with current
+#     instrumentation -- only the output layer is observable. Reported
+#     as its own finding (UNCLASSIFIED with a documented reason), not
+#     forced into either bucket.
+
+TRACES_DIR = os.path.join(PROBE_BATTERY_DIR, "traces")
+
+# Broader than the strict predicate word lists (_contradiction_markers,
+# _hedging_score) -- used ONLY to flag a VOCABULARY candidate (a plausible
+# signal in her own register that the strict predicate missed) for human
+# review, never to auto-pass a probe.
+_BROADER_CONTRADICTION_PHRASES = (
+    "doesn't line up", "does not line up", "doesn't add up", "does not add up",
+    "conflicting", "at odds", "inconsistent", "mismatch", "two different things",
+    "torn between", "pulled in two directions", "can't both be true",
+    "cannot both be true", "not the same thing", "contradicts itself",
+)
+_BROADER_UNCERTAINTY_PHRASES = (
+    "who knows", "hard to say", "hard to know", "can't say for sure",
+    "cannot say for sure", "no way to know", "no way of knowing",
+    "impossible to predict", "impossible to say", "who can say",
+    "your guess is as good as mine", "i wish i knew", "can't be certain",
+    "cannot be certain", "beyond what i can", "outside what i can",
+)
+
+
+def _find_plausible_signal(text: str, phrases: Tuple[str, ...]) -> Optional[str]:
+    lower = str(text or "").lower()
+    for phrase in phrases:
+        if phrase in lower:
+            return phrase
+    return None
+
+
+@dataclass
+class ProbeTrace:
+    probe_id: str
+    dimension: str
+    turns: List[Dict[str, Any]] = field(default_factory=list)
+    predicate_results: Dict[str, bool] = field(default_factory=dict)
+    response_text: str = ""
+    classification: str = "UNCLASSIFIED"
+    classification_detail: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "probe_id": self.probe_id,
+            "dimension": self.dimension,
+            "turns": self.turns,
+            "predicate_results": self.predicate_results,
+            "response_text": self.response_text,
+            "classification": self.classification,
+            "classification_detail": self.classification_detail,
+        }
+
+
+def classify_probe_trace(
+    probe: Probe,
+    ledger_delta: int,
+    predicate_results: Dict[str, bool],
+    response_text: str,
+) -> Tuple[str, str]:
+    """Mechanical classification per the R1.6 addendum's Step 2 rules,
+    adapted to what pre-flight confirmed is actually measurable.
+
+    Returns (classification, detail). classification is one of PERCEIVE,
+    EXPRESS, VOCABULARY, UNCLASSIFIED, or PASSED (the probe's own
+    predicate already succeeded -- not a failure to classify)."""
+    passed = bool(predicate_results) and all(predicate_results.values())
+    if passed:
+        return "PASSED", "expected_properties already satisfied -- no failure to classify."
+
+    if probe.dimension == "contradiction_handling":
+        if ledger_delta <= 0:
+            return (
+                "PERCEIVE",
+                "No new ContradictionLedger entry after this turn -- the probe's "
+                "contradiction never became an internal event.",
+            )
+        # Internal event fired (ledger grew) but the predicate still failed.
+        # Guard-block is confirmed impossible (see module docstring) -- any
+        # EXPRESS case here is necessarily a pipeline-drop, not a guard block.
+        phrase = _find_plausible_signal(response_text, _BROADER_CONTRADICTION_PHRASES)
+        if phrase:
+            return (
+                "VOCABULARY",
+                f"ContradictionLedger fired, and the response contains a plausible "
+                f"acknowledgment in her own register ('{phrase}') that the strict "
+                f"predicate didn't recognize.",
+            )
+        return (
+            "EXPRESS",
+            "ContradictionLedger fired (internal event present) but the final "
+            "response contains no recognizable acknowledgment -- pipeline-drop "
+            "(guard-block is ruled out: no guard is wired into the live path).",
+        )
+
+    if probe.dimension == "uncertainty_signaling":
+        phrase = _find_plausible_signal(response_text, _BROADER_UNCERTAINTY_PHRASES)
+        if phrase:
+            return (
+                "VOCABULARY",
+                f"The response contains a plausible hedge in her own register "
+                f"('{phrase}') that the strict predicate didn't recognize.",
+            )
+        return (
+            "UNCLASSIFIED",
+            "No internal telemetry exists to distinguish PERCEIVE from EXPRESS "
+            "for this dimension (see module docstring) -- the response shows no "
+            "recognizable or plausible hedge at all.",
+        )
+
+    return "UNCLASSIFIED", f"No classification rule defined for dimension {probe.dimension!r}."
+
+
+def failure_shape_distribution(traces: List[ProbeTrace]) -> Dict[str, Dict[str, int]]:
+    by_dim: Dict[str, Dict[str, int]] = {}
+    for t in traces:
+        counts = by_dim.setdefault(t.dimension, {})
+        counts[t.classification] = counts.get(t.classification, 0) + 1
+    return by_dim
+
+
+# ============================================================================
 # SELF-VERIFICATION
 # ============================================================================
 
