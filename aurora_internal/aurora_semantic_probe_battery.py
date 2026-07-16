@@ -49,6 +49,15 @@ STATE_DIR = os.path.join(REPO_ROOT, "aurora_state")
 PROBE_BATTERY_DIR = os.path.join(STATE_DIR, "probe_battery")
 PROBES_PATH = os.path.join(PROBE_BATTERY_DIR, "probes.json")
 RESULTS_DIR = os.path.join(PROBE_BATTERY_DIR, "results")
+GOLDEN_PATH = os.path.join(PROBE_BATTERY_DIR, "golden_transcripts.json")
+
+# R1.5 addendum (2026-07-15), Step 1: "No gauge that has never produced a
+# nonzero reading may be trusted. Prove the scorer can score." A metric
+# pinned at exactly 0.0 across every run is indistinguishable, from the
+# outside, between "genuine capability floor" and "broken instrument" --
+# these thresholds are the acceptance bar for telling the two apart.
+GOLDEN_IDEAL_MIN_SCORE = 0.75
+GOLDEN_FAILING_MAX_SCORE = 0.25
 
 # Dimensions the rubric engine already tracks; used to threshold expected
 # properties that reuse a RUBRIC_DIMENSIONS score directly.
@@ -180,6 +189,14 @@ _FUNCTION_WORDS = {
     "a", "an", "the", "of", "in", "on", "at", "to", "for", "with", "by", "from",
     "and", "or", "but", "nor", "so", "yet", "is", "are", "was", "were", "am",
     "be", "been", "being", "that", "this", "these", "those", "as", "than",
+    # R1.5 addendum (2026-07-15) Step 1 golden-transcript validation caught
+    # a false negative: "How long before switching between chords feels
+    # natural?" is grammatically well-formed but used none of the original
+    # (narrower) set -- common prepositions/conjunctions were missing.
+    "before", "after", "between", "during", "about", "above", "below",
+    "without", "within", "through", "into", "onto", "over", "under",
+    "up", "down", "out", "off", "not", "if", "when", "while", "because",
+    "since", "until", "though", "although", "whether",
 }
 
 
@@ -406,6 +423,125 @@ def run_battery(
         process_turn_fn = process_turn_fn_factory(probe)
         results.append(run_probe(probe, process_turn_fn, rubric_engine))
     return BatteryReport(run_id=run_id, timestamp=time.time(), probe_results=results)
+
+
+# ============================================================================
+# GOLDEN-TRANSCRIPT INSTRUMENT VALIDATION (R1.5 addendum, 2026-07-15)
+# ============================================================================
+# "No gauge that has never produced a nonzero reading may be trusted. Prove
+# the scorer can score." Feeds hand-authored ideal/failing transcripts
+# DIRECTLY into the scoring path -- bypassing Aurora's generation entirely
+# (no boot_aurora, no process_external_user_turn) -- so a pinned-at-0.0
+# metric can be told apart as "genuine capability floor" (golden pair
+# separates cleanly) vs "broken instrument" (golden ideal ALSO scores near
+# zero, meaning the predicate/rubric wiring itself can't fire even on a
+# textbook-perfect answer).
+
+@dataclass
+class GoldenCheckResult:
+    probe_id: str
+    dimension: str
+    ideal_score: Optional[float]
+    failing_score: Optional[float]
+    ideal_passed: bool
+    failing_passed: bool
+    separated: bool
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "probe_id": self.probe_id,
+            "dimension": self.dimension,
+            "ideal_score": self.ideal_score,
+            "failing_score": self.failing_score,
+            "ideal_passed": self.ideal_passed,
+            "failing_passed": self.failing_passed,
+            "separated": self.separated,
+        }
+
+
+def load_golden_transcripts(golden_path: str = GOLDEN_PATH) -> Dict[str, Dict[str, Any]]:
+    with open(golden_path, "r", encoding="utf-8") as f:
+        return json.load(f).get("golden", {})
+
+
+def _score_golden_variant(
+    probe: Probe, responses: List[str], rubric_engine: ConversationRubricEngine,
+) -> Tuple[Optional[float], bool]:
+    """Returns (score, predicate_passed) for one golden variant (ideal or
+    failing). score is dimension_scores[dim] for RUBRIC_DIMENSIONS members,
+    or None for semantic_wellformedness (no continuous score exists for
+    it -- parseable is boolean by construction)."""
+    messages: List[Tuple[str, str]] = []
+    for turn_text, response_text in zip(probe.turns, responses):
+        messages.append(("user", turn_text))
+        messages.append(("assistant", response_text))
+    last_response = responses[-1] if responses else ""
+
+    score = rubric_engine.score_conversation(f"golden:{probe.probe_id}", messages)
+    dimension_scores = dict(score.dimension_scores)
+    property_results = check_expected_properties(probe, last_response, dimension_scores)
+    predicate_passed = bool(property_results) and all(property_results.values())
+
+    if probe.dimension in dimension_scores and probe.dimension != "semantic_wellformedness":
+        return dimension_scores.get(probe.dimension), predicate_passed
+    return None, predicate_passed
+
+
+def validate_golden_transcripts(
+    probes_path: str = PROBES_PATH, golden_path: str = GOLDEN_PATH,
+) -> List[GoldenCheckResult]:
+    probes = load_probes(probes_path)
+    golden = load_golden_transcripts(golden_path)
+    rubric_engine = ConversationRubricEngine()
+    results: List[GoldenCheckResult] = []
+
+    for probe in probes:
+        entry = golden.get(probe.probe_id)
+        if entry is None:
+            results.append(GoldenCheckResult(
+                probe_id=probe.probe_id, dimension=probe.dimension,
+                ideal_score=None, failing_score=None,
+                ideal_passed=False, failing_passed=False, separated=False,
+            ))
+            continue
+
+        ideal_score, ideal_passed = _score_golden_variant(
+            probe, entry.get("ideal_responses", []), rubric_engine,
+        )
+        failing_score, failing_passed = _score_golden_variant(
+            probe, entry.get("failing_responses", []), rubric_engine,
+        )
+
+        if ideal_score is not None and failing_score is not None:
+            separated = ideal_score >= GOLDEN_IDEAL_MIN_SCORE and failing_score <= GOLDEN_FAILING_MAX_SCORE
+        else:
+            # semantic_wellformedness (and any dimension with no continuous
+            # rubric score): fall back to the boolean predicate itself.
+            separated = ideal_passed and not failing_passed
+
+        results.append(GoldenCheckResult(
+            probe_id=probe.probe_id, dimension=probe.dimension,
+            ideal_score=ideal_score, failing_score=failing_score,
+            ideal_passed=ideal_passed, failing_passed=failing_passed,
+            separated=separated,
+        ))
+
+    return results
+
+
+def golden_validation_summary(results: List[GoldenCheckResult]) -> Dict[str, Any]:
+    by_dim: Dict[str, List[GoldenCheckResult]] = {}
+    for r in results:
+        by_dim.setdefault(r.dimension, []).append(r)
+    summary: Dict[str, Any] = {}
+    for dim, dim_results in by_dim.items():
+        separated = sum(1 for r in dim_results if r.separated)
+        summary[dim] = {
+            "probe_count": len(dim_results),
+            "separated_count": separated,
+            "all_separated": separated == len(dim_results),
+        }
+    return summary
 
 
 # ============================================================================

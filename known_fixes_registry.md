@@ -807,3 +807,95 @@ been catching.
 **First Seen:** Semantic Plateau Remediation Directive, 2026-07-15,
 Phase R0's own founding rule: "No further classroom lessons are scored
 by dev_index. Competence = probe score."
+
+---
+
+## FIX-A022 (ARCHITECTURAL) — Golden-pair rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** Trusting a scoring instrument's output before ever proving
+the instrument can score at all.
+
+**Correct Form:** A probe dimension is only "live" (its 0.0 reading
+treated as a real capability floor rather than a suspect gauge) once a
+hand-authored ideal/failing response pair, fed directly into the SAME
+scoring path (bypassing generation entirely), separates cleanly:
+ideal >= 0.75, failing <= 0.25 (`aurora_internal/
+aurora_semantic_probe_battery.py::validate_golden_transcripts()`,
+`run_probe_battery.py --golden`). The golden set is a permanent fixture,
+not a one-time check -- every future battery run should be able to
+re-run it as a self-test for instrument drift.
+
+**Why:** `contradiction_handling` and `uncertainty_signaling` read
+exactly 0.0 across all six probe-battery runs before this rule existed
+(3 baseline + 3 post-R1) -- indistinguishable, from the outside, between
+"genuine capability floor" and "broken instrument." Golden validation
+resolved it directly: both separate cleanly on hand-written content
+(12/12 probes each, ideal >= 0.75, failing <= 0.25) -- the 0.0 in live
+runs is a real, confirmed capability gap, not a wiring bug. Building the
+golden set also caught two independent instrument bugs by contrast: (1)
+`_parseable()`'s function-word list was missing common prepositions
+("before", "between", ...), producing a false negative on a
+grammatically fine question; (2) `context_carryover`'s rubric formula
+has a real calibration ceiling (~0.66, below the 0.75 bar) for any
+transcript whose user-side text lacks a callback marker word ("that",
+"this", "they", ...) -- confirmed a formula limitation, not a capability
+claim, since the golden ideal's boolean predicate (mentions_referent)
+still fires correctly every time.
+
+**First Seen:** Remediation Addendum R1.5, 2026-07-15, Step 1.
+
+---
+
+## FIX-A023 (ARCHITECTURAL) — Pinned-floor rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** Treating a metric reading exactly 0.0 (or exactly max)
+across multiple independent runs as a settled capability conclusion
+without first ruling out an instrument problem.
+
+**Correct Form:** Any metric pinned at exactly 0.0 (or exactly its max)
+across >= 3 independent runs triggers golden-pair instrument validation
+(FIX-A022) BEFORE any capability conclusion is drawn from it. A floor is
+not "weak" (weak reads as noisy small numbers) -- a floor that never
+moves at all is either a real absolute ceiling or a broken gauge, and
+those require different fixes.
+
+**Why:** Same evidence base as FIX-A022 -- the pinned-0.0 signal alone
+was the thing that correctly triggered the golden-validation step in the
+first place, per the R1.5 addendum's own re-diagnosis.
+
+**First Seen:** Remediation Addendum R1.5, 2026-07-15.
+
+---
+
+## FIX-A024 (ARCHITECTURAL) — Curriculum scheduler-balance rule
+
+**Category:** ARCHITECTURAL
+
+**Pattern:** A curriculum selector ranked purely by a single severity
+score (fail_count) with no floor on how long a low-ranked candidate can
+go unscheduled when the batch size is smaller than the full candidate
+pool.
+
+**Correct Form:** Within any rolling window (20 lessons), no candidate
+dimension may fall more than a small tolerance (2 lessons) behind the
+most-fed dimension in that window --
+`aurora_classroom.py::_balance_starved_dimensions_first()`, derived from
+`classroom_log.jsonl`'s own persisted history, not new state. Anything
+past tolerance is pulled to the front of the ranked plan, most-starved
+first, ahead of the normal severity order.
+
+**Why:** `select_curriculum(n=4, ...)` (the daemon's own cadence) has no
+guaranteed-coverage mechanism -- a chronically-low-fail-count dimension
+could go starved indefinitely. Flagged in the R1.5 addendum from
+`uncertainty_signaling` receiving only 3 of 45 lessons in one sampled
+window; that specific run turned out to be a uniform 3-per-dimension
+artifact of `n` exceeding the full 15-dimension pool (not an actual
+skew), but the underlying unguarded mechanism is real and applies
+directly to the daemon's smaller `n=4` cycles, so the fix stands on its
+own merits independent of that one sample.
+
+**First Seen:** Remediation Addendum R1.5, 2026-07-15.

@@ -30,11 +30,14 @@ from typing import Any, Dict
 from aurora import boot_aurora, process_external_user_turn
 from aurora_developmental_log import record_developmental_snapshot
 from aurora_internal.aurora_semantic_probe_battery import (
+    GOLDEN_PATH,
     PROBES_PATH,
     RESULTS_DIR,
     Probe,
+    golden_validation_summary,
     load_probes,
     run_battery,
+    validate_golden_transcripts,
 )
 
 REPO_ROOT = Path(__file__).resolve().parent
@@ -156,11 +159,52 @@ def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
         shutil.rmtree(scratch_root, ignore_errors=True)
 
 
+def run_golden_validation() -> Dict[str, Any]:
+    """R1.5 addendum, Step 1: 'No gauge that has never produced a nonzero
+    reading may be trusted. Prove the scorer can score.' Feeds hand-
+    authored ideal/failing transcripts directly into the scoring path --
+    no boot_aurora, no live generation -- so a pinned-at-0.0 dimension can
+    be told apart as a genuine capability floor (golden separates
+    cleanly) vs a broken instrument (golden ideal ALSO fails)."""
+    try:
+        results = validate_golden_transcripts(probes_path=PROBES_PATH, golden_path=GOLDEN_PATH)
+    except Exception as exc:
+        return {"status": "blocked", "reason": f"could not run golden validation: {exc}"}
+    summary = golden_validation_summary(results)
+    return {
+        "status": "ok",
+        "mode": "golden",
+        "timestamp": time.time(),
+        "per_dimension": summary,
+        "results": [r.to_dict() for r in results],
+        "all_separated": all(s["all_separated"] for s in summary.values()),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run Aurora's held-out semantic probe battery.")
     parser.add_argument("--run-id", type=str, default="", help="Label for this run (default: run_<timestamp>).")
     parser.add_argument("--quiet", action="store_true", help="Reduce boot logging.")
+    parser.add_argument(
+        "--golden", action="store_true",
+        help="Validate the scoring instrument itself against hand-authored golden "
+             "transcripts (aurora_state/probe_battery/golden_transcripts.json). "
+             "Bypasses Aurora's generation entirely -- tests the gauge, not her.",
+    )
     args = parser.parse_args()
+
+    if args.golden:
+        result = run_golden_validation()
+        RESULTS_DIR_PATH.mkdir(parents=True, exist_ok=True)
+        out_path = RESULTS_DIR_PATH / f"golden_{int(time.time())}.json"
+        out_path.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        print(json.dumps(result, indent=2))
+        print(f"\n[REPORT] wrote {out_path}")
+        if result.get("status") == "ok":
+            print(f"[SUMMARY] all_separated={result.get('all_separated')}")
+            for dim, s in (result.get("per_dimension") or {}).items():
+                print(f"  {dim}: {s}")
+        return 0
 
     result = run_probe_battery(run_id=str(args.run_id or ""), verbose=not args.quiet)
 
