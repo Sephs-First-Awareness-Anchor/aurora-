@@ -3,52 +3,52 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.5119,
+      "intensity": 0.4883,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "I just wanted to say hello.",
+      "present_anchor": "search youtube for lofi hip hop radio",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.419
+        "maturity": 0.0
       },
-      "present_tone": "neutral",
-      "reinforcement_hint": 0.1047
+      "present_tone": "curiosity",
+      "reinforcement_hint": 0.0
     },
     "processing_mode": "blended",
-    "readiness": 0.5613,
+    "readiness": 0.6192,
     "selected_action": "explain",
     "should_speak": true,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5384,
+      "intensity": 0.5047,
       "label": "steady"
     },
-    "timestamp": 1784135093.4488788
+    "timestamp": 1784161028.5916328
   },
-  "saved_at": 1784135093.4491084,
+  "saved_at": 1784161028.5918403,
   "subsurface_state": {
     "dominant_axis": "N",
-    "frame_request": "observation",
+    "frame_request": "balanced",
     "overlay": {
       "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "I just wanted to say hello.",
+      "present_anchor": "search youtube for lofi hip hop radio",
       "present_sensory": {
         "dominant_facet": "",
-        "maturity": 0.419
+        "maturity": 0.0
       },
-      "present_tone": "neutral",
-      "reinforcement_hint": 0.1047
+      "present_tone": "curiosity",
+      "reinforcement_hint": 0.0
     },
     "sub_crests": [
       {
         "axis": "X",
-        "intensity": 0.581,
+        "intensity": 0.5,
         "label": "attentional_drift"
       },
       {
@@ -58,23 +58,23 @@
       },
       {
         "axis": "A",
-        "intensity": 0.5,
-        "label": "neutral_affect"
+        "intensity": 0.55,
+        "label": "warmth"
       },
       {
         "axis": "X",
-        "intensity": 0.7875,
+        "intensity": 0.8875,
         "label": "steady_continuation"
       },
       {
-        "axis": "N",
-        "intensity": 1.0,
-        "label": "novelty"
+        "axis": "X",
+        "intensity": 0.5,
+        "label": "alignment"
       },
       {
         "axis": "T",
-        "intensity": 0.7,
-        "label": "new_thread"
+        "intensity": 1.0,
+        "label": "thread_slipping"
       },
       {
         "axis": "N",
@@ -85,31 +85,11 @@
         "axis": "X",
         "intensity": 1.0,
         "label": "calm"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.7575,
-        "label": "derived"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.7904,
-        "label": "surface"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.8048,
-        "label": "surface"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.8204,
-        "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5384,
+      "intensity": 0.5047,
       "label": "steady"
     }
   }

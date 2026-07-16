@@ -1,6 +1,11 @@
 {
   "action_bias_candidates": [],
-  "candidate_interpretations": [],
+  "candidate_interpretations": [
+    {
+      "confidence": 0.35,
+      "label": "affective_attention"
+    }
+  ],
   "coherence": 0.45,
   "comparison_channels": [
     "incoming_input",
@@ -11,42 +16,28 @@
     "active_topic": "",
     "ambiguity": 0.0,
     "cost_total": 0.0,
-    "dominant_emotion": "neutral",
+    "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
-    "interpreted_deep_emotion": "neutral",
-    "interpreted_deep_passion": "",
-    "tracked_surface_emotion": "neutral",
+    "interpreted_deep_emotion": "calm",
+    "interpreted_deep_passion": "settled_alignment",
+    "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.0
   },
   "instability_markers": [],
   "law_bindings": [],
-  "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "novelty_attention",
-      "rationale": "Novelty is high enough that the frame should stay exploratory.",
-      "source": "entropy",
-      "tags": [
-        "novelty",
-        "exploration"
-      ],
-      "urgency": 0.4
-    }
-  ],
+  "micro_reasoning": [],
   "origin_systems": [
     "incoming_input",
     "DimensionalSystems.process_synthesis",
     "DCEAssembly"
   ],
   "prediction_signal": {
-    "alerts": [
-      "novelty_shift"
-    ],
-    "confidence": 0.6006,
+    "alerts": [],
+    "confidence": 0.6356,
     "expected_observation": "followup",
     "expected_user_continuation": "",
     "likely_affect_shift": "neutral",
-    "mismatch": 0.2125,
+    "mismatch": 0.1125,
     "prediction_payload": {
       "affect": "neutral",
       "axis_signature": "",
@@ -57,7 +48,7 @@
     "preload_context": [
       "followup"
     ],
-    "readiness_bias": 0.5739,
+    "readiness_bias": 0.6344,
     "source": "runtime_evidence"
   },
   "pressure_map": {
@@ -67,9 +58,9 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.5613,
+  "readiness": 0.6192,
   "recalled_fragments": [
-    "I just wanted to say hello."
+    "search youtube for lofi hip hop radio"
   ],
   "salience_weights": {
     "A": 0.0,
@@ -78,11 +69,11 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784135093.4494405,
+  "saved_at": 1784161028.5921745,
   "sub_crests": [
     {
       "axis": "X",
-      "intensity": 0.581,
+      "intensity": 0.5,
       "label": "attentional_drift"
     },
     {
@@ -92,23 +83,23 @@
     },
     {
       "axis": "A",
-      "intensity": 0.5,
-      "label": "neutral_affect"
+      "intensity": 0.55,
+      "label": "warmth"
     },
     {
       "axis": "X",
-      "intensity": 0.7875,
+      "intensity": 0.8875,
       "label": "steady_continuation"
     },
     {
-      "axis": "N",
-      "intensity": 1.0,
-      "label": "novelty"
+      "axis": "X",
+      "intensity": 0.5,
+      "label": "alignment"
     },
     {
       "axis": "T",
-      "intensity": 0.7,
-      "label": "new_thread"
+      "intensity": 1.0,
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
@@ -119,26 +110,6 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.7575,
-      "label": "derived"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.7904,
-      "label": "surface"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.8048,
-      "label": "surface"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.8204,
-      "label": "surface"
     }
   ]
 }

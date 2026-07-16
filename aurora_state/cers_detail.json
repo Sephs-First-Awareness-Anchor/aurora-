@@ -10,10 +10,10 @@
     "intervention_label": null,
     "legacy_label": "steady",
     "permitted": true,
-    "response_bias": 0.3,
+    "response_bias": 0.0,
     "semantic_hesitation": false,
     "semantic_hesitation_proposed": false,
-    "semantic_mode": "undetermined",
+    "semantic_mode": null,
     "semantic_salience": 0.0,
     "semantic_salience_proposed": 0.0,
     "unused_potential": [],
@@ -26,38 +26,26 @@
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
     "conflict_rate": 0.0,
-    "frames_evaluated": 500,
-    "rationale": "100.0% agreement across 500 frames with 0.00% conflict rate. All potential trials in this window resolved \u2014 none still open \u2014 so CERS-governed convergence is producing equivalent or better results without losing anything the legacy path was doing.",
+    "frames_evaluated": 301,
+    "rationale": "100.0% agreement across 301 frames with 0.00% conflict rate. All potential trials in this window resolved \u2014 none still open \u2014 so CERS-governed convergence is producing equivalent or better results without losing anything the legacy path was doing.",
     "status": "recommend_merge"
   },
   "governed_by": "cers_regulator.cers_converge",
-  "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "novelty_attention",
-      "rationale": "Novelty is high enough that the frame should stay exploratory.",
-      "source": "entropy",
-      "tags": [
-        "novelty",
-        "exploration"
-      ],
-      "urgency": 0.4
-    }
-  ],
+  "micro_reasoning": [],
   "mtsl_semantic": {
-    "response_bias": 0.3,
+    "response_bias": 0.0,
     "semantic_hesitation": false,
-    "semantic_mode": "undetermined",
+    "semantic_mode": null,
     "semantic_salience": 0.0,
     "variant_confidence": 0.0
   },
-  "prediction_confidence": 0.7144,
-  "prediction_source": "runtime_evidence+manifold",
-  "saved_at": 1784135093.4524105,
+  "prediction_confidence": 0.6356,
+  "prediction_source": "runtime_evidence",
+  "saved_at": 1784161028.5964036,
   "sub_crests": [
     {
       "axis": "X",
-      "intensity": 0.581,
+      "intensity": 0.5,
       "label": "attentional_drift"
     },
     {
@@ -67,23 +55,23 @@
     },
     {
       "axis": "A",
-      "intensity": 0.5,
-      "label": "neutral_affect"
+      "intensity": 0.55,
+      "label": "warmth"
     },
     {
       "axis": "X",
-      "intensity": 0.7875,
+      "intensity": 0.8875,
       "label": "steady_continuation"
     },
     {
-      "axis": "N",
-      "intensity": 1.0,
-      "label": "novelty"
+      "axis": "X",
+      "intensity": 0.5,
+      "label": "alignment"
     },
     {
       "axis": "T",
-      "intensity": 0.7,
-      "label": "new_thread"
+      "intensity": 1.0,
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
@@ -94,32 +82,7 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.7575,
-      "label": "derived"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.7904,
-      "label": "surface"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.8048,
-      "label": "surface"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.8204,
-      "label": "surface"
     }
   ],
-  "tensor_trace": {
-    "coord": "MANIFOLD:X:NC[N:COST]xNC[T:DIFFERENCE]",
-    "distortion": 0.0,
-    "is_new_coordinate": false,
-    "salience": 0.0
-  }
+  "tensor_trace": {}
 }
