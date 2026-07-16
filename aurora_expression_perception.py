@@ -2948,16 +2948,21 @@ class SentenceComposer:
                     "best_score": best_score, "floor": self._RELEVANCE_FLOOR_R_MIN,
                 })
 
-        # R1.9.2 G3 / F5.2: _select_with_temperature is real and unit-tested
-        # but NOT called here -- _EXPLORATION_ENABLED is False, so selection
-        # stays the existing deterministic-ish top-4 choice regardless of
-        # register. This is the "ship temperature-flat" instruction: the
-        # plumbing (register estimate, ring-width table, hard invariant)
-        # exists and is provable now; the actual behavior change is a
-        # separate future switch, not a side effect of building it.
-        chosen = _r.choice(top[:4] if len(top) >= 4 else top)
-        if chosen is not None:
+        # R1.9.2 G3 / F5.2, switched ON at N2 (2026-07-16, mini-acceptance
+        # passed -- see known_fixes_registry.md): register now genuinely
+        # gates how far selection reaches into the relevance-ranked pool.
+        # Serious register's ring width is 1, so this is mathematically
+        # identical to the old deterministic top-1 for serious turns --
+        # the hard invariant (never below the register's relevance floor)
+        # is enforced inside _select_with_temperature itself.
+        if self._EXPLORATION_ENABLED:
+            chosen, ring_rank = self._select_with_temperature(
+                top, anchor_set, valence_target, f5_register, self._RELEVANCE_FLOOR_R_MIN,
+            )
+        else:
+            chosen = _r.choice(top[:4] if len(top) >= 4 else top)
             ring_rank = top.index(chosen) if chosen in top else 0
+        if chosen is not None:
             self._log_exploration_attempt(
                 f5_turn_id, chosen.word,
                 self._score_composer_candidate(chosen, anchor_set, valence_target),

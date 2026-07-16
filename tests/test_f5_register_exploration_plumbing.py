@@ -137,3 +137,44 @@ def test_compose_and_select_constraint_word_accept_f5_kwargs_without_breaking():
     for sig in (motif_sig, select_sig):
         assert sig.parameters["f5_turn_id"].default == ""
         assert sig.parameters["f5_register"].default == "neutral"
+
+
+def test_selection_wiring_uses_deterministic_path_when_disabled():
+    """N2 (2026-07-16): _select_with_temperature is now wired into
+    _select_constraint_word behind the flag, but the flag stays False (see
+    test_exploration_is_shipped_disabled) -- confirm the OLD deterministic-
+    ish top-4 path is still what actually runs, not _select_with_temperature."""
+    c = _make_composer()
+    c._last_required_slot_attempts = 0
+    c._last_floor_failures = []
+    calls = []
+    orig = c._select_with_temperature
+
+    def _spy(*a, **kw):
+        calls.append(a)
+        return orig(*a, **kw)
+
+    c._select_with_temperature = _spy
+    for _ in range(20):
+        c._select_constraint_word("action", "X", ("OPERATOR", "COST"), "verb", 0.0, [], input_text="")
+    assert calls == [], "_select_with_temperature was called even though _EXPLORATION_ENABLED is False"
+
+
+def test_selection_wiring_uses_temperature_path_when_enabled():
+    """The other half of the same check: if a caller DOES enable
+    exploration on an instance, the wiring must actually route through
+    _select_with_temperature (not silently keep using the old path)."""
+    c = _make_composer()
+    c._last_required_slot_attempts = 0
+    c._last_floor_failures = []
+    c._EXPLORATION_ENABLED = True
+    calls = []
+    orig = c._select_with_temperature
+
+    def _spy(*a, **kw):
+        calls.append(a)
+        return orig(*a, **kw)
+
+    c._select_with_temperature = _spy
+    word = c._select_constraint_word("action", "X", ("OPERATOR", "COST"), "verb", 0.0, [], input_text="")
+    assert calls, "_select_with_temperature was never called even though _EXPLORATION_ENABLED was True on the instance"

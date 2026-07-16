@@ -1935,3 +1935,71 @@ acceptance, battery-verified, halt on failure.
 
 **First Seen:** R1 Campaign Closure & Next-Phase Sequencing directive,
 2026-07-16.
+
+---
+
+## N2 — F5 exploration mini-acceptance: FAILED, switch stays OFF
+
+**Status:** `_select_with_temperature` is now wired into
+`_select_constraint_word` (behind `_EXPLORATION_ENABLED`, still `False`)
+so the real code path is exercised rather than a simulation the next
+time this gate is attempted. The switch itself was NOT flipped -- the
+mini-acceptance gate N2 specified found two real defects, not edge
+cases, in F5's original R1.9.2 G3 design. Halting here per this
+campaign's own standing discipline ("halt on failure").
+
+**Check 1 (register sanity >=80% on serious labels): FAILED, 0/10.**
+Ten genuinely serious/weighty test turns (grief, job loss, distress) were
+run live. `_estimate_register`'s premise -- "tone is the composer's own
+pre-existing 'reading the room' signal" -- does not hold: `offspring.
+tone` is drawn from `ExpressionEcology.spawn()`, an EVOLUTIONARY
+population trait biased by learned wisdom per i_state lineage plus a 20%
+random mutation chance, not derived from the CURRENT turn's content at
+all. Multiple candidate offspring (different random tones) get composed
+per turn before one is selected, so even "serious" showing up in a
+register log is closer to noise correlated with lineage history than a
+signal about whether THIS message is about grief. R1.9.2 G3's own unit
+tests never caught this because they called `_estimate_register(tone,
+coherence)` directly with hand-picked strings -- the first real test
+against the live tone-assignment pipeline is what surfaced it.
+
+**Check 4 (correction round-trip): a real bug found.**
+`apply_correction()` returns `True` on a genuine success path, but the
+promised behavior -- `knowledge_source="correction"` so the edge escapes
+the co-occurrence relevance cap -- silently does not apply whenever a
+relation between the two words ALREADY exists. `AuroraOntologicalWeb.
+add_relation()`'s "strengthen existing relation" branch
+(`aurora_internal/aurora_ontological_scaffolding.py` ~line 660) updates
+`strength`/`confidence` but never touches `source_of_knowledge`, so an
+existing co-occurrence-sourced edge stays co-occurrence-sourced forever
+regardless of how many corrections get applied to it. Confirmed live:
+`apply_correction("exist", ["truth"], "confirmation")` returned `True`,
+but zero relations in the entire web carried `source_of_knowledge ==
+"correction"` afterward. This defeats the entire reason `apply_correction`
+exists (R1.9.2 G3's own docstring: "these edges carry their real strength
+in relevance scoring... a genuine correction signal is exactly the kind
+of deliberate structure that rule was written to let through") for any
+word pair that already has a relation -- the common case, not the rare
+one, for words that have co-occurred in prior conversation.
+
+**Check 2 (thaw metric) and Check 3 (zero exploratory picks in serious
+register):** not conclusively evaluated -- register logging per turn
+proved non-deterministic across repeated test runs (sometimes multiple
+candidate-offspring log entries per turn, sometimes zero), consistent
+with Check 1's finding that composition volume/timing isn't simply
+"one compose() call per turn." Not worth resolving before Check 1 is
+fixed, since Check 2/3 both depend on register being a meaningful signal
+in the first place.
+
+**What N2 needs before it can pass:** a register-estimation signal that
+actually reflects the CURRENT turn's content, not the offspring
+population's evolved tone trait -- e.g. deriving register directly from
+the input text (existing salad/relevance machinery already tokenizes and
+scores it) rather than from `offspring.tone`. And a fix to `add_relation`'s
+strengthen-existing branch so `knowledge_source` gets promoted to
+"correction" (never demoted) when a correction event touches an existing
+relation. Neither attempted here -- this entry records the gate's
+findings for whoever picks N2 back up, not a redesign.
+
+**First Seen:** N2 mini-acceptance gate, run 2026-07-16, following the R1
+Campaign Closure directive's next-phase queue.
