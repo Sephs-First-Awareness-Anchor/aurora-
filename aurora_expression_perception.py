@@ -2435,11 +2435,14 @@ class SentenceComposer:
             "descriptor": ("MAGNITUDE", "POLARITY"),
             "connector":  (),
             "agent":      (),
+            # R1.9.4 Step 3b: determiner is a closed structural class like
+            # agent/connector, not a concept-axis-driven slot.
+            "determiner": (),
         }
         _role_lexroles = {
             "action": "verb", "object": "noun",
             "descriptor": "adjective", "connector": "connector",
-            "agent": "pronoun",
+            "agent": "pronoun", "determiner": "determiner",
         }
 
         roles = []
@@ -2740,6 +2743,10 @@ class SentenceComposer:
         "action": frozenset({"verb"}),
         "descriptor": frozenset({"adjective", "adverb"}),
         "connector": frozenset({"connector", "conjunction", "preposition"}),
+        # R1.9.4 Step 3b: determiner is its own category, distinct from
+        # connector -- conflating them would let a preposition fill a
+        # determiner slot or vice versa, which is never grammatical.
+        "determiner": frozenset({"determiner"}),
     }
     # Every POS tag the lexicon/OETS actually use. Anything outside this
     # set (e.g. OETS's "training_gap" placeholder, or a missing role) is
@@ -2881,8 +2888,18 @@ class SentenceComposer:
                     pass
 
         if not candidates:
+            # R1.9.4 Step 3b: last resort now searches every lexicon role
+            # in the slot's full allowed category (e.g. connector also
+            # accepts "preposition"/"conjunction"), not just the single
+            # `lex_role` string -- structural roles like connector/
+            # determiner have empty `chars` and so had ONLY this fallback
+            # as their entire candidate source, meaning the category gate
+            # existed but had nothing but a single-role search feeding it.
             try:
-                found = self.lexicon.find_by_role(lex_role)
+                search_roles = self._ROLE_POS_CATEGORIES.get(role) or {lex_role}
+                found = []
+                for r in search_roles:
+                    found.extend(self.lexicon.find_by_role(r))
                 candidates = [e for e in found
                               if e.word.lower() not in seen and self._pos_ok(e, role)]
             except Exception:

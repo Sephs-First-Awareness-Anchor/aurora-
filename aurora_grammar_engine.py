@@ -59,7 +59,8 @@ class TokenRole(Enum):
     ACTION     = "action"       # verb
     OBJECT     = "object"       # direct object / target
     DESCRIPTOR = "descriptor"   # adjective / adverb
-    CONNECTOR  = "connector"    # conjunction / discourse connector
+    CONNECTOR  = "connector"    # conjunction / preposition / discourse connector
+    DETERMINER = "determiner"   # article / demonstrative / quantifier ("a", "the", "this", "some")
     CONTEXT    = "context"      # epistemic / temporal framing ("I think", "maybe")
     UNKNOWN    = "unknown"      # skip in pattern extraction
 
@@ -128,10 +129,25 @@ class RoleTagger:
         "waits", "changes", "calls", "comes", "goes", "says",
     ])
 
+    # R1.9.4 Step 3b: articles/quantifiers -- their own role now (DETERMINER),
+    # not skipped. Demonstratives (this/that/these/those) stay out of this
+    # set deliberately: they're already resolved to AGENT via
+    # _AGENT_PRONOUNS above, an established behavior this doesn't touch.
+    _DETERMINERS: frozenset = frozenset([
+        "a", "an", "the", "some", "any", "no", "each", "every",
+    ])
+
+    # R1.9.4 Step 3b: true prepositions -- routed to CONNECTOR (the
+    # composer's connector role already accepts "preposition" as a valid
+    # category per L2's _ROLE_POS_CATEGORIES), not skipped. Previously
+    # thrown away here meant no mined/observed motif could ever include a
+    # preposition slot at all.
+    _PREPOSITIONS: frozenset = frozenset([
+        "of", "in", "on", "at", "to", "for", "by", "with", "from",
+    ])
+
     # Possessives are NOT skipped -- "my systems" = the systems are the agent
     _SKIP_TOKENS: frozenset = frozenset([
-        "the", "a", "an",
-        "of", "in", "on", "at", "to", "for", "by", "with", "from",
         "very", "quite", "just", "really", "so",
     ])
 
@@ -221,8 +237,10 @@ class RoleTagger:
 
             if tl in self._CONTEXT_UNIGRAMS:
                 result[i] = (tok, TokenRole.CONTEXT)
-            elif tl in self._CONNECTORS:
+            elif tl in self._CONNECTORS or tl in self._PREPOSITIONS:
                 result[i] = (tok, TokenRole.CONNECTOR)
+            elif tl in self._DETERMINERS:
+                result[i] = (tok, TokenRole.DETERMINER)
             elif tl in self._SKIP_TOKENS:
                 result[i] = (tok, TokenRole.UNKNOWN)
             elif tl in self._POSSESSIVES:
@@ -266,6 +284,12 @@ class RoleTagger:
                 result[i] = (tok, TokenRole.OBJECT)
             elif prev_role is TokenRole.OBJECT:
                 result[i] = (tok, TokenRole.DESCRIPTOR)
+            elif prev_role is TokenRole.DETERMINER:
+                # R1.9.4 Step 3b: a determiner is almost always immediately
+                # followed by its noun -- without this, "the answer" tagged
+                # the words after every determiner as UNKNOWN and dropped
+                # them, making the new DETERMINER role useless for mining.
+                result[i] = (tok, TokenRole.OBJECT)
             else:
                 result[i] = (tok, TokenRole.UNKNOWN)
             prev_role = result[i][1]  # type: ignore[index]
@@ -288,6 +312,7 @@ class RoleTagger:
             "CC":  TokenRole.CONNECTOR, "IN": TokenRole.CONNECTOR,
             "WDT": TokenRole.CONNECTOR, "WP": TokenRole.CONNECTOR,
             "WRB": TokenRole.CONNECTOR,
+            "DT":  TokenRole.DETERMINER,
             "UH":  TokenRole.CONTEXT,
         }
         tokens = self._tokenize(text)
@@ -433,11 +458,22 @@ class StructuralMotif:
 #     (AGENT, ACTION, OBJECT, AGENT, ACTION, OBJECT)
 #         -- two complete clauses concatenated with no connector is a
 #            run-on, not one valid clause
+#
+# R1.9.4 Step 3b addition: DETERMINER immediately before its OBJECT is a
+# valid, common clause extension ("I need the answer.", "I find the
+# answer clear.") -- added once the composer/tagger could actually
+# produce and recognize a determiner slot (previously "a"/"the" were
+# thrown away during mining entirely, so no such motif could exist to
+# review). Per the directive's own instruction, this widens ELIGIBILITY
+# only; nothing here forces these shapes to be mined, promoted, or used --
+# that still runs entirely through the normal should_promote() path.
 _VALID_CLAUSE_SHAPES = frozenset({
     (TokenRole.AGENT, TokenRole.ACTION),
     (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT),
     (TokenRole.AGENT, TokenRole.ACTION, TokenRole.DESCRIPTOR),
     (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT, TokenRole.DESCRIPTOR),
+    (TokenRole.AGENT, TokenRole.ACTION, TokenRole.DETERMINER, TokenRole.OBJECT),
+    (TokenRole.AGENT, TokenRole.ACTION, TokenRole.DETERMINER, TokenRole.OBJECT, TokenRole.DESCRIPTOR),
 })
 
 
