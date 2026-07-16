@@ -107,6 +107,33 @@ def _make_process_turn_fn_factory(systems: Dict[str, Any]):
     return factory
 
 
+def _make_relevance_scorer(systems: Dict[str, Any]):
+    """R1.9.2 G4 gate 3, made permanent: fraction of a response's content
+    words within one hop of the turn's anchor set, using the SAME shared
+    build_relevance_anchor_set() G1/G2 use for selection -- this is the
+    live delivered-path graph, not a stored/re-scored snapshot. Returns
+    None (not 0.0) on any failure so a scoring exception is distinguishable
+    from a genuinely zero-relevance response."""
+    perception = systems.get("perception")
+    oets = getattr(perception, "oets", None)
+    web = getattr(oets, "web", None) if oets is not None else None
+
+    def scorer(input_text: str, response_text: str):
+        try:
+            import re as _re
+            from aurora_constraint_emission import build_relevance_anchor_set
+            anchor = build_relevance_anchor_set(input_text, [], web)
+            words = _re.findall(r"[a-zA-Z][a-zA-Z']{2,}", str(response_text or "").lower())
+            if not words:
+                return None
+            hits = sum(1 for w in words if w in anchor)
+            return hits / len(words)
+        except Exception:
+            return None
+
+    return scorer
+
+
 def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
     if not run_id:
         run_id = f"run_{int(time.time())}"
@@ -144,7 +171,10 @@ def run_probe_battery(run_id: str = "", verbose: bool = True) -> Dict[str, Any]:
                 "timestamp": time.time(),
             }
 
-        report = run_battery(_make_process_turn_fn_factory(systems), run_id=run_id, probes_path=PROBES_PATH)
+        report = run_battery(
+            _make_process_turn_fn_factory(systems), run_id=run_id, probes_path=PROBES_PATH,
+            relevance_scorer=_make_relevance_scorer(systems),
+        )
 
         try:
             post_snapshot = record_developmental_snapshot(systems, force=True)
@@ -410,6 +440,8 @@ def main() -> int:
         print(f"[SUMMARY] overall_pass_rate={result.get('overall_pass_rate')}")
         for dim, summ in (result.get("per_dimension") or {}).items():
             print(f"  {dim}: {summ}")
+        if result.get("relevance") is not None:
+            print(f"[SUMMARY] relevance: {result.get('relevance')}")
     return 0
 
 

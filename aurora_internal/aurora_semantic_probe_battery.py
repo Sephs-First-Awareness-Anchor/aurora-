@@ -294,6 +294,14 @@ class ProbeResult:
     dimension_scores: Dict[str, float] = field(default_factory=dict)
     property_results: Dict[str, bool] = field(default_factory=dict)
     passed: bool = False
+    # R1.9.2 G4 gate 3: fraction of the final response's content words that
+    # are within one hop of the probe's own anchor set (same
+    # aurora_constraint_emission.build_relevance_anchor_set logic G1/G2 use
+    # for selection). None when no relevance_scorer was supplied to
+    # run_probe()/run_battery() -- this is optional so the module stays
+    # decoupled from boot_aurora()'s systems dict; the caller injects a
+    # scorer closure that has real OETS access.
+    relevance_fraction: Optional[float] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -305,6 +313,7 @@ class ProbeResult:
             "dimension_scores": self.dimension_scores,
             "property_results": self.property_results,
             "passed": self.passed,
+            "relevance_fraction": self.relevance_fraction,
         }
 
 
@@ -312,6 +321,7 @@ def run_probe(
     probe: Probe,
     process_turn_fn,
     rubric_engine: ConversationRubricEngine,
+    relevance_scorer: Optional[Any] = None,
 ) -> ProbeResult:
     """Drive one probe's turns through `process_turn_fn` (expected to be a
     closure over process_external_user_turn(systems, text, session_id=...)
@@ -367,6 +377,14 @@ def run_probe(
     property_results = check_expected_properties(probe, last_response_text, dimension_scores)
     passed = bool(property_results) and all(property_results.values())
 
+    relevance_fraction: Optional[float] = None
+    if relevance_scorer is not None:
+        last_user_turn = probe.turns[-1] if probe.turns else ""
+        try:
+            relevance_fraction = relevance_scorer(last_user_turn, last_response_text)
+        except Exception:
+            relevance_fraction = None
+
     return ProbeResult(
         probe_id=probe.probe_id,
         dimension=probe.dimension,
@@ -375,6 +393,7 @@ def run_probe(
         dimension_scores=dimension_scores,
         property_results=property_results,
         passed=passed,
+        relevance_fraction=relevance_fraction,
     )
 
 
@@ -463,6 +482,25 @@ class BatteryReport:
             return 0.0
         return sum(1 for r in self.probe_results if r.passed) / len(self.probe_results)
 
+    def relevance_summary(self) -> Dict[str, Any]:
+        """R1.9.2 G4 gate 3, made permanent: mean relevance_fraction across
+        every probe that was actually scored for it (relevance_scorer was
+        supplied to run_battery() and the probe wasn't blocked). None when
+        no scorer was supplied at all -- this metric is opt-in, unlike
+        per_dimension/stratified_wellformedness which always run."""
+        scored = [r for r in self.probe_results if r.relevance_fraction is not None]
+        if not scored:
+            return {"scored_count": 0, "mean_relevance_fraction": None,
+                     "nonzero_count": 0, "nonzero_rate": None}
+        total = sum(r.relevance_fraction for r in scored)
+        nonzero = sum(1 for r in scored if r.relevance_fraction > 0)
+        return {
+            "scored_count": len(scored),
+            "mean_relevance_fraction": total / len(scored),
+            "nonzero_count": nonzero,
+            "nonzero_rate": nonzero / len(scored),
+        }
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "run_id": self.run_id,
@@ -473,6 +511,8 @@ class BatteryReport:
             # per_dimension -- a blended/global number is exactly what let
             # the R1.6 collapse hide inside a "healthy" 0.75 mean.
             "stratified_wellformedness": self.stratified_wellformedness_summary(),
+            # R1.9.2 G4 gate 3, made permanent.
+            "relevance": self.relevance_summary(),
             "probe_results": [r.to_dict() for r in self.probe_results],
         }
 
@@ -481,16 +521,24 @@ def run_battery(
     process_turn_fn_factory,
     run_id: str,
     probes_path: str = PROBES_PATH,
+    relevance_scorer: Optional[Any] = None,
 ) -> BatteryReport:
     """`process_turn_fn_factory(probe: Probe) -> callable(turn_text) -> dict`
     lets the caller bind a fresh, probe-unique session_id per probe while
-    this module stays decoupled from boot_aurora()'s systems dict."""
+    this module stays decoupled from boot_aurora()'s systems dict.
+
+    relevance_scorer (R1.9.2 G4 gate 3), if supplied, is
+    Callable[[str, str], Optional[float]] taking (last_user_turn_text,
+    last_response_text) and returning the fraction of the response's
+    content words within one hop of the turn's anchor set -- injected by
+    the caller (run_probe_battery.py) since it has the live OETS graph this
+    module deliberately doesn't hold a reference to."""
     probes = load_probes(probes_path)
     rubric_engine = ConversationRubricEngine()
     results: List[ProbeResult] = []
     for probe in probes:
         process_turn_fn = process_turn_fn_factory(probe)
-        results.append(run_probe(probe, process_turn_fn, rubric_engine))
+        results.append(run_probe(probe, process_turn_fn, rubric_engine, relevance_scorer=relevance_scorer))
     return BatteryReport(run_id=run_id, timestamp=time.time(), probe_results=results)
 
 
