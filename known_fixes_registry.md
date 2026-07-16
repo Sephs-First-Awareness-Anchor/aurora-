@@ -2297,5 +2297,26 @@ architected, and now correctly reflected in both the quarantine manifest
 and its regression coverage. No integration decision is pending for this
 item — unlike N5 item 1, there is nothing here for Sunni to decide.
 
+**Side discovery (not a new bug — a rediscovery, not in scope to fix
+here):** with the TCL wiring test finally fixed, a full `pytest` run
+(784 tests, one process) now surfaces
+`tests/test_toroidal_circulation_layer.py::test_seed_from_surface_log_against_real_repo_data`
+failing (`'mixed' != 'circulating'`) — order-dependent, not deterministic
+on the file's own content. Isolated runs of that file, and runs
+immediately after a `git checkout -- aurora_state/`, pass cleanly every
+time; the failure only appears when an earlier test in the same
+full-suite process does a live `boot_aurora()` turn first. This is the
+exact "New finding: state-dir isolation gap" already on record above
+(R1.9.2) — `surface_pressure_log.jsonl`'s write path still doesn't
+respect `state_dir` — just newly confirmed to reach this specific test,
+previously masked because the TCL wiring test's permanent failure was
+the only thing anyone checked the "1 known failure" baseline against.
+Not fixed here (out of N5 item 2's scope, and the isolation-gap audit is
+already tracked as its own future item) — flagging so "suite green"
+claims stay honest: a full single-process run needs the established
+`git checkout -- aurora_state/` discipline applied mid-run (before this
+specific test) to read as truly clean, same as it always has for the
+other affected files.
+
 **First Seen:** N5 item 2, R1 Campaign Closure directive's next-phase
 queue, 2026-07-16.
