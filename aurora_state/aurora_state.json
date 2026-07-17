@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784298931.603383,
-  "generation": 8538,
-  "genome_version": 8538,
+  "timestamp": 1784304190.2188954,
+  "generation": 8573,
+  "genome_version": 8573,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.4702,
+    "caution": 0.41,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.39,
-    "introspection": 0.468,
-    "pattern_sensitivity": 0.5076,
-    "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "verbosity": 0.4117,
+    "introspection": 0.4969,
+    "pattern_sensitivity": 0.5467,
+    "social_engagement": 0.414,
+    "energy_conservation": 0.3131
   },
-  "personality_drift": 0.6955,
+  "personality_drift": 0.7191,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5892064922686145,
-      "precision": 0.6669654355433146,
-      "depth": 0.6328083328222553,
-      "confidence": 0.45239999999999997
+      "warmth": 0.598512156586757,
+      "precision": 0.644141483746364,
+      "depth": 0.5304000000000001,
+      "confidence": 0.6101416607473449
     },
     "cognitive": {
-      "curiosity": 0.8339968760092216,
-      "pattern_matching": 0.9844972773467401,
-      "abstraction": 0.9255153902706446,
-      "risk_assessment": 0.7462319578857509
+      "curiosity": 0.7550410828852803,
+      "pattern_matching": 0.8026176663921731,
+      "abstraction": 0.8025392114621972,
+      "risk_assessment": 0.9260649539170372
     },
     "social": {
-      "empathy": 1.0,
-      "trust_extension": 0.7576073300748074,
-      "boundary_maintenance": 0.5831594780401577,
-      "engagement": 0.9595336597473937
+      "empathy": 0.765599190896369,
+      "trust_extension": 0.7978440070732908,
+      "boundary_maintenance": 0.5475820205364305,
+      "engagement": 1.0
     }
   },
   "governance_stats": {
@@ -115,9 +115,9 @@
   "total_episodes": 5,
   "understanding_shards": 15,
   "what_aurora_learned": [
-    "its creates friction when approached with warm acknowledgment \u2014 it connects to shape, feel (B-axis, depth 0.24)."
+    "we creates friction when approached with curious inquiry (B-axis \u2014 'we' still shallow in my web)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "7b7da0849ef9"
+  "_checksum": "8f4d1f6102b2"
 }
