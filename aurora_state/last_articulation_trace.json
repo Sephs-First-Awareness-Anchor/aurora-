@@ -1,37 +1,14 @@
 {
-  "original": "I do am is. I did want exist.",
-  "candidate": "",
-  "selected": "I do am is. I did want exist.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.62,
-  "candidate_score": 0.0,
-  "original_pressure": 0.316,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.684,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "What would likely cause that relation to change?",
-    "input_interpretation": {
-      "raw_prompt": "What would likely cause that relation to change?",
-      "intent_hint": "question",
-      "topic_terms": [
-        "likely",
-        "cause",
-        "relation",
-        "change"
-      ],
-      "entities": []
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1784264568.8351579,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "I changing tasks play. I conflicting alliance stemming.",
+  "candidate": "I changing tasks play. I conflicting alliance stemming.",
+  "selected": "I changing tasks play. I conflicting alliance stemming.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.292,
+  "candidate_pressure": 0.292,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }
