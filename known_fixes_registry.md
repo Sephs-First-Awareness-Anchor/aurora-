@@ -3195,3 +3195,72 @@ tests).
 
 **Not yet done (next in this directive):** D2.3 (diagnostic-leak
 rider), D2.4 (acceptance battery + abstain-rate telemetry + HALT).
+
+## Directive D2.3 — Rider 2: structural delivery-boundary sanitization (2026-07-17)
+
+**Registry linkage the directive asked for, honestly reported:**
+searched `known_fixes_registry.md` and `git log` (all branches,
+2026-01-01 through 2026-03-15, `-i --grep` for "leak", "diagnostic",
+"internal state", "mechanism", "axis dump") for the "Feb-era
+internals-leak class" the directive names -- found no matching entry or
+commit. Rather than fabricate a citation, this entry stands as the
+first traceable registry record of the class itself: mechanism detail
+(internal telemetry/state readouts) crossing the expression boundary
+and reaching the user verbatim.
+
+**Fix:** `flutter_app/android/app/src/main/python/aurora_bridge.py`'s
+`_sanitize_response()` gained a new check 0, running BEFORE all 13
+existing pattern-specific checks (fail-closed -- reject the whole
+candidate, never partially clean telemetry-shaped content and let the
+remainder through). Structural, not string-specific, per the directive:
+`_looks_like_internal_telemetry(text)` fires on either signal (a) two or
+more `word=numeric_value` pairs in one response (the shape of a
+telemetry/axis dump, not a sentence a person would say), or (b) an
+explicit internal-state section label (`"Active axes:"`, `"Field
+state:"`). Either signal alone is sufficient. A single incidental
+`=` (e.g. "confidence=0.8 today") does NOT trigger rejection --
+the rule requires the shape of a dump, not any equals sign.
+
+On a match: the whole response is discarded, replaced with the same
+canonical honest-abstain string ConstraintEmitter's crash net already
+uses (`"I don't have a clear sense of that."`), and the rejection is
+logged to `aurora_state/delivery_boundary_rejection_log.jsonl`
+(`{reason, raw_text, timestamp}`) -- mirroring aurora.py's own
+`_log_constraint_fallback`/`constraint_fallback_log.jsonl` pattern on
+this file's side of the boundary, per the silent-fallback rule (no catch
+here is ever silent).
+
+**Pinned live regression:** the exact string D1's live trace captured
+verbatim as a delivered device response --
+`"Active axes: existence=0.30, time/belief=0.28, cost/purpose=0.15.
+Field state: heat=0.004, dominant-emotion=calm. Energy/cost moved down
+since the last exchange."` -- is now caught by BOTH signals (4
+key=value pairs AND both section labels) and rejected before delivery.
+
+**New tests** (`tests/test_d2_3_delivery_boundary_telemetry_rejection.py`,
+7 tests): the pinned live leak is detected; a DIFFERENT, never-seen
+key=value dump is also caught (proving the rule is structural, not a
+memorized string); ordinary conversational sentences are never
+false-positived; a single incidental `=` doesn't trigger rejection;
+`_sanitize_response` returns the honest-abstain text and never leaks
+`"active axes"` or a bare `=` for the pinned case; the rejection is
+logged (not silent) with the reason and raw text on disk; and an
+ordinary grounded reply with no telemetry shape passes through
+unchanged (regression guard against over-suppression).
+
+**Full suite: 818 passed, 1 failed, 0 caused by this change.** The one
+failure, `tests/test_concept_image_ingestion_import.py::test_ingest_
+concept_image_succeeds_against_real_fixture` (`cv2` has no attribute
+`imdecode`), is a pre-existing test-order-dependent flake, confirmed
+unrelated: reproduced identically across two consecutive full-suite
+runs (same single failure both times), but passes cleanly every time
+when run in isolation (`pytest tests/test_concept_image_ingestion_
+import.py`, 3/3 pass). Touches camera/cv2 image-ingestion code, nowhere
+near `aurora_bridge.py`, `aurora.py`, or `aurora_dream_trainer.py`.
+Flagged honestly here per the campaign's "halt on failure, report
+honestly, never fudge" doctrine -- not fixed (out of D2.3's scope, a
+separate test-isolation gap in the suite's cv2 mocking/global state
+across files, not this directive's concern), not hidden.
+
+**Not yet done (next in this directive):** D2.4 (acceptance battery +
+abstain-rate telemetry + full CI + HALT).

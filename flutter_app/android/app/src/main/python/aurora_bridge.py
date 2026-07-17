@@ -2271,11 +2271,74 @@ _WANT_THE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Directive D2.3 (Rider 2, 2026-07-17): structural internal-telemetry
+# detection. Earlier checks in this function are pattern-matches against
+# SPECIFIC known leak shapes; this is a shape-based rule instead, so a
+# leak class doesn't need its own new regex every time a new internal
+# format finds a way to the surface (the class this belongs to:
+# mechanism detail crossing the expression boundary -- an internal
+# state readout is not speech, regardless of its exact wording). Two
+# independent signals, either one is sufficient:
+#   (a) two or more "word=numeric_value" pairs in one response -- the
+#       shape of a telemetry/axis dump, not a sentence a person would say.
+#   (b) an explicit internal-state section label ("Active axes:",
+#       "Field state:").
+# The live pinned case: "Active axes: existence=0.30, time/belief=0.28,
+# cost/purpose=0.15. Field state: heat=0.004, dominant-emotion=calm.
+# Energy/cost moved down since the last exchange." -- delivered verbatim
+# as a device response on a live turn (D1's trace), because no existing
+# check in this function is shape-based; all of them match specific
+# known phrasings.
+_TELEMETRY_KV_RE = re.compile(r'\b[a-z][a-z_/-]{1,24}\s*=\s*-?\d+(?:\.\d+)?%?')
+_TELEMETRY_SECTION_LABEL_RE = re.compile(
+    r'\b(?:active axes|field state)\s*:', re.IGNORECASE,
+)
+_TELEMETRY_REJECTION_ABSTAIN_TEXT = "I don't have a clear sense of that."
+
+
+def _looks_like_internal_telemetry(text: str) -> str:
+    """Returns a short machine-readable reason string when `text` matches
+    internal-telemetry shape; empty string when it looks like ordinary
+    speech. Structural, not string-specific -- see module comment above
+    _TELEMETRY_KV_RE for the rule and its rationale."""
+    if not text:
+        return ""
+    kv_matches = _TELEMETRY_KV_RE.findall(text)
+    if len(kv_matches) >= 2:
+        return f"key_value_run:{len(kv_matches)}_pairs"
+    if _TELEMETRY_SECTION_LABEL_RE.search(text):
+        return "internal_state_section_label"
+    return ""
+
+
+def _log_delivery_boundary_rejection(reason: str, raw_text: str) -> None:
+    """Fail-closed rejections at the delivery boundary must never be a
+    silent fallback (silent-fallback rule, this campaign's governing
+    doctrine) -- every catch is logged with its reason, mirroring
+    aurora.py's _log_constraint_fallback / constraint_fallback_log.jsonl
+    pattern on this file's own side of the boundary."""
+    try:
+        import json as _json
+        import time as _dbr_time
+        state_dir = str((_systems or {}).get("state_dir") or os.getcwd() or "aurora_state")
+        log_path = os.path.join(state_dir, "delivery_boundary_rejection_log.jsonl")
+        entry = {
+            "reason": reason,
+            "raw_text": str(raw_text or "")[:500],
+            "timestamp": _dbr_time.strftime("%Y-%m-%dT%H:%M:%SZ", _dbr_time.gmtime()),
+        }
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
 
 def _sanitize_response(response: str, user_text: str) -> str:
     """
     Strip pipeline leaks from Aurora's generated response.
 
+    0.  Structural internal-telemetry rejection (Directive D2.3) --
+        fail-closed: reject and route to honest-abstain, logged.
     1.  De-duplicate repeated phrase prefixes.
     2.  If user asked "can you hear me" and response claims audio offline, correct it.
     3.  Remove stray offline-feed sentences.
@@ -2292,6 +2355,16 @@ def _sanitize_response(response: str, user_text: str) -> str:
     """
     if not response:
         return response
+
+    # 0. Structural internal-telemetry rejection (Directive D2.3, 2026-07-17).
+    # Runs BEFORE any other processing -- this is the delivery boundary
+    # itself, fail-closed: never partially clean telemetry-shaped content
+    # and let the remainder through, reject the whole turn and say so
+    # honestly instead.
+    _telemetry_reason = _looks_like_internal_telemetry(response)
+    if _telemetry_reason:
+        _log_delivery_boundary_rejection(_telemetry_reason, response)
+        return _TELEMETRY_REJECTION_ABSTAIN_TEXT
 
     # 1. De-duplicate prefix repetition
     response = _DEDUP_PREFIX_RE.sub(r'\1', response).strip()
