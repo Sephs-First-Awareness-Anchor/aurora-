@@ -1,11 +1,13 @@
 {
   "contradiction_handling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
-    "fail_point:train_epoch_2:episode_c6388e715bc2"
+    "fail_point:train_epoch_2:episode_c6388e715bc2",
+    "corpus:contradiction_handling:0"
   ],
   "uncertainty_signaling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
-    "corpus:uncertainty_signaling:0"
+    "corpus:uncertainty_signaling:0",
+    "fail_point:train_epoch_2:episode_c6388e715bc2"
   ],
   "context_carryover": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -17,10 +19,12 @@
     "fail_point:train_epoch_3:episode_cfa449acb78c",
     "fail_point:train_epoch_1:episode_56922eea6a4a",
     "fail_point:train_epoch_1:episode_fd0a312e6c50",
-    "fail_point:train_epoch_8:episode_3a346b0dbebf"
+    "fail_point:train_epoch_8:episode_3a346b0dbebf",
+    "fail_point:train_epoch_8:episode_8d8b68844b49"
   ],
   "boundary_calibration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
-    "corpus:boundary_calibration:0"
+    "corpus:boundary_calibration:0",
+    "corpus:boundary_calibration:1"
   ]
 }
