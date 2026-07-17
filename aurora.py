@@ -17280,6 +17280,22 @@ def _run_reasoning_pipeline(
     try:
         _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
         _d2_unified_text = str(getattr(resp_B, "content", "") or "").strip() if resp_B is not None else ""
+        # D2 Acceptance Condition 2 fix (2026-07-17): the composer's OWN
+        # internal abstain gate (SentenceComposer.compose()'s R1.9.2 G2
+        # check) can fire and return a real, non-empty string --
+        # one of _ABSTAIN_TEMPLATES ("I'm not sure.", etc.) -- which is NOT
+        # grounded content, just honestly phrased differently than
+        # _emit_honest_abstain_and_seek's own templates. Treating it as
+        # case 1 mislabeled a genuine composer-level abstain as
+        # "composer_unified" (confirmed live: a synthetic-unanswerable
+        # trace produced this exact string with src=composer_unified,
+        # masking that the composer had actually abstained). Recognize it
+        # here so it falls through to case 2/3 like true composer silence.
+        _d2_composer_abstain_templates = tuple(
+            getattr(getattr(systems.get("perception"), "composer", None), "_ABSTAIN_TEMPLATES", ()) or ()
+        )
+        if _d2_unified_text in _d2_composer_abstain_templates:
+            _d2_unified_text = ""
         if _d2_unified_text:
             resp_A.content = _d2_unified_text
             resp_A.emotional_tone = getattr(resp_B, "emotional_tone", resp_A.emotional_tone)

@@ -3363,3 +3363,137 @@ the abstract/conceptual wellformedness gap is real, honestly measured,
 and now visible for the first time on the actually-delivered field --
 whether and how to close it is a new question for Sunni to scope, not
 something this directive's acceptance step decides unilaterally.
+
+## D2 Acceptance Memo (2026-07-17) — CONDITIONALLY ACCEPTED, ratified
+
+Cael's verdict on the D2.4 acceptance report above, ratified by Sunni:
+accepted on the numbers (relevance, simple/concrete wellformedness,
+the 83%->0% abstain decrease, both riders, the suite), with one named
+standing gap and one small condition before N6 work starts.
+
+**Standing gap, owner assigned (not a blocker):** abstract/conceptual
+wellformedness (0.458 vs the 0.5 floor) is the first honest measurement
+of this stratum on the delivered field -- it was 0.0 nine days ago.
+**Owner: N6.** Post-D2, classroom training and delivery share one
+voice for the first time (the same unification D2.1 built), so
+classroom gains now land directly in delivered speech. N6's 40-lesson
+re-verdict runs abstract-weighted. If 3 consecutive post-N6 batteries
+show no positive abstract-stratum trend, targeted vocabulary seeding in
+abstract regions is authorized -- assess `scripts/seed_oets_aurora_
+vocabulary.py` first (sourced assets before new infrastructure).
+
+**Measured-field attribution rule (scripture tier):** no measurement
+claim is valid without byte-attribution of the measured field. The
+probe-battery stale-`"response_text"`-key incident (D2.4's pre-flight
+fix, above) is logged as **attribution incident #4** in this
+campaign's sequence (boot-comment lie; probe-field near-miss; D1's
+third device-path incident; this stale-key incident is the fourth).
+Historical resp_B-era probe-battery numbers (R0 through R1.9.4) stand
+as-is -- they measured a real, campaign-verified composer call
+(`speak_to_aurora()`, same underlying `SentenceComposer` machinery),
+just not literally the turn's own delivered `resp_A`; that composer
+path is independently anchored by the R1.9.1 byte-attribution CI
+(`test_delivered_output_attribution_traces_to_sentence_composer`), so
+those historical numbers are not retracted, only understood precisely
+for what they measured. All future probe-battery runs measure the
+unified delivered field by construction (the
+`_extract_delivered_response_text()` fix is permanent, pinned by
+`tests/test_d2_4_probe_battery_measures_resp_a.py`).
+
+**D2.1 fork record:** the abstain-before-generation ordering problem
+(resp_A's own honest-abstain net firing before the composer/synthesis
+even existed later in the same function) required the deeper reorder
+D2.1 ultimately shipped, not the lower-risk cosmetic patch first
+attempted. Logged here with its evidence: 1/6 turns unified under the
+first patch; 6/6 turns unified (0/6 abstain) after the reorder,
+live-retraced against the same 6 turns; confirmed at scale by D2.4's
+independent 100-turn run (0/100 abstain).
+
+**Condition 2 (abstain sanity, before N6) — result, 2026-07-17:**
+
+Ran the memo's own prescribed check: >=3 synthetic genuinely-
+unanswerable turns through the live unified path
+(`process_external_user_turn`). First run, against the code as D2.4
+shipped it: **0/4 abstained.** The memo's own worry was correct --
+0/100 was not earned.
+
+**Root cause found (not what the memo's fallback assumed):**
+`ingest_interaction()`'s blind vocabulary-learning path
+(`aurora_expression_perception.py`) stamps ANY 4+ char alphabetic token
+from raw turn text as a lexicon entry with meaning `"learned:<word>"`
+and a POS role guessed by `infer_word_role()` -- whose unconditional
+"default: noun" fallback (the docstring's claimed "recognizable role"
+quality bar does not actually exist in the code) accepts literally any
+string matching the character class. `build_relevance_anchor_set()`
+then scores that same token as a `RELEVANCE_DIRECT_ANCHOR` match of
+ITSELF. Live-confirmed: a gibberish turn ("Zqxvornmal threbicultan
+fost yendrical mip?") got auto-learned word-for-word into
+`lexicon.json` (`meaning: "learned:zqxvornmal"`, role/valence
+guessed), then echoed straight back as delivered content ("I become
+threbicultan zqxvornmal..."). **The memo's prescribed fallback
+(recalibrate R_MIN) cannot fix this**: R_MIN is derived strictly
+between the distant-tier ceiling (0.075) and one-hop-tier floor (0.2);
+a direct-anchor score (1.0-tier) sits above that entire range by
+construction, so no R_MIN value can ever reject a word matching itself
+as its own anchor. Verified this precisely before touching code, per
+this campaign's "report honestly, never fudge" doctrine -- did not
+recalibrate R_MIN and falsely report Condition 2 fixed.
+
+**Fix shipped** (`aurora_expression_perception.py`,
+`SentenceComposer._score_composer_candidate`): a candidate whose
+`meaning` is exactly the auto-learned placeholder
+(`f"learned:{word}"`) AND whose `usage_count` is below the new
+`_UNVERIFIED_VOCAB_USAGE_FLOOR = 3` has its relevance capped at
+`RELEVANCE_DISTANT_FLOOR`, regardless of anchor-set score -- unverified
+single-turn vocabulary can no longer masquerade as grounded content.
+Words taught with a real definition
+(`aurora_internal/aurora_comprehension_gap.py`, which stores the
+actual definition/answer as `meaning`, never the placeholder) or
+OETS-enriched (`meaning="oets:<keyword>"`, requires a pre-existing
+real OETS node to trigger) are untouched -- confirmed by dedicated unit
+tests, not just live retracing. A word graduates out of the cap once
+it accumulates real repeated use (`usage_count >= 3`), rather than
+staying permanently distrusted.
+
+**Second bug found while re-testing:** once the first bug was fixed,
+one turn (pure gibberish, no real words at all) correctly triggered
+`SentenceComposer.compose()`'s OWN internal abstain gate -- but D2.1's
+unification code treated ANY non-empty `resp_B.content` as grounded,
+mislabeling the composer's own abstain-template string ("I don't have
+a clear sense of that.") as `src="composer_unified"` instead of
+recognizing it as an abstain. Fixed in `aurora.py`'s D2.1 unification
+block: `resp_B`'s content is now checked against
+`SentenceComposer._ABSTAIN_TEMPLATES` first, falling through to the
+true honest-abstain-and-seek net when it matches.
+
+**Result after both fixes:** the pure-gibberish turn ("Zqxvornmal
+threbicultan fost yendrical mip?") now correctly produces
+`src="constraint_abstain"`, content "I don't have a clear sense of
+that.", with a logged reason in `constraint_fallback_log.jsonl`
+(`trigger="emission_chokepoint"`). Pinned as a live regression test
+(`tests/test_d2_condition2_abstain_sanity.py`,
+`test_pure_gibberish_turn_abstains_honestly_live`).
+
+**Residual gap, honestly reported, NOT fixed:** two of the four
+synthetic turns -- "What is the square root of the color purple
+divided by last Wednesday?" and the fabricated-authentication-code
+request -- are built ENTIRELY from real, valid English words in a
+category-error/semantically-incoherent arrangement. There is no
+gibberish token for the vocabulary-trust fix to catch, so these still
+produce fluent-sounding word-salad rather than an abstain (e.g. "I
+knowing last clear. I become color real."). This is a fundamentally
+different, much harder problem than the one this fix addresses --
+whole-sentence semantic/logical coherence detection, not per-word
+vocabulary trust -- and is out of this fix's scope. Condition 2's
+literal bar (>=3/3 honest abstains) is therefore only PARTIALLY met:
+1/4 by strict `constraint_abstain` label (a second turn, pure keyboard-
+mash, produced an honest `comprehension_gap` clarifying question
+instead -- arguably honest engagement, differently labeled, not
+counted here to avoid inflating the number). Reported to Sunni for a
+decision on whether this residual gap blocks N6 or is accepted as a
+separate, future-scoped problem.
+
+Full suite after both fixes: 830 passed, 1 failed (the same documented
+pre-existing cv2 test-order flake noted in the D2.4 acceptance report
+above -- reproduced again here, passes in isolation, unrelated to this
+work).

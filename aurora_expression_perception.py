@@ -2524,6 +2524,20 @@ class SentenceComposer:
     # topically-grounded word to offer for that slot.
     _RELEVANCE_FLOOR_R_MIN = 0.1
 
+    # D2 Acceptance Condition 2 fix (2026-07-17): a word auto-learned by
+    # ingest_interaction()'s blind POS-guess path (meaning stamped literally
+    # "learned:<word>", never independently defined) can become its OWN
+    # direct anchor the very turn it's first heard -- a live root cause,
+    # confirmed via a 4-turn synthetic-unanswerable trace, of gibberish
+    # input scoring as trivially "relevant" to itself and defeating the
+    # honest-abstain gate. usage_count below this floor means the word has
+    # not yet earned trust through real repeated use (see
+    # _score_composer_candidate). Words taught through aurora_comprehension_
+    # gap.py (real definition/answer stored as meaning) or OETS-enriched
+    # (meaning="oets:<keyword>", requires a pre-existing real OETS node to
+    # trigger) are untouched by this cap.
+    _UNVERIFIED_VOCAB_USAGE_FLOOR = 3
+
     _ABSTAIN_TEMPLATES = (
         "I'm not sure.",
         "I don't have a clear sense of that.",
@@ -2816,6 +2830,9 @@ class SentenceComposer:
     def _score_composer_candidate(self, entry, anchor_set: Dict[str, float],
                                   valence_target: float) -> float:
         relevance = anchor_set.get(entry.word.lower(), aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR)
+        if (str(getattr(entry, "meaning", "") or "") == f"learned:{entry.word}"
+                and int(getattr(entry, "usage_count", 0) or 0) < self._UNVERIFIED_VOCAB_USAGE_FLOOR):
+            relevance = min(relevance, aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR)
         valence_distance = min(1.0, abs(entry.emotional_valence - valence_target))
         return relevance * (1.0 + self._VALENCE_TIEBREAK_WEIGHT * (1.0 - valence_distance))
 

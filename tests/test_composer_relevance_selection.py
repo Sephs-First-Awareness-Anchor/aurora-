@@ -9,7 +9,7 @@ style; F5: register -> looseness; now: valence-proximity -> tone).
 """
 import math
 
-from aurora_expression_perception import ExpressionPerceptionEngine, SentenceComposer
+from aurora_expression_perception import ExpressionPerceptionEngine, SentenceComposer, LexicalEntry
 
 
 def test_valence_tiebreak_bound_never_outweighs_one_hop_relevance():
@@ -108,6 +108,88 @@ def test_abstain_does_not_fire_on_partial_floor_failure():
         and len(composer._last_floor_failures) == composer._last_required_slot_attempts
     )
     assert not all_failed
+
+
+def test_unverified_vocab_capped_even_as_perfect_direct_anchor():
+    """D2 Acceptance Condition 2 fix (2026-07-17): a word auto-learned by
+    ingest_interaction()'s blind POS-guess path (meaning stamped literally
+    "learned:<word>") must not claim RELEVANCE_DIRECT_ANCHOR-tier score
+    just because it matches itself in the anchor set -- this is exactly
+    the live bug that let gibberish input (e.g. "zqxvornmal") get echoed
+    back as "content": the word IS its own anchor, scoring at the direct
+    tier, defeating the honest-abstain floor regardless of where R_MIN
+    sits (a recalibrated R_MIN can never reject a direct-anchor score,
+    confirmed live before this fix was found)."""
+    import aurora_constraint_emission as ace
+
+    composer = SentenceComposer.__new__(SentenceComposer)
+    entry = LexicalEntry(
+        word="zqxvornmal", meaning="learned:zqxvornmal", role="adjective",
+        emotional_valence=0.0, noncomp_id="X:POLARITY", usage_count=1,
+    )
+    anchor_set = {"zqxvornmal": ace.RELEVANCE_DIRECT_ANCHOR}
+    score = composer._score_composer_candidate(entry, anchor_set, valence_target=0.0)
+    max_distant = ace.RELEVANCE_DISTANT_FLOOR * (1.0 + SentenceComposer._VALENCE_TIEBREAK_WEIGHT)
+    assert score <= max_distant, (
+        f"unverified single-use learned word scored {score}, above the distant-tier "
+        f"ceiling {max_distant} -- it can still masquerade as grounded content"
+    )
+    assert score < SentenceComposer._RELEVANCE_FLOOR_R_MIN
+
+
+def test_unverified_vocab_graduates_to_trust_after_real_repeated_use():
+    """A word that has been used _UNVERIFIED_VOCAB_USAGE_FLOOR times or
+    more is no longer capped -- sustained repeated use is itself a
+    grounding signal, distinguishing reinforced vocabulary (including
+    genuinely novel real words a user teaches informally) from a single
+    same-turn echo of nonsense."""
+    import aurora_constraint_emission as ace
+
+    composer = SentenceComposer.__new__(SentenceComposer)
+    entry = LexicalEntry(
+        word="photosynthesis", meaning="learned:photosynthesis", role="noun",
+        emotional_valence=0.0, noncomp_id="X:MAGNITUDE",
+        usage_count=SentenceComposer._UNVERIFIED_VOCAB_USAGE_FLOOR,
+    )
+    anchor_set = {"photosynthesis": ace.RELEVANCE_DIRECT_ANCHOR}
+    score = composer._score_composer_candidate(entry, anchor_set, valence_target=0.0)
+    max_distant = ace.RELEVANCE_DISTANT_FLOOR * (1.0 + SentenceComposer._VALENCE_TIEBREAK_WEIGHT)
+    assert score > max_distant, "a word with real repeated use must not stay capped forever"
+
+
+def test_taught_word_with_real_definition_is_never_capped():
+    """Words taught through aurora_comprehension_gap.py store the real
+    definition/answer text as `meaning` (not the "learned:<word>"
+    placeholder) -- this fix must not touch that path at all, since
+    genuine teaching is the whole point of vocabulary acquisition."""
+    import aurora_constraint_emission as ace
+
+    composer = SentenceComposer.__new__(SentenceComposer)
+    entry = LexicalEntry(
+        word="chord", meaning="a group of notes played together", role="noun",
+        emotional_valence=0.0, noncomp_id="X:MAGNITUDE", usage_count=0,
+    )
+    anchor_set = {"chord": ace.RELEVANCE_DIRECT_ANCHOR}
+    score = composer._score_composer_candidate(entry, anchor_set, valence_target=0.0)
+    expected = ace.RELEVANCE_DIRECT_ANCHOR * (1.0 + SentenceComposer._VALENCE_TIEBREAK_WEIGHT)
+    assert score == expected, "a taught word with a real definition must score at full relevance"
+
+
+def test_oets_enriched_word_is_never_capped():
+    """Words bridged from OETS relations/definitions (meaning stamped
+    "oets:<keyword>") require a pre-existing real OETS node to trigger --
+    also untouched by this fix."""
+    import aurora_constraint_emission as ace
+
+    composer = SentenceComposer.__new__(SentenceComposer)
+    entry = LexicalEntry(
+        word="fretboard", meaning="oets:guitar", role="noun",
+        emotional_valence=0.0, noncomp_id="X:MAGNITUDE", usage_count=0,
+    )
+    anchor_set = {"fretboard": ace.RELEVANCE_DIRECT_ANCHOR}
+    score = composer._score_composer_candidate(entry, anchor_set, valence_target=0.0)
+    expected = ace.RELEVANCE_DIRECT_ANCHOR * (1.0 + SentenceComposer._VALENCE_TIEBREAK_WEIGHT)
+    assert score == expected
 
 
 def test_compose_and_express_accept_input_text_without_breaking_existing_callers():
