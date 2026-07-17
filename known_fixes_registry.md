@@ -3497,3 +3497,117 @@ Full suite after both fixes: 830 passed, 1 failed (the same documented
 pre-existing cv2 test-order flake noted in the D2.4 acceptance report
 above -- reproduced again here, passes in isolation, unrelated to this
 work).
+
+## N6 (post-D2) — abstract-weighted classroom re-verdict, 2026-07-17
+
+Per the D2 Acceptance Memo's queue item 2: post-D2, classroom training
+and delivery share one voice for the first time (D2.1's unification),
+so classroom gains now land directly in delivered speech instead of
+being masked behind the independent `speak_to_aurora()` call the
+probe battery measured pre-D2. This run is the named owner of the
+standing abstract/conceptual wellformedness gap (0.458 vs the 0.5
+floor, first honestly measured on the delivered field by D2.4).
+
+**What ran:** the same methodology as the earlier N6 (pre-D2, 2026-07-
+16): a fresh 45-lesson classroom block (3 segments of
+`run_targeted_curriculum(n=15, turns_per_lesson=6)` -- `select_
+curriculum()` only draws from the 15-dimension pool once per call, so
+3 calls are needed to reach a real 45-lesson total covering every
+canonical dimension 3x each). Ran against the real repo `aurora_state`
+under `runtime_profile="full"`. `dev_delta_total = 952.0` across all
+45 lessons (mean 21.16/lesson) -- real developmental accumulation, not
+incidental pollution.
+
+**Then, per the memo's own instruction, 3 consecutive post-N6 probe
+battery passes** (`python run_probe_battery.py --quiet`, each a fresh
+boot against the real, now-trained `aurora_state`), tracking the
+abstract_conceptual stratum against D2.4's pre-N6 baseline:
+
+| Run | simple_concrete | abstract_conceptual |
+|---|---|---|
+| D2.4 baseline (pre-N6) | 0.722 | 0.458 |
+| N6 post, battery 1 | 0.778 | 0.500 |
+| N6 post, battery 2 | 0.750 | 0.417 |
+| N6 post, battery 3 | 0.778 | 0.500 |
+| **3-run mean** | **0.769** | **0.472** |
+
+**Honest read, not decided unilaterally:** simple_concrete shows a
+clear, consistent improvement (0.722 -> mean 0.769). Abstract_
+conceptual is noisier and genuinely ambiguous: 2 of 3 runs sit exactly
+at the 0.5 floor (an improvement over the 0.458 baseline), but battery
+2 dipped to 0.417 (below baseline), and the 3-run mean (0.472) is only
+marginally above the pre-N6 number -- nowhere near a clean, decisive
+trend. This is squarely the situation the memo's own trigger
+anticipated ("if 3 consecutive post-N6 batteries show no positive
+abstract-stratum trend, targeted vocabulary seeding... is
+authorized"), but the memo's trigger condition itself is a judgment
+call on noisy data, not a bright line this run crossed unambiguously
+either way. Reported for Sunni's read rather than self-authorized:
+does 2-of-3-at-floor with a marginal-positive mean count as "a
+positive trend," or does the mean's smallness and battery 2's dip
+count as "no positive trend" -> authorize `scripts/seed_oets_aurora_
+vocabulary.py` (assessed, not yet run -- sourced assets before new
+infrastructure, per the memo's own instruction).
+
+Full suite after this run (no production code touched, state-only):
+[see below].
+
+## V0 — Boundary Envelopes validation gate, 2026-07-17 (measurement only, HALT)
+
+Per `AURORA_SPEC_BOUNDARY_ENVELOPES_20260717.md` (Cael's design,
+addressing Condition 2's residual gap after both the generation-score
+and understanding-accuracy signals were empirically ruled out as
+rhythm/coherence detectors). Consumer instruction: validation gate
+first, no implementation until V0 separates.
+
+**Method (constraint-derivative, per the spec's own design test):**
+16 joints -- (operator_phrase, argument_word) pairs -- hand-extracted
+from the 4 Condition-2 test sentences, 8 coherent controls, and 4
+legitimate-metaphor sentences ("the taste of victory" class). Each
+word's "lived envelope" was read from ONLY existing Aurora machinery:
+its real lexicon `noncomp_id` axis tag (excluding same-turn-only
+placeholder learns, matching the D2 Condition 2 fix's own distinction)
+and, where absent, its OETS node's relation-edge neighbors' axis tags.
+A joint scored supported/contradicted/unknown by comparing the
+argument's axis identity against the operator's own axis identity,
+computed the identical way -- no hand-authored "what role does this
+operator demand" ontology; the axis vocabulary is HER existing X/T/N/
+B/A framework throughout.
+
+**Result: did not separate.** All three groups landed overwhelmingly
+in `unknown`:
+
+| Group | supported | contradicted | unknown | n |
+|---|---|---|---|---|
+| category_error | 0 | 0 | 4 | 4 |
+| gibberish | 0 | 0 | 2 | 2 |
+| coherent | 2 | 1 | 5 | 8 |
+| metaphor | 0 | 0 | 4 | 4 |
+
+Category-error and metaphor scored identically (100% unknown) --
+exactly the "dead on arrival" failure mode the spec's own falsifiable
+prediction warned about (metaphor was supposed to land in unknown
+while category-error showed something systematically weaker).
+
+**Root cause of the non-separation, traced before reporting a verdict
+either way:** the scoring required the OPERATOR PHRASE itself ("square
+root of", "the taste of", "seventeen-digit") to have real axis
+evidence before evaluating the argument at all -- and most operator
+phrases in this test set are multi-word or rare terms simply absent
+from her ~1660-word vocabulary, so the great majority of joints never
+reached an argument-level verdict. This looks like a measurement-
+sparsity artifact of this specific proxy (single-word lexicon/OETS
+lookup on the operator side), not necessarily evidence the underlying
+design is unworkable -- the spec's own data sources ("L2 slot-role
+logs, graph edge roles, coupling shapes") may need a richer read (e.g.
+projecting the operator PHRASE's own axis via `_project_utterance_
+axes`, or drawing on `genealogy/couplings.json`'s axis-pair co-
+occurrence history directly) than the word-lookup proxy this V0 pass
+used.
+
+**HALT, per the spec's own instruction.** V0 as measured is
+inconclusive, not a pass or a kill -- reported honestly rather than
+loosened to force separation or over-read as proof the design fails.
+No implementation attempted. Whether to refine V0's measurement
+methodology and re-run, or treat this as sufficient evidence to park
+the design, is Sunni's call.

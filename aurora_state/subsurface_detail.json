@@ -2,10 +2,6 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
-      "label": "topic_continuation"
-    },
-    {
       "confidence": 0.35,
       "label": "affective_attention"
     }
@@ -17,97 +13,43 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "use",
-    "ambiguity": 0.545,
-    "cost_total": 0.2836,
+    "active_topic": "",
+    "ambiguity": 0.0,
+    "cost_total": 0.0,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
-    "interpreted_deep_emotion": "fear",
+    "frame_continuity": 0.0,
+    "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
-    "tracked_surface_intensity": 0.419
+    "tracked_surface_intensity": 0.0
   },
-  "instability_markers": [
-    {
-      "label": "prediction_mismatch",
-      "severity": 0.49
-    }
-  ],
+  "instability_markers": [],
   "law_bindings": [],
-  "micro_reasoning": [
-    {
-      "confidence": 0.5,
-      "label": "comfort_bias",
-      "rationale": "Deeper affective pressure suggests comfort or care may matter more than pure explanation.",
-      "source": "affect",
-      "tags": [
-        "care",
-        "attunement"
-      ],
-      "urgency": 0.55
-    },
-    {
-      "confidence": 0.49,
-      "label": "prediction_mismatch",
-      "rationale": "Observed input diverged from the currently primed continuation.",
-      "source": "prediction",
-      "tags": [
-        "reframe",
-        "surprise"
-      ],
-      "urgency": 0.55
-    },
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
-    {
-      "confidence": 1.0,
-      "label": "novelty_attention",
-      "rationale": "Novelty is high enough that the frame should stay exploratory.",
-      "source": "entropy",
-      "tags": [
-        "novelty",
-        "exploration"
-      ],
-      "urgency": 0.4
-    }
-  ],
+  "micro_reasoning": [],
   "origin_systems": [
     "incoming_input",
     "DimensionalSystems.process_synthesis",
     "DCEAssembly"
   ],
   "prediction_signal": {
-    "alerts": [
-      "prediction_mismatch",
-      "novelty_shift"
-    ],
-    "confidence": 0.4254,
+    "alerts": [],
+    "confidence": 0.6356,
     "expected_observation": "followup",
-    "expected_user_continuation": "use",
-    "likely_affect_shift": "curiosity",
-    "mismatch": 0.49,
+    "expected_user_continuation": "",
+    "likely_affect_shift": "neutral",
+    "mismatch": 0.1125,
     "prediction_payload": {
-      "affect": "curiosity",
-      "axis_signature": "N",
-      "certainty_band": "low",
+      "affect": "neutral",
+      "axis_signature": "",
+      "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "use"
+      "topic": ""
     },
     "preload_context": [
-      "use",
       "followup"
     ],
-    "readiness_bias": 0.2736,
-    "source": "understanding_contract"
+    "readiness_bias": 0.6344,
+    "source": "runtime_evidence"
   },
   "pressure_map": {
     "A": 0.0,
@@ -116,29 +58,28 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.457,
+  "readiness": 0.6192,
   "recalled_fragments": [
-    "use",
-    "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:recalled:..."
+    "search youtube for lofi hip hop radio"
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2656,
-    "N": 0.3445,
-    "T": 0.3899,
+    "B": 0.0,
+    "N": 1.0,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784233929.0931747,
+  "saved_at": 1784322357.6310701,
   "sub_crests": [
     {
       "axis": "X",
-      "intensity": 0.581,
+      "intensity": 0.5,
       "label": "attentional_drift"
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.65,
+      "label": "unfamiliar"
     },
     {
       "axis": "A",
@@ -147,18 +88,18 @@
     },
     {
       "axis": "X",
-      "intensity": 0.49,
-      "label": "surprise"
+      "intensity": 0.8875,
+      "label": "steady_continuation"
     },
     {
-      "axis": "N",
-      "intensity": 1.0,
-      "label": "novelty"
+      "axis": "X",
+      "intensity": 0.5,
+      "label": "alignment"
     },
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
@@ -169,21 +110,6 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.7817,
-      "label": "surface"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.8055,
-      "label": "surface"
-    },
-    {
-      "axis": "X",
-      "intensity": 0.821,
-      "label": "surface"
     }
   ]
 }

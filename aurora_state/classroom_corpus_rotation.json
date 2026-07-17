@@ -3,13 +3,19 @@
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "corpus:contradiction_handling:0",
-    "corpus:contradiction_handling:1"
+    "corpus:contradiction_handling:1",
+    "corpus:contradiction_handling:2",
+    "corpus:contradiction_handling:3",
+    "corpus:contradiction_handling:4"
   ],
   "uncertainty_signaling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "corpus:uncertainty_signaling:0",
     "fail_point:train_epoch_2:episode_c6388e715bc2",
-    "corpus:uncertainty_signaling:1"
+    "corpus:uncertainty_signaling:1",
+    "corpus:uncertainty_signaling:2",
+    "corpus:uncertainty_signaling:3",
+    "corpus:uncertainty_signaling:4"
   ],
   "context_carryover": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -32,13 +38,19 @@
     "corpus:context_carryover:6",
     "corpus:context_carryover:7",
     "corpus:context_carryover:8",
-    "corpus:context_carryover:9"
+    "corpus:context_carryover:9",
+    "corpus:context_carryover:10",
+    "corpus:context_carryover:11",
+    "corpus:context_carryover:12"
   ],
   "boundary_calibration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "corpus:boundary_calibration:0",
     "corpus:boundary_calibration:1",
-    "fail_point:train_epoch_2:episode_c6388e715bc2"
+    "fail_point:train_epoch_2:episode_c6388e715bc2",
+    "corpus:boundary_calibration:2",
+    "corpus:boundary_calibration:3",
+    "corpus:boundary_calibration:4"
   ],
   "coherence_maintenance": [
     "fail_point:prove_ep_epoch_1:rel_probe_corpus_fragment_1",
@@ -48,7 +60,10 @@
     "fail_point:train_epoch_3:episode_ca4e4da10b27",
     "fail_point:train_epoch_3:episode_11d625707dd0",
     "fail_point:train_epoch_3:episode_cfa449acb78c",
-    "fail_point:train_epoch_1:episode_56922eea6a4a"
+    "fail_point:train_epoch_1:episode_56922eea6a4a",
+    "fail_point:train_epoch_1:episode_e10382644c33",
+    "fail_point:train_epoch_8:rel_probe_approach_curious_1",
+    "fail_point:train_epoch_8:episode_8d8b68844b49"
   ],
   "perspective_integration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -58,7 +73,10 @@
     "corpus:perspective_integration:2",
     "corpus:perspective_integration:3",
     "corpus:perspective_integration:4",
-    "corpus:perspective_integration:5"
+    "corpus:perspective_integration:5",
+    "corpus:perspective_integration:6",
+    "corpus:perspective_integration:7",
+    "corpus:perspective_integration:8"
   ],
   "ambiguity_handling": [
     "fail_point:train_epoch_2:episode_c6388e715bc2",
@@ -68,7 +86,10 @@
     "corpus:ambiguity_handling:2",
     "corpus:ambiguity_handling:3",
     "corpus:ambiguity_handling:4",
-    "corpus:ambiguity_handling:5"
+    "corpus:ambiguity_handling:5",
+    "corpus:ambiguity_handling:6",
+    "corpus:ambiguity_handling:7",
+    "corpus:ambiguity_handling:8"
   ],
   "adaptive_strategy_selection": [
     "corpus:adaptive_strategy_selection:0",
@@ -78,7 +99,10 @@
     "corpus:adaptive_strategy_selection:2",
     "corpus:adaptive_strategy_selection:3",
     "corpus:adaptive_strategy_selection:4",
-    "corpus:adaptive_strategy_selection:5"
+    "corpus:adaptive_strategy_selection:5",
+    "corpus:adaptive_strategy_selection:6",
+    "corpus:adaptive_strategy_selection:7",
+    "corpus:adaptive_strategy_selection:8"
   ],
   "multi_turn_stability": [
     "corpus:multi_turn_stability:0",
@@ -88,7 +112,10 @@
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "corpus:multi_turn_stability:3",
     "corpus:multi_turn_stability:4",
-    "corpus:multi_turn_stability:5"
+    "corpus:multi_turn_stability:5",
+    "corpus:multi_turn_stability:6",
+    "corpus:multi_turn_stability:7",
+    "corpus:multi_turn_stability:8"
   ],
   "emotional_calibration": [
     "corpus:emotional_calibration:0",
@@ -98,7 +125,10 @@
     "corpus:emotional_calibration:4",
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "corpus:emotional_calibration:5",
-    "corpus:emotional_calibration:6"
+    "corpus:emotional_calibration:6",
+    "corpus:emotional_calibration:7",
+    "fail_point:train_epoch_2:episode_c6388e715bc2",
+    "corpus:emotional_calibration:8"
   ],
   "implied_intent_inference": [
     "fail_point:train_epoch_5:episode_df5c950c49f1",
@@ -108,7 +138,10 @@
     "fail_point:train_epoch_3:episode_d853922e4627",
     "fail_point:train_epoch_3:episode_eb43f74bde1e",
     "fail_point:train_epoch_3:episode_954a2dd13dfc",
-    "fail_point:train_epoch_2:episode_9b4d7d53e6ea"
+    "fail_point:train_epoch_2:episode_9b4d7d53e6ea",
+    "fail_point:train_epoch_2:episode_c6388e715bc2",
+    "fail_point:train_epoch_2:episode_39e0c4564ecd",
+    "fail_point:train_epoch_1:episode_d67a4d779e6c"
   ],
   "misunderstanding_repair": [
     "corpus:misunderstanding_repair:0",
@@ -118,7 +151,10 @@
     "corpus:misunderstanding_repair:4",
     "corpus:misunderstanding_repair:5",
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
-    "corpus:misunderstanding_repair:6"
+    "corpus:misunderstanding_repair:6",
+    "corpus:misunderstanding_repair:7",
+    "corpus:misunderstanding_repair:8",
+    "fail_point:train_epoch_2:episode_c6388e715bc2"
   ],
   "framing_selection": [
     "fail_point:train_epoch_1:episode_0b98bbd29a13",
@@ -128,7 +164,10 @@
     "corpus:framing_selection:3",
     "corpus:framing_selection:4",
     "corpus:framing_selection:5",
-    "corpus:framing_selection:6"
+    "corpus:framing_selection:6",
+    "corpus:framing_selection:7",
+    "corpus:framing_selection:8",
+    "corpus:framing_selection:9"
   ],
   "semantic_precision": [
     "fail_point:train_epoch_1:episode_378923657cce",
@@ -138,7 +177,10 @@
     "fail_point:train_epoch_8:rel_probe_approach_curious_1",
     "fail_point:train_epoch_7:rel_probe_approach_thoughtful_1",
     "fail_point:train_epoch_6:rel_probe_approach_thoughtful_1",
-    "fail_point:train_epoch_6:episode_7653f60c2cf7"
+    "fail_point:train_epoch_6:episode_7653f60c2cf7",
+    "fail_point:train_epoch_6:episode_bad75bd5eecc",
+    "fail_point:train_epoch_5:rel_probe_approach_warm_1",
+    "corpus:semantic_precision:0"
   ],
   "compression_elaboration_fit": [
     "fail_point:train_epoch_4:episode_bfc770689b35",
@@ -148,6 +190,9 @@
     "fail_point:train_epoch_6:episode_834c00d77bdb",
     "fail_point:train_epoch_2:episode_ea639365d762",
     "fail_point:train_epoch_1:episode_d67a4d779e6c",
-    "fail_point:train_epoch_1:episode_06e5f6adc750"
+    "fail_point:train_epoch_1:episode_06e5f6adc750",
+    "corpus:compression_elaboration_fit:0",
+    "corpus:compression_elaboration_fit:1",
+    "corpus:compression_elaboration_fit:2"
   ]
 }
