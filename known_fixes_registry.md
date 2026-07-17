@@ -3264,3 +3264,102 @@ across files, not this directive's concern), not hidden.
 
 **Not yet done (next in this directive):** D2.4 (acceptance battery +
 abstain-rate telemetry + full CI + HALT).
+
+## Directive D2.4 — Acceptance (2026-07-17): HALT after acceptance with the live numbers
+
+**Pre-flight fix required before acceptance was even measurable:**
+`run_probe_battery.py`'s response extraction read
+`response.get("response_text")`, a key `process_external_user_turn()`'s
+result dict never populates (confirmed empirically -- its real keys are
+`resp_A`/`resp_B`/`src`/...). That miss was silent: every probe always
+fell through to a SEPARATE call, `aurora_gateway.speak_to_aurora
+(turn_text)` -- a fresh, independent invocation of the same underlying
+composer machinery, not literally the turn's own `resp_A`/`resp_B`.
+Every probe-battery score from R0 through R1.9.4 was therefore
+measuring that separate call, not the field D1 proved actually reaches
+a device. Fixed via a shared `_extract_delivered_response_text()`
+helper (reads `resp_A.content` first, falls back to the gateway call
+only when `resp_A` is genuinely empty, matching this file's original
+documented fallback intent) applied at both call sites (the main
+battery runner and `--trace` mode). New tests:
+`tests/test_d2_4_probe_battery_measures_resp_a.py` (5 tests) pin the
+correct extraction so it cannot silently regress to the non-existent
+key. This was necessary groundwork, not scope creep -- D2.4 explicitly
+requires the battery to measure "the unified device-delivered field,"
+and the script did not do that until this fix landed.
+
+**1. Stratified battery at campaign floors, measured on resp_A directly**
+(`python run_probe_battery.py --quiet`, `runtime_profile=surface`,
+disclosed per directive, 60 probes, single run):
+- **Relevance floor (>= 0.6): MET.** `mean_relevance_fraction = 0.862`,
+  `nonzero_rate = 0.933` (56/60 probes scored nonzero relevance).
+- **Wellformedness floor (>= 0.5): MET for simple/concrete, MISSED for
+  abstract/conceptual.** `stratified_wellformedness.simple_concrete.
+  parseable_rate = 0.722` (26/36); `stratified_wellformedness.
+  abstract_conceptual.parseable_rate = 0.458` (11/24) -- below the 0.5
+  floor. Reported exactly as measured, not rounded up or hedged: on
+  probes requiring abstract/conceptual reasoning, resp_A's composer
+  voice (word-choice from a live, sparse axis/relevance graph, not a
+  language model) does not yet reliably produce parseable structure at
+  the campaign's own floor. This is a real, honest gap, not a new
+  regression from D2 -- it reflects the composer's existing quality
+  ceiling on harder probes, now visible for the first time on the field
+  that's actually delivered (previously masked by the independent
+  `speak_to_aurora()` call the battery measured instead, per the
+  pre-flight finding above -- whether that call's own historical scores
+  showed the same split was not re-derived here; out of this
+  acceptance's scope).
+- Single run, not the 3x replication R0.3 used for its baseline; D2.4's
+  own text does not mandate replication the way R0.3's did. Flagged
+  honestly as a smaller sample.
+
+**2. Abstain-rate telemetry, 100 live turns, before/after:**
+- **Before (documented, D1's live trace, 6-turn sample):** 5/6 turns
+  (83.3%) hit resp_A's own canned abstain (`"I don't have a clear sense
+  of that."` / `"I'm not sure."`) while resp_B kept generating,
+  unreachable by the user.
+- **After (this run, 100-turn sample, fresh boot, mixed conversational
+  turns):** **0/100 turns (0.0%) hit the constraint_abstain crash net.**
+  100/100 turns resolved via `composer_unified` -- the D2.1 voice
+  transplant fired on every turn in this sample.
+- This is a **marked decrease**, exactly as D2.4 anticipated ("the
+  waterfall abstaining past its untrusted voice should recede as the
+  trusted voice lands"). Honestly noted: the "before" and "after"
+  samples are not a matched controlled A/B (different turn sets, different
+  sample sizes) -- a live re-run of the exact same 6 D1 turns after D2.1
+  already showed this directly (6/6 unified, 0/6 abstain, documented in
+  D2.1's own entry above), and this 100-turn run confirms the effect
+  holds at scale, not just on the original 6 turns.
+
+**3. D1 byte-attribution CI: green across all enumerated surfaces.**
+`tests/test_d1_device_path_attribution.py`'s 5 tests pass, including
+`test_resp_a_and_resp_b_are_unified_by_construction_post_d2` (D2.1's
+unity proof). Delivery-surface enumeration rule satisfied: daemon and
+Flutter bridge (chat + TTS, byte-identical on that side) both
+structurally confirmed to read resp_A; the live unity test proves
+resp_A/resp_B byte-identity whenever the composer produces grounded
+content.
+
+**4. Riders' regression tests: green.**
+`tests/test_d2_2_corpus_fragment_nesting.py` (6),
+`tests/test_d2_2_live_turn_reentrancy_guard.py` (3, including the
+live 20-turn exactly-1-call acceptance criterion),
+`tests/test_d2_3_delivery_boundary_telemetry_rejection.py` (7,
+including the pinned "Active axes:" live regression) -- all pass.
+
+**5. Full suite: 823 passed, 1 failed.** The one failure
+(`test_concept_image_ingestion_import.py::test_ingest_concept_image_
+succeeds_against_real_fixture`, `cv2.imdecode`) is the SAME pre-existing,
+unrelated test-order-dependent flake documented in D2.3's entry --
+reproduced identically a third time across this session's full-suite
+runs, passes 3/3 in isolation every time, touches only camera/cv2 code.
+Not caused by, or related to, any D2 work. Not fixed (out of scope),
+not hidden.
+
+**HALT.** Per the directive's own instruction: this is the acceptance
+report, not a decision to keep iterating on the wellformedness gap. The
+abstain-rate and unity results meet or exceed what D2 set out to prove;
+the abstract/conceptual wellformedness gap is real, honestly measured,
+and now visible for the first time on the actually-delivered field --
+whether and how to close it is a new question for Sunni to scope, not
+something this directive's acceptance step decides unilaterally.

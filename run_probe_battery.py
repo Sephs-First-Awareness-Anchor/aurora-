@@ -63,6 +63,43 @@ def _json_safe(value: Any) -> Any:
         return str(value)
 
 
+def _extract_delivered_response_text(
+    response: Dict[str, Any],
+    turn_text: str,
+    aurora_gateway: Any,
+) -> str:
+    """D2.4 (Directive D2, 2026-07-17): read the field real device
+    surfaces actually deliver -- resp_A (D1's byte-attribution proof;
+    post-D2.1, resp_A carries the SAME campaign-verified composer voice
+    as resp_B whenever the composer produced grounded content).
+
+    Prior to this fix this function read response.get("response_text"),
+    a key process_external_user_turn()'s result dict never populates
+    (confirmed empirically -- its real keys are resp_A/resp_B/src/...).
+    That miss was silent: it always fell through to the
+    aurora_gateway.speak_to_aurora(turn_text) branch below, which is a
+    SEPARATE, independent call into the governance gateway's own
+    receive() (same underlying SentenceComposer machinery, but a fresh
+    invocation with its own state, not literally the turn's own
+    resp_A/resp_B). Every probe-battery score from R0 through R1.9.4 was
+    therefore measuring that separate call, not the field D1 proved
+    actually reaches a device. Fixed here so this script honestly
+    measures the delivered field D2.4 requires; the gateway call is kept
+    as a last-resort fallback for the case resp_A is genuinely empty
+    under a given runtime profile (matching this file's original
+    documented intent)."""
+    resp_a = response.get("resp_A")
+    response_text = str(getattr(resp_a, "content", "") or "").strip()
+    if not response_text and aurora_gateway is not None and hasattr(aurora_gateway, "speak_to_aurora"):
+        try:
+            gateway_response = aurora_gateway.speak_to_aurora(turn_text)
+            response_text = str(getattr(gateway_response, "content", "") or "").strip()
+            response["response_src"] = str(response.get("response_src") or "") or "gateway_fallback"
+        except Exception as exc:
+            response["response_src"] = f"gateway_error:{exc.__class__.__name__}"
+    return response_text
+
+
 def _make_process_turn_fn_factory(systems: Dict[str, Any]):
     aurora_gateway = systems.get("aurora")
 
@@ -86,19 +123,7 @@ def _make_process_turn_fn_factory(systems: Dict[str, Any]):
                     run_periodic_maintenance=False,
                 ) or {}
             )
-            response_text = str(response.get("response_text") or "").strip()
-            # Same fallback run_full_competency_gauntlet.py uses -- the
-            # canonical bridge sometimes returns no text depending on which
-            # subsystems are live under a given runtime profile; falling
-            # through to the gateway keeps this the SAME path the gauntlet
-            # already relies on, not a shortcut invented for this script.
-            if not response_text and aurora_gateway is not None and hasattr(aurora_gateway, "speak_to_aurora"):
-                try:
-                    gateway_response = aurora_gateway.speak_to_aurora(turn_text)
-                    response_text = str(getattr(gateway_response, "content", "") or "").strip()
-                    response["response_src"] = str(response.get("response_src") or "") or "gateway_fallback"
-                except Exception as exc:
-                    response["response_src"] = f"gateway_error:{exc.__class__.__name__}"
+            response_text = _extract_delivered_response_text(response, turn_text, aurora_gateway)
             response["response_text"] = response_text
             return response
 
@@ -272,13 +297,7 @@ def run_traced_probes(
                         run_periodic_maintenance=False,
                     ) or {}
                 )
-                response_text = str(response.get("response_text") or "").strip()
-                if not response_text and aurora_gateway is not None and hasattr(aurora_gateway, "speak_to_aurora"):
-                    try:
-                        gw = aurora_gateway.speak_to_aurora(turn_text)
-                        response_text = str(getattr(gw, "content", "") or "").strip()
-                    except Exception:
-                        pass
+                response_text = _extract_delivered_response_text(response, turn_text, aurora_gateway)
                 ledger_after = _contradiction_ledger_count(systems)
                 last_response_text = response_text
                 messages.append(("user", turn_text))
