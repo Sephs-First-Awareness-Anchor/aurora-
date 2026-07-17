@@ -2,20 +2,6 @@
   "history": [
     {
       "axis_signature": "X^1*T^1",
-      "change_id": "MC:6c000b3a2c16",
-      "dominant_axis": "X",
-      "file": "aurora_manifold_directory/__init__.py",
-      "matched_ability_id": "X:CODE_LINEAGE_cbbc23fcba",
-      "matched_score": 1.0,
-      "mode": "attached_existing_family",
-      "module_name": "aurora_manifold_directory.__init__",
-      "purpose_lane": "admissibility_grounding",
-      "registered_ability_id": "X:CODE_LINEAGE_cbbc23fcba",
-      "source": "aurora.boot",
-      "timestamp": 1784124611.2937317
-    },
-    {
-      "axis_signature": "X^1*T^1",
       "change_id": "MC:afb1228e8d2f",
       "dominant_axis": "X",
       "file": "aurora_manifold_directory/noncomp_field.py",
@@ -3359,10 +3345,24 @@
       "registered_ability_id": "X:CODE_LINEAGE_83db0595cf",
       "source": "aurora.boot",
       "timestamp": 1784317836.9117782
+    },
+    {
+      "axis_signature": "X^1*T^1",
+      "change_id": "MC:348febf96a53",
+      "dominant_axis": "X",
+      "file": "scripts/seed_abstract_regions_s1.py",
+      "matched_ability_id": "",
+      "matched_score": 0.66,
+      "mode": "created_manual_branch",
+      "module_name": "scripts.seed_abstract_regions_s1",
+      "purpose_lane": "admissibility_grounding",
+      "registered_ability_id": "X:CODE_LINEAGE_b73212e63e",
+      "source": "aurora.boot",
+      "timestamp": 1784325424.9893503
     }
   ],
   "initialized": true,
-  "last_run_at": 1784322045.995961,
+  "last_run_at": 1784325425.2201486,
   "manifest": {
     "aurora-acm/native/aurora_acm_native.py": {
       "mtime_ns": 1781923577991269291,
@@ -4483,6 +4483,10 @@
     "scripts/scan_lineage_25x25.py": {
       "mtime_ns": 1781923578947658938,
       "size": 82807
+    },
+    "scripts/seed_abstract_regions_s1.py": {
+      "mtime_ns": 1784324981834925493,
+      "size": 17621
     },
     "scripts/seed_oets_aurora_vocabulary.py": {
       "mtime_ns": 1781923578948263391,

@@ -1,142 +1,5 @@
 [
   {
-    "packet_id": "f644f114c4d5475a8579e94846313b1f",
-    "created_at": 1784318638.5679636,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fr",
-    "aurora_response": "I polarising discussion clear. I changing away real.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.59"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "4c1ea60fbc71403aa485c9a7c1bb4d53",
-    "created_at": 1784318648.9431713,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "I knowing here clear. I become what real.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.62"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "43d415651e1941bf8a91a8f83114a16a",
-    "created_at": 1784318661.7415178,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "I understand truth clear. I change meaning real.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "c59117dad5624bd6a4093a4c789a64bf",
-    "created_at": 1784318671.077536,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "I am reconcile beautiful. I do specific successive.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.52"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "f01ca7974de54e64a4f330f71ba7cc85",
-    "created_at": 1784318682.3642027,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links behavior and links here?",
-    "aurora_response": "I knowing here clear. I become what real.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "behavior",
-      "links",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.50"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "576fb28ed3b44b94993190d24c776e9c",
     "created_at": 1784318695.637038,
     "source": "simulation_live_bridge",
@@ -513,6 +376,136 @@
   {
     "packet_id": "c837d6e1d5384106a660f816437ae60c",
     "created_at": 1784322357.6397126,
+    "source": "aurora_turn",
+    "user_input": "search youtube for lofi hip hop radio",
+    "aurora_response": "",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "youtube",
+      "lofi",
+      "hip",
+      "hop",
+      "radio"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "29acbd1562cd4beb8ef0c13773a5f48f",
+    "created_at": 1784325415.7250986,
+    "source": "aurora_turn",
+    "user_input": "search youtube for lofi hip hop radio",
+    "aurora_response": "",
+    "response_tone": "honest",
+    "concepts_activated": [
+      "youtube",
+      "lofi",
+      "hip",
+      "hop",
+      "radio"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 1.0,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "bcdce4270bc447e2bf23a638477b80f4",
+    "created_at": 1784325429.2329123,
+    "source": "external_user_turn",
+    "user_input": "Hello Aurora, are you present?",
+    "aurora_response": "I become hello clear. I knowing right real.",
+    "response_tone": "warm",
+    "concepts_activated": [
+      "aurora",
+      "present"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.972,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "332b8616c88542da9af80ab79ac7751f",
+    "created_at": 1784325430.6791794,
+    "source": "external_user_turn",
+    "user_input": "What does the concept of 'Tranquility' mean to you physically?",
+    "aurora_response": "I do moment clear. I seeing mean real.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "concept",
+      "tranquility",
+      "physically"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.744,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f13baabfb22f43dfa760f0e54747a4f1",
+    "created_at": 1784325431.9775496,
+    "source": "external_user_turn",
+    "user_input": "How does that relate to your internal energy cost?",
+    "aurora_response": "I become hello alive. I do there real.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "relate",
+      "internal",
+      "energy",
+      "cost"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.516,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "f3ccaa65a502430da870f8180e2a2b0e",
+    "created_at": 1784325736.067498,
     "source": "aurora_turn",
     "user_input": "search youtube for lofi hip hop radio",
     "aurora_response": "",

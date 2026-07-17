@@ -46471,27 +46471,6 @@
   "experiments": {
     "trials": [
       {
-        "tick": 111427,
-        "trigger_mode": "code_evolution",
-        "mutation_id": "DREAM:c056a2a5d7dd9b",
-        "operator_key": "dream_dream_evidence",
-        "accepted": false,
-        "shape": "dream_evidence",
-        "target_modules": [],
-        "target_files": [],
-        "changed_files": [],
-        "score": 0.35,
-        "avg_fitness": 0.0,
-        "genealogy_pressure": 0.0,
-        "compile_failures": 0,
-        "conflicts_delta": 0.0,
-        "apply_duration_s": 0.0,
-        "agency_time_credit": 0.35,
-        "temporal_overhead_penalty": 0.0,
-        "ability_id": "A:CODE_EVOLVE_30a9028300",
-        "adopted": false
-      },
-      {
         "tick": 111434,
         "trigger_mode": "code_evolution",
         "mutation_id": "DREAM:34fe80d9a330e9",
@@ -51509,20 +51488,23 @@
         "temporal_overhead_penalty": 0.0,
         "ability_id": "A:CODE_EVOLVE_877a302710",
         "adopted": false
+      },
+      {
+        "tick": 112094,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:348febf96a53",
+        "shape": "generic",
+        "target_modules": [
+          "scripts.seed_abstract_regions_s1"
+        ],
+        "target_files": [
+          "scripts/seed_abstract_regions_s1.py"
+        ],
+        "ability_id": "X:CODE_LINEAGE_b73212e63e",
+        "adopted": true
       }
     ],
     "adoptions": [
-      {
-        "tick": 101565,
-        "trigger_mode": "manual_code_assimilation",
-        "change_id": "MC:2a9b1fc24f6f",
-        "shape": "generic",
-        "target_modules": [
-          "tests.test_concept_image_ingestion_import"
-        ],
-        "ability_id": "X:CODE_LINEAGE_9191216c2b",
-        "score": 1.0
-      },
       {
         "tick": 101565,
         "trigger_mode": "manual_code_assimilation",
@@ -52948,6 +52930,17 @@
           "tests.test_n21_hardened_reacceptance"
         ],
         "ability_id": "X:CODE_LINEAGE_83db0595cf",
+        "score": 0.72
+      },
+      {
+        "tick": 112094,
+        "trigger_mode": "manual_code_assimilation",
+        "change_id": "MC:348febf96a53",
+        "shape": "generic",
+        "target_modules": [
+          "scripts.seed_abstract_regions_s1"
+        ],
+        "ability_id": "X:CODE_LINEAGE_b73212e63e",
         "score": 0.72
       }
     ]

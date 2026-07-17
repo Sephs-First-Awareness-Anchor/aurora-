@@ -3611,3 +3611,99 @@ loosened to force separation or over-read as proof the design fails.
 No implementation attempted. Whether to refine V0's measurement
 methodology and re-run, or treat this as sufficient evidence to park
 the design, is Sunni's call.
+
+## Directive S1 — Abstract-Region Seeding, 2026-07-17 (both gates HALT)
+
+Rulings ratified: N6 = STALLED (vocabulary seeding authorized); V0 =
+ON HOLD pending seeded data, not rejected.
+
+**S1.1 (asset assessment):** `scripts/seed_oets_aurora_vocabulary.py`
+writes real OETS nodes (genuine definitions, real `noncomp_id` axis
+tags) and typed relations into `aurora_state/aurora_oets_web.json`,
+already provenance-tagged (`source="seeded"` / `source_of_knowledge=
+"seeded"`). Not bare word-lists. Gap: hardcoded to one fixed
+architecture-vocabulary set, not region-targetable, and covers neither
+the battery's abstract stratum (confirmed by reading the dimension->
+stratum mapping in `aurora_semantic_probe_battery.py`: `abstract_
+conceptual` = literally the `contradiction_handling` and `uncertainty_
+signaling` probe dimensions, not a vocabulary theme) nor V0's joint-
+inventory words. Verdict: reuse the mechanism, extend the content.
+
+**S1.2 (seeding, `scripts/seed_abstract_regions_s1.py`):** extended
+the existing script's exact helpers/pattern. Added 24 OETS nodes + 22
+relations (contradiction/hedge/uncertain-domain vocabulary + V0's
+exact joint words), and 22 matching lexicon entries with real
+definitions and hand-assigned `noncomp_id` axis tags (X/T/N/B/A,
+following the same semantics already live in `constraint_meaning_
+axes`). Provenance: OETS via the existing `source="seeded"`
+convention; lexicon via `lineage="seeded_s1"`. Two abstract-stratum
+words (`contradiction`, `uncertain`) and one V0 word (`water`) already
+existed and were correctly skipped, not overwritten -- respects
+earned-through-use, but see the envelope-gate root cause below.
+Deliberately did NOT hand-edit `aurora_state/genealogy/couplings.json`
+("coupling shapes") -- a live-computed rolling-statistics store with
+invariants (breeding_score_ema, inheritance_breach_count) not designed
+for external insertion; flagged as scope left out, not silently
+skipped.
+
+**S1.3 gate 1 — composition (stratified battery x3 post-seeding):**
+
+| Run | simple_concrete | abstract_conceptual |
+|---|---|---|
+| S1 post-seed, run 1 | 0.778 | 0.417 |
+| S1 post-seed, run 2 | 0.750 | 0.458 |
+| S1 post-seed, run 3 | 0.722 | 0.583 |
+| **3-run mean** | **0.750** | **0.486** |
+
+Required to clear: mean >= 0.55, no floor-kissing. **0.486 does not
+clear.** simple_concrete stayed healthy (no regression from seeding).
+**Gate 1: NOT CLEARED.**
+
+**S1.3 gate 2 — envelope (V0 re-run, identical joints, identical
+scoring code, against seeded data):**
+
+| Group | supported | contradicted | unknown | n |
+|---|---|---|---|---|
+| category_error | 1 | 2 | 1 | 4 |
+| coherent | 1 | 5 | 2 | 8 |
+| metaphor | 0 | 2 | 2 | 4 |
+
+Required: category-error separates from coherent (weaker support);
+metaphor lands unknown-not-contradicted. **Neither held. Coherent
+joints contradicted MORE often (62.5%) than category-error (50%) --
+inverted from what's needed. Metaphor landed 50% contradicted, not
+unknown. Gate 2: NOT CLEARED, and the direction is actively wrong, not
+just insufficiently separated.**
+
+**Root cause traced before reporting a verdict (per the starved-
+instrument rule this directive itself asks be logged -- but the root
+cause here is NOT sparsity, it's a scoring-mechanism flaw the seeded
+data exposed):** several coherent-control argument words (`water`,
+`france`, `japan`, `guitar`, `photosynthesis`) are pre-existing,
+blind-learned lexicon entries whose `noncomp_id` axis was assigned
+by the ORIGINAL auto-learn path's arbitrary role->axis default
+mapping, never chosen with this joint's semantics in mind. S1.2
+correctly declined to overwrite them (respecting earned-through-use),
+but this left their axis tags essentially incidental. The V0 scorer's
+"supported iff argument axis == operator's dominant axis, else
+contradicted" rule is too coarse: a genuinely coherent relationship
+(a substance and a measurable property OF it, e.g. boiling point/
+water; a country and its capital) routinely spans TWO DIFFERENT native
+axes by the five-axis framework's own logic (magnitude vs. existence,
+existence vs. existence-of-a-different-entity) -- axis MISMATCH does
+not mean semantic incompatibility the way this scorer assumed. This is
+a genuine flaw in the scoring mechanism V0's first run's sparsity
+happened to mask (when almost everything was "unknown," the axis-
+equality rule rarely got exercised against real, colliding data at
+all).
+
+**HALT, per S1.3's own instruction, with both gates' numbers.**
+Composition gate not cleared (data-real, seeding may need more volume
+or better-targeted words, or more turns for lived integration).
+Envelope gate not cleared, and per S1.3's own fallback clause this
+now authorizes methodology review: the axis-equality verdict rule
+itself needs to model property-of / attribute-of relationships as
+compatible-across-axes, not just same-axis-or-contradicted, before a
+third V0 attempt would be a fair test of the underlying Boundary
+Envelope design rather than of this particular scoring shortcut.
+No further code changes attempted without Sunni's direction.

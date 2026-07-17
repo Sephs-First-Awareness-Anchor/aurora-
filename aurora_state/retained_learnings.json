@@ -103026,6 +103026,29 @@
       "sightings": 1,
       "first_seen": 1784318807.462793,
       "last_seen": 1784318807.462793
+    },
+    {
+      "text": "Manual code lineage for change_id=MC:348febf96a53; source=aurora.boot; kind=added; rewrite_profile=generic; modules=scripts.seed_abstract_regions_s1; axis_signature=X^1*T^1",
+      "confidence": 0.84,
+      "sources": [
+        "external_user_turn:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "code",
+        "lineage",
+        "xcode_lineage_b73212e63e"
+      ],
+      "tags": [
+        "lineage_event",
+        "ability",
+        "composer_unified"
+      ],
+      "sightings": 2,
+      "first_seen": 1784325430.863769,
+      "last_seen": 1784325432.356127
     }
   ]
 }
