@@ -2963,3 +2963,130 @@ ALL user-facing delivery surfaces (chat field, device/app, TTS,
 notification channels) and byte-attribute each -- verifying one surface
 says nothing about its siblings. (Origin: third attribution incident,
 Directive D1.)
+
+## Directive D2.1 — Voice transplant (2026-07-17, ratified: ship the deeper reorder)
+
+**Decision:** Sunni ratified Cael's Option 3 recommendation (D2, 2026-07-17):
+retain resp_A's dual_question_pipeline waterfall as the orchestration spine
+(comprehension -> search -> teaching -> generation -> honest-abstain ->
+crash-net), replace only its GENERATIVE stage with the campaign-verified
+composer path (gw._express() -> SentenceComposer). resp_A/resp_B collapse
+to one field feeding all delivery surfaces.
+
+**Pre-flight finding that reshaped the implementation:** mapping the live
+waterfall (aurora.py) before writing any transplant code (per D2.1's own
+"assess before architect" instruction) surfaced two things not visible
+from the directive text alone:
+
+1. resp_B (`gw._express()`'s output) is explicitly marked
+   `_internal_only=True` / `_surface_channel="internal_afterthought"`
+   immediately after it's computed (aurora.py ~17235-17238) -- by design
+   it was never meant to be delivered anywhere; it's an internal
+   "afterthought" simulation artifact. D1 already proved no real device
+   surface reads it. This context matters for anyone re-reading this code
+   without D1/D2's history: resp_B's tagging is not a bug, it predates
+   the unification and is safe to leave as-is (D2.1 only reads its
+   *content*, never removes the tag).
+2. resp_A was ALREADY double-wired into SentenceComposer before this
+   directive -- `_render_runtime_intent()` (aurora.py) -> WorkingMemory's
+   `_render_from_comprehension_intent()` (aurora_working_memory.py:3016)
+   already calls `perception.express()` -> `composer.compose()`, but via
+   a MOCK `AssemblyResult` (`SimpleNamespace(active_count=10)`,
+   `entropy_state={}`, `ds_stats={}`) that discards the richer evidence
+   (`_strata_evidence`, `subsurface_projection`, `activation_field`)
+   resp_B's real `gw._synthesize()` assembly carries. The "voice
+   transplant" is therefore best understood as: stop routing resp_A's
+   words through a synthetic evidence path when the real, evidence-
+   grounded one (already computed for resp_B, just discarded) is
+   available for the same turn.
+
+**First implementation attempt (kept, but insufficient alone):** at the
+point resp_B is computed and grounded-checked (aurora.py, end of
+`_run_reasoning_pipeline`), copy resp_B's content/tone/confidence onto
+resp_A whenever resp_B has grounded content AND resp_A's own chain had
+not already fired the honest-abstain net (`state.response_src ==
+"constraint_abstain"`). Live-traced against 6 turns: only **1/6**
+unified. Root cause: resp_A's own honest-abstain crash net fires TWICE,
+mid-chain (`_chain_down2_belief`, old trigger `"mid_chain"`) and at the
+emission chokepoint (`_enforce_emission_discipline`, old trigger
+`"emission_chokepoint"`) -- BOTH well before `gw._synthesize()`/
+`gw._express()` are even called later in the same function. resp_A's
+generative branches require a literal fact/comprehension match to
+produce anything; when they don't, abstain fires immediately, long
+before the composer voice ever gets a chance to speak. Directive D2.4
+explicitly anticipated this class of finding ("a non-decrease [in
+abstain rate] is a flag, not a failure") but the intent of "the spine
+keeps its job, the voice gets replaced" clearly requires abstain to be
+genuinely downstream of the NEW generation stage, not just downstream of
+resp_A's old, far stricter one.
+
+**Presented as a fork, not decided unilaterally** (this is an
+implementation-shaping decision with real risk-tradeoff, not covered by
+D2's "precisely scoped" language): ship the low-risk 1/6 patch as-is
+(defensible per D2.4's own escape clause, but the transplant barely
+fires) vs. do a deeper reorder so abstain waits for the composer vs. a
+narrower middle option (give the composer one attempt inside
+`_emit_honest_abstain_and_seek` itself). **Sunni ratified the deeper
+reorder.**
+
+**Final implementation (deeper reorder):**
+- `_chain_down2_belief`'s mid-chain abstain call and
+  `_enforce_emission_discipline`'s emission-chokepoint abstain call no
+  longer fire `_emit_honest_abstain_and_seek` inline. Both leave
+  `state.response_content` empty when resp_A's own chain found nothing --
+  every stage between there and resp_A's construction already guards on
+  `if state.response_content:`, so this is a safe no-op change for those
+  turns. Everything else in `_enforce_emission_discipline` (crest
+  compression, anchor-leak suppression) is unchanged.
+- At the D2.1 unification point (after resp_B is computed and grounded-
+  checked), the logic now has three cases: (1) composer produced grounded
+  content -> resp_A's content becomes the SAME string resp_B carries
+  (`resp_A.src = "composer_unified"`) -- the actual generation swap; (2)
+  composer produced nothing AND resp_A's own chain also produced nothing
+  -> the single honest-abstain crash net fires HERE, once, genuinely as
+  the last resort after both generation attempts; (3) composer produced
+  nothing but resp_A's own chain found something (direct fact/identity
+  lookup) -> keep resp_A's own content, graceful degradation, not an
+  abstain case.
+- Net effect: there is now exactly ONE call site to
+  `_emit_honest_abstain_and_seek` in the live turn path (previously two),
+  reusing `trigger="emission_chokepoint"`. N4's LIVE_FALLBACK crash-net
+  design is unchanged in every other respect (still ConstraintEmitter's
+  only surviving role, still logs every catch via
+  `_log_constraint_fallback`).
+
+**Live re-verification after the reorder:** same 6-turn trace,
+**6/6 unified** (`resp_A.src == "composer_unified"`, byte-identical
+content), 0/6 abstain -- versus the pre-D2.1 baseline where 5/6 of the
+same turns hit resp_A's own canned abstain while resp_B kept generating.
+This is the "abstain recedes as the trusted voice lands" effect D2.4
+anticipated.
+
+**New permanent CI test:**
+`tests/test_d1_device_path_attribution.py::test_resp_a_and_resp_b_are_unified_by_construction_post_d2`
+-- drives `process_external_user_turn()` across 6 live turns and asserts
+that whenever resp_B has grounded content, resp_A.content is byte-
+identical to it and `resp_A.src == "composer_unified"`. Since every real
+device surface (daemon, Flutter chat, Flutter TTS) reads resp_A (D1),
+this closes the divergence D1 proved: the words users see are now the
+same words the campaign's grammar/relevance verification battery
+(run_probe_battery.py) has been measuring and fixing all along.
+
+**Full suite: 802 passed, 0 failed** (unchanged count -- no test needed
+updating beyond the new one above; `test_governance_liveness.py`'s
+crash-net tests pass unmodified since they check for the
+`_emitter._emit_abstain(` call pattern and absence of retired call
+sites, not literal trigger-string counts).
+
+**Known caveat, honestly flagged, not fixed here:** unification is
+conditional on resp_B actually computing (requires `synthesis is not
+None` and not `suppress_afterthought`) and on `_response_is_grounded()`
+passing. Turns that hit those suppression paths (direct identity/name
+lookups, sensory queries, inline-definition turns) keep resp_A's own
+content untouched by design (case 3 above) -- this is intentional
+graceful degradation, not a gap needing a fix, since those turns already
+have a satisfying literal answer from resp_A's own chain.
+
+**Not yet done (next in this directive):** D2.2 (nesting-bug rider),
+D2.3 (diagnostic-leak rider), D2.4 (acceptance battery + abstain-rate
+telemetry + HALT).

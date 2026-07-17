@@ -139,3 +139,72 @@ def test_device_delivered_text_byte_attributes_to_resp_a_live():
     finally:
         A.process_external_user_turn = orig_peut
         shutil.rmtree(scratch, ignore_errors=True)
+
+
+def test_resp_a_and_resp_b_are_unified_by_construction_post_d2():
+    """D2.1 (Directive D2, ratified 2026-07-17): voice transplant unity
+    proof. Post-transplant, whenever the campaign-verified composer
+    (gw._express() -> SentenceComposer, resp_B) produces grounded content
+    for a turn, resp_A.content must be the SAME string -- not merely
+    similar, byte-identical -- because resp_A is now assigned directly
+    from resp_B's own content at the D2.1 unification point in
+    _run_reasoning_pipeline (aurora.py, src == "composer_unified"), rather
+    than independently re-derived. Since every real device surface reads
+    resp_A (D1), this is what makes the daemon, Flutter chat bubble, and
+    Flutter TTS handoff all carry the SAME words the campaign's own
+    grammar/relevance verification battery (run_probe_battery.py) already
+    measures on resp_B -- closing the divergence D1 proved.
+
+    Drives process_external_user_turn() directly (not through the Android
+    bridge) across several turns so both resp_A and resp_B are visible
+    side by side."""
+    sys.path.insert(0, REPO_ROOT)
+    import aurora as A
+
+    scratch = tempfile.mkdtemp(prefix="aurora_d2_unity_")
+    try:
+        shutil.copytree(
+            os.path.join(REPO_ROOT, "aurora_state"),
+            os.path.join(scratch, "aurora_state"),
+        )
+        systems = A.boot_aurora(state_dir=os.path.join(scratch, "aurora_state"))
+
+        turns = [
+            "Hi Aurora, how are you today?",
+            "What's your name?",
+            "Good morning!",
+            "What is a guitar chord?",
+            "Tell me about photosynthesis.",
+            "Can you help me understand recursion?",
+        ]
+        n_unified = 0
+        for turn_text in turns:
+            result = A.process_external_user_turn(systems, turn_text)
+            resp_a = result.get("resp_A")
+            resp_b = result.get("resp_B")
+            a_content = str(getattr(resp_a, "content", "") or "")
+            a_src = str(getattr(resp_a, "src", "") or "")
+            b_content = str(getattr(resp_b, "content", "") or "") if resp_b is not None else ""
+
+            if b_content.strip():
+                # The composer produced grounded content this turn -- the
+                # unification invariant must hold exactly.
+                assert a_src == "composer_unified", (
+                    f"turn {turn_text!r}: resp_B had content {b_content!r} but "
+                    f"resp_A.src={a_src!r}, not 'composer_unified' -- the D2.1 "
+                    f"voice transplant did not fire when it should have."
+                )
+                assert a_content == b_content, (
+                    f"turn {turn_text!r}: resp_A and resp_B diverged post-D2.1 "
+                    f"-- resp_A={a_content!r} resp_B={b_content!r}. Unity is "
+                    f"no longer held by construction; re-verification needed."
+                )
+                n_unified += 1
+
+        assert n_unified >= 1, (
+            "no turn in this sample produced a grounded composer response to "
+            "verify unity against -- battery may need adjustment, not "
+            "necessarily a regression, but this test proves nothing as-is."
+        )
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)

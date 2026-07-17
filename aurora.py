@@ -4738,8 +4738,14 @@ def _enforce_emission_discipline(user_text: str, systems, state) -> None:
                     )
                 except Exception:
                     pass
-        if not str(getattr(state, "response_content", "") or "").strip():
-            _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
+        # D2.1 (Directive D2, ratified 2026-07-17): the abstain-on-empty
+        # fallback formerly fired right here too -- before the campaign-
+        # verified composer voice existed for this turn. Content is left
+        # empty (resp_A is built from it as-is); the single honest-abstain
+        # crash net now fires once, later in _run_reasoning_pipeline, only
+        # if the composer voice also produced nothing. Everything else in
+        # this chokepoint (crest compression, anchor-leak suppression
+        # above) is unchanged -- only the terminal abstain-firing moved.
         # Expose this turn's captured waveform for observability.
         if isinstance(systems, dict):
             systems["_last_waveform"] = list(getattr(state, "waveform", []) or [])
@@ -15876,12 +15882,17 @@ def _chain_down2_belief(user_text: str, systems: dict, state: Any, *, auto_searc
                     state.quasiarch_events.append(dict(fb_event))
         except Exception:
             pass
-    if not state.response_content:
-        # Terminal gap mid-chain: nothing emerged at any level yet. Honest abstain +
-        # active seek (warp accommodation + base-meaning seeking). Anchor discipline
-        # itself is enforced once at the emission chokepoint (_enforce_emission_
-        # discipline, just before resp_A is built) so no path can leak past it.
-        _emit_honest_abstain_and_seek(user_text, systems, state, trigger="mid_chain")
+    # D2.1 (Directive D2, ratified 2026-07-17): the mid-chain terminal-gap
+    # abstain formerly fired right here, before the campaign-verified
+    # composer voice (resp_B / SentenceComposer) had been computed at all --
+    # "downstream of generation" meant downstream of resp_A's OWN generation
+    # only. Content is left empty and allowed to flow through the rest of
+    # the chain harmlessly (every remaining stage below already guards on
+    # `if state.response_content:`); the single honest-abstain crash net now
+    # fires once, later in _run_reasoning_pipeline, only if BOTH resp_A's
+    # own chain AND the composer voice produced nothing -- true last resort,
+    # not mid-chain pre-emption. See the deferred call at the D2.1 voice-
+    # transplant unification point.
     # Evolutionary refinement (learning hints woven in)
     try:
         state.response_content = _evolutionary_response_refinement(
@@ -17242,6 +17253,49 @@ def _run_reasoning_pipeline(
             resp_B.content = ""
             resp_B.emotional_tone = "neutral"
             resp_B.confidence = min(float(getattr(resp_B, "confidence", 0.5) or 0.5), 0.35)
+    except Exception:
+        pass
+    # D2.1 (Directive D2, ratified 2026-07-17): voice transplant. The spine
+    # (comprehension -> search -> teaching -> generation -> honest-abstain ->
+    # crash-net) stays exactly as ratified; only the GENERATIVE stage's words
+    # are replaced, and honest-abstain is now genuinely downstream of BOTH
+    # generation attempts (resp_A's own chain -- mid_chain and emission_
+    # chokepoint no longer fire abstain inline, see those two sites) and the
+    # campaign-verified composer (gw._express() -> SentenceComposer, the same
+    # call resp_B already makes) computed just above. Three cases:
+    #   1. Composer produced grounded content -> resp_A's words become the
+    #      SAME string resp_B carries (the actual generation swap: resp_A no
+    #      longer speaks through its own mock-assembly rendering --
+    #      _render_runtime_intent's mock AssemblyResult path in
+    #      aurora_working_memory.py -- when the real, evidence-grounded
+    #      composer voice is available).
+    #   2. Composer produced nothing AND resp_A's own chain also produced
+    #      nothing -> true last resort: the single honest-abstain crash net
+    #      fires here, once, now that both generation attempts have had
+    #      their turn.
+    #   3. Composer produced nothing but resp_A's own chain DID find
+    #      something (e.g. a direct fact/identity lookup) -> keep resp_A's
+    #      own content untouched (graceful degradation, not a case for
+    #      abstain -- there IS a genuine answer, just not from the composer).
+    try:
+        _d2_have_chain_content = bool(str(getattr(resp_A, "content", "") or "").strip())
+        _d2_unified_text = str(getattr(resp_B, "content", "") or "").strip() if resp_B is not None else ""
+        if _d2_unified_text:
+            resp_A.content = _d2_unified_text
+            resp_A.emotional_tone = getattr(resp_B, "emotional_tone", resp_A.emotional_tone)
+            resp_A.confidence = max(
+                float(getattr(resp_A, "confidence", 0.0) or 0.0),
+                float(getattr(resp_B, "confidence", 0.0) or 0.0),
+            )
+            resp_A.src = "composer_unified"
+            state.response_content = _d2_unified_text
+            state.response_src = "composer_unified"
+        elif not _d2_have_chain_content:
+            _emit_honest_abstain_and_seek(user_text, systems, state, trigger="emission_chokepoint")
+            resp_A.content = state.response_content
+            resp_A.emotional_tone = state.response_tone
+            resp_A.confidence = state.response_confidence
+            resp_A.src = state.response_src
     except Exception:
         pass
     if is_question and not bool(systems.get("_disable_afterthought_sim", False)):
