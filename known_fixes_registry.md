@@ -2747,4 +2747,219 @@ whole campaign's grammar/relevance work has measured (resp_B, via
 `run_probe_battery.py`) are two different, non-overlapping text
 generation paths -- confirmed diverging on every sample turn traced.
 Not addressed by the decision memo; flagged for Sunni as its own next
-item.
+item. Picked up the next day as Directive D1 (below).
+
+---
+
+## Directive D1 — Device-Path Attribution (The Third Voice), 2026-07-17
+
+**Status:** D1.1-D1.4 complete (artifact captured, byte-attribution
+proven live, divergence classified, unification dossier written).
+**Per the directive's own D1.4 instruction: HALTS HERE.** The unification
+path (route device to resp_B's verified path vs repair resp_A in place)
+is Sunni's decision, not made in this entry. D1.5 (acceptance) is not
+attempted until that decision lands.
+
+### D1.1 — Artifact captured
+
+Captured the exact device-delivered text (not a transcription -- the
+literal string handed downstream) for 6 live turns (3 simple, 3 topical
+incl. "guitar chords," the standing cross-path control) through the
+REAL Android bridge entry point,
+`flutter_app/android/app/src/main/python/aurora_bridge.py`'s
+`handle_message()` -- the same function `AuroraService.kt` calls via
+Chaquopy -- alongside the same turns' `resp_B` for side-by-side. Zero of
+6 turns matched between device text and resp_B, confirming the original
+finding on a rigorously-captured artifact, not an approximation.
+
+### D1.2 — Backward byte-trace: two real device surfaces, both resp_A
+
+**Delivery-surface enumeration** (this directive's own registry
+addition, applied to itself): two real device surfaces exist, traced
+independently.
+
+1. **`aurora_daemon.py`'s production entry** (~line 5575): `return
+   result.get("resp_A") if isinstance(result, dict) else None`. The
+   embedded/hardware daemon path. Unchanged since N4's pre-flight trace.
+2. **The Flutter mobile app**, traced end-to-end through three layers:
+   - Python: `aurora_bridge.handle_message()` calls `_aurora.
+     process_external_user_turn(...)`, then `response =
+     _sanitize_response(_extract_response(result), text)`.
+     `_extract_response()` reads `result.get("resp_A")` -- same field as
+     the daemon.
+   - Kotlin: `AuroraService.sendMessage()` calls `bridge.callAttr
+     ("handle_message", text)`, gets the string back, hands it to a
+     callback AND broadcasts it via `eventSink` as `{"type": "response",
+     "text": reply}`.
+   - Dart: `home_screen.dart`'s `_sendMessage()` receives `reply` from
+     `AuroraBridge.sendMessage()`, adds it to the chat log
+     (`_msgs.add(ChatMsg(reply, ...))`) AND -- unless quiet mode is on --
+     passes the SAME string to `_speak(reply)` ->
+     `AuroraBridge.speak(reply)` -> `'speak'` method channel ->
+     Kotlin's `nativeSpeak(reply)` -> `TextToSpeech.speak(reply, ...)`.
+     Chat text and TTS voice are byte-identical on the Flutter side --
+     no third divergence between them, only the one already found
+     between device (either surface) and resp_B.
+
+**Both real device surfaces read `resp_A`. There are two paths, not
+three** -- resp_A (both device surfaces) and resp_B (what `run_probe_
+battery.py` measures via its `gateway.speak_to_aurora()` fallback).
+
+**Byte-for-byte proof, live, same standard as `test_governance_
+liveness.py::test_delivered_output_attribution_traces_to_sentence_
+composer`:** `aurora.process_external_user_turn` was monkeypatched to
+capture every call `handle_message()` makes internally. Confirmed on
+all 6 turns: `device_delivered_text` matches `_sanitize_response(
+_extract_response(captured_result))` for at least one captured call --
+the exact same "matches any call, not necessarily the first" standard
+the resp_B test already established (both tests independently
+discovered that a single user turn can trigger multiple internal
+generation calls). **Permanent CI test added:**
+`tests/test_d1_device_path_attribution.py` (4 tests: 2 structural checks
+per surface, 1 call-chain check, 1 live byte-attribution proof) -- 4/4
+passing.
+
+**New finding, not previously known:** `handle_message()` calls
+`process_external_user_turn()` MULTIPLE times per single user turn (1,
+3, or 4 observed across 6 sample turns) -- confirmed live, call texts
+captured directly. Some of these are internal/background prompts, not
+the user's own text:
+- `"[AFTERTHOUGHT] <user text>"` -- an internal afterthought/reflection
+  pass.
+- `"Use this corpus fragment as context: Use this corpus fragment as
+  context: Use this corpus fragment as context: ..."` (repeated many
+  times, truncated at the print width but clearly self-nesting) --
+  traced to `aurora_dream_trainer.py:2040`'s corpus-context prompt
+  template (`f"Use this corpus fragment as context: {source_snippet}"`).
+  The repetition pattern strongly suggests `source_snippet` is
+  accumulating the FULL PRIOR PROMPT (including its own previous
+  prefix) rather than being reset between study-cycle iterations -- an
+  unbounded self-nesting bug, separate from and unrelated to device-path
+  attribution. Not fixed here (out of D1's scope); flagged for its own
+  future item.
+- `"What behavior links use and corpus here?"` / `"What would likely
+  cause that relation to change?"` -- apparent study-cycle follow-up
+  questions, also firing synchronously inside a live, latency-sensitive
+  user-facing call.
+
+This means `handle_message()` -- the function a real user's live turn
+actually runs through -- is synchronously executing background
+dream/study-cycle machinery (with at least one confirmed bug in it)
+before or interleaved with the user's own turn, not just the resp_A
+generation this directive was scoped to attribute. Recorded honestly;
+not investigated further here.
+
+**Second new finding:** on one live turn ("What's your name?", first
+capture run), the device-delivered text was a raw internal diagnostic
+string, not a conversational reply at all: *"Active axes:
+existence=0.29, cost/purpose=0.23, time/belief=0.21. Field state:
+heat=0.006, dominant-emotion=calm. Belief/time moved down since the
+last exchange."* This is exactly the class of leak `_sanitize_
+response()`'s docstring says it strips ("internal lineage/journal
+state," "self-state observation string tokens") but evidently does not
+catch this specific pattern. A real user asking Aurora her name could
+receive a raw axis-state readout instead of an answer. Not fixed here
+(separate defect from attribution); flagged for `_sanitize_response()`
+to gain a pattern for this leak class.
+
+### D1.3 — Divergence-point classification: (a) Routing-only
+
+Both `aurora_daemon.py` and `aurora_bridge.py` call the exact same
+`aurora.process_external_user_turn()` function, on the exact same
+`systems` dict (shared state, shared subsystems, shared turn
+processing) that produces resp_B too. The fork is NOT two independent
+generators -- it is a single shared call whose result dict happens to
+carry two differently-sourced fields (`resp_A`, built inside `_run_
+live_response_turn`'s dual_question_pipeline chain -- comprehension-
+response, search, teaching, sedimemory-recall, grounded-fallback,
+honest-abstain -- and `resp_B`, built via `gw._express()` ->
+`SentenceComposer.compose()`), and every real device consumer reads the
+former while this campaign's entire instrument stack reads the latter.
+**Classification: (a) routing-only.** The remedy is a routing decision
+(point device consumers at resp_B, or bring resp_A's construction up to
+the same standard), not a from-scratch diagnosis of a second generator
+-- resp_A's own generation chain (comprehension-response,
+grounded-fallback, etc.) is real, existing, already-built machinery,
+just never the subject of this campaign's grammar/relevance fixes.
+
+### D1.4 — Unification dossier (evidence only; HALT, per directive)
+
+**What routing device -> resp_B would gain:** every fix this entire R1
+campaign landed (POS-gating, skeleton validity, grounded fitness,
+relevance-primary selection, the refined wellformedness predicate,
+determiner/preposition motif slots, the N2.1 register rebuild) would
+reach real users for the first time. Currently none of it does --
+confirmed, not inferred.
+
+**What routing device -> resp_B would cost / risk:**
+- resp_B's own live character (this session's traces): short,
+  grammatically-attempted-but-often-salad sentences ("I exist sunni
+  clear. I understand moment real.") -- fluent-shaped but frequently
+  not meaningfully on-topic. resp_A's current character is the opposite
+  failure mode: honest, calibrated, often genuinely on-topic when it
+  has grounding (sedimemory recall, taught facts, search), but falls
+  through to short generic hedges ("I'm not sure.", "I don't have a
+  clear sense of that.") when it doesn't -- and per this campaign's own
+  "never fabricate" doctrine (FIX-A008), that hedging is arguably closer
+  to correct behavior than resp_B's confident-sounding salad, just less
+  fluent. Routing device to resp_B is not a strict improvement on every
+  axis; it trades one failure mode for a different one.
+- resp_A's chain includes real, working machinery resp_B's chain does
+  not have at all: comprehension-response (search/teaching-grounded
+  answers), sedimemory-recall (contextual memory), grounded-fallback.
+  Routing device straight to resp_B would silently drop all of that
+  capability from real device users unless it's ported or the routing
+  is additive (resp_B as a stage WITHIN resp_A's chain, not a full
+  replacement) rather than a straight swap.
+- The two newly-found separate bugs (dream-trainer corpus self-nesting;
+  diagnostic-string leak) sit inside resp_A's chain and `handle_message
+  ()` respectively -- routing away from resp_A doesn't fix either; they
+  need their own remediation regardless of the routing decision.
+
+**Dependent consumers of resp_A's CURRENT behavior:** none identified
+that specifically depend on resp_A's hedging/short-template character
+as opposed to richer content -- but this was not exhaustively audited
+(out of D1's scope; would require surveying every place `resp_A.content`
+or `state.response_content` is read downstream of the turn, beyond the
+two device surfaces this directive traced).
+
+**End-state options, per migration-completion (target: ONE generation
+path feeding all delivery surfaces + the documented crash-net):**
+1. **Route device to resp_B.** Fastest way to make campaign fixes
+   reach users. Risk: silently drops resp_A's real
+   comprehension/search/memory capability unless ported first (not a
+   small port -- see above).
+2. **Bring resp_A's construction up to the campaign's standard**
+   (apply POS-gating/relevance-primary/etc. to whatever component of
+   resp_A's chain currently under-performs) while keeping its working
+   comprehension/search/memory machinery. Larger, more careful
+   diagnosis than option 1, closer to a "full mini-diagnosis of an
+   independent generator" even though D1.3 classified this as
+   routing-only at the TOP level -- resp_A's chain is itself several
+   distinct sub-generators (comprehension-response, sedimemory-recall,
+   grounded-fallback, honest-abstain), each potentially needing its own
+   check against the campaign's fix catalog.
+3. **Hybrid:** resp_B's word-selection/grammar machinery feeds INTO
+   resp_A's chain as one candidate source alongside comprehension-
+   response/sedimemory/search, with the existing chain's fallback
+   ordering deciding when each fires. Preserves resp_A's real
+   capability, gains resp_B's grammar fixes, avoids a full separate
+   diagnosis of every resp_A sub-generator up front -- but is
+   architecturally the most involved option to design correctly.
+
+**No recommendation ranked above the others as "the" answer here** --
+D1.4 is evidence, per the directive's own framing, matching this
+campaign's established pattern for judgment-requiring dual-path
+decisions (R1.9.1 Step 3, N4's dossier).
+
+**HALT.** Path decision is Sunni's.
+
+**First Seen:** Directive D1, 2026-07-17.
+
+## Registry entry (per D1's own instruction, pending Sunni confirmation)
+
+**Delivery-surface enumeration rule:** attribution work must enumerate
+ALL user-facing delivery surfaces (chat field, device/app, TTS,
+notification channels) and byte-attribute each -- verifying one surface
+says nothing about its siblings. (Origin: third attribution incident,
+Directive D1.)
