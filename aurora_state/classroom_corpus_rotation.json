@@ -22,7 +22,8 @@
     "corpus:contradiction_handling:17",
     "corpus:contradiction_handling:18",
     "corpus:contradiction_handling:19",
-    "corpus:contradiction_handling:20"
+    "corpus:contradiction_handling:20",
+    "corpus:contradiction_handling:21"
   ],
   "uncertainty_signaling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -47,14 +48,16 @@
     "corpus:uncertainty_signaling:17",
     "corpus:uncertainty_signaling:18",
     "corpus:uncertainty_signaling:19",
-    "corpus:uncertainty_signaling:20"
+    "corpus:uncertainty_signaling:20",
+    "corpus:uncertainty_signaling:21"
   ],
   "context_carryover": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "fail_point:train_epoch_3:episode_8e8123ca88d8",
     "fail_point:train_epoch_3:episode_861845cce6c1",
-    "fail_point:train_epoch_3:episode_ca4e4da10b27"
+    "fail_point:train_epoch_3:episode_ca4e4da10b27",
+    "fail_point:train_epoch_3:episode_11d625707dd0"
   ],
   "boundary_calibration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -79,6 +82,7 @@
     "corpus:boundary_calibration:17",
     "corpus:boundary_calibration:18",
     "corpus:boundary_calibration:19",
-    "corpus:boundary_calibration:20"
+    "corpus:boundary_calibration:20",
+    "corpus:boundary_calibration:21"
   ]
 }
