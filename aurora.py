@@ -24601,6 +24601,13 @@ def process_external_user_turn(
         runtime_governor = None
         runtime_contract = {}
 
+    # D2.2 (Directive D2 rider, 2026-07-17): reentrancy depth counter. Read
+    # by _run_simulation_live_response_bridge to detect when a dream/
+    # afterthought simulation episode is trying to recursively re-enter
+    # process_external_user_turn WHILE a real interactive turn is already
+    # in progress -- "training fragments have no business inside a user's
+    # live turn." See that function for the guard this counter enables.
+    systems["_live_turn_depth"] = int(systems.get("_live_turn_depth", 0) or 0) + 1
     try:
         result = _run_live_response_turn(
             systems=systems,
@@ -24618,6 +24625,7 @@ def process_external_user_turn(
             result["runtime_contract"] = dict(runtime_contract)
         return result
     finally:
+        systems["_live_turn_depth"] = max(0, int(systems.get("_live_turn_depth", 1) or 1) - 1)
         if runtime_governor is not None:
             try:
                 runtime_governor.note_task_run("response_turn")
@@ -24917,13 +24925,44 @@ def _run_simulation_live_response_bridge(
     """
     Route one simulation prompt through Aurora's live turn processor.
     """
+    prompt = str(context.get('prompt', '') or context.get('topic', '') or '').strip()
+    if not prompt:
+        prompt = f"Let's explore {context.get('category', 'this')}."
+
+    # D2.2 (Directive D2 rider, 2026-07-17): a real interactive turn is
+    # already in progress on THIS SAME systems object (process_external_
+    # user_turn stamps _live_turn_depth before calling down into the
+    # chain that can reach here via train_on_bundle's every-10th-turn
+    # dream episode, or the is_question afterthought simulation). Both
+    # routes end up here regardless of which spec triggered run_episode()
+    # -- recursing into process_external_user_turn now would nest a
+    # synthetic turn inside the user's own turn (the D1/D2.2 "1-4 calls
+    # per turn" finding, including the corpus-fragment self-nesting bug).
+    # "Training fragments have no business inside a user's live turn":
+    # skip the recursive call and let this episode step complete locally
+    # with the same cheap fallback expression this function already uses
+    # when the real bridge produces nothing -- the episode's own
+    # bookkeeping still closes out, just without contaminating the live
+    # turn. Standalone/background invocations of this bridge (no live
+    # turn in progress, _live_turn_depth == 0) are unaffected.
+    if int(systems.get("_live_turn_depth", 0) or 0) > 0:
+        concept_name = str(getattr(getattr(selected, 'primary_concept', None), 'value', '') or '').replace('_', ' ')
+        expression = f"I approach this with {concept_name}. {prompt}".strip()
+        return {
+            'expression': expression,
+            'meta': {
+                'generation_path': 'live_turn_bridge_deferred',
+                'turn_src': 'reentrancy_guard',
+                'confidence': 0.3,
+                'offered_lookup': False,
+                'selected_concept': str(getattr(getattr(selected, 'primary_concept', None), 'value', '') or ''),
+            },
+        }
+
     episode_context = runtime_context or _build_simulation_live_bridge_context(systems)
     sandbox_systems = dict(episode_context.get('systems', {}) or {})
     sandbox_systems['_simulation_bridge_active'] = True
     sandbox_systems['_disable_afterthought_sim'] = True
-    prompt = str(context.get('prompt', '') or context.get('topic', '') or '').strip()
-    if not prompt:
-        prompt = f"Let's explore {context.get('category', 'this')}."
 
     turn_tick = int(episode_context.get('turn_tick', 0) or 0) + 1
     episode_context['turn_tick'] = turn_tick

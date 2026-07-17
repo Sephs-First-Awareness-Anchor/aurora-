@@ -3090,3 +3090,108 @@ have a satisfying literal answer from resp_A's own chain.
 **Not yet done (next in this directive):** D2.2 (nesting-bug rider),
 D2.3 (diagnostic-leak rider), D2.4 (acceptance battery + abstain-rate
 telemetry + HALT).
+
+## Directive D2.2 — Rider 1: nesting bug fixed (2026-07-17)
+
+**Root cause, traced in full** (a background research pass, since the
+call chain crosses aurora_dream_trainer.py, aurora_simulation_engine.py,
+and aurora.py): `handle_message()`'s 1-4 `process_external_user_turn()`
+calls per user turn came from TWO synchronous simulation triggers, both
+routing through the SAME choke point --
+`_run_simulation_live_response_bridge` (aurora.py), wired at boot via
+`_attach_live_response_simulation_bridge` as the simulation session's
+`live_response_bridge`:
+
+1. The `is_question` "[AFTERTHOUGHT]" simulation
+   (`aurora.gateway.simulation.run_episode(seed_prompt=f"[AFTERTHOUGHT]
+   {user_text}", turns=2, ...)`, inside `_run_reasoning_pipeline`).
+2. `DreamTrainer.train_on_bundle`'s every-10th-turn dream episode (the
+   "FIX-2" block in `_run_live_response_turn`, gated on
+   `_episode_compile_count % 10 == 0` and a >= 2-turn buffer) --
+   `train_on_bundle` calls `session.queue_avatar_specs([spec])` then
+   `simulation.run_episode(**ep_kw)`, BLOCKING, no threading.
+
+Either trigger's `run_episode()` call pops the OLDEST queued avatar spec
+(FIFO `_pending_avatar_specs.popleft()`) -- not necessarily its own --
+and `_shape_topic_for_turn` reads that spec's `prompt_candidates`/
+`followup_candidates` to build each turn's prompt. When a relational-
+probe spec (built by `_build_relational_probe_specs`, queued via
+`flush_lessons_to_simulation(force=True)` at boot) happened to be at the
+head of the queue, THIS is what produced the "Use this corpus fragment
+as context: ..." + 2 follow-up prompts observed live. Each prompt then
+reaches `_generate_expression()` -> `_live_response_bridge()` ->
+`_run_simulation_live_response_bridge`, which called
+`process_external_user_turn(sandbox_systems, prompt, ...)`
+**recursively**, nested inside the outer, real call's own call stack --
+this is what produced the extra `process_external_user_turn` calls, for
+BOTH triggers, regardless of which spec was queued.
+
+**Self-nesting compounding, fixed at two layers (write-time + read-time):**
+a probe-seeded turn's own exchange gets logged back into
+`FailPointLedger` as a future fail-point example (via
+`record_relational_probe_outcomes` -> `record_fail`); the next
+`_build_relational_probe_specs` pass then re-mines that already-wrapped
+text as `source_snippet` and wraps it AGAIN, compounding the prefix
+linearly every cycle (observed live: dozens of repeats in one string).
+- **Write-time** (`aurora_dream_trainer.py`, `FailPointLedger.
+  _sanitize_example`): extended the SAME regex-strip pattern already
+  used there for the identical `[AFTERTHOUGHT]` bug class
+  (`re.sub(r'^(?:\[(?:AFTERTHOUGHT|aftermath)\]\s*)+', '', text)`) to
+  also strip `"Use this corpus fragment as context: "` (repeated,
+  case-insensitive) before an example is ever stored.
+- **Read-time, defense-in-depth** (`_build_relational_probe_specs`):
+  new `_CORPUS_FRAGMENT_PREFIX` constant + `_strip_corpus_fragment_
+  wrapper()` helper strip the wrapper from `texts` again before pair
+  extraction; `"use"`, `"corpus"`, `"fragment"` added to
+  `_RELATIONAL_STOPWORDS` so the wrapper's own words can never be mined
+  as a fake "relational pair" (this is literally what happened live --
+  `left="use", right="corpus"` became the next cycle's seed).
+
+**Recursion, fixed with a reentrancy guard, not threading:** considered
+moving `train_on_bundle`'s `run_episode()` call to a background thread
+(the codebase's existing pattern for async training work --
+`aurora_bridge.py`'s `_pursue_study`/`_pursue_self`), but `aurora.py`'s
+turn pipeline shows no evidence of being thread-safe (pervasive
+unguarded `systems[...]=...` mutation throughout); threading a
+deeply-nested call chain that mutates a huge shared `systems` dict
+risked trading one bug for a worse, intermittent one. Instead:
+`process_external_user_turn` now stamps a reentrancy counter,
+`systems["_live_turn_depth"]` (incremented on entry, decremented in its
+existing `finally` block -- no new control-flow paths).
+`_run_simulation_live_response_bridge` checks that counter before
+recursing: when `> 0` (a real turn is already in progress on this exact
+`systems` object), it skips the recursive `process_external_user_turn`
+call and completes the episode step locally with the same cheap
+fallback expression (`f"I approach this with {concept}. {prompt}"`)
+this function already used whenever the real bridge produced nothing --
+the episode's own bookkeeping still closes out, just without nesting a
+synthetic turn inside the user's turn. Standalone/background
+invocations of the bridge (no live turn in progress, e.g. classroom
+lesson running) are unaffected -- this is a reentrancy guard, not a
+feature removal. "Training fragments have no business inside a user's
+live turn" (directive's own words) is satisfied by keeping training
+fragments OUT of the live call stack, not by disabling training.
+
+**Live acceptance criterion, verified exactly as specified:** 20 live
+turns (spanning turns 10 and 20, where the every-10th-turn dream trigger
+fires), **20/20 produced exactly 1 `process_external_user_turn()`
+call** -- versus the pre-fix baseline of 1-4 calls per turn documented
+in D1. New permanent tests:
+- `tests/test_d2_2_corpus_fragment_nesting.py` (6 tests): wrapper
+  stripping (single/compounded/idempotent), relational-pair extraction
+  never mines wrapper words, `_sanitize_example` strips at write-time,
+  and an end-to-end 5-cycle simulation proving the prefix never exceeds
+  1 occurrence in any generated `prompt_candidate` even when each
+  cycle's own output is fed back into the ledger.
+- `tests/test_d2_2_live_turn_reentrancy_guard.py` (3 tests): the depth
+  counter increments/decrements correctly and never goes negative; the
+  simulation bridge skips recursion when `_live_turn_depth > 0`
+  (isolated unit test, no full boot); and the live 20-turn acceptance
+  criterion itself.
+
+**Full suite: 812 passed, 0 failed** (up from 802 baseline: +1 D2.1
+unity test, +6 D2.2 corpus-fragment tests, +3 D2.2 reentrancy-guard
+tests).
+
+**Not yet done (next in this directive):** D2.3 (diagnostic-leak
+rider), D2.4 (acceptance battery + abstain-rate telemetry + HALT).
