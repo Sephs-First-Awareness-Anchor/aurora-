@@ -3823,3 +3823,47 @@ gate re-run). The still-open merge-conflict question (PR #130 vs.
 `aurora_state/*` files, zero code conflicts) remains unaddressed by
 directive, per Sunni's explicit instruction to continue M1 work first
 and deal with the merge conflict after.
+
+## M1.2 — Provenance hygiene, blind-era lexicon re-tagging, 2026-07-17
+
+`scripts/m1_2_provenance_hygiene.py`: identified blind-origin lexicon
+entries structurally -- `meaning == "learned:<word>"`, the exact
+signature D2's Condition-2 fix already caps in scoring -- one
+mechanical predicate over all 1752 entries, per the directive's own
+"identified by creation provenance ... not by guessing at individual
+entries." Re-tags matching entries' `lineage` as
+`"legacy-unverified:<original_lineage>"` (prepended, not overwritten
+-- nothing deleted, original provenance stays readable).
+
+**Result: 873/1752 entries (49.8%) re-tagged legacy-unverified** --
+nearly half the whole lexicon originated from the blind auto-learn
+path. Idempotent (re-run reports 0 newly tagged, 873 already tagged).
+
+**V0 control-word check, as the directive asked:** water, france,
+guitar, photosynthesis confirmed blind-origin and tagged. **japan is
+the honest exception** -- S1.2's seeding already replaced it with a
+real definition (`lineage="seeded_s1"`) before M1.2 ran, so it
+correctly does NOT get the tag. Reported as measured rather than
+forcing 5/5 to match the directive's phrasing.
+
+**No scoring change:** `SentenceComposer._score_composer_candidate`'s
+existing cap keys off `meaning` directly, not `lineage` -- this pass
+is visibility/audit only. Already-graduated entries (usage_count >= 3)
+keep scoring at full trust exactly as before; confirmed by test
+(`test_tagging_does_not_change_composer_scoring_behavior`).
+
+5 new tests (`tests/test_m1_2_provenance_hygiene.py`): all blind-
+origin entries tagged, original lineage recoverable, non-blind entries
+never tagged, scoring behavior unchanged, and the V0 control-word
+check (4 confirmed + japan's honest exception) pinned as a live
+regression against the real lexicon.
+
+Full suite: 847 passed (up from 842), 1 failed (same pre-existing cv2
+flake, unrelated). Noted for future cleanup: M1.1-A's Tier-2 logger
+now means `aurora_state/relation_pair_log.jsonl` joins the list of
+files a full-suite run pollutes via the isolation-gap pattern (tests
+that boot against real state without an isolated `state_dir` now also
+trigger the comprehension-stage logger) -- reverted this run same as
+always, not a new class of bug, just a new file in the same list.
+
+Not yet done: M1.3 (V0 third run), M1.4 (composition gate re-run).
