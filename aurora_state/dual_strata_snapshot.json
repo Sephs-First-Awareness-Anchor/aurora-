@@ -21,7 +21,7 @@
       "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.4415,
+    "readiness": 0.457,
     "selected_action": "contextualize",
     "should_speak": true,
     "stance": "contextual_continuity",
@@ -30,9 +30,9 @@
       "intensity": 0.5622,
       "label": "continuity_stable"
     },
-    "timestamp": 1784356573.6485438
+    "timestamp": 1784363144.74905
   },
-  "saved_at": 1784356573.6487224,
+  "saved_at": 1784363144.7492335,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
@@ -71,9 +71,9 @@
         "label": "surprise"
       },
       {
-        "axis": "B",
-        "intensity": 0.65,
-        "label": "contradiction"
+        "axis": "N",
+        "intensity": 1.0,
+        "label": "novelty"
       },
       {
         "axis": "T",

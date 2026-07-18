@@ -33,17 +33,6 @@
   "governed_by": "cers_regulator.cers_converge",
   "micro_reasoning": [
     {
-      "confidence": 0.6,
-      "label": "conflict_exposure",
-      "rationale": "The active assembly still contains paradox or unresolved conflict.",
-      "source": "assembly",
-      "tags": [
-        "conflict",
-        "stability"
-      ],
-      "urgency": 0.6
-    },
-    {
       "confidence": 1.0,
       "label": "callback_pressure",
       "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
@@ -75,7 +64,7 @@
   },
   "prediction_confidence": 0.53,
   "prediction_source": "understanding_contract+manifold",
-  "saved_at": 1784356573.6518297,
+  "saved_at": 1784363144.7523391,
   "sub_crests": [
     {
       "axis": "X",
@@ -98,9 +87,9 @@
       "label": "surprise"
     },
     {
-      "axis": "B",
-      "intensity": 0.65,
-      "label": "contradiction"
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "novelty"
     },
     {
       "axis": "T",
