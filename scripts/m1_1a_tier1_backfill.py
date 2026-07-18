@@ -41,7 +41,6 @@ data distribution below, not copied from grammar's 5/3/0.30.
 # Authors: Sunni (Sir) Morningstar & Cael Devo
 
 import json
-import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -50,19 +49,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
 import aurora_expression_perception as aep  # noqa: E402
+from aurora_internal.aurora_relation_pairs import extract_joints, region_from_entry  # noqa: E402
 
 CLASSROOM_LOG = REPO_ROOT / "aurora_state" / "classroom_log.jsonl"
 FAIL_POINTS = REPO_ROOT / "aurora_state" / "fail_points.json"
 LEXICON_PATH = REPO_ROOT / "aurora_state" / "lexicon.json"
 OETS_PATH = REPO_ROOT / "aurora_state" / "aurora_oets_web.json"
 OUT_PATH = REPO_ROOT / "aurora_state" / "relation_pair_log.jsonl"
-
-_STOPWORDS = {
-    "the", "a", "an", "this", "that", "these", "those", "my", "your",
-    "his", "her", "its", "our", "their", "and", "or", "but", "if",
-    "is", "are", "was", "were", "be", "been", "being", "to", "for",
-    "with", "in", "on", "at", "as", "it", "you", "i", "we", "they",
-}
 
 
 def load_lexicon():
@@ -76,20 +69,15 @@ def load_oets():
 
 
 def word_region(word, lexicon, oets_nodes):
-    """Dominant axis for a word -- lexicon noncomp_id first, OETS node
-    noncomp_id second (nodes don't carry noncomp_id directly in this
-    schema, so OETS fallback here is: does a node exist at all --
-    'known' vs 'unknown', not axis-bearing). Returns None if no real
-    lived data."""
-    w = word.lower()
-    entry = lexicon.get(w)
-    if entry and entry.get("noncomp_id"):
-        meaning = str(entry.get("meaning", "") or "")
-        is_placeholder = meaning == f"learned:{w}"
-        usage = int(entry.get("usage_count", 0) or 0)
-        if not is_placeholder or usage >= 3:
-            return str(entry["noncomp_id"]).split(":")[0]
-    return None
+    """Dominant axis for a word, via the shared region_from_entry() --
+    lexicon lookup only (OETS nodes in this schema don't carry a
+    noncomp_id, so there is no second axis-bearing source to fall back
+    to; oets_nodes is accepted for signature symmetry with earlier
+    callers but unused)."""
+    entry = lexicon.get(word.lower())
+    if not entry:
+        return None
+    return region_from_entry(word.lower(), entry.get("meaning"), entry.get("noncomp_id"), entry.get("usage_count"))
 
 
 def collect_received_text():
@@ -119,42 +107,6 @@ def collect_received_text():
     return texts
 
 
-_WORD_RE = re.compile(r"[a-zA-Z][a-zA-Z']{2,}")
-
-
-def extract_joints(text):
-    """Regex-over-POS-tags extraction. Returns list of (operator, argument, pattern)."""
-    joints = []
-    words = _WORD_RE.findall(text.lower())
-    words = [w for w in words if w not in _STOPWORDS]
-    if len(words) < 2:
-        return joints
-
-    # Pattern A/B: "<X> of|by <Y>" -- search the raw (non-stopword-filtered)
-    # token stream so "of"/"by" themselves are visible as anchors.
-    raw_tokens = re.findall(r"[a-zA-Z']+", text.lower())
-    for i, tok in enumerate(raw_tokens):
-        if tok in ("of", "by") and 0 < i < len(raw_tokens) - 1:
-            left = raw_tokens[i - 1]
-            right = raw_tokens[i + 1]
-            if len(left) >= 3 and len(right) >= 3 and left not in _STOPWORDS and right not in _STOPWORDS:
-                joints.append((left, right, f"X_{tok}_Y"))
-
-    # Pattern C/D: adjacent content-word pairs where the first is a
-    # verb/adjective (operator-like) and the second is a noun
-    # (argument-like), using real POS tagging.
-    for i in range(len(raw_tokens) - 1):
-        w1, w2 = raw_tokens[i], raw_tokens[i + 1]
-        if w1 in _STOPWORDS or w2 in _STOPWORDS or len(w1) < 3 or len(w2) < 3:
-            continue
-        r1 = aep.infer_word_role(w1)
-        r2 = aep.infer_word_role(w2)
-        if r1 in ("verb", "adjective") and r2 == "noun":
-            joints.append((w1, w2, f"{r1}_noun_adjacent"))
-
-    return joints
-
-
 def main():
     lexicon = load_lexicon()
     oets_nodes = load_oets()
@@ -164,7 +116,7 @@ def main():
 
     all_pairs = []
     for text, src in texts:
-        for operator, argument, pattern in extract_joints(text):
+        for operator, argument, pattern in extract_joints(text, aep.infer_word_role):
             all_pairs.append({
                 "operator_relation": operator,
                 "argument_word": argument,

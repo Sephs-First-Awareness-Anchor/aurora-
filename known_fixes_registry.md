@@ -3778,3 +3778,48 @@ Output: `aurora_state/relation_pair_log.jsonl` (991 records, schema:
 `operator_relation, argument_word, pattern, source, origin,
 argument_region` -- the same field shape Tier-2's live logger will
 append to).
+
+## M1.1-A Tier-2 — live relation-pair logger, 2026-07-17
+
+Extraction and region logic pulled out of the Tier-1 script into
+`aurora_internal/aurora_relation_pairs.py` so both tiers share one
+implementation, per the amendment's own "invent nothing parallel"
+principle applied to this campaign's own new code, not just to
+pre-existing Aurora machinery. `scripts/m1_1a_tier1_backfill.py`
+re-verified byte-identical output after the refactor (991 raw joints,
+same distribution) before Tier-2 was built on top of it.
+
+Logger wired into `_chain_down5_understanding` (`aurora.py`) --
+literally the comprehension stage's entry point, firing on the raw
+received `user_text` before any generation happens, matching "read-
+only observer of comprehension." Wrapped in a blanket `except`: a
+broken logger can never affect the turn being processed. Writes to
+`state_dir/relation_pair_log.jsonl` explicitly (not a hardcoded
+`__file__`-relative path) -- avoids repeating the isolation-gap
+pollution pattern this campaign has hit and fixed several times
+already elsewhere in the codebase.
+
+Tagged `source="input"`, `origin="live_comprehension"`, `turn_id`
+sourced from `working_memory.turn_count`. Every turn -- user turns,
+classroom lessons, and (per the amendment) future R2 correspondence
+replies -- feeds this store going forward, unlike Tier-1's fixed,
+already-exhausted archive.
+
+12 new tests (`tests/test_m1_1a_relation_pairs.py`): extraction
+pattern correctness (×4), `region_from_entry`'s fail-closed doctrine
+(×4, matching D2 Condition-2's earn-trust mechanism verbatim -- third
+application), graceful degradation with no/broken perception, a
+structural check confirming the wiring, and a live end-to-end test
+(real boot, real turn through `process_external_user_turn`, confirms
+`relation_pair_log.jsonl` actually grows).
+
+Full suite: 842 passed (up from 830), 1 failed (same pre-existing cv2
+test-order flake, passes in isolation, unrelated).
+
+Not yet done: M1.2 (blind-era provenance re-tagging), M1.3 (V0 third
+run against Tier-1 + whatever Tier-2 accumulates), M1.4 (composition
+gate re-run). The still-open merge-conflict question (PR #130 vs.
+`main`'s independently-running autonomous process, ~59 conflicting
+`aurora_state/*` files, zero code conflicts) remains unaddressed by
+directive, per Sunni's explicit instruction to continue M1 work first
+and deal with the merge conflict after.

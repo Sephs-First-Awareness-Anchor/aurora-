@@ -14921,6 +14921,17 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
     """Stage 5 down -- Understanding (A axis): From apex understanding, derive what needs saying.
     Consumes upward-built understanding_observation, developmental_stage, learned_hints,
     goal_stack, dominant_meaning_form to constrain the response before any retrieval runs."""
+    # M1.1-A Tier-2 (Directive M1, 2026-07-17): live relation-pair logger,
+    # the comprehension stage's entry point -- fires on RECEIVED text
+    # only, before any generation happens. Read-only observer: a broken
+    # logger must never affect the turn, hence the blanket except here.
+    try:
+        from aurora_internal.aurora_relation_pairs import log_relation_pairs_from_turn
+        _wm_t2 = systems.get("working_memory") if isinstance(systems, dict) else None
+        _turn_id_t2 = int(getattr(_wm_t2, "turn_count", 0) or 0) if _wm_t2 is not None else 0
+        log_relation_pairs_from_turn(user_text, systems, turn_id=_turn_id_t2, source="input")
+    except Exception:
+        pass
     # Propagate learned hints into pipeline_state for downstream stages
     if state.learned_hints:
         ps = state.pipeline_state
