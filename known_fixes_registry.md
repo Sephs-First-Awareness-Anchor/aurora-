@@ -3867,3 +3867,55 @@ trigger the comprehension-stage logger) -- reverted this run same as
 always, not a new class of bug, just a new file in the same list.
 
 Not yet done: M1.3 (V0 third run), M1.4 (composition gate re-run).
+
+## M1.3 — V0 third run, relation-level scorer, 2026-07-17 (HALT)
+
+Same 16 joints, same predictions on record as V0's first two runs.
+Scorer rewritten per M1.1/M1.1-A: SUPPORTED requires a direct
+`(operator, argument)` pair or a region-generalized `(operator,
+region)` key clearing thresholds derived from `relation_pair_log.
+jsonl`'s own distribution (direct-pair median=2, region-key
+instance_count median=2, region diversity max=2 -- thin data, honest
+low bar). UNKNOWN = no history, no counter-evidence. **CONTRADICTED
+was not used at all this run** -- no store of genuine counter-evidence
+("operator X tried with argument Y and failed") exists yet, so absence
+of support is UNKNOWN by construction, never CONTRADICTED. This is
+itself the fix for S1's inversion: raw axis difference is no longer
+consulted anywhere in the scorer.
+
+**Result: 18/18 joints landed UNKNOWN.** Category-error (4), gibberish
+(2), coherent (8), and metaphor (4) all identical.
+
+**Checked against the three predictions stated on record:**
+1. *"square root of [purple]" and "divided by [Wednesday]" show no
+   lived pair support and no region generalization"* -- **CONFIRMED.**
+   Both landed unknown exactly as predicted.
+2. *"boiling point of [water] shows region-generalized support even
+   where the exact pair is unlived"* -- **FALSIFIED.** Landed unknown;
+   `relation_pair_log.jsonl` simply doesn't have enough real
+   `(boiling/point, T-region)` history yet to clear even the
+   data-derived thresholds. Consistent with Tier-1's own reported
+   finding (median region diversity = 1 across the whole corpus).
+3. *"metaphors show sparse neighboring support -> unknown"* --
+   **CONFIRMED.** All 4 metaphor joints landed unknown, none
+   contradicted -- the anti-timidity/cross-axis-penalty-prohibition
+   requirement holds structurally now (there is no axis check left in
+   the scorer to violate it).
+
+**Reading the result honestly:** this is not the flawed-inversion
+failure S1 produced (nothing scores as falsely contradicted; the
+scoring mechanism itself now matches M1.1's corrected design). It is a
+**data-volume failure** -- the corrected scorer is only as good as the
+pair/region evidence available to it, and Tier-1's archival backfill
+plus zero real Tier-2 accumulation so far (Tier-2 only just landed,
+hasn't had real live turns to learn from yet) isn't enough evidence to
+positively support even the clearly-coherent control joints. 2 of 3
+predictions held exactly; the one that didn't points at insufficient
+data, not a wrong mechanism.
+
+**HALT per M1.3's own instruction: no fourth patch without a rethink.**
+Per the directive's explicit clause ("Non-separation against fed data
+AND a relation-level scorer -> the design itself returns to Sunni and
+Cael for first-principles rework"), this result returns to Sunni and
+Cael. M1.4 (composition gate re-run) not attempted -- gated on M1.3's
+outcome per the directive's own sequencing, and M1.3 did not separate.
