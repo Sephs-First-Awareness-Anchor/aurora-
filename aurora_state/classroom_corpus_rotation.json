@@ -13,7 +13,8 @@
     "corpus:contradiction_handling:8",
     "corpus:contradiction_handling:9",
     "corpus:contradiction_handling:10",
-    "corpus:contradiction_handling:11"
+    "corpus:contradiction_handling:11",
+    "corpus:contradiction_handling:12"
   ],
   "uncertainty_signaling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -29,7 +30,8 @@
     "corpus:uncertainty_signaling:8",
     "corpus:uncertainty_signaling:9",
     "corpus:uncertainty_signaling:10",
-    "corpus:uncertainty_signaling:11"
+    "corpus:uncertainty_signaling:11",
+    "corpus:uncertainty_signaling:12"
   ],
   "context_carryover": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -53,7 +55,8 @@
     "corpus:context_carryover:7",
     "corpus:context_carryover:8",
     "corpus:context_carryover:9",
-    "corpus:context_carryover:10"
+    "corpus:context_carryover:10",
+    "corpus:context_carryover:11"
   ],
   "boundary_calibration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -69,6 +72,7 @@
     "corpus:boundary_calibration:8",
     "corpus:boundary_calibration:9",
     "corpus:boundary_calibration:10",
-    "corpus:boundary_calibration:11"
+    "corpus:boundary_calibration:11",
+    "corpus:boundary_calibration:12"
   ]
 }
