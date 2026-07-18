@@ -4018,3 +4018,54 @@ mechanism attached rather than a bare number. Composition battery not
 re-run this pass (re-running against unchanged seeding would not be
 informative -- the trace evidence already explains the flat 0.486
 mean without needing a fourth measurement of the same state).
+
+## Data-recovery finding — S1.2's OETS seed silently lost, then restored, 2026-07-18
+
+While mapping real sources for Directive P1 Track CP's third
+incompatibility signal (OETS "contradicts" antonym relations, seeded
+in S1.2 specifically for this purpose -- guarantee<->uncertain,
+hedge<->guarantee), queried the live `aurora_state/aurora_oets_web.json`
+and found **zero** `contradicts`-type relations and no "guarantee"
+node -- directly contradicting S1.2's own script output
+(`"[OETS] Added 24 nodes: [...'guarantee'...]"`, `"Added 22
+relations"`) and this registry's own S1.2 entry, both already
+committed as fact.
+
+**Root cause (confirmed via git history, not guessed):** `git show`
+of the S1.2 commit (`61573195`) against its parent shows **0 new OETS
+nodes** landed in that commit -- only 168 live co-occurrence/adjacency
+relations from subsequent battery-run turn processing. The seed
+script's write to disk genuinely happened (its own printed counts are
+accurate at run time), but something after it and before the commit
+reverted `aurora_oets_web.json` to its pre-seed state -- most likely
+an over-broad pollution-cleanup `git checkout -- aurora_state/` run to
+discard an unrelated test run's writes to the same file, without
+noticing it also discarded the not-yet-committed seed. The **lexicon**
+side of the same seed (22 entries, `lineage=seeded_s1`, including
+`guarantee`) landed correctly and is intact through HEAD -- only the
+OETS web file was affected, so this is a single-file loss, not a
+broader seeding failure.
+
+**Fix:** `scripts/seed_abstract_regions_s1.py` is idempotent (skips
+existing nodes/relations/lexicon entries by design). Re-ran it against
+current HEAD state (`18614918`). Correctly added the 24 missing OETS
+nodes + 22 relations (both `contradicts` relations included) and
+correctly skipped all 26 words on the lexicon side (0 added -- no
+double-seeding, confirming the lexicon copy was never at risk).
+Verified live: `guarantee` node present, 2 `contradicts` relations
+present, node/relation count deltas (861->885 nodes, 18832->18854
+relations) match the script's original claimed deltas exactly.
+Committed separately (`6059e498`).
+
+**Process lesson, stated plainly:** the established pollution-cleanup
+reflex (`git checkout -- aurora_state/` after any live/test run) is a
+*wholesale* file revert -- it cannot distinguish "this run's pollution"
+from "other genuine uncommitted work sitting in the same file." Any
+seeding/data-generation step must be committed (or at minimum staged)
+*before* the next live/test run that touches the same state files,
+not left uncommitted across a run boundary. No evidence found that any
+*other* S1.2-seeded content (the lexicon side, or any later directive's
+seeded/logged data) was similarly affected -- this appears isolated to
+the single file/single run-boundary gap above -- but the mechanism
+means it is a latent risk class, not a one-off, and is worth keeping
+in mind for any future seeding step's commit sequencing.
