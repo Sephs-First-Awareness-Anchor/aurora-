@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784404207.894946,
-  "generation": 9308,
-  "genome_version": 9308,
+  "timestamp": 1784407678.110229,
+  "generation": 9343,
+  "genome_version": 9343,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -69,31 +69,31 @@
     "curiosity": 0.492,
     "caution": 0.41,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.39,
-    "introspection": 0.468,
-    "pattern_sensitivity": 0.4677,
+    "verbosity": 0.4122,
+    "introspection": 0.4896,
+    "pattern_sensitivity": 0.4283,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.353
   },
-  "personality_drift": 0.7803,
+  "personality_drift": 0.7349,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.8042910212257517,
-      "precision": 1.0,
-      "depth": 0.6626875905427034,
-      "confidence": 0.4549540724752981
+      "warmth": 0.8341828010226955,
+      "precision": 0.9071981936567283,
+      "depth": 0.6359795020229105,
+      "confidence": 0.49944998303580773
     },
     "cognitive": {
-      "curiosity": 0.7121000845797086,
-      "pattern_matching": 0.6803157675784203,
-      "abstraction": 0.525242947930264,
-      "risk_assessment": 0.9788258867228438
+      "curiosity": 0.7829849152719784,
+      "pattern_matching": 0.578770435280645,
+      "abstraction": 0.6864014307579768,
+      "risk_assessment": 0.9302700834404999
     },
     "social": {
-      "empathy": 0.5973862450147918,
-      "trust_extension": 0.7502148089794722,
-      "boundary_maintenance": 0.7494813282411569,
-      "engagement": 0.9947865693004831
+      "empathy": 0.8541129505927096,
+      "trust_extension": 0.5361950388614646,
+      "boundary_maintenance": 0.6552755030557339,
+      "engagement": 0.9639357383093238
     }
   },
   "governance_stats": {
@@ -113,11 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 15,
-  "what_aurora_learned": [
-    "what creates friction when approached with curious inquiry \u2014 it connects to existence, makes (B-axis, depth 0.37)."
-  ],
+  "understanding_shards": 16,
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
-  "stability_state": "critical",
-  "_checksum": "8b64e0a6ad5d"
+  "stability_state": "cautious",
+  "_checksum": "5ce2cf8740f2"
 }
