@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784414956.916288,
-  "generation": 9413,
-  "genome_version": 9413,
+  "timestamp": 1784418809.5138147,
+  "generation": 9448,
+  "genome_version": 9448,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.4639,
-    "emotional_expressiveness": 0.429,
-    "verbosity": 0.4139,
+    "curiosity": 0.5052,
+    "caution": 0.41,
+    "emotional_expressiveness": 0.39,
+    "verbosity": 0.3999,
     "introspection": 0.468,
-    "pattern_sensitivity": 0.4609,
+    "pattern_sensitivity": 0.3902,
     "social_engagement": 0.39,
-    "energy_conservation": 0.3133
+    "energy_conservation": 0.3205
   },
-  "personality_drift": 0.669,
+  "personality_drift": 0.8262,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.9763997116092733,
-      "precision": 0.938884158683001,
-      "depth": 0.5361575714991361,
-      "confidence": 0.91030994392982
+      "warmth": 1.0,
+      "precision": 0.9508891140306324,
+      "depth": 0.5507964056258594,
+      "confidence": 0.9632730252833342
     },
     "cognitive": {
-      "curiosity": 0.8419156946659134,
-      "pattern_matching": 0.5622944568215255,
-      "abstraction": 0.7338493543703679,
-      "risk_assessment": 0.6543996875761428
+      "curiosity": 0.9882385270013105,
+      "pattern_matching": 0.7471382246811624,
+      "abstraction": 0.728703304060355,
+      "risk_assessment": 0.8326428252306068
     },
     "social": {
-      "empathy": 0.9767367539185798,
-      "trust_extension": 0.4921553209957767,
-      "boundary_maintenance": 0.8779724856186073,
-      "engagement": 0.8260829092179918
+      "empathy": 0.9674911565980597,
+      "trust_extension": 0.7351086153681066,
+      "boundary_maintenance": 0.8178367945856205,
+      "engagement": 0.9267714590922274
     }
   },
   "governance_stats": {
@@ -115,9 +115,9 @@
   "total_episodes": 5,
   "understanding_shards": 16,
   "what_aurora_learned": [
-    "the creates friction when approached with thoughtful reflection (B-axis, depth 0.25)."
+    "its creates friction when approached with thoughtful reflection \u2014 it connects to shape, exist (B-axis, depth 0.24)."
   ],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "da6253c40536"
+  "_checksum": "8d83bf68d6c3"
 }
