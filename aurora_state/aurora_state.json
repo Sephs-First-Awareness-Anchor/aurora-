@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784372772.02414,
-  "generation": 9028,
-  "genome_version": 9028,
+  "timestamp": 1784375746.0095696,
+  "generation": 9063,
+  "genome_version": 9063,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.7346,
+    "caution": 0.6157,
     "emotional_expressiveness": 0.39,
-    "verbosity": 0.4018,
+    "verbosity": 0.39,
     "introspection": 0.468,
     "pattern_sensitivity": 0.39,
     "social_engagement": 0.39,
-    "energy_conservation": 0.6543
+    "energy_conservation": 0.312
   },
-  "personality_drift": 1.1571,
+  "personality_drift": 0.8837,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.8987885126088562,
-      "precision": 0.8918107637335292,
-      "depth": 0.8338550501326731,
-      "confidence": 0.5859250511340726
+      "warmth": 1.0,
+      "precision": 0.9119692365666661,
+      "depth": 0.7120823123262962,
+      "confidence": 0.8865645065569511
     },
     "cognitive": {
-      "curiosity": 0.7782802448017782,
-      "pattern_matching": 0.9730853029593295,
-      "abstraction": 0.9551440648478701,
-      "risk_assessment": 0.9497662487664061
+      "curiosity": 0.9648868237336329,
+      "pattern_matching": 0.9789294049671899,
+      "abstraction": 0.8003327350297157,
+      "risk_assessment": 0.9173134501076718
     },
     "social": {
-      "empathy": 0.7876057287545383,
-      "trust_extension": 0.711532752505516,
-      "boundary_maintenance": 0.570181696544143,
-      "engagement": 0.7402621055223544
+      "empathy": 0.9244996053244483,
+      "trust_extension": 0.8679938537846765,
+      "boundary_maintenance": 0.5148,
+      "engagement": 0.7961669227138873
     }
   },
   "governance_stats": {
@@ -113,11 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 15,
-  "what_aurora_learned": [
-    "what creates friction when approached with direct clarity \u2014 it connects to them, reflection (B-axis, depth 0.37)."
-  ],
+  "understanding_shards": 16,
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "7106f9db49c0"
+  "_checksum": "91f8f18d178d"
 }
