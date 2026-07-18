@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784379722.236271,
-  "generation": 9098,
-  "genome_version": 9098,
+  "timestamp": 1784384779.0730364,
+  "generation": 9133,
+  "genome_version": 9133,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.492,
-    "caution": 0.4266,
-    "emotional_expressiveness": 0.39,
-    "verbosity": 0.39,
-    "introspection": 0.4807,
-    "pattern_sensitivity": 0.3902,
-    "social_engagement": 0.39,
-    "energy_conservation": 0.3231
+    "curiosity": 0.5508,
+    "caution": 0.5236,
+    "emotional_expressiveness": 0.4097,
+    "verbosity": 0.3945,
+    "introspection": 0.468,
+    "pattern_sensitivity": 0.4285,
+    "social_engagement": 0.4129,
+    "energy_conservation": 0.3139
   },
-  "personality_drift": 0.8173,
+  "personality_drift": 0.6454,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.7911404939158255,
-      "precision": 0.8028163441190398,
-      "depth": 0.9193413779003252,
-      "confidence": 0.8626716411603522
+      "warmth": 1.0,
+      "precision": 0.6789212106654964,
+      "depth": 0.8999595575778611,
+      "confidence": 0.9115713927945547
     },
     "cognitive": {
-      "curiosity": 0.822684707806097,
-      "pattern_matching": 0.843632418420165,
-      "abstraction": 0.9385971024485038,
-      "risk_assessment": 0.8585414314844627
+      "curiosity": 0.9396453459504084,
+      "pattern_matching": 0.5304000000000001,
+      "abstraction": 0.7085678145926276,
+      "risk_assessment": 0.935839012978126
     },
     "social": {
-      "empathy": 0.8868860692094158,
-      "trust_extension": 0.5915074403647382,
-      "boundary_maintenance": 0.5879829762846014,
-      "engagement": 0.9813476439014029
+      "empathy": 1.0,
+      "trust_extension": 0.8147713109938043,
+      "boundary_maintenance": 0.6163890854125023,
+      "engagement": 1.0
     }
   },
   "governance_stats": {
@@ -113,12 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 5,
-  "understanding_shards": 15,
-  "what_aurora_learned": [
-    "due creates friction when approached with warm acknowledgment \u2014 it connects to children, allies (B-axis, depth 0.24).",
-    "what creates friction when approached with thoughtful reflection \u2014 it connects to cause, can (B-axis, depth 0.38)."
-  ],
+  "understanding_shards": 16,
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "cautious",
-  "_checksum": "e6684f84c9e5"
+  "_checksum": "316210ad6052"
 }
