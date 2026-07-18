@@ -14932,6 +14932,19 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
         log_relation_pairs_from_turn(user_text, systems, turn_id=_turn_id_t2, source="input")
     except Exception:
         pass
+    # B1.1 (Directive B1, 2026-07-18): Boundary Envelope shadow scoring.
+    # Rides beside the Tier-2 logger above, same contract -- read-only
+    # observer, zero behavioral effect, a broken scorer must never
+    # affect the turn. Computes per-joint envelope verdicts against the
+    # CURRENT relation_pair_log.jsonl and logs them for the longitudinal
+    # instrument panel (B1.2); does not feed anything back into state.
+    try:
+        from aurora_internal.aurora_boundary_envelope import log_envelope_shadow
+        _wm_b1 = systems.get("working_memory") if isinstance(systems, dict) else None
+        _turn_id_b1 = int(getattr(_wm_b1, "turn_count", 0) or 0) if _wm_b1 is not None else 0
+        log_envelope_shadow(user_text, systems, turn_id=_turn_id_b1)
+    except Exception:
+        pass
     # Propagate learned hints into pipeline_state for downstream stages
     if state.learned_hints:
         ps = state.pipeline_state

@@ -3919,3 +3919,45 @@ AND a relation-level scorer -> the design itself returns to Sunni and
 Cael for first-principles rework"), this result returns to Sunni and
 Cael. M1.4 (composition gate re-run) not attempted -- gated on M1.3's
 outcome per the directive's own sequencing, and M1.3 did not separate.
+
+## Directive B1 — The Rethink (Longitudinal Deployment), 2026-07-18
+
+Ratified. First-principles verdict accepted: M1.3's mechanism is
+sound (2/3 predictions held; the falsified one was a designer-prior
+assumption, not a scorer defect -- the scorer correctly refused to
+claim support her lived history doesn't contain). The actual flaw was
+gate epistemology -- a static offline exam applied to a mechanism
+whose evidence IS lived history. Validation and living are the same
+process for a learning system; V0 as a pass/fail gate was a category
+error, not the scorer.
+
+## B1.1 — Shadow deployment, 2026-07-18
+
+`aurora_internal/aurora_boundary_envelope.py`: M1.3's scorer
+(unchanged mechanism -- direct pair / region-generalized / unknown,
+never contradicted) wired into the live comprehension path, riding
+beside the Tier-2 relation-pair logger it shares a contract with.
+Computes per-joint verdicts on every real received turn against the
+CURRENT `relation_pair_log.jsonl`, logs `{operator_relation,
+argument_word, pattern, verdict, reason, evidence, provenance_mix,
+turn_id, timestamp}` to `aurora_state/envelope_shadow_log.jsonl`.
+**Zero behavioral effect** -- read-only observer, wrapped in the same
+blanket-except contract as Tier-2 (a broken scorer can never affect a
+turn), feeds nothing back into `state`/`resp_A`. Thresholds (direct=2,
+region_count=2, region_diversity=2) carried over unchanged from M1.3.
+
+9 new tests (`tests/test_b1_1_envelope_shadow.py`): pair-index
+construction, direct/region-generalized/unknown scoring, a permanent
+invariant test that `score_joint` can never return "contradicted"
+(the structural fix for S1's inversion, now pinned), graceful
+degradation, structural wiring confirmation, and a live end-to-end
+test confirming a real turn actually grows `envelope_shadow_log.jsonl`.
+
+Full suite: 856 passed (up from 847), 1 failed (same pre-existing cv2
+flake, unrelated). `envelope_shadow_log.jsonl` joins `relation_pair_
+log.jsonl` on the isolation-gap pollution watch-list for future
+full-suite runs -- same pattern, not a new bug.
+
+Not yet done: B1.2 (weekly panel automation + kill-switch derivation),
+B1.3 (reading-program corpus -- gated on Sunni's separate content
+approval), B1.4/M1.4 (composition-gate re-aim, decoupled, next).
