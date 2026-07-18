@@ -3707,3 +3707,74 @@ compatible-across-axes, not just same-axis-or-contradicted, before a
 third V0 attempt would be a fair test of the underlying Boundary
 Envelope design rather than of this particular scoring shortcut.
 No further code changes attempted without Sunni's direction.
+
+## Amendment M1.1-A — Pair-Data Sources, Tier-1 Backfill, 2026-07-17
+
+**Premise correction accepted, second instance:** M1's named pair
+source (`couplings.json`/`pair_stats.json`) doesn't exist at word
+level (already logged above). This amendment's own trigger notes a
+THIRD would-be premise gap caught before building: "the V0 harness's
+existing joint-extraction machinery" doesn't exist either -- V0's 16
+joints were 100% hand-authored per sentence; `UtteranceParser` only
+produces a flat `topic_words` bag, no structured relation extraction
+anywhere in the codebase. Flagged before building, per instruction:
+built a minimal extractor instead of assuming one existed.
+
+**Tier-1 backfill (`scripts/m1_1a_tier1_backfill.py`):** received-text
+only (classroom_log.jsonl's 474 non-empty `seed_prompt` fields +
+fail_points.json's `examples[].user_turns`, 674 sources total) --
+deliberately excludes `assistant_turns` (self-generated, Tier-3
+territory). Extraction: regex-over-POS-tags, three patterns ("X of Y",
+"X by Y", verb/adjective+noun adjacency), using `infer_word_role` (the
+same POS tagger the composer/lexicon already use) as the sole
+existing-machinery backbone. Region = argument word's dominant axis
+via lexicon `noncomp_id` (fail-closed: placeholder/low-usage entries
+score no region, matching the D2 Condition-2 doctrine). Accumulation
+follows the grammar-motif promotion shape (`aurora_grammar_engine.py`)
+verbatim in structure: key = `(operator_relation, argument_region)`,
+accumulate `instance_count` + `distinct_arguments` (contexts_seen
+analog).
+
+**Numbers, reported as measured, not rounded up:**
+- 991 raw joint instances extracted from 674 received-text sources.
+- 439/991 (44%) have a real lived-axis region for their argument --
+  the rest are either stopword-adjacent noise or genuinely
+  region-unknown words, both structurally excluded rather than
+  guessed at.
+- 199 distinct `(operator_relation, region)` keys accumulated.
+- **Diversity is the binding constraint: median `distinct_arguments`
+  per key = 1.** Most keys saw exactly one unique argument word ever
+  -- there is essentially no region-generalization signal in this
+  corpus at this scale (max diversity across all 199 keys = 2).
+  Genuine region generalization (an operator shown to work with
+  MULTIPLE different arguments sharing a region, not just one word
+  repeated) barely exists here.
+- **Coverage of V0's actual joint operators is thin: only 15/991
+  pairs (1.5%) match a V0 operator word at all** (square/root/
+  divided/capital/boiling/point/legs/population/chord/tell/taste/
+  heavy/bright/weight/authentication/code/seventeen/digit). Of those
+  15: `weight of evidence` (B region) and `point of view` (region
+  unresolved) are genuine, useful real-English pairs; `population of
+  uncertain` (T region, 6 occurrences) is almost certainly a
+  cross-clause extraction artifact from a longer sentence, not a real
+  "population of X" relation -- the regex pattern has no clause
+  boundary awareness, a known limitation of a minimal
+  regex-over-POS-tags extractor, logged rather than silently trusted.
+
+**Honest implication for M1.3:** Tier-1 alone will barely move V0's
+specific 16 joints -- the archival corpus this campaign has generated
+so far (lesson seed prompts + failure-example transcripts) is real
+data but numerically thin for THESE particular words. Tier-2's live
+logger (not yet built) is likely to matter more than Tier-1 for V0's
+third run, since it accumulates going forward rather than backfilling
+a fixed, already-exhausted archive. Reported per the amendment's own
+sequencing checkpoint ("Tier-1 backfill runs first ... report pair
+counts + region coverage") before proceeding to Tier-2/M1.2/M1.3,
+since these numbers are weaker than the amendment's framing may have
+anticipated and could change how the remaining M1 sequence should be
+paced.
+
+Output: `aurora_state/relation_pair_log.jsonl` (991 records, schema:
+`operator_relation, argument_word, pattern, source, origin,
+argument_region` -- the same field shape Tier-2's live logger will
+append to).
