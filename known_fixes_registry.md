@@ -3961,3 +3961,60 @@ full-suite runs -- same pattern, not a new bug.
 Not yet done: B1.2 (weekly panel automation + kill-switch derivation),
 B1.3 (reading-program corpus -- gated on Sunni's separate content
 approval), B1.4/M1.4 (composition-gate re-aim, decoupled, next).
+
+## B1.4 / M1.4 — Composition-gate region-drift check, 2026-07-18
+
+Used the existing `run_probe_battery.py --trace` diagnostic (built in
+R1.6, classifies failures as PERCEIVE/EXPRESS/VOCABULARY/UNCLASSIFIED)
+against all 24 abstract-stratum probes rather than guessing at drift.
+
+**Result: zero VOCABULARY-classified failures.**
+`contradiction_handling`: 12/12 classified **PERCEIVE**.
+`uncertainty_signaling`: 12/12 classified **UNCLASSIFIED**.
+
+Read the raw traces to understand both:
+
+- **contradiction_handling's PERCEIVE failures**: per-probe detail is
+  identical across all 12 -- `"No new ContradictionLedger entry after
+  this turn -- the probe's contradiction never became an internal
+  event."` `contradiction_ledger_count_before/after` are both 0. This
+  is a detection failure upstream of generation entirely -- Aurora's
+  ContradictionLedger mechanism isn't recognizing these inputs as
+  contradictions at all. No amount of vocabulary seeding touches this;
+  it is a comprehension-layer gap, not an expression-layer one.
+
+- **uncertainty_signaling's response pattern**, read directly from the
+  traces: responses echo literal content words already present in the
+  input ("stock market" -> "month clear", "coworker...reorg" ->
+  "coworker deep...reorg clear", "medication" -> "medication clear")
+  -- F1's relevance-anchoring mechanism working exactly as designed,
+  pulling direct anchors from the turn's own text. **None of S1.2's
+  seeded strategy vocabulary (hedge, uncertain, unknowable, predict,
+  speculate, contradiction, acknowledge) appears in a single response
+  across all 24 probes**, despite existing with real definitions and
+  real axis tags. Root cause: those words were only related to EACH
+  OTHER in S1.2's OETS relations (contradiction->inconsistent,
+  hedge->uncertain, etc.), never to the CONCRETE topic words real
+  probes actually contain (stock, market, coworker, medication,
+  career, cat, wedding, history, friend, business, author,
+  relationship). Relevance-anchoring is input-text-driven by design
+  (F1/G1's own doctrine); a strategy word with no graph path from the
+  turn's actual words can never win selection, no matter how well
+  it's defined.
+
+**Drift confirmed, but not the kind M1.4 anticipated.** This isn't a
+wrong-region miss (S1.2 targeted the correct domain -- confirmed
+already in S1.1/S1.2's own analysis) -- it's a **missing-relation**
+gap: the right words exist, unconnected to the concrete vocabulary
+that would ever surface them. "Top-up seeding into corrected regions"
+as M1.4 describes it (more words, same region) would not fix this;
+what's missing is a different kind of seeding entirely (operator/
+strategy-word <-> concrete-topic-word relations), a design decision
+this entry does not make unilaterally.
+
+**Per M1.4's own escape clause: the composition gap decouples from
+seeding and returns as its own open question**, now with a precise
+mechanism attached rather than a bare number. Composition battery not
+re-run this pass (re-running against unchanged seeding would not be
+informative -- the trace evidence already explains the flat 0.486
+mean without needing a fourth measurement of the same state).
