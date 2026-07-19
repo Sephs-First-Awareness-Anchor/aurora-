@@ -1840,7 +1840,15 @@ class ContradictionLedger:
         "contradiction_ledger.json",
     )
 
-    def __init__(self):
+    def __init__(self, state_dir=None):
+        # Data-recovery finding (Directive P1 Track CP, 2026-07-19):
+        # STATE_PATH was a hardcoded class attribute, so every instance
+        # -- test or live -- read/wrote the real repo's aurora_state/
+        # regardless of what state_dir a scratch-isolated boot passed
+        # elsewhere. Instance-level override here matches the isolation
+        # contract already enforced for the Tier-2/B1.1/Track CP loggers.
+        if state_dir:
+            self.STATE_PATH = os.path.join(str(state_dir), "contradiction_ledger.json")
         self._records: Dict[str, ContradictionRecord] = {}
         self._lock = import_threading_lock()
         self.load()

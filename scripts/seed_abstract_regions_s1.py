@@ -280,8 +280,17 @@ def build_relations(existing_rels, all_new_words):
     add("uncertain", "unknowable", "related_to", 0.80, 0.82)
     add("predict", "uncertain", "causes", 0.82, 0.82)
     add("speculate", "predict", "related_to", 0.80, 0.80)
-    add("guarantee", "uncertain", "contradicts", 0.85, 0.85)
-    add("hedge", "guarantee", "contradicts", 0.80, 0.80)
+    # NOTE (data-recovery correction, 2026-07-19): the live RelationType
+    # enum (aurora_internal/aurora_ontological_scaffolding.py) has no
+    # "contradicts" member -- OPPOSITE_OF = "opposite_of" is the real
+    # antonym type ("light OPPOSITE_OF dark"). A relation_type string
+    # not in that enum is silently reclassified to RELATED_TO on the
+    # very next boot_aurora() load/resave cycle (aurora_identity_
+    # persistence.py's rtype_map.get(rtype_val, RelationType.RELATED_TO)
+    # fallback) -- this is what actually erased S1.2's original seed
+    # (not a stray git checkout, though that was the first hypothesis).
+    add("guarantee", "uncertain", "opposite_of", 0.85, 0.85)
+    add("hedge", "guarantee", "opposite_of", 0.80, 0.80)
 
     # V0 category-error cluster (purple/square/divided/color -- deliberately
     # NOT linked to each other by anything but "related_to color", since the

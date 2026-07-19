@@ -39,6 +39,22 @@ _RAW_TOKEN_RE = re.compile(r"[a-zA-Z']+")
 
 _UNVERIFIED_USAGE_FLOOR = 3  # matches SentenceComposer._UNVERIFIED_VOCAB_USAGE_FLOOR
 
+_NEGATION_RE = re.compile(r"\b(not|n't|never|no|isn't|wasn't|won't|doesn't|didn't|can't|cannot|aren't)\b")
+_NEGATION_PROXIMITY_CHARS = 40
+
+
+def is_negated_near(text_low, word):
+    """Rough proximity check (not a parser, matching this module's own
+    extraction honesty level): does a negation marker appear in the
+    span immediately before `word`'s first occurrence in text_low?
+    Used by Directive P1 Track CP to detect negation-flip collisions
+    without needing a real dependency parse."""
+    idx = text_low.find(word)
+    if idx == -1:
+        return False
+    span = text_low[max(0, idx - _NEGATION_PROXIMITY_CHARS):idx]
+    return bool(_NEGATION_RE.search(span))
+
 
 def extract_joints(text, infer_word_role):
     """Pure text -> list of (operator, argument, pattern). `infer_word_role`
@@ -119,6 +135,8 @@ def log_relation_pairs_from_turn(user_text, systems, turn_id, source="input"):
     state_dir = str((systems or {}).get("state_dir") or "aurora_state")
     out_path = os.path.join(state_dir, "relation_pair_log.jsonl")
 
+    text_low = user_text.lower()
+
     written = 0
     lines = []
     for operator, argument, pattern in joints:
@@ -138,6 +156,7 @@ def log_relation_pairs_from_turn(user_text, systems, turn_id, source="input"):
             "source": source,
             "origin": "live_comprehension",
             "argument_region": region,
+            "negated": is_negated_near(text_low, argument.lower()),
             "turn_id": str(turn_id),
             "timestamp": time.time(),
         }))

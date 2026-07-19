@@ -14932,6 +14932,21 @@ def _chain_down5_understanding(user_text: str, systems: dict, state: Any,
         log_relation_pairs_from_turn(user_text, systems, turn_id=_turn_id_t2, source="input")
     except Exception:
         pass
+    # P1 Track CP (Directive P1, 2026-07-18): contradiction perception via
+    # pair collision. Runs AFTER the Tier-2 write above so the recent-
+    # window read below reflects prior turns' pairs on disk (this turn's
+    # own pairs are excluded by turn_id, never compared against
+    # themselves). Feed-the-mechanism rule: routes real collisions into
+    # the EXISTING ContradictionLedger.record() entry point, no rival
+    # ledger. Fail-quiet: unknown compatibility never fires; any failure
+    # here must never affect the turn, hence the blanket except.
+    try:
+        from aurora_internal.aurora_contradiction_perception import perceive_contradictions
+        _wm_cp = systems.get("working_memory") if isinstance(systems, dict) else None
+        _turn_id_cp = int(getattr(_wm_cp, "turn_count", 0) or 0) if _wm_cp is not None else 0
+        perceive_contradictions(user_text, systems, turn_id=_turn_id_cp)
+    except Exception:
+        pass
     # B1.1 (Directive B1, 2026-07-18): Boundary Envelope shadow scoring.
     # Rides beside the Tier-2 logger above, same contract -- read-only
     # observer, zero behavioral effect, a broken scorer must never
@@ -20456,7 +20471,7 @@ def boot_aurora(
     systems['contradiction_ledger'] = None
     try:
         from aurora_ivm import ContradictionLedger
-        systems['contradiction_ledger'] = ContradictionLedger()
+        systems['contradiction_ledger'] = ContradictionLedger(state_dir=systems.get('state_dir'))
         if verbose:
             print("  [TRUTH] ContradictionLedger online")
     except Exception as _cl_e:
