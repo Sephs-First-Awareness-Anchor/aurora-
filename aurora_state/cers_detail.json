@@ -2,13 +2,13 @@
   "cers_verdict": {
     "actively_trialing_potential": [],
     "agrees_with_legacy": true,
-    "cers_label": "continuity_stable",
+    "cers_label": "steady",
     "confirmed_inert_potential": [],
     "confirmed_potential_benefits": {},
     "conflicts": [],
     "geometry_deviation": null,
     "intervention_label": null,
-    "legacy_label": "continuity_stable",
+    "legacy_label": "steady",
     "permitted": true,
     "response_bias": 0.0,
     "semantic_hesitation": false,
@@ -34,17 +34,6 @@
   "micro_reasoning": [
     {
       "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
-    {
-      "confidence": 1.0,
       "label": "novelty_attention",
       "rationale": "Novelty is high enough that the frame should stay exploratory.",
       "source": "entropy",
@@ -62,9 +51,9 @@
     "semantic_salience": 0.0,
     "variant_confidence": 0.0
   },
-  "prediction_confidence": 0.53,
+  "prediction_confidence": 0.6009,
   "prediction_source": "understanding_contract+manifold",
-  "saved_at": 1784438515.1128142,
+  "saved_at": 1784447309.9342453,
   "sub_crests": [
     {
       "axis": "X",
@@ -73,8 +62,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.65,
+      "label": "unfamiliar"
     },
     {
       "axis": "A",
@@ -83,8 +72,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.49,
-      "label": "surprise"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
       "axis": "N",
@@ -94,7 +83,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
@@ -108,12 +97,12 @@
     },
     {
       "axis": "X",
-      "intensity": 0.8003,
+      "intensity": 0.8029,
       "label": "surface"
     },
     {
       "axis": "X",
-      "intensity": 0.8212,
+      "intensity": 0.8234,
       "label": "surface"
     }
   ],

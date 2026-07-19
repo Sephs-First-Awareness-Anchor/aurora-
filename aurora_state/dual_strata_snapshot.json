@@ -3,51 +3,47 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.5285,
-      "label": "contextualize"
+      "intensity": 0.545,
+      "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
-      "active_crystals": [
-        "use"
-      ],
+      "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
+      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.457,
-    "selected_action": "contextualize",
+    "readiness": 0.5555,
+    "selected_action": "explain",
     "should_speak": true,
-    "stance": "contextual_continuity",
+    "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5622,
-      "label": "continuity_stable"
+      "intensity": 0.5857,
+      "label": "steady"
     },
-    "timestamp": 1784438515.1095288
+    "timestamp": 1784447309.9295998
   },
-  "saved_at": 1784438515.1097443,
+  "saved_at": 1784447309.9298246,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
-      "active_crystals": [
-        "use"
-      ],
+      "active_crystals": [],
       "interaction_state": "present",
-      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
+      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "sub_crests": [
       {
@@ -57,8 +53,8 @@
       },
       {
         "axis": "T",
-        "intensity": 1.0,
-        "label": "continuity_pull"
+        "intensity": 0.65,
+        "label": "unfamiliar"
       },
       {
         "axis": "A",
@@ -67,8 +63,8 @@
       },
       {
         "axis": "X",
-        "intensity": 0.49,
-        "label": "surprise"
+        "intensity": 0.45,
+        "label": "low_certainty"
       },
       {
         "axis": "N",
@@ -78,7 +74,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_holds"
+        "label": "thread_slipping"
       },
       {
         "axis": "N",
@@ -92,19 +88,19 @@
       },
       {
         "axis": "X",
-        "intensity": 0.8003,
+        "intensity": 0.8029,
         "label": "surface"
       },
       {
         "axis": "X",
-        "intensity": 0.8212,
+        "intensity": 0.8234,
         "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5622,
-      "label": "continuity_stable"
+      "intensity": 0.5857,
+      "label": "steady"
     }
   }
 }
