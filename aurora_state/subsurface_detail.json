@@ -2,6 +2,10 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
+      "confidence": 1.0,
+      "label": "topic_continuation"
+    },
+    {
       "confidence": 0.35,
       "label": "affective_attention"
     }
@@ -13,19 +17,57 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "",
+    "active_topic": "use",
     "ambiguity": 0.545,
-    "cost_total": 0.2807,
+    "cost_total": 0.2836,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 0.0,
-    "interpreted_deep_emotion": "calm",
-    "interpreted_deep_passion": "meaning_hold",
+    "frame_continuity": 1.0,
+    "interpreted_deep_emotion": "fear",
+    "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [],
+  "instability_markers": [
+    {
+      "label": "prediction_mismatch",
+      "severity": 0.49
+    }
+  ],
   "law_bindings": [],
   "micro_reasoning": [
+    {
+      "confidence": 0.5,
+      "label": "comfort_bias",
+      "rationale": "Deeper affective pressure suggests comfort or care may matter more than pure explanation.",
+      "source": "affect",
+      "tags": [
+        "care",
+        "attunement"
+      ],
+      "urgency": 0.55
+    },
+    {
+      "confidence": 0.49,
+      "label": "prediction_mismatch",
+      "rationale": "Observed input diverged from the currently primed continuation.",
+      "source": "prediction",
+      "tags": [
+        "reframe",
+        "surprise"
+      ],
+      "urgency": 0.55
+    },
+    {
+      "confidence": 1.0,
+      "label": "callback_pressure",
+      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
+      "source": "memory_resonance",
+      "tags": [
+        "continuity",
+        "context"
+      ],
+      "urgency": 0.45
+    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -45,24 +87,26 @@
   ],
   "prediction_signal": {
     "alerts": [
+      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.4473,
+    "confidence": 0.3693,
     "expected_observation": "followup",
-    "expected_user_continuation": "",
+    "expected_user_continuation": "use",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.49,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "B",
+      "axis_signature": "N",
       "certainty_band": "low",
       "intent_type": "followup",
-      "topic": ""
+      "topic": "use"
     },
     "preload_context": [
+      "use",
       "followup"
     ],
-    "readiness_bias": 0.3627,
+    "readiness_bias": 0.2568,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -72,18 +116,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.5555,
+  "readiness": 0.457,
   "recalled_fragments": [
-    "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a..."
+    "use",
+    "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4362,
-    "N": 0.5638,
-    "T": 0.0,
+    "B": 0.2656,
+    "N": 0.3445,
+    "T": 0.3899,
     "X": 0.0
   },
-  "saved_at": 1784447309.9302795,
+  "saved_at": 1784454890.3300037,
   "sub_crests": [
     {
       "axis": "X",
@@ -92,8 +137,8 @@
     },
     {
       "axis": "T",
-      "intensity": 0.65,
-      "label": "unfamiliar"
+      "intensity": 1.0,
+      "label": "continuity_pull"
     },
     {
       "axis": "A",
@@ -102,8 +147,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.45,
-      "label": "low_certainty"
+      "intensity": 0.49,
+      "label": "surprise"
     },
     {
       "axis": "N",
@@ -113,7 +158,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_slipping"
+      "label": "thread_holds"
     },
     {
       "axis": "N",
@@ -127,12 +172,12 @@
     },
     {
       "axis": "X",
-      "intensity": 0.8029,
+      "intensity": 0.8003,
       "label": "surface"
     },
     {
       "axis": "X",
-      "intensity": 0.8234,
+      "intensity": 0.8212,
       "label": "surface"
     }
   ]
