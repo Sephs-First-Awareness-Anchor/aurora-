@@ -113,24 +113,51 @@ and `source_trust.json`, whose backing classes (`SourceTrustRegistry`/
   seeded relations are not a separate bug, they are a direct symptom of
   the `OETSPersistence` root cause above.
 
-## Scope for PS1.2
+## PS1.2 — done, 2026-07-19
 
 Per the directive's invariant requirement ("boot never silently discards
 newer persisted state... per store, chosen from what PS1.1 shows each
 store's actual role is — no blanket guess"):
 
-1. **`OETSPersistence`** — primary fix target. Needs generation/lineage
-   arbitration between `primary_web_file` and `snapshot_web_file` (or a
-   canonical-source decision that retires the dual-path design), plus
-   no-silent-reversion audit logging.
-2. **`LexicalMemory`** — needs a `state_dir` constructor parameter,
-   threaded from `boot_aurora()`, matching the pattern already used by
-   `GrammarEngine`/`ContradictionLedger`(fixed)/Tier-2/B1.1.
-3. **`ProvisionalStore`** — needs the same `state_dir` threading.
-4. **`DimensionalSystems`** — needs `boot_aurora()` to actually pass
-   `state_dir` into its constructor so the embedded pressure-map cache
-   load stops defaulting to the repo-root path.
+1. **`OETSPersistence`** — fixed. `load_web()` now arbitrates: reads
+   every existing candidate's metadata before committing to one (a
+   corrupted candidate is reported explicitly, not silently treated as
+   absent), then applies the rule chosen from PS1.1's own inventory —
+   `snapshot_web_file` (state_dir-scoped, matches every other correctly-
+   built store) is canonical by default; `primary_web_file` (repo-root,
+   untracked) only wins if strictly newer by timestamp. Every reversion
+   is logged via the new `aurora_internal/aurora_persistence_audit.py`
+   (`persistence_audit_log.jsonl`: store, discarded/kept source +
+   timestamp + counts, reason). 8 unit tests, `tests/
+   test_ps1_2_persistence_arbitration.py`.
+2. **`LexicalMemory`** — fixed. `__init__(self, state_dir=None)`
+   overrides the hardcoded `_DEFAULT_PATH` at the instance level
+   (`self._path`), same pattern as `ContradictionLedger`. Threaded
+   through `ExpressionPerceptionEngine(contract, state_dir=...)` and
+   `boot_aurora()`'s construction of it (`aurora.py:20598`).
+3. **`ProvisionalStore`/`SourceTrustRegistry`** — fixed at the call site
+   (`aurora.py`'s `_on_online()` callback): both classes already accepted
+   an explicit `path` constructor override, they just weren't given one.
+   Now constructed with `state_dir`-scoped paths explicitly.
+4. **`DimensionalSystems`** — fixed. `boot_aurora()` now passes
+   `state_dir=state_dir` into its constructor (`aurora.py:20134`), which
+   threads into the embedded `Aurora625PressureMap(state_dir=state_dir)`
+   — confirmed `Aurora625PressureMap` stores `self.state_dir` and builds
+   its cache paths directly from it (`aurora_625_pressure_map.py:308-310`).
 5. Log-only / read-only / offline-tool entries (`ThoughtContinuity`,
    `aurora_tool_mind.py` logs, `aurora_daemon.py`'s diagnostic path,
-   `aurora_voice.py`'s corpus discovery) are lower priority — flagged
-   here for completeness, not blocking PS1.2/PS1.3.
+   `aurora_voice.py`'s corpus discovery) left as-is — lower priority,
+   noted for completeness, not blocking.
+
+Corrupted-snapshot handling: `OETSPersistence.load_web()` now prints an
+explicit `CORRUPTED candidate` message and excludes only that candidate
+from arbitration rather than silently treating it as if it never
+existed — a valid sibling candidate still loads normally.
+
+Full pytest regression (858 passed, 1 pre-existing unrelated failure —
+`test_ingest_concept_image_succeeds_against_real_fixture`, an
+environment `cv2.imdecode` issue confirmed present and unaffected on
+the pre-PS1.2 baseline) + a live `boot_aurora(state_dir=scratch)` smoke
+test (boot succeeds, a real turn processes, `perception.lexicon._path`
+correctly resolves inside scratch, `lexicon.json` correctly lands in
+scratch, not the real repo).

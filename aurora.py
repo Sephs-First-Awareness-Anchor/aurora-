@@ -20131,7 +20131,11 @@ def boot_aurora(
     # Layer 3: Dimensional Systems
     if verbose: print("  [L3] Dimensional Systems...", end=" ", flush=True)
     from aurora_dimensional_systems import DimensionalSystems
-    dimensional = DimensionalSystems(lattice)
+    # PS1.2 (Directive PS1, 2026-07-19): state_dir threaded through so the
+    # embedded Aurora625PressureMap cache load respects this boot's
+    # state_dir instead of always defaulting to the repo's own aurora_state/
+    # (the main DPS crystal save/load path below was already correct).
+    dimensional = DimensionalSystems(lattice, state_dir=state_dir)
     systems['dimensional'] = dimensional
     _register_layer(systems, 'L3', 'Dimensional Systems', 'dimensional', dimensional, {
         'state': 'get_system_state',
@@ -20595,7 +20599,7 @@ def boot_aurora(
         ExpressionPerceptionEngine,
         build_layer5_associative_modules,
     )
-    perception = ExpressionPerceptionEngine(contract)
+    perception = ExpressionPerceptionEngine(contract, state_dir=state_dir)
     systems['perception'] = perception
     if systems.get('sedimemory') is not None and hasattr(perception, 'connect_sedimemory'):
         try:
@@ -21721,8 +21725,21 @@ def boot_aurora(
         def _on_online():
             systems['_is_online'] = True
             try:
-                from aurora_offline_resilience import ProvisionalStore, run_verification_sweep
-                run_verification_sweep(ProvisionalStore())
+                from pathlib import Path as _Path
+                from aurora_offline_resilience import (
+                    ProvisionalStore, SourceTrustRegistry, run_verification_sweep,
+                )
+                # PS1.2 (Directive PS1, 2026-07-19): explicit state_dir-scoped
+                # paths -- both classes' constructors already accept a `path`
+                # override, they just weren't given one, so every boot
+                # silently shared the real repo's aurora_state/ files
+                # regardless of the state_dir this boot actually used.
+                _sd = _Path(str(state_dir))
+                _trust = SourceTrustRegistry(path=_sd / "source_trust.json")
+                run_verification_sweep(ProvisionalStore(
+                    path=_sd / "provisional_knowledge.json",
+                    trust_registry=_trust,
+                ))
             except Exception:
                 pass
 

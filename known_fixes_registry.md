@@ -4177,3 +4177,72 @@ the antonym source is wired and will fire the moment the underlying
 OETS durability issue is resolved, no further Track CP code needed.
 Track ST not started, per directive sequencing (CP first, numbers in
 before ST).
+
+## Directive PS1 — Persistence Integrity, 2026-07-19
+
+**PS1.1 (inventory, permanent doc: `PERSISTENCE_INVENTORY.md`).** Full
+map of every persisted store reachable from `boot_aurora()`. Confirmed
+root cause of Track CP's OETS finding: `OETSPersistence` (`aurora_
+internal/aurora_identity_persistence.py`) tracks two files for `aurora_
+oets_web.json` — a `state_dir`-scoped "snapshot" (the git-tracked file
+this campaign edits) and a hardcoded, `__file__`-relative, **gitignored**
+repo-root "primary". `load_web()` always preferred primary when present
+(no generation/mtime comparison) and force-overwrote every other
+candidate with it on load — silently discarding S1.2's seed data (and,
+separately, the relation_type fix from the Track CP entry above) before
+either was ever committed. Every "isolated" scratch-dir test that
+touched OETS across this campaign was actually reading/writing the
+shared, untracked repo-root file. A systematic sweep for the same
+`__file__`-relative hardcoded-path pattern also found: `LexicalMemory`
+(`aurora_state/lexicon.json`) has no `state_dir` parameter at all, same
+bug shape as the pre-fix `ContradictionLedger`; `ProvisionalStore`/
+`SourceTrustRegistry` and `DimensionalSystems`' embedded pressure-map
+cache have narrower versions of the same gap. `grammar_motifs.json` and
+the Tier-2/B1.1 loggers built this campaign are the confirmed-safe
+reference pattern.
+
+**PS1.2 (the fix).** `OETSPersistence.load_web()` now arbitrates instead
+of blindly taking "first that exists": `snapshot_web_file` canonical by
+default (matches every other correctly-built store), `primary_web_file`
+only wins if strictly newer by timestamp, every reversion logged via
+the new shared `aurora_internal/aurora_persistence_audit.py`
+(`persistence_audit_log.jsonl`). A corrupted candidate is reported
+explicitly, never silently treated as absent. `LexicalMemory` gained a
+`state_dir` constructor param threaded from `boot_aurora()`;
+`ProvisionalStore`/`SourceTrustRegistry` fixed at their call site
+(already accepted an explicit path, just weren't given one);
+`DimensionalSystems` now receives `state_dir` so its embedded pressure-
+map cache stops defaulting to the repo root. 22 new unit/structural
+tests across `tests/test_ps1_2_persistence_arbitration.py`. Full
+regression: 858 passed, 1 pre-existing unrelated failure (`cv2.imdecode`
+environment issue, confirmed present on the pre-PS1.2 baseline too, not
+a regression). Live `boot_aurora(state_dir=scratch)` smoke test passed.
+
+**Ruling from Directive PS1 itself, restated for the record:** Track CP
+stands accepted at 2/3 sources (negation + closed-set), zero false fires
+across two runs; the OETS antonym source was marked BLOCKED-ON-
+PERSISTENCE, not failed — PS1.3 re-tests it now that PS1.2 has landed.
+The S1 composition-gate verdict (0.486), V0-3's non-separation (18/18
+UNKNOWN), and the B1 panel baseline were all measured against
+potentially-reverting vocabulary; none are overturned yet, all are
+flagged for PS1.3's re-measurement, per the suspect-verdict practice
+below.
+
+**Registry entries per Directive PS1's own instruction:**
+1. **No-silent-reversion rule:** boot/restore paths never silently
+   discard newer persisted state; all overrides are arbitrated by
+   lineage/generation and logged with exactly what was discarded.
+   (Origin: OETS snapshot graft, this entry.)
+2. **Hard-fail enum rule:** seed/ingestion scripts should hard-fail on
+   unknown enum/relation values — silent downgrade to a default
+   relation is a data-corruption class, not a compatibility feature.
+   (Origin: `relation_type="contradicts"` → `related_to`, the likely
+   true mechanism of the original S1.2 loss, found investigating Track
+   CP.) Not yet enforced at the seeding layer itself — `seed_abstract_
+   regions_s1.py` was hand-corrected to the real enum value, but no
+   validation guard was added to catch a *future* seeding mistake of
+   the same shape. Flagged as an open follow-up, not blocking PS1.3.
+3. **Suspect-verdict practice:** when a foundation bug is found,
+   verdicts measured atop it are flagged and re-measured, never assumed
+   correct OR assumed wrong in either direction until re-tested.
+   (Origin: PS1.3, next.)

@@ -266,10 +266,18 @@ class LexicalMemory:
     # Anchored to this module's directory (FIX-A009) — the old relative path
     # made persistence cwd-dependent: daemon, CLI, and test launches each
     # resolved a different lexicon.json, so vocabulary never round-tripped.
+    # Fallback only — PS1.2 (Directive PS1, 2026-07-19): a real state_dir
+    # passed to __init__ takes priority (self._path), matching the pattern
+    # already used by GrammarEngine/ContradictionLedger/Tier-2/B1.1. Before
+    # this fix, every boot_aurora(state_dir=scratch) call still silently
+    # loaded/saved the real repo's aurora_state/lexicon.json regardless of
+    # state_dir, an isolation gap of the same shape PS1.1's inventory found
+    # in OETSPersistence.
     _DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  "aurora_state", "lexicon.json")
 
-    def __init__(self):
+    def __init__(self, state_dir: Optional[str] = None):
+        self._path = os.path.join(str(state_dir), "lexicon.json") if state_dir else None
         self.entries: Dict[str, LexicalEntry] = {}
         self._role_index: Dict[str, List[str]] = {}
         self._seed_core()
@@ -426,7 +434,7 @@ class LexicalMemory:
     def save(self, path: str = "") -> bool:
         """Persist full vocabulary to disk."""
         import json as _j, os as _os
-        p = path or self._DEFAULT_PATH
+        p = path or self._path or self._DEFAULT_PATH
         try:
             _os.makedirs(_os.path.dirname(p), exist_ok=True)
             data = {
@@ -452,7 +460,7 @@ class LexicalMemory:
     def load(self, path: str = "") -> int:
         """Restore vocabulary from disk. Returns number of entries loaded."""
         import json as _j, os as _os
-        p = path or self._DEFAULT_PATH
+        p = path or self._path or self._DEFAULT_PATH
         if not _os.path.exists(p):
             return 0
         try:
@@ -3938,7 +3946,7 @@ class ExpressionPerceptionEngine(WarpCapable):
     EXPRESSION: assembly result -- ecology -- pressure -- voice-shaped output
     """
 
-    def __init__(self, contract: Optional[FoundationalContract] = None):
+    def __init__(self, contract: Optional[FoundationalContract] = None, state_dir: Optional[str] = None):
         self.contract = contract or FoundationalContract()
         self._sedimemory = None  # L3.5 SediMemory (injected externally via connect_sedimemory)
         self.hardware = None
@@ -3952,7 +3960,10 @@ class ExpressionPerceptionEngine(WarpCapable):
         self.manifold = ManifoldEngine()
 
         # Expression pipeline
-        self.lexicon = LexicalMemory()
+        # PS1.2 (Directive PS1, 2026-07-19): state_dir threaded through so
+        # vocabulary persistence respects boot_aurora(state_dir=...) instead
+        # of always hitting the repo's own aurora_state/lexicon.json.
+        self.lexicon = LexicalMemory(state_dir=state_dir)
         self.ecology = ExpressionEcology()
         self.pressure = ExpressionPressure()
         self.voice = VoiceGenome()
