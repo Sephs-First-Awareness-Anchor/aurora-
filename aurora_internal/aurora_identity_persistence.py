@@ -404,6 +404,7 @@ class OETSPersistence:
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
         env_web = os.environ.get("AURORA_OETS_WEB_FILE", "").strip()
+        self._primary_env_override = bool(env_web)
         self.primary_web_file = (
             Path(env_web).expanduser()
             if env_web
@@ -414,10 +415,32 @@ class OETSPersistence:
         self.memory_file = self.state_dir / "aurora_conversation_memory.json"
         self.identity_file = self.state_dir / "aurora_identity.json"
 
+        # PS1.2 follow-up (Directive PS1, 2026-07-19): PS1.3's seed-
+        # verification found that arbitrating LOAD order alone was not
+        # enough -- save_web() writes to every candidate unconditionally,
+        # so an isolated scratch-dir boot was still contaminating the
+        # shared, untracked repo-root primary_web_file on every save,
+        # which could then win a future real boot's arbitration by
+        # having a newer timestamp despite being test junk. Fix: when a
+        # real state_dir override is in effect (anything other than the
+        # repo's own default aurora_state/), primary_web_file is treated
+        # as out of scope entirely -- excluded from both load and save
+        # candidates -- unless AURORA_OETS_WEB_FILE was explicitly set,
+        # which is always an intentional, explicit override.
+        try:
+            self._isolated = (
+                str(self.state_dir.expanduser().resolve())
+                != str(Path(_STATE_ROOT).expanduser().resolve())
+            )
+        except Exception:
+            self._isolated = str(self.state_dir) != str(_STATE_ROOT)
+
     def _web_candidates(self) -> List[Path]:
         candidates: List[Path] = []
         seen: Set[str] = set()
-        for candidate in (self.primary_web_file, self.snapshot_web_file):
+        sources = (self.snapshot_web_file,) if (self._isolated and not self._primary_env_override) \
+            else (self.primary_web_file, self.snapshot_web_file)
+        for candidate in sources:
             try:
                 key = str(candidate.expanduser().resolve())
             except Exception:

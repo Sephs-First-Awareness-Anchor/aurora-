@@ -57,6 +57,16 @@ def _setup(scratch):
     fake_primary = os.path.join(scratch, "primary_aurora_oets_web.json")
     persist.primary_web_file = type(persist.primary_web_file)(fake_primary)
     persist.web_file = persist.primary_web_file
+    # These tests exist specifically to exercise the dual-candidate
+    # arbitration path using safe, sandboxed fake paths -- not the real
+    # shared repo-root file. PS1.3's follow-up fix excludes primary_web_file
+    # entirely for genuinely isolated (state_dir != default) boots, which
+    # is exactly right for real test isolation but would also skip the
+    # code under test here, so it's explicitly overridden back on for
+    # this fixture only (simulating "as if this were the one real default
+    # boot," which is the only context where dual-candidate arbitration
+    # is meant to run at all).
+    persist._isolated = False
     return persist, state_dir
 
 
@@ -179,6 +189,27 @@ def test_corrupted_candidate_does_not_block_valid_sibling(capsys):
 
         captured = capsys.readouterr()
         assert "CORRUPTED" in captured.out
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+
+def test_isolated_state_dir_excludes_primary_from_candidates():
+    """A genuinely isolated boot (state_dir != the repo default) must
+    never touch the shared, untracked repo-root primary file at all --
+    not on load, not on save. Without this, an isolated scratch test
+    could still silently contaminate the shared file (PS1.3's own
+    finding: this happened for real, across this campaign's earlier
+    test runs, before this fix)."""
+    scratch = tempfile.mkdtemp(prefix="ps1_2_isolation_test_")
+    try:
+        state_dir = os.path.join(scratch, "aurora_state")
+        os.makedirs(state_dir, exist_ok=True)
+        persist = OETSPersistence(state_dir=state_dir)
+        assert persist._isolated is True
+        candidates = persist._web_candidates()
+        assert persist.primary_web_file not in candidates
+        assert persist.snapshot_web_file in candidates
+        assert len(candidates) == 1
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
 
