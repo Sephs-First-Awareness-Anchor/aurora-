@@ -4069,3 +4069,111 @@ seeded/logged data) was similarly affected -- this appears isolated to
 the single file/single run-boundary gap above -- but the mechanism
 means it is a latent risk class, not a one-off, and is worth keeping
 in mind for any future seeding step's commit sequencing.
+
+## Directive P1 Track CP — contradiction perception via pair collision, 2026-07-19
+
+Built `aurora_internal/aurora_contradiction_perception.py`: on each
+received turn, checks the turn's Tier-2 relation pairs against a
+6-turn window of prior pairs (derived from classroom_log.jsonl's own
+fixed lesson length -- 602/602 lessons at exactly 6 turns, the only
+real "conversation length" distribution available) for three narrow
+incompatibility sources -- negation flip, day-of-week closed set,
+OETS antonym relations -- feeding genuine collisions through the
+EXISTING `ContradictionLedger.record()` entry point (feed-the-
+mechanism rule). Wired into `aurora.py`'s comprehension-stage hook,
+third alongside Tier-2/B1.1. 9 pure-logic/structural tests, all pass
+deterministically.
+
+**Two real bugs found and fixed while diagnosing the live acceptance
+battery** (12 planted-contradiction probes + 10 no-contradiction
+controls, per the directive's own acceptance criteria):
+
+1. **relation_type mismatch.** S1.2's seed script used
+   `relation_type="contradicts"` for the two antonym relations
+   (guarantee<->uncertain, hedge<->guarantee). The live `RelationType`
+   enum (`aurora_internal/aurora_ontological_scaffolding.py`) has no
+   such member -- `OPPOSITE_OF="opposite_of"` is the real antonym
+   type. `aurora_identity_persistence.py`'s loader silently
+   reclassifies any unrecognized relation_type string to RELATED_TO on
+   load (`rtype_map.get(rtype_val, RelationType.RELATED_TO)`) --
+   confirmed live: a fresh `boot_aurora()` with zero turns processed
+   dropped the on-disk contradicts count from 2 to 0. This is almost
+   certainly the more precise mechanism behind the *original* S1.2
+   data loss investigated in the prior entry above (a better
+   explanation than the git-checkout theory that entry proposed -- any
+   live boot after seeding would have silently corrected the
+   mislabeled relations away before they were ever committed). Fixed:
+   seed script now writes "opposite_of"; the 2 already-restored
+   relations corrected in place; the detector's antonym source updated
+   to match.
+
+2. **ContradictionLedger state_dir isolation gap.** `STATE_PATH`
+   (`aurora_ivm.py`) was a hardcoded class attribute derived from
+   `__file__`, never honoring any `state_dir` passed to
+   `boot_aurora()` -- every "isolated" scratch-dir test was actually
+   reading/writing the real repo's `aurora_state/contradiction_ledger.
+   json`. Confirmed live: a freshly copied scratch boot showed
+   `unresolved_count()=6` before any turns were processed, carrying
+   entries from an unrelated prior test run. Same isolation-gap
+   pollution pattern already fixed for the Tier-2/B1.1 loggers, just
+   not previously caught since this is the ledger's first real
+   consumer. Fixed: `ContradictionLedger.__init__` now accepts an
+   optional `state_dir` overriding `STATE_PATH` at the instance level;
+   `boot_aurora()` passes `systems['state_dir']` through. Backward
+   compatible.
+
+**Acceptance battery results, two independent live runs (post-fix):**
+
+| source | run 1 | run 2 |
+|---|---|---|
+| negation flip (4 probes) | 3/4 | 4/4 |
+| closed-set weekday (4 probes) | 1/4 | 4/4 |
+| OETS antonym (4 probes) | 0/4 | 0/4 |
+| **no-contradiction controls (10)** | **0/10 false fires** | **0/10 false fires** |
+
+Fail-quiet holds solidly -- zero false fires across both runs, the
+directive's hard requirement. Negation and closed-set sources fire
+correctly but noisily between runs (3/4->4/4, 1/4->4/4) -- the
+collision logic itself is deterministic and passes 100% of pure-unit
+tests every time, so this run-to-run variance traces to something
+elsewhere in the live pipeline (timing-sensitive extraction or window
+state across a long multi-turn live session), not a flaw in Track
+CP's own detection logic. Not further investigated this pass -- noted
+as an open loose end, not blocking.
+
+**OETS antonym source: 0/4 on both runs, root cause NOT the relation_
+type bug (already fixed) -- a separate, deeper, pre-existing
+architectural finding, reported here rather than patched:**
+
+Even after fix #1 above, a *fresh* `boot_aurora()` scratch-dir boot
+with **zero turns processed** still drops 20 of S1.2's 24 seeded OETS
+words (including "hedge", load-bearing for 2 of the 4 antonym probes)
+and mangles the relation set (18854->18144 relations net, 885->910
+nodes net) between the pre-boot file and the post-boot file on disk.
+Survivors ("guarantee", "purple", "boiling", "water") and losses
+("hedge", "acknowledge", "square", ...) show *identical* per-node
+stats before boot (comprehension_confidence, times_encountered,
+scaffolding_level, ontological_depth all equal) -- so this is not a
+fitness-based prune. The boot log's `[STATE] Restored from snapshot
+(gen=7749, epochs=194)` line (`aurora.py` ~21113-21128, `aurora.
+load_state()` / `persistence.load()` -> `_restore_runtime_from_
+snapshot`) is the most likely mechanism: a separate snapshot/
+generation store appears to graft in an older OETS state independent
+of what `aurora_oets_web.json` itself says, and boot then resaves
+that grafted state back over the file. Not traced to its exact
+implementation this pass -- doing so is a materially larger
+investigation than Track CP's own scope, and directly affects the
+durability of ALL seeded vocabulary campaign-wide (S1.2's original
+loss, M1.1-A's Tier-1 backfill data, any future seeding), not just
+these two relations.
+
+**HALT per Track CP's own sequencing** ("regression pinned" after
+numbers are in). Reporting this as a dossier rather than patching
+unilaterally: fixing the snapshot-restoration mechanism is a
+judgment call on scope and architecture that belongs to Sunni/Cael,
+not something to guess at inside Track CP. Track CP's own two working
+sources (negation, closed-set) are live, correct, and fail-quiet;
+the antonym source is wired and will fire the moment the underlying
+OETS durability issue is resolved, no further Track CP code needed.
+Track ST not started, per directive sequencing (CP first, numbers in
+before ST).
