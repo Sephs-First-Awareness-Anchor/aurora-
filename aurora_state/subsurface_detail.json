@@ -18,24 +18,29 @@
     "cost_total": 0.2807,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
-    "interpreted_deep_emotion": "fear",
+    "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "meaning_hold",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [],
+  "instability_markers": [
+    {
+      "label": "paradox_active",
+      "severity": 0.8
+    }
+  ],
   "law_bindings": [],
   "micro_reasoning": [
     {
-      "confidence": 0.5,
-      "label": "comfort_bias",
-      "rationale": "Deeper affective pressure suggests comfort or care may matter more than pure explanation.",
-      "source": "affect",
+      "confidence": 0.6,
+      "label": "conflict_exposure",
+      "rationale": "The active assembly still contains paradox or unresolved conflict.",
+      "source": "assembly",
       "tags": [
-        "care",
-        "attunement"
+        "conflict",
+        "stability"
       ],
-      "urgency": 0.55
+      "urgency": 0.6
     },
     {
       "confidence": 1.0,
@@ -83,7 +88,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.5555,
+  "readiness": 0.4755,
   "recalled_fragments": [
     "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a..."
   ],
@@ -94,7 +99,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784487690.457271,
+  "saved_at": 1784492006.8185093,
   "sub_crests": [
     {
       "axis": "X",
@@ -117,9 +122,9 @@
       "label": "low_certainty"
     },
     {
-      "axis": "N",
-      "intensity": 1.0,
-      "label": "novelty"
+      "axis": "B",
+      "intensity": 0.65,
+      "label": "contradiction"
     },
     {
       "axis": "T",
