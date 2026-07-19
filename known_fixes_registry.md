@@ -4245,4 +4245,101 @@ below.
 3. **Suspect-verdict practice:** when a foundation bug is found,
    verdicts measured atop it are flagged and re-measured, never assumed
    correct OR assumed wrong in either direction until re-tested.
-   (Origin: PS1.3, next.)
+   (Origin: PS1.3, this entry.)
+
+## PS1.3 — Seed re-verification + honest re-baselines, 2026-07-19 (HALT)
+
+**PS1.2 follow-up fix, found during PS1.3's own verification.** The
+first seed re-verification pass failed: a fresh scratch boot still
+showed 19/24 S1 words missing from `aurora_oets_web.json`, immediately
+after PS1.2 landed. Root cause was NOT a regression in the arbitration
+logic itself (which worked exactly as designed) -- `save_web()` writes
+to every candidate unconditionally, so isolated scratch-dir test boots
+had continued contaminating the shared, untracked repo-root
+`primary_web_file` throughout this campaign's own debugging *today*,
+before PS1.2 even existed. Because "newest wins" is the arbitration
+rule, that contamination (19/24 words genuinely missing, timestamped
+after the correct seed) was legitimately winning over the correct,
+git-tracked snapshot on every real boot. Fixed: `OETSPersistence` now
+excludes `primary_web_file` from its candidate list entirely whenever
+a real `state_dir` override is in effect -- isolated boots never touch
+the shared file again, on either load or save. The contaminated real
+primary file was reset out-of-band (deleted, then one real default
+`boot_aurora()` call rebuilt it correctly from the snapshot). Verified:
+two full boot cycles against a fresh scratch copy now show **0 missing
+S1 words, 0 changed counts** (885 nodes, 18854 relations, 4
+`opposite_of` relations, 22 `seeded_s1` lexicon entries, before and
+after both cycles, identical). 1 new test (`test_isolated_state_dir_
+excludes_primary_from_candidates`), pushed alongside PS1.2's suite.
+
+**1. OETS antonym source re-test (the 4 previously-blocked Track CP
+probes):** 3/4 now fire (`level of guarantee`/`level of uncertain`,
+`degree of hedge`/`degree of guarantee`, `measure of hedge`/`measure of
+guarantee`; `amount of guarantee`/`amount of uncertain` did not fire
+this run). Up from 0/4 pre-fix. Confirms the persistence fix genuinely
+unblocked the source, matching the noisy-but-working pattern already
+seen in the negation/closed-set sources across runs (mechanism sound,
+some run-to-run variance not yet traced to a specific cause). Track
+CP's BLOCKED-ON-PERSISTENCE ruling for this source is resolved --
+reclassify to ACTIVE, same as the other two.
+
+**2. Composition battery x3 (identical methodology to S1.3's original
+gate 1):**
+
+| Run | simple_concrete | abstract_conceptual |
+|---|---|---|
+| PS1.3 post-fix, run 1 | 0.778 | 0.500 |
+| PS1.3 post-fix, run 2 | 0.806 | 0.542 |
+| PS1.3 post-fix, run 3 | 0.806 | 0.583 |
+| **3-run mean** | **0.796** | **0.542** |
+| S1's original mean (for comparison) | 0.750 | 0.486 |
+
+abstract_conceptual moved from 0.486 to 0.542 (+0.056) -- a real,
+material move in the predicted direction, not noise (the same
+increasing 3-run pattern recurs; the top run, 0.583, is identical
+across both sets). **Per this directive's own instruction, the S1
+gate-1 verdict is amended on the record: the original 0.486 was
+partly a persistence artifact, not purely a seeding-volume/design
+ceiling** -- some of the seeded vocabulary S1.2 wrote was silently
+unavailable to live generation the whole time gate 1 was measured.
+simple_concrete also moved (0.750 -> 0.796), consistent with a general
+persistence-health improvement (LexicalMemory's own isolation fix
+landed in the same PS1.2 commit), not a narrowly abstract-stratum
+effect -- so the amendment should not be read as "S1's seeding alone
+explains the gain."
+
+**Gate 1 still does not clear** (0.542 < the required 0.55 -- closer,
+not cleared; no floor-kissing exemption invoked). Whether to pursue
+the now-much-smaller remaining gap (0.008) is Sunni/Cael's call, not
+decided here.
+
+**3. "B1 panel" re-score.** B1.2 (the panel automation itself) was
+never built (still pending, task #119) -- there is no panel/timeline
+to re-score. The closest existing, already-built instrument is M1.3's
+V0 relation-level rescorer (`scripts/m1_3_v0_rerun.py`), re-run for
+this HALT: **18/18 still UNKNOWN, byte-identical to the original M1.3
+result.** On inspection this is not a null re-confirmation -- this
+instrument reads only `relation_pair_log.jsonl` and `lexicon.json`
+(both already `state_dir`-safe per PS1.1's inventory), never
+`aurora_oets_web.json` directly, so it was **never actually exposed**
+to the silent-reversion bug in the first place. Its verdict stands
+unamended -- not because it survived re-measurement, but because it
+was never at risk. Only the composition gate (which depends on live
+generation drawing on the OETS graph during real turns) and Track CP's
+antonym source (which reads `aurora_oets_web.json`'s relations
+directly) were actually exposed.
+
+**Suspect-verdict resolution, stated plainly:**
+- S1 composition gate (0.486): **amended** -> 0.542, still not
+  cleared, gap narrowed materially.
+- V0-3 non-separation (18/18 UNKNOWN): **unamended, and never at
+  risk** -- confirmed its data sources were unaffected by the bug.
+- "B1 panel baseline": **did not exist to re-score** -- B1.2 was never
+  built; the underlying instrument (V0-3) is covered by the line above.
+
+**HALT per PS1.3's own instruction**, inventory (`PERSISTENCE_INVENTORY.md`,
+updated), fix evidence (this entry + the PS1.2 entry above), and all
+re-baseline numbers now on the record. Per the directive's queue: Track
+ST is unblocked (PS1 complete); B1.3 remains gated on Sunni's content
+approval; B1.2 panel automation and the remaining docket (TCL,
+worth/variant tier) are unaffected, proceed independently.

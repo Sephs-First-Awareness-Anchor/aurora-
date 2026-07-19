@@ -161,3 +161,40 @@ the pre-PS1.2 baseline) + a live `boot_aurora(state_dir=scratch)` smoke
 test (boot succeeds, a real turn processes, `perception.lexicon._path`
 correctly resolves inside scratch, `lexicon.json` correctly lands in
 scratch, not the real repo).
+
+## PS1.3 follow-up — the write-side leak PS1.2 missed, 2026-07-19
+
+PS1.3's own seed re-verification caught a gap in PS1.2: `save_web()`
+writes to every candidate unconditionally, so an isolated scratch-dir
+boot was still contaminating the shared, untracked `primary_web_file`
+on every save, even after load-side arbitration was fixed. Confirmed
+live: the real primary file had drifted to 19/24 S1 words missing and
+a newer timestamp than the correct snapshot, purely from this
+campaign's own earlier debug/test boots (run before PS1.2 existed) —
+and because "newest wins," that contamination was actively winning
+arbitration on every subsequent real boot.
+
+**Fixed:** `OETSPersistence.__init__` now computes `self._isolated =
+(state_dir != the repo's own default aurora_state/)`. When `_isolated`
+is true, `_web_candidates()` excludes `primary_web_file` entirely —
+isolated boots read and write ONLY their own `snapshot_web_file`,
+never touching the shared file, unless `AURORA_OETS_WEB_FILE` was
+explicitly set (always an intentional override). The contaminated real
+primary file was reset out-of-band: deleted, then rebuilt correctly by
+one real default `boot_aurora()` call loading purely from the correct
+snapshot.
+
+**Verified:** two full boot cycles against a fresh scratch copy (one
+with a real turn processed in between) show 0 missing S1 words and
+byte-identical node/relation/`opposite_of` counts before and after
+both cycles. 1 new test added to `tests/
+test_ps1_2_persistence_arbitration.py`.
+
+**Lesson for future dual-path stores:** load-side arbitration alone is
+not sufficient for "no silent reversion" — a store with more than one
+candidate file must also stop *writing* to non-canonical candidates
+once real isolation is requested, or contamination re-accumulates on
+the write side even when reads are correctly arbitrated. Worth
+checking against this checklist if any other store from the inventory
+table above is later found to need arbitration, not just the
+`ContradictionLedger`-style single-path threading most of them got.
