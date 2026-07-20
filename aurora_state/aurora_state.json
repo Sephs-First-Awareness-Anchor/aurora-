@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784584194.839713,
-  "generation": 10239,
-  "genome_version": 10239,
+  "timestamp": 1784588232.2773216,
+  "generation": 10267,
+  "genome_version": 10267,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -67,33 +67,33 @@
   "memory_helices": 0,
   "traits": {
     "curiosity": 0.492,
-    "caution": 0.5916,
-    "emotional_expressiveness": 0.3945,
-    "verbosity": 0.39,
-    "introspection": 0.4905,
-    "pattern_sensitivity": 0.4244,
+    "caution": 0.5114,
+    "emotional_expressiveness": 0.39,
+    "verbosity": 0.3977,
+    "introspection": 0.468,
+    "pattern_sensitivity": 0.4084,
     "social_engagement": 0.39,
-    "energy_conservation": 0.312
+    "energy_conservation": 0.3728
   },
-  "personality_drift": 0.7982,
+  "personality_drift": 0.6925,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6783475107476359,
-      "precision": 0.5304000000000001,
+      "warmth": 0.6656001910006196,
+      "precision": 0.7156976242453668,
       "depth": 1.0,
-      "confidence": 1.0
+      "confidence": 0.9371240245314651
     },
     "cognitive": {
-      "curiosity": 0.8096968137725381,
-      "pattern_matching": 1.0,
-      "abstraction": 1.0,
-      "risk_assessment": 0.7240883474278164
+      "curiosity": 0.6778613209525504,
+      "pattern_matching": 0.936702737580521,
+      "abstraction": 0.9975987383579479,
+      "risk_assessment": 0.5670173070714406
     },
     "social": {
-      "empathy": 0.9575157033773093,
-      "trust_extension": 0.6036289296567221,
-      "boundary_maintenance": 0.9829175011103778,
-      "engagement": 0.9185032548784451
+      "empathy": 1.0,
+      "trust_extension": 0.5741752678426023,
+      "boundary_maintenance": 0.8336228303530423,
+      "engagement": 0.8654257019030983
     }
   },
   "governance_stats": {
@@ -113,11 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 4,
-  "understanding_shards": 2,
-  "what_aurora_learned": [
-    "its creates friction when approached with curious inquiry \u2014 it connects to meaning, surprised (B-axis, depth 0.24)."
-  ],
+  "understanding_shards": 4,
+  "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "729d8d74045e"
+  "_checksum": "9ebb324c9284"
 }
