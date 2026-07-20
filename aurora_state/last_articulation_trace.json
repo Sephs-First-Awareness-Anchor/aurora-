@@ -1,49 +1,14 @@
 {
-  "original": "I is. I do.",
-  "candidate": "",
-  "selected": "I is. I do.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.62,
-  "candidate_score": 0.0,
-  "original_pressure": 0.456,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.544,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "input_interpretation": {
-      "raw_prompt": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-      "intent_hint": "statement_or_context",
-      "topic_terms": [
-        "corpus",
-        "fragment",
-        "context",
-        "corpus",
-        "fragment",
-        "context",
-        "corpus",
-        "fragment"
-      ],
-      "entities": [
-        "Use",
-        "Use",
-        "Use",
-        "Use",
-        "Use",
-        "Use",
-        "Use"
-      ]
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1784588237.4260418,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "Truth understand want feel did am. Moment become alive meaning do beautiful.",
+  "candidate": "Truth understand want feel did am. Moment become alive meaning do beautiful.",
+  "selected": "Truth understand want feel did am. Moment become alive meaning do beautiful.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.92,
+  "candidate_score": 0.92,
+  "original_pressure": 0.291,
+  "candidate_pressure": 0.291,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }
