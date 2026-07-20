@@ -3,47 +3,51 @@
     "coherence": 0.45,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.545,
-      "label": "explain"
+      "intensity": 0.5285,
+      "label": "contextualize"
     },
     "dominant_axis": "N",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "use"
+      ],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
     "readiness": 0.45,
-    "selected_action": "explain",
+    "selected_action": "contextualize",
     "should_speak": true,
-    "stance": "interpretive_explanation",
+    "stance": "contextual_continuity",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5857,
-      "label": "steady"
+      "intensity": 0.5622,
+      "label": "continuity_stable"
     },
-    "timestamp": 1784544716.606559
+    "timestamp": 1784553030.8679097
   },
-  "saved_at": 1784544716.6067615,
+  "saved_at": 1784553030.8680413,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "use"
+      ],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
+      "present_anchor": "What would likely cause that relation to change?\n[recalled:relation] What would likely cause that relation to change? [recalled:likely] W...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "sub_crests": [
       {
@@ -53,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 0.65,
-        "label": "unfamiliar"
+        "intensity": 1.0,
+        "label": "continuity_pull"
       },
       {
         "axis": "A",
@@ -63,8 +67,8 @@
       },
       {
         "axis": "X",
-        "intensity": 0.45,
-        "label": "low_certainty"
+        "intensity": 0.49,
+        "label": "surprise"
       },
       {
         "axis": "N",
@@ -74,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_slipping"
+        "label": "thread_holds"
       },
       {
         "axis": "N",
@@ -88,19 +92,19 @@
       },
       {
         "axis": "X",
-        "intensity": 0.8029,
+        "intensity": 0.8003,
         "label": "surface"
       },
       {
         "axis": "X",
-        "intensity": 0.8234,
+        "intensity": 0.8212,
         "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5857,
-      "label": "steady"
+      "intensity": 0.5622,
+      "label": "continuity_stable"
     }
   }
 }
