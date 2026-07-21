@@ -2555,7 +2555,25 @@ class SentenceComposer:
             if r == "agent":
                 current_subject = words[i]
             elif r == "action" and current_subject is not None:
-                words[i] = self._conjugate_for_subject(words[i], current_subject)
+                w = words[i]
+                # PF1.5 finding: role_coherent() (aurora_internal/
+                # aurora_pf1_5_instruments.py) flags a bare gerund used
+                # as a finite verb ("I planning water.") -- and this gap
+                # predates PF1.3/PF1.4 entirely (confirmed: "planning"
+                # already appeared as an ordinary find_by_noncomp
+                # candidate in PF1.0's own pre-PF1.4 baseline data), so
+                # it belongs here in the general conjugation pass, not
+                # only in _bind_slot_from_frame's frame-bound branch.
+                # " " not in w guards against re-wrapping a multi-word
+                # result _bind_slot_from_frame already produced (e.g.
+                # "am planning", "do not help") -- both end up here too
+                # since this pass runs unconditionally, and reprocessing
+                # an already-finite multi-word form must be a no-op.
+                if " " not in w and w.lower().endswith("ing") and len(w) > 4:
+                    aux = "am" if current_subject.lower() == "i" else "are"
+                    words[i] = f"{aux} {w}"
+                else:
+                    words[i] = self._conjugate_for_subject(w, current_subject)
 
         sent = " ".join(words)
         sent = sent[0].upper() + sent[1:]
@@ -2592,6 +2610,21 @@ class SentenceComposer:
                 if r == "agent":
                     current_subject = w
                     break
+            # PF1.5 finding: a bare gerund/present-participle bound
+            # directly as ACTION is not a finite verb ("I planning
+            # water."). role_coherent() (aurora_internal/aurora_pf1_5_
+            # instruments.py) exists to catch exactly this shape, and it
+            # fired on 14/60 real probes. Fixed with the SAME "be"-
+            # auxiliary approach _negate_action_word already uses below,
+            # not a new degerunding table -- stripping "-ing" back to a
+            # base form correctly requires real morphology (consonant
+            # doubling, silent-e restoration) that a rule-of-thumb would
+            # get wrong often enough to trade one defect for another.
+            # Progressive aspect ("I am planning") is genuine, correct
+            # English, not a workaround.
+            if verb.endswith("ing") and len(verb) > 4:
+                aux = "am" if current_subject.lower().rstrip(".,!?;:") == "i" else "are"
+                return f"{aux} not {verb}" if frame.negated else f"{aux} {verb}"
             if frame.negated:
                 return self._negate_action_word(verb, current_subject)
             return self._conjugate_for_subject(verb, current_subject)

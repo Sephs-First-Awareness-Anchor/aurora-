@@ -123,6 +123,30 @@ def test_negate_action_word_handles_be_forms_in_place():
     assert c._negate_action_word("is", "you") == "are not"
 
 
+def test_binds_bare_gerund_action_with_progressive_auxiliary():
+    """PF1.5's role_coherent() caught this shape live (14/60 real
+    probes): a bare gerund bound as ACTION is not a finite verb ("I
+    planning water."). Fixed with a progressive-aspect auxiliary."""
+    c = _composer()
+    frame = PropositionFrame(subject="I", relation="planning", obj="water", source="thought")
+    word = c._bind_slot_from_frame("action", frame, ["agent"], ["I"])
+    assert word == "am planning"
+
+
+def test_binds_bare_gerund_action_with_are_for_you_subject():
+    c = _composer()
+    frame = PropositionFrame(subject="I", relation="knowing", obj="water", source="thought")
+    word = c._bind_slot_from_frame("action", frame, ["agent"], ["you"])
+    assert word == "are knowing"
+
+
+def test_negated_bare_gerund_action_uses_am_not():
+    c = _composer()
+    frame = PropositionFrame(subject="I", relation="seeing", obj="water", negated=True, source="thought")
+    word = c._bind_slot_from_frame("action", frame, ["agent"], ["I"])
+    assert word == "am not seeing"
+
+
 def test_negate_action_word_uses_do_support_for_regular_verbs():
     c = _composer()
     assert c._negate_action_word("help", "I") == "do not help"
@@ -165,3 +189,25 @@ def test_compose_from_motif_with_no_frame_is_unaffected():
     orientation = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.0, "A": 0.5}
     # Must not raise with no frame set.
     c._compose_from_motif(motif, orientation, 0.0, "i_is", 0)
+
+
+def test_bare_gerund_from_ordinary_channel_selection_gets_an_auxiliary_too():
+    """PF1.5 finding: the bare-gerund-as-finite-verb gap predates PF1.3/
+    PF1.4 -- it already existed in ordinary channel selection (confirmed
+    live: 'planning' appeared as a find_by_noncomp candidate in PF1.0's
+    pre-PF1.4 baseline data). The general post-loop conjugation pass
+    must catch it too, not just frame-bound words."""
+    c = _composer()
+    assert c._proposition_frame is None  # no frame -> normal selection path
+    c._last_required_slot_attempts = 0
+    c._last_floor_failures = []
+
+    def _fake_select(role, *args, **kwargs):
+        return {"agent": "I", "action": "seeing", "object": "water"}.get(role, "")
+
+    c._select_constraint_word = _fake_select
+    motif = _FakeMotif(["agent", "action", "object"])
+    orientation = {"X": 0.5, "T": 0.5, "N": 0.5, "B": 0.0, "A": 0.5}
+    sent = c._compose_from_motif(motif, orientation, 0.0, "i_is", 0)
+    assert "am seeing" in sent.lower()
+    assert "i seeing" not in sent.lower()

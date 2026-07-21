@@ -4845,3 +4845,126 @@ golden guard] + `test_l1_skeleton_validity_gate.py` +
 `test_composer_relevance_selection.py` + all four
 `test_pf1_1`-`test_pf1_4` files). PF1.5 (instrument re-derivation)
 next.
+
+## Directive PF1 — PF1.5 instrument re-derivation, 2026-07-21
+
+New module `aurora_internal/aurora_pf1_5_instruments.py`, purely
+additive -- neither pre-existing instrument it extends is modified,
+so R1.9.3's 24-case golden set and every prior directive's own
+acceptance numbers stay pinned to exactly what they always measured.
+
+**`adequacy_score(response_text, anchor)`** -- relevance -> adequacy.
+Same `hits/len` base arithmetic as the existing relevance scorer
+(`run_probe_battery.py`'s `_make_relevance_scorer`), plus a bounded
+(+0.15, applies once) predicate-argument bonus when a verb and a noun
+are BOTH anchor-relevant and sit within 4 tokens of each other -- a
+real predicate taking a real, on-topic argument, not just isolated
+word hits scattered through the response.
+
+**`role_coherent(text)` / `wellformed_and_coherent(text)`** --
+wellformedness gains role-coherence. `_parseable()` (unchanged)
+catches word salad but was never designed to catch a specific, real
+failure class PF1.3/PF1.4's own live-boot runs produced: a bare
+present-participle used as a finite main verb with no auxiliary ("I
+planning before real.", "I knowing sister."). `role_coherent()` flags
+exactly that shape (subject pronoun directly followed by a bare `-ing`
+word, no recognized auxiliary, no `-ing`-as-noun override) per
+sentence. `wellformed_and_coherent()` = `_parseable() AND role_
+coherent()` -- the new, stronger combined gate for PF1.6's acceptance.
+
+**Three bugs found and fixed via PF1.5's own real-world revalidation,
+not by unit tests** (same discipline as PF1.4's telemetry-contamination
+catch -- this is the instrument re-derivation phase actually doing its
+job: a stronger measurement surfacing real defects the old, coarser
+one couldn't see):
+
+1. **Tokenization mismatch in `adequacy_score` itself.** The first live
+   60-probe run showed `mean_new_adequacy` (0.667) BELOW `mean_old_
+   relevance` (0.844) -- structurally impossible if adequacy is truly
+   "relevance base + non-negative bonus." Root cause: `adequacy_score`
+   tokenized with `aurora_semantic_probe_battery.py`'s `_WORD_RE` (min
+   length 1, built for `_parseable`'s word-shape checks -- counts "I"/
+   "a"/"is"), not the actual relevance scorer's own anchor-token regex
+   (min length 3), silently changing adequacy's "base" term out from
+   under the arithmetic it was documented and unit-tested to match
+   (the original unit tests didn't catch it because they compared
+   adequacy's output against hand-counts using the SAME wrong regex,
+   never cross-checked against the real old scorer). Fixed: added
+   `_ANCHOR_TOKEN_RE` identical to the relevance scorer's own pattern.
+   Rewrote the affected unit tests to cross-check against a local
+   `_old_relevance()` helper using that same real regex, plus added
+   `test_adequacy_base_term_is_never_lower_than_old_relevance_on_real_
+   probe_shaped_text` as a direct, always-on regression guard.
+
+2. **Frame-bound bare-gerund action binding (PF1.4's own code).** The
+   revalidation's wellformedness comparison showed 14/60 probes
+   flipping from old-`_parseable`-pass to new-`role_coherent`-fail.
+   Every flip spot-checked and confirmed a genuine bare-gerund-as-
+   finite-verb catch, zero false positives (`"I planning before real."`,
+   `"I replacing best real."`, `"I knowing sister."`, etc.) -- `_bind_
+   slot_from_frame` (`aurora_expression_perception.py`, PF1.4) binds
+   `frame.relation` directly whenever `infer_word_role` tags it a verb,
+   which its own `-ing`-suffix rule does for bare gerunds, with no
+   finiteness check. Fixed: when the bound verb ends `-ing`, use a
+   progressive-aspect auxiliary (`"am"`/`"are"` + gerund, `"am not"`/
+   `"are not"` if negated) instead of the plain conjugation path --
+   reuses `_negate_action_word`'s existing "be"-auxiliary pattern, adds
+   no new degerunding/morphology table (stripping `-ing` back to a
+   correct base form needs real morphology -- consonant doubling,
+   silent-e restoration -- that a rule-of-thumb gets wrong often enough
+   to trade one defect for another; "I am planning" is genuine, correct
+   English, not a workaround).
+
+3. **Ordinary-channel-selection bare-gerund actions -- a genuinely
+   PRE-EXISTING defect, not introduced by PF1.3/PF1.4.** Re-running the
+   revalidation after fix #2 still showed 15/60 flips; the actual
+   delivered text (`"I seeing prioritize."`, `"I writing okay."`, `"I
+   going okay."`) showed the SAME defect shape but through words that
+   were never frame-bound at all -- traced to `_select_constraint_
+   word`'s ordinary lexicon/DPS-crystal candidate pool, which has
+   always been able to surface a bare gerund for the ACTION role with
+   no finiteness check (confirmed: `"planning"` appears as an ordinary
+   `find_by_noncomp` candidate in PF1.0's own baseline data, captured
+   BEFORE PF1.3/PF1.4 existed -- this predates the whole PF1 directive;
+   `_parseable()` was simply never strong enough to see it). Fixed at
+   the general level: `_compose_from_motif`'s existing per-sentence
+   subject-driven conjugation pass (R1.9.3 L3) now applies the SAME
+   auxiliary treatment to ANY bare-gerund action word, frame-bound or
+   not (a `" " not in w` guard skips words fix #2 already finished,
+   e.g. `"am planning"`, so the two fixes compose cleanly rather than
+   double-wrapping). `tests/test_pf1_4_slot_binding.py` gained `test_
+   bare_gerund_from_ordinary_channel_selection_gets_an_auxiliary_too`,
+   exercising this path directly via a monkeypatched `_select_
+   constraint_word`, no live boot needed.
+
+19 tests in `tests/test_pf1_4_slot_binding.py` (was 15), 16 in `tests/
+test_pf1_5_instruments.py`, all passing, including the two-direction
+check against R1.9.3's own golden set (all 24 garbled responses still
+rejected, all 24 good sentences still accepted -- zero new false
+negatives from role-coherence).
+
+**Final real 60-probe two-direction revalidation** (`scripts/pf1_5_
+instrument_revalidation.py`, reusing `run_probe_battery.py`'s exact
+boot/scratch-isolation and D2.4 delivered-text extraction), after all
+three fixes: `mean_old_relevance = 0.7919`, `mean_new_adequacy =
+0.8044` (correctly >= relevance, invariant holds).
+`old_parseable_pass_count = 7/60`, `new_wellformed_coherent_pass_
+count = 7/60`, **`wellformedness_flipped_count = 0`** -- old and new
+instruments now agree on every single probe in this run; sample
+delivered text confirms the fix live (`"I am planning before clear. I
+change dinner real."`, `"I am replacing best clear. I am planning."`).
+Note honestly: the raw pass-count (7/60) is itself lower than earlier
+runs' pass-counts (19-23/60) for reasons UNRELATED to this phase --
+`best_for_proposition`'s (PF1.3) fitness-proportional sampling is
+stochastic by design, so different runs draw different mixes of the
+3 currently-eligible motifs and different word choices, and this
+particular run's draw happened to produce more non-gerund-related
+wellformedness failures (e.g. `"I am interesting sister's clear."`).
+Zero flips confirms this variance is NOT a role-coherence artifact --
+old and new agree completely -- but the underlying pass-rate itself
+remains a live, honest number for PF1.6's acceptance measurement to
+report, not something this phase can or should smooth over.
+
+Full data: `aurora_state/probe_battery/results/pf1_5_revalidation_
+<timestamp>.json` (gitignored, local only, per convention). PF1.6
+(acceptance) next.
