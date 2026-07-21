@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 0.35,
+      "confidence": 1.0,
       "label": "topic_continuation"
     },
     {
@@ -17,19 +17,30 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "understand",
+    "active_topic": "meaning",
     "ambiguity": 0.545,
-    "cost_total": 0.1504,
+    "cost_total": 0.159,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 0.0,
+    "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
-    "interpreted_deep_passion": "settled_alignment",
+    "interpreted_deep_passion": "meaning_hold",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
   "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
+    {
+      "confidence": 1.0,
+      "label": "callback_pressure",
+      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
+      "source": "memory_resonance",
+      "tags": [
+        "continuity",
+        "context"
+      ],
+      "urgency": 0.45
+    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -51,23 +62,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6423,
+    "confidence": 0.649,
     "expected_observation": "followup",
-    "expected_user_continuation": "understand",
+    "expected_user_continuation": "meaning",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "X",
+      "axis_signature": "B",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "understand"
+      "topic": "meaning"
     },
     "preload_context": [
-      "understand",
+      "meaning",
       "followup"
     ],
-    "readiness_bias": 0.4212,
+    "readiness_bias": 0.4232,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -79,17 +90,17 @@
   },
   "readiness": 0.6525,
   "recalled_fragments": [
-    "understand",
-    "How do you understand meaning?\n[recalled:meaning] How do you understand meaning? [recalled:understand] How do you understand meaning? [re..."
+    "meaning",
+    "Tell me about meaning.\n[recalled:meaning] Tell me about meaning. [recalled:recalled:meaning] Tell me about meaning.\n[recalled:meaning] Te..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4758,
-    "N": 0.5242,
-    "T": 0.0,
+    "B": 0.2792,
+    "N": 0.0652,
+    "T": 0.6557,
     "X": 0.0
   },
-  "saved_at": 1784667184.8745062,
+  "saved_at": 1784671615.5949397,
   "sub_crests": [
     {
       "axis": "X",
@@ -98,8 +109,8 @@
     },
     {
       "axis": "T",
-      "intensity": 0.5,
-      "label": "familiar"
+      "intensity": 1.0,
+      "label": "continuity_pull"
     },
     {
       "axis": "A",
@@ -119,7 +130,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_slipping"
+      "label": "thread_holds"
     },
     {
       "axis": "N",
