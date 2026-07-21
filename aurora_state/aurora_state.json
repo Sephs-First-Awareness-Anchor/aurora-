@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784629617.2873201,
-  "generation": 10329,
-  "genome_version": 10329,
+  "timestamp": 1784636291.5949585,
+  "generation": 10331,
+  "genome_version": 10331,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,32 +66,32 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.6576,
-    "caution": 0.6376,
-    "emotional_expressiveness": 0.4552,
-    "verbosity": 0.5537,
-    "introspection": 0.5789,
-    "pattern_sensitivity": 0.6262,
-    "social_engagement": 0.5649,
-    "energy_conservation": 0.4713
+    "curiosity": 0.7185,
+    "caution": 0.6968,
+    "emotional_expressiveness": 0.5472,
+    "verbosity": 0.5588,
+    "introspection": 0.6606,
+    "pattern_sensitivity": 0.7068,
+    "social_engagement": 0.646,
+    "energy_conservation": 0.4538
   },
-  "personality_drift": 0.5773,
+  "personality_drift": 0.8884,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6717566550111531,
-      "precision": 0.6912155966578025,
-      "depth": 0.7837416493212519,
-      "confidence": 0.7843448238926932
+      "warmth": 0.6649907084585804,
+      "precision": 0.7444759515510427,
+      "depth": 0.8195670889656376,
+      "confidence": 0.7803993767753358
     },
     "cognitive": {
-      "curiosity": 0.8003523586399717,
-      "pattern_matching": 0.8515564302842007,
-      "abstraction": 0.9656590764220364,
-      "risk_assessment": 0.8573072695059986
+      "curiosity": 0.7387483312861415,
+      "pattern_matching": 0.8263453606688683,
+      "abstraction": 0.926694617678965,
+      "risk_assessment": 0.9107707642082224
     },
     "social": {
-      "empathy": 0.7531268350092665,
-      "trust_extension": 0.6023957570054336,
+      "empathy": 0.7414630161685314,
+      "trust_extension": 0.5855715589891275,
       "boundary_maintenance": 1.0,
       "engagement": 1.0
     }
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "5e55af6c46bb"
+  "_checksum": "f25390247133"
 }

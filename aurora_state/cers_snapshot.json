@@ -1,53 +1,53 @@
 {
   "conscious_frame": {
-    "coherence": 0.544,
+    "coherence": 0.288,
     "conscious_crest": {
-      "axis": "T",
-      "intensity": 0.5132,
-      "label": "contextualize"
+      "axis": "N",
+      "intensity": 0.3997,
+      "label": "explain"
     },
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "overlay": {
       "active_crystals": [
-        "identity"
+        "language"
       ],
       "interaction_state": "present",
-      "present_anchor": "identity.\n[recalled:identity] identity. [recalled:recalled:identity] identity.\n[recalled:identity] identity. [recalled:recalled:recalled:...",
+      "present_anchor": "Do you experience language?\n[recalled:experience] Do you experience language? [recalled:language] Do you experience language? [recalled:r...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.544,
-    "selected_action": "contextualize",
-    "should_speak": true,
-    "stance": "contextual_continuity",
+    "readiness": 0.288,
+    "selected_action": "explain",
+    "should_speak": false,
+    "stance": "interpretive_explanation",
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     },
-    "timestamp": 1784629622.8861842
+    "timestamp": 1784636294.8802254
   },
-  "saved_at": 1784629622.886369,
+  "saved_at": 1784636294.8804164,
   "subsurface_state": {
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "identity"
+        "language"
       ],
       "interaction_state": "present",
-      "present_anchor": "identity.\n[recalled:identity] identity. [recalled:recalled:identity] identity.\n[recalled:identity] identity. [recalled:recalled:recalled:...",
+      "present_anchor": "Do you experience language?\n[recalled:experience] Do you experience language? [recalled:language] Do you experience language? [recalled:r...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "sub_crests": [
       {
@@ -57,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 1.0,
-        "label": "continuity_pull"
+        "intensity": 0.5,
+        "label": "familiar"
       },
       {
         "axis": "A",
@@ -78,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_holds"
+        "label": "thread_slipping"
       },
       {
         "axis": "N",
@@ -92,9 +92,9 @@
       }
     ],
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     }
   }
 }

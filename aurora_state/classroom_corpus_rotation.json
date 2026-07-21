@@ -67,21 +67,25 @@
   "coherence_maintenance": [
     "fail_point:prove_ep_epoch_1:rel_probe_corpus_fragment_1",
     "fail_point:train_epoch_2:episode_c6388e715bc2",
-    "fail_point:train_epoch_3:episode_8e8123ca88d8"
+    "fail_point:train_epoch_3:episode_8e8123ca88d8",
+    "fail_point:train_epoch_3:episode_861845cce6c1"
   ],
   "perspective_integration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "corpus:perspective_integration:0",
-    "fail_point:train_epoch_2:episode_c6388e715bc2"
+    "fail_point:train_epoch_2:episode_c6388e715bc2",
+    "corpus:perspective_integration:1"
   ],
   "ambiguity_handling": [
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
-    "corpus:ambiguity_handling:0"
+    "corpus:ambiguity_handling:0",
+    "corpus:ambiguity_handling:1"
   ],
   "adaptive_strategy_selection": [
     "corpus:adaptive_strategy_selection:0",
     "corpus:adaptive_strategy_selection:1",
-    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
+    "fail_point:train_epoch_2:episode_c6388e715bc2"
   ]
 }

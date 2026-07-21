@@ -1,6 +1,6 @@
 {
   "generation": 0,
-  "total_visual_processed": 9,
+  "total_visual_processed": 14,
   "total_audio_processed": 0,
   "visual_templates": {
     "warm_skin_and_light": {
@@ -527,12 +527,42 @@
             "lexeme": "unknown_visual",
             "oets_node": "",
             "timestamp": 1784629614.6294842
+          },
+          {
+            "intent": "sensory:visual",
+            "lexeme": "unknown_visual",
+            "oets_node": "",
+            "timestamp": 1784636287.1796434
+          },
+          {
+            "intent": "sensory:visual",
+            "lexeme": "unknown_visual",
+            "oets_node": "",
+            "timestamp": 1784636287.664278
+          },
+          {
+            "intent": "sensory:visual",
+            "lexeme": "unknown_visual",
+            "oets_node": "",
+            "timestamp": 1784636288.146661
+          },
+          {
+            "intent": "sensory:visual",
+            "lexeme": "unknown_visual",
+            "oets_node": "",
+            "timestamp": 1784636288.6551821
+          },
+          {
+            "intent": "sensory:visual",
+            "lexeme": "unknown_visual",
+            "oets_node": "",
+            "timestamp": 1784636289.094818
           }
         ],
-        "times_matched": 1,
+        "times_matched": 6,
         "guidance_count": 0,
         "generation_created": 0,
-        "last_accessed": 1784629614.6294744
+        "last_accessed": 1784636289.0948112
       }
     },
     "grounding_log": [
@@ -543,6 +573,46 @@
         "lexeme": "unknown_visual",
         "oets_node": "",
         "timestamp": 1784629614.6294854
+      },
+      {
+        "modality": "visual",
+        "concept": "unknown_visual",
+        "intent": "sensory:visual",
+        "lexeme": "unknown_visual",
+        "oets_node": "",
+        "timestamp": 1784636287.1796446
+      },
+      {
+        "modality": "visual",
+        "concept": "unknown_visual",
+        "intent": "sensory:visual",
+        "lexeme": "unknown_visual",
+        "oets_node": "",
+        "timestamp": 1784636287.664279
+      },
+      {
+        "modality": "visual",
+        "concept": "unknown_visual",
+        "intent": "sensory:visual",
+        "lexeme": "unknown_visual",
+        "oets_node": "",
+        "timestamp": 1784636288.146663
+      },
+      {
+        "modality": "visual",
+        "concept": "unknown_visual",
+        "intent": "sensory:visual",
+        "lexeme": "unknown_visual",
+        "oets_node": "",
+        "timestamp": 1784636288.655183
+      },
+      {
+        "modality": "visual",
+        "concept": "unknown_visual",
+        "intent": "sensory:visual",
+        "lexeme": "unknown_visual",
+        "oets_node": "",
+        "timestamp": 1784636289.094819
       }
     ]
   },
