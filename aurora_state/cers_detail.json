@@ -31,7 +31,19 @@
     "status": "recommend_merge"
   },
   "governed_by": "cers_regulator.cers_converge",
-  "micro_reasoning": [],
+  "micro_reasoning": [
+    {
+      "confidence": 1.0,
+      "label": "novelty_attention",
+      "rationale": "Novelty is high enough that the frame should stay exploratory.",
+      "source": "entropy",
+      "tags": [
+        "novelty",
+        "exploration"
+      ],
+      "urgency": 0.4
+    }
+  ],
   "mtsl_semantic": {
     "response_bias": 0.0,
     "semantic_hesitation": false,
@@ -39,13 +51,13 @@
     "semantic_salience": 0.0,
     "variant_confidence": 0.0
   },
-  "prediction_confidence": 0.6356,
-  "prediction_source": "runtime_evidence",
-  "saved_at": 1784325736.062336,
+  "prediction_confidence": 0.6009,
+  "prediction_source": "understanding_contract+manifold",
+  "saved_at": 1784598968.3782291,
   "sub_crests": [
     {
       "axis": "X",
-      "intensity": 0.5,
+      "intensity": 0.581,
       "label": "attentional_drift"
     },
     {
@@ -60,13 +72,13 @@
     },
     {
       "axis": "X",
-      "intensity": 0.8875,
-      "label": "steady_continuation"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
-      "axis": "X",
-      "intensity": 0.5,
-      "label": "alignment"
+      "axis": "N",
+      "intensity": 1.0,
+      "label": "novelty"
     },
     {
       "axis": "T",
@@ -82,7 +94,22 @@
       "axis": "X",
       "intensity": 1.0,
       "label": "calm"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8029,
+      "label": "surface"
+    },
+    {
+      "axis": "X",
+      "intensity": 0.8234,
+      "label": "surface"
     }
   ],
-  "tensor_trace": {}
+  "tensor_trace": {
+    "coord": "MANIFOLD:X:NC[T:DIFFERENCE]xNC[N:COST]",
+    "distortion": 0.0,
+    "is_new_coordinate": false,
+    "salience": 0.0
+  }
 }

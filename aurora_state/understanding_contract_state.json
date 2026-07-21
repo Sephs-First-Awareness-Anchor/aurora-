@@ -18162,7 +18162,7 @@
       }
     }
   ],
-  "last_saved_at": 1784134965.5334074,
+  "last_saved_at": 1784598970.8889709,
   "pending_validation": {
     "action_type": "grounded_response",
     "expected_affect": "curiosity",
@@ -18176,25 +18176,5 @@
     "summary": "Gravity description gravity description.",
     "tone": "uncertain"
   },
-  "structural_gaps": [
-    {
-      "layer": "code",
-      "pathway": "surface_emergence",
-      "severity": 0.6,
-      "source": "manual_code_lineage",
-      "trigger": "no_organ_alignment",
-      "ts": 1784134563.5211866,
-      "unresolved": "reply_aurora"
-    },
-    {
-      "layer": "code",
-      "pathway": "surface_emergence",
-      "severity": 0.6,
-      "source": "manual_code_lineage",
-      "trigger": "no_organ_alignment",
-      "ts": 1784134565.468724,
-      "unresolved": "tests.test_correspondence_loop"
-    }
-  ],
   "time_index": 977
 }

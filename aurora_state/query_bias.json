@@ -30,7 +30,7 @@
     },
     {
       "pressure_type": "knowledge_gap",
-      "priority": 0.2113,
+      "priority": 0.2109,
       "label": "Missing conceptual content",
       "axis": "X (Existence)",
       "signal_mode": "active",
@@ -57,7 +57,7 @@
     },
     {
       "pressure_type": "articulation_gap",
-      "priority": 0.2025,
+      "priority": 0.2026,
       "label": "Expression precision failure",
       "axis": "N (Energy / Resource)",
       "signal_mode": "active",
@@ -78,19 +78,18 @@
       "hypothesis_seed": "If semantic_precision were expressed with a fixed canonical vocabulary, how much of the current N (Energy / Resource) pressure would dissolve?",
       "source_dimensions": [
         "semantic_precision",
-        "compression_elaboration_fit",
         "implied_intent_inference"
       ]
     }
   ],
   "axis_pressure": {},
-  "last_updated": 1784325728.5082047,
+  "last_updated": 1784598862.7537313,
   "pressure_scores": {
     "code_gap": 0.2725,
-    "knowledge_gap": 0.2113,
-    "articulation_gap": 0.2025,
-    "stability_gap": 0.1546,
-    "reasoning_gap": 0.1336,
-    "tool_gap": 0.1289
+    "knowledge_gap": 0.2109,
+    "articulation_gap": 0.2026,
+    "stability_gap": 0.1552,
+    "reasoning_gap": 0.1351,
+    "tool_gap": 0.1277
   }
 }
