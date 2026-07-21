@@ -1737,6 +1737,13 @@ class SentenceComposer:
         # Context: keywords from last perceived input
         self._context_keywords: List[str] = []
 
+        # PF1.2: PropositionFrame ("what to say") + ExpressionGuidance,
+        # transported in from begin_expression() -- not yet consumed by
+        # compose() (PF1.3/PF1.4 wire motif selection and slot binding
+        # to these). None means "no frame/guidance available this turn."
+        self._proposition_frame = None
+        self._expression_guidance = None
+
         # Sensory register bias — set per-compose from sensory_context.
         # +1.0 high-energy input, -1.0 low-energy, 0.0 neutral. Nudges the
         # N (Energy) axis of the live constraint orientation during composition.
@@ -2289,6 +2296,21 @@ class SentenceComposer:
             if role in ('verb', 'noun', 'adjective', 'adverb'):
                 filtered.append(w_clean)
         self._context_keywords = filtered[:10]
+
+    def set_proposition_frame(self, frame) -> None:
+        """PF1.2: transport in the PropositionFrame derived this turn
+        (aurora_internal.aurora_proposition_frame.build_frame), or None
+        if no rung produced one. Symmetric with set_context(); not yet
+        read by compose() -- transport only, motif/slot consumption is
+        PF1.3/PF1.4."""
+        self._proposition_frame = frame
+
+    def set_expression_guidance(self, guidance) -> None:
+        """PF1.2: transport in the ExpressionGuidance already produced
+        at the begin_expression() call site (aurora_braid_wiring.py)
+        but never previously consumed by the composer (audit finding
+        F1). Symmetric with set_context(); not yet read by compose()."""
+        self._expression_guidance = guidance
 
     # ================================================================
     # COMPOSITION  -- The main output (scaffolding-aware)

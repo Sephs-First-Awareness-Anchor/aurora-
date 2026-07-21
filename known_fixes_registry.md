@@ -4604,3 +4604,60 @@ fixes/notes bundled in, per this directive's own "one phase per
 commit" sequencing -- the alternative (a separate commit purely for
 inherited breakage) doesn't serve the campaign's clarity any better
 here since both were discovered strictly by PF1.1's own mandated gate.
+
+## Directive PF1 — PF1.2 transport via begin_expression, 2026-07-21
+
+Wires PF1.1's `build_frame()` and the already-produced-but-orphaned
+`ExpressionGuidance` (audit finding F1) onto the composer, at the
+existing `begin_expression()` call site (`aurora_braid_wiring.py`,
+`aurora.py:16545`) -- the same anchor point `SemanticIntentionBridge`
+already uses, confirmed structurally unrelated in PF1.1. Pure
+transport: `compose()` reads neither field yet, so this phase cannot
+change a single byte of delivered output. Consumption is PF1.3
+(motif selection) and PF1.4 (slot binding).
+
+`aurora_expression_perception.py` (`SentenceComposer`): added
+`self._proposition_frame = None` / `self._expression_guidance = None`
+to `__init__`, and two setters symmetric with the existing
+`set_context()` -- `set_proposition_frame(frame)` and
+`set_expression_guidance(guidance)`, both plain assignment, no
+filtering (unlike `set_context`'s noise-word gate -- there's nothing
+to filter on a structured frame/guidance object).
+
+`aurora_braid_wiring.py` (`begin_expression`): after the existing
+`SemanticIntentionBridge` wiring block, a new fail-quiet block calls
+`build_frame(systems, state_shim)` and pushes the result plus
+`systems['_expression_guidance']` onto the composer via the two new
+setters. `begin_expression(systems)` only receives the `systems`
+dict, not the real `TurnState` object `build_frame`'s anchor rung
+expects (`state.noncomp_input_state`) -- shimmed via a
+`types.SimpleNamespace` reading `systems['_last_noncomp_input']`,
+the same dict-mirrored copy of the NonComp summary `aurora.py`
+already maintains for exactly this "no `state` object available"
+situation (confirmed existing precedent at several call sites, e.g.
+`aurora.py:10644`). Wrapped in its own try/except, additive to the
+existing outer try/except -- a failure here degrades to "no frame
+this turn," never affects expression-layer setup or the turn itself.
+
+18 tests total: `tests/test_pf1_2_transport.py` (10 new) covering the
+composer defaults/setters directly, a structural grep-based check
+that `compose()`'s current source contains neither
+`_proposition_frame` nor `_expression_guidance` (the byte-identical
+gate, enforced mechanically rather than assumed), and
+`begin_expression()` wiring through fakes (anchor-rung frame, thought-
+rung frame with priority over a decoy anchor, None-frame when no rung
+fires, graceful degradation with no composer / no thought state).
+Plus the existing 13 `test_pf1_1_proposition_frame.py` tests (still
+green, no changes to that module this phase).
+
+**PF1.2 regression gate:** `test_pf1_1_proposition_frame.py` (13) +
+`test_pf1_2_transport.py` (10) + `test_d1_device_path_attribution.py`
+(5, includes the live-boot `test_device_delivered_text_byte_
+attributes_to_resp_a_live` -- an actual `process_external_user_turn`
+call against real boot state) -- **28 passed, 0 failed** (1391.14s;
+this environment is running noticeably slower than earlier in the
+campaign, noted previously, not diagnosed further, not blocking).
+Live-boot delivered text confirmed unchanged, matching the phase's
+own byte-identical gate both mechanically (structural check) and
+empirically (live turn). PF1.3 (motif selection conditioned on the
+proposition) next.
