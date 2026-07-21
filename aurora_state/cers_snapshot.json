@@ -1,16 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.45,
+    "coherence": 0.288,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.545,
+      "intensity": 0.3997,
       "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "understand"
+      ],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
+      "present_anchor": "How do you understand connection?\n[recalled:connection] How do you understand connection? [recalled:understand] How do you understand con...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -19,25 +21,27 @@
       "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.45,
+    "readiness": 0.288,
     "selected_action": "explain",
-    "should_speak": true,
+    "should_speak": false,
     "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5857,
+      "intensity": 0.4476,
       "label": "steady"
     },
-    "timestamp": 1784598968.3763833
+    "timestamp": 1784610692.2929723
   },
-  "saved_at": 1784598968.376558,
+  "saved_at": 1784610692.2936351,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
-      "active_crystals": [],
+      "active_crystals": [
+        "understand"
+      ],
       "interaction_state": "present",
-      "present_anchor": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment a...",
+      "present_anchor": "How do you understand connection?\n[recalled:connection] How do you understand connection? [recalled:understand] How do you understand con...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -53,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 0.65,
-        "label": "unfamiliar"
+        "intensity": 0.5,
+        "label": "familiar"
       },
       {
         "axis": "A",
@@ -85,21 +89,11 @@
         "axis": "X",
         "intensity": 1.0,
         "label": "calm"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.8029,
-        "label": "surface"
-      },
-      {
-        "axis": "X",
-        "intensity": 0.8234,
-        "label": "surface"
       }
     ],
     "subsurface_crest": {
       "axis": "N",
-      "intensity": 0.5857,
+      "intensity": 0.4476,
       "label": "steady"
     }
   }
