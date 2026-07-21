@@ -70,7 +70,8 @@
     "fail_point:train_epoch_3:episode_8e8123ca88d8",
     "fail_point:train_epoch_3:episode_861845cce6c1",
     "fail_point:train_epoch_3:episode_ca4e4da10b27",
-    "fail_point:train_epoch_3:episode_11d625707dd0"
+    "fail_point:train_epoch_3:episode_11d625707dd0",
+    "fail_point:train_epoch_3:episode_cfa449acb78c"
   ],
   "perspective_integration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -78,7 +79,8 @@
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "corpus:perspective_integration:1",
     "corpus:perspective_integration:2",
-    "corpus:perspective_integration:3"
+    "corpus:perspective_integration:3",
+    "corpus:perspective_integration:4"
   ],
   "ambiguity_handling": [
     "fail_point:train_epoch_2:episode_c6388e715bc2",
@@ -86,7 +88,8 @@
     "corpus:ambiguity_handling:0",
     "corpus:ambiguity_handling:1",
     "corpus:ambiguity_handling:2",
-    "corpus:ambiguity_handling:3"
+    "corpus:ambiguity_handling:3",
+    "corpus:ambiguity_handling:4"
   ],
   "adaptive_strategy_selection": [
     "corpus:adaptive_strategy_selection:0",
@@ -94,6 +97,7 @@
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "corpus:adaptive_strategy_selection:2",
-    "corpus:adaptive_strategy_selection:3"
+    "corpus:adaptive_strategy_selection:3",
+    "corpus:adaptive_strategy_selection:4"
   ]
 }
