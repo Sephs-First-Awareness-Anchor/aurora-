@@ -2497,13 +2497,38 @@ class SentenceComposer:
         words = list(used_words or [])  # cross-sentence diversity pressure
         _new_start = len(words)
         sentence_roles = []
+        frame = self._proposition_frame
         for r_i, role in enumerate(roles):
+            word = None
+            if frame is not None:
+                try:
+                    word = self._bind_slot_from_frame(role, frame, sentence_roles, words)
+                except Exception:
+                    word = None
+            if word:
+                words.append(word)
+                sentence_roles.append(role)
+                continue
+            # PF1.4: DESCRIPTOR still goes through the existing relevance-
+            # ranked channel selection (no override table for it), but
+            # when a frame is present its terms are folded into the
+            # anchor text so the EXISTING anchor-set ranking (already the
+            # correctly-working mechanism per PF1.0) naturally favors
+            # words related to what she's actually saying, not just the
+            # raw turn text.
+            _role_input_text = input_text
+            if frame is not None and role == "descriptor":
+                _frame_terms = " ".join(
+                    t for t in (frame.subject, frame.relation, frame.obj) if t
+                )
+                if _frame_terms:
+                    _role_input_text = f"{input_text} {_frame_terms}".strip()
             word = self._select_constraint_word(
                 role, dominant_axis,
                 _role_chars.get(role, ()),
                 _role_lexroles.get(role, "noun"),
                 valence_target, words,
-                input_text=input_text,
+                input_text=_role_input_text,
                 f5_turn_id=f5_turn_id, f5_register=f5_register,
             )
             if word:
@@ -2537,6 +2562,60 @@ class SentenceComposer:
         if not sent.endswith((".", "!", "?")):
             sent += "."
         return sent
+
+    # ── PF1.4: slot binding -- the proposition fills its own sentence ──
+
+    _BE_NEGATION_FORMS = frozenset({"am", "are", "was", "were", "being", "been"})
+
+    def _bind_slot_from_frame(self, role: str, frame, sentence_roles: list,
+                              words: list) -> Optional[str]:
+        """PF1.4: fill ACTION/OBJECT directly from the PropositionFrame
+        (aurora_internal.aurora_proposition_frame) when it has a real,
+        POS-verified word for that role. Returns None (fail-quiet) on
+        anything else -- an empty frame field, a POS mismatch, or an
+        immediate duplicate -- and the caller falls back to today's
+        exact channel-selection path.
+
+        AGENT is deliberately NOT bound from frame.subject: AGENT is
+        always a pronoun ("I"/"you", enforced by _select_constraint_
+        word's own agent branch) and frame.subject is frequently an
+        arbitrary topic noun ("water", "meeting"), not a pronoun --
+        forcing it in would produce an ungrammatical subject. The
+        proposition's real content lives in relation/obj anyway.
+        """
+        if role == "action" and frame.relation:
+            verb = str(frame.relation).strip().lower()
+            if not verb or infer_word_role(verb) != "verb":
+                return None
+            current_subject = "I"
+            for r, w in zip(reversed(sentence_roles), reversed(words)):
+                if r == "agent":
+                    current_subject = w
+                    break
+            if frame.negated:
+                return self._negate_action_word(verb, current_subject)
+            return self._conjugate_for_subject(verb, current_subject)
+
+        if role == "object" and frame.obj:
+            noun = str(frame.obj).strip().lower()
+            if not noun or infer_word_role(noun) != "noun":
+                return None
+            if noun in (w.lower() for w in words):
+                return None
+            return noun
+
+        return None
+
+    def _negate_action_word(self, verb: str, subject: str) -> str:
+        """PF1.4: minimal do-support negation, reusing the existing
+        _conjugate_for_subject table rather than a new one. 'be' forms
+        negate in place ("am not"/"are not"); everything else uses
+        do-support ("do not <base>") -- correct for "I"/"you" (the only
+        subjects this delivered voice ever uses; "does" never applies)."""
+        base = self._conjugate_for_subject(verb, subject)
+        if base in self._BE_NEGATION_FORMS:
+            return f"{base} not"
+        return f"do not {base}"
 
     # R1.9.2 G1: valence-proximity's bonus is bounded so no valence match,
     # however perfect, can outweigh one hop of relevance. Derived the same

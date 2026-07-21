@@ -51,6 +51,32 @@ class PropositionFrame:
 _MIN_TOKEN_LEN = 3
 
 
+# PF1.4's own real-world verification (60-probe live-boot run) caught
+# `unified_interpretation` in its ACTUAL delivered shape for the first
+# time -- prior fixture text in PF1.1's unit tests was hand-written
+# natural language, never this. aurora_thought_formation.py's own
+# ThoughtState docstring says it plainly: "This is Aurora's internal
+# thought -- NOT the response." Its real generators
+# (_reason_through_dominant, _partial_interpretation) format it as an
+# internal telemetry trace -- pipe-joined labeled segments ("Operating
+# on: ... | Triggered by: warp_coverage_extension, x=0.50 | Dominant
+# pressure: A-axis (0.62)") or a "[partial] ..." fallback -- never a
+# sentence. Parsing that literally surfaced real internal tokens
+# ("triggered", "x=0.50") straight into delivered text ("I triggered
+# x=0.50."). This is the fix: refuse to parse the known telemetry
+# shape at all, rather than trying to filter it token by token.
+_TELEMETRY_MARKERS = (
+    "Operating on:", "Active processes:", "Triggered by:",
+    "Dominant pressure:", "Unresolved tension:", "Background:",
+)
+
+
+def _looks_like_internal_telemetry(text: str) -> bool:
+    if text.startswith("[partial]"):
+        return True
+    return any(marker in text for marker in _TELEMETRY_MARKERS)
+
+
 def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
     """Lightweight subject/relation/object extraction from Aurora's own
     plain-language thought text, via the existing utterance parser (for
@@ -59,12 +85,17 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
     token (object) -- the same "regex/role-tag over full-parse" honesty
     level already established for this kind of extraction elsewhere in
     this codebase (Track CP's extract_joints, SemanticIntentionBridge's
-    keyword pull). Returns None if no usable topic is found."""
+    keyword pull). Returns None if no usable topic is found, or if the
+    text is recognizably internal telemetry rather than a thought
+    expressed in language."""
     if not text or not str(text).strip():
+        return None
+    text = str(text)
+    if _looks_like_internal_telemetry(text):
         return None
     try:
         from aurora_internal.aurora_utterance_parser import parse_utterance
-        parsed = parse_utterance(str(text))
+        parsed = parse_utterance(text)
     except Exception:
         parsed = {}
 
@@ -73,15 +104,22 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
     negated = bool(parsed.get("negated", False))
     if not topic and topic_words:
         topic = topic_words[0]
-    if not topic:
+    if not topic or "=" in topic:
         return None
 
     relation = ""
     obj = ""
-    tokens = [t.strip(".,!?;:\"'()").lower() for t in str(text).split()]
+    tokens = [t.strip(".,!?;:\"'()").lower() for t in text.split()]
     topic_lower = topic.lower()
     for tok in tokens:
         if len(tok) < _MIN_TOKEN_LEN:
+            continue
+        # Defense in depth beyond the whole-text telemetry check above:
+        # no genuine spoken word ever contains "=" -- catches stray
+        # "key=value" tokens (e.g. topic strings assigned straight from
+        # a ProcessContext.what_it_is_operating_on like
+        # "aurora:activation=0.75") even outside the pipe-joined format.
+        if "=" in tok:
             continue
         if tok == topic_lower:
             continue

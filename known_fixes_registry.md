@@ -4738,3 +4738,110 @@ motif got selected, so this does not block continuing the directive.
 
 Full data: `aurora_state/probe_battery/results/pf1_0_attribution_
 <timestamp>.json` (gitignored, local only, per convention).
+
+## Directive PF1 — PF1.4 slot binding: the proposition fills its own sentence, 2026-07-21
+
+`aurora_expression_perception.py`'s `_compose_from_motif` now tries a
+frame-bound fill before falling back to today's channel selection.
+Two new methods: `_bind_slot_from_frame(role, frame, sentence_roles,
+words)` -- ACTION binds from `frame.relation` (POS-gated: `infer_word_
+role(verb) == "verb"`, else fail-quiet fallback), conjugated for the
+sentence's own current subject via the existing `_conjugate_for_
+subject`; OBJECT binds from `frame.obj` (POS-gated as a noun, and
+rejected if it would immediately repeat the previous word). `_negate_
+action_word(verb, subject)` -- minimal do-support negation reusing
+the existing conjugation table rather than a new one ("be" forms
+negate in place, "am not"/"are not"; everything else "do not
+<base>" -- correct for "I"/"you", the only subjects this delivered
+voice ever uses). AGENT is deliberately NOT bound from `frame.
+subject`: AGENT is always a pronoun (enforced by `_select_constraint_
+word`'s own agent branch), and `frame.subject` is frequently an
+arbitrary topic noun -- forcing it in would produce an ungrammatical
+subject, and the proposition's real content lives in relation/obj
+anyway. DESCRIPTOR stays on the existing relevance-ranked path
+unmodified in mechanism, but when a frame is present its own terms
+(subject/relation/obj) are folded into the `input_text` passed to
+`_select_constraint_word`, so the ALREADY-correctly-working anchor-set
+ranking (PF1.0's own finding) naturally favors words related to what
+she's actually proposing, with zero new ranking logic. 15 new tests
+(`tests/test_pf1_4_slot_binding.py`): direct unit coverage of `_bind_
+slot_from_frame` (binds action/object, fails through on empty fields,
+fails through on POS mismatch, fails through on immediate duplicate,
+AGENT/DESCRIPTOR never bound, never raises on a malformed frame),
+conjugation/negation (`_negate_action_word`'s be-form and do-support
+paths), and two integration tests through `_compose_from_motif`
+(frame-bound content appears in the sentence; no-frame path
+unaffected, regression guard).
+
+Honest note on the POS gate's real shape: `infer_word_role`'s verb
+recognition is narrow -- a hardcoded present/base-form hint table plus
+`-ing`/`-ed` suffix rules, no third-person `-s` recognition ("goes",
+"needs" default to noun, not verb) -- so ACTION binding is
+conservative by construction: most extracted relation words that
+aren't already in base form fall through to normal selection rather
+than binding. This is the correct failure direction for a fail-quiet
+gate (never invents a fill it can't verify), not a defect, but is
+worth knowing when reading real bind-rate numbers.
+
+**Bug found and fixed via PF1.4's own real-world verification (60-
+probe live-boot run), not by unit tests:** several delivered sentences
+contained literal internal-state tokens instead of language -- e.g.
+`"I triggered x=0.50."` (`context_carryover_03`) and similar across
+several other probes. Root-caused: `aurora_thought_formation.py`'s
+`ThoughtState.unified_interpretation` is Aurora's INTERNAL reasoning
+trace, not a sentence -- its own docstring says so directly ("This is
+Aurora's internal thought -- NOT the response"). Its real generators,
+`_reason_through_dominant`/`_partial_interpretation`, format it as
+pipe-joined labeled telemetry (`"Operating on: ... | Triggered by:
+warp_coverage_extension, x=0.50 | Dominant pressure: A-axis (0.62)"`)
+or a `"[partial] ..."` fallback -- never natural language. PF1.1's
+`_extract_triple_from_thought_text` (`aurora_internal/aurora_
+proposition_frame.py`) parsed this literally with a plain role-tag
+scan, picking "triggered" as a verb (matches the `-ed` suffix rule)
+and "x=0.50" as a noun (unrecognized token defaults to noun) --
+exactly the observed contamination. PF1.1's own 13 unit tests never
+caught this because every fixture was hand-written natural language
+("I need to help with the water project"), never the real generated
+shape -- a gap in test *realism*, not test coverage per se.
+
+**Fixed at the root, in PF1.1's own module** (found a gap in earlier
+own work via PF1.4's testing, fixed it -- same discipline as PS1.3's
+write-side-leak correction): added `_looks_like_internal_telemetry()`
+to `aurora_proposition_frame.py`, checked before any parsing attempt
+-- rejects text starting with `"[partial]"` or containing any of the
+known pipe-joined markers (`"Operating on:"`, `"Active processes:"`,
+`"Triggered by:"`, `"Dominant pressure:"`, `"Unresolved tension:"`,
+`"Background:"`). Plus a defense-in-depth per-token guard (`"=" in
+tok` skips the token as a relation/object candidate, and the topic
+itself is rejected if it contains `"="`) -- catches stray `key=value`
+tokens even outside the pipe-joined format (e.g. a topic string
+assigned straight from a `ProcessContext.what_it_is_operating_on` like
+`"aurora:activation=0.75"`, a real shape seen elsewhere in `aurora_
+thought_formation.py`'s warp-stream signal handling). 4 new regression
+tests added to `tests/test_pf1_1_proposition_frame.py` (now 17,
+was 13): the exact pipe-joined telemetry shape rejected, the
+`"[partial]"` shape rejected, telemetry-thought correctly falls
+through to the claim rung (priority ladder still works when the top
+rung is rejected, not just when it's empty), and the stray `key=value`
+token guard verified independently of the whole-text check.
+
+**Re-verification, same 60-probe battery, after the fix:** zero
+telemetry-shaped tokens in any of the 60 `composer_raw` outputs
+(checked programmatically -- no `"triggered"`, no `key=value`
+patterns, no `"[partial]"`). Delivered text now visibly carries
+real conversational content instead of internal debug strings, e.g.
+`"I planning before clear. I did dinner real."` for
+`context_carryover_01` (relation/object drawn from the turn's own
+content via the claim/anchor rungs and DESCRIPTOR's anchor-text
+folding) -- readable improvement over PF1.0's monotone "I [verb]
+[word] clear/real." baseline, though full wellformedness/relevance
+re-measurement under new instruments is PF1.5/PF1.6's job, not
+claimed here.
+
+**Full regression:** 81/81 passed
+(`test_generation_collapse_regression.py` [24-case wellformedness
+golden guard] + `test_l1_skeleton_validity_gate.py` +
+`test_l4_grounded_motif_fitness.py` +
+`test_composer_relevance_selection.py` + all four
+`test_pf1_1`-`test_pf1_4` files). PF1.5 (instrument re-derivation)
+next.
