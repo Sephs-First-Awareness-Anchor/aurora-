@@ -19,7 +19,9 @@
     "memory",
     "generation",
     "aurora",
-    "weight"
+    "weight",
+    "predict",
+    "speculate"
   ],
   "failed": [
     "read",
@@ -142,7 +144,11 @@
     "exist",
     "is",
     "truth",
-    "moment"
+    "moment",
+    "inconsistent",
+    "acknowledge",
+    "hedge",
+    "unknowable"
   ],
   "grounded": [
     "maintain",
@@ -164,6 +170,8 @@
     "memory",
     "generation",
     "aurora",
-    "weight"
+    "weight",
+    "predict",
+    "speculate"
   ]
 }
