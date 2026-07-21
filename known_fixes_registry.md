@@ -4968,3 +4968,145 @@ report, not something this phase can or should smooth over.
 Full data: `aurora_state/probe_battery/results/pf1_5_revalidation_
 <timestamp>.json` (gitignored, local only, per convention). PF1.6
 (acceptance) next.
+
+## Directive PF1 — PF1.6 acceptance, 2026-07-21
+
+Composition battery x3 (`scripts/pf1_6_acceptance.py`, one boot, three
+independent 60-probe passes against the same live state, matching this
+campaign's established S1.3/PS1.3 methodology) under PF1.5's new
+instruments -- new honest baselines, deliberately not compared to any
+pre-PF1 number (old relevance/`_parseable` measured something
+different; adequacy/`wellformed_and_coherent` measure something
+stricter and new).
+
+**Adequacy, stratified (PROMPT_STRATA, unchanged mapping):**
+
+| Run | simple_concrete | abstract_conceptual |
+|---|---|---|
+| 1 | 0.738 | 0.869 |
+| 2 | 0.800 | 0.916 |
+| 3 | 0.824 | 0.951 |
+| **3-run mean** | **0.787** | **0.912** |
+
+**Wellformed-and-coherent pass rate, stratified:**
+
+| Run | simple_concrete | abstract_conceptual |
+|---|---|---|
+| 1 | 0.167 | 0.083 |
+| 2 | 0.167 | 0.208 |
+| 3 | 0.333 | 0.333 |
+
+**Motif diversity:** 3 distinct role-sequence shapes across all three
+runs combined (`agent_action`, `agent_action_object`, `agent_action_
+object_descriptor`) -- unchanged from PF1.3's own measurement, and
+already root-caused there: the live lineage currently has exactly 3
+promoted motifs that pass the pre-existing L1 clause-shape whitelist,
+a ceiling PF1.3's selection algorithm cannot exceed on its own (it
+uses 100% of what's eligible). Below the directive's stated ">=4"
+target -- carried forward as an open item below, not fudged.
+
+**Descriptor repetition** ("clear"/"real" share of all delivered
+content words): 0.117, 0.086, 0.122 across the three runs -- well
+under the directive's 40% bar.
+
+**Abstain rate:** 0.0 across all three runs (0/60 each) -- no silent
+failures, no over-triggering.
+
+**Diagnostic leakage:** 0 across all three runs, all 180 probe-turns
+-- the telemetry-token check PF1.4's own verification used, re-run
+here as a standing acceptance gate. Confirms PF1.4/PF1.1's fix holds
+under repeated independent measurement.
+
+**Full regression suite:** `python3 -m pytest tests/ -q` -- **959
+passed, 1 failed** (2106.43s / 35:06). The one failure is the same
+long-documented pre-existing test-order-dependent flake (`tests/
+test_concept_image_ingestion_import.py::test_ingest_concept_image_
+succeeds_against_real_fixture`, `cv2.imdecode` AttributeError),
+confirmed unrelated at every checkpoint across this campaign
+(830/842/847/856/858/959 passed, always this same single failure,
+always passes 3/3 in isolation, touches only camera/cv2 ingestion
+code nowhere near anything PF1 touched). Test count rose from 905 (at
+the start of this segment) to 960 total -- the ~55 new tests added
+across PF1.0 through PF1.6. Suite is clean for every purpose this
+directive's own gate cares about.
+
+---
+
+**Honest summary of the whole PF1 arc, for Sunni/Cael's review.** PF1
+set out to test the audit's own F12 hypothesis (relevance-primary
+scoring already works; the real defect was upstream of word choice)
+and, once RW7 confirmed that mechanism, to fix the actual finding:
+motif selection never varied, and nothing derived what she was trying
+to say before deciding how to say it. Six phases, six commits, full
+regression between each, exactly as directed:
+
+- **PF1.0** falsified both of the directive's own hypothesized side
+  channels (DPS-crystal resonance, usage-count-zero tiebreak) and
+  confirmed the real diagnosis mechanically: motif diversity across 60
+  probes was exactly 1.
+- **PF1.1** built the PropositionFrame fail-quiet derivation ladder
+  (thought -> claim -> anchor -> None), reusing existing machinery,
+  zero live wiring.
+- **PF1.2** transported the frame (and the previously-orphaned
+  ExpressionGuidance, audit finding F1) onto the composer -- verified
+  byte-identical delivered output, both structurally and via a live
+  turn.
+- **PF1.3** built `best_for_proposition` (shape-fit + fitness-
+  proportional top-4 sampling, replacing the plain `max()` that caused
+  the monotony) -- diversity rose 1 -> 3, the full ceiling of what the
+  live lineage currently has promoted and L1-valid. The directive's own
+  ">=4" target was not reached; root-caused as a motif-*mining*
+  ceiling, explicitly out of a motif-*selection* phase's scope.
+- **PF1.4** wired the frame into actual slot content (ACTION/OBJECT
+  bound from the proposition, DESCRIPTOR biased toward it) -- and its
+  own real-world verification caught a genuine bug in PF1.1's parser
+  (internal thought-telemetry parsed as if it were language, landing
+  raw debug tokens in delivered text), found and fixed at the root the
+  same day it was introduced.
+- **PF1.5** built the adequacy/role-coherence instruments needed to
+  actually measure PF1.3/PF1.4's effect honestly -- and its own
+  revalidation caught three more real bugs (its own tokenization
+  mismatch, plus two independent bare-gerund-as-finite-verb defects,
+  one in the new frame-binding code and one PRE-EXISTING in ordinary
+  channel selection, invisible to every prior directive's `_parseable`
+  gate until this phase's stronger instrument existed to see it). All
+  three found and fixed before shipping; final revalidation showed 0
+  wellformedness flips against the old instrument.
+- **PF1.6** (this entry) measured the result honestly under the new
+  instruments: real, new, unflattering-in-places baselines, not a
+  clean pass on every axis.
+
+**Open items for Sunni/Cael's decision, not resolved by this
+directive:**
+
+1. **Motif-diversity ceiling (from PF1.3).** The live lineage has only
+   3 promoted, L1-valid skeletons; 3 more whitelisted shapes
+   (`agent_action_descriptor`, `agent_action_determiner_object`,
+   `agent_action_determiner_object_descriptor`) exist in the grammar
+   but have never accumulated enough real success history to promote.
+   Closing this is motif-*mining* work, a different intervention than
+   anything in PF1's own phase list.
+2. **Wellformed-and-coherent pass rate is low (8-33% per stratum).**
+   This is the FIRST time this instrument has existed to measure
+   anything, so there is no prior baseline to compare against and no
+   claim here that PF1 made this worse -- the old, coarser
+   `_parseable()` was simply never able to see most of what this gate
+   now catches. What it's catching, beyond the now-fixed gerund cases,
+   has not been characterized in this directive -- that characterization
+   (what specific shapes are failing role-coherence now, and whether
+   PF1.3/PF1.4's frame-binding needs further phases, e.g. the
+   originally-scoped-but-not-built PF1.4 DESCRIPTOR neighborhood
+   constraint) is a natural next directive, not something PF1.6
+   invents an answer to.
+3. **Both gerund bugs and the telemetry bug are fixed and verified,**
+   but were found reactively, by each phase's own regression gate,
+   not by design review before writing the code. Worth noting as a
+   process observation, not a blocker: this campaign's "halt on
+   failure, verify before commit" discipline caught all three before
+   they shipped, but a design pass anticipating "what does infer_word_
+   role's suffix-rule verb detection actually admit" before PF1.4 was
+   written might have caught the gerund class earlier.
+
+Zero diagnostic leakage, zero abstain over-triggering, descriptor
+repetition well under bar -- reported as the genuinely clean parts of
+this baseline, not a blanket "PF1.6 passed."
