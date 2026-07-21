@@ -65,15 +65,19 @@
     "corpus:boundary_calibration:5"
   ],
   "coherence_maintenance": [
-    "fail_point:prove_ep_epoch_1:rel_probe_corpus_fragment_1"
-  ],
-  "perspective_integration": [
-    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
-  ],
-  "ambiguity_handling": [
+    "fail_point:prove_ep_epoch_1:rel_probe_corpus_fragment_1",
     "fail_point:train_epoch_2:episode_c6388e715bc2"
   ],
+  "perspective_integration": [
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
+    "corpus:perspective_integration:0"
+  ],
+  "ambiguity_handling": [
+    "fail_point:train_epoch_2:episode_c6388e715bc2",
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
+  ],
   "adaptive_strategy_selection": [
-    "corpus:adaptive_strategy_selection:0"
+    "corpus:adaptive_strategy_selection:0",
+    "corpus:adaptive_strategy_selection:1"
   ]
 }

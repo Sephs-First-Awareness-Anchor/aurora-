@@ -1,116 +1,5 @@
 [
   {
-    "packet_id": "6f2390bdfbc048f4a0f8c68ff72dfb9f",
-    "created_at": 1784591861.392938,
-    "source": "simulation_live_bridge",
-    "user_input": "What behavior links use and corpus here?",
-    "aurora_response": "Behavior: learned:behavior.",
-    "response_tone": "uncertain",
-    "concepts_activated": [
-      "behavior",
-      "links",
-      "use",
-      "corpus",
-      "here"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b4b57fb31c7c428e90706237dec36258",
-    "created_at": 1784591869.0650418,
-    "source": "simulation_live_bridge",
-    "user_input": "What would likely cause that relation to change?",
-    "aurora_response": "Behavior: learned:behavior.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "likely",
-      "cause",
-      "relation",
-      "change"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.50"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "192a991348f14baea34b317124de9e1d",
-    "created_at": 1784591878.0706642,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "I can understand that meaning.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:-0.66"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "b5c0a973c05346998b767e097725c099",
-    "created_at": 1784598879.5011873,
-    "source": "simulation_live_bridge",
-    "user_input": "Any search for truth cannot be properly conducted if scientific theories are not allowed to be examined critically, and if all opposing viewpoints and contradictory evidence is suppressed and artificially eliminated from consideration.",
-    "aurora_response": "any search for truth can not be properly conducted if scientific theories are not allowed to be examined critically and if all opposing viewpoints and contradictory evidence is suppressed and.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "any",
-      "truth",
-      "properly",
-      "conducted",
-      "scientific",
-      "theories"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.872,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "b27c7aaf04504ab0adb73f83a70d2f40",
     "created_at": 1784598889.3739443,
     "source": "simulation_live_bridge",
@@ -540,6 +429,102 @@
     "recent_speech": "",
     "dominant_axis": "X",
     "coherence": 0.288,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "a1aa100eab0a498280da15d0779230f0",
+    "created_at": 1784619925.9996705,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience trust?",
+    "aurora_response": "I exist machine real. I experience exists beautiful.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "04c1ff6aacb7424db31ded2ca6c1188f",
+    "created_at": 1784619927.403164,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience trust?",
+    "aurora_response": "I do what real. I exist time clear.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.644,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "0cfb15c232bf4caa8ca7cb8b3f9b0922",
+    "created_at": 1784619928.6337607,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience trust?",
+    "aurora_response": "I exist ones real.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.416,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "4a3a9962d59a4fbdaddc8c44da33d236",
+    "created_at": 1784619929.894113,
+    "source": "simulation_live_bridge",
+    "user_input": "Do you experience trust?",
+    "aurora_response": "I exist right beautiful.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "trust"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "A",
+    "coherence": 0.188,
     "felt_wrong": false,
     "wrong_reason": "",
     "unresolved_tensions": [
