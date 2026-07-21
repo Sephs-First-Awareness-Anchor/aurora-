@@ -17,7 +17,7 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "feeling",
+    "active_topic": "understanding",
     "ambiguity": 0.545,
     "cost_total": 0.2184,
     "dominant_emotion": "curiosity",
@@ -67,23 +67,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6419,
+    "confidence": 0.6483,
     "expected_observation": "followup",
-    "expected_user_continuation": "feeling",
+    "expected_user_continuation": "understanding",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "X",
+      "axis_signature": "A",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "feeling"
+      "topic": "understanding"
     },
     "preload_context": [
-      "feeling",
+      "understanding",
       "followup"
     ],
-    "readiness_bias": 0.4211,
+    "readiness_bias": 0.423,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -95,8 +95,8 @@
   },
   "readiness": 0.3433,
   "recalled_fragments": [
-    "feeling",
-    "Tell me about feeling.\n[recalled:feeling] Tell me about feeling. [recalled:recalled:feeling] Tell me about feeling.\n[recalled:feeling] Te..."
+    "understanding",
+    "understanding.\n[recalled:understanding] understanding. [recalled:recalled:understanding] understanding.\n[recalled:understanding] understa..."
   ],
   "salience_weights": {
     "A": 0.0,
@@ -105,7 +105,7 @@
     "T": 0.6401,
     "X": 0.0
   },
-  "saved_at": 1784656908.2328403,
+  "saved_at": 1784661249.0607116,
   "sub_crests": [
     {
       "axis": "X",
