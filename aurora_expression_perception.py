@@ -2406,7 +2406,15 @@ class SentenceComposer:
                     # sentences draw different structures under similar pressure
                     _orient = {ax: v * (1.0 + 0.08 * ((s_i + hash(ax)) % 3 - 1))
                                for ax, v in orientation.items()}
-                    motif = lineage.best_for_pressure(_orient, outlet)
+                    # PF1.3: when a PropositionFrame is present (PF1.2's
+                    # transport), route motif selection through it instead
+                    # of pressure-only scoring -- frame-absent turns keep
+                    # today's exact best_for_pressure behavior.
+                    if self._proposition_frame is not None:
+                        motif = lineage.best_for_proposition(
+                            self._proposition_frame, _orient, outlet)
+                    else:
+                        motif = lineage.best_for_pressure(_orient, outlet)
                 except Exception:
                     motif = None
             sent = self._compose_from_motif(motif, orientation, valence_target,

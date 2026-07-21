@@ -52,18 +52,14 @@ def test_set_proposition_frame_accepts_none():
     assert c._proposition_frame is None
 
 
-# ── compose() must not yet read either field (transport-only gate) ──
-
-def test_compose_source_does_not_reference_proposition_frame_or_guidance_yet():
-    with open(os.path.join(REPO_ROOT, "aurora_expression_perception.py"), "r", encoding="utf-8") as f:
-        source = f.read()
-    idx = source.index("    def compose(self, offspring: 'ExpressionOffspring',")
-    # Up to the next top-level method def after compose (generous window
-    # covering the whole compose() body as it stands at PF1.2 time).
-    next_def = source.index("\n    def ", idx + 10)
-    block = source[idx:next_def]
-    assert "_proposition_frame" not in block
-    assert "_expression_guidance" not in block
+# NOTE: this file previously carried a structural test asserting
+# compose() referenced neither `_proposition_frame` nor
+# `_expression_guidance` -- PF1.2's own "transport only, zero
+# consumption" gate. PF1.3 (aurora_grammar_engine.py's
+# best_for_proposition, wired into compose()'s motif-selection call)
+# intentionally begins consuming `_proposition_frame`, superseding
+# that gate by design. Removed rather than left to fail; PF1.3's own
+# tests (tests/test_pf1_3_motif_selection.py) now cover consumption.
 
 
 # ── begin_expression(): wiring through fakes ────────────────────────

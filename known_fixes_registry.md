@@ -4661,3 +4661,80 @@ Live-boot delivered text confirmed unchanged, matching the phase's
 own byte-identical gate both mechanically (structural check) and
 empirically (live turn). PF1.3 (motif selection conditioned on the
 proposition) next.
+
+## Directive PF1 — PF1.3 motif selection conditioned on proposition, 2026-07-21
+
+Adds `MotifLineage.best_for_proposition(frame, orientation,
+outlet_fraction)` in `aurora_grammar_engine.py`, alongside the
+existing `best_for_pressure` (untouched -- frame-absent turns keep
+today's exact behavior). Same base scoring as `best_for_pressure`
+(composability, axis fit, agent bonus, economy, clause bonus), plus:
+
+1. **Shape-fit term** -- `wants` = how many of the frame's
+   subject/relation/obj are non-empty; `capacity` = count of AGENT/
+   ACTION/OBJECT roles in the skeleton's role_sequence;
+   `shape_fit = min(wants,capacity)/max(wants,capacity,1)`. Softened
+   into the score as `base * (0.6 + 0.4*shape_fit)` rather than a bare
+   multiply, so a strong base skeleton is discounted for a shape
+   mismatch, never zeroed out by one.
+2. **Monotony-breaker** -- fitness-proportional `random.choices` over
+   the top 4 candidates by score, replacing `best_for_pressure`'s
+   plain `max()`. This is the direct mechanical answer to PF1.0's
+   finding (distinct motifs across 60 probes = exactly 1): a hard
+   max() under near-constant orientation always breaks the same way.
+
+`aurora_expression_perception.py`'s `compose()` routes per sentence:
+`self._proposition_frame is not None` -> `best_for_proposition`,
+else -> `best_for_pressure` (unchanged call). 7 new unit tests
+(`tests/test_pf1_3_motif_selection.py`): none-when-no-candidates,
+single-candidate determinism, L1 clause-shape whitelist still
+enforced (shape-fit scoring cannot bypass it), shape-fit statistically
+favors the skeleton with room for a full triple (300-trial frequency
+check), anchor-only frames (wants=2) don't crash the shape-fit math,
+monotony-breaker produces >=2 distinct motifs from 5 similarly-fit
+candidates over 200 trials, and `best_for_pressure` itself provably
+unaffected (regression guard). Also removed PF1.2's own structural
+"compose() must not reference `_proposition_frame` yet" test --
+correctly obsolete now that PF1.3 begins consumption by design; that
+gate's job is now covered by this phase's own tests instead.
+
+**PF1.3's own real-world gate, run against the live 60-probe battery
+(`scripts/pf1_0_attribution_run.py`, reused as-is -- same
+instrumentation, now measuring the post-PF1.3 code path):**
+`distinct_motif_ids_used` / `distinct_role_sequences_used` rose from
+PF1.0's baseline of **exactly 1** to **3** (role sequences used:
+`agent_action` x31, `agent_action_object` x39,
+`agent_action_object_descriptor` x49, out of 119 motif-bearing turns
+across the 60 probes). `test_generation_collapse_regression.py`'s
+24-case wellformedness golden guard: 6/6 passed, no regression.
+
+**Honest shortfall against the directive's own literal gate text**
+("distinct motifs across 60 probes >= 4"): 3 was reached, not 4.
+Root-caused, not assumed: queried the live `aurora_state/grammar_
+motifs.json` lineage directly -- of 16 currently-promoted motifs,
+only **3** pass the pre-existing L1 clause-shape whitelist gate
+(`is_valid_clause_shape`, R1.9.3) at all (`agent_action`,
+`agent_action_object`, `agent_action_object_descriptor`); the other
+13 promoted motifs are invalid shapes, already correctly excluded
+from composition by L1, unrelated to PF1.3. The battery result (3/3
+distinct shapes actually used, matching the composition-eligible
+ceiling exactly) shows the selection mechanism is working at 100% of
+its available diversity -- the shortfall against ">=4" is a ceiling
+in how many *valid, promoted* skeletons currently exist in the live
+lineage state, not a defect in how PF1.3 selects among them. Closing
+that ceiling is a motif-*mining/promotion* concern (getting the other
+3 whitelisted-but-unpromoted shapes -- `agent_action_descriptor`,
+`agent_action_determiner_object`,
+`agent_action_determiner_object_descriptor` -- enough real success
+history to pass `should_promote()`), which is outside PF1.3's stated
+scope (motif *selection*, not motif *mining*) and outside this
+directive's own phase list. Flagged here honestly per "report
+honestly, never fudge" rather than claimed met; carried forward
+explicitly into the PF1.6 acceptance report for Sunni/Cael's
+attention rather than blocking phase-by-phase progress on a mining
+problem PF1.3 was never designed to solve. PF1.4/1.5/1.6 do not
+depend on hitting a specific motif count -- they operate on whichever
+motif got selected, so this does not block continuing the directive.
+
+Full data: `aurora_state/probe_battery/results/pf1_0_attribution_
+<timestamp>.json` (gitignored, local only, per convention).

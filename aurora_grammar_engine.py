@@ -34,6 +34,7 @@ import os
 import re
 import json
 import time
+import random
 import hashlib
 import threading
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -721,6 +722,76 @@ class MotifLineage:
             return m.composability_score() * 0.45 + axis_fit * 0.30 + agent_bonus + economy + clause_bonus
 
         return max(candidates, key=_score)
+
+    def best_for_proposition(
+        self,
+        frame:           Any,
+        orientation:     Dict[str, float],
+        outlet_fraction: float,
+    ) -> Optional[StructuralMotif]:
+        """
+        PF1.3: select a promoted motif shaped for a PropositionFrame
+        (aurora_internal.aurora_proposition_frame.PropositionFrame),
+        not just constraint pressure.
+
+        PF1.0's attribution run found motif diversity was exactly 1 --
+        every one of 60 probes used the same skeleton, because
+        best_for_pressure's plain max() always breaks ties toward the
+        same highest scorer under near-constant orientation. This adds
+        two things on top of that same base scoring, both scoped to
+        this method only (best_for_pressure is untouched, so callers
+        with no frame keep today's exact behavior):
+
+        1. Shape-fit: how many of the frame's filled slots (subject/
+           relation/obj) a skeleton actually has room for (AGENT/
+           ACTION/OBJECT role count). A skeleton with no OBJECT slot
+           can't carry a frame with an object -- that should cost it,
+           not be scored blind to it. Softened (0.6 + 0.4*fit rather
+           than a bare multiply) so a strong base skeleton is never
+           zeroed out purely for shape, only discounted.
+        2. Monotony-breaker: fitness-proportional sampling over the
+           top 4 candidates instead of a hard max() -- the direct
+           mechanical fix for the diversity=1 finding. Only engages
+           when a frame is actually driving selection; best_for_
+           pressure's deterministic max() stays the default absent a
+           frame, so response quality when no proposition exists is
+           unaffected.
+        """
+        pool = self.get_promoted(min_composability=0.20)
+        candidates = [m for m in pool if is_valid_clause_shape(m.role_sequence)]
+        if not candidates:
+            return None
+
+        wants = (
+            int(bool(getattr(frame, "subject", "")))
+            + int(bool(getattr(frame, "relation", "")))
+            + int(bool(getattr(frame, "obj", "")))
+        )
+        _SHAPE_ROLES = (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT)
+
+        def _score(m: StructuralMotif) -> float:
+            axis_fit = sum(
+                m.constraint_scores.get(ax, 0.5) * _clamp(corr, 0.5, 2.0)
+                for ax, corr in orientation.items()
+            ) / max(1, len(orientation))
+            agent_bonus = (
+                outlet_fraction * 0.25
+                if m.role_sequence and m.role_sequence[0] is TokenRole.AGENT
+                else 0.0
+            )
+            economy = m.compression_score * 0.05
+            clause_bonus = min(0.15, max(0.0, (len(m.role_sequence) - 2) * 0.05))
+            base = m.composability_score() * 0.45 + axis_fit * 0.30 + agent_bonus + economy + clause_bonus
+
+            capacity = sum(1 for r in m.role_sequence if r in _SHAPE_ROLES)
+            denom = max(wants, capacity, 1)
+            shape_fit = min(wants, capacity) / denom
+            return base * (0.6 + 0.4 * shape_fit)
+
+        ranked = sorted(candidates, key=_score, reverse=True)
+        top = ranked[:4]
+        weights = [max(0.001, _score(m)) for m in top]
+        return random.choices(top, weights=weights, k=1)[0]
 
     def seed_motifs(
         self,
