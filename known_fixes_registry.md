@@ -5110,3 +5110,125 @@ directive:**
 Zero diagnostic leakage, zero abstain over-triggering, descriptor
 repetition well under bar -- reported as the genuinely clean parts of
 this baseline, not a blanket "PF1.6 passed."
+
+## PF1.6 Residue Characterization — W1: ThoughtState carried no turn content, 2026-07-21
+
+Follow-up audit (`AURORA_PF16_RESIDUE_CHARACTERIZATION_20260721.md`,
+external session, uploaded) found the PropositionFrame ladder living
+entirely on its bottom rung across the 60-probe battery: `frame_source`
+= anchor 55, claim 3, **thought 0**, none 2. The "thought" rung --
+Aurora's own formed thought driving what she says, the actual point of
+PF1 -- never fired once. Sunni: "let's just tackle them one at a time,"
+starting with W1 (this entry). W2 (claim gate rate) and W3 (adequacy
+saturation on bare copulas) queued, not started.
+
+**Root cause, confirmed via a live diagnostic before touching any
+code** (`scripts/w1_thought_state_diagnostic.py`): `ThoughtState.
+unified_interpretation` and `self_application` are built by `aurora_
+thought_formation._reason_through_dominant()` purely from
+administrative `ProcessContext`s (memory-ambient, identity-predicates,
+constraint loop-counts) -- an internal telemetry trace, never the
+turn's own content. A 4-turn live check showed `unified_interpretation`
+**identical across 4 completely unrelated turns** ("he's nervous
+around new people" / "revenue numbers down" / "crying all week" all
+produced the exact same string) and `skipped=False` with 5 registered
+processes every time -- ruling out the original audit's registration-
+starvation hypothesis outright. PF1.5's own telemetry guard
+(`_looks_like_internal_telemetry`, built to fix the real "I triggered
+x=0.50." bug during PF1.4) was correctly rejecting this text every
+single time -- not a false positive, structurally guaranteed to fire
+on 100% of real ThoughtStates, since `_reason_through_dominant` has no
+natural-language output mode at all.
+
+**Fix (Sunni's chosen direction: the deeper fix, not a narrow parser
+patch):** `aurora_braid_wiring.py`'s `_build_turn_process_contexts`
+now registers a `"linguistic"` `ProcessContext` carrying the turn's
+actual text (`self_relevance=0.75`, `axis_signature=["X","T","A"]`,
+chosen to overlap with memory/identity so it clusters into `dominant_
+thread` rather than sitting isolated in `supporting_context`).
+`aurora_internal/aurora_proposition_frame.py`'s `_frame_from_thought_
+state` now reads that context directly from `thought_state.dominant_
+thread` by `process_type=="linguistic"`, bypassing the telemetry
+strings entirely -- with a fallback to the old text-parsing path
+(still telemetry-guarded) for defensiveness. Verified live,
+before/after, same 4 turns: `build_frame -> source=thought` on all 4
+(was `None` on all 4), with genuinely turn-specific extracted content.
+
+**Two bugs found and fixed via the fix's own live-fire battery
+testing** (same discipline as PF1.4/PF1.5's own findings):
+
+1. **Contractions leaking into content slots.** First full 60-probe
+   re-run (`scripts/characterize_pf16_residue.py`, now also fixed to
+   scratch-isolate its boot instead of hitting real `aurora_state/`
+   directly) showed real text flowing through -- but also `"I am
+   planning he's."`, `"I am replacing what's real."` -- `infer_word_
+   role` has no apostrophe rule, so an unrecognized contraction
+   ("he's", "what's", "i'm") defaults to "noun" and binds straight
+   into ACTION/OBJECT. Fixed: an apostrophe guard in `_extract_
+   triple_from_thought_text`, same style as the existing "=" guard.
+   Re-run confirmed clean (0 contraction leaks from this path); two
+   residual cases ("she's", "sister's") traced via word-source
+   attribution to the ORDINARY `find_by_noncomp` channel-selection
+   path -- pre-existing lexicon contamination unrelated to this fix,
+   flagged not fixed (separate finding, out of W1's scope).
+
+**Before/after, same 60-probe battery, surface profile, scratch-
+isolated:**
+
+| | frame_source thought | frame_source anchor | residue (fail wellformed_and_coherent / adequacy<0.55) |
+|---|---|---|---|
+| Original audit | 0/60 | 55/60 | 53/60 |
+| After linguistic-context fix | 49/60 | 9/60 | 51/60 |
+| After contraction-guard fix | 49/60 | 9/60 | **49/60** |
+
+Sample delivered-text shift: `"I am bit."` (vacuous copula, original)
+-> `"I am planning around nervous. I find around. I do around real."`
+(real content, still not fully coherent -- W3's adequacy-saturation
+finding and general grammar quality are separate, queued work, not
+claimed solved here).
+
+**Reentrancy-guard test investigation (thorough, before committing):**
+the first full-suite run after this fix showed 3 failures instead of
+the usual 1 -- the known cv2 flake, plus two new ones. Investigated
+both rather than assuming either was caused by this fix:
+
+- `test_m1_2_provenance_hygiene.py::test_blind_origin_entries_are_
+  tagged_legacy_unverified` ("lang" missing its tag) -- confirmed
+  **pre-existing**: "lang" carries the same untagged state in the
+  git-committed `HEAD` version, unrelated to anything in this session.
+  Data drift from the continuously-running autonomous instance
+  outpacing M1.2's one-time tagging backfill. Not fixed here (separate
+  concern).
+- `test_d2_2_live_turn_reentrancy_guard.py::test_twenty_live_turns_
+  each_produce_exactly_one_top_level_call` -- confirmed via `git
+  stash` isolation that this fix DOES cause it in the full-suite
+  context (fails with the fix present, passes cleanly with it
+  stashed out, all else equal). Investigated the mechanism at length:
+  two custom live-trace scripts (`scripts/w1_reentrancy_trace.py`,
+  kept for future reentrancy debugging) reproducing the exact same
+  20-turn sequence as standalone scripts caught **zero** recursive
+  `process_external_user_turn` calls and confirmed the `_live_turn_
+  depth` guard holding on every one of 53 simulation-bridge
+  invocations. The missing experiment: fix present, test run in
+  **isolation** via pytest itself (not a custom script) --
+  **passed cleanly** (1 passed, 21:37). Conclusion: this fix does
+  NOT deterministically cause the failure on its own; it only
+  manifests under full-suite cross-test conditions -- the same class
+  of pre-existing test-isolation fragility as the already-documented
+  cv2.imdecode flake (module-level singletons -- `ThoughtBraid`,
+  `ThoughtContinuity`, `EmotionFirewall`, all process-global per
+  `aurora_braid_wiring.py`'s `_get_braid`/`_get_continuity`/`_get_
+  firewall` -- persist across all ~960 tests in one pytest process;
+  this fix's small per-turn timing change plausibly tips an existing
+  latent race, doesn't create one). Not fixed here -- flagged
+  honestly, matching the cv2 flake's own precedent in this registry,
+  rather than either hidden or blocking on a full concurrency
+  investigation this finding doesn't by itself justify.
+
+**Tests:** 21 in `tests/test_pf1_1_proposition_frame.py` (was 17: +3
+for the linguistic-context primary path, +1 for the contraction
+guard), 4 in `tests/test_w1_turn_content_context.py` (new). 25/25
+passing, plus the full existing PF1 regression set unaffected.
+
+Full data: `aurora_state/probe_battery/results/pf16_residue_
+characterization.json` (gitignored, local only). W2 (claim gate) next.

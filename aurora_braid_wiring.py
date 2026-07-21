@@ -201,6 +201,31 @@ def _build_turn_process_contexts(systems: Dict[str, Any], tick: int, user_text: 
     except Exception:
         pass
 
+    # PF1.6 residue W1: the turn's own content, as real language, not a
+    # telemetry summary. Every context above describes the STATE of some
+    # subsystem (memory-ambient, identity-predicates, loop-counts) --
+    # none carries what the user actually said. Without this, ThoughtState.
+    # unified_interpretation (built purely from these administrative
+    # contexts by _reason_through_dominant) is identical across unrelated
+    # turns and never usable as a proposition source (confirmed live: the
+    # PropositionFrame "thought" rung fired 0/60 on the probe battery).
+    # High self_relevance + an axis pairing that overlaps with identity
+    # ("X","A") and memory ("X","T") so this clusters into dominant_thread
+    # alongside them rather than sitting isolated in supporting_context.
+    try:
+        if user_text:
+            contexts.append(make_process_context(
+                process_id=f"turn_content_{tick}",
+                process_type="linguistic",
+                what_triggered_it="user_turn",
+                what_it_is_operating_on=str(user_text)[:200],
+                self_relevance=0.75,
+                axis_signature=["X", "T", "A"],
+                tick=tick,
+            ))
+    except Exception:
+        pass
+
     return contexts
 
 
