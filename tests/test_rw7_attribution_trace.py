@@ -15,6 +15,7 @@ sys.path.insert(0, REPO_ROOT)
 from aurora_internal.aurora_attribution_trace import (  # noqa: E402
     enable_capture, disable_capture, is_capture_enabled,
     record_composer_raw, pop_composer_raw,
+    record_word_sources_and_motifs, pop_word_sources_and_motifs,
 )
 
 
@@ -69,5 +70,70 @@ def test_record_degrades_gracefully_on_garbage_input():
         assert pop_composer_raw() == ""
         record_composer_raw(12345)
         assert pop_composer_raw() == "12345"
+    finally:
+        disable_capture()
+
+
+class _FakeRole:
+    def __init__(self, value):
+        self.value = value
+
+
+class _FakeMotif:
+    def __init__(self, pattern_id, roles):
+        self.pattern_id = pattern_id
+        self.role_sequence = [_FakeRole(r) for r in roles]
+
+
+class _FakeComposer:
+    def __init__(self, word_sources, motifs):
+        self._last_word_sources = word_sources
+        self._last_motifs_used = motifs
+
+
+def test_word_sources_and_motifs_disabled_by_default_is_noop():
+    disable_capture()
+    record_word_sources_and_motifs(_FakeComposer({"hi": {"tag": "X"}}, []))
+    ws, ms = pop_word_sources_and_motifs()
+    assert ws is None
+    assert ms is None
+
+
+def test_word_sources_and_motifs_capture_and_pop():
+    try:
+        enable_capture()
+        composer = _FakeComposer(
+            word_sources={"leaves": {"tag": "X:MAGNITUDE", "candidate_source": "dps_crystal",
+                                      "usage_count_at_selection": 0}},
+            motifs=[_FakeMotif("motif_42", ["agent", "action", "object"])],
+        )
+        record_word_sources_and_motifs(composer)
+        ws, ms = pop_word_sources_and_motifs()
+        assert ws == {"leaves": {"tag": "X:MAGNITUDE", "candidate_source": "dps_crystal",
+                                  "usage_count_at_selection": 0}}
+        assert ms == [{"motif_id": "motif_42", "role_sequence": ["agent", "action", "object"]}]
+    finally:
+        disable_capture()
+
+
+def test_word_sources_and_motifs_pop_clears_scratch():
+    try:
+        enable_capture()
+        record_word_sources_and_motifs(_FakeComposer({"a": {}}, []))
+        pop_word_sources_and_motifs()
+        ws, ms = pop_word_sources_and_motifs()
+        assert ws is None
+        assert ms is None
+    finally:
+        disable_capture()
+
+
+def test_word_sources_and_motifs_degrades_gracefully_on_garbage():
+    try:
+        enable_capture()
+        record_word_sources_and_motifs(object())  # no _last_word_sources/_last_motifs_used
+        ws, ms = pop_word_sources_and_motifs()
+        assert ws == {}
+        assert ms == []
     finally:
         disable_capture()

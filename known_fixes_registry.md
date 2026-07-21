@@ -4442,3 +4442,72 @@ codebase (audio goes through `sounddevice`/`speech_recognition`/
 
 **HALT per RW7's own "no fixes ship before this lands" clause.**
 Reporting to Sunni/Cael before RW1 or any other rewiring proceeds.
+
+## Directive PF1 — PF1.0 attribution instrumentation, 2026-07-20
+
+PF1 supersedes RW1/RW2 (dropped) based on RW7's results; RW3-RW6 queued
+behind PF1. PF1.0 settles the side-channel question RW7 left open and
+baselines motif diversity, logging only, zero behavioral change.
+
+Extended `aurora_internal/aurora_attribution_trace.py` with `record_
+word_sources_and_motifs`/`pop_word_sources_and_motifs`, wired at the
+same hook as RW7's composer-raw capture (`aurora_expression_
+perception.py`'s `_build_expression`). Tagged each `_select_
+constraint_word` candidate-pool branch (`dps_crystal`, `find_by_
+noncomp`, `cross_axis`, `role_fallback`) at the point it's added to
+the pool, and extended `_last_word_sources`' stored value to include
+the branch tag plus `usage_count_at_selection` (captured before the
+post-selection increment). `scripts/pf1_0_attribution_run.py` reruns
+the 60-probe battery once, reusing the same boot/isolation machinery
+as RW7's script.
+
+**Result — both of the directive's own hypothesized side channels are
+wrong, and the real answer is simpler than either:**
+
+- **Candidate source: 357/357 selected words came from `find_by_
+  noncomp`. Zero from `dps_crystal`.** DPS-crystal resonance (the
+  "one-crystal doctrine" branch) never once won a slot across all 60
+  probes.
+- **`usage_count_at_selection`: 0/357 were fresh (usage_count=0) at
+  selection time.** Every single selected word had already been used
+  many times before (observed range in the sample: 70-6454). The
+  "fresh word sorts first" tiebreak hypothesis is also wrong — these
+  are not novel words riding a freshness bias, they're heavily-reused
+  words that happen to share an axis/character with the turn's anchor
+  set.
+- **The real mechanism: F1/G1's relevance-primary scoring, already
+  built and verified earlier in this campaign, is working exactly as
+  designed.** `find_by_noncomp` collects the axis/character candidate
+  pool; `_score_composer_candidate`'s relevance-primary ranking (R1.9.2
+  G1) correctly promotes candidates connected to the turn's anchor set
+  to the top of that pool. There is no side channel to fix here — word
+  *choice* is not the defect RW7 surfaced.
+
+**Motif diversity: exactly 1.** Across 119 captured sentences spanning
+all 60 probes, **every single one used the same motif** (`agent_
+action_object_descriptor`, role sequence `('agent', 'action', 'object',
+'descriptor')`) — not "near-1" as the directive predicted going in,
+but total, literal monotony. This is the direct, now fully-evidenced
+mechanical cause of RW7's "I [verb] [word] clear/real." pattern:
+correctly-chosen, topically-relevant words (confirmed above) get
+poured into the exact same four-slot skeleton on every turn regardless
+of content, because nothing before word selection ever varies which
+motif gets used.
+
+**Implication for the rest of PF1:** PF1.1-PF1.4's plan (a proposition
+frame that conditions motif *selection*, not word *selection*) is
+confirmed as the right target by this data -- the defect is 100%
+structural (which motif), 0% lexical (which words), matching the
+directive's own diagnosis exactly. PF1.3's monotony-breaker
+(fitness-proportional sampling over top motif candidates) is necessary
+regardless of the proposition-frame work, since right now there isn't
+even a SECOND motif in contention to sample from in practice.
+
+Full data: `aurora_state/probe_battery/results/pf1_0_attribution_
+*.json` (gitignored, local only, per this campaign's existing
+convention). New tests: `tests/test_rw7_attribution_trace.py` (4 new
+cases covering the extended capture).
+
+**Gate cleared: table produced, logging only, zero behavior change**
+(verified: no non-test-state files changed by the instrumentation
+itself). PF1.1 next.

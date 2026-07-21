@@ -2956,6 +2956,17 @@ class SentenceComposer:
 
         candidates = []
         seen = set(w.lower() for w in already)
+        # PF1.0 (Directive PF1, 2026-07-20): attribution instrumentation --
+        # which branch produced each candidate word, so RW7's open question
+        # (fresh-word usage_count=0 tiebreak vs. DPS-crystal resonance as
+        # the real side channel carrying topical words into selection) can
+        # be settled from real per-turn data instead of guessed at. A word
+        # first added by an earlier branch keeps that branch's tag even if
+        # a later branch would also have produced it (branches are not
+        # mutually exclusive against each other's additions, only against
+        # `already`/`seen` from before this call) -- first-producer wins,
+        # matching which branch actually put it in front of the ranking.
+        _candidate_source: Dict[str, str] = {}
 
         # EDIT (one-crystal doctrine): word candidates come first from HER
         # EXISTING DPS crystals — resonance between the live dominant axis
@@ -2986,6 +2997,7 @@ class SentenceComposer:
                         _e = self.lexicon.entries.get(_wd)
                         if _e is not None and self._pos_ok(_e, role):
                             candidates.append(_e)
+                            _candidate_source.setdefault(_e.word.lower(), "dps_crystal")
             except Exception:
                 pass
 
@@ -3003,8 +3015,10 @@ class SentenceComposer:
             try:
                 found = self.lexicon.find_by_noncomp(
                     f"{dominant_axis}:{ch}", valence_target)
-                candidates.extend(e for e in found
-                                  if e.word.lower() not in seen and self._pos_ok(e, role))
+                for e in found:
+                    if e.word.lower() not in seen and self._pos_ok(e, role):
+                        candidates.append(e)
+                        _candidate_source.setdefault(e.word.lower(), "find_by_noncomp")
             except Exception:
                 pass
 
@@ -3016,8 +3030,10 @@ class SentenceComposer:
                 try:
                     found = self.lexicon.find_by_noncomp(
                         f"{ax}:{chars[0]}", valence_target)
-                    candidates.extend(e for e in found
-                                      if e.word.lower() not in seen and self._pos_ok(e, role))
+                    for e in found:
+                        if e.word.lower() not in seen and self._pos_ok(e, role):
+                            candidates.append(e)
+                            _candidate_source.setdefault(e.word.lower(), "cross_axis")
                 except Exception:
                     pass
 
@@ -3036,6 +3052,8 @@ class SentenceComposer:
                     found.extend(self.lexicon.find_by_role(r))
                 candidates = [e for e in found
                               if e.word.lower() not in seen and self._pos_ok(e, role)]
+                for e in candidates:
+                    _candidate_source.setdefault(e.word.lower(), "role_fallback")
             except Exception:
                 candidates = []
 
@@ -3106,7 +3124,15 @@ class SentenceComposer:
             )
         try:
             self._last_words_used.append(chosen.word)
-            self._last_word_sources[chosen.word] = chosen.noncomp_id or chosen.role
+            # PF1.0: source tag (which branch produced this candidate) +
+            # usage_count AT SELECTION TIME (before the increment below) --
+            # settles whether the fresh-word usage_count=0 tiebreak or
+            # DPS-crystal resonance is the real side channel RW7 flagged.
+            self._last_word_sources[chosen.word] = {
+                "tag": chosen.noncomp_id or chosen.role,
+                "candidate_source": _candidate_source.get(chosen.word.lower(), "unknown"),
+                "usage_count_at_selection": int(getattr(chosen, "usage_count", 0) or 0),
+            }
             chosen.usage_count += 1
         except Exception:
             pass
@@ -4365,12 +4391,16 @@ class ExpressionPerceptionEngine(WarpCapable):
         personality = getattr(self, '_personality_traits', None)
         _compose_result = self.composer.compose(offspring, assembly, i_state, personality,
                                                  input_text=input_text)
-        # RW7 (Architecture Wiring Audit, 2026-07-20): attribution capture,
-        # gated -- zero cost/effect when disabled (the default).
+        # RW7/PF1.0 (Architecture Wiring Audit + Directive PF1, 2026-07-20):
+        # attribution capture, gated -- zero cost/effect when disabled
+        # (the default).
         try:
-            from aurora_internal.aurora_attribution_trace import is_capture_enabled, record_composer_raw
+            from aurora_internal.aurora_attribution_trace import (
+                is_capture_enabled, record_composer_raw, record_word_sources_and_motifs,
+            )
             if is_capture_enabled():
                 record_composer_raw(_compose_result)
+                record_word_sources_and_motifs(self.composer)
         except Exception:
             pass
         return _compose_result
