@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
+      "confidence": 0.35,
       "label": "topic_continuation"
     },
     {
@@ -10,37 +10,31 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.644,
+  "coherence": 0.188,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "meaning",
+    "active_topic": "understand",
     "ambiguity": 0.545,
-    "cost_total": 0.159,
+    "cost_total": 0.2099,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
+    "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
-    "interpreted_deep_passion": "meaning_hold",
+    "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [],
+  "instability_markers": [
+    {
+      "label": "low_coherence",
+      "severity": 0.812
+    }
+  ],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -62,20 +56,20 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.649,
+    "confidence": 0.6491,
     "expected_observation": "followup",
-    "expected_user_continuation": "meaning",
+    "expected_user_continuation": "understand",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "B",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "meaning"
+      "topic": "understand"
     },
     "preload_context": [
-      "meaning",
+      "understand",
       "followup"
     ],
     "readiness_bias": 0.4232,
@@ -88,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.6525,
+  "readiness": 0.3433,
   "recalled_fragments": [
-    "meaning",
-    "Tell me about meaning.\n[recalled:meaning] Tell me about meaning. [recalled:recalled:meaning] Tell me about meaning.\n[recalled:meaning] Te..."
+    "understand",
+    "How do you understand connection?\n[recalled:connection] How do you understand connection? [recalled:understand] How do you understand con..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2792,
-    "N": 0.0652,
-    "T": 0.6557,
+    "B": 0.4569,
+    "N": 0.5431,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784671615.5949397,
+  "saved_at": 1784674616.436793,
   "sub_crests": [
     {
       "axis": "X",
@@ -109,8 +103,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.5,
+      "label": "familiar"
     },
     {
       "axis": "A",
@@ -130,7 +124,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
