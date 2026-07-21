@@ -1,53 +1,5 @@
 [
   {
-    "packet_id": "914de36123f34003bbf23918491a3e34",
-    "created_at": 1784629621.6436343,
-    "source": "simulation_live_bridge",
-    "user_input": "identity.",
-    "aurora_response": "I do mean good. I am seeing what.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "identity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.744,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "503e54a948c44a0882639897b8a051c3",
-    "created_at": 1784629624.16195,
-    "source": "simulation_live_bridge",
-    "user_input": "identity.",
-    "aurora_response": "I do good i am seeing what. I am seeing good i am seeing what good.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "identity"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.544,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.68"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "dad86b8cfb074156bcca7e0a81451817",
     "created_at": 1784636291.4390717,
     "source": "simulation_live_bridge",
@@ -476,6 +428,56 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "6a9ecf686db24c99acef8da2788e04b2",
+    "created_at": 1784667183.8243191,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand meaning?",
+    "aurora_response": "I am having meaning clear. I am seeing blue. I mentioned raven.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "understand",
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "1ff398a29d6740bf817fc51bf52a9a54",
+    "created_at": 1784667187.23818,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand meaning?",
+    "aurora_response": "I mentioned. I change. I am believing blue.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "understand",
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.644,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,
