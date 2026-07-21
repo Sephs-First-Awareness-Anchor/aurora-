@@ -110,7 +110,7 @@ def test_chain_down5_understanding_wires_b1_1_shadow_logger():
     with open(os.path.join(REPO_ROOT, "aurora.py"), "r", encoding="utf-8") as f:
         source = f.read()
     idx = source.index("def _chain_down5_understanding(user_text: str, systems: dict, state: Any,")
-    block = source[idx:idx + 2200]
+    block = source[idx:idx + 3000]
     assert "log_envelope_shadow" in block
     assert "aurora_boundary_envelope" in block
 

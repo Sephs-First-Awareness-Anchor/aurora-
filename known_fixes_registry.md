@@ -4511,3 +4511,96 @@ cases covering the extended capture).
 **Gate cleared: table produced, logging only, zero behavior change**
 (verified: no non-test-state files changed by the instrumentation
 itself). PF1.1 next.
+
+## PF1.1 — PropositionFrame builder, 2026-07-20
+
+New module `aurora_internal/aurora_proposition_frame.py`: `PropositionFrame`
+dataclass (subject/relation/obj/negated/stance/unresolved/topic/source)
++ `build_frame(systems, state)`, a fail-quiet 4-rung derivation ladder,
+each rung tried only if the one above produced nothing:
+
+1. **Thought** -- `systems['_current_thought_state']` (`ThoughtState`,
+   not `skipped`): `unified_interpretation` + `self_application`
+   concatenated, parsed through the existing `aurora_internal/aurora_
+   utterance_parser.py` (`parse_utterance()`) for topic + negation, plus
+   one `infer_word_role` token scan for the first verb (relation) and
+   first noun (object) not equal to the subject -- the same "regex/
+   role-tag over full-parse" honesty level already established for
+   this kind of extraction (Track CP's `extract_joints`,
+   `SemanticIntentionBridge`'s keyword pull). Stance = `thought.
+   confidence`. source="thought".
+2. **Claim** -- current-turn nodes from `working_memory.proposition_
+   substrate.nodes` (real claim triples, already scored elsewhere in
+   the pipeline), highest `score_claim()` wins. source="claim".
+3. **Anchor** -- `state.noncomp_input_state['anchor']` only, no
+   relation (subject="self", obj=anchor). source="anchor".
+4. **None** -- composer behaves exactly as today. Zero regression
+   surface; every consumer must treat `None` as "no frame."
+
+**Confirmed no duplication with existing machinery** before writing
+this: `SemanticIntentionBridge` (already wired at the exact call site
+PF1.2 will use) extracts a keyword bag + axis/tone/lane metadata from
+the same `ThoughtState`, and `.apply()` only calls `composer.set_
+context(...)` -- the same dead wire F3 already found (feeds only the
+orphaned `_fill_template` branches). Structurally unrelated to a
+subject/relation/object triple aimed at motif *selection*; no overlap.
+
+13 unit tests (`tests/test_pf1_1_proposition_frame.py`) covering all
+four rungs, priority ordering between rungs, negation detection,
+empty-anchor edge case, and a malformed-`systems`-never-raises case.
+No live wiring yet -- `build_frame()` has zero callers outside its own
+tests, matching PF1.1's own gate exactly. PF1.2 (transport into
+`begin_expression`) next.
+
+**PF1.1 regression gate (per PF1's "full regression suite between
+phases"):** full suite run, 905 tests, 2 failed, 903 passed
+(2019.51s). Neither failure is caused by PF1.0 or PF1.1:
+
+1. `tests/test_b1_1_envelope_shadow.py::test_chain_down5_
+   understanding_wires_b1_1_shadow_logger` -- genuine staleness bug,
+   caused by this campaign's OWN earlier Track CP work (P1 directive,
+   2026-07-18): `perceive_contradictions` was inserted into `_chain_
+   down5_understanding` between the Tier-2 relation-pair logger and
+   the B1.1 shadow-logger hook, pushing `log_envelope_shadow` to
+   offset 2572 -- past the test's fixed 2200-char structural-check
+   window. Same recurring class of bug as the Tier-2 window fix
+   documented earlier in this registry (900 -> 1200 chars). Fixed:
+   widened 2200 -> 3000 chars (confirmed sufficient: `log_envelope_
+   shadow` sits at offset 2572, closing paren at 2637). Not caused by
+   PF1 -- pre-existing breakage from an earlier directive that the
+   full suite hadn't been re-run against until now.
+
+2. `tests/test_concept_image_ingestion_import.py::test_ingest_
+   concept_image_succeeds_against_real_fixture` (`cv2.imdecode`
+   AttributeError) -- recurrence of the long-documented pre-existing
+   test-order-dependent flake (first flagged during D2.3, re-confirmed
+   at 830/842/847/856/858-passed checkpoints since). **Correction to
+   this registry's own RW7 entry**, which speculated the numpy/pytest
+   reinstall had "very likely" fixed this permanently: it did not --
+   the failure has now recurred in this exact same environment, after
+   that reinstall, disproving that diagnosis. Re-verified the actual
+   behavior: `cv2.imdecode` exists and works fine in a fresh
+   interpreter (`hasattr(cv2, 'imdecode')` -> True), the standalone
+   test file passes 3/3 every time, and a targeted 4-file subset
+   spanning the tests immediately preceding it in collection order
+   (`test_classroom_curriculum_seeding.py`, `test_classroom_
+   perspective_rotation_and_watchdog.py`, `test_composer_relevance_
+   selection.py`, `test_concept_image_ingestion_import.py`) also
+   passes clean. The flake only manifests deep into a true full-suite
+   run, consistent with the original diagnosis: some other test
+   earlier in the run leaves global/thread state that intermittently
+   breaks this one file's `cv2` access, not a numpy dependency gap.
+   Root cause still not isolated after two independent investigation
+   attempts across sessions; out of scope for PF1.1, flagged honestly
+   per the campaign's "halt on failure, report honestly, never fudge"
+   doctrine rather than claimed fixed a second time on a guess.
+   Touches only camera/cv2 ingestion code, nowhere near anything PF1,
+   PS1, or the architecture audit changed.
+
+Both fixes verified green in isolation
+(`test_b1_1_envelope_shadow.py` + `test_pf1_1_proposition_frame.py`,
+22/22 passed). PF1.1 committed with these two pre-existing-failure
+fixes/notes bundled in, per this directive's own "one phase per
+commit" sequencing -- the alternative (a separate commit purely for
+inherited breakage) doesn't serve the campaign's clarity any better
+here since both were discovered strictly by PF1.1's own mandated gate.
