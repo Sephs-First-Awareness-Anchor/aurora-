@@ -91,6 +91,16 @@ _RELATIONAL_STOPWORDS = {
     "respond", "response", "care", "enough", "depth", "help", "overstepping",
     "active", "point", "thread", "context", "coherent", "clarify", "clarification",
     "meaning", "reasoning", "answer", "answers",
+    # D2.2 (Directive D2 rider, 2026-07-17): words from the probe wrapper
+    # phrase itself ("Use this corpus fragment as context: ..." -- see
+    # _CORPUS_FRAGMENT_PREFIX below). A wrapped probe prompt is a turn like
+    # any other, so its own exchange gets logged back into the fail-point
+    # ledger; without this, the next probe-building pass mined "use"/
+    # "corpus" out of ITS OWN prior wrapper text as a "relational pair" and
+    # wrapped it again, compounding the prefix linearly every cycle
+    # (observed live: dozens of repeats in one string). See
+    # _strip_corpus_fragment_wrapper for the companion fix.
+    "use", "corpus", "fragment",
 }
 _RELATIONAL_RELATION_CUES = (
     "relates", "relation", "connect", "connects", "linked", "links", "interacts",
@@ -138,6 +148,26 @@ def _extract_relational_pairs(texts: List[str], limit: int = 2) -> List[Tuple[st
             if len(pairs) >= max(1, int(limit or 1)):
                 return pairs
     return pairs
+
+
+_CORPUS_FRAGMENT_PREFIX = "Use this corpus fragment as context: "
+
+
+def _strip_corpus_fragment_wrapper(text: str) -> str:
+    """D2.2 (Directive D2 rider, 2026-07-17): strip every leading occurrence
+    of the relational-probe wrapper phrase before this text is used as
+    fresh corpus material. A probe prompt built with this wrapper is a
+    turn like any other, so its own exchange (the wrapped prompt +
+    Aurora's reply) can get logged back into the fail-point ledger as a
+    future example. Without this guard, the next probe-building pass
+    picks that already-wrapped text back up as source_snippet and wraps
+    it AGAIN -- the prefix compounds linearly every cycle it isn't
+    caught, and was observed live repeated dozens of times in one
+    string. Idempotent: repeated calls on already-clean text are no-ops."""
+    out = str(text or "")
+    while out.startswith(_CORPUS_FRAGMENT_PREFIX):
+        out = out[len(_CORPUS_FRAGMENT_PREFIX):]
+    return out.strip()
 
 
 def _pack_relational_probe_hint(left: str, right: str, source_ref: str = "") -> str:
@@ -442,6 +472,15 @@ class FailPointLedger:
             for value in list(values or [])[:limit]:
                 text = str(value or '').strip()
                 text = re.sub(r'^(?:\[(?:AFTERTHOUGHT|aftermath)\]\s*)+', '', text)
+                # D2.2 (Directive D2 rider, 2026-07-17): same self-referential-
+                # wrapper class as the AFTERTHOUGHT strip above, for the
+                # relational-probe corpus-fragment wrapper. A probe prompt
+                # built with this wrapper is a turn like any other, so its
+                # own exchange can land back in this ledger as a future
+                # example; without stripping it here (at write-time, before
+                # storage), the next probe-building read re-wraps it and the
+                # prefix compounds linearly every cycle.
+                text = re.sub(r'^(?:Use this corpus fragment as context:\s*)+', '', text, flags=re.IGNORECASE)
                 text = re.sub(r'^(?:human|user|aurora)\s*:\s*', '', text, flags=re.IGNORECASE)
                 text = re.sub(r'\s+', ' ', text)
                 if len(text) < 3:
@@ -2029,6 +2068,20 @@ class DreamTrainer:
                     list(example.get("assistant_turns", []) or []),
                     limit=10,
                 )
+                # D2.2 (Directive D2 rider, 2026-07-17): strip any wrapper
+                # this text may already carry from a PRIOR probe cycle
+                # before it's mined for relational pairs or reused as fresh
+                # source material -- see _strip_corpus_fragment_wrapper.
+                # Without this, an already-wrapped example compounds the
+                # prefix every time it's picked up again.
+                texts = [
+                    stripped for stripped in (
+                        _strip_corpus_fragment_wrapper(t) for t in texts
+                    )
+                    if stripped and len(stripped.split()) >= 2
+                ]
+                if not texts:
+                    continue
                 for left, right in _extract_relational_pairs(texts, limit=2):
                     pair_key = tuple(sorted((left, right)))
                     if pair_key in seen_pairs:

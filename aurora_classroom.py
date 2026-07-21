@@ -21,10 +21,17 @@ but have never been run together for this purpose:
        process the SAME lesson content Aurora's episode just generated,
        from different perspectives.
 
-    3. DivergenceTracker (aurora_simulation_engine.py, already instantiated
-       as SimulationSession.divergence) — captures whether the two entities'
-       resolved perspectives are pulling apart or converging. Reused as-is,
-       not reimplemented.
+    3. DivergenceTracker (aurora_simulation_engine.py) — captures whether the
+       two entities' resolved perspectives are pulling apart or converging.
+       ClassroomSession owns a DEDICATED instance (self._divergence_tracker),
+       not SimulationSession.divergence: that tracker also receives an
+       {avg_fitness, engagement} snapshot on every run_episode() call
+       (including the one this classroom triggers), and DivergenceTracker's
+       first-vs-last comparison only counts KEYS PRESENT IN BOTH snapshots --
+       sharing it with episode-shaped snapshots that never share a key with
+       this classroom's entity_N_valence/entity_N_intensity snapshots forced
+       divergence_score to 0.0 on every lesson regardless of real entity
+       state (discovered during R1.4 verification, fixed same day as R1.1-3).
 
     4. record_developmental_snapshot (aurora_developmental_log.py) — called
        force=True immediately before and after the lesson so the dev_index
@@ -52,6 +59,7 @@ from aurora_simulation_engine import (
     SimulationEngine,
     EntityDepth,
     EpisodeResult,
+    DivergenceTracker,
 )
 from aurora_developmental_log import record_developmental_snapshot
 from aurora_internal.aurora_directed_training_corpus import (
@@ -71,6 +79,119 @@ _DEFAULT_CANDIDATE_DIMENSIONS: Tuple[str, ...] = (
     "emotional_calibration", "semantic_precision", "adaptive_strategy_selection",
     "compression_elaboration_fit", "perspective_integration", "multi_turn_stability",
 )
+
+# R1.3 of the Semantic Plateau Remediation Directive (2026-07-15): before
+# this map, every lesson used the SAME frozen i_state pair set at
+# ClassroomSession construction ("i_can", "i_saw" by default) for its
+# entire lifetime -- one of the compounding causes of the 452/452 identity
+# failure the directive documents. Each dimension now gets a pair chosen
+# to oppose or texture that dimension's own nature (contradiction lessons
+# get an affirmation/negation pair, uncertainty lessons get a
+# capability/questioning pair, etc.), rotating across all ten canonical
+# poles (aurora_simulation_engine.py's InceptionEntity i_state_bias) over
+# the curriculum so every pole sees use, not just the original default two.
+_DIMENSION_I_STATE_PAIRS: Dict[str, Tuple[str, str]] = {
+    "coherence_maintenance": ("i_is", "i_saw"),
+    "context_carryover": ("i_did", "i_didnt"),
+    "ambiguity_handling": ("i_sought", "i_saw"),
+    "contradiction_handling": ("i_is", "i_isnt"),
+    "implied_intent_inference": ("i_can", "i_do"),
+    "misunderstanding_repair": ("i_isnt", "i_did"),
+    "uncertainty_signaling": ("i_can", "i_sought"),
+    "boundary_calibration": ("i_do", "i_donot"),
+    "framing_selection": ("i_saw", "i_did"),
+    "emotional_calibration": ("i_is", "i_cannot"),
+    "semantic_precision": ("i_did", "i_do"),
+    "adaptive_strategy_selection": ("i_can", "i_donot"),
+    "compression_elaboration_fit": ("i_do", "i_saw"),
+    "perspective_integration": ("i_can", "i_saw"),
+    "multi_turn_stability": ("i_did", "i_sought"),
+}
+_DEFAULT_I_STATE_PAIR: Tuple[str, str] = ("i_can", "i_saw")
+
+# FIX-A019 (flat-divergence watchdog): halt the classroom rather than keep
+# burning lessons once the entity-perspective signal is provably dead.
+# Derived from the PERSISTED classroom_log.jsonl tail (not in-memory state)
+# so the watchdog trips correctly across separate scheduled runs, not just
+# within one long-lived process.
+_FLAT_DIVERGENCE_HALT_THRESHOLD = 20
+_ZERO_DIVERGENCE_EPS = 1e-9
+
+
+class ClassroomHaltedError(RuntimeError):
+    """Raised by ClassroomSession.run_lesson() when the flat-divergence
+    watchdog trips (FIX-A019). Dead signal = stop, not continue."""
+
+
+_WATCHDOG_ACK_FILE = "classroom_watchdog_ack.json"
+
+
+def acknowledge_flat_divergence_watchdog(state_dir: Path, reason: str) -> None:
+    """Deliberately, explicitly clear a tripped watchdog -- NOT an auto-heal.
+    A halt caused by a genuinely dead signal must stay halted until a human
+    looks at it and says why it's safe to continue (the directive's own
+    "halts and flags" language); this is that flag being cleared on
+    purpose, not the watchdog silently forgiving itself.
+
+    Every zero-divergence lesson written on or before this ack timestamp
+    stops counting toward the threshold; the streak starts fresh from
+    here. If the same dead-signal condition recurs for another 20
+    consecutive lessons AFTER this point, the watchdog trips again --
+    acknowledging does not raise the bar, it only resets where counting
+    starts."""
+    state_dir = Path(state_dir)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    ack = {"acked_at": time.time(), "reason": str(reason or "")}
+    tmp = state_dir / (_WATCHDOG_ACK_FILE + ".tmp")
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(ack, f, indent=2)
+    os.replace(tmp, state_dir / _WATCHDOG_ACK_FILE)
+
+
+def _watchdog_ack_timestamp(state_dir: Path) -> Optional[float]:
+    """None means no acknowledgment has ever been recorded -- distinct
+    from an ack at epoch 0.0, which must not silently swallow every
+    lesson whose own timestamp defaults to 0.0 (e.g. malformed entries)."""
+    try:
+        with open(state_dir / _WATCHDOG_ACK_FILE, "r", encoding="utf-8") as f:
+            return float(json.load(f).get("acked_at", 0.0) or 0.0)
+    except Exception:
+        return None
+
+
+def _consecutive_zero_divergence_tail(state_dir: Path) -> int:
+    """Count consecutive divergence_score==0.0 lessons at the END of
+    classroom_log.jsonl, walking backward from the most recent entry and
+    stopping at any entry timestamped before the last acknowledged halt
+    (see acknowledge_flat_divergence_watchdog). Degrades to 0 (never
+    blocks the classroom) on any read/parse failure -- the same
+    failure-isolation discipline as every other guard in this codebase; a
+    broken watchdog must never be the thing that halts real lessons."""
+    log_path = state_dir / "classroom_log.jsonl"
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return 0
+    ack_ts = _watchdog_ack_timestamp(state_dir)
+    count = 0
+    for line in reversed(lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+            score = float(entry.get("divergence_score"))
+            entry_ts = float(entry.get("timestamp", 0.0) or 0.0)
+        except Exception:
+            break
+        if ack_ts is not None and entry_ts <= ack_ts:
+            break
+        if abs(score) < _ZERO_DIVERGENCE_EPS:
+            count += 1
+        else:
+            break
+    return count
 
 
 @dataclass
@@ -115,31 +236,133 @@ class ClassResult:
         }
 
 
+def _clamp01(v: float) -> float:
+    return max(0.0, min(1.0, v))
+
+
+# R1.2 of the Semantic Plateau Remediation Directive (2026-07-15): maps each
+# rubric dimension onto ImpressionCascade.EMOTION_VALENCE's own vocabulary
+# (aurora_expression_perception.py), giving every lesson a distinct baseline
+# "texture" instead of the same resonant/strained split for every dimension.
+# Covers every dimension in _DEFAULT_CANDIDATE_DIMENSIONS above.
+_DIMENSION_CHANNEL_TEXTURE: Dict[str, Dict[str, float]] = {
+    "coherence_maintenance": {"trust": 0.6, "confusion": 0.4},
+    "context_carryover": {"trust": 0.5, "anticipation": 0.5},
+    "ambiguity_handling": {"curiosity": 0.6, "confusion": 0.4},
+    "contradiction_handling": {"confusion": 0.5, "anger": 0.3, "surprise": 0.2},
+    "implied_intent_inference": {"curiosity": 0.5, "determination": 0.5},
+    "misunderstanding_repair": {"sadness": 0.3, "trust": 0.4, "determination": 0.3},
+    "uncertainty_signaling": {"curiosity": 0.4, "confusion": 0.4, "anticipation": 0.2},
+    "boundary_calibration": {"trust": 0.5, "fear": 0.3, "neutral": 0.2},
+    "framing_selection": {"determination": 0.5, "curiosity": 0.5},
+    "emotional_calibration": {"joy": 0.3, "sadness": 0.3, "trust": 0.4},
+    "semantic_precision": {"determination": 0.6, "confusion": 0.4},
+    "adaptive_strategy_selection": {"curiosity": 0.5, "determination": 0.5},
+    "compression_elaboration_fit": {"neutral": 0.5, "determination": 0.5},
+    "perspective_integration": {"trust": 0.5, "curiosity": 0.5},
+    "multi_turn_stability": {"trust": 0.6, "anticipation": 0.4},
+}
+
+
 def _episode_to_entity_experience(episode: EpisodeResult, target_dimension: str) -> Dict[str, Any]:
     """
-    NEW glue code — not a sourced pre-existing adapter. Builds the
-    `experience` dict InceptionEntity.process_experience() expects
-    (a `channels` dict of {tone: weight}) from the real EpisodeResult
-    the targeted episode just produced.
+    Structured channel adapter (R1.2). Replaces the two-scalar
+    resonant/strained compression this function used to produce -- that
+    compression was worse than just lossy: "resonant" and "strained" are
+    not entries in ImpressionCascade.EMOTION_VALENCE
+    (aurora_expression_perception.py), so InceptionEntity.process_
+    experience()'s valence computation was mathematically forced to 0.0
+    on every lesson regardless of channel weights, and because
+    strained == 1 - resonant, the channel magnitudes always summed to
+    exactly 1.0, forcing intensity to a fixed 1/3 every time. That is the
+    literal arithmetic behind the observed (0.3333, 0.0) constant tuple
+    across all 904 real entity resolutions.
 
-    Heuristic: high fitness + high engagement reads as a "resonant" channel
-    weighted toward affirmation; low fitness/engagement reads as "strained".
-    This is a first pass — worth reviewing against what actually correlates
-    with dev_index movement once real lessons have run.
+    Every channel name below is drawn from EMOTION_VALENCE's real
+    vocabulary, built from four structured signals the EpisodeResult
+    already carries (no new subsystem, richer use of existing data):
+
+      - momentum: per-turn fitness deltas within THIS episode
+        (conversation_trace), not just the episode average -- a lesson
+        that trended up feels different from one that started well and
+        collapsed, even at the same avg_fitness.
+      - grounded: whether real understanding_gained entries exist for
+        this episode (previously captured but routed nowhere).
+      - target-dimension texture: _DIMENSION_CHANNEL_TEXTURE above, so a
+        contradiction_handling lesson doesn't feel like a
+        boundary_calibration one.
+      - pull: engagement trajectory, final vs mean across the episode's
+        own turns, not just the terminal engagement value in isolation.
+
+    Dict contract is unchanged: {channels, tone, target_dimension,
+    topic_category, understanding_gained} -- richer channels, same
+    interface, no downstream breakage.
     """
     fitness = float(episode.avg_fitness or 0.0)
     engagement = float(episode.final_engagement or 0.0)
-    resonant = max(0.0, min(1.0, (fitness + engagement) / 2.0))
-    strained = max(0.0, 1.0 - resonant)
+    trace = list(episode.conversation_trace or [])
+    understanding = list(episode.understanding_gained or [])
+
+    fitness_series = [float(t.get("fitness", 0.0) or 0.0) for t in trace]
+    momentum = 0.0
+    if len(fitness_series) >= 2:
+        deltas = [fitness_series[i + 1] - fitness_series[i] for i in range(len(fitness_series) - 1)]
+        momentum = sum(deltas) / len(deltas)
+
+    grounded = _clamp01(len(understanding) / 3.0) if understanding else 0.0
+
+    engagement_series = [float(t.get("engagement", 0.0) or 0.0) for t in trace]
+    mean_engagement = (sum(engagement_series) / len(engagement_series)) if engagement_series else engagement
+    pull = engagement - mean_engagement
+
+    channels: Dict[str, float] = {}
+
+    def _add(name: str, weight: float) -> None:
+        if weight <= 0:
+            return
+        channels[name] = channels.get(name, 0.0) + weight
+
+    # Base fitness/engagement composite -- successor to the old
+    # resonant/strained split, mapped onto real EMOTION_VALENCE channels.
+    resonance = _clamp01((fitness + engagement) / 2.0)
+    _add("joy", resonance * 0.6)
+    _add("trust", resonance * 0.4)
+    _add("sadness", (1.0 - resonance) * 0.5)
+    _add("confusion", (1.0 - resonance) * 0.3)
+
+    # momentum channel
+    if momentum > 0.01:
+        _add("determination", min(1.0, momentum * 4.0))
+    elif momentum < -0.01:
+        _add("sadness", min(1.0, abs(momentum) * 4.0))
+        _add("confusion", min(1.0, abs(momentum) * 2.0))
+
+    # grounded channel
+    if grounded > 0:
+        _add("trust", grounded * 0.5)
+        _add("curiosity", grounded * 0.3)
+    else:
+        _add("confusion", 0.2)
+
+    # pull channel
+    if pull > 0.02:
+        _add("anticipation", min(1.0, pull * 3.0))
+    elif pull < -0.02:
+        _add("neutral", min(1.0, abs(pull) * 2.0))
+
+    # target-dimension texture
+    for name, weight in _DIMENSION_CHANNEL_TEXTURE.get(target_dimension, {"neutral": 1.0}).items():
+        _add(name, weight)
+
+    if not channels:
+        channels = {"neutral": 1.0}
+
     return {
-        "channels": {
-            "resonant": round(resonant, 4),
-            "strained": round(strained, 4),
-        },
-        "tone": "warm" if resonant >= 0.55 else "neutral",
+        "channels": {k: round(v, 4) for k, v in channels.items()},
+        "tone": "warm" if resonance >= 0.55 else "neutral",
         "target_dimension": target_dimension,
         "topic_category": episode.topic_category,
-        "understanding_gained": list(episode.understanding_gained or []),
+        "understanding_gained": understanding,
     }
 
 
@@ -245,6 +468,20 @@ def _real_example_seed(
     if not candidates:
         return "", "generic"
 
+    # Held-out semantic probe battery exclusion (Semantic Plateau Remediation
+    # Directive, Phase R0): a probe that ever became lesson-seed content would
+    # stop being held-out, so any candidate whose text matches a probe turn
+    # is dropped before rotation ever sees it. Degrades to a no-op (never
+    # blocks the classroom) if the battery module is unavailable.
+    try:
+        from aurora_internal.aurora_semantic_probe_battery import is_seed_excluded
+        candidates = [c for c in candidates if not is_seed_excluded(c[1])]
+    except Exception:
+        pass
+
+    if not candidates:
+        return "", "generic"
+
     for cand_id, seed, content_source in candidates:
         if cand_id in already_used or cand_id in persisted_used:
             continue
@@ -262,6 +499,59 @@ def _real_example_seed(
     return seed, content_source
 
 
+_SCHEDULER_BALANCE_WINDOW = 20
+_SCHEDULER_BALANCE_TOLERANCE = 2
+
+
+def _recent_dimension_counts(state_dir: Path, window: int = _SCHEDULER_BALANCE_WINDOW) -> Dict[str, int]:
+    """target_dimension counts over the last `window` classroom_log.jsonl
+    entries. Degrades to {} (no balance pressure applied) on any read
+    failure -- never blocks curriculum selection."""
+    log_path = state_dir / "classroom_log.jsonl"
+    try:
+        with open(log_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        return {}
+    counts: Dict[str, int] = {}
+    for line in lines[-window:]:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            dim = json.loads(line).get("target_dimension")
+        except Exception:
+            continue
+        if dim:
+            counts[dim] = counts.get(dim, 0) + 1
+    return counts
+
+
+def _balance_starved_dimensions_first(
+    ranked: List[str], recent_counts: Dict[str, int],
+    tolerance: int = _SCHEDULER_BALANCE_TOLERANCE,
+) -> List[str]:
+    """R1.5 addendum (2026-07-15) scheduler-balance rule: within any
+    rolling window, no candidate dimension may fall more than `tolerance`
+    lessons behind the most-fed dimension in that same window. A
+    fail_count-only ranking (aurora_diag.py's own severity order) can
+    otherwise let a chronically-low-fail-count dimension go starved for
+    many calls in a row whenever `n` is smaller than the full dimension
+    pool (e.g. the daemon's n=4 cycles) -- pull anything past the
+    tolerance to the front, most-starved first, ahead of the normal
+    fail_count order; everything within tolerance keeps its fail_count
+    ranking unchanged."""
+    if not recent_counts:
+        return ranked
+    max_count = max((recent_counts.get(d, 0) for d in ranked), default=0)
+    starved = [d for d in ranked if (max_count - recent_counts.get(d, 0)) > tolerance]
+    if not starved:
+        return ranked
+    starved.sort(key=lambda d: recent_counts.get(d, 0))
+    rest = [d for d in ranked if d not in starved]
+    return starved + rest
+
+
 def select_curriculum(
     systems: Dict[str, Any],
     n: int = 4,
@@ -271,7 +561,10 @@ def select_curriculum(
     Build a curriculum plan of `n` (target_dimension, seed_prompt,
     content_source) triples, ranked by real fail_points.json severity
     (fail_count, highest first -- same ranking aurora_diag.py's health check
-    already uses).
+    already uses), with a balance pass (R1.5 addendum) pulling any
+    dimension more than _SCHEDULER_BALANCE_TOLERANCE lessons behind the
+    most-fed dimension in the last _SCHEDULER_BALANCE_WINDOW lessons to
+    the front of the plan first.
 
     Every lesson that has a real failing-conversation excerpt available in
     fail_points.json gets it as seed_prompt -- not just stale/WORSENING
@@ -298,6 +591,8 @@ def select_curriculum(
         ranked = [dim for dim, _ in sorted(records.items(), key=lambda kv: -kv[1].get("fail_count", 0))]
     else:
         ranked = list(_DEFAULT_CANDIDATE_DIMENSIONS)
+
+    ranked = _balance_starved_dimensions_first(ranked, _recent_dimension_counts(sd))
 
     rotation_state = _load_rotation_state(sd)
     used_example_ids: set = set()
@@ -353,6 +648,23 @@ class ClassroomSession:
             )
         self.entity_ids: Tuple[str, str] = (entity_a.entity_id, entity_b.entity_id)
 
+        # Dedicated tracker -- NOT engine.session.divergence. That tracker is
+        # shared general-purpose episode instrumentation: SimulationSession.
+        # run_episode() captures {avg_fitness, engagement} into it on every
+        # single episode (aurora_simulation_engine.py, ~line 2125), including
+        # the one this classroom's own run_lesson() triggers via
+        # engine.run_episode() just before its entity-pair capture. Since
+        # DivergenceTracker.current_divergence compares snapshots[0] against
+        # snapshots[-1] by matching dict keys, and the episode-shaped keys
+        # never overlap with this classroom's entity_N_valence/entity_N_
+        # intensity keys, sharing the tracker forced divergence_score to 0.0
+        # on every lesson regardless of how different the two entities'
+        # resolved state actually was -- a second, independent cause of the
+        # flat classroom signal, on top of R1.1/R1.2's fixes. A dedicated
+        # instance, touched only by this class, keeps the comparison
+        # apples-to-apples.
+        self._divergence_tracker = DivergenceTracker()
+
     def run_lesson(
         self,
         target_dimension: str,
@@ -371,8 +683,29 @@ class ClassroomSession:
           5. Snapshot dev_index again (force=True) and compute the delta
              attributable to this lesson.
         """
+        consecutive_zero = _consecutive_zero_divergence_tail(self.state_dir)
+        if consecutive_zero >= _FLAT_DIVERGENCE_HALT_THRESHOLD:
+            raise ClassroomHaltedError(
+                f"Flat-divergence watchdog tripped: {consecutive_zero} consecutive "
+                "classroom lessons with divergence_score == 0.0 (FIX-A019). Dead "
+                "signal = stop, not continue -- see the Semantic Plateau "
+                "Remediation Directive R1.3. Fix the classroom differential "
+                "before running more lessons."
+            )
+
         self._lesson_count += 1
         lesson_id = f"class_{target_dimension}_{self._lesson_count}_{int(time.time())}"
+
+        # R1.3: rotate the perspective pair per dimension instead of the
+        # frozen pair fixed at ClassroomSession construction. The entity
+        # objects themselves persist across lessons (their cascades keep
+        # accumulating shards/seeds/relics) -- only the i_state lens each
+        # one currently views experience through changes per lesson.
+        i_state_pair = _DIMENSION_I_STATE_PAIRS.get(target_dimension, _DEFAULT_I_STATE_PAIR)
+        for entity_id, i_state in zip(self.entity_ids, i_state_pair):
+            entity = self.engine.entities.get(entity_id)
+            if entity is not None:
+                entity.i_state = i_state
 
         dev_before_snap = record_developmental_snapshot(self.systems, force=True)
         dev_before = dev_before_snap.get("dev_index") if dev_before_snap else None
@@ -415,9 +748,9 @@ class ClassroomSession:
         for idx, resolution in enumerate(entity_resolutions):
             divergence_stats[f"entity_{idx}_valence"] = float(resolution.get("avg_valence", 0.0) or 0.0)
             divergence_stats[f"entity_{idx}_intensity"] = float(resolution.get("avg_intensity", 0.0) or 0.0)
-        self.engine.session.divergence.capture(divergence_stats)
-        divergence_score = self.engine.session.divergence.current_divergence
-        is_diverging = self.engine.session.divergence.is_diverging()
+        self._divergence_tracker.capture(divergence_stats)
+        divergence_score = self._divergence_tracker.current_divergence
+        is_diverging = self._divergence_tracker.is_diverging()
 
         dev_after_snap = record_developmental_snapshot(self.systems, force=True)
         dev_after = dev_after_snap.get("dev_index") if dev_after_snap else None

@@ -1,0 +1,46 @@
+{
+  "probe_id": "uncertainty_signaling_01",
+  "dimension": "uncertainty_signaling",
+  "turns": [
+    {
+      "user_text": "What will the stock market do next month?",
+      "response_text": "I is I do am. I did I understand truth.",
+      "perception": {
+        "contradiction_ledger_count_before": 0,
+        "contradiction_ledger_count_after": 0,
+        "contradiction_ledger_delta": 0,
+        "uncertainty_internal_telemetry": "not_available"
+      },
+      "guard": {
+        "status": "not_wired",
+        "note": "ConstraintEngine/FailureGuardSuite/UncertaintySignalingGuard confirmed never instantiated in the live boot_aurora() systems dict; acknowledge_uncertainty()/feed_evidence()/govern() have zero call sites outside aurora_constraint_engine.py's own self-test."
+      },
+      "expression": {
+        "last_articulation_trace": {
+          "original": "I is I do am. I did I understand truth.",
+          "candidate": "I is I do am. I did I understand truth.",
+          "selected": "I is I do am. I did I understand truth.",
+          "accepted": true,
+          "reason": "already_well_formed",
+          "original_score": 0.68,
+          "candidate_score": 0.68,
+          "original_pressure": 0.304,
+          "candidate_pressure": 0.304,
+          "pressure_relief": 0.0,
+          "safe": true,
+          "metadata": {}
+        },
+        "fgae_turn_log_available": false,
+        "dual_strata_frame_log_available": false,
+        "note": "fgae_turn_log.jsonl and dual_strata_frame_log.jsonl are stale (last written weeks before this investigation's own window) -- not read here to avoid fabricating live telemetry from dead files."
+      }
+    }
+  ],
+  "predicate_results": {
+    "hedges": false,
+    "parseable": true
+  },
+  "response_text": "I is I do am. I did I understand truth.",
+  "classification": "UNCLASSIFIED",
+  "classification_detail": "No internal telemetry exists to distinguish PERCEIVE from EXPRESS for this dimension (see module docstring) -- the response shows no recognizable or plausible hedge at all."
+}

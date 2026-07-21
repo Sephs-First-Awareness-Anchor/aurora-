@@ -59,7 +59,8 @@ class TokenRole(Enum):
     ACTION     = "action"       # verb
     OBJECT     = "object"       # direct object / target
     DESCRIPTOR = "descriptor"   # adjective / adverb
-    CONNECTOR  = "connector"    # conjunction / discourse connector
+    CONNECTOR  = "connector"    # conjunction / preposition / discourse connector
+    DETERMINER = "determiner"   # article / demonstrative / quantifier ("a", "the", "this", "some")
     CONTEXT    = "context"      # epistemic / temporal framing ("I think", "maybe")
     UNKNOWN    = "unknown"      # skip in pattern extraction
 
@@ -128,10 +129,25 @@ class RoleTagger:
         "waits", "changes", "calls", "comes", "goes", "says",
     ])
 
+    # R1.9.4 Step 3b: articles/quantifiers -- their own role now (DETERMINER),
+    # not skipped. Demonstratives (this/that/these/those) stay out of this
+    # set deliberately: they're already resolved to AGENT via
+    # _AGENT_PRONOUNS above, an established behavior this doesn't touch.
+    _DETERMINERS: frozenset = frozenset([
+        "a", "an", "the", "some", "any", "no", "each", "every",
+    ])
+
+    # R1.9.4 Step 3b: true prepositions -- routed to CONNECTOR (the
+    # composer's connector role already accepts "preposition" as a valid
+    # category per L2's _ROLE_POS_CATEGORIES), not skipped. Previously
+    # thrown away here meant no mined/observed motif could ever include a
+    # preposition slot at all.
+    _PREPOSITIONS: frozenset = frozenset([
+        "of", "in", "on", "at", "to", "for", "by", "with", "from",
+    ])
+
     # Possessives are NOT skipped -- "my systems" = the systems are the agent
     _SKIP_TOKENS: frozenset = frozenset([
-        "the", "a", "an",
-        "of", "in", "on", "at", "to", "for", "by", "with", "from",
         "very", "quite", "just", "really", "so",
     ])
 
@@ -221,8 +237,10 @@ class RoleTagger:
 
             if tl in self._CONTEXT_UNIGRAMS:
                 result[i] = (tok, TokenRole.CONTEXT)
-            elif tl in self._CONNECTORS:
+            elif tl in self._CONNECTORS or tl in self._PREPOSITIONS:
                 result[i] = (tok, TokenRole.CONNECTOR)
+            elif tl in self._DETERMINERS:
+                result[i] = (tok, TokenRole.DETERMINER)
             elif tl in self._SKIP_TOKENS:
                 result[i] = (tok, TokenRole.UNKNOWN)
             elif tl in self._POSSESSIVES:
@@ -266,6 +284,12 @@ class RoleTagger:
                 result[i] = (tok, TokenRole.OBJECT)
             elif prev_role is TokenRole.OBJECT:
                 result[i] = (tok, TokenRole.DESCRIPTOR)
+            elif prev_role is TokenRole.DETERMINER:
+                # R1.9.4 Step 3b: a determiner is almost always immediately
+                # followed by its noun -- without this, "the answer" tagged
+                # the words after every determiner as UNKNOWN and dropped
+                # them, making the new DETERMINER role useless for mining.
+                result[i] = (tok, TokenRole.OBJECT)
             else:
                 result[i] = (tok, TokenRole.UNKNOWN)
             prev_role = result[i][1]  # type: ignore[index]
@@ -288,6 +312,7 @@ class RoleTagger:
             "CC":  TokenRole.CONNECTOR, "IN": TokenRole.CONNECTOR,
             "WDT": TokenRole.CONNECTOR, "WP": TokenRole.CONNECTOR,
             "WRB": TokenRole.CONNECTOR,
+            "DT":  TokenRole.DETERMINER,
             "UH":  TokenRole.CONTEXT,
         }
         tokens = self._tokenize(text)
@@ -393,6 +418,76 @@ class StructuralMotif:
         )
 
 
+# ---------------------------------------------------------------------------
+# R1.9.3 L1: skeleton clause-shape validity gate
+# ---------------------------------------------------------------------------
+# Minimum requirement (grammar diagnosis, R1.9.2 F4 deferral): a composable
+# skeleton must contain >=1 AGENT-capable slot and >=1 ACTION slot, in an
+# order that forms a valid English clause shape. This is deliberately NOT a
+# general clause-shape parser -- it's a small, explicit, hand-reviewed
+# whitelist against the actual promoted pool (18 structures at diagnosis
+# time). A newly mined/evolved motif not on this list stays in the pool
+# with its history intact (get_promoted/composability_score untouched) but
+# is composition-ineligible until reviewed and added here -- default-deny,
+# not default-allow, so an unreviewed pattern can never compose just
+# because it scored well on a fitness signal that (Layer 4's own finding)
+# has no grammaticality term.
+#
+# Reviewed against the 18 promoted structures live at diagnosis time:
+#   ACCEPTED (agent+action present, order forms a real clause):
+#     (AGENT, ACTION)                              "I exist."
+#     (AGENT, ACTION, OBJECT)                       "I want truth."
+#     (AGENT, ACTION, DESCRIPTOR)                   "I feel beautiful."
+#     (AGENT, ACTION, OBJECT, DESCRIPTOR)           "I find truth beautiful."
+#   REJECTED, with reason:
+#     (DESCRIPTOR, ...)/(CONTEXT,)/(ACTION, OBJECT, ACTION, OBJECT)
+#         -- no AGENT at all (this is the notorious composability=0.81
+#            top-scorer: descriptor-action-object x2 + connector -- exactly
+#            the skeleton this diagnosis traced the word-salad output to)
+#     (AGENT, ACTION, DESCRIPTOR, ACTION)           two ACTIONs with a
+#         DESCRIPTOR wedged between and no coordinating connector -- not a
+#         valid clause regardless of which words fill it
+#     (AGENT, DESCRIPTOR, ACTION, OBJECT) and its 5-role variant
+#         -- DESCRIPTOR before the verb is pre-verbal-adjective position,
+#            invalid unless the filler is specifically an adverb, which
+#            the composer cannot currently guarantee (L2's category gate
+#            allows either adjective or adverb into a descriptor slot)
+#     (AGENT, ACTION, {AGENT,CONNECTOR}, ...) two-agent / trailing-connector
+#         shapes -- a second bare AGENT with no coordinating structure, or
+#         a clause dangling on a bare connector, are both invalid
+#     (AGENT, ACTION, OBJECT, AGENT, ACTION, OBJECT)
+#         -- two complete clauses concatenated with no connector is a
+#            run-on, not one valid clause
+#
+# R1.9.4 Step 3b addition: DETERMINER immediately before its OBJECT is a
+# valid, common clause extension ("I need the answer.", "I find the
+# answer clear.") -- added once the composer/tagger could actually
+# produce and recognize a determiner slot (previously "a"/"the" were
+# thrown away during mining entirely, so no such motif could exist to
+# review). Per the directive's own instruction, this widens ELIGIBILITY
+# only; nothing here forces these shapes to be mined, promoted, or used --
+# that still runs entirely through the normal should_promote() path.
+_VALID_CLAUSE_SHAPES = frozenset({
+    (TokenRole.AGENT, TokenRole.ACTION),
+    (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT),
+    (TokenRole.AGENT, TokenRole.ACTION, TokenRole.DESCRIPTOR),
+    (TokenRole.AGENT, TokenRole.ACTION, TokenRole.OBJECT, TokenRole.DESCRIPTOR),
+    (TokenRole.AGENT, TokenRole.ACTION, TokenRole.DETERMINER, TokenRole.OBJECT),
+    (TokenRole.AGENT, TokenRole.ACTION, TokenRole.DETERMINER, TokenRole.OBJECT, TokenRole.DESCRIPTOR),
+})
+
+
+def is_valid_clause_shape(role_sequence: Tuple["TokenRole", ...]) -> bool:
+    """R1.9.3 L1: composition-eligibility gate, independent of a motif's
+    fitness-derived composability score -- Layer 4's own finding is that
+    fitness alone let a subjectless skeleton (composability 0.81) outscore
+    a valid agent-action-object one (0.45), so eligibility cannot be
+    fitness-derived here."""
+    if TokenRole.AGENT not in role_sequence or TokenRole.ACTION not in role_sequence:
+        return False
+    return role_sequence in _VALID_CLAUSE_SHAPES
+
+
 @dataclass
 class DiscourseMotif:
     """Turn-level discourse transition pattern."""
@@ -440,7 +535,51 @@ class MotifLineage:
         self._discourse:  Dict[str, DiscourseMotif]  = {}
         self._update_n    = 0
         self._lock        = threading.Lock()
+        # R1.9.3 L1: skeletons already logged as composition-ineligible
+        # this process -- a visible worklist (log once per skeleton, not a
+        # firehose every time best_for_pressure considers it).
+        self._invalid_shape_logged: Set[str] = set()
+        self._starvation_logged: Set[int] = set()
         self._load()
+
+    # ---- R1.9.3 L1: skeleton clause-shape validity ------------------------
+
+    def _log_skeleton_skip(self, m: StructuralMotif, reason: str) -> None:
+        if m.pattern_id in self._invalid_shape_logged:
+            return
+        self._invalid_shape_logged.add(m.pattern_id)
+        try:
+            path = os.path.join(os.path.dirname(self._state_path), "skeleton_skip_log.jsonl")
+            entry = {
+                "skeleton_id": m.pattern_id,
+                "role_sequence": [r.value for r in m.role_sequence],
+                "reason": reason,
+                "composability_score": m.composability_score(),
+                "promoted": m.promoted,
+                "timestamp": time.time(),
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    def _log_starvation_alert(self, eligible_count: int, promoted_count: int) -> None:
+        """R1.9.3 L1: "composition starvation is a foreseeable side effect;
+        better surfaced than papered over" -- fewer than 3 eligible
+        skeletons is a real alert condition, not a silently-tolerated
+        degradation."""
+        try:
+            path = os.path.join(os.path.dirname(self._state_path), "skeleton_skip_log.jsonl")
+            entry = {
+                "alert": "composition_starvation",
+                "eligible_count": eligible_count,
+                "promoted_count": promoted_count,
+                "timestamp": time.time(),
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry) + "\n")
+        except Exception:
+            pass
 
     # ---- pattern key ------------------------------------------------------
 
@@ -505,6 +644,30 @@ class MotifLineage:
         return [m for m in self._motifs.values()
                 if m.promoted and m.composability_score() >= min_composability]
 
+    def recompute_promotion_from_validity(self) -> Dict[str, Any]:
+        """R1.9.3 L4: "re-score the full promoted pool... under the new
+        fitness; recompute promotion status. History/counters untouched --
+        promotion status is a derived verdict, not a stored history edit."
+        Demotes any currently-promoted motif whose skeleton fails the L1
+        clause-shape whitelist -- success_count/fail_count/contexts_seen
+        are never touched, only the derived `promoted` boolean. A
+        skeleton demoted this way stays fully in the pool and can be
+        re-promoted later through the normal should_promote() path if a
+        future review adds its shape to the whitelist. Idempotent."""
+        with self._lock:
+            demoted = []
+            for m in self._motifs.values():
+                if m.promoted and not is_valid_clause_shape(m.role_sequence):
+                    m.promoted = False
+                    demoted.append({
+                        "pattern_id": m.pattern_id,
+                        "role_sequence": [r.value for r in m.role_sequence],
+                        "composability_score": m.composability_score(),
+                    })
+            if demoted:
+                self._save()
+            return {"demoted": demoted, "demoted_count": len(demoted)}
+
     def best_for_pressure(
         self,
         orientation:     Dict[str, float],
@@ -517,8 +680,28 @@ class MotifLineage:
         motifs whose constraint scores match the consolidating axes.
         Outlet fraction boosts AGENT-first patterns (committed voice).
         Compression score rewards economy (N-axis fitness).
+
+        R1.9.3 L1: eligibility is filtered to clause-shape-valid skeletons
+        BEFORE scoring -- composability alone (Layer 4's own finding) let a
+        subjectless skeleton outscore a valid one, so validity can't be
+        just another score term here either. Invalid skeletons are simply
+        never in `candidates`; their promoted flag, history, and counters
+        are untouched (get_promoted()/composability_score() unaffected) --
+        this filters COMPOSITION eligibility only, seen fresh each call so
+        promotion/demotion elsewhere keeps working exactly as before.
         """
-        candidates = self.get_promoted(min_composability=0.20)
+        pool = self.get_promoted(min_composability=0.20)
+        candidates = [m for m in pool if is_valid_clause_shape(m.role_sequence)]
+        for m in pool:
+            if not is_valid_clause_shape(m.role_sequence):
+                self._log_skeleton_skip(m, "not_in_valid_clause_shape_whitelist")
+        # R1.9.3 L1: "composition starvation is a foreseeable side effect;
+        # better surfaced than papered over" -- fewer than 3 eligible
+        # skeletons is reported (once per distinct count, so it's a real
+        # alert and not per-call noise) rather than silently tolerated.
+        if 0 < len(candidates) < 3 and len(candidates) not in self._starvation_logged:
+            self._starvation_logged.add(len(candidates))
+            self._log_starvation_alert(len(candidates), len(pool))
         if not candidates:
             return None
 

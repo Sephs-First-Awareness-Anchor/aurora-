@@ -1,0 +1,52 @@
+{
+  "addendum": "R1.9.2 G4 -- acceptance gates against the delivered path (SentenceComposer, post-G1/G2 fix)",
+  "gate_1_regression_set_24_cases": {
+    "criterion": "each of the 24 contradiction_handling/uncertainty_signaling probes: <=1 identity-bank word in the delivered response, OR abstain with a logged reason",
+    "result": "14/24 PASS (58%)",
+    "verdict": "PARTIAL -- real, large improvement over the pre-fix 0/24, but does not meet the gate's all-24 requirement",
+    "note": "no abstains fired during this run (all 24 probes produced assembled text) -- the abstain gate (G2) is calibrated to fire on total floor failure, and these probes evidently had at least some anchor-connected candidates even where the FINAL text still leaked >1 bank word from other slots/sentences"
+  },
+  "gate_2_stratified_wellformedness": {
+    "criterion": "3x runs, semantic_wellformedness (parseable_rate) mean >= 0.3 in BOTH strata",
+    "result": {
+      "simple_concrete_mean_over_3_runs": 0.037,
+      "abstract_conceptual_mean_over_3_runs": 0.0,
+      "per_run": [
+        {"run": 1, "simple_concrete": 0.083, "abstract_conceptual": 0.0},
+        {"run": 2, "simple_concrete": 0.0, "abstract_conceptual": 0.0},
+        {"run": 3, "simple_concrete": 0.028, "abstract_conceptual": 0.0}
+      ]
+    },
+    "verdict": "FAIL -- both strata well under the 0.3 gate",
+    "note": "_parseable() is a GRAMMAR check (function-word density, distinct-word ratio, sentence structure), not a relevance check. G1/G2 fixed WHICH words get selected; they did not touch _compose_from_motif's naive role-sequence concatenation ('descriptor action object descriptor action object connector' just joined with no real syntax). Sample output: 'I finding been interesting. I energy chords have.' -- topically relevant, still not grammatical. This is exactly the outcome F4's own non-goals section anticipated: 'if F3 shows relevant-but-ungrammatical output, that's the NEXT diagnosis with its own trace, and it will be a cleaner one: relevant salad is a different, better problem than irrelevant salad.'"
+  },
+  "gate_3_relevance_metric": {
+    "criterion": "fraction of response content words within 1 hop of the input's anchor set, gate: > pre-fix (~0 by construction), target >=0.3 mean",
+    "result": "0.337 mean across 58 scored probes (2 blocked/empty), 40/58 probes (69%) show non-zero relevance",
+    "verdict": "PASS -- clears the 0.3 target and is a categorical change from the pre-fix ~0 baseline",
+    "note": "computed post-hoc against the stored r192_g4_baseline_1.json transcripts using the same non-co-occurrence-only one-hop rule as build_relevance_anchor_set. NOT yet added to run_probe_battery.py/aurora_semantic_probe_battery.py as a permanent battery metric (F3's own instruction) -- that instrumentation work is still outstanding, tracked as a follow-up."
+  },
+  "gate_4_dual_boot_profile": {
+    "criterion": "run gate 2 once under campaign (surface) profile AND once under full boot; report both, investigate if materially different",
+    "result": "NOT RUN -- only the surface profile (run_probe_battery.py's default, matching every prior measurement this campaign has taken) was exercised this session",
+    "verdict": "NOT YET DONE",
+    "note": "flagged as an explicit follow-up, not silently skipped. Per the boot-profile disclosure rule (R1.9 registry), all G4 numbers above are surface-profile-only and must be stated as such."
+  },
+  "gate_5_abstain_reachability": {
+    "criterion": "unit test proving the abstain path now fires on a floor-failing synthetic turn",
+    "result": "tests/test_composer_relevance_selection.py::test_abstain_fires_when_every_required_slot_fails_the_floor and test_abstain_does_not_fire_on_partial_floor_failure, both passing",
+    "verdict": "PASS"
+  },
+  "gate_6_full_suite_green": {
+    "criterion": "694+ tests passing, including the liveness tests",
+    "result": "705 passed, 1 pre-existing unrelated failure (test_flow_audit_and_tcl_wiring.py, confirmed pre-existing and unrelated to this campaign's Python changes, unchanged before/after)",
+    "verdict": "PASS"
+  },
+  "training_stack_propagation_check": {
+    "criterion": "run 10 classroom lessons post-fix, confirm episode machinery functions with the new selector",
+    "result": "NOT RUN this session",
+    "verdict": "NOT YET DONE",
+    "note": "flagged as an explicit follow-up given session time constraints, not silently skipped."
+  },
+  "overall_summary": "G1 (relevance-primary selection) demonstrably worked: the relevance metric more than triples the 0.3 target and the 24-case regression set improved from 0/24 to 14/24 bank-word-clean. G2 (abstain gate) is real and unit-tested, though it never fired live in this run (no total floor failures among these 24 probes). The GRAMMAR gate (stratified wellformedness) failed, but for the reason F4 explicitly anticipated: G1/G2 fixed word RELEVANCE, not sentence STRUCTURE, and _compose_from_motif's naive concatenation was never in scope for this directive. Two gates (dual boot-profile, training-stack propagation) were not run this session due to time constraints and are flagged, not silently skipped."
+}

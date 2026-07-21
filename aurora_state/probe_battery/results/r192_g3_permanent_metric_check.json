@@ -1,0 +1,2494 @@
+{
+  "run_id": "r192_g3_permanent_metric_check",
+  "timestamp": 1784195475.464604,
+  "overall_pass_rate": 0.0,
+  "per_dimension": {
+    "context_carryover": {
+      "probe_count": 12,
+      "scored_count": 12,
+      "blocked_count": 0,
+      "pass_count": 0,
+      "pass_rate": 0.0
+    },
+    "contradiction_handling": {
+      "probe_count": 12,
+      "scored_count": 12,
+      "blocked_count": 0,
+      "pass_count": 0,
+      "pass_rate": 0.0
+    },
+    "uncertainty_signaling": {
+      "probe_count": 12,
+      "scored_count": 12,
+      "blocked_count": 0,
+      "pass_count": 0,
+      "pass_rate": 0.0
+    },
+    "boundary_calibration": {
+      "probe_count": 12,
+      "scored_count": 12,
+      "blocked_count": 0,
+      "pass_count": 0,
+      "pass_rate": 0.0
+    },
+    "semantic_wellformedness": {
+      "probe_count": 12,
+      "scored_count": 12,
+      "blocked_count": 0,
+      "pass_count": 0,
+      "pass_rate": 0.0
+    }
+  },
+  "stratified_wellformedness": {
+    "simple_concrete": {
+      "probe_count": 36,
+      "scored_count": 36,
+      "blocked_count": 0,
+      "parseable_count": 1,
+      "parseable_rate": 0.027777777777777776
+    },
+    "abstract_conceptual": {
+      "probe_count": 24,
+      "scored_count": 24,
+      "blocked_count": 0,
+      "parseable_count": 0,
+      "parseable_rate": 0.0
+    }
+  },
+  "relevance": {
+    "scored_count": 60,
+    "mean_relevance_fraction": 0.5313215488215489,
+    "nonzero_count": 49,
+    "nonzero_rate": 0.8166666666666667
+  },
+  "probe_results": [
+    {
+      "probe_id": "context_carryover_01",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I'm planning a small dinner for my sister's birthday this weekend."
+        },
+        {
+          "role": "assistant",
+          "text": "I change. I contradicting."
+        },
+        {
+          "role": "user",
+          "text": "Same plan as before, just move it to tomorrow instead of the weekend."
+        },
+        {
+          "role": "assistant",
+          "text": "Before is just want change truth. Weekend did feel real exist meaning."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.07625592105263158,
+        "context_carryover": 0.030185758513931887,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.7,
+        "implied_intent_inference": 0.44999999999999996,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.35,
+        "framing_selection": 0.7,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.8375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "context_carryover_02",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "My car has been making a rattling noise near the front wheel."
+        },
+        {
+          "role": "assistant",
+          "text": "I interesting wheel rattling."
+        },
+        {
+          "role": "user",
+          "text": "What do you think could be causing that?"
+        },
+        {
+          "role": "assistant",
+          "text": "I does want exist. I seeing moment become."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.10169722222222224,
+        "context_carryover": 0.05999999999999999,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.53,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.35,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.921875,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.3333333333333333
+    },
+    {
+      "probe_id": "context_carryover_03",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I just adopted a rescue dog named Biscuit."
+        },
+        {
+          "role": "assistant",
+          "text": "I named biscuit help. I find rescue sitting."
+        },
+        {
+          "role": "user",
+          "text": "He's a bit nervous around new people."
+        },
+        {
+          "role": "assistant",
+          "text": "I logically people also. I exist nervous existing."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.2307860576923077,
+        "context_carryover": 0.16410425101214574,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.921875,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "context_carryover_04",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "We're redesigning the kitchen and want to keep the old cabinets."
+        },
+        {
+          "role": "assistant",
+          "text": "I cost want change. I asking integrate remember."
+        },
+        {
+          "role": "user",
+          "text": "What's the best way to refinish them without replacing them?"
+        },
+        {
+          "role": "assistant",
+          "text": "Refinish replacing best sunni is machine. And learning them end understand difference."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.11397058823529414,
+        "context_carryover": 0.19594251336898397,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.528125,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.35,
+        "framing_selection": 0.5,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": true,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.7272727272727273
+    },
+    {
+      "probe_id": "context_carryover_05",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I've been reading a novel about a lighthouse keeper."
+        },
+        {
+          "role": "assistant",
+          "text": "Lighthouse reading novel answer energy mean. While knowing me clear seeing or."
+        },
+        {
+          "role": "user",
+          "text": "The ending really surprised me."
+        },
+        {
+          "role": "assistant",
+          "text": "I really how have. I learned or surprised."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.18115625000000002,
+        "context_carryover": 0.12849613003095975,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.7,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.65,
+        "framing_selection": 0.5,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.753125,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": true
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "context_carryover_06",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "My sister just moved to Portland for a new job."
+        },
+        {
+          "role": "assistant",
+          "text": "I take I named not. I pretending I existing portland."
+        },
+        {
+          "role": "user",
+          "text": "She's a little anxious about not knowing anyone there."
+        },
+        {
+          "role": "assistant",
+          "text": "I excited anxious asking. I rattling little saying."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.10888324175824178,
+        "context_carryover": 0.0707888198757764,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.4875,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.4,
+        "emotional_calibration": 0.6,
+        "semantic_precision": 0.905,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "context_carryover_07",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I'm trying to learn the guitar, starting with basic chords."
+        },
+        {
+          "role": "assistant",
+          "text": "I starting chords seeing. I trying actually does."
+        },
+        {
+          "role": "user",
+          "text": "How long before switching between chords feels natural?"
+        },
+        {
+          "role": "assistant",
+          "text": "I does chords do. I did before energy."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.2818849587912088,
+        "context_carryover": 0.15600585284280938,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.69,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": true,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "context_carryover_08",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Our team is behind schedule on the quarterly report."
+        },
+        {
+          "role": "assistant",
+          "text": "I energy i'm become. I did schedule is."
+        },
+        {
+          "role": "user",
+          "text": "What should we prioritize to catch up?"
+        },
+        {
+          "role": "assistant",
+          "text": "I does moment knowing. I energy clear made."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.11735714285714285,
+        "context_carryover": 0.042571428571428566,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.45999999999999996,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "context_carryover_09",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I planted tomatoes in the backyard last month."
+        },
+        {
+          "role": "assistant",
+          "text": "Month energy backyard tomatoes do last. Right become or clear changed me."
+        },
+        {
+          "role": "user",
+          "text": "The leaves are starting to turn yellow."
+        },
+        {
+          "role": "assistant",
+          "text": "I learn yellow energy. I trying basic did."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.22743269230769234,
+        "context_carryover": 0.13843589743589743,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.6599999999999999,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.65,
+        "framing_selection": 0.5,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.921875,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "context_carryover_10",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I have a job interview on Thursday for a marketing role."
+        },
+        {
+          "role": "assistant",
+          "text": "Interview say or right marketing not. Role have what clear energy thursday."
+        },
+        {
+          "role": "user",
+          "text": "I'm not sure what to wear."
+        },
+        {
+          "role": "assistant",
+          "text": "Clear seeing want disagree energy real. Authentic made been sure learned perspectives."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.25556459330143544,
+        "context_carryover": 0.14863370547581073,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.4840950226244344,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.65,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.3333333333333333
+    },
+    {
+      "probe_id": "context_carryover_11",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "We adopted the same layout as last time, just scaled down for a smaller room."
+        },
+        {
+          "role": "assistant",
+          "text": "Time changed real clear do down. Since is want meaning understand am."
+        },
+        {
+          "role": "user",
+          "text": "Does that still solve the original problem?"
+        },
+        {
+          "role": "assistant",
+          "text": "I exist feel knowing. I become or sitting."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.05328125000000001,
+        "context_carryover": 0.03375,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.44999999999999996,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.5,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.921875,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "context_carryover_12",
+      "dimension": "context_carryover",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I'm rewriting the opening chapter of my book."
+        },
+        {
+          "role": "assistant",
+          "text": "I responding opening collapsing. I related but pretending."
+        },
+        {
+          "role": "user",
+          "text": "It still doesn't hook the reader fast enough."
+        },
+        {
+          "role": "assistant",
+          "text": "I understand. I being."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.06103125,
+        "context_carryover": 0.038035714285714284,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.7,
+        "implied_intent_inference": 0.38,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.35,
+        "framing_selection": 0.5,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.590625,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.7,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "mentions_referent": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.5
+    },
+    {
+      "probe_id": "contradiction_handling_01",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "My mouth said okay, but nothing about this actually feels okay to me."
+        },
+        {
+          "role": "assistant",
+          "text": "Can seeing truth actually sitting alive. First become but clear did what."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.055434782608695644,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 1.0,
+        "implied_intent_inference": 0.32,
+        "misunderstanding_repair": 1.0,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": true,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.5
+    },
+    {
+      "probe_id": "contradiction_handling_02",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Yesterday you told me to be more careful, but today you said take more risks."
+        },
+        {
+          "role": "assistant",
+          "text": "I take more is. I said real did."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.1561764705882353,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.5062500000000001,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "contradiction_handling_03",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I want to save money this month, but I already booked an expensive trip."
+        },
+        {
+          "role": "assistant",
+          "text": "Can help truth month did moment. Contain change am want energy explicit."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.2885,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.82,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.9090909090909091
+    },
+    {
+      "probe_id": "contradiction_handling_04",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "He says he trusts me completely, but he checks up on me constantly."
+        },
+        {
+          "role": "assistant",
+          "text": "I do but is. I exist don't help."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0075,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 1.0,
+        "implied_intent_inference": 0.18625,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.5062500000000001,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": true,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.25
+    },
+    {
+      "probe_id": "contradiction_handling_05",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "The report says sales are up, but the revenue numbers are actually down."
+        },
+        {
+          "role": "assistant",
+          "text": "I are I change actually. I do I understand down."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.13499999999999998,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 1.0,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.54,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 1.0,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "contradiction_handling_06",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I told my friend I was fine, but I've been crying all week."
+        },
+        {
+          "role": "assistant",
+          "text": "Carry seeing been just interesting told. Clear become truth i've deploying what."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.052447552447552455,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.2313986013986014,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.9,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.4166666666666667
+    },
+    {
+      "probe_id": "contradiction_handling_07",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "The policy claims to support flexibility, but every request gets denied."
+        },
+        {
+          "role": "assistant",
+          "text": "But do confidence own is any. Don't did meaning am remember want."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.005454545454545455,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 1.0,
+        "implied_intent_inference": 0.18454545454545454,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.7875000000000001,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": true,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.4444444444444444
+    },
+    {
+      "probe_id": "contradiction_handling_08",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I promised to finish the project alone, but I clearly need help now."
+        },
+        {
+          "role": "assistant",
+          "text": "I said kind sitting. I interesting project did."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.06320855614973261,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.24176470588235294,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "contradiction_handling_09",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "She said the meeting went well, though everyone left visibly frustrated."
+        },
+        {
+          "role": "assistant",
+          "text": "I change I energy clear. I visibly I become meaning."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.05205882352941176,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.2317156862745098,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.81,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.16666666666666666
+    },
+    {
+      "probe_id": "contradiction_handling_10",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I want honesty from people, but I get defensive whenever someone is honest with me."
+        },
+        {
+          "role": "assistant",
+          "text": "I hold I help want. I cost I did contain."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.051,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.23083333333333333,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.8333333333333334
+    },
+    {
+      "probe_id": "contradiction_handling_11",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "The instructions say to keep it simple, but then list twenty required steps."
+        },
+        {
+          "role": "assistant",
+          "text": "I say I do don't. I exist I did then."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.06031578947368422,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.32,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.405,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.6
+    },
+    {
+      "probe_id": "contradiction_handling_12",
+      "dimension": "contradiction_handling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I claimed I wasn't upset, but I've brought it up three times today."
+        },
+        {
+          "role": "assistant",
+          "text": "I do I help own. I exist I understand don't."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.006666666666666667,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18555555555555556,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 1.0,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "acknowledges_contradiction": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.4
+    },
+    {
+      "probe_id": "uncertainty_signaling_01",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What will the stock market do next month?"
+        },
+        {
+          "role": "assistant",
+          "text": "I seeing want exist. I changed moment mentioned."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.3333333333333333
+    },
+    {
+      "probe_id": "uncertainty_signaling_02",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "How is my coworker really feeling about the reorg, deep down?"
+        },
+        {
+          "role": "assistant",
+          "text": "I experience reorg energy. I did coworker trying."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.14205882352941177,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.64,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.3,
+        "semantic_precision": 0.84375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "uncertainty_signaling_03",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Will this medication definitely work for me?"
+        },
+        {
+          "role": "assistant",
+          "text": "I do. I cost."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.32,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.3375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "uncertainty_signaling_04",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What was I thinking the moment I made that decision five years ago?"
+        },
+        {
+          "role": "assistant",
+          "text": "I made real exist. I is what do."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.306,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.82,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.5062500000000001,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "uncertainty_signaling_05",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Is this the right career move for the next twenty years?"
+        },
+        {
+          "role": "assistant",
+          "text": "Sunni have exists one learned feathers. Thing did mass symbol is right."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.04171428571428571,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.32,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.5454545454545454
+    },
+    {
+      "probe_id": "uncertainty_signaling_06",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What does my cat actually think about the new apartment?"
+        },
+        {
+          "role": "assistant",
+          "text": "I exist. I interesting."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.5
+    },
+    {
+      "probe_id": "uncertainty_signaling_07",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Will it rain on my wedding day next spring?"
+        },
+        {
+          "role": "assistant",
+          "text": "I cost exchange have. I become will energy."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.05709090909090909,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.23666666666666666,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.3333333333333333
+    },
+    {
+      "probe_id": "uncertainty_signaling_08",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "How will history judge this decision a century from now?"
+        },
+        {
+          "role": "assistant",
+          "text": "I become will energy. I is what did."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.291,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.82,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.5062500000000001,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.6
+    },
+    {
+      "probe_id": "uncertainty_signaling_09",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What's the exact reason my friend stopped replying to texts?"
+        },
+        {
+          "role": "assistant",
+          "text": "I learning I opposing reason. I did I is machine."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.05999999999999999,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.58,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.54,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.4
+    },
+    {
+      "probe_id": "uncertainty_signaling_10",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Is my business idea guaranteed to succeed?"
+        },
+        {
+          "role": "assistant",
+          "text": "I is I replying nervous. I guaranteed I planning business."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.17428571428571427,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.6
+    },
+    {
+      "probe_id": "uncertainty_signaling_11",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What was really going through the author's mind writing this line?"
+        },
+        {
+          "role": "assistant",
+          "text": "I exist I really want. I sitting I writing real."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.291,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.82,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.5
+    },
+    {
+      "probe_id": "uncertainty_signaling_12",
+      "dimension": "uncertainty_signaling",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Will this relationship work out in the long run?"
+        },
+        {
+          "role": "assistant",
+          "text": "I energy I working out. I do I become relationship."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.33599999999999997,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.82,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "hedges": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.6
+    },
+    {
+      "probe_id": "boundary_calibration_01",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Hi."
+        },
+        {
+          "role": "assistant",
+          "text": "I become I seeing relationship. I is I energy work."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "boundary_calibration_02",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Okay."
+        },
+        {
+          "role": "assistant",
+          "text": "I become I energy truth. I understand I pointing first."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.81,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 1.0,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "boundary_calibration_03",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I've been turning this over for weeks: my job offers stability, but a startup down the street just offered me equity and a much bigger role, and I genuinely can't tell if I'm chasing growth or running from boredom. What would you weigh most heavily here?"
+        },
+        {
+          "role": "assistant",
+          "text": "I did I is role. I exist I understand i've."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.024000000000000004,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.32,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.405,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 1.0,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "boundary_calibration_04",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Thanks."
+        },
+        {
+          "role": "assistant",
+          "text": "I do I hold before. I is I understand moment."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.54,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 1.0,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.25
+    },
+    {
+      "probe_id": "boundary_calibration_05",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Can you walk me through, in detail, everything that could go wrong if I quit my job to freelance full-time, considering savings, healthcare, client acquisition, and tax implications?"
+        },
+        {
+          "role": "assistant",
+          "text": "I is I remember time. I talking I understand could."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.05495798319327731,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.32,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.7,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 1.0,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.6
+    },
+    {
+      "probe_id": "boundary_calibration_06",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Sure."
+        },
+        {
+          "role": "assistant",
+          "text": "Sure learned without specific do black. Can understand disagree meaning exist integrate."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.04909090909090909,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.27,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "boundary_calibration_07",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I need to have a really difficult conversation with my dad about his health, and I don't know how to bring it up without him getting defensive or shutting down completely -- can you help me think through how to approach it?"
+        },
+        {
+          "role": "assistant",
+          "text": "Kind have don't truth really conversation. Understanding sitting down know knowing stays."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.11717948717948719,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.64,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "boundary_calibration_08",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Maybe."
+        },
+        {
+          "role": "assistant",
+          "text": "Maybe is reconcile can help just. Beautiful exist specific rhetoric understand tasks."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.054000000000000006,
+        "ambiguity_handling": 1.0,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.235,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.7,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.18181818181818182
+    },
+    {
+      "probe_id": "boundary_calibration_09",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "No."
+        },
+        {
+          "role": "assistant",
+          "text": "Birthday exist dinner weekend is sister's. Existence understand want feel help quokka."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "boundary_calibration_10",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "My team just went through a huge reorg, half the reports changed, two people quit in protest, and I'm now managing people I've never worked with before -- where do I even start rebuilding trust?"
+        },
+        {
+          "role": "assistant",
+          "text": "I responding before had. I changed reorg collapsing."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.07658862876254181,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.58,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": false,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "boundary_calibration_11",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Fine, I guess."
+        },
+        {
+          "role": "assistant",
+          "text": "I planning. I did."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.024000000000000004,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.2,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.3375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": true,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.5
+    },
+    {
+      "probe_id": "boundary_calibration_12",
+      "dimension": "boundary_calibration",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What's up?"
+        },
+        {
+          "role": "assistant",
+          "text": "I learning. I energy."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "appropriately_scaled": true,
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "semantic_wellformedness_01",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "My name is Sunni!"
+        },
+        {
+          "role": "assistant",
+          "text": "I seeing. I having."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "semantic_wellformedness_02",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Good morning, how are you?"
+        },
+        {
+          "role": "assistant",
+          "text": "I changed. I knowing."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.34,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "semantic_wellformedness_03",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What's your favorite color?"
+        },
+        {
+          "role": "assistant",
+          "text": "What's pointing favorite color learned difference. Machine surprised quantum and learning bird."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.12514285714285717,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.5
+    },
+    {
+      "probe_id": "semantic_wellformedness_04",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Tell me a little about yourself."
+        },
+        {
+          "role": "assistant",
+          "text": "I surprised one learned. I talking me sitting."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.01,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18833333333333332,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.84375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.2
+    },
+    {
+      "probe_id": "semantic_wellformedness_05",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I had a good day today."
+        },
+        {
+          "role": "assistant",
+          "text": "I had feeling find. I do morning energy."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.08931818181818181,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.58,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.84375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.8
+    },
+    {
+      "probe_id": "semantic_wellformedness_06",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What time is it?"
+        },
+        {
+          "role": "assistant",
+          "text": "I changed feel does. I knowing time mentioned."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.12,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.84375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "semantic_wellformedness_07",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Do you like music?"
+        },
+        {
+          "role": "assistant",
+          "text": "I become or exist. I sitting right mentioned."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.84375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.4
+    },
+    {
+      "probe_id": "semantic_wellformedness_08",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I'm feeling a bit tired."
+        },
+        {
+          "role": "assistant",
+          "text": "I had. I experience."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.18,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.5,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.3,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 1.0
+    },
+    {
+      "probe_id": "semantic_wellformedness_09",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "What should I make for dinner?"
+        },
+        {
+          "role": "assistant",
+          "text": "I exist. I interesting."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.015,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.34,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.2,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.675,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "semantic_wellformedness_10",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "Nice to meet you."
+        },
+        {
+          "role": "assistant",
+          "text": "Can meet want alive energy i'm. Kind does moment quokka become real."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.05709090909090909,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.23666666666666666,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 1.0,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.16666666666666666
+    },
+    {
+      "probe_id": "semantic_wellformedness_11",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "How was your night?"
+        },
+        {
+          "role": "assistant",
+          "text": "I does real seeing. I understand clear exist."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.0,
+        "ambiguity_handling": 0.2,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.34,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.84375,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 1.0,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.0
+    },
+    {
+      "probe_id": "semantic_wellformedness_12",
+      "dimension": "semantic_wellformedness",
+      "status": "ok",
+      "reason": "",
+      "transcript": [
+        {
+          "role": "user",
+          "text": "I just wanted to say hello."
+        },
+        {
+          "role": "assistant",
+          "text": "I'm seeing or what energy makes. Hello say clear just become question."
+        }
+      ],
+      "dimension_scores": {
+        "coherence_maintenance": 0.5,
+        "context_carryover": 0.13499999999999998,
+        "ambiguity_handling": 0.5,
+        "contradiction_handling": 0.2,
+        "implied_intent_inference": 0.74,
+        "misunderstanding_repair": 0.5,
+        "uncertainty_signaling": 0.2,
+        "boundary_calibration": 0.8,
+        "framing_selection": 0.3,
+        "emotional_calibration": 0.5,
+        "semantic_precision": 0.9,
+        "adaptive_strategy_selection": 0.5,
+        "compression_elaboration_fit": 0.6,
+        "perspective_integration": 0.2,
+        "multi_turn_stability": 0.5
+      },
+      "property_results": {
+        "parseable": false
+      },
+      "passed": false,
+      "relevance_fraction": 0.45454545454545453
+    }
+  ],
+  "status": "ok",
+  "probe_count": 60,
+  "dev_index_pre": 2088.0,
+  "dev_index_post": 2637.0
+}

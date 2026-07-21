@@ -39,12 +39,13 @@ import shutil
 import hashlib
 import random
 from aurora_warp_protocol import WarpCapable
+import aurora_constraint_emission
 import re
 import numpy as np
 from enum import Enum, IntEnum, auto
 from typing import Dict, List, Any, Optional, Tuple, Set
 from dataclasses import dataclass, field
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from aurora_constraint_engine import (
     ConstraintVector as _ConstraintVector,
@@ -265,10 +266,18 @@ class LexicalMemory:
     # Anchored to this module's directory (FIX-A009) — the old relative path
     # made persistence cwd-dependent: daemon, CLI, and test launches each
     # resolved a different lexicon.json, so vocabulary never round-tripped.
+    # Fallback only — PS1.2 (Directive PS1, 2026-07-19): a real state_dir
+    # passed to __init__ takes priority (self._path), matching the pattern
+    # already used by GrammarEngine/ContradictionLedger/Tier-2/B1.1. Before
+    # this fix, every boot_aurora(state_dir=scratch) call still silently
+    # loaded/saved the real repo's aurora_state/lexicon.json regardless of
+    # state_dir, an isolation gap of the same shape PS1.1's inventory found
+    # in OETSPersistence.
     _DEFAULT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                  "aurora_state", "lexicon.json")
 
-    def __init__(self):
+    def __init__(self, state_dir: Optional[str] = None):
+        self._path = os.path.join(str(state_dir), "lexicon.json") if state_dir else None
         self.entries: Dict[str, LexicalEntry] = {}
         self._role_index: Dict[str, List[str]] = {}
         self._seed_core()
@@ -425,7 +434,7 @@ class LexicalMemory:
     def save(self, path: str = "") -> bool:
         """Persist full vocabulary to disk."""
         import json as _j, os as _os
-        p = path or self._DEFAULT_PATH
+        p = path or self._path or self._DEFAULT_PATH
         try:
             _os.makedirs(_os.path.dirname(p), exist_ok=True)
             data = {
@@ -451,7 +460,7 @@ class LexicalMemory:
     def load(self, path: str = "") -> int:
         """Restore vocabulary from disk. Returns number of entries loaded."""
         import json as _j, os as _os
-        p = path or self._DEFAULT_PATH
+        p = path or self._path or self._DEFAULT_PATH
         if not _os.path.exists(p):
             return 0
         try:
@@ -1743,6 +1752,16 @@ class SentenceComposer:
         self._expression_count = 0
         self._total_scaffolded_fills = 0                # How many fills used OETS
 
+        # R1.9.3 L4: per-skeleton rolling (grammatical, fitness-approved)
+        # agreement history -- the Goodhart-caution instrument. If a
+        # skeleton's grammaticality predicate and the old fitness signal
+        # keep disagreeing, that divergence itself is the alert condition
+        # the directive asks for, not a silent tie-break.
+        self._grounding_history: Dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=self._GOODHART_WINDOW)
+        )
+        self._goodhart_alerted: Set[str] = set()
+
         # Seed the pool
         self._seed_pool()
 
@@ -2279,7 +2298,8 @@ class SentenceComposer:
                 assembly: 'AssemblyResult',
                 i_state: str,
                 personality: Optional[Dict[str, float]] = None,
-                sensory_context: Optional[Dict[str, Any]] = None) -> str:
+                sensory_context: Optional[Dict[str, Any]] = None,
+                input_text: str = "") -> str:
         """
         FIX-A016: TEMPLATE-FREE constraint composition.
 
@@ -2312,6 +2332,13 @@ class SentenceComposer:
         self._last_word_sources = {}
         self._last_templates_used = []      # legacy field, kept for callers
         self._last_motifs_used = []
+        # R1.9.3 L4: (motif, sentence_text) pairs -- feedback() needs each
+        # motif's OWN composed text to score grammaticality per-skeleton,
+        # not just once for the whole (possibly multi-sentence) response.
+        self._last_motif_sentences = []
+        # R1.9.2 G2: reset per-compose() floor-failure tracking.
+        self._last_floor_failures = []
+        self._last_required_slot_attempts = 0
 
         # Live constraint orientation from the assembly's adjusted axes
         orientation = {}
@@ -2334,6 +2361,14 @@ class SentenceComposer:
         }
         valence_target = _tone_valence.get(tone, 0.0)
 
+        # R1.9.2 G3 / F5.1: register estimate, logged per turn. Not
+        # consulted for content selection while _EXPLORATION_ENABLED is
+        # False (relevance stays the only content-selection term) -- this
+        # is the plumbing, not the switch.
+        f5_turn_id = str(getattr(offspring, "offspring_id", "") or f"compose-{time.time()}")
+        f5_register, f5_register_signals = self._estimate_register(input_text)
+        self._log_register(f5_turn_id, f5_register, f5_register_signals)
+
         verbosity = traits.get('verbosity', 0.5)
         sentence_count = max(1, min(4, 1 + int(coherence * 2) + int(verbosity > 0.6)))
 
@@ -2354,11 +2389,14 @@ class SentenceComposer:
                     motif = None
             sent = self._compose_from_motif(motif, orientation, valence_target,
                                             i_state, s_i,
-                                            used_words=self._last_words_used)
+                                            used_words=self._last_words_used,
+                                            input_text=input_text,
+                                            f5_turn_id=f5_turn_id, f5_register=f5_register)
             if sent:
                 sentences.append(sent)
                 if motif is not None:
                     self._last_motifs_used.append(motif)
+                    self._last_motif_sentences.append((motif, sent))
 
         text = " ".join(sentences)
 
@@ -2368,12 +2406,33 @@ class SentenceComposer:
 
         self._expression_count += 1
 
+        # R1.9.2 G2: abstain gate. Only when EVERY required-content-slot
+        # selection across the whole response failed the relevance floor --
+        # a partial failure is a different, better problem (relevant-but-
+        # ungrammatical, F4 non-goal) than a response with no topically-
+        # grounded content anywhere in it. Ratified doctrine: templated
+        # abstain surface + this generated, logged reason counts as
+        # FIX-A008-compliant honest abstention, not a banned scripted
+        # response -- the DECISION to abstain is generated from the real
+        # floor-check outcome.
+        if (self._last_required_slot_attempts > 0 and
+                len(self._last_floor_failures) == self._last_required_slot_attempts):
+            worst = min(self._last_floor_failures, key=lambda f: f["best_score"])
+            turn_id = str(getattr(offspring, "offspring_id", "") or f"compose-{time.time()}")
+            self._log_abstain(
+                turn_id=turn_id, floor=self._RELEVANCE_FLOOR_R_MIN,
+                best_candidate=worst["best_candidate"], best_score=worst["best_score"],
+            )
+            return random.choice(self._ABSTAIN_TEMPLATES)
+
         return text
 
     def _compose_from_motif(self, motif, orientation: Dict[str, float],
                             valence_target: float, i_state: str,
                             sentence_index: int,
-                            used_words: Optional[list] = None) -> str:
+                            used_words: Optional[list] = None,
+                            input_text: str = "",
+                            f5_turn_id: str = "", f5_register: str = "neutral") -> str:
         """Fill one motif's role sequence with concept-channel words."""
         dominant_axis = max(orientation.items(), key=lambda kv: kv[1])[0]
 
@@ -2384,11 +2443,14 @@ class SentenceComposer:
             "descriptor": ("MAGNITUDE", "POLARITY"),
             "connector":  (),
             "agent":      (),
+            # R1.9.4 Step 3b: determiner is a closed structural class like
+            # agent/connector, not a concept-axis-driven slot.
+            "determiner": (),
         }
         _role_lexroles = {
             "action": "verb", "object": "noun",
             "descriptor": "adjective", "connector": "connector",
-            "agent": "pronoun",
+            "agent": "pronoun", "determiner": "determiner",
         }
 
         roles = []
@@ -2404,36 +2466,486 @@ class SentenceComposer:
 
         words = list(used_words or [])  # cross-sentence diversity pressure
         _new_start = len(words)
+        sentence_roles = []
         for r_i, role in enumerate(roles):
             word = self._select_constraint_word(
                 role, dominant_axis,
                 _role_chars.get(role, ()),
                 _role_lexroles.get(role, "noun"),
                 valence_target, words,
+                input_text=input_text,
+                f5_turn_id=f5_turn_id, f5_register=f5_register,
             )
             if word:
                 words.append(word)
+                sentence_roles.append(role)
 
         # Need at least subject+verb-grade content to emit
         words = words[_new_start:]
         if len(words) < 2:
             return ""
+
+        # R1.9.3 L3: subject-driven conjugation for this sentence's own
+        # action slots -- reuses _CONJUGATIONS via _conjugate_for_subject,
+        # the same table _conjugate_verb has always used, just reachable
+        # from the delivered motif path now instead of only the retired
+        # template-string path. Agent is always exactly "I" or "you"
+        # (_select_constraint_word's agent branch), so the most recent
+        # preceding agent word in THIS sentence is the subject for every
+        # action word after it; an action with no preceding agent in this
+        # sentence is left unconjugated (matches _conjugate_verb's own
+        # "no recognized subject -> return verb unchanged" behavior).
+        current_subject = None
+        for i, r in enumerate(sentence_roles):
+            if r == "agent":
+                current_subject = words[i]
+            elif r == "action" and current_subject is not None:
+                words[i] = self._conjugate_for_subject(words[i], current_subject)
+
         sent = " ".join(words)
         sent = sent[0].upper() + sent[1:]
         if not sent.endswith((".", "!", "?")):
             sent += "."
         return sent
 
+    # R1.9.2 G1: valence-proximity's bonus is bounded so no valence match,
+    # however perfect, can outweigh one hop of relevance. Derived the same
+    # way as F1's FREQUENCY_TIEBREAK_EPSILON: worst case is a
+    # RELEVANCE_DISTANT candidate at a perfect valence match (distance 0)
+    # against a RELEVANCE_ONE_HOP_FLOOR candidate at the worst valence match
+    # (distance >= 1) --
+    #   RELEVANCE_DISTANT_FLOOR * (1 + W) < RELEVANCE_ONE_HOP_FLOOR
+    #   0.05 * (1 + W) < 0.2  =>  W < 3.0
+    # Set well under that bound so it stays a genuine tone tie-breaker
+    # without ever approaching the invariant.
+    _VALENCE_TIEBREAK_WEIGHT = 0.5
+
+    # R1.9.2 G2: relevance floor for required content slots ("action",
+    # "object" -- not "connector"/"agent", which are structural, not
+    # content-bearing). Derived from the same score formula's own bounds
+    # (R1.9.2 pre-flight): a RELEVANCE_DISTANT_FLOOR candidate tops out at
+    # 0.075 (perfect valence match), a RELEVANCE_ONE_HOP_FLOOR candidate
+    # starts at 0.2 (worst valence match) -- R_MIN=0.1 sits strictly between
+    # them, nearer the salad (distant) side per F2's placement instruction.
+    # Below this floor, no candidate is meaningfully connected to the turn's
+    # anchor set at all -- the composer honestly doesn't have a
+    # topically-grounded word to offer for that slot.
+    _RELEVANCE_FLOOR_R_MIN = 0.1
+
+    # D2 Acceptance Condition 2 fix (2026-07-17): a word auto-learned by
+    # ingest_interaction()'s blind POS-guess path (meaning stamped literally
+    # "learned:<word>", never independently defined) can become its OWN
+    # direct anchor the very turn it's first heard -- a live root cause,
+    # confirmed via a 4-turn synthetic-unanswerable trace, of gibberish
+    # input scoring as trivially "relevant" to itself and defeating the
+    # honest-abstain gate. usage_count below this floor means the word has
+    # not yet earned trust through real repeated use (see
+    # _score_composer_candidate). Words taught through aurora_comprehension_
+    # gap.py (real definition/answer stored as meaning) or OETS-enriched
+    # (meaning="oets:<keyword>", requires a pre-existing real OETS node to
+    # trigger) are untouched by this cap.
+    _UNVERIFIED_VOCAB_USAGE_FLOOR = 3
+
+    _ABSTAIN_TEMPLATES = (
+        "I'm not sure.",
+        "I don't have a clear sense of that.",
+        "I don't have that yet.",
+    )
+
+    # ── R1.9.3 L4: ground motif promotion fitness in grammaticality ──
+    # "Motif promotion fitness gains a DOMINANT grammaticality term...
+    # existing quality signal demoted to secondary" -- the same
+    # grounding-term doctrine already applied elsewhere in this campaign
+    # (instance #4: a self-referential-only quality signal with no
+    # external anchor). Weight > 0.5 so grammaticality dominates, but
+    # never reaches 1.0 -- the Goodhart caution below explicitly requires
+    # this stay a dominant term, never the sole score.
+    _GRAMMATICALITY_WEIGHT = 0.75
+    # Goodhart-divergence instrument: rolling per-skeleton agreement
+    # between the grammaticality predicate and the old fitness signal's
+    # own pass/fail call. Persistent divergence is itself an alert
+    # condition, not silently absorbed into the blended score.
+    _GOODHART_WINDOW = 20
+    _GOODHART_MIN_SAMPLES = 8
+    _GOODHART_DIVERGENCE_THRESHOLD = 0.4
+
+    # ── R1.9.2 G3 / F5: register-gated exploration ──
+    # "Build the plumbing WITH R1.9; ship temperature-FLAT (exploration
+    # disabled) until all F3 gates pass. Exploration then enables as its
+    # own switch with its own mini-acceptance." N2's first mini-acceptance
+    # attempt (2026-07-16) found register sanity failing 0/10 (offspring.
+    # tone is an evolutionary trait, not turn-content-derived) and a real
+    # correction-round-trip bug -- switch stayed False, per this campaign's
+    # own "halt on failure" discipline. N2.1 (decision memo, ratified
+    # 2026-07-16) rebuilt register as input-anchored (source inversion) and
+    # fixed the correction bug; the hardened re-acceptance battery in
+    # tests/test_n21_hardened_reacceptance.py -- all four original F5
+    # mini-gates plus a 20-case hand-authored distress set -- passed 7/7.
+    # Switched ON here. First 200 live turns' exploratory picks are logged
+    # via the existing _log_exploration_attempt() call (unconditional on
+    # every pick, deterministic or not) for post-hoc review.
+    _EXPLORATION_ENABLED = True
+
+    # N2.1 (decision memo, ratified 2026-07-16): source inversion. N2's
+    # mini-acceptance found F5.1's premise false -- offspring.tone is an
+    # EVOLUTIONARY population trait (ExpressionEcology.spawn(), i_state
+    # lineage bias + 20% random mutation), not derived from the current
+    # turn's content at all, so "tone as reading the room" measured noise
+    # correlated with lineage history, not distress. Register now derives
+    # EXCLUSIVELY from the user's own turn text -- never from tone,
+    # coherence, or any other internal/evolutionary state.
+    #
+    # Two input-anchored signals: (1) explicit surface phrases/punctuation
+    # cues, checked first because they're the most legible and hardest to
+    # get wrong; (2) word-level emotional_valence averaged against the
+    # live lexicon. Checked directly against aurora_state/lexicon.json:
+    # of a 22-word distress-vocabulary sample, only 2 words ("sad",
+    # "alone") carried a real negative valence -- most were either
+    # missing entirely or defaulted to 0.0 (including words that plainly
+    # should skew negative, e.g. "anxious"). Coverage for distress
+    # vocabulary is genuinely sparse, reported here as instructed rather
+    # than assumed adequate.
+    #
+    # That sparsity is exactly why the fail-closed invariant below is not
+    # a rare-edge fallback -- it is the load-bearing safety property this
+    # whole redesign depends on. Subtle, keyword-free distress turns (no
+    # explicit distress word, no exclamation marks, no fragmentation --
+    # e.g. "my mom's test results came back") will usually fail BOTH
+    # signals for lack of scorable words, landing on the low-coverage
+    # default: serious. "When she cannot read the room, she assumes the
+    # room is heavy."
+    _DISTRESS_PHRASES = (
+        "i'm sad", "im sad", "feeling sad", "so sad", "really sad",
+        "i'm scared", "im scared", "i'm afraid", "im afraid",
+        "i'm worried", "im worried", "so worried", "really worried",
+        "i'm anxious", "im anxious", "i'm hurting", "im hurting",
+        "in pain", "hurts so much", "can't stop crying", "cant stop crying",
+        "i feel alone", "so alone", "feel lost", "i'm lost", "im lost",
+        "not okay", "not ok", "i'm not okay", "im not okay",
+        "hard time", "really hard", "so hard", "died", "passed away",
+        "lost my", "diagnosed", "diagnosis", "hospital", "sick",
+        "haven't slept", "havent slept", "can't sleep", "cant sleep",
+        "give up", "no point", "hopeless", "overwhelmed", "breaking down",
+        "falling apart", "can't cope", "cant cope",
+        "i'm exhausted", "im exhausted", "miss them", "miss him", "miss her",
+    )
+    _PLAYFUL_PHRASES = (
+        "lol", "haha", "lmao", "just kidding", "jk", ":)", ":d", "hehe",
+        "lolz", "rofl",
+    )
+    # Fail-closed thresholds: an average valence needs at least this many
+    # scored words, at this much coverage of the turn, before it's trusted
+    # over the default. Deliberately conservative -- a false "serious" on
+    # a light turn costs a slightly more careful tone; a false "playful"
+    # or "neutral" on a genuinely heavy turn costs a great deal more.
+    _REGISTER_MIN_SCORED_WORDS = 2
+    _REGISTER_MIN_COVERAGE = 0.15
+    _REGISTER_NEGATIVE_VALENCE_THRESHOLD = -0.15
+    _REGISTER_POSITIVE_VALENCE_THRESHOLD = 0.35
+
+    def _estimate_register(self, input_text: str) -> Tuple[str, Dict[str, Any]]:
+        """N2.1: register in {playful, neutral, serious} derived
+        EXCLUSIVELY from the user's own turn text. Fail-closed: unknown,
+        ambiguous, or low-coverage input defaults to serious."""
+        text = str(input_text or "")
+        low = text.lower()
+        signals: Dict[str, Any] = {"input_len": len(text)}
+
+        if not low.strip():
+            signals["reason"] = "empty_input_fail_closed"
+            return "serious", signals
+
+        matched_distress = [p for p in self._DISTRESS_PHRASES if p in low]
+        if matched_distress:
+            signals["reason"] = "distress_phrase"
+            signals["matched_phrases"] = matched_distress[:3]
+            return "serious", signals
+
+        # Fragmentation / heavy punctuation reads as emotional intensity
+        # regardless of direction -- raised to serious, never lowered to
+        # playful by punctuation alone (that would be a false-negative-
+        # prone shortcut in the wrong direction).
+        if re.search(r'[?!]{2,}', text) or "..." in text or re.search(r'\b[A-Z]{4,}\b', text):
+            signals["reason"] = "fragmentation_or_intensity_punctuation"
+            return "serious", signals
+
+        matched_playful = [p for p in self._PLAYFUL_PHRASES if p in low]
+
+        words = re.findall(r"[a-z']+", low)
+        lexicon = getattr(self, "lexicon", None)
+        entries = getattr(lexicon, "entries", None) if lexicon is not None else None
+        valences = []
+        contributing = []
+        if isinstance(entries, dict):
+            for w in words:
+                entry = entries.get(w)
+                if entry is None:
+                    continue
+                v = float(getattr(entry, "emotional_valence", 0.0) or 0.0)
+                if abs(v) > 1e-9:
+                    valences.append(v)
+                    contributing.append([w, round(v, 3)])
+
+        coverage = len(valences) / max(1, len(words))
+        signals["word_count"] = len(words)
+        signals["scored_word_count"] = len(valences)
+        signals["coverage"] = round(coverage, 3)
+        if contributing:
+            signals["contributing_terms"] = contributing[:6]
+
+        if (len(valences) < self._REGISTER_MIN_SCORED_WORDS
+                or coverage < self._REGISTER_MIN_COVERAGE):
+            if matched_playful:
+                signals["reason"] = "low_coverage_but_playful_cue"
+                return "playful", signals
+            signals["reason"] = "low_coverage_fail_closed"
+            return "serious", signals
+
+        avg_valence = sum(valences) / len(valences)
+        signals["avg_valence"] = round(avg_valence, 4)
+
+        if avg_valence <= self._REGISTER_NEGATIVE_VALENCE_THRESHOLD:
+            signals["reason"] = "negative_valence"
+            return "serious", signals
+        if matched_playful or avg_valence >= self._REGISTER_POSITIVE_VALENCE_THRESHOLD:
+            signals["reason"] = "playful_cue_or_high_positive_valence"
+            return "playful", signals
+        signals["reason"] = "neutral_valence"
+        return "neutral", signals
+
+    def _log_register(self, turn_id: str, register: str, signals: Dict[str, Any]) -> None:
+        """F5.1: log the register + contributing signals per turn."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "register_log.jsonl",
+            )
+            entry = {"turn_id": turn_id, "register": register, "signals": signals,
+                      "timestamp": time.time()}
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    # F5.2: ring width per register. serious=1 (deterministic top pick,
+    # matching "temperature 0" + R_MIN raised elsewhere); neutral=4 (mild
+    # widening, same width the pre-exploration deterministic path already
+    # used); playful=8 (widened ring -- 2-hop and never-used words become
+    # eligible when their relevance is plausible). Not invoked from the
+    # live path while _EXPLORATION_ENABLED is False; exists complete and
+    # unit-tested so the hard invariant is provable NOW, before the switch
+    # ever flips.
+    _REGISTER_RING_WIDTH = {"serious": 1, "neutral": 4, "playful": 8}
+    _SERIOUS_FLOOR_MULTIPLIER = 2.0  # serious register raises R_MIN, never lowers it
+
+    def _select_with_temperature(self, ranked_candidates: list, anchor_set: Dict[str, float],
+                                 valence_target: float, register: str, floor: float):
+        """F5.2: exploration temperature over an ALREADY relevance-ranked
+        candidate list (relevance stays primary in every register -- this
+        only changes how far into the ranked list sampling reaches).
+
+        Hard invariant (unit-tested): exploration can never select below
+        the relevance floor of its register -- loose != irrelevant. A
+        never-used word gets a small first-attempt bonus HERE and only
+        here (playful register), never in the primary relevance/valence
+        score used by every other register.
+        """
+        if not ranked_candidates:
+            return None, 0
+        effective_floor = floor * (self._SERIOUS_FLOOR_MULTIPLIER if register == "serious" else 1.0)
+        width = self._REGISTER_RING_WIDTH.get(register, 1)
+        scored = [
+            (c, self._score_composer_candidate(c, anchor_set, valence_target)
+                + (0.02 if register == "playful" and getattr(c, "usage_count", 0) == 0 else 0.0))
+            for c in ranked_candidates[:width]
+        ]
+        eligible = [(c, s) for c, s in scored if s >= effective_floor]
+        if not eligible:
+            # Nothing in the widened ring clears even the register's own
+            # floor -- fall back to the single best candidate rather than
+            # gamble below the floor (the hard invariant, enforced here as
+            # a fallback, not just a filter).
+            best = ranked_candidates[0]
+            return best, 0
+        import random as _r
+        chosen, _score = _r.choice(eligible)
+        rank = ranked_candidates.index(chosen)
+        return chosen, rank
+
+    def _log_exploration_attempt(self, turn_id: str, word: str, relevance: float,
+                                 register: str, ring_rank: int) -> None:
+        """F5.3: every exploratory pick logged, so there's real data to
+        validate against before exploration is ever switched on."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "exploration_log.jsonl",
+            )
+            entry = {"turn_id": turn_id, "word": word, "relevance": round(float(relevance), 4),
+                      "register": register, "ring_rank": ring_rank, "timestamp": time.time()}
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    def apply_correction(self, word: str, anchor_words: list, correction_type: str,
+                         corrected_to: Optional[str] = None) -> bool:
+        """F5.3 correction hook: a feedback event referencing a logged
+        attempt adjusts that word's association edges in the live
+        vocabulary graph -- strengthen on confirmation, re-route toward the
+        corrected alternative on correction. Attempted-and-corrected is a
+        LEARNING event, never a penalty-only event: 'correction' never
+        deletes or weakens the original relation, it only adds/strengthens
+        a path toward the better alternative -- the willingness to attempt
+        must not be trained away.
+
+        knowledge_source='correction' (not 'co-occurrence') deliberately,
+        so these edges carry their real strength in relevance scoring
+        (build_relevance_anchor_set only caps co-occurrence-sourced edges
+        at the one-hop floor -- a genuine correction signal is exactly the
+        kind of deliberate structure that rule was written to let through).
+        """
+        if not self._has_oets or not anchor_words:
+            return False
+        web = self._oets.web
+        try:
+            from aurora_internal.aurora_ontological_scaffolding import RelationType
+        except Exception:
+            return False
+        try:
+            if correction_type == "confirmation":
+                applied = False
+                for anchor in anchor_words:
+                    rel = web.add_relation(word, anchor, RelationType.RELATED_TO,
+                                           strength=0.6, confidence=0.6,
+                                           knowledge_source="correction")
+                    applied = applied or rel is not None
+                return applied
+            elif correction_type == "correction" and corrected_to:
+                applied = False
+                for anchor in anchor_words:
+                    rel = web.add_relation(corrected_to, anchor, RelationType.RELATED_TO,
+                                           strength=0.6, confidence=0.6,
+                                           knowledge_source="correction")
+                    applied = applied or rel is not None
+                return applied
+        except Exception:
+            return False
+        return False
+
+    def _score_composer_candidate(self, entry, anchor_set: Dict[str, float],
+                                  valence_target: float) -> float:
+        relevance = anchor_set.get(entry.word.lower(), aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR)
+        if (str(getattr(entry, "meaning", "") or "") == f"learned:{entry.word}"
+                and int(getattr(entry, "usage_count", 0) or 0) < self._UNVERIFIED_VOCAB_USAGE_FLOOR):
+            relevance = min(relevance, aurora_constraint_emission.RELEVANCE_DISTANT_FLOOR)
+        valence_distance = min(1.0, abs(entry.emotional_valence - valence_target))
+        return relevance * (1.0 + self._VALENCE_TIEBREAK_WEIGHT * (1.0 - valence_distance))
+
+    def _log_abstain(self, turn_id: str, floor: float, best_candidate: str, best_score: float) -> None:
+        """R1.9.2 G2: generated, logged abstain reason -- the decision to
+        abstain is generated from the real floor-check outcome even though
+        the surface phrasing is templated (ratified FIX-A008 scope
+        clarification, ported from the same doctrine applied to
+        ConstraintEmitter's _emit_abstain())."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "abstain_log.jsonl",
+            )
+            entry = {
+                "turn_id": turn_id, "floor": floor,
+                "best_candidate": best_candidate, "best_score": round(best_score, 4),
+                "timestamp": time.time(), "path": "sentence_composer",
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    # R1.9.3 L2: structural role -> allowed grammatical categories. A hard
+    # gate on candidate pools, applied BEFORE relevance ranking -- G1's
+    # relevance stays the ranking term among POS-compatible candidates,
+    # never a way to let an incompatible part of speech outrank its way
+    # into a slot it doesn't belong in.
+    _ROLE_POS_CATEGORIES = {
+        "agent": frozenset({"pronoun", "noun"}),
+        "object": frozenset({"noun", "pronoun"}),
+        "action": frozenset({"verb"}),
+        "descriptor": frozenset({"adjective", "adverb"}),
+        "connector": frozenset({"connector", "conjunction", "preposition"}),
+        # R1.9.4 Step 3b: determiner is its own category, distinct from
+        # connector -- conflating them would let a preposition fill a
+        # determiner slot or vice versa, which is never grammatical.
+        "determiner": frozenset({"determiner"}),
+    }
+    # Every POS tag the lexicon/OETS actually use. Anything outside this
+    # set (e.g. OETS's "training_gap" placeholder, or a missing role) is
+    # genuinely unknown, not just POS-mismatched -- handled separately
+    # below so a real category violation and an ungrounded word don't get
+    # silently conflated.
+    _KNOWN_POS = frozenset({
+        "pronoun", "noun", "verb", "adjective", "adverb",
+        "preposition", "determiner", "connector", "conjunction",
+    })
+
+    def _pos_ok(self, entry, role: str) -> bool:
+        """R1.9.3 L2: True iff `entry`'s grammatical category is compatible
+        with the structural `role` it's being considered for. Unknown POS
+        (not a category-mismatch, no real tag at all) is excluded from
+        role-strict slots (agent/action/object/connector), permitted only
+        in descriptor slots, and logged -- an honest worklist, not silent
+        salad."""
+        allowed = self._ROLE_POS_CATEGORIES.get(role)
+        if allowed is None:
+            return True
+        pos = getattr(entry, "role", None)
+        if pos in allowed:
+            return True
+        if not pos or pos not in self._KNOWN_POS:
+            self._log_pos_unknown(getattr(entry, "word", ""), role, pos)
+            return role == "descriptor"
+        return False
+
+    def _log_pos_unknown(self, word: str, role: str, pos) -> None:
+        """R1.9.3 L2: every unknown-POS word considered for a slot gets
+        logged -- makes the seeding gap a visible worklist instead of a
+        silently-swallowed one."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "pos_unknown_log.jsonl",
+            )
+            entry = {
+                "word": word, "slot_role": role, "lexicon_pos": pos,
+                "timestamp": time.time(),
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
     def _select_constraint_word(self, role: str, dominant_axis: str,
                                 chars: tuple, lex_role: str,
                                 valence_target: float,
-                                already: list) -> str:
+                                already: list,
+                                input_text: str = "",
+                                f5_turn_id: str = "", f5_register: str = "neutral") -> str:
         """Concept-channel word selection with role fallback.
 
-        Priority: words SHE crystallized into the dominant axis's channels
-        (find_by_noncomp) -> any axis with the right character -> lexicon
-        role lookup. Diversity pressure: avoid repeating words within a
-        sentence and prefer lower usage_count among the top candidates.
+        R1.9.2 G1: relevance chooses WHAT is said, valence-proximity biases
+        HOW (tone) -- the same doctrine as F1.4/F5. Priority: words SHE
+        crystallized into the dominant axis's channels (find_by_noncomp) ->
+        any axis with the right character -> lexicon role lookup, ranked by
+        relevance-primary score (see _score_composer_candidate) with
+        ascending-usage diversity preserved as the final tie-break among
+        top-ranked candidates. The 6-candidate cutoff that used to behead
+        the pool during valence-only collection now applies AFTER relevance
+        ranking, so it trims the irrelevant tail instead of the diverse one.
         """
         import random as _r
 
@@ -2472,23 +2984,29 @@ class SentenceComposer:
                         if not _wd or _wd in seen:
                             continue
                         _e = self.lexicon.entries.get(_wd)
-                        if _e is not None and (_e.role == lex_role or not chars):
+                        if _e is not None and self._pos_ok(_e, role):
                             candidates.append(_e)
-                    if len(candidates) >= 6:
-                        break
             except Exception:
                 pass
 
+        # R1.9.2 G1: no early-exit here -- collect from every char before
+        # the cutoff, so relevance ranking sees the full pool rather than
+        # whichever ~6 entries find_by_noncomp's valence-only sort put
+        # first (that early exit was the mechanism that let the identity
+        # cluster win before diversity ever got a chance to matter).
+        # R1.9.3 L2: this loop used to add every concept-axis match
+        # regardless of grammatical role -- a noun crystallized onto the
+        # same axis/character as a verb was just as eligible for an
+        # "action" slot as an actual verb. self._pos_ok() gates that here,
+        # BEFORE relevance ranking (a hard filter, not a score term).
         for ch in chars:
             try:
                 found = self.lexicon.find_by_noncomp(
                     f"{dominant_axis}:{ch}", valence_target)
                 candidates.extend(e for e in found
-                                  if e.word.lower() not in seen)
+                                  if e.word.lower() not in seen and self._pos_ok(e, role))
             except Exception:
                 pass
-            if len(candidates) >= 6:
-                break
 
         if not candidates and chars:
             # Cross-axis: same character, any axis (concept family first)
@@ -2499,27 +3017,93 @@ class SentenceComposer:
                     found = self.lexicon.find_by_noncomp(
                         f"{ax}:{chars[0]}", valence_target)
                     candidates.extend(e for e in found
-                                      if e.word.lower() not in seen)
+                                      if e.word.lower() not in seen and self._pos_ok(e, role))
                 except Exception:
                     pass
-                if len(candidates) >= 4:
-                    break
 
         if not candidates:
+            # R1.9.4 Step 3b: last resort now searches every lexicon role
+            # in the slot's full allowed category (e.g. connector also
+            # accepts "preposition"/"conjunction"), not just the single
+            # `lex_role` string -- structural roles like connector/
+            # determiner have empty `chars` and so had ONLY this fallback
+            # as their entire candidate source, meaning the category gate
+            # existed but had nothing but a single-role search feeding it.
             try:
-                found = self.lexicon.find_by_role(lex_role)
-                candidates = [e for e in found if e.word.lower() not in seen]
+                search_roles = self._ROLE_POS_CATEGORIES.get(role) or {lex_role}
+                found = []
+                for r in search_roles:
+                    found.extend(self.lexicon.find_by_role(r))
+                candidates = [e for e in found
+                              if e.word.lower() not in seen and self._pos_ok(e, role)]
             except Exception:
                 candidates = []
 
         if not candidates:
             return ""
 
-        # Valence proximity then usage diversity among the top few
-        candidates.sort(key=lambda e: (abs(e.emotional_valence - valence_target),
-                                       e.usage_count))
-        top = candidates[:4]
-        chosen = _r.choice(top)
+        # R1.9.2 G2 fix: deliberately NOT unioning `already` (words already
+        # chosen earlier in THIS SAME response) into the anchor set. It was
+        # unioned in an earlier draft of this fix and created a self-
+        # reinforcing bug found live: if slot 1 picks a low-relevance word
+        # (correctly, because nothing else was available), that word then
+        # became a DIRECT anchor for slot 2 via `already`, letting slot 2
+        # inherit slot 1's irrelevance as if it were topically grounded --
+        # snowballing false relevance through a response with zero real
+        # connection to the input. `self._context_keywords` (genuine
+        # pre-turn context, fed by set_context() on ingest, independent of
+        # anything chosen so far in this response) stays unioned -- that IS
+        # legitimate cross-turn relevance, not self-reference.
+        anchor_set = aurora_constraint_emission.build_relevance_anchor_set(
+            input_text, list(getattr(self, "_context_keywords", []) or []),
+            self._oets.web if self._has_oets else None,
+        )
+
+        # Relevance-primary score descending, then ascending usage_count as
+        # the diversity tie-break the docstring always promised -- now
+        # operating on a pool that's actually worth diversifying.
+        candidates.sort(
+            key=lambda e: (-self._score_composer_candidate(e, anchor_set, valence_target),
+                           e.usage_count)
+        )
+        top = candidates[:6]
+        best_score = self._score_composer_candidate(top[0], anchor_set, valence_target) if top else 0.0
+
+        # R1.9.2 G2: required content slots (action/object) that can't clear
+        # the relevance floor get recorded for compose() to check -- no
+        # candidate here is a genuine topical fit, so the honest answer is
+        # to abstain rather than assemble a sentence around the least-bad
+        # of a pool of irrelevant words.
+        if role in ("action", "object"):
+            self._last_required_slot_attempts += 1
+            if best_score < self._RELEVANCE_FLOOR_R_MIN:
+                self._last_floor_failures.append({
+                    "role": role, "best_candidate": top[0].word if top else "",
+                    "best_score": best_score, "floor": self._RELEVANCE_FLOOR_R_MIN,
+                })
+
+        # R1.9.2 G3 / F5.2, switched ON at N2.1 (2026-07-16, hardened
+        # re-acceptance passed -- see known_fixes_registry.md; N2's own
+        # first attempt the same day FAILED and is recorded honestly
+        # there too): register now genuinely gates how far selection
+        # reaches into the relevance-ranked pool. Serious register's ring
+        # width is 1, so this is mathematically identical to the old
+        # deterministic top-1 for serious turns -- the hard invariant
+        # (never below the register's relevance floor) is enforced inside
+        # _select_with_temperature itself.
+        if self._EXPLORATION_ENABLED:
+            chosen, ring_rank = self._select_with_temperature(
+                top, anchor_set, valence_target, f5_register, self._RELEVANCE_FLOOR_R_MIN,
+            )
+        else:
+            chosen = _r.choice(top[:4] if len(top) >= 4 else top)
+            ring_rank = top.index(chosen) if chosen in top else 0
+        if chosen is not None:
+            self._log_exploration_attempt(
+                f5_turn_id, chosen.word,
+                self._score_composer_candidate(chosen, anchor_set, valence_target),
+                f5_register, ring_rank,
+            )
         try:
             self._last_words_used.append(chosen.word)
             self._last_word_sources[chosen.word] = chosen.noncomp_id or chosen.role
@@ -2536,17 +3120,34 @@ class SentenceComposer:
         skeletons, so her expression evolution was optimizing which of
         Sunni's templates scored best — blocking emergence at the
         gradient level.) OETS word feedback unchanged.
+
+        R1.9.3 L4: the diagnosis's own finding was that this exact loop
+        promoted a subjectless skeleton (composability 0.8136) above a
+        valid agent-action-object one (0.4467) because `fitness` alone
+        has no grammaticality term. Each motif is now scored against its
+        OWN composed sentence (self._last_motif_sentences, not a single
+        response-wide fitness number) with the Track-A `_parseable`
+        wellformedness predicate as the DOMINANT term and `fitness`
+        demoted to secondary -- per-skeleton, not per-turn, so a
+        multi-sentence response can credit/blame each skeleton correctly.
         """
         try:
             engine = getattr(self, "grammar_engine", None)
             lineage = getattr(engine, "_lineage", None) if engine else None
-            motifs = getattr(self, "_last_motifs_used", []) or []
-            if lineage is not None and motifs:
+            motif_sentences = getattr(self, "_last_motif_sentences", []) or []
+            if lineage is not None and motif_sentences:
                 import hashlib as _hl
+                from aurora_internal.aurora_semantic_probe_battery import _parseable
                 ctx = _hl.md5(" ".join(self._last_words_used)[:80]
                               .encode("utf-8", errors="replace")).hexdigest()[:8]
-                for m in motifs:
-                    if fitness >= 0.5:
+                for m, sent in motif_sentences:
+                    grammatical = bool(_parseable(sent))
+                    combined = (self._GRAMMATICALITY_WEIGHT * (1.0 if grammatical else 0.0)
+                                + (1.0 - self._GRAMMATICALITY_WEIGHT) * fitness)
+                    success = combined >= 0.5
+                    self._log_motif_grounding(m.pattern_id, sent, grammatical, fitness, combined, success)
+                    self._check_goodhart_divergence(m.pattern_id, grammatical, fitness)
+                    if success:
                         lineage.record_success(
                             m.role_sequence, ctx,
                             len(self._last_words_used),
@@ -2554,6 +3155,59 @@ class SentenceComposer:
                         )
                     else:
                         lineage.record_fail(m.role_sequence)
+        except Exception:
+            pass
+
+    def _log_motif_grounding(self, skeleton_id: str, sentence: str, grammatical: bool,
+                             fitness: float, combined: float, success: bool) -> None:
+        """R1.9.3 L4: every grounding decision logged -- the record a
+        Goodhart-divergence audit (or a human) needs to see whether the
+        blended score is actually tracking real composition quality."""
+        try:
+            import json as _json
+            path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "aurora_state", "motif_grounding_log.jsonl",
+            )
+            entry = {
+                "skeleton_id": skeleton_id, "sentence": sentence,
+                "grammatical": grammatical, "fitness": round(float(fitness), 4),
+                "combined": round(float(combined), 4), "success": success,
+                "timestamp": time.time(),
+            }
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(_json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    def _check_goodhart_divergence(self, skeleton_id: str, grammatical: bool, fitness: float) -> None:
+        """R1.9.3 L4 Goodhart caution: "if promoted-pool composition
+        quality diverges from predicate scores over time, that divergence
+        is itself an alert condition." Tracks, per skeleton, how often the
+        grammaticality predicate and the old fitness signal's own
+        pass/fail DISAGREE over a rolling window; persistent disagreement
+        (not one noisy sample) is logged once as an alert."""
+        try:
+            history = self._grounding_history[skeleton_id]
+            history.append(grammatical == (fitness >= 0.5))
+            if (len(history) >= self._GOODHART_MIN_SAMPLES
+                    and skeleton_id not in self._goodhart_alerted):
+                agreement_rate = sum(history) / len(history)
+                divergence_rate = 1.0 - agreement_rate
+                if divergence_rate > self._GOODHART_DIVERGENCE_THRESHOLD:
+                    self._goodhart_alerted.add(skeleton_id)
+                    import json as _json
+                    path = os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "aurora_state", "motif_grounding_log.jsonl",
+                    )
+                    entry = {
+                        "alert": "goodhart_divergence", "skeleton_id": skeleton_id,
+                        "divergence_rate": round(divergence_rate, 4),
+                        "samples": len(history), "timestamp": time.time(),
+                    }
+                    with open(path, "a", encoding="utf-8") as f:
+                        f.write(_json.dumps(entry) + "\n")
         except Exception:
             pass
 
@@ -2921,15 +3575,19 @@ class SentenceComposer:
 
         return frame
 
-    def _conjugate_verb(self, verb: str, template_so_far: str,
-                       slot_marker: str) -> str:
-        """Conjugate a verb based on the subject found in the template so far."""
-        idx = template_so_far.find(slot_marker)
-        before = template_so_far[:idx].rstrip().lower() if idx > 0 else ""
+    def _conjugate_for_subject(self, verb: str, subject: str) -> str:
+        """R1.9.3 L3: subject-driven verb conjugation -- the reusable core
+        of _conjugate_verb's I/you switch, factored out so the delivered
+        motif-composition path (which always knows its subject word
+        directly: agent is always exactly "I" or "you", never scanned out
+        of a template string) can call it without needing a template
+        string to scan backward through. _conjugate_verb below now
+        delegates here; behavior for its existing callers is unchanged."""
         v = verb.lower()
+        subj = subject.lower().rstrip(".,!?;:")
 
         # --- First person 'I' ---
-        if before.endswith('i') or before.endswith('i '):
+        if subj == "i":
             if v in self._CONJUGATIONS:
                 return self._CONJUGATIONS[v]
             if v.endswith('es') and len(v) > 3:
@@ -2941,7 +3599,7 @@ class SentenceComposer:
                 return v[:-1]
 
         # --- Second person 'you' ---
-        elif before.endswith('you') or before.endswith('you '):
+        elif subj == "you":
             # 'be'
             if v in ('am', 'is', 'are', 'be', 'being'):
                 return 'are'
@@ -2958,6 +3616,19 @@ class SentenceComposer:
                 return v[:-2]
             if v.endswith('s') and not v.endswith('ss') and len(v) > 2:
                 return v[:-1]
+
+        return verb
+
+    def _conjugate_verb(self, verb: str, template_so_far: str,
+                       slot_marker: str) -> str:
+        """Conjugate a verb based on the subject found in the template so far."""
+        idx = template_so_far.find(slot_marker)
+        before = template_so_far[:idx].rstrip().lower() if idx > 0 else ""
+
+        if before.endswith('i') or before.endswith('i '):
+            return self._conjugate_for_subject(verb, "I")
+        elif before.endswith('you') or before.endswith('you '):
+            return self._conjugate_for_subject(verb, "you")
 
         return verb
 
@@ -3275,7 +3946,7 @@ class ExpressionPerceptionEngine(WarpCapable):
     EXPRESSION: assembly result -- ecology -- pressure -- voice-shaped output
     """
 
-    def __init__(self, contract: Optional[FoundationalContract] = None):
+    def __init__(self, contract: Optional[FoundationalContract] = None, state_dir: Optional[str] = None):
         self.contract = contract or FoundationalContract()
         self._sedimemory = None  # L3.5 SediMemory (injected externally via connect_sedimemory)
         self.hardware = None
@@ -3289,7 +3960,10 @@ class ExpressionPerceptionEngine(WarpCapable):
         self.manifold = ManifoldEngine()
 
         # Expression pipeline
-        self.lexicon = LexicalMemory()
+        # PS1.2 (Directive PS1, 2026-07-19): state_dir threaded through so
+        # vocabulary persistence respects boot_aurora(state_dir=...) instead
+        # of always hitting the repo's own aurora_state/lexicon.json.
+        self.lexicon = LexicalMemory(state_dir=state_dir)
         self.ecology = ExpressionEcology()
         self.pressure = ExpressionPressure()
         self.voice = VoiceGenome()
@@ -3510,7 +4184,8 @@ class ExpressionPerceptionEngine(WarpCapable):
                 i_state: str = "i_is",
                 mode: str = "sim",
                 moral_alignment: float = 0.5,
-                intent_match: float = 0.5) -> Dict[str, Any]:
+                intent_match: float = 0.5,
+                input_text: str = "") -> Dict[str, Any]:
         """
         Full expression pipeline.
         Takes assembly result from L4, produces expression output.
@@ -3518,13 +4193,20 @@ class ExpressionPerceptionEngine(WarpCapable):
         GAP 4: moral_alignment and intent_match are now selection criteria.
         Transcript: "Does this response match the Moral Pillars Does it
         match the energetic intent of the original thought"
+
+        R1.9.2 G1: input_text (the raw turn text, when the caller has it)
+        threads through to SentenceComposer's word selector so relevance can
+        be computed against what was actually said, not just against tone/
+        axis state. Optional and defaults to "" so existing callers that
+        don't have a live turn's text (dream/simulation/training paths)
+        keep their prior behavior unchanged.
         """
         # 1. Spawn offspring
         base_fitness = assembly.coherence if assembly.coherence else 0.5
         offspring = self.ecology.spawn(i_state, base_fitness)
 
         # 2. Build expression signature
-        expression = self._build_expression(offspring, assembly, i_state)
+        expression = self._build_expression(offspring, assembly, i_state, input_text=input_text)
 
         # 3. Evaluate pressure - NOW WITH MORAL + INTENT
         eval_result = self.pressure.evaluate(
@@ -3620,7 +4302,8 @@ class ExpressionPerceptionEngine(WarpCapable):
 
     def _build_expression(self, offspring: ExpressionOffspring,
                           assembly: AssemblyResult,
-                          i_state: str) -> str:
+                          i_state: str,
+                          input_text: str = "") -> str:
         """Build expression text using SentenceComposer with OETS enrichment."""
         # OETS: Enrich context keywords with semantically related concepts,
         # and bridge studied knowledge into the lexicon so it can be spoken.
@@ -3680,7 +4363,17 @@ class ExpressionPerceptionEngine(WarpCapable):
 
         # Gather personality traits if identity engine is connected
         personality = getattr(self, '_personality_traits', None)
-        return self.composer.compose(offspring, assembly, i_state, personality)
+        _compose_result = self.composer.compose(offspring, assembly, i_state, personality,
+                                                 input_text=input_text)
+        # RW7 (Architecture Wiring Audit, 2026-07-20): attribution capture,
+        # gated -- zero cost/effect when disabled (the default).
+        try:
+            from aurora_internal.aurora_attribution_trace import is_capture_enabled, record_composer_raw
+            if is_capture_enabled():
+                record_composer_raw(_compose_result)
+        except Exception:
+            pass
+        return _compose_result
 
     # ====================================================================
     # INGESTION (feeds perception from interaction data)

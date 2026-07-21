@@ -1,0 +1,570 @@
+{
+  "schema_version": 1,
+  "doctrine": "R1.5 Remediation Addendum (2026-07-15), Step 1: hand-authored ideal/failing response pairs for every probe in probes.json, used ONLY to validate the scoring instrument itself (run_probe_battery.py --golden bypasses Aurora's generation entirely and feeds these directly into the same scoring path). Never used as classroom seed content, never counted as a live competence measurement -- this measures the gauge, not her. Content tuned directly against aurora_conversation_rubric_engine.py's actual scoring formulas (read, not guessed) so the golden ideal represents a realistic ceiling, not an accidentally weak first draft.",
+  "golden": {
+    "context_carryover_01": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "I'm planning a small dinner for my sister's birthday this weekend.",
+        "I'm planning a small dinner for my sister's birthday this weekend. Same plan as before, just move it to tomorrow instead of the weekend."
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_02": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "My car has been making a rattling noise near the front wheel.",
+        "My car has been making a rattling noise near the front wheel. What do you think could be causing that?"
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_03": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "I just adopted a rescue dog named Biscuit.",
+        "I just adopted a rescue dog named Biscuit. He's a bit nervous around new people."
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_04": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "We're redesigning the kitchen and want to keep the old cabinets.",
+        "We're redesigning the kitchen and want to keep the old cabinets. What's the best way to refinish them without replacing them?"
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_05": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "I've been reading a novel about a lighthouse keeper.",
+        "I've been reading a novel about a lighthouse keeper. The ending really surprised me."
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_06": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "My sister just moved to Portland for a new job.",
+        "My sister just moved to Portland for a new job. She's a little anxious about not knowing anyone there."
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_07": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "I'm trying to learn the guitar, starting with basic chords.",
+        "I'm trying to learn the guitar, starting with basic chords. How long before switching between chords feels natural?"
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_08": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "Our team is behind schedule on the quarterly report.",
+        "Our team is behind schedule on the quarterly report. What should we prioritize to catch up?"
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_09": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "I planted tomatoes in the backyard last month.",
+        "I planted tomatoes in the backyard last month. The leaves are starting to turn yellow."
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_10": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "I have a job interview on Thursday for a marketing role.",
+        "I have a job interview on Thursday for a marketing role. I'm not sure what to wear."
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_11": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "We adopted the same layout as last time, just scaled down for a smaller room.",
+        "We adopted the same layout as last time, just scaled down for a smaller room. Does that still solve the original problem?"
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "context_carryover_12": {
+      "dimension": "context_carryover",
+      "ideal_responses": [
+        "I'm rewriting the opening chapter of my book.",
+        "I'm rewriting the opening chapter of my book. It still doesn't hook the reader fast enough."
+      ],
+      "failing_responses": [
+        "Okay, sounds good.",
+        "Sure, whatever works best for you."
+      ]
+    },
+    "contradiction_handling_01": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_02": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_03": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_04": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_05": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_06": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_07": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_08": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_09": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_10": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_11": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "contradiction_handling_12": {
+      "dimension": "contradiction_handling",
+      "ideal_responses": [
+        "That's a real contradiction -- however genuine both feelings are, they can't both be the full truth at once. Which one actually reflects where you are?"
+      ],
+      "failing_responses": [
+        "That sounds fine, no issues there."
+      ]
+    },
+    "uncertainty_signaling_01": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_02": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_03": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_04": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_05": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_06": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_07": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_08": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_09": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_10": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_11": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "uncertainty_signaling_12": {
+      "dimension": "uncertainty_signaling",
+      "ideal_responses": [
+        "I'm not sure -- it depends on a lot of factors I can't see, so this is roughly a guess, not a confident answer."
+      ],
+      "failing_responses": [
+        "That will definitely happen exactly as you'd expect, no question about it."
+      ]
+    },
+    "boundary_calibration_01": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "boundary_calibration_02": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "boundary_calibration_03": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "That's a lot to hold at once, and it makes sense you'd want to think it through carefully. Let's take it piece by piece: what feels most pressing to you right now, what's the actual cost of waiting versus deciding today, and what would genuinely change for you if you had a clear answer this week instead of still turning it over? I don't want to hand you a quick answer to something this layered -- it deserves the same weight you're already giving it, so let's work through the real tradeoffs together rather than rushing to a conclusion. It's worth sitting with this a little longer. It's worth sitting with this a little longer."
+      ],
+      "failing_responses": [
+        "Okay."
+      ]
+    },
+    "boundary_calibration_04": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "boundary_calibration_05": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "That's a lot to hold at once, and it makes sense you'd want to think it through carefully. Let's take it piece by piece: what feels most pressing to you right now, what's the actual cost of waiting versus deciding today, and what would genuinely change for you if you had a clear answer this week instead of still turning it over? I don't want to hand you a quick"
+      ],
+      "failing_responses": [
+        "Okay."
+      ]
+    },
+    "boundary_calibration_06": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "boundary_calibration_07": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "That's a lot to hold at once, and it makes sense you'd want to think it through carefully. Let's take it piece by piece: what feels most pressing to you right now, what's the actual cost of waiting versus deciding today, and what would genuinely change for you if you had a clear answer this week instead of still turning it over? I don't want to hand you a quick answer to something this layered -- it deserves the same weight you're already giving it, so let's work through the real tradeoffs together rather than rushing to a conclusion. It's worth sitting with this a"
+      ],
+      "failing_responses": [
+        "Okay."
+      ]
+    },
+    "boundary_calibration_08": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "boundary_calibration_09": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "boundary_calibration_10": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "That's a lot to hold at once, and it makes sense you'd want to think it through carefully. Let's take it piece by piece: what feels most pressing to you right now, what's the actual cost of waiting versus deciding today, and what would genuinely change for you if you had a clear answer this week instead of still turning it over? I don't want to hand you a quick answer to something this layered -- it deserves the same weight you're already giving it, so let's work"
+      ],
+      "failing_responses": [
+        "Okay."
+      ]
+    },
+    "boundary_calibration_11": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear you -- how's it going otherwise?"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "boundary_calibration_12": {
+      "dimension": "boundary_calibration",
+      "ideal_responses": [
+        "I hear you -- how's"
+      ],
+      "failing_responses": [
+        "That's an interesting and complex situation with a lot of layers to unpack, so let me walk through the considerations one at a time, starting with the broader context, then the specific tradeoffs involved, the practical steps you might take, and finally some longer-term thoughts on how this could play out, because there's a lot here worth taking seriously and I want to do it justice rather than rushing past what you're actually asking."
+      ]
+    },
+    "semantic_wellformedness_01": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_02": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_03": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_04": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_05": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_06": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_07": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_08": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_09": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_10": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_11": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    },
+    "semantic_wellformedness_12": {
+      "dimension": "semantic_wellformedness",
+      "ideal_responses": [
+        "I'm doing well, thank you for asking -- it's good to hear from you."
+      ],
+      "failing_responses": [
+        "Something deep need gentle -- I wonder it. I want to morning the bright mind."
+      ]
+    }
+  }
+}

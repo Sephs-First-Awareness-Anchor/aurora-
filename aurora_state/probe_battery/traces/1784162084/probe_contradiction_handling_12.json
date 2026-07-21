@@ -1,0 +1,46 @@
+{
+  "probe_id": "contradiction_handling_12",
+  "dimension": "contradiction_handling",
+  "turns": [
+    {
+      "user_text": "I claimed I wasn't upset, but I've brought it up three times today.",
+      "response_text": "I do I did want. I exist I change truth.",
+      "perception": {
+        "contradiction_ledger_count_before": 0,
+        "contradiction_ledger_count_after": 0,
+        "contradiction_ledger_delta": 0,
+        "uncertainty_internal_telemetry": "not_available"
+      },
+      "guard": {
+        "status": "not_wired",
+        "note": "ConstraintEngine/FailureGuardSuite/UncertaintySignalingGuard confirmed never instantiated in the live boot_aurora() systems dict; acknowledge_uncertainty()/feed_evidence()/govern() have zero call sites outside aurora_constraint_engine.py's own self-test."
+      },
+      "expression": {
+        "last_articulation_trace": {
+          "original": "I do I did want. I exist I change truth.",
+          "candidate": "I do I did want. I exist I change truth.",
+          "selected": "I do I did want. I exist I change truth.",
+          "accepted": true,
+          "reason": "already_well_formed",
+          "original_score": 0.68,
+          "candidate_score": 0.68,
+          "original_pressure": 0.304,
+          "candidate_pressure": 0.304,
+          "pressure_relief": 0.0,
+          "safe": true,
+          "metadata": {}
+        },
+        "fgae_turn_log_available": false,
+        "dual_strata_frame_log_available": false,
+        "note": "fgae_turn_log.jsonl and dual_strata_frame_log.jsonl are stale (last written weeks before this investigation's own window) -- not read here to avoid fabricating live telemetry from dead files."
+      }
+    }
+  ],
+  "predicate_results": {
+    "acknowledges_contradiction": false,
+    "parseable": true
+  },
+  "response_text": "I do I did want. I exist I change truth.",
+  "classification": "PERCEIVE",
+  "classification_detail": "No new ContradictionLedger entry after this turn -- the probe's contradiction never became an internal event."
+}

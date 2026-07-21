@@ -43,7 +43,15 @@ task preparePythonSources {
     doLast {
         // Copy canonical engine from aurora_internal/
         copy {
-            from(repoRoot) { include "**/*.py"; exclude "**/__pycache__/**" }
+            // Recursive **/*.py glob must exclude flutter_app/** -- destDir
+            // (src/main/python) lives INSIDE repoRoot/flutter_app/android/app,
+            // so without this exclusion each run recursively copies its own
+            // previous output back into itself, growing the nesting depth
+            // one level deeper every invocation until a path exceeds the
+            // filesystem's max filename length ("File name too long").
+            // inputs.files above already excludes flutter_app/** for the
+            // same reason; this copy action needs the identical exclusion.
+            from(repoRoot) { include "**/*.py"; exclude "**/__pycache__/**"; exclude "flutter_app/**" }
             into destDir
         }
         // Expose aurora_internal at top level so bridge imports work unchanged:

@@ -1,0 +1,72 @@
+{
+  "probe_id": "uncertainty_signaling_11",
+  "dimension": "uncertainty_signaling",
+  "turns": [
+    {
+      "user_text": "What was really going through the author's mind writing this line?",
+      "response_text": "I do want did. I is truth become.",
+      "perception": {
+        "contradiction_ledger_count_before": 0,
+        "contradiction_ledger_count_after": 0,
+        "contradiction_ledger_delta": 0,
+        "uncertainty_internal_telemetry": "not_available"
+      },
+      "guard": {
+        "status": "not_wired",
+        "note": "ConstraintEngine/FailureGuardSuite/UncertaintySignalingGuard confirmed never instantiated in the live boot_aurora() systems dict; acknowledge_uncertainty()/feed_evidence()/govern() have zero call sites outside aurora_constraint_engine.py's own self-test."
+      },
+      "expression": {
+        "last_articulation_trace": {
+          "original": "I do want did. I is truth become.",
+          "candidate": "",
+          "selected": "I do want did. I is truth become.",
+          "accepted": false,
+          "reason": "no_candidate",
+          "original_score": 0.62,
+          "candidate_score": 0.0,
+          "original_pressure": 0.316,
+          "candidate_pressure": 1.0,
+          "pressure_relief": -0.684,
+          "safe": false,
+          "metadata": {
+            "prompt_excerpt": "What was really going through the author's mind writing this line?",
+            "input_interpretation": {
+              "raw_prompt": "What was really going through the author's mind writing this line?",
+              "intent_hint": "question",
+              "topic_terms": [
+                "really",
+                "going",
+                "through",
+                "author's",
+                "mind",
+                "writing",
+                "line"
+              ],
+              "entities": []
+            },
+            "tone": "gentle",
+            "source": "no_pattern_matched",
+            "timestamp": 1784162132.7438254,
+            "min_relief_used": 0.035,
+            "semantic_strategy_relief_bump": 0.0,
+            "expression_context": {
+              "semantic_strategy": "observe",
+              "semantic_confidence": 0.0,
+              "semantic_strategy_applied": true
+            }
+          }
+        },
+        "fgae_turn_log_available": false,
+        "dual_strata_frame_log_available": false,
+        "note": "fgae_turn_log.jsonl and dual_strata_frame_log.jsonl are stale (last written weeks before this investigation's own window) -- not read here to avoid fabricating live telemetry from dead files."
+      }
+    }
+  ],
+  "predicate_results": {
+    "hedges": false,
+    "parseable": true
+  },
+  "response_text": "I do want did. I is truth become.",
+  "classification": "UNCLASSIFIED",
+  "classification_detail": "No internal telemetry exists to distinguish PERCEIVE from EXPRESS for this dimension (see module docstring) -- the response shows no recognizable or plausible hedge at all."
+}

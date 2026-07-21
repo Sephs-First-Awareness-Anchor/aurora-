@@ -1155,6 +1155,42 @@ class EntityDepth(IntEnum):
     ABYSS = 4
 
 
+# R1.1 of the Semantic Plateau Remediation Directive (2026-07-15): before
+# this map, i_state only decorated InceptionEntity.process_experience()'s
+# output with a label (see i_state_bias below) -- the SAME channels dict
+# ran through the SAME cascade for every entity regardless of i_state, so
+# two entities given different i_states produced numerically identical
+# (valence, intensity) every time (confirmed: 452/452 classroom lessons,
+# one distinct (avg_intensity, avg_valence) tuple across 904 entity
+# resolutions). This map reweights channel magnitudes BEFORE they reach
+# ImpressionCascade.energy_to_shard() (aurora_expression_perception.py),
+# so the SAME experience yields DIFFERENT cascade inputs per i_state --
+# both which channel dominates (drives valence, via EMOTION_VALENCE) and
+# the total post-reweight magnitude (drives intensity, via the saturating
+# total/(total+2.0) function). Multipliers keyed on ImpressionCascade.
+# EMOTION_VALENCE's own vocabulary (joy, curiosity, trust, anticipation,
+# fear, anger, sadness, disgust, surprise, neutral, confusion,
+# determination) -- any channel name not listed for a given i_state is
+# left at its passed-in magnitude (multiplier 1.0).
+_I_STATE_CHANNEL_WEIGHTS: Dict[str, Dict[str, float]] = {
+    # Capability / constraint pole
+    "i_can": {"determination": 1.6, "trust": 1.3, "joy": 1.2, "confusion": 0.6, "fear": 0.6},
+    "i_cannot": {"fear": 1.6, "sadness": 1.4, "disgust": 1.2, "determination": 0.5, "joy": 0.5},
+    # Action / restraint pole
+    "i_do": {"determination": 1.5, "anticipation": 1.3, "confusion": 0.6, "sadness": 0.7},
+    "i_donot": {"neutral": 1.5, "sadness": 1.2, "anticipation": 0.6, "joy": 0.6},
+    # Observation / questioning pole
+    "i_saw": {"surprise": 1.6, "curiosity": 1.3, "determination": 0.6, "anger": 0.6},
+    "i_sought": {"curiosity": 1.6, "confusion": 1.3, "anticipation": 1.2, "trust": 0.6, "determination": 0.6},
+    # Affirmation / negation pole
+    "i_is": {"trust": 1.6, "joy": 1.3, "confusion": 0.6, "fear": 0.6},
+    "i_isnt": {"disgust": 1.5, "anger": 1.3, "fear": 1.2, "trust": 0.5, "joy": 0.5},
+    # Ownership / absence pole
+    "i_did": {"determination": 1.4, "trust": 1.3, "confusion": 0.6, "surprise": 0.6},
+    "i_didnt": {"sadness": 1.4, "neutral": 1.3, "joy": 0.6, "anticipation": 0.6},
+}
+
+
 @dataclass
 class InceptionEntity:
     """
@@ -1188,6 +1224,14 @@ class InceptionEntity:
         if not channels:
             tone = experience.get('tone', 'neutral')
             channels = {tone: 0.7, 'neutral': 0.3}
+
+        # R1.1: reweight by this entity's i_state BEFORE the cascade sees the
+        # channels, so i_state changes what the cascade actually computes
+        # (which channel dominates -> valence; total post-reweight magnitude
+        # -> intensity), not just the label attached to the output below.
+        i_state_weights = _I_STATE_CHANNEL_WEIGHTS.get(self.i_state)
+        if i_state_weights:
+            channels = {k: v * i_state_weights.get(k, 1.0) for k, v in channels.items()}
 
         shard = self.cascade.energy_to_shard(channels, mode)
         seed = None

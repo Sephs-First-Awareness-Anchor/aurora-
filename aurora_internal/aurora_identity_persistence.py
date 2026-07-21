@@ -404,6 +404,7 @@ class OETSPersistence:
         self.state_dir.mkdir(parents=True, exist_ok=True)
 
         env_web = os.environ.get("AURORA_OETS_WEB_FILE", "").strip()
+        self._primary_env_override = bool(env_web)
         self.primary_web_file = (
             Path(env_web).expanduser()
             if env_web
@@ -414,10 +415,32 @@ class OETSPersistence:
         self.memory_file = self.state_dir / "aurora_conversation_memory.json"
         self.identity_file = self.state_dir / "aurora_identity.json"
 
+        # PS1.2 follow-up (Directive PS1, 2026-07-19): PS1.3's seed-
+        # verification found that arbitrating LOAD order alone was not
+        # enough -- save_web() writes to every candidate unconditionally,
+        # so an isolated scratch-dir boot was still contaminating the
+        # shared, untracked repo-root primary_web_file on every save,
+        # which could then win a future real boot's arbitration by
+        # having a newer timestamp despite being test junk. Fix: when a
+        # real state_dir override is in effect (anything other than the
+        # repo's own default aurora_state/), primary_web_file is treated
+        # as out of scope entirely -- excluded from both load and save
+        # candidates -- unless AURORA_OETS_WEB_FILE was explicitly set,
+        # which is always an intentional, explicit override.
+        try:
+            self._isolated = (
+                str(self.state_dir.expanduser().resolve())
+                != str(Path(_STATE_ROOT).expanduser().resolve())
+            )
+        except Exception:
+            self._isolated = str(self.state_dir) != str(_STATE_ROOT)
+
     def _web_candidates(self) -> List[Path]:
         candidates: List[Path] = []
         seen: Set[str] = set()
-        for candidate in (self.primary_web_file, self.snapshot_web_file):
+        sources = (self.snapshot_web_file,) if (self._isolated and not self._primary_env_override) \
+            else (self.primary_web_file, self.snapshot_web_file)
+        for candidate in sources:
             try:
                 key = str(candidate.expanduser().resolve())
             except Exception:
@@ -534,181 +557,247 @@ class OETSPersistence:
         """
         Restore the OETS OntologicalWeb from disk.
         Returns True if successful.
+
+        PS1.2 (Directive PS1, 2026-07-19): arbitrates between candidates
+        instead of blindly taking "first that exists" (the mechanism
+        behind the S1.2 seed-data loss Track CP uncovered -- primary_web_file,
+        an untracked repo-root file, always won over snapshot_web_file,
+        the state_dir-scoped, git-tracked file this campaign actually
+        edits, with no generation comparison and a silent force-
+        overwrite of the loser). Rule, chosen per PS1.1's own inventory
+        (every other correctly-built store in this codebase treats
+        state_dir as canonical -- GrammarEngine, ContradictionLedger,
+        Tier-2, B1.1): snapshot_web_file is canonical by default;
+        primary_web_file only wins if it is STRICTLY newer by
+        timestamp. Whichever candidate is discarded gets logged via
+        aurora_persistence_audit.log_reversion -- never silent. A
+        corrupted candidate is noted explicitly, not silently treated
+        as absent, and does not block loading from a valid sibling.
         """
         load_candidates = [path for path in self._web_candidates() if path.exists()]
         if not load_candidates:
             return False
 
-        last_error = None
-        for web_path in load_candidates:
+        parsed = []
+        for path in load_candidates:
             try:
-                with open(web_path, 'r') as f:
-                    data = json.load(f)
+                with open(path, 'r') as f:
+                    parsed.append((path, json.load(f), None))
+            except Exception as e:
+                parsed.append((path, None, e))
+                print(f"  [OETS PERSIST] CORRUPTED candidate {path}: "
+                      f"{type(e).__name__}: {e} -- excluded, not treated as absent")
 
-                # Need imports from the scaffolding module
-                from aurora_internal.aurora_ontological_scaffolding import (
-                    SemanticNode, SemanticRelation, UsageExample, RelationType
+        valid = [(p, d) for p, d, e in parsed if d is not None]
+        if not valid:
+            last_error = parsed[-1][2] if parsed else None
+            if last_error is not None:
+                print(f"  [OETS PERSIST] Load failed: {last_error}")
+            return False
+
+        def _ts(d):
+            try:
+                return float(d.get("timestamp", 0) or 0)
+            except Exception:
+                return 0.0
+
+        snapshot_entry = next(((p, d) for p, d in valid if str(p) == str(self.snapshot_web_file)), None)
+        primary_entry = next(((p, d) for p, d in valid if str(p) == str(self.primary_web_file)), None)
+
+        if snapshot_entry and primary_entry:
+            s_path, s_data = snapshot_entry
+            p_path, p_data = primary_entry
+            if _ts(p_data) > _ts(s_data):
+                web_path, data = p_path, p_data
+                discarded_path, discarded_data = s_path, s_data
+                reason = "primary strictly newer than snapshot by timestamp"
+            else:
+                web_path, data = s_path, s_data
+                discarded_path, discarded_data = p_path, p_data
+                reason = "snapshot canonical by default (tie or primary not newer)"
+            try:
+                from aurora_internal.aurora_persistence_audit import log_reversion
+                log_reversion(
+                    str(self.state_dir), "OETSPersistence",
+                    discarded={
+                        "source": str(discarded_path), "timestamp": _ts(discarded_data),
+                        "node_count": len(discarded_data.get("nodes", {})),
+                        "relation_count": len(discarded_data.get("relations", {})),
+                    },
+                    kept={
+                        "source": str(web_path), "timestamp": _ts(data),
+                        "node_count": len(data.get("nodes", {})),
+                        "relation_count": len(data.get("relations", {})),
+                    },
+                    reason=reason,
+                )
+            except Exception:
+                pass
+        else:
+            web_path, data = valid[0]
+
+        try:
+            # Need imports from the scaffolding module
+            from aurora_internal.aurora_ontological_scaffolding import (
+                SemanticNode, SemanticRelation, UsageExample, RelationType
+            )
+
+            web = oets_engine.web
+            web.nodes = {}
+            web.relations = {}
+            web._nodes_by_role = defaultdict(set)
+            web._relations_by_source = defaultdict(set)
+            web._relations_by_target = defaultdict(set)
+            web._relations_by_type = defaultdict(set)
+            web._semantic_categories = defaultdict(set)
+            web._nodes_by_cluster = defaultdict(set)
+            oets_engine.cluster_engine.clusters = {}
+
+            # Restore nodes
+            nodes_data = data.get("nodes", {})
+            for word, ndata in nodes_data.items():
+                node = SemanticNode(
+                    word=ndata["word"],
+                    role=ndata.get("role", "noun"),
+                    emotional_valence=ndata.get("emotional_valence", 0.0),
+                    lineage=ndata.get("lineage", ""),
+                )
+                node.definitions = ndata.get("definitions", [])
+
+                for exdata in ndata.get("usage_examples", []):
+                    node.usage_examples.append(UsageExample(
+                        text=exdata.get("text", ""),
+                        context=exdata.get("context", ""),
+                        i_state=exdata.get("i_state", "i_is"),
+                        fitness=exdata.get("fitness", 0.5),
+                        timestamp=exdata.get("timestamp", time.time()),
+                    ))
+
+                node.ontological_depth = ndata.get("ontological_depth", 0.0)
+                node.comprehension_confidence = ndata.get("comprehension_confidence", 0.1)
+                node.research_priority = ndata.get("research_priority", 0.5)
+                node.scaffolding_level = ndata.get("scaffolding_level", 0)
+                # Cluster objects are not serialized separately, so membership
+                # must be rebuilt from the restored web rather than replaying
+                # stale ids that no longer map to live cluster objects.
+                node.cluster_ids = set()
+                node.times_encountered = ndata.get("times_encountered", 0)
+                node.times_used_in_expression = ndata.get("times_used_in_expression", 0)
+                node.times_researched = ndata.get("times_researched", 0)
+                node.first_encountered = ndata.get("first_encountered", time.time())
+                node.last_accessed = ndata.get("last_accessed", time.time())
+
+                web.nodes[word] = node
+                web._nodes_by_role[node.role].add(word)
+
+            rtype_map = {rt.value: rt for rt in RelationType}
+
+            relations_data = data.get("relations", {})
+            for rel_id, rdata in relations_data.items():
+                rtype_val = rdata.get("relation_type", "related_to")
+                rtype = rtype_map.get(rtype_val, RelationType.RELATED_TO)
+
+                source = rdata.get("source_word", "")
+                target = rdata.get("target_word", "")
+                if source not in web.nodes or target not in web.nodes:
+                    continue
+
+                relation = SemanticRelation(
+                    relation_id=rel_id,
+                    source_word=source,
+                    target_word=target,
+                    relation_type=rtype,
+                    strength=rdata.get("strength", 0.5),
+                    confidence=rdata.get("confidence", 0.5),
+                    source_of_knowledge=rdata.get("source_of_knowledge", "restored"),
+                    timestamp=rdata.get("timestamp", time.time()),
                 )
 
-                web = oets_engine.web
-                web.nodes = {}
-                web.relations = {}
-                web._nodes_by_role = defaultdict(set)
-                web._relations_by_source = defaultdict(set)
-                web._relations_by_target = defaultdict(set)
-                web._relations_by_type = defaultdict(set)
-                web._semantic_categories = defaultdict(set)
-                web._nodes_by_cluster = defaultdict(set)
-                oets_engine.cluster_engine.clusters = {}
+                web.relations[rel_id] = relation
+                web._relations_by_source[source].add(rel_id)
+                web._relations_by_target[target].add(rel_id)
+                web._relations_by_type[rtype].add(rel_id)
 
-                # Restore nodes
-                nodes_data = data.get("nodes", {})
-                for word, ndata in nodes_data.items():
-                    node = SemanticNode(
-                        word=ndata["word"],
-                        role=ndata.get("role", "noun"),
-                        emotional_valence=ndata.get("emotional_valence", 0.0),
-                        lineage=ndata.get("lineage", ""),
-                    )
-                    node.definitions = ndata.get("definitions", [])
+                web.nodes[source].relations[rel_id] = relation
+                web.nodes[target].relations[rel_id] = relation
 
-                    for exdata in ndata.get("usage_examples", []):
-                        node.usage_examples.append(UsageExample(
-                            text=exdata.get("text", ""),
-                            context=exdata.get("context", ""),
-                            i_state=exdata.get("i_state", "i_is"),
-                            fitness=exdata.get("fitness", 0.5),
-                            timestamp=exdata.get("timestamp", time.time()),
-                        ))
+            for cat, words in data.get("categories", {}).items():
+                web._semantic_categories[cat] = set(words)
 
-                    node.ontological_depth = ndata.get("ontological_depth", 0.0)
-                    node.comprehension_confidence = ndata.get("comprehension_confidence", 0.1)
-                    node.research_priority = ndata.get("research_priority", 0.5)
-                    node.scaffolding_level = ndata.get("scaffolding_level", 0)
-                    # Cluster objects are not serialized separately, so membership
-                    # must be rebuilt from the restored web rather than replaying
-                    # stale ids that no longer map to live cluster objects.
-                    node.cluster_ids = set()
-                    node.times_encountered = ndata.get("times_encountered", 0)
-                    node.times_used_in_expression = ndata.get("times_used_in_expression", 0)
-                    node.times_researched = ndata.get("times_researched", 0)
-                    node.first_encountered = ndata.get("first_encountered", time.time())
-                    node.last_accessed = ndata.get("last_accessed", time.time())
+            web.total_consolidations = data.get("total_consolidations", 0)
+            web.total_relations_created = data.get("total_relations_created", 0)
+            web.total_research_cycles = data.get("total_research_cycles", 0)
 
-                    web.nodes[word] = node
-                    web._nodes_by_role[node.role].add(word)
+            research_stats = data.get("research_stats", {})
+            if research_stats:
+                oets_engine.research.total_cycles = research_stats.get("total_cycles", 0)
+                oets_engine.research.total_words_researched = research_stats.get("total_words_researched", 0)
+                oets_engine.research.total_definitions_learned = research_stats.get("total_definitions_learned", 0)
+                oets_engine.research.total_relations_discovered = research_stats.get("total_relations_discovered", 0)
 
-                rtype_map = {rt.value: rt for rt in RelationType}
+            oets_engine._initialized = True
+            node_count = len(web.nodes)
+            relation_count = len(web.relations)
 
-                relations_data = data.get("relations", {})
-                for rel_id, rdata in relations_data.items():
-                    rtype_val = rdata.get("relation_type", "related_to")
-                    rtype = rtype_map.get(rtype_val, RelationType.RELATED_TO)
-
-                    source = rdata.get("source_word", "")
-                    target = rdata.get("target_word", "")
-                    if source not in web.nodes or target not in web.nodes:
-                        continue
-
-                    relation = SemanticRelation(
-                        relation_id=rel_id,
-                        source_word=source,
-                        target_word=target,
-                        relation_type=rtype,
-                        strength=rdata.get("strength", 0.5),
-                        confidence=rdata.get("confidence", 0.5),
-                        source_of_knowledge=rdata.get("source_of_knowledge", "restored"),
-                        timestamp=rdata.get("timestamp", time.time()),
-                    )
-
-                    web.relations[rel_id] = relation
-                    web._relations_by_source[source].add(rel_id)
-                    web._relations_by_target[target].add(rel_id)
-                    web._relations_by_type[rtype].add(rel_id)
-
-                    web.nodes[source].relations[rel_id] = relation
-                    web.nodes[target].relations[rel_id] = relation
-
-                for cat, words in data.get("categories", {}).items():
-                    web._semantic_categories[cat] = set(words)
-
-                web.total_consolidations = data.get("total_consolidations", 0)
-                web.total_relations_created = data.get("total_relations_created", 0)
-                web.total_research_cycles = data.get("total_research_cycles", 0)
-
-                research_stats = data.get("research_stats", {})
-                if research_stats:
-                    oets_engine.research.total_cycles = research_stats.get("total_cycles", 0)
-                    oets_engine.research.total_words_researched = research_stats.get("total_words_researched", 0)
-                    oets_engine.research.total_definitions_learned = research_stats.get("total_definitions_learned", 0)
-                    oets_engine.research.total_relations_discovered = research_stats.get("total_relations_discovered", 0)
-
-                oets_engine._initialized = True
-                node_count = len(web.nodes)
-                relation_count = len(web.relations)
-
-                def _restore_clusters():
-                    try:
-                        oets_engine.cluster_engine.clusters = {}
-                        oets_engine.cluster_engine.discover_clusters()
-                        oets_engine.cluster_engine.update_cluster_depths()
-                        oets_engine._cluster_restore_status = {
-                            "status": "ready",
-                            "mode": "sync" if force_sync or (node_count < 250 and relation_count < 750) else "async",
-                            "node_count": node_count,
-                            "relation_count": relation_count,
-                            "cluster_count": len(oets_engine.cluster_engine.clusters),
-                        }
-                    except Exception as exc:
-                        oets_engine._cluster_restore_status = {
-                            "status": "failed",
-                            "mode": "sync" if force_sync or (node_count < 250 and relation_count < 750) else "async",
-                            "node_count": node_count,
-                            "relation_count": relation_count,
-                            "error": f"{type(exc).__name__}: {exc}",
-                        }
-
-                force_sync = str(os.environ.get("AURORA_SYNC_OETS_CLUSTER_RESTORE", "")).strip().lower() in {
-                    "1", "true", "yes", "on"
-                }
-                if force_sync or (node_count < 250 and relation_count < 750):
-                    _restore_clusters()
-                else:
+            def _restore_clusters():
+                try:
+                    oets_engine.cluster_engine.clusters = {}
+                    oets_engine.cluster_engine.discover_clusters()
+                    oets_engine.cluster_engine.update_cluster_depths()
                     oets_engine._cluster_restore_status = {
-                        "status": "pending",
-                        "mode": "async",
+                        "status": "ready",
+                        "mode": "sync" if force_sync or (node_count < 250 and relation_count < 750) else "async",
                         "node_count": node_count,
                         "relation_count": relation_count,
+                        "cluster_count": len(oets_engine.cluster_engine.clusters),
                     }
-                    thread = threading.Thread(
-                        target=_restore_clusters,
-                        daemon=True,
-                        name="OETSClusterRestore",
-                    )
-                    oets_engine._cluster_restore_thread = thread
-                    thread.start()
+                except Exception as exc:
+                    oets_engine._cluster_restore_status = {
+                        "status": "failed",
+                        "mode": "sync" if force_sync or (node_count < 250 and relation_count < 750) else "async",
+                        "node_count": node_count,
+                        "relation_count": relation_count,
+                        "error": f"{type(exc).__name__}: {exc}",
+                    }
 
-                for target in self._web_candidates():
-                    try:
-                        if str(target.resolve()) == str(web_path.resolve()):
-                            continue
-                    except Exception:
-                        if str(target) == str(web_path):
-                            continue
-                    try:
-                        self._write_web_payload(target, data)
-                    except Exception:
-                        pass
+            force_sync = str(os.environ.get("AURORA_SYNC_OETS_CLUSTER_RESTORE", "")).strip().lower() in {
+                "1", "true", "yes", "on"
+            }
+            if force_sync or (node_count < 250 and relation_count < 750):
+                _restore_clusters()
+            else:
+                oets_engine._cluster_restore_status = {
+                    "status": "pending",
+                    "mode": "async",
+                    "node_count": node_count,
+                    "relation_count": relation_count,
+                }
+                thread = threading.Thread(
+                    target=_restore_clusters,
+                    daemon=True,
+                    name="OETSClusterRestore",
+                )
+                oets_engine._cluster_restore_thread = thread
+                thread.start()
 
-                return True
+            for target in self._web_candidates():
+                try:
+                    if str(target.resolve()) == str(web_path.resolve()):
+                        continue
+                except Exception:
+                    if str(target) == str(web_path):
+                        continue
+                try:
+                    self._write_web_payload(target, data)
+                except Exception:
+                    pass
 
-            except Exception as e:
-                last_error = e
-                continue
+            return True
 
-        if last_error is not None:
-            print(f"  [OETS PERSIST] Load failed: {last_error}")
-        return False
+        except Exception as e:
+            print(f"  [OETS PERSIST] Load failed while applying {web_path}: "
+                  f"{type(e).__name__}: {e}")
+            return False
 
     # ---- Conversation Memory Save/Load ----
 

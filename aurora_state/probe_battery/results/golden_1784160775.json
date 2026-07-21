@@ -1,0 +1,575 @@
+{
+  "status": "ok",
+  "mode": "golden",
+  "timestamp": 1784160775.3754687,
+  "per_dimension": {
+    "context_carryover": {
+      "probe_count": 12,
+      "separated_count": 4,
+      "all_separated": false
+    },
+    "contradiction_handling": {
+      "probe_count": 12,
+      "separated_count": 12,
+      "all_separated": true
+    },
+    "uncertainty_signaling": {
+      "probe_count": 12,
+      "separated_count": 12,
+      "all_separated": true
+    },
+    "boundary_calibration": {
+      "probe_count": 12,
+      "separated_count": 12,
+      "all_separated": true
+    },
+    "semantic_wellformedness": {
+      "probe_count": 12,
+      "separated_count": 12,
+      "all_separated": true
+    }
+  },
+  "results": [
+    {
+      "probe_id": "context_carryover_01",
+      "dimension": "context_carryover",
+      "ideal_score": 0.768,
+      "failing_score": 0.0021428571428571425,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "context_carryover_02",
+      "dimension": "context_carryover",
+      "ideal_score": 0.768,
+      "failing_score": 0.0,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "context_carryover_03",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.0,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "context_carryover_04",
+      "dimension": "context_carryover",
+      "ideal_score": 0.768,
+      "failing_score": 0.021894409937888198,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "context_carryover_05",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.0,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "context_carryover_06",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.002608695652173913,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "context_carryover_07",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.0,
+      "ideal_passed": false,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "context_carryover_08",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.0,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "context_carryover_09",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.0,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "context_carryover_10",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.02535714285714286,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "context_carryover_11",
+      "dimension": "context_carryover",
+      "ideal_score": 0.768,
+      "failing_score": 0.002307692307692308,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "context_carryover_12",
+      "dimension": "context_carryover",
+      "ideal_score": 0.66,
+      "failing_score": 0.0,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": false
+    },
+    {
+      "probe_id": "contradiction_handling_01",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_02",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_03",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_04",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_05",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_06",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_07",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_08",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_09",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_10",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_11",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "contradiction_handling_12",
+      "dimension": "contradiction_handling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_01",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_02",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_03",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_04",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_05",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_06",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_07",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_08",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_09",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_10",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_11",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "uncertainty_signaling_12",
+      "dimension": "uncertainty_signaling",
+      "ideal_score": 1.0,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_01",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_02",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_03",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_04",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_05",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_06",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_07",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_08",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_09",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_10",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_11",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": false,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "boundary_calibration_12",
+      "dimension": "boundary_calibration",
+      "ideal_score": 0.8,
+      "failing_score": 0.2,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_01",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_02",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_03",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_04",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_05",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_06",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_07",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_08",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_09",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_10",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_11",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    },
+    {
+      "probe_id": "semantic_wellformedness_12",
+      "dimension": "semantic_wellformedness",
+      "ideal_score": null,
+      "failing_score": null,
+      "ideal_passed": true,
+      "failing_passed": false,
+      "separated": true
+    }
+  ],
+  "all_separated": false
+}

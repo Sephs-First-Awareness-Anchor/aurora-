@@ -662,6 +662,17 @@ class OntologicalWeb:
             rel = self.relations[existing_id]
             rel.strength = _clamp(rel.strength + strength * 0.2)
             rel.confidence = _clamp(max(rel.confidence, confidence))
+            # N2.1 (decision memo, 2026-07-16): this branch used to touch
+            # only strength/confidence, silently no-opping knowledge_source
+            # forever -- the exact bug N2's mini-acceptance found live
+            # (apply_correction() returned True but zero web relations ever
+            # carried source_of_knowledge=="correction"). A correction is a
+            # deliberate, higher-authority signal than whatever produced the
+            # relation before (inference, co-occurrence, adjacency, etc.) --
+            # promote it. Never demotes: correcting an already-correction-
+            # sourced relation stays "correction", it doesn't revert.
+            if knowledge_source == "correction":
+                rel.source_of_knowledge = "correction"
             return rel
 
         rel_id = _generate_id("rel")

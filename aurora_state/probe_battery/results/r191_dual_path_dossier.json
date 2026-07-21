@@ -1,0 +1,46 @@
+{
+  "addendum": "R1.9.1 Delivered-Path Trace & Dual-Path Resolution",
+  "step_1_and_2_summary": {
+    "delivered_path_confirmed": "gateway._express() -> ExpressionPerceptionEngine.express() -> self.composer.compose() (SentenceComposer) -> _compose_from_motif() -> _select_constraint_word(). Confirmed byte-for-byte via live instrumented trace and a permanent regression test (tests/test_governance_liveness.py::test_delivered_output_attribution_traces_to_sentence_composer): gateway._express()'s returned .content matches resp_B.content -- the exact field run_probe_battery.py scores.",
+    "delivered_path_fault_location": "_select_constraint_word() builds its candidate pool via lexicon.find_by_noncomp(f'{axis}:{char}', valence_target), which sorts ALL matching-category entries purely by emotional-valence proximity to valence_target -- no input-topic relevance term anywhere. The caller then only collects the first ~6 entries (early-exit: 'if len(candidates) >= 6: break') before the intended diversity tie-break (sort by ascending usage_count) ever runs. Verified live: cold-start topic words (guitar/dinner/chords) sit at the generic seed default emotional_valence=0.0 (never updated -- usage_count=13, essentially unused), while the identity-bank cluster (am/meaning/truth/can/exist) sits at emotional_valence=0.3-0.4 from years of repeated use, much closer to observed live valence_target values (0.35, 0.45). The identity cluster wins the valence-proximity sort by a wide margin for any typical target, systematically excluding topic words from the candidate pool before usage-count diversity ever gets a chance to matter.",
+    "relation_to_constraintemitter_bug": "A different root cause from FIX-A032/F1's finding in ConstraintEmitter (there: comprehension_confidence/times_used_in_expression directly dominated selection). Here: no relevance signal exists in the selector at all -- selection is driven entirely by a historically-stale valence field plus an early-exit that defeats the pool's own diversity intent. Same family of defect (historical-reinforcement artifact outcompeting topical relevance), different mechanism, different fix shape required.",
+    "cael_prediction_verdict": "Partially confirmed, partially falsified. Candidate pools are NOT near-empty (89-305 entries per axis:char bucket) -- falsifying that half. But the pool that actually reaches the tie-break IS effectively bank-only, because find_by_noncomp's valence-sort + the 6-item early-exit cherry-picks the identity cluster before the pool is ever meaningfully diverse. Net effect matches the prediction's spirit (bank-dominated selection) via a different mechanism than 'near-empty pools.'"
+  },
+  "step_3_dossier": {
+    "capabilities_unique_to_sentence_composer_path": [
+      "ExpressionEcology: genuine evolutionary template population (spawn/select/mutate/promote) -- 'Templates are NOT hardcoded -- they evolve', with fitness tracked per template pattern per tone",
+      "DPS crystal integration as the PRIMARY candidate source in _select_constraint_word (crystallized concept words checked before lexicon fallback)",
+      "VoiceGenome voice-shaping parameters applied to output",
+      "evo/SIC+MultiDraft two-pass cycle (self.evo.process_output) -- a second evolution/selection pass over the composed draft, using axis_activation/dominant_axis/dominant_emotion/axis_depth as context",
+      "record_fitness()/feedback() loop -- composer templates get reinforced or culled based on downstream fitness evaluation; a working (if currently mis-targeted) learning mechanism already exists here",
+      "Deep integration across Aurora's TRAINING infrastructure, not just live chat: aurora_dream_trainer.py, aurora_conversation_trainer.py, aurora_simulation_engine.py, corpus_runner.py, backfill_concept_associations.py, aurora_internal/aurora_comprehension_gap.py, aurora_runtime.py all reference SentenceComposer/ExpressionPerceptionEngine directly (9 non-test files total)"
+    ],
+    "capabilities_unique_to_constraintemitter_path": [
+      "Explicit SpeechAct taxonomy (ASSERTION/ABSTAIN/ACKNOWLEDGMENT/DISAGREEMENT/AGREEMENT/REFUSAL/QUESTION/BACKCHANNEL/INVALIDATION/HEDGE/CLARIFY/CONTRADICTION/REPAIR) -- principled speech-act modeling SentenceComposer's path does not have",
+      "_emit_abstain(): fully template-based, zero vocabulary dependency, cannot produce word-salad by construction -- a genuinely safe fallback",
+      "I-state pair modeling (I_IS/I_ISNT, I_CAN/I_CANNOT, I_DO/I_DONOT, I_SAW/I_SOUGHT, I_DID/I_DIDNT) tied directly to axis polarities",
+      "The R1.9 F1 relevance-primary fix already lives here: a real anchor-set-based relevance term, defanged co-occurrence-edge contamination, and a derived epsilon bound -- none of this exists on the composer path yet",
+      "Newer, smaller, better-documented (1,949 lines vs aurora_expression_perception.py's 5,331; explicit docstring: 'One emission path. No anchor fallback. No meta-narration. No echo.')",
+      "Narrow, contained call-site footprint: only aurora.py, its own module, concepts/dce_10state.py, and aurora_internal/dual_strata/predictive_stager.py (4 non-test files) -- NOT embedded in the training pipeline"
+    ],
+    "f5_register_exploration_fit": {
+      "temperature_sampling_mechanism": "Fits ConstraintEmitter more naturally. F1's relevance-primary formula already produces a smooth, comparable per-candidate score (relevance * quality * frequency-tiebreak * axis_alignment) that a temperature parameter can cleanly widen around (sample within the top-k ring). SentenceComposer's selector has no comparable scored ranking -- it's valence-sort-then-top-4-then-random.choice, which would need real restructuring before a temperature knob could attach cleanly.",
+      "correction_learning_mechanism": "Fits SentenceComposer more naturally. record_fitness()/feedback() and the ExpressionEcology promotion cycle are an EXISTING, working learning loop that F5.3's correction hook could plug into directly. ConstraintEmitter has no comparable learning/feedback mechanism today -- F5.3 would need to be built from scratch there.",
+      "net_read": "F5's two halves point at different paths. Whichever path is chosen for delivery, the other path's relevant mechanism (ConstraintEmitter's scoring shape or SentenceComposer's feedback loop) is worth studying as a model even if not directly reused."
+    },
+    "blast_radius": {
+      "option_a_complete_migration_to_constraintemitter": {
+        "description": "Route gateway._express() (or ExpressionPerceptionEngine.express()) to call constraint_emitter.emit() instead of self.composer.compose(); quarantine/remove SentenceComposer.",
+        "risk": "HIGH. SentenceComposer/ExpressionPerceptionEngine is referenced by 9 non-test files spanning the training/simulation stack (dream_trainer, conversation_trainer, simulation_engine, corpus_runner, backfill script, comprehension_gap, aurora_runtime), not just the live-turn path. Migrating delivery without touching those call sites leaves them talking to a component whose output no longer reaches the user, or requires auditing/rewiring all 9. Loses ExpressionEcology's template evolution, DPS crystal integration, VoiceGenome shaping, and the evo/SIC+MultiDraft pass unless those capabilities are ported first.",
+        "test_footprint": "tests/_pipeline_test.py, tests/test_direct_address_formulation.py exercise composer-path behavior and would need review."
+      },
+      "option_b_repair_composer_in_place": {
+        "description": "Fix _select_constraint_word's candidate-building to include a real relevance term (mirroring F1's anchor-set approach) before the valence sort, and/or address the valence-staleness problem (cold-start words never updated off the 0.0 seed default). ConstraintEmitter's F1 fix stays committed but parallel, pending its own quarantine-or-integrate decision per the migration-completion rule.",
+        "risk": "LOWER immediate risk -- confined to aurora_expression_perception.py's SentenceComposer/LexicalMemory. Does not touch the 9 files integrated with ExpressionPerceptionEngine's broader API (only the internal selection logic changes, not its interface).",
+        "residual_debt": "Leaves two parallel word-selection systems live unless ConstraintEmitter is explicitly quarantined -- exactly the dual-alive-paths defect class the migration-completion rule (R1.9.1 registry entry) now names. That decision still has to be made even under option (b)."
+      },
+      "either_option": "The migration-completion rule requires an explicit quarantine-or-integrate decision for whichever path is NOT chosen for delivery -- 'dual-alive-paths after a replacement' is now a named defect class, not a neutral resting state."
+    }
+  },
+  "halt": "Per the directive, halting after this dossier. The path decision (a vs b, and the quarantine call for whichever path loses) is Sunni's."
+}

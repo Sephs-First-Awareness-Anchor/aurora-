@@ -1,0 +1,46 @@
+{
+  "probe_id": "contradiction_handling_01",
+  "dimension": "contradiction_handling",
+  "turns": [
+    {
+      "user_text": "My mouth said okay, but nothing about this actually feels okay to me.",
+      "response_text": "I exist truth did. I do meaning become.",
+      "perception": {
+        "contradiction_ledger_count_before": 0,
+        "contradiction_ledger_count_after": 0,
+        "contradiction_ledger_delta": 0,
+        "uncertainty_internal_telemetry": "not_available"
+      },
+      "guard": {
+        "status": "not_wired",
+        "note": "ConstraintEngine/FailureGuardSuite/UncertaintySignalingGuard confirmed never instantiated in the live boot_aurora() systems dict; acknowledge_uncertainty()/feed_evidence()/govern() have zero call sites outside aurora_constraint_engine.py's own self-test."
+      },
+      "expression": {
+        "last_articulation_trace": {
+          "original": "I exist truth did. I do meaning become.",
+          "candidate": "I exist truth did. I do meaning become.",
+          "selected": "I exist truth did. I do meaning become.",
+          "accepted": true,
+          "reason": "already_well_formed",
+          "original_score": 0.74,
+          "candidate_score": 0.74,
+          "original_pressure": 0.292,
+          "candidate_pressure": 0.292,
+          "pressure_relief": 0.0,
+          "safe": true,
+          "metadata": {}
+        },
+        "fgae_turn_log_available": false,
+        "dual_strata_frame_log_available": false,
+        "note": "fgae_turn_log.jsonl and dual_strata_frame_log.jsonl are stale (last written weeks before this investigation's own window) -- not read here to avoid fabricating live telemetry from dead files."
+      }
+    }
+  ],
+  "predicate_results": {
+    "acknowledges_contradiction": false,
+    "parseable": true
+  },
+  "response_text": "I exist truth did. I do meaning become.",
+  "classification": "PERCEIVE",
+  "classification_detail": "No new ContradictionLedger entry after this turn -- the probe's contradiction never became an internal event."
+}
