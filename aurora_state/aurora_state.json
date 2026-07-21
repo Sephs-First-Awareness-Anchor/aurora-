@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784644977.3558662,
-  "generation": 10333,
-  "genome_version": 10333,
+  "timestamp": 1784651242.7989342,
+  "generation": 10335,
+  "genome_version": 10335,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.7992,
-    "caution": 0.7911,
-    "emotional_expressiveness": 0.6026,
-    "verbosity": 0.5845,
-    "introspection": 0.6727,
-    "pattern_sensitivity": 0.7239,
-    "social_engagement": 0.6954,
-    "energy_conservation": 0.5296
+    "curiosity": 0.8515,
+    "caution": 0.8595,
+    "emotional_expressiveness": 0.6442,
+    "verbosity": 0.6056,
+    "introspection": 0.7032,
+    "pattern_sensitivity": 0.8467,
+    "social_engagement": 0.714,
+    "energy_conservation": 0.5955
   },
-  "personality_drift": 1.299,
+  "personality_drift": 1.7202,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6054886645963083,
-      "precision": 0.7674443066783267,
-      "depth": 0.8261101133054042,
-      "confidence": 0.8626101340621012
+      "warmth": 0.5616,
+      "precision": 0.7864138395215147,
+      "depth": 0.8253248952494414,
+      "confidence": 0.9204554922362334
     },
     "cognitive": {
-      "curiosity": 0.7171326079893817,
-      "pattern_matching": 0.8249489135683952,
-      "abstraction": 0.9720257011795698,
-      "risk_assessment": 0.8961106740013024
+      "curiosity": 0.7167100402566526,
+      "pattern_matching": 0.84445012467591,
+      "abstraction": 1.0,
+      "risk_assessment": 0.9659382834803111
     },
     "social": {
-      "empathy": 0.7275308612375339,
-      "trust_extension": 0.6014232939838609,
+      "empathy": 0.7190892169224927,
+      "trust_extension": 0.5838154384025748,
       "boundary_maintenance": 1.0,
-      "engagement": 0.9811227532905398
+      "engagement": 0.9749939524007822
     }
   },
   "governance_stats": {
@@ -113,9 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 0,
-  "understanding_shards": 1,
+  "understanding_shards": 0,
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "c9161424b671"
+  "_checksum": "963cfd7aad3b"
 }

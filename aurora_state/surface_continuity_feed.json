@@ -1,59 +1,5 @@
 [
   {
-    "packet_id": "90ba6dc8415e41bea6a90b65eeb9eae3",
-    "created_at": 1784598968.3936007,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "I can understand the meaning.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.0,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "03126837c7984ff7821dea3d7ba32eb7",
-    "created_at": 1784610688.4612515,
-    "source": "simulation_live_bridge",
-    "user_input": "How do you understand connection?",
-    "aurora_response": "I do moment alive. I change feeling always.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "understand",
-      "connection"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "X",
-    "coherence": 0.972,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.70"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "79d2f7f93cce4ddbb7a7173e30a4cdde",
     "created_at": 1784610689.8290236,
     "source": "simulation_live_bridge",
@@ -483,6 +429,56 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "d0a3953f4ef74a6a8eaefcd92edefd12",
+    "created_at": 1784651245.9960806,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand meaning?",
+    "aurora_response": "I do. I exist meaning.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "understand",
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "7761b6a0b23b42619dfc4d35ed9ac0e9",
+    "created_at": 1784651249.290333,
+    "source": "simulation_live_bridge",
+    "user_input": "How do you understand meaning?",
+    "aurora_response": "I change existence. I do meaning anxious. I do moment.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "understand",
+      "meaning"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.644,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.69"
     ],
     "resolved_bindings": [],
     "consumed": false,

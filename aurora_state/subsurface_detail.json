@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.188,
+  "coherence": 0.644,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "understanding",
+    "active_topic": "understand",
     "ambiguity": 0.545,
-    "cost_total": 0.2099,
+    "cost_total": 0.1504,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
@@ -27,12 +27,7 @@
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [
-    {
-      "label": "low_coherence",
-      "severity": 0.812
-    }
-  ],
+  "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
     {
@@ -56,23 +51,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6231,
+    "confidence": 0.6579,
     "expected_observation": "followup",
-    "expected_user_continuation": "understanding",
+    "expected_user_continuation": "understand",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "A",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "understanding"
+      "topic": "understand"
     },
     "preload_context": [
-      "understanding",
+      "understand",
       "followup"
     ],
-    "readiness_bias": 0.4154,
+    "readiness_bias": 0.4259,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -82,19 +77,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3433,
+  "readiness": 0.6525,
   "recalled_fragments": [
-    "understanding",
-    "Do you experience understanding?\n[recalled:understanding] Do you experience understanding? [recalled:experience] Do you experience unders..."
+    "understand",
+    "How do you understand meaning?\n[recalled:meaning] How do you understand meaning? [recalled:understand] How do you understand meaning? [re..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4569,
-    "N": 0.5431,
+    "B": 0.4758,
+    "N": 0.5242,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784644980.4855657,
+  "saved_at": 1784651246.9603837,
   "sub_crests": [
     {
       "axis": "X",
