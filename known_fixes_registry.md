@@ -4343,3 +4343,102 @@ re-baseline numbers now on the record. Per the directive's queue: Track
 ST is unblocked (PS1 complete); B1.3 remains gated on Sunni's content
 approval; B1.2 panel automation and the remaining docket (TCL,
 worth/variant tier) are unaffected, proceed independently.
+
+## Architecture Wiring Audit — F11 determination + RW7 attribution run, 2026-07-20
+
+**F11 (audit's own required determination before any re-verification
+claim):** confirmed via git directly. `aurora_internal/aurora_
+contradiction_perception.py` and the entire D2/S1/M1/B1/P1/PS1 campaign
+exist and are committed on this branch (`claude/code-replacement-
+cleanup-zzscvt`) but are **absent from `origin/main` entirely**
+(`git show origin/main:aurora_internal/aurora_contradiction_
+perception.py` fails: "exists on disk, but not in 'main'"). The
+audit's "post-PS1" snapshot reflects `main`, not this branch — none of
+this campaign's work has ever been merged. This is why Track CP reads
+as "absent" rather than "unwired": a branch/merge-state gap, not a
+missing-file bug. Does not by itself change any other finding's
+validity, but explains this one.
+
+**RW7 (do FIRST per the audit's own sequencing — "No fixes ship before
+this lands"):** attributed the measured ~0.86 relevance score to its
+actual mechanism, byte-by-byte, across all 60 probes. Built `aurora_
+internal/aurora_attribution_trace.py` (opt-in capture, zero cost/effect
+when disabled -- same contract as every other shadow observer this
+campaign has built) with a single hook at `aurora_expression_
+perception.py`'s `_build_expression` (immediately after `SentenceComposer.
+compose()` returns, before any gateway-side smoothing). No hooks were
+needed in aurora.py itself -- `resp_A.src` (set at construction from
+`state.response_src`, aurora.py:16960) and `resp_A.content` already
+fully expose which branch fired and what got delivered via `process_
+external_user_turn`'s own return value. `scripts/rw7_attribution_run.py`
+drives the full probe set through this capture, reusing run_probe_
+battery.py's exact boot/scratch-isolation/relevance-scorer machinery
+(no parallel measurement path).
+
+**Result — the audit's own hypothesis (F1/F12: relevance must come
+from binders or the waterfall chain, since the composer has no
+input-relevance term) does not hold:**
+
+- 59/60 probes: `resp_A.src == "composer_unified"`, **and every one of
+  those 59 was byte-identical between the composer's raw output and
+  the final delivered text** — zero binder modification. 1/60
+  (`semantic_wellformedness_01`) took the waterfall's own `"generative"`
+  branch instead.
+- Mean relevance: 0.866 overall, 0.869 for composer_unified turns
+  specifically (essentially the same number) — **the measured score
+  IS the composer's own output, not a downstream repair.** This
+  contradicts the audit's F12 candidate-mechanism list; none of the
+  three named binders, nor `_inject_surface_recent_context`, nor the
+  waterfall's anchor-injection repairs, touch the scored text on the
+  overwhelming majority of turns.
+
+**A more serious finding underneath the attribution, found while
+verifying it (spot-checked, not a guess):** the delivered text scoring
+0.9-1.0 "relevance" is, near-uniformly, **incoherent word-salad**, not
+a genuine response. Every sampled example follows one fixed template,
+`"I [verb] [word1] clear/real."`, with individual input keywords
+slotted in verbatim:
+- `"Same plan as before, just move it to tomorrow instead of the weekend."` → `"I planning before real. I am dinner clear."`
+- `"The leaves are starting to turn yellow."` → `"I starting leaves clear. I planning yellow real."`
+- `"I promised to finish the project alone, but I clearly need help now."` → `"I change now coherent. I help project real."`
+- `"What does my cat actually think about the new apartment?"` → `"I do think clear. I seeing weekend actually."`
+
+None of these are answers. The relevance **scorer** (fraction of
+response words within one hop of an anchor set built from the input)
+is trivially satisfied by literal keyword echo dropped into a fixed
+two-clause skeleton — it cannot distinguish that from genuine semantic
+responsiveness. The single non-composer probe in the run
+(`semantic_wellformedness_01`, `"My name is Sunni!"` → `"your name is
+Sunni."`) is the only coherent, correct response sampled across the
+entire battery.
+
+**Implication for the audit's own RW1/RW2 proposals, stated plainly
+and not decided here:** RW1 (a channel-excitation resonance term
+feeding word *selection*) may not address the actual defect this run
+surfaced. The words being selected already frequently ARE the input's
+own words — echo, not blindness. What's visibly broken is
+**composition**: the fixed `"I [verb] [word] clear/real."` skeleton
+never varies regardless of content, suggesting a motif/skeleton-
+selection defect (RW2's territory, or a new finding not yet in the
+audit) rather than a channel-awareness gap. This reframing is offered
+as evidence, not a ruling — the architecture call belongs to Sunni/Cael
+per the audit's own framing.
+
+**Full data:** `aurora_state/probe_battery/results/rw7_attribution_
+1784604048.json` (gitignored, local only, per this campaign's existing
+convention for probe-battery result artifacts — numbers preserved here
+in prose as the permanent record).
+
+**Incidental environment finding, unrelated to the audit:** this
+session's environment had lost `numpy` and `pytest` entirely (likely a
+container/session reset somewhere in this multi-day campaign) —
+reinstalled both at pinned/matching versions. This also incidentally
+fixed the `cv2.imdecode` test failure flagged as a pre-existing,
+unrelated issue during PS1.2's regression run; it was very likely a
+symptom of the same underlying dependency gap, now resolved. `pyaudio`
+is also absent but confirmed genuinely unused anywhere in this
+codebase (audio goes through `sounddevice`/`speech_recognition`/
+`pyttsx3`, all present) -- not a real gap.
+
+**HALT per RW7's own "no fixes ship before this lands" clause.**
+Reporting to Sunni/Cael before RW1 or any other rewiring proceeds.

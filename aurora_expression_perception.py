@@ -4363,8 +4363,17 @@ class ExpressionPerceptionEngine(WarpCapable):
 
         # Gather personality traits if identity engine is connected
         personality = getattr(self, '_personality_traits', None)
-        return self.composer.compose(offspring, assembly, i_state, personality,
-                                     input_text=input_text)
+        _compose_result = self.composer.compose(offspring, assembly, i_state, personality,
+                                                 input_text=input_text)
+        # RW7 (Architecture Wiring Audit, 2026-07-20): attribution capture,
+        # gated -- zero cost/effect when disabled (the default).
+        try:
+            from aurora_internal.aurora_attribution_trace import is_capture_enabled, record_composer_raw
+            if is_capture_enabled():
+                record_composer_raw(_compose_result)
+        except Exception:
+            pass
+        return _compose_result
 
     # ====================================================================
     # INGESTION (feeds perception from interaction data)
