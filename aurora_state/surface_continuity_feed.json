@@ -1,92 +1,5 @@
 [
   {
-    "packet_id": "b27c7aaf04504ab0adb73f83a70d2f40",
-    "created_at": 1784598889.3739443,
-    "source": "simulation_live_bridge",
-    "user_input": "Any search for truth cannot be properly conducted if scientific theories are not allowed to be examined critically, and if all opposing viewpoints and contradictory evidence is suppressed and artificially eliminated from consideration. Now reconcile this with an opposing angle.",
-    "aurora_response": "both any search for truth can not be properly conducted if scientific theories are not allowed to be examined critically and if all opposing viewpoints and contradictory evidence is suppressed and artificially eliminated from consideration now reconcile this with an opposing angle and any search for truth can not be properly conducted if scientific theories are not allowed to be examined critically and if all opposing viewpoints and contradictory evidence is suppressed and artificially eliminated from consideration can hold at the same time.",
-    "response_tone": "careful",
-    "concepts_activated": [
-      "any",
-      "truth",
-      "properly",
-      "conducted",
-      "scientific",
-      "theories"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "N",
-    "coherence": 0.673,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.69"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "1641d554866142a3ad7807ac8b6fb8b1",
-    "created_at": 1784598898.6131186,
-    "source": "simulation_live_bridge",
-    "user_input": "Any search for truth cannot be properly conducted if scientific theories are not allowed to be examined critically, and if all opposing viewpoints and contradictory evidence is suppressed and artificially eliminated from consideration. Now reconcile this with an opposing angle.",
-    "aurora_response": "both any search for truth can not be properly conducted if scientific theories are not allowed to be examined critically and if all opposing viewpoints and contradictory evidence is suppressed and artificially eliminated from consideration now reconcile this with an opposing angle and any search for truth can not be properly conducted if scientific theories are not allowed to be examined critically and if all opposing viewpoints and contradictory evidence is suppressed and artificially eliminated from consideration can hold at the same time.",
-    "response_tone": "curious",
-    "concepts_activated": [
-      "any",
-      "truth",
-      "properly",
-      "conducted",
-      "scientific",
-      "theories"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "T",
-    "coherence": 0.473,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.59"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
-    "packet_id": "50e35e9a4f3d41429c32366e27d74331",
-    "created_at": 1784598906.2546585,
-    "source": "simulation_live_bridge",
-    "user_input": "Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fragment as context: Use this corpus fr",
-    "aurora_response": "I can understand the meaning.",
-    "response_tone": "neutral",
-    "concepts_activated": [
-      "use",
-      "corpus",
-      "fragment",
-      "context",
-      "use",
-      "corpus"
-    ],
-    "visual_description": "",
-    "audio_description": "",
-    "recent_speech": "",
-    "dominant_axis": "B",
-    "coherence": 0.375,
-    "felt_wrong": false,
-    "wrong_reason": "",
-    "unresolved_tensions": [
-      "existence:+0.65"
-    ],
-    "resolved_bindings": [],
-    "consumed": false,
-    "consumed_at": null
-  },
-  {
     "packet_id": "714266644da841b3a88e1d915e46828c",
     "created_at": 1784598912.275642,
     "source": "simulation_live_bridge",
@@ -529,6 +442,78 @@
     "wrong_reason": "",
     "unresolved_tensions": [
       "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "cea71fbd36d741a69b040848d6d642f6",
+    "created_at": 1784629616.8896775,
+    "source": "simulation_live_bridge",
+    "user_input": "identity.",
+    "aurora_response": "I do mean good. I become what beautiful.",
+    "response_tone": "neutral",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.872,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "914de36123f34003bbf23918491a3e34",
+    "created_at": 1784629621.6436343,
+    "source": "simulation_live_bridge",
+    "user_input": "identity.",
+    "aurora_response": "I do mean good. I am seeing what.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "N",
+    "coherence": 0.744,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.70"
+    ],
+    "resolved_bindings": [],
+    "consumed": false,
+    "consumed_at": null
+  },
+  {
+    "packet_id": "503e54a948c44a0882639897b8a051c3",
+    "created_at": 1784629624.16195,
+    "source": "simulation_live_bridge",
+    "user_input": "identity.",
+    "aurora_response": "I do good i am seeing what. I am seeing good i am seeing what good.",
+    "response_tone": "curious",
+    "concepts_activated": [
+      "identity"
+    ],
+    "visual_description": "",
+    "audio_description": "",
+    "recent_speech": "",
+    "dominant_axis": "X",
+    "coherence": 0.544,
+    "felt_wrong": false,
+    "wrong_reason": "",
+    "unresolved_tensions": [
+      "existence:+0.68"
     ],
     "resolved_bindings": [],
     "consumed": false,
