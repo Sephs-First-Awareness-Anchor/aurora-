@@ -18,7 +18,7 @@
     "cost_total": 0.2807,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
-    "interpreted_deep_emotion": "fear",
+    "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "meaning_hold",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
@@ -26,17 +26,6 @@
   "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 0.5,
-      "label": "comfort_bias",
-      "rationale": "Deeper affective pressure suggests comfort or care may matter more than pure explanation.",
-      "source": "affect",
-      "tags": [
-        "care",
-        "attunement"
-      ],
-      "urgency": 0.55
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -94,7 +83,7 @@
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784591878.0488765,
+  "saved_at": 1784598968.3754156,
   "sub_crests": [
     {
       "axis": "X",
