@@ -409,6 +409,31 @@ def begin_expression(systems: Dict[str, Any]) -> None:
         except Exception:
             pass
 
+        # PF1.2: transport PropositionFrame + ExpressionGuidance onto the
+        # composer. Fail-quiet, additive -- compose() does not read either
+        # yet (PF1.3/PF1.4), so this cannot change delivered output.
+        try:
+            import types
+            from aurora_internal.aurora_proposition_frame import build_frame
+            perception = systems.get('perception')
+            composer = getattr(perception, 'composer', None) if perception else None
+            if composer is not None:
+                # begin_expression only receives `systems`, not the real
+                # TurnState object build_frame's anchor rung expects --
+                # the same NonComp summary is already mirrored onto
+                # systems['_last_noncomp_input'] elsewhere in the
+                # pipeline (aurora.py), so shim a minimal namespace with
+                # the one attribute that rung reads.
+                state_shim = types.SimpleNamespace(
+                    noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
+                )
+                frame = build_frame(systems, state_shim)
+                systems['_proposition_frame'] = frame
+                composer.set_proposition_frame(frame)
+                composer.set_expression_guidance(systems.get('_expression_guidance'))
+        except Exception:
+            pass
+
     except Exception:
         systems['_expression_layer'] = None
         systems['_expression_guidance'] = None

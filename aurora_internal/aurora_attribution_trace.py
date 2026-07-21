@@ -21,6 +21,8 @@ from typing import Any, Dict, Optional
 
 _ENABLED = False
 _composer_raw: Optional[str] = None
+_word_sources: Optional[Dict[str, Any]] = None
+_motif_summaries: Optional[list] = None
 _log: list = []
 
 
@@ -30,9 +32,11 @@ def enable_capture() -> None:
 
 
 def disable_capture() -> None:
-    global _ENABLED, _composer_raw
+    global _ENABLED, _composer_raw, _word_sources, _motif_summaries
     _ENABLED = False
     _composer_raw = None
+    _word_sources = None
+    _motif_summaries = None
 
 
 def is_capture_enabled() -> bool:
@@ -64,6 +68,47 @@ def pop_composer_raw() -> Optional[str]:
     val = _composer_raw
     _composer_raw = None
     return val
+
+
+def record_word_sources_and_motifs(composer: Any) -> None:
+    """PF1.0 (Directive PF1, 2026-07-20): called alongside record_composer_raw,
+    same hook, same turn. Snapshots composer._last_word_sources (word ->
+    {tag, candidate_source, usage_count_at_selection}) and a compact summary
+    of composer._last_motifs_used (role sequence + identity per motif this
+    turn) -- settles RW7's open side-channel question (fresh-word usage_
+    count=0 tiebreak vs. DPS-crystal resonance) and baselines motif
+    diversity per turn."""
+    global _word_sources, _motif_summaries
+    if not _ENABLED:
+        return
+    try:
+        _word_sources = dict(getattr(composer, "_last_word_sources", {}) or {})
+    except Exception:
+        _word_sources = None
+    try:
+        motifs = list(getattr(composer, "_last_motifs_used", []) or [])
+        summaries = []
+        for m in motifs:
+            try:
+                roles = [getattr(r, "value", str(r)) for r in getattr(m, "role_sequence", [])]
+            except Exception:
+                roles = []
+            summaries.append({
+                "motif_id": str(getattr(m, "pattern_id", id(m))),
+                "role_sequence": roles,
+            })
+        _motif_summaries = summaries
+    except Exception:
+        _motif_summaries = None
+
+
+def pop_word_sources_and_motifs():
+    """Consume the current turn's word-source/motif capture. Returns
+    (word_sources_dict_or_None, motif_summaries_list_or_None)."""
+    global _word_sources, _motif_summaries
+    ws, ms = _word_sources, _motif_summaries
+    _word_sources, _motif_summaries = None, None
+    return ws, ms
 
 
 def record_turn(probe_id: str, dimension: str, user_text: str,

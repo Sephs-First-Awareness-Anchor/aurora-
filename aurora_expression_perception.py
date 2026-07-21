@@ -1737,6 +1737,13 @@ class SentenceComposer:
         # Context: keywords from last perceived input
         self._context_keywords: List[str] = []
 
+        # PF1.2: PropositionFrame ("what to say") + ExpressionGuidance,
+        # transported in from begin_expression() -- not yet consumed by
+        # compose() (PF1.3/PF1.4 wire motif selection and slot binding
+        # to these). None means "no frame/guidance available this turn."
+        self._proposition_frame = None
+        self._expression_guidance = None
+
         # Sensory register bias — set per-compose from sensory_context.
         # +1.0 high-energy input, -1.0 low-energy, 0.0 neutral. Nudges the
         # N (Energy) axis of the live constraint orientation during composition.
@@ -2290,6 +2297,21 @@ class SentenceComposer:
                 filtered.append(w_clean)
         self._context_keywords = filtered[:10]
 
+    def set_proposition_frame(self, frame) -> None:
+        """PF1.2: transport in the PropositionFrame derived this turn
+        (aurora_internal.aurora_proposition_frame.build_frame), or None
+        if no rung produced one. Symmetric with set_context(); not yet
+        read by compose() -- transport only, motif/slot consumption is
+        PF1.3/PF1.4."""
+        self._proposition_frame = frame
+
+    def set_expression_guidance(self, guidance) -> None:
+        """PF1.2: transport in the ExpressionGuidance already produced
+        at the begin_expression() call site (aurora_braid_wiring.py)
+        but never previously consumed by the composer (audit finding
+        F1). Symmetric with set_context(); not yet read by compose()."""
+        self._expression_guidance = guidance
+
     # ================================================================
     # COMPOSITION  -- The main output (scaffolding-aware)
     # ================================================================
@@ -2384,7 +2406,15 @@ class SentenceComposer:
                     # sentences draw different structures under similar pressure
                     _orient = {ax: v * (1.0 + 0.08 * ((s_i + hash(ax)) % 3 - 1))
                                for ax, v in orientation.items()}
-                    motif = lineage.best_for_pressure(_orient, outlet)
+                    # PF1.3: when a PropositionFrame is present (PF1.2's
+                    # transport), route motif selection through it instead
+                    # of pressure-only scoring -- frame-absent turns keep
+                    # today's exact best_for_pressure behavior.
+                    if self._proposition_frame is not None:
+                        motif = lineage.best_for_proposition(
+                            self._proposition_frame, _orient, outlet)
+                    else:
+                        motif = lineage.best_for_pressure(_orient, outlet)
                 except Exception:
                     motif = None
             sent = self._compose_from_motif(motif, orientation, valence_target,
@@ -2467,13 +2497,38 @@ class SentenceComposer:
         words = list(used_words or [])  # cross-sentence diversity pressure
         _new_start = len(words)
         sentence_roles = []
+        frame = self._proposition_frame
         for r_i, role in enumerate(roles):
+            word = None
+            if frame is not None:
+                try:
+                    word = self._bind_slot_from_frame(role, frame, sentence_roles, words)
+                except Exception:
+                    word = None
+            if word:
+                words.append(word)
+                sentence_roles.append(role)
+                continue
+            # PF1.4: DESCRIPTOR still goes through the existing relevance-
+            # ranked channel selection (no override table for it), but
+            # when a frame is present its terms are folded into the
+            # anchor text so the EXISTING anchor-set ranking (already the
+            # correctly-working mechanism per PF1.0) naturally favors
+            # words related to what she's actually saying, not just the
+            # raw turn text.
+            _role_input_text = input_text
+            if frame is not None and role == "descriptor":
+                _frame_terms = " ".join(
+                    t for t in (frame.subject, frame.relation, frame.obj) if t
+                )
+                if _frame_terms:
+                    _role_input_text = f"{input_text} {_frame_terms}".strip()
             word = self._select_constraint_word(
                 role, dominant_axis,
                 _role_chars.get(role, ()),
                 _role_lexroles.get(role, "noun"),
                 valence_target, words,
-                input_text=input_text,
+                input_text=_role_input_text,
                 f5_turn_id=f5_turn_id, f5_register=f5_register,
             )
             if word:
@@ -2500,13 +2555,100 @@ class SentenceComposer:
             if r == "agent":
                 current_subject = words[i]
             elif r == "action" and current_subject is not None:
-                words[i] = self._conjugate_for_subject(words[i], current_subject)
+                w = words[i]
+                # PF1.5 finding: role_coherent() (aurora_internal/
+                # aurora_pf1_5_instruments.py) flags a bare gerund used
+                # as a finite verb ("I planning water.") -- and this gap
+                # predates PF1.3/PF1.4 entirely (confirmed: "planning"
+                # already appeared as an ordinary find_by_noncomp
+                # candidate in PF1.0's own pre-PF1.4 baseline data), so
+                # it belongs here in the general conjugation pass, not
+                # only in _bind_slot_from_frame's frame-bound branch.
+                # " " not in w guards against re-wrapping a multi-word
+                # result _bind_slot_from_frame already produced (e.g.
+                # "am planning", "do not help") -- both end up here too
+                # since this pass runs unconditionally, and reprocessing
+                # an already-finite multi-word form must be a no-op.
+                if " " not in w and w.lower().endswith("ing") and len(w) > 4:
+                    aux = "am" if current_subject.lower() == "i" else "are"
+                    words[i] = f"{aux} {w}"
+                else:
+                    words[i] = self._conjugate_for_subject(w, current_subject)
 
         sent = " ".join(words)
         sent = sent[0].upper() + sent[1:]
         if not sent.endswith((".", "!", "?")):
             sent += "."
         return sent
+
+    # ── PF1.4: slot binding -- the proposition fills its own sentence ──
+
+    _BE_NEGATION_FORMS = frozenset({"am", "are", "was", "were", "being", "been"})
+
+    def _bind_slot_from_frame(self, role: str, frame, sentence_roles: list,
+                              words: list) -> Optional[str]:
+        """PF1.4: fill ACTION/OBJECT directly from the PropositionFrame
+        (aurora_internal.aurora_proposition_frame) when it has a real,
+        POS-verified word for that role. Returns None (fail-quiet) on
+        anything else -- an empty frame field, a POS mismatch, or an
+        immediate duplicate -- and the caller falls back to today's
+        exact channel-selection path.
+
+        AGENT is deliberately NOT bound from frame.subject: AGENT is
+        always a pronoun ("I"/"you", enforced by _select_constraint_
+        word's own agent branch) and frame.subject is frequently an
+        arbitrary topic noun ("water", "meeting"), not a pronoun --
+        forcing it in would produce an ungrammatical subject. The
+        proposition's real content lives in relation/obj anyway.
+        """
+        if role == "action" and frame.relation:
+            verb = str(frame.relation).strip().lower()
+            if not verb or infer_word_role(verb) != "verb":
+                return None
+            current_subject = "I"
+            for r, w in zip(reversed(sentence_roles), reversed(words)):
+                if r == "agent":
+                    current_subject = w
+                    break
+            # PF1.5 finding: a bare gerund/present-participle bound
+            # directly as ACTION is not a finite verb ("I planning
+            # water."). role_coherent() (aurora_internal/aurora_pf1_5_
+            # instruments.py) exists to catch exactly this shape, and it
+            # fired on 14/60 real probes. Fixed with the SAME "be"-
+            # auxiliary approach _negate_action_word already uses below,
+            # not a new degerunding table -- stripping "-ing" back to a
+            # base form correctly requires real morphology (consonant
+            # doubling, silent-e restoration) that a rule-of-thumb would
+            # get wrong often enough to trade one defect for another.
+            # Progressive aspect ("I am planning") is genuine, correct
+            # English, not a workaround.
+            if verb.endswith("ing") and len(verb) > 4:
+                aux = "am" if current_subject.lower().rstrip(".,!?;:") == "i" else "are"
+                return f"{aux} not {verb}" if frame.negated else f"{aux} {verb}"
+            if frame.negated:
+                return self._negate_action_word(verb, current_subject)
+            return self._conjugate_for_subject(verb, current_subject)
+
+        if role == "object" and frame.obj:
+            noun = str(frame.obj).strip().lower()
+            if not noun or infer_word_role(noun) != "noun":
+                return None
+            if noun in (w.lower() for w in words):
+                return None
+            return noun
+
+        return None
+
+    def _negate_action_word(self, verb: str, subject: str) -> str:
+        """PF1.4: minimal do-support negation, reusing the existing
+        _conjugate_for_subject table rather than a new one. 'be' forms
+        negate in place ("am not"/"are not"); everything else uses
+        do-support ("do not <base>") -- correct for "I"/"you" (the only
+        subjects this delivered voice ever uses; "does" never applies)."""
+        base = self._conjugate_for_subject(verb, subject)
+        if base in self._BE_NEGATION_FORMS:
+            return f"{base} not"
+        return f"do not {base}"
 
     # R1.9.2 G1: valence-proximity's bonus is bounded so no valence match,
     # however perfect, can outweigh one hop of relevance. Derived the same
@@ -2956,6 +3098,17 @@ class SentenceComposer:
 
         candidates = []
         seen = set(w.lower() for w in already)
+        # PF1.0 (Directive PF1, 2026-07-20): attribution instrumentation --
+        # which branch produced each candidate word, so RW7's open question
+        # (fresh-word usage_count=0 tiebreak vs. DPS-crystal resonance as
+        # the real side channel carrying topical words into selection) can
+        # be settled from real per-turn data instead of guessed at. A word
+        # first added by an earlier branch keeps that branch's tag even if
+        # a later branch would also have produced it (branches are not
+        # mutually exclusive against each other's additions, only against
+        # `already`/`seen` from before this call) -- first-producer wins,
+        # matching which branch actually put it in front of the ranking.
+        _candidate_source: Dict[str, str] = {}
 
         # EDIT (one-crystal doctrine): word candidates come first from HER
         # EXISTING DPS crystals — resonance between the live dominant axis
@@ -2986,6 +3139,7 @@ class SentenceComposer:
                         _e = self.lexicon.entries.get(_wd)
                         if _e is not None and self._pos_ok(_e, role):
                             candidates.append(_e)
+                            _candidate_source.setdefault(_e.word.lower(), "dps_crystal")
             except Exception:
                 pass
 
@@ -3003,8 +3157,10 @@ class SentenceComposer:
             try:
                 found = self.lexicon.find_by_noncomp(
                     f"{dominant_axis}:{ch}", valence_target)
-                candidates.extend(e for e in found
-                                  if e.word.lower() not in seen and self._pos_ok(e, role))
+                for e in found:
+                    if e.word.lower() not in seen and self._pos_ok(e, role):
+                        candidates.append(e)
+                        _candidate_source.setdefault(e.word.lower(), "find_by_noncomp")
             except Exception:
                 pass
 
@@ -3016,8 +3172,10 @@ class SentenceComposer:
                 try:
                     found = self.lexicon.find_by_noncomp(
                         f"{ax}:{chars[0]}", valence_target)
-                    candidates.extend(e for e in found
-                                      if e.word.lower() not in seen and self._pos_ok(e, role))
+                    for e in found:
+                        if e.word.lower() not in seen and self._pos_ok(e, role):
+                            candidates.append(e)
+                            _candidate_source.setdefault(e.word.lower(), "cross_axis")
                 except Exception:
                     pass
 
@@ -3036,6 +3194,8 @@ class SentenceComposer:
                     found.extend(self.lexicon.find_by_role(r))
                 candidates = [e for e in found
                               if e.word.lower() not in seen and self._pos_ok(e, role)]
+                for e in candidates:
+                    _candidate_source.setdefault(e.word.lower(), "role_fallback")
             except Exception:
                 candidates = []
 
@@ -3106,7 +3266,15 @@ class SentenceComposer:
             )
         try:
             self._last_words_used.append(chosen.word)
-            self._last_word_sources[chosen.word] = chosen.noncomp_id or chosen.role
+            # PF1.0: source tag (which branch produced this candidate) +
+            # usage_count AT SELECTION TIME (before the increment below) --
+            # settles whether the fresh-word usage_count=0 tiebreak or
+            # DPS-crystal resonance is the real side channel RW7 flagged.
+            self._last_word_sources[chosen.word] = {
+                "tag": chosen.noncomp_id or chosen.role,
+                "candidate_source": _candidate_source.get(chosen.word.lower(), "unknown"),
+                "usage_count_at_selection": int(getattr(chosen, "usage_count", 0) or 0),
+            }
             chosen.usage_count += 1
         except Exception:
             pass
@@ -4365,12 +4533,16 @@ class ExpressionPerceptionEngine(WarpCapable):
         personality = getattr(self, '_personality_traits', None)
         _compose_result = self.composer.compose(offspring, assembly, i_state, personality,
                                                  input_text=input_text)
-        # RW7 (Architecture Wiring Audit, 2026-07-20): attribution capture,
-        # gated -- zero cost/effect when disabled (the default).
+        # RW7/PF1.0 (Architecture Wiring Audit + Directive PF1, 2026-07-20):
+        # attribution capture, gated -- zero cost/effect when disabled
+        # (the default).
         try:
-            from aurora_internal.aurora_attribution_trace import is_capture_enabled, record_composer_raw
+            from aurora_internal.aurora_attribution_trace import (
+                is_capture_enabled, record_composer_raw, record_word_sources_and_motifs,
+            )
             if is_capture_enabled():
                 record_composer_raw(_compose_result)
+                record_word_sources_and_motifs(self.composer)
         except Exception:
             pass
         return _compose_result
