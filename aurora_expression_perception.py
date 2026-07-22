@@ -4484,8 +4484,31 @@ class ExpressionPerceptionEngine(WarpCapable):
                 _oets_checked += 1
                 if node:
                     _oets_hits += 1
-                    # Pull words from relations
-                    for rel in list(node.relations.values())[:5]:
+                    # Pull words from relations. Co-occurrence-sourced
+                    # relations are excluded here -- PF3.1 (2026-07-21):
+                    # aurora_constraint_emission.build_relevance_anchor_set
+                    # already caps co-occurrence edge strength at the
+                    # one-hop floor with exactly this rationale ("86% of
+                    # this graph's relations are co-occurrence-sourced and
+                    # 84% of those sit at strength 1.0 -- a saturated
+                    # frequency proxy, not a semantic-relevance signal",
+                    # same pattern as FIX-A032), but that dampening never
+                    # reached this call site: words pulled in here get
+                    # written straight into composer._context_keywords,
+                    # which build_relevance_anchor_set then treats as
+                    # DIRECT anchors (relevance 1.0, full strength) via its
+                    # direct_from_recent branch -- bypassing the one-hop
+                    # cap entirely. Confirmed live: heavily-reinforced hub
+                    # words ("planning", usage_count 496+) rode a
+                    # co-occurrence edge from an unrelated turn's keyword
+                    # straight into context_keywords, then into the
+                    # anchor set at full strength, dominating slot
+                    # selection for turns that never mentioned them.
+                    relevant_rels = [
+                        rel for rel in node.relations.values()
+                        if getattr(rel, "source_of_knowledge", "") != "co-occurrence"
+                    ]
+                    for rel in relevant_rels[:5]:
                         other = (rel.target_word if rel.source_word == keyword
                                  else rel.source_word)
                         if other not in enriched:

@@ -5462,3 +5462,166 @@ things:
    neighborhood constraint (PF1.4) is still worth building now that
    real propositional content is flowing through more often (W1) --
    a natural next question this arc surfaces but doesn't answer.
+
+## PF3.1 — Carryover isolation, 2026-07-21
+
+Ground: PF2.1's full-profile recharacterization (Directive PF2, merged
+`main` via PR #132) found Cluster D -- cross-turn carryover
+contamination, sticky words persisting into completely unrelated turns
+-- as the single largest residue bucket (23/41 thought-sourced + 6/8
+non-thought = 29/49). Directive PF3 (Sunni & Cael, 2026-07-21) named
+one located mechanism (`ThoughtContinuity.carry_forward`'s axis-letter
+merge trigger) and specified the fix. Investigating and fixing it
+first, per this arc's own established practice, surfaced two FURTHER,
+independent carryover mechanisms the directive didn't anticipate --
+each investigated, fixed, and gated the same way before commit.
+
+**FIX-A047 (ARCHITECTURAL) — Continuity Over-Trigger.**
+Category: ARCHITECTURAL. `ThoughtContinuity.carry_forward`
+(`aurora_thought_formation.py:936-976`, the directive's own diagnosis)
+merged the ENTIRE previous turn's `dominant_thread` into the new
+turn's `supporting_context` whenever `last_axes & new_axes` was
+non-empty -- with a 5-letter axis alphabet (X/T/N/B/A) and the
+linguistic `ProcessContext` (W1) contributing `["X","T","A"]` on every
+turn, this fired near-unconditionally. **Fix:** gate the merge on
+topic overlap (shared 3+-char content words, `_ANCHOR_TOKEN_STOPWORDS`
+reused from `aurora_constraint_emission.py`) between the CURRENT
+turn's and PRIOR turn's `linguistic`-type context specifically, not
+axis letters, and not the whole `dominant_thread`. A first attempt
+compared topics across the WHOLE `dominant_thread` (including every
+non-linguistic context) and reproduced the identical defect one level
+down -- every other context type's `what_it_is_operating_on` is a
+FIXED administrative label ("identity_predicates", "memory presence",
+"forward lean", "sedi_ambient") present on nearly every turn
+regardless of content, confirmed live via
+`scripts/pf3_1_carryover_trace.py`. Restricting the comparison to
+`process_type=="linguistic"` (the one context type W1 confirmed
+carries genuine turn text) fixed it for real -- re-traced, confirmed
+`supporting_context` no longer accumulates prior turns' contexts on
+unrelated topics while still merging correctly on a genuine shared-
+topic multi-turn probe. Pattern, for future continuity/carry-forward
+work: a low-cardinality proxy signal (axis letters, or ANY field that
+happens to be constant/near-constant across turns) will fire near-
+unconditionally as a merge gate; use the most specific identity signal
+already in scope, and verify empirically that "specific" one doesn't
+itself hide a second constant-across-turns field. Tests:
+`tests/test_pf3_1_carryover_isolation.py` (5, including the specific
+whole-thread-vs-linguistic-only regression).
+
+**FIX-A048 (ARCHITECTURAL) — Co-occurrence relation hub leak into
+context enrichment.** Category: ARCHITECTURAL. Fixing FIX-A047 did
+NOT materially drop Cluster D in the live full-profile gate re-run --
+traced further and found a second, independent mechanism: sticky word
+"planning" (usage_count 496+ in the real, persistent `aurora_state/
+lexicon.json`, accumulated over this whole campaign's testing history)
+entering `composer._context_keywords` via `ExpressionPerceptionEngine.
+_build_expression`'s OETS relation-neighbor enrichment (aurora_
+expression_perception.py, "Pull words from relations" block) with NO
+filtering by relation source. `aurora_constraint_emission.
+build_relevance_anchor_set` already caps co-occurrence-sourced
+relation strength at the one-hop floor for exactly this reason ("86%
+of this graph's relations are co-occurrence-sourced and 84% of those
+sit at strength 1.0 -- a saturated frequency proxy, not a semantic-
+relevance signal", the same reinforcement-imbalance pattern as
+FIX-A032) -- but that dampening never reached this call site: words
+pulled in here get written straight into `context_keywords`, which
+the anchor builder then treats as DIRECT anchors (relevance 1.0),
+bypassing the one-hop cap entirely. **Fix:** exclude co-occurrence-
+sourced relations from this specific enrichment pull, reusing the
+established `source_of_knowledge` check rather than inventing a new
+one. Tests: `tests/test_pf3_1_cooccurrence_hub_leak.py` (3).
+
+**FIX-A049 (ARCHITECTURAL) — Proposition-frame staleness on
+conditionally-skipped turns.** Category: ARCHITECTURAL. Fixing
+FIX-A048 alone still left a third symptom: "upset" persisting across
+12/60 unrelated turns (all of `uncertainty_signaling`, spilling into
+the next dimension) -- and unlike "planning", "upset" never appeared
+in `word_sources` at all, ruling out every ordinary candidate-scoring
+path. Traced directly (`scripts/pf3_1_frame_staleness_trace.py`,
+monkeypatching `begin_expression`/`build_frame` to log every call):
+`composer._proposition_frame` / `systems['_proposition_frame']` are
+only ever refreshed inside `begin_expression()`
+(`aurora_braid_wiring.py`), and `aurora.py`'s own caller of
+`begin_expression` gates it behind `_perc_a5 and _resp_draft` (plus
+`not _preserve_literal_response`/`not _skip_surface_expression`) --
+confirmed live, `build_frame` was reached on only 2 of 6 traced turns.
+On every turn where that gate doesn't clear, both fields silently kept
+whatever the LAST successful turn's frame was; `_bind_slot_from_frame`
+(`aurora_expression_perception.py`) then binds that stale frame's
+`.obj`/`.relation` straight into slot-filling -- a path that never
+writes to `word_sources`, explaining exactly why "upset" was invisible
+there. **Fix:** `aurora_braid_wiring.reset_proposition_frame_for_turn`,
+called unconditionally at the top of `aurora.py`'s
+`_run_reasoning_pipeline` (before `begin_expression` may or may not
+run), so a skipped refresh correctly means "no frame this turn," not
+"reuse whichever turn last had one." Tests:
+`tests/test_pf3_1_frame_staleness.py` (5).
+
+**Before/after, full-profile live battery
+(`scripts/characterize_pf16_residue.py`), same 60-probe battery
+(recomputed directly from each stage's own saved JSON output, not
+reconstructed from memory):**
+
+| | residue | byte-identical duplicate outputs | "upset" in unrelated turns | "planning" in unrelated turns |
+|---|---|---|---|---|
+| PF2.1 baseline | 49/60 | 3 groups | 13/60 | 20/60 |
+| After FIX-A047 only (corrected) | 50/60 | **0 groups** | 13/60 | 19/60 |
+| **After FIX-A047 + A048 + A049** | **46/60** | 0 groups | **0/60** | 22/60* |
+
+(A first, buggy attempt at FIX-A047 -- comparing topics across the
+whole `dominant_thread` instead of the linguistic context only --
+reached 51/60 residue with the duplicate-output signal already gone
+but "upset" still at 12/60; caught and fixed before commit, not a
+shipped state, not counted above.)
+
+\* "planning" did not meaningfully drop after any of the three fixes
+-- not a regression from FIX-A049 specifically; none of the three
+target the mechanism responsible for it (see below). FIX-A049 removed
+a DIFFERENT masking contamination (stale frames binding other words),
+which is why "upset" -- which WAS one of that mechanism's symptoms --
+dropped to zero while "planning" -- fed by a still-unfixed third
+mechanism -- did not.
+
+**Third mechanism found, NOT fixed -- flagged for Sunni & Cael rather
+than patched unilaterally (Sunni's explicit direction: commit what's
+verified, scope this separately):** `composer._context_keywords`
+still carries "planning" into turns that never mention it or anything
+related. Traced directly (`scripts/pf3_1_context_keywords_trace.py`,
+monkeypatching `SentenceComposer.set_context` to log every call, its
+caller, and the field's contents before/after): FOUR call sites feed
+this field (`ExpressionPerceptionEngine.ingest_interaction`,
+`_build_expression`'s own enrichment, `aurora_working_memory.py`'s
+`_render_from_comprehension_intent`, `aurora_semantic_intention_
+bridge.py`'s `apply`), and it does NOT reset at turn boundaries --
+confirmed live, turn 2 ("Hi.") started with turn 1's leftover
+`["what's", "favorite"]` still present. Unlike FIX-A047/A049,
+`_context_keywords`'s cross-turn persistence is NOT a bug: an existing
+comment in `aurora_constraint_emission.py` explicitly documents it as
+"recent_words... carried across turns," with its own hollow-node
+guard built specifically because that carrying-forward is intended
+behavior. The real defect is narrower: `_build_expression`'s
+enrichment step feeds its OWN OETS-derived expansion words (relation
+neighbors, definition text) back into `_context_keywords` as if they
+were genuine recent conversation, so enrichment output compounds and
+gets re-enriched again on the next turn -- an unbounded accumulation,
+not simple carryover, and blanket-resetting the field the same way as
+FIX-A047/A049 would break the intentional multi-turn recency design.
+Needs a real decision before implementation: candidate approaches
+include (a) tracking enrichment-derived words in a separate,
+turn-scoped field never persisted via `set_context`'s cross-turn slot,
+so only genuine `ingest_interaction`-sourced words carry forward; (b)
+an explicit age/decay policy so words age out after N turns without
+reinforcement; (c) capping how many enrichment-derived words any
+single turn may inject, independent of the "recent" cap. Not chased
+further this phase.
+
+**Full suite: 996 passed, 2 failed** -- both already-documented,
+pre-existing, unrelated (`test_m1_2_provenance_hygiene` -- live-lexicon
+tagging drift, confirmed identical with and without any of this
+phase's fixes; `test_concept_image_ingestion_import` -- passes in
+isolation, full-suite-only cross-test ordering artifact, same class as
+the reentrancy flake).
+
+Full data: `aurora_state/probe_battery/results/` runs (gitignored,
+local only) at each stage. PF3.2 (pronoun consumer split) next, per
+Directive PF3's sequence.

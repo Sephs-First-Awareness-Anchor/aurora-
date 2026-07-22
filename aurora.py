@@ -16280,6 +16280,17 @@ def _run_reasoning_pipeline(
     except Exception:
         pass
 
+    # PF3.1 (2026-07-21): see aurora_braid_wiring.reset_proposition_frame_
+    # for_turn's docstring -- composer._proposition_frame only ever gets
+    # refreshed later in this function, inside begin_expression(), which
+    # is itself conditionally skipped on some turns. Unconditional reset
+    # here means a skipped refresh correctly means "no frame this turn".
+    try:
+        from aurora_braid_wiring import reset_proposition_frame_for_turn
+        reset_proposition_frame_for_turn(systems)
+    except Exception:
+        pass
+
     # ---- GAP 3 FIX: SEDI SURFACE FRAGS — inject temporal continuity fragments ----
     # SediMemory surface recall is loaded by the surface daemon before calling
     # process_external_user_turn, but the frags were never threaded into the

@@ -378,6 +378,33 @@ def begin_response_turn(
 # 3. begin_expression
 # ---------------------------------------------------------------------------
 
+def reset_proposition_frame_for_turn(systems: Dict[str, Any]) -> None:
+    """PF3.1 (2026-07-21): systems['_proposition_frame'] and composer.
+    _proposition_frame are only ever REFRESHED, inside begin_expression()
+    below -- and begin_expression() is itself only called on some turns
+    (aurora.py's caller gates it behind `_perc_a5 and _resp_draft`, `not
+    _preserve_literal_response`, `not _skip_surface_expression`). Any turn
+    where that gate doesn't clear previously left both fields holding
+    whatever the last successful turn's frame was, unnoticed -- confirmed
+    live via scripts/pf3_1_frame_staleness_trace.py: build_frame() was
+    reached on only 2 of 6 traced turns, and _bind_slot_from_frame
+    (aurora_expression_perception.py) silently bound the stale frame's
+    content into slot-filling on the turns in between, entering delivered
+    text without ever touching word_sources or ThoughtContinuity (the
+    carry-forward mechanism this same phase's first fix addressed).
+    Call this unconditionally at the start of every turn, before
+    begin_expression may or may not run -- a skipped refresh then
+    correctly means "no frame this turn", not "reuse whichever turn last
+    had one"."""
+    try:
+        systems["_proposition_frame"] = None
+        composer = getattr(systems.get("perception"), "composer", None)
+        if composer is not None:
+            composer.set_proposition_frame(None)
+    except Exception:
+        pass
+
+
 def begin_expression(systems: Dict[str, Any]) -> None:
     """
     CALL SITE 3 — Just BEFORE perception.express() is called.
