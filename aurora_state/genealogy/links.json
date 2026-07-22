@@ -40339,5 +40339,99 @@
       "compression_op:N:COMPRESSION_fac419aee7",
       "nc_dim:OPERATOR"
     ]
+  },
+  "L:7752bbf648": {
+    "id": "L:7752bbf648",
+    "parents": [
+      "dream:ambiguity_handle",
+      "L:7201a76a36"
+    ],
+    "depth": 2,
+    "created_at_tick": 125928,
+    "stats": {
+      "count": 6,
+      "mean_pos_relief": {
+        "X": 0.03133333333333333,
+        "T": 0.12050391603744119,
+        "N": 0.04699999999999999,
+        "B": 0.1253333333333333,
+        "A": 0.004504166666666663
+      },
+      "mean_relief": {
+        "X": 0.03133333333333333,
+        "T": 0.12050391603744119,
+        "N": 0.04699999999999999,
+        "B": 0.1253333333333333,
+        "A": 0.004504166666666663
+      },
+      "stdev_relief": {
+        "X": 0.03133333333333333,
+        "T": 0.12067551262247597,
+        "N": 0.04699999999999999,
+        "B": 0.06266666666666666,
+        "A": 0.0074029144504790196
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0030000000000000005,
+        "B": 0.0007500000000000001,
+        "A": 0.0
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "T",
+    "tags": [
+      "origin_signature:0",
+      "operator_action:operator_on_t",
+      "purpose_lane:meaning",
+      "operator_grade:0.666",
+      "purpose_grade:0.868",
+      "overall_grade:0.767",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.450",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.450",
+      "artificial_seed:true",
+      "seed_lineage_id:episode_c4d307c96367",
+      "steering_target_generation:2",
+      "ontological_status:native_closed",
+      "depth_score:0.0467",
+      "leverage_grade:0.0769",
+      "viable_band_alignment:0.1538",
+      "energetic_footprint:0.0467",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_fa1e861b63",
+      "nc_dim:DIFFERENCE",
+      "origin_signature:0",
+      "operator_action:operator_on_t",
+      "purpose_lane:intelligence",
+      "operator_grade:0.666",
+      "purpose_grade:0.300",
+      "overall_grade:0.420",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.450",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.450",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3",
+      "ontological_status:native_closed",
+      "depth_score:0.0467",
+      "leverage_grade:0.0769",
+      "viable_band_alignment:0.1538",
+      "energetic_footprint:0.0467",
+      "dominant_constraint:T",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_69753b5f76",
+      "nc_dim:DIFFERENCE"
+    ]
   }
 }

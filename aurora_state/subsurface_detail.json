@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.252,
+  "coherence": 0.188,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "language",
-    "ambiguity": 0.295,
-    "cost_total": 0.165,
+    "active_topic": "understand",
+    "ambiguity": 0.545,
+    "cost_total": 0.2099,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
@@ -30,7 +30,7 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.748
+      "severity": 0.812
     }
   ],
   "law_bindings": [],
@@ -56,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6421,
+    "confidence": 0.6231,
     "expected_observation": "followup",
-    "expected_user_continuation": "language",
+    "expected_user_continuation": "understand",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.3925,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "language"
+      "topic": "understand"
     },
     "preload_context": [
-      "language",
+      "understand",
       "followup"
     ],
-    "readiness_bias": 0.4374,
+    "readiness_bias": 0.4154,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -82,20 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3615,
+  "readiness": 0.3433,
   "recalled_fragments": [
-    "language",
-    "i do means clear i am seeing or real i am interesting right always",
-    "What does language mean to you?\n[recalled:language] What does language mean to you? [recalled:mean] What does language mean to you? [reca..."
+    "understand",
+    "How do you understand trust?\n[recalled:understand] How do you understand trust? [recalled:trust] How do you understand trust? [recalled:r..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.3252,
-    "N": 0.6748,
+    "B": 0.4569,
+    "N": 0.5431,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784685313.5807095,
+  "saved_at": 1784697048.5402539,
   "sub_crests": [
     {
       "axis": "X",
