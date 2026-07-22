@@ -17,7 +17,13 @@ stay pinned to exactly what they always measured):
    argument term on top of that same base score: a bonus specifically
    for a verb and a noun that are BOTH anchor-relevant AND sit near
    each other (a real predicate taking a real, on-topic argument),
-   not just present somewhere in the response.
+   not just present somewhere in the response. PF1.6 residue W3
+   (2026-07-21) added a second correction, confidence damping: a
+   response with very few countable words can trivially hit adequacy
+   1.0 off a single lucky anchor word ("I am bit." scored 1.0) -- the
+   base term is now scaled down when there's too little text to trust
+   hits/len's statistics, undamped (identical to the original
+   arithmetic) for any response of ordinary length.
 
 2. **Role-coherence** (wellformedness extension): aurora_internal.
    aurora_semantic_probe_battery._parseable() catches word salad but
@@ -64,19 +70,41 @@ _PREDICATE_ARGUMENT_BONUS = 0.15
 # tight enough to stay "near", not "anywhere in the response".
 _ARGUMENT_SEARCH_WINDOW = 4
 
+# PF1.6 residue W3 (2026-07-21): a response with very few countable
+# (3+ char) tokens can trivially score adequacy 1.0 off a single lucky
+# anchor hit -- confirmed live, "I am bit." (PropositionFrame's own
+# anchor rung rendering a bare copula plus the anchor word, no real
+# relation) scored 1.0 against an anchor containing "bit", because "I"
+# and "am" are both under the 3-char counting threshold and "bit" was
+# the only word left to average over. hits/len's statistical
+# confidence scales with how many words it's actually averaged across;
+# below this many countable words, the base term is damped
+# proportionally rather than trusted at full strength. This is the
+# report's own "minimum-content check" option (the other option,
+# frame-relation-presence, would need a `frame` parameter threaded
+# through every call site -- this is self-contained). Deliberately
+# breaks the "adequacy >= old relevance" guarantee for pathologically
+# short responses ONLY -- that guarantee was never meant to bless a
+# single-word coincidence as high-confidence adequacy; it still holds
+# for any response of ordinary length (see tests).
+_MIN_COUNTABLE_WORDS_FOR_FULL_CONFIDENCE = 3
+
 
 def adequacy_score(response_text: str, anchor: Dict[str, float]) -> Optional[float]:
     """hits/len base (identical arithmetic to the existing relevance
-    scorer) plus a predicate-argument bonus. Returns None (not 0.0) on
-    an empty response, matching the existing scorer's own failure
-    contract -- a scoring non-result must stay distinguishable from a
-    genuinely zero-adequacy response."""
+    scorer, damped for very short responses -- see
+    _MIN_COUNTABLE_WORDS_FOR_FULL_CONFIDENCE) plus a predicate-argument
+    bonus. Returns None (not 0.0) on an empty response, matching the
+    existing scorer's own failure contract -- a scoring non-result
+    must stay distinguishable from a genuinely zero-adequacy response."""
     words = _ANCHOR_TOKEN_RE.findall(str(response_text or "").lower())
     if not words:
         return None
     lower_words = words
     hits = sum(1 for w in lower_words if w in anchor)
     base = hits / len(lower_words)
+    confidence = min(1.0, len(lower_words) / _MIN_COUNTABLE_WORDS_FOR_FULL_CONFIDENCE)
+    base *= confidence
 
     tagged = [(w, infer_word_role(w)) for w in lower_words]
     pa_bonus = 0.0

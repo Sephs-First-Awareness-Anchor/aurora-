@@ -5352,4 +5352,113 @@ reentrancy cross-test flake found during W1 did not even appear this
 run, consistent with it being non-deterministic timing-dependent
 rather than anything in this change.
 
-W3 (adequacy saturation on bare copula fragments) next.
+## PF1.6 Residue Characterization — W3: adequacy saturation on bare copula fragments, 2026-07-21
+
+Third and last work item. Root cause confirmed exactly as the report
+described, reproduced directly: `"I am bit."` (a live delivered
+response, an anchor-only PropositionFrame rendering as a bare copula
+plus the anchor word, no real relation) scored `adequacy_score` **1.0**
+against an anchor containing `"bit"`. Traced: `_ANCHOR_TOKEN_RE`
+requires 3+ character tokens (matching the old relevance scorer's own
+tokenization, per PF1.5's own design) -- "I" (1 char) and "am" (2
+chars) are both excluded from the count, leaving `"bit"` as the ONLY
+countable word in the response. `hits/len` on a denominator of 1 turns
+a single lucky anchor hit into a perfect score, regardless of whether
+the response actually asserts anything.
+
+The report offered two fix options: a relation-presence term (requires
+threading a `frame` parameter through `adequacy_score` and every one
+of its call sites) or a minimum-content check (self-contained). Chose
+the minimum-content check: `hits/len`'s statistical confidence scales
+with how many words it's actually averaged over, so the base term is
+now damped proportionally below `_MIN_COUNTABLE_WORDS_FOR_FULL_
+CONFIDENCE` (3) countable words -- `confidence = min(1.0, len(words) /
+3)`, `base *= confidence`. Undamped (byte-identical arithmetic to
+before) for any response of ordinary length; only pathologically short
+ones are affected. `adequacy_score`'s signature is unchanged, so no
+call site (`pf1_6_acceptance.py`, `pf1_5_instrument_revalidation.py`)
+needed updating.
+
+**Verified against the report's own example:** `"I am bit."` ->
+**0.333** (was 1.0).
+
+**Deliberate, tested exception to PF1.5's own invariant:** the
+existing test suite asserted `adequacy_score(text, anchor) >=
+_old_relevance(text, anchor)` unconditionally (a real regression guard
+from PF1.5's own tokenization-bug fix). That guarantee no longer holds
+for pathologically short responses by design -- the whole point of
+this fix is that a single-word coincidence should score LOWER than
+naive `hits/len` said it did, not merely "not lower." Confirmed the
+pre-existing invariant test's own 5 sample sentences all already have
+>=3 countable words (undamped, unaffected, passes unchanged) --
+the exception is real but scoped exactly as intended, not a silent
+weakening of the general guarantee.
+
+**Tests:** 5 new in `tests/test_pf1_5_instruments.py` (now 21, was
+16) -- the exact reported case, single- and two-countable-word damping
+arithmetic verified directly, confirmation that >=3-word responses are
+completely undamped, and the invariant-exception itself stated and
+tested explicitly rather than left implicit. One pre-existing test
+(`test_adequacy_no_bonus_when_verb_and_noun_are_not_both_anchored`)
+had its sample text lengthened to isolate the bonus behavior it was
+actually testing from this new, independent damping effect.
+
+**Real battery re-measurement** (`scripts/pf1_6_acceptance.py`, same
+3-pass/60-probe methodology as PF1.6's own acceptance run):
+
+| | mean simple_concrete adequacy | mean abstract_conceptual adequacy |
+|---|---|---|
+| PF1.6 original (undamped) | 0.787 | 0.912 |
+| **After W3's damping fix** | **0.702** | **0.835** |
+
+Both drop, as expected and intended -- vacuous short responses no
+longer inflate the mean; this is the instrument becoming more honest,
+not a regression to explain away. Motif diversity (3), descriptor
+repetition (9-11%), abstain rate (0.0), diagnostic leakage (0) all
+unchanged across the re-run, exactly as expected since none of them
+read `adequacy_score` at all.
+
+**Full suite: 982 passed, 3 failed** -- all three already-documented,
+pre-existing, unrelated (cv2 test-order flake, "lang" tagging drift,
+reentrancy cross-test flake -- the last one is non-deterministic and
+didn't appear in W1's or W2's own final pre-commit runs, but recurred
+here; still confirmed via W1's own git-stash isolation to be a
+full-suite-only cross-test artifact, not caused by any of W1/W2/W3's
+changes).
+
+---
+
+**This closes the PF1.6 residue characterization arc (W1, W2, W3),**
+tackled one at a time per Sunni's instruction, started from the
+external audit's own report. Honest summary of where this leaves
+things:
+
+- **W1** fixed the PropositionFrame "thought" rung from firing 0/60 to
+  49/60 (a real bug: `unified_interpretation` was always internal
+  telemetry, never language), plus a contraction-leak bug its own
+  live-fire testing caught along the way. Residue (probes failing
+  PF1.5's instruments) 53/60 -> 49/60.
+- **W2** widened the claim gate from firing 3/60 to 6/60 through four
+  bounded fixes (contractions, verb whitelist, negation-pattern
+  coverage, a reported-speech regex bug), explicitly leaving the
+  pronoun-subject exclusion untouched as a likely-intentional design
+  boundary for Sunni/Cael to decide on.
+- **W3** fixed the adequacy instrument's own blind spot (short
+  responses trivially scoring 1.0), producing more honest -- and
+  necessarily lower -- adequacy numbers than PF1.6's original
+  acceptance report.
+
+**Open items still flagged for Sunni/Cael, not resolved by this arc:**
+1. The motif-diversity ceiling from PF1.3 (3 promoted+valid motifs in
+   the live lineage vs. the directive's stated >=4) -- a mining/
+   promotion gap, unrelated to anything W1-W3 touched.
+2. `_CLAIM_SKIP_SUBJECTS`'s pronoun-subject exclusion (W2) -- real
+   architecture call about whether unresolved-referent claims should
+   ever enter the substrate.
+3. Ditransitive reported speech ("I told my friend I was fine...")
+   and the "claims to `<verb>`" infinitive-marker-as-subject residual
+   (W2) -- both out of this arc's bounded scope, noted not chased.
+4. Whether PF1's originally-scoped-but-not-built DESCRIPTOR
+   neighborhood constraint (PF1.4) is still worth building now that
+   real propositional content is flowing through more often (W1) --
+   a natural next question this arc surfaces but doesn't answer.
