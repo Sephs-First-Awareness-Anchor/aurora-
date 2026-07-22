@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
+      "confidence": 0.35,
       "label": "topic_continuation"
     },
     {
@@ -17,11 +17,11 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "understanding",
+    "active_topic": "change",
     "ambiguity": 0.545,
-    "cost_total": 0.2184,
+    "cost_total": 0.2099,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
+    "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
@@ -35,17 +35,6 @@
   ],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -67,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6483,
+    "confidence": 0.5995,
     "expected_observation": "followup",
-    "expected_user_continuation": "understanding",
+    "expected_user_continuation": "change",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.3925,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "A",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "understanding"
+      "topic": "change"
     },
     "preload_context": [
-      "understanding",
+      "change",
       "followup"
     ],
-    "readiness_bias": 0.423,
+    "readiness_bias": 0.3746,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3433,
+  "readiness": 0.3231,
   "recalled_fragments": [
-    "understanding",
-    "understanding.\n[recalled:understanding] understanding. [recalled:recalled:understanding] understanding.\n[recalled:understanding] understa..."
+    "change",
+    "What is change?\n[recalled:change] What is change? [recalled:recalled:change] What is change?\n[recalled:change] What is change? [recalled:..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2725,
-    "N": 0.0874,
-    "T": 0.6401,
+    "B": 0.4569,
+    "N": 0.5431,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784661249.0607116,
+  "saved_at": 1784722954.4912868,
   "sub_crests": [
     {
       "axis": "X",
@@ -114,8 +103,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.5,
+      "label": "familiar"
     },
     {
       "axis": "A",
@@ -135,7 +124,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",

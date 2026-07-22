@@ -72,7 +72,16 @@
     "fail_point:train_epoch_3:episode_ca4e4da10b27",
     "fail_point:train_epoch_3:episode_11d625707dd0",
     "fail_point:train_epoch_3:episode_cfa449acb78c",
-    "fail_point:train_epoch_1:episode_56922eea6a4a"
+    "fail_point:train_epoch_1:episode_56922eea6a4a",
+    "fail_point:train_epoch_1:episode_e10382644c33",
+    "fail_point:train_epoch_8:rel_probe_approach_curious_1",
+    "fail_point:train_epoch_8:episode_8d8b68844b49",
+    "fail_point:train_epoch_7:rel_probe_approach_thoughtful_1",
+    "corpus:coherence_maintenance:0",
+    "corpus:coherence_maintenance:1",
+    "corpus:coherence_maintenance:2",
+    "corpus:coherence_maintenance:3",
+    "corpus:coherence_maintenance:4"
   ],
   "perspective_integration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -82,7 +91,16 @@
     "corpus:perspective_integration:2",
     "corpus:perspective_integration:3",
     "corpus:perspective_integration:4",
-    "corpus:perspective_integration:5"
+    "corpus:perspective_integration:5",
+    "corpus:perspective_integration:6",
+    "corpus:perspective_integration:7",
+    "corpus:perspective_integration:8",
+    "corpus:perspective_integration:9",
+    "corpus:perspective_integration:10",
+    "corpus:perspective_integration:11",
+    "corpus:perspective_integration:12",
+    "corpus:perspective_integration:13",
+    "corpus:perspective_integration:14"
   ],
   "ambiguity_handling": [
     "fail_point:train_epoch_2:episode_c6388e715bc2",
@@ -92,7 +110,16 @@
     "corpus:ambiguity_handling:2",
     "corpus:ambiguity_handling:3",
     "corpus:ambiguity_handling:4",
-    "corpus:ambiguity_handling:5"
+    "corpus:ambiguity_handling:5",
+    "corpus:ambiguity_handling:6",
+    "corpus:ambiguity_handling:7",
+    "corpus:ambiguity_handling:8",
+    "corpus:ambiguity_handling:9",
+    "corpus:ambiguity_handling:10",
+    "corpus:ambiguity_handling:11",
+    "corpus:ambiguity_handling:12",
+    "corpus:ambiguity_handling:13",
+    "corpus:ambiguity_handling:14"
   ],
   "adaptive_strategy_selection": [
     "corpus:adaptive_strategy_selection:0",
@@ -102,6 +129,15 @@
     "corpus:adaptive_strategy_selection:2",
     "corpus:adaptive_strategy_selection:3",
     "corpus:adaptive_strategy_selection:4",
-    "corpus:adaptive_strategy_selection:5"
+    "corpus:adaptive_strategy_selection:5",
+    "corpus:adaptive_strategy_selection:6",
+    "corpus:adaptive_strategy_selection:7",
+    "corpus:adaptive_strategy_selection:8",
+    "corpus:adaptive_strategy_selection:9",
+    "corpus:adaptive_strategy_selection:10",
+    "corpus:adaptive_strategy_selection:11",
+    "corpus:adaptive_strategy_selection:12",
+    "corpus:adaptive_strategy_selection:13",
+    "corpus:adaptive_strategy_selection:14"
   ]
 }
