@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.288,
+  "coherence": 0.188,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "connection",
+    "active_topic": "trust",
     "ambiguity": 0.545,
-    "cost_total": 0.2041,
+    "cost_total": 0.2184,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
@@ -30,7 +30,7 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.712
+      "severity": 0.812
     }
   ],
   "law_bindings": [],
@@ -67,9 +67,9 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6431,
+    "confidence": 0.6223,
     "expected_observation": "followup",
-    "expected_user_continuation": "connection",
+    "expected_user_continuation": "trust",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
@@ -77,13 +77,13 @@
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "connection"
+      "topic": "trust"
     },
     "preload_context": [
-      "connection",
+      "trust",
       "followup"
     ],
-    "readiness_bias": 0.4214,
+    "readiness_bias": 0.4152,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,19 +93,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.4033,
+  "readiness": 0.3433,
   "recalled_fragments": [
-    "connection",
-    "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca..."
+    "trust",
+    "trust.\n[recalled:trust] trust."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2741,
-    "N": 0.0821,
-    "T": 0.6438,
+    "B": 0.2725,
+    "N": 0.0874,
+    "T": 0.6401,
     "X": 0.0
   },
-  "saved_at": 1784706296.498786,
+  "saved_at": 1784715986.9428005,
   "sub_crests": [
     {
       "axis": "X",

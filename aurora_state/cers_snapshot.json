@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.288,
+    "coherence": 0.188,
     "conscious_crest": {
       "axis": "T",
-      "intensity": 0.4364,
-      "label": "contextualize"
+      "intensity": 0.45,
+      "label": "hold"
     },
     "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "connection"
+        "trust"
       ],
       "interaction_state": "present",
-      "present_anchor": "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca...",
+      "present_anchor": "trust.\n[recalled:trust] trust.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,27 +21,27 @@
       "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.288,
-    "selected_action": "contextualize",
+    "readiness": 0.188,
+    "selected_action": "wait",
     "should_speak": true,
-    "stance": "contextual_continuity",
+    "stance": "hold_for_coherence",
     "subsurface_crest": {
       "axis": "T",
       "intensity": 0.5,
       "label": "continuity_stable"
     },
-    "timestamp": 1784706296.5049016
+    "timestamp": 1784715986.9439523
   },
-  "saved_at": 1784706296.5050306,
+  "saved_at": 1784715986.9441247,
   "subsurface_state": {
     "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "connection"
+        "trust"
       ],
       "interaction_state": "present",
-      "present_anchor": "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca...",
+      "present_anchor": "trust.\n[recalled:trust] trust.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
