@@ -232,6 +232,50 @@ def _frame_from_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
     )
 
 
+def _frame_from_turn_local_claims(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
+    """PF3.2 (2026-07-21): turn-local consumer for claims WorkingMemory.
+    _CLAIM_SKIP_SUBJECTS excluded from the substrate (pronoun/wh-word
+    subjects, e.g. "He's a bit nervous around new people.") --
+    aurora_working_memory.py's own docstring on _turn_local_claims and
+    _CLAIM_SKIP_SUBJECTS explains why the substrate exclusion stays
+    (contradiction identity keys by subject; an unresolved "he"/"she"
+    colliding across referents would manufacture false contradictions).
+    The frame needs no cross-turn identity, so it renders the pronoun as
+    spoken ("he" stays "he") -- lower precedence than a real substrate
+    claim (_frame_from_claims), higher than anchor. These claims were
+    never persisted anywhere else, so there is no scored-edge signal to
+    rank by (unlike substrate nodes' score_claim) -- most recent for
+    this turn wins, the same recency default used elsewhere in this
+    module when no stronger signal exists."""
+    working_memory = systems.get("working_memory") if isinstance(systems, dict) else None
+    turn_local = getattr(working_memory, "_turn_local_claims", None) if working_memory is not None else None
+    if not turn_local:
+        return None
+    try:
+        current_turn = int(getattr(working_memory, "turn_count", 0) or 0)
+        candidates = [c for c in turn_local if int(c.get("turn", -1) or -1) == current_turn]
+        if not candidates:
+            return None
+        best = candidates[-1]
+    except Exception:
+        return None
+
+    subject = str(best.get("subject", "") or "").strip()
+    if not subject:
+        return None
+    obj = str(best.get("object", "") or "").strip()
+    return PropositionFrame(
+        subject=subject,
+        relation=str(best.get("relation", "") or "").strip(),
+        obj=obj,
+        negated=bool(best.get("negated", False)),
+        stance=0.5,
+        unresolved=[],
+        topic=subject,
+        source="claim",
+    )
+
+
 def _frame_from_anchor(systems: Dict[str, Any], state: Any) -> Optional[PropositionFrame]:
     noncomp_input_state = dict(getattr(state, "noncomp_input_state", {}) or {})
     anchor = str(noncomp_input_state.get("anchor", "") or "").strip()
@@ -255,6 +299,12 @@ def build_frame(systems: Dict[str, Any], state: Any) -> Optional[PropositionFram
         pass
     try:
         frame = _frame_from_claims(systems)
+        if frame is not None:
+            return frame
+    except Exception:
+        pass
+    try:
+        frame = _frame_from_turn_local_claims(systems)
         if frame is not None:
             return frame
     except Exception:

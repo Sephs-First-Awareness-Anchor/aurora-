@@ -5625,3 +5625,73 @@ the reentrancy flake).
 Full data: `aurora_state/probe_battery/results/` runs (gitignored,
 local only) at each stage. PF3.2 (pronoun consumer split) next, per
 Directive PF3's sequence.
+
+## PF3.2 — Pronoun claim consumer split, 2026-07-21
+
+Directive PF3's ratified ruling. `_CLAIM_SKIP_SUBJECTS`
+(`aurora_working_memory.py:154`, enforced in `_extract_claims`) stays
+untouched for `PropositionSubstrate` admission -- the substrate keys
+contradiction identity by subject, and an unresolved "he"/"she"/"they"
+colliding across referents would manufacture false contradictions,
+violating fail-quiet perception (which requires positive same-referent
+evidence the substrate cannot have). But the frame needs no cross-turn
+identity, so a claim rejected SOLELY by the pronoun-subject check now
+has somewhere to go within the turn it was said.
+
+**Implementation:** `WorkingMemory.__init__` gained
+`self._turn_local_claims = deque(maxlen=12)` -- bounded, multi-turn
+(NOT reset per `note_claims()` call, since `note_claims` legitimately
+runs more than once per turn, `source='user'` then `source='aurora'`;
+a single-call reset would let the second call silently wipe the
+first's turn-local claims). `_extract_claims`'s `_append_claim` closure
+was reordered so the REAL invalidity checks (empty subject/object, weak
+anchor label, vague-referent object after conjunction-splitting) run
+BEFORE the pronoun-subject check, not after -- "rejected solely by
+pronoun" has to mean every other check already passed. A claim that
+clears every check except `subject_norm in _CLAIM_SKIP_SUBJECTS` is
+built the normal way (`_build_claim`, so `_normalize_mention` already
+renders "He's" -> "he" exactly as spoken, no extra pronoun-preservation
+logic needed) and appended to `_turn_local_claims` instead of `out`,
+deduplicated within the SAME call (`seen_turn_local`, same per-call
+scope as the existing `seen` set for substrate claims -- calling
+`_extract_claims` twice with identical text produces two entries either
+way, unchanged from prior behavior).
+
+`aurora_internal/aurora_proposition_frame.py` gained
+`_frame_from_turn_local_claims`, wired into `build_frame`'s ladder
+between `_frame_from_claims` and `_frame_from_anchor`: thought ->
+substrate claim -> turn-local claim -> anchor. Filters
+`working_memory._turn_local_claims` by `turn == turn_count`, the same
+turn-filtering discipline `_frame_from_claims` already applies to
+substrate nodes (a stale earlier-turn's turn-local claim must not leak
+into a later turn's frame -- verified explicitly, since this whole arc
+has been about exactly that class of bug). No substrate scoring
+function exists for claims that never entered the substrate, so ties
+break on recency (most recent claim for the current turn wins) --
+the same default this module already uses elsewhere when no stronger
+signal exists.
+
+**Gate (directive's own scenario), verified end to end:**
+`"He's a bit nervous around new people."` -> `frame.subject == 'he'`,
+`frame.relation == 'is'`, `frame.source == 'claim'`,
+`'nervous' in frame.obj` (the object is the copula pattern's full
+predicate capture, `"bit nervous around new people"` -- unchanged,
+pre-existing behavior for EVERY subject, pronoun or not; PF3.2 changes
+WHERE a pronoun-subject claim goes, never how the object is extracted).
+`proposition_substrate.nodes` count: 0. `recent_claims` and
+`claim_conflicts`: both empty -- `note_claims()` only ever iterates its
+substrate-bound return value, so a pronoun-only turn never touches
+either.
+
+**Tests:** `tests/test_pf3_2_pronoun_consumer_split.py` (11) -- the
+directive's own gate scenario end to end, substrate-claim-over-
+turn-local precedence, anchor fallback when turn-local is absent,
+survival across the two-call-per-turn `note_claims` pattern
+(user then aurora, confirmed live NOT to wipe each other), turn-
+filtering (an earlier turn's claim must not leak forward), wh-word
+subjects (not just personal pronouns), the "solely by pronoun" boundary
+(a claim invalid for an UNRELATED reason, e.g. vague object, still
+goes nowhere), and per-call dedup. Full existing `_extract_claims`/
+`build_frame` regression (`test_w2_claim_gate_widening.py`,
+`test_pf1_1_proposition_frame.py`, 33 tests) unaffected by the
+`_append_claim` reordering.

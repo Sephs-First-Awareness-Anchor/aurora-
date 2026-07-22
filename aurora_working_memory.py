@@ -264,6 +264,18 @@ class WorkingMemory:
         self.turn_count: int = 0
         self.recent_mentions = deque(maxlen=32)
         self.recent_claims = deque(maxlen=24)
+        # PF3.2 (2026-07-21): turn-local claims -- claims _extract_claims
+        # rejected SOLELY for having a pronoun/wh-word subject
+        # (_CLAIM_SKIP_SUBJECTS). Never passed to proposition_substrate.
+        # note_claim(), never separately persisted. Each entry carries its
+        # own 'turn' (set by _build_claim, same as substrate claims) --
+        # note_claims() can run more than once in a single turn (source=
+        # 'user' then source='aurora'), so this is a bounded, multi-turn
+        # deque filtered by turn_count at read time (build_frame), the
+        # same pattern _frame_from_claims already uses for substrate
+        # nodes, rather than a single-call scratch value a second
+        # note_claims() call in the same turn would silently wipe.
+        self._turn_local_claims = deque(maxlen=12)
         self.claim_conflicts = deque(maxlen=12)
         self.last_referent_resolution: dict = {}
         self.last_claim_resolution: dict = {}
@@ -4280,15 +4292,12 @@ class WorkingMemory:
         line = self._expand_claim_contractions(raw.rstrip('.!'))
         out: List[Dict[str, Any]] = []
         seen = set()
+        seen_turn_local = set()
 
         def _append_claim(subject: str, relation: str, obj: str, negated: bool = False):
             subject_norm = self._normalize_mention(subject)
             obj_norm = self._normalize_claim_object(obj)
-            if (
-                not subject_norm or not obj_norm or
-                subject_norm in self._CLAIM_SKIP_SUBJECTS or
-                self._is_weak_anchor_label(subject_norm)
-            ):
+            if not subject_norm or not obj_norm or self._is_weak_anchor_label(subject_norm):
                 return
             obj_norm = re.split(
                 r'\b(?:because|but|so|while|although)\b',
@@ -4307,6 +4316,19 @@ class WorkingMemory:
                 claim['negated'],
                 claim['source'],
             )
+            # PF3.2 (2026-07-21): everything above is a REAL invalidity
+            # check (no subject, no object, weak/vague anchor) -- a claim
+            # that fails any of those isn't offered anywhere. A claim that
+            # passes all of them but has a pronoun/wh-word subject is
+            # rejected SOLELY on that basis; it stays out of the substrate
+            # (_CLAIM_SKIP_SUBJECTS's own docstring: unresolved-referent
+            # collisions would manufacture false contradictions) but is
+            # still real, turn-local content the frame can use.
+            if subject_norm in self._CLAIM_SKIP_SUBJECTS:
+                if key not in seen_turn_local:
+                    seen_turn_local.add(key)
+                    self._turn_local_claims.append(claim)
+                return
             if key in seen:
                 return
             seen.add(key)
