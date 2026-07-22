@@ -40929,5 +40929,99 @@
       "compression_op:N:COMPRESSION_8095b157f8",
       "nc_dim:OPERATOR"
     ]
+  },
+  "L:cab01786be": {
+    "id": "L:cab01786be",
+    "parents": [
+      "L:18b735a816",
+      "dream:purpose:communication"
+    ],
+    "depth": 2,
+    "created_at_tick": 126465,
+    "stats": {
+      "count": 4,
+      "mean_pos_relief": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0,
+        "B": 0.09317074955288733,
+        "A": 0.0
+      },
+      "mean_relief": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0,
+        "B": 0.09317074955288733,
+        "A": 0.0
+      },
+      "stdev_relief": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0,
+        "B": 0.0014363039065987593,
+        "A": 0.0
+      },
+      "mean_cost": {
+        "X": 0.0,
+        "T": 0.0,
+        "N": 0.0,
+        "B": 0.0,
+        "A": 0.0
+      },
+      "mean_x_risk": 0.0
+    },
+    "dominant_relief_axis": "B",
+    "tags": [
+      "origin_signature:0",
+      "operator_action:operator_on_b",
+      "purpose_lane:communication",
+      "operator_grade:0.743",
+      "purpose_grade:0.866",
+      "overall_grade:0.805",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:2",
+      "generation_role:ADJACENT",
+      "seed_influence:0.439",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.439",
+      "artificial_seed:true",
+      "seed_lineage_id:spd_6486b88690ed",
+      "steering_target_generation:2",
+      "ontological_status:native_closed",
+      "depth_score:0.2667",
+      "leverage_grade:1.0000",
+      "viable_band_alignment:0.0000",
+      "energetic_footprint:0.2667",
+      "dominant_constraint:B",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_923a822310",
+      "nc_dim:MAGNITUDE",
+      "origin_signature:0",
+      "operator_action:operator_on_b",
+      "purpose_lane:meaning",
+      "operator_grade:0.743",
+      "purpose_grade:0.300",
+      "overall_grade:0.513",
+      "complexity_axes:1",
+      "complexity_slots:1",
+      "generation:3",
+      "generation_role:SHEAR",
+      "seed_influence:0.439",
+      "seed_lineage:true",
+      "artificial_seed_influence:0.439",
+      "artificial_seed:false",
+      "seed_lineage_id:",
+      "steering_target_generation:3",
+      "ontological_status:native_closed",
+      "depth_score:0.2667",
+      "leverage_grade:1.0000",
+      "viable_band_alignment:0.0000",
+      "energetic_footprint:0.2667",
+      "dominant_constraint:B",
+      "dominant_dimension:OPERATOR",
+      "compression_op:N:COMPRESSION_0d946f3851",
+      "nc_dim:MAGNITUDE"
+    ]
   }
 }
