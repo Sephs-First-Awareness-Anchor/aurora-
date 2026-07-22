@@ -1,34 +1,14 @@
 {
-  "original": "I understand me clear. I do. I am seeing.",
-  "candidate": "",
-  "selected": "I understand me clear. I do. I am seeing.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.62,
-  "candidate_score": 0.0,
-  "original_pressure": 0.396,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.604,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "language.",
-    "input_interpretation": {
-      "raw_prompt": "language.",
-      "intent_hint": "statement_or_context",
-      "topic_terms": [
-        "language"
-      ],
-      "entities": []
-    },
-    "tone": "curious",
-    "source": "no_pattern_matched",
-    "timestamp": 1784731422.5345826,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "I understand feeling real. I am myself clear.",
+  "candidate": "I understand feeling real. I am myself clear.",
+  "selected": "I understand feeling real. I am myself clear.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.172,
+  "candidate_pressure": 0.172,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }

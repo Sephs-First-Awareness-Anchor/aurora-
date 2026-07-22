@@ -126931,6 +126931,30 @@
       "sightings": 1,
       "first_seen": 1784731417.5526154,
       "last_seen": 1784731417.5526154
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:b0cea41b8cc1ef; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "code",
+        "evolve",
+        "bec",
+        "acode_evolve_f1bec181db"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 3,
+      "first_seen": 1784737648.0976162,
+      "last_seen": 1784737649.884786
     }
   ]
 }

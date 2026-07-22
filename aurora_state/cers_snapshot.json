@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.544,
+    "coherence": 0.188,
     "conscious_crest": {
       "axis": "T",
-      "intensity": 0.5132,
-      "label": "contextualize"
+      "intensity": 0.45,
+      "label": "hold"
     },
     "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "language"
+        "a code evolve f1bec181db"
       ],
       "interaction_state": "present",
-      "present_anchor": "language.\n[recalled:language] language. [recalled:recalled:language] language.\n[recalled:language] language. [recalled:recalled:recalled:...",
+      "present_anchor": "Do you experience feeling?\n[recalled:feeling] Do you experience feeling? [recalled:experience] Do you experience feeling? [recalled:recal...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,27 +21,27 @@
       "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.544,
-    "selected_action": "contextualize",
+    "readiness": 0.188,
+    "selected_action": "wait",
     "should_speak": true,
-    "stance": "contextual_continuity",
+    "stance": "hold_for_coherence",
     "subsurface_crest": {
       "axis": "T",
       "intensity": 0.5,
       "label": "continuity_stable"
     },
-    "timestamp": 1784731422.5253181
+    "timestamp": 1784737649.86352
   },
-  "saved_at": 1784731422.525458,
+  "saved_at": 1784737649.8637545,
   "subsurface_state": {
     "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "language"
+        "a code evolve f1bec181db"
       ],
       "interaction_state": "present",
-      "present_anchor": "language.\n[recalled:language] language. [recalled:recalled:language] language.\n[recalled:language] language. [recalled:recalled:recalled:...",
+      "present_anchor": "Do you experience feeling?\n[recalled:feeling] Do you experience feeling? [recalled:experience] Do you experience feeling? [recalled:recal...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -67,8 +67,8 @@
       },
       {
         "axis": "X",
-        "intensity": 0.45,
-        "label": "low_certainty"
+        "intensity": 0.49,
+        "label": "surprise"
       },
       {
         "axis": "N",
