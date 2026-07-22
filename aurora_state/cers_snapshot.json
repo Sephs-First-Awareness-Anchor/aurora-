@@ -1,53 +1,53 @@
 {
   "conscious_frame": {
-    "coherence": 0.188,
+    "coherence": 0.288,
     "conscious_crest": {
-      "axis": "N",
-      "intensity": 0.45,
-      "label": "hold"
+      "axis": "T",
+      "intensity": 0.4364,
+      "label": "contextualize"
     },
-    "dominant_axis": "N",
+    "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "understand"
+        "connection"
       ],
       "interaction_state": "present",
-      "present_anchor": "How do you understand trust?\n[recalled:understand] How do you understand trust? [recalled:trust] How do you understand trust? [recalled:r...",
+      "present_anchor": "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.188,
-    "selected_action": "wait",
+    "readiness": 0.288,
+    "selected_action": "contextualize",
     "should_speak": true,
-    "stance": "hold_for_coherence",
+    "stance": "contextual_continuity",
     "subsurface_crest": {
-      "axis": "N",
-      "intensity": 0.4476,
-      "label": "steady"
+      "axis": "T",
+      "intensity": 0.5,
+      "label": "continuity_stable"
     },
-    "timestamp": 1784697048.5504022
+    "timestamp": 1784706296.5049016
   },
-  "saved_at": 1784697048.5506175,
+  "saved_at": 1784706296.5050306,
   "subsurface_state": {
-    "dominant_axis": "N",
+    "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "understand"
+        "connection"
       ],
       "interaction_state": "present",
-      "present_anchor": "How do you understand trust?\n[recalled:understand] How do you understand trust? [recalled:trust] How do you understand trust? [recalled:r...",
+      "present_anchor": "connection.\n[recalled:connection] connection. [recalled:recalled:connection] connection.\n[recalled:connection] connection. [recalled:reca...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "sub_crests": [
       {
@@ -57,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 0.5,
-        "label": "familiar"
+        "intensity": 1.0,
+        "label": "continuity_pull"
       },
       {
         "axis": "A",
@@ -78,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_slipping"
+        "label": "thread_holds"
       },
       {
         "axis": "N",
@@ -92,9 +92,9 @@
       }
     ],
     "subsurface_crest": {
-      "axis": "N",
-      "intensity": 0.4476,
-      "label": "steady"
+      "axis": "T",
+      "intensity": 0.5,
+      "label": "continuity_stable"
     }
   }
 }
