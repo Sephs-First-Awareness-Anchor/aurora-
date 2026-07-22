@@ -1,5 +1,5 @@
 {
-  "total_fails": 71621,
+  "total_fails": 71628,
   "records": {
     "coherence_maintenance": {
       "fail_count": 4263,
@@ -226,11 +226,10 @@
       ]
     },
     "context_carryover": {
-      "fail_count": 12179,
-      "severity_sum": 6008.413797751705,
+      "fail_count": 12182,
+      "severity_sum": 6009.448797751705,
       "recent": [
         0.5,
-        0.035,
         0.5,
         0.5,
         0.5,
@@ -248,7 +247,8 @@
         0.5,
         0.5,
         0.5,
-        0.5
+        0.5,
+        0.035
       ],
       "examples": [
         {
@@ -450,8 +450,8 @@
       ]
     },
     "ambiguity_handling": {
-      "fail_count": 2258,
-      "severity_sum": 729.1521316552585,
+      "fail_count": 2260,
+      "severity_sum": 730.1521316552585,
       "recent": [
         0.5,
         0.5,
@@ -466,9 +466,9 @@
         0.5,
         0.5,
         0.5,
-        0.5,
-        0.5,
         0.035,
+        0.5,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -628,13 +628,13 @@
       ]
     },
     "contradiction_handling": {
-      "fail_count": 15830,
-      "severity_sum": 7978.25094833132,
+      "fail_count": 15831,
+      "severity_sum": 7978.75094833132,
       "recent": [
         0.5,
         0.5,
-        0.5,
         0.035,
+        0.5,
         0.5,
         0.5,
         0.5,
@@ -806,8 +806,8 @@
       ]
     },
     "implied_intent_inference": {
-      "fail_count": 1455,
-      "severity_sum": 673.017621673019,
+      "fail_count": 1456,
+      "severity_sum": 673.517621673019,
       "recent": [
         0.5,
         0.5,
@@ -817,8 +817,8 @@
         0.5,
         0.5,
         0.5,
-        0.5,
         0.035,
+        0.5,
         0.5,
         0.5,
         0.5,

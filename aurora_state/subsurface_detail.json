@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 0.35,
+      "confidence": 1.0,
       "label": "topic_continuation"
     },
     {
@@ -10,31 +10,37 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.188,
+  "coherence": 0.544,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "change",
-    "ambiguity": 0.545,
-    "cost_total": 0.2099,
+    "active_topic": "language",
+    "ambiguity": 0.295,
+    "cost_total": 0.1319,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 0.0,
+    "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [
-    {
-      "label": "low_coherence",
-      "severity": 0.812
-    }
-  ],
+  "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
+    {
+      "confidence": 1.0,
+      "label": "callback_pressure",
+      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
+      "source": "memory_resonance",
+      "tags": [
+        "continuity",
+        "context"
+      ],
+      "urgency": 0.45
+    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -56,23 +62,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.5995,
+    "confidence": 0.6293,
     "expected_observation": "followup",
-    "expected_user_continuation": "change",
+    "expected_user_continuation": "language",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.3925,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "change"
+      "topic": "language"
     },
     "preload_context": [
-      "change",
+      "language",
       "followup"
     ],
-    "readiness_bias": 0.3746,
+    "readiness_bias": 0.4673,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -82,19 +88,20 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3231,
+  "readiness": 0.6025,
   "recalled_fragments": [
-    "change",
-    "What is change?\n[recalled:change] What is change? [recalled:recalled:change] What is change?\n[recalled:change] What is change? [recalled:..."
+    "language",
+    "i do means clear i am seeing me coherent i am knowing or just",
+    "language.\n[recalled:language] language. [recalled:recalled:language] language.\n[recalled:language] language. [recalled:recalled:recalled:..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4569,
-    "N": 0.5431,
-    "T": 0.0,
+    "B": 0.1755,
+    "N": 0.0628,
+    "T": 0.7617,
     "X": 0.0
   },
-  "saved_at": 1784722954.4912868,
+  "saved_at": 1784731422.5243661,
   "sub_crests": [
     {
       "axis": "X",
@@ -103,8 +110,8 @@
     },
     {
       "axis": "T",
-      "intensity": 0.5,
-      "label": "familiar"
+      "intensity": 1.0,
+      "label": "continuity_pull"
     },
     {
       "axis": "A",
@@ -124,7 +131,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_slipping"
+      "label": "thread_holds"
     },
     {
       "axis": "N",

@@ -29,96 +29,6 @@
   "issue_possibility_pressure": {},
   "recent_events": [
     {
-      "ts": 1783811686.1878395,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_direct_address_formulation",
-      "severity": 0.6,
-      "persistence_key": "tests.test_direct_address_formulation",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783811686.8445532,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_directed_training_corpus_cache_trust",
-      "severity": 0.6,
-      "persistence_key": "tests.test_directed_training_corpus_cache_trust",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783811689.3587756,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_grammar_motif_depletion_check",
-      "severity": 0.6,
-      "persistence_key": "tests.test_grammar_motif_depletion_check",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783815830.829081,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "tests.test_scheduled_run_state_persistence",
-      "severity": 0.6,
-      "persistence_key": "tests.test_scheduled_run_state_persistence",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
-      "ts": 1783854111.764125,
-      "provenance": "WARP",
-      "pathway": "surface_emergence",
-      "source": "manual_code_lineage",
-      "layer": "code",
-      "trigger": "no_organ_alignment",
-      "unresolved": "aurora_understanding_sediment",
-      "severity": 0.6,
-      "persistence_key": "aurora_understanding_sediment",
-      "profile": {
-        "X": 0.8,
-        "T": 0.1,
-        "N": 0.1,
-        "B": 0.1,
-        "A": 0.1
-      }
-    },
-    {
       "ts": 1783854171.1851125,
       "provenance": "WARP",
       "pathway": "surface_emergence",
@@ -1755,6 +1665,96 @@
         "B": 0.1,
         "A": 0.1
       }
+    },
+    {
+      "ts": 1784731192.7538664,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.characterize_pf16_residue",
+      "severity": 0.6,
+      "persistence_key": "scripts.characterize_pf16_residue",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784731234.4967268,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.w1_reentrancy_trace",
+      "severity": 0.6,
+      "persistence_key": "scripts.w1_reentrancy_trace",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784731236.005262,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "scripts.w1_thought_state_diagnostic",
+      "severity": 0.6,
+      "persistence_key": "scripts.w1_thought_state_diagnostic",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784731407.5962656,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_w1_turn_content_context",
+      "severity": 0.6,
+      "persistence_key": "tests.test_w1_turn_content_context",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
+    },
+    {
+      "ts": 1784731409.104192,
+      "provenance": "WARP",
+      "pathway": "surface_emergence",
+      "source": "manual_code_lineage",
+      "layer": "code",
+      "trigger": "no_organ_alignment",
+      "unresolved": "tests.test_w2_claim_gate_widening",
+      "severity": 0.6,
+      "persistence_key": "tests.test_w2_claim_gate_widening",
+      "profile": {
+        "X": 0.8,
+        "T": 0.1,
+        "N": 0.1,
+        "B": 0.1,
+        "A": 0.1
+      }
     }
   ],
   "consultation_history": [],
@@ -3008,5 +3008,5 @@
       ]
     }
   ],
-  "saved_at": 1784722959.938095
+  "saved_at": 1784731423.507261
 }
