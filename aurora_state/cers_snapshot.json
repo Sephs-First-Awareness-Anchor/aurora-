@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.288,
+    "coherence": 0.252,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.3997,
-      "label": "explain"
+      "intensity": 0.45,
+      "label": "hold"
     },
     "dominant_axis": "N",
     "overlay": {
       "active_crystals": [
-        "existence"
+        "language"
       ],
       "interaction_state": "present",
-      "present_anchor": "Do you experience existence?\n[recalled:experience] Do you experience existence? [recalled:existence] Do you experience existence? [recall...",
+      "present_anchor": "What does language mean to you?\n[recalled:language] What does language mean to you? [recalled:mean] What does language mean to you? [reca...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,27 +21,27 @@
       "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.288,
-    "selected_action": "explain",
-    "should_speak": false,
-    "stance": "interpretive_explanation",
+    "readiness": 0.252,
+    "selected_action": "wait",
+    "should_speak": true,
+    "stance": "hold_for_coherence",
     "subsurface_crest": {
       "axis": "N",
       "intensity": 0.4476,
       "label": "steady"
     },
-    "timestamp": 1784678376.3061619
+    "timestamp": 1784685313.581958
   },
-  "saved_at": 1784678376.3066893,
+  "saved_at": 1784685313.5821254,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "existence"
+        "language"
       ],
       "interaction_state": "present",
-      "present_anchor": "Do you experience existence?\n[recalled:experience] Do you experience existence? [recalled:existence] Do you experience existence? [recall...",
+      "present_anchor": "What does language mean to you?\n[recalled:language] What does language mean to you? [recalled:mean] What does language mean to you? [reca...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419

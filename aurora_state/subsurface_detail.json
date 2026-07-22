@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.288,
+  "coherence": 0.252,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "existence",
-    "ambiguity": 0.545,
-    "cost_total": 0.1956,
+    "active_topic": "language",
+    "ambiguity": 0.295,
+    "cost_total": 0.165,
     "dominant_emotion": "curiosity",
     "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
@@ -30,7 +30,7 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.712
+      "severity": 0.748
     }
   ],
   "law_bindings": [],
@@ -56,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6556,
+    "confidence": 0.6421,
     "expected_observation": "followup",
-    "expected_user_continuation": "existence",
+    "expected_user_continuation": "language",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.3925,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "A",
+      "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "existence"
+      "topic": "language"
     },
     "preload_context": [
-      "existence",
+      "language",
       "followup"
     ],
-    "readiness_bias": 0.4252,
+    "readiness_bias": 0.4374,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -82,19 +82,20 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.4033,
+  "readiness": 0.3615,
   "recalled_fragments": [
-    "existence",
-    "Do you experience existence?\n[recalled:experience] Do you experience existence? [recalled:existence] Do you experience existence? [recall..."
+    "language",
+    "i do means clear i am seeing or real i am interesting right always",
+    "What does language mean to you?\n[recalled:language] What does language mean to you? [recalled:mean] What does language mean to you? [reca..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.4613,
-    "N": 0.5387,
+    "B": 0.3252,
+    "N": 0.6748,
     "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784678376.303576,
+  "saved_at": 1784685313.5807095,
   "sub_crests": [
     {
       "axis": "X",
