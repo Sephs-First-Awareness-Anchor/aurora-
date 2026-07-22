@@ -5232,3 +5232,124 @@ passing, plus the full existing PF1 regression set unaffected.
 
 Full data: `aurora_state/probe_battery/results/pf16_residue_
 characterization.json` (gitignored, local only). W2 (claim gate) next.
+
+## PF1.6 Residue Characterization — W2: claim gate firing rate, 2026-07-21
+
+Second work item, tackled one at a time per Sunni's instruction.
+Characterized `WorkingMemory._extract_claims` (`aurora_working_memory.py`
+-- the real gate feeding `proposition_substrate`; the residue report's
+own name for it, `_ws_claim_gate`, doesn't exist in the codebase and
+was traced to `aurora_articulation._is_word_salad`, an unrelated
+salad-detection gate on delivered text) against all 60 real probe
+turns, offline, no boot required. Four narrow, bounded widenings to
+the SAME existing gate, never a parallel extractor, per the report's
+own scoping:
+
+1. **Contraction expansion.** Every pattern in `_extract_claims`
+   requires the copula/auxiliary as a separate whitespace-delimited
+   token ("he is", "does not") -- ordinary contracted English ("he's",
+   "doesn't") never matched at all. Fixed via `_expand_claim_
+   contractions`, a new method applying a closed, unambiguous
+   expansion set (`_CLAIM_CONTRACTION_EXPANSIONS`) once, before
+   pattern matching -- deliberately excludes generic noun+'s
+   ("Sarah's book"), which stays genuinely ambiguous between
+   possessive and "has" and is left untouched. **Measured finding, not
+   assumed:** the copula-contraction half of this set (he's/she's/
+   it's/that's/what's/...) turned out to have ZERO effect on its own
+   in the real battery -- every word it expands to is itself a
+   pronoun/wh-word already on `_CLAIM_SKIP_SUBJECTS` (see below). The
+   negation-contraction half (doesn't/isn't/don't/...) is where it
+   actually matters: a concrete-noun subject with a contracted negated
+   verb ("The policy doesn't support flexibility" -> now extracts a
+   claim; didn't before).
+
+2. **Verb whitelist widened.** The two existing relation-verb lists
+   were scoped for technical/architectural relations (`connects to`,
+   `blocks`, `requires`, `causes`, ...) -- ordinary conversational
+   stance/relationship verbs never matched at all ("trusts",
+   "surprised", "wanted", "promised", "booked"). Added a third
+   enumerated list (`relation_patterns[2]`, ~35 curated verbs) through
+   the exact same mechanism, not a generic `infer_word_role` fallback
+   -- a fallback risks misclassified tokens producing noisy/wrong
+   claims into the substrate, where a curated list stays reviewable.
+   `negated_aux_pattern` (the "doesn't `<verb>`" path) originally only
+   checked the first technical-verb list -- widened to check both.
+
+3. **`reported_match` had two independent gaps.** Its subject-capture
+   regex required >=2 characters (`{1,40}?`, minimum non-zero), so
+   single-letter pronoun subjects ("I") never entered the reported-
+   speech branch at all -- "I claimed I wasn't upset, but I've brought
+   it up three times today." skipped straight past it and fell through
+   to the plain copula pattern, which then captured **"I claimed I"**
+   as its subject (the reporting frame swallowed whole into a garbled
+   claim). Fixed the minimum (`{0,40}?`). Its verb list also only had
+   3rd-person -s/past forms, never the natural first-person base form
+   ("I claim...", "I think...") -- added, but restricted to firing
+   only directly after `I`/`we`/`you` (the only subjects bare present
+   tense is grammatically valid for anyway) via a lookahead-branched
+   pattern rather than the flexible general subject capture. This
+   restriction turned out to be load-bearing, not just grammatical
+   pedantry: an unrestricted bare-form addition caught a live false
+   positive during this work's own testing -- "I just wanted to say
+   hello." matched on bare "say" with "wanted to" swallowed into the
+   subject capture (an infinitive purpose clause, not reported
+   speech), silently losing what had been a correctly-widened verb-
+   list claim on "wanted". Found and fixed before shipping, same
+   discipline as every other phase's own live-fire catches this
+   campaign has documented.
+
+   Also changed `_extract_claims` to unconditionally `return out[:3]`
+   after `reported_match` fires (previously only returned early `if
+   out`), rather than falling through to re-scan the whole original
+   line when the reported clause's own extraction produces nothing --
+   a reported-speech sentence's assertion lives in the reported
+   clause; if nothing extractable lives there (very often because the
+   reporter/reportee are pronouns, correctly skipped), the honest
+   answer is no claim, not a fallback match against the wrapper.
+
+**Deliberately NOT touched: `_CLAIM_SKIP_SUBJECTS`'s exclusion of bare
+pronoun subjects** (he/she/it/i/we/you/they/this/that/...). This is
+the actual, deeper reason the report's own headline examples ("He's a
+bit nervous around new people.", "She's a little anxious...") still
+produce no claim even with every fix above applied -- confirmed
+directly (`"He is a bit nervous around new people."` -> `[]`, `"The
+dog is a bit nervous around new people."` -> a real claim). This looks
+like a genuine, intentional design boundary (a claim like "he is
+nervous" without knowing who "he" resolves to is a real, unresolved-
+referent ambiguity the substrate may be right to refuse) rather than
+an oversight -- relaxing it would let in a substantial volume of
+ambiguous claims with real downstream effects (contradiction
+detection, claim substrate noise). Flagged here explicitly for Sunni/
+Cael's decision, matching this campaign's own "architecture calls are
+yours" doctrine, not decided unilaterally under a characterization
+work item.
+
+**Also NOT touched:** ditransitive reported speech ("I told my friend
+I was fine..." -> still produces a garbled `"i told my friend i"`
+subject) -- ordinary reported_match handles `SUBJECT + VERB + CLAUSE`,
+not `SUBJECT + VERB + INDIRECT_OBJECT + CLAUSE`; fixing "told X that
+Y" needs a genuinely different pattern, not a widening of the existing
+one, out of this item's bounded scope. And `"The policy claims to
+support flexibility..."` extracts with subject `"to"` (the infinitive
+marker, not stripped from the nested clause) -- a minor residual, not
+chased further.
+
+**Before/after, same 60-probe battery, offline (no boot needed --
+`_extract_claims` is pure):** `has_claim` **3/60 -> 6/60**. Every
+successful claim spot-checked; only known residuals are the two
+explicitly named above (ditransitive "told", infinitive-marker
+subject on "claims to"), no other garbled subjects.
+
+**Tests:** 12 new in `tests/test_w2_claim_gate_widening.py`, covering
+each fix individually, the pronoun-skip boundary explicitly (documents
+it, doesn't relax it), the false-positive-found-and-fixed case
+directly, and a full-battery regression guard asserting no future
+change reintroduces a reporting-verb-in-subject shape. **Full suite:
+978 passed, 2 failed** -- both already-documented, pre-existing,
+unrelated (`test_concept_image_ingestion_import.py`'s cv2 flake,
+`test_m1_2_provenance_hygiene.py`'s "lang" tagging drift); the
+reentrancy cross-test flake found during W1 did not even appear this
+run, consistent with it being non-deterministic timing-dependent
+rather than anything in this change.
+
+W3 (adequacy saturation on bare copula fragments) next.
