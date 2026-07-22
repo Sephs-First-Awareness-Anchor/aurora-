@@ -156,6 +156,30 @@ class WorkingMemory:
         'this', 'that', 'these', 'those', 'they', 'them', 'he', 'she',
         'we', 'you', 'i', 'my', 'your', 'our', 'their', 'there', 'here',
     }
+    # PF1.6 residue W2 (2026-07-21): _extract_claims's regex patterns all
+    # require the copula/auxiliary as a separate whitespace-delimited
+    # token ("he is", "does not") -- ordinary contracted English ("he's",
+    # "doesn't") never matched at all. This is a closed, curated set:
+    # only pronoun/wh-word + 's contractions where "is" is overwhelmingly
+    # the correct expansion (never possessive-'s on a proper/common noun,
+    # which stays ambiguous and is deliberately left untouched -- "Sarah's
+    # book" must not become "Sarah is book"). Applied once, before pattern
+    # matching, widening the EXISTING gate's own entry path rather than a
+    # parallel extractor, per this work item's own scoping.
+    _CLAIM_CONTRACTION_EXPANSIONS = {
+        r"\bhe's\b": "he is", r"\bshe's\b": "she is", r"\bit's\b": "it is",
+        r"\bthat's\b": "that is", r"\bwhat's\b": "what is",
+        r"\bwho's\b": "who is", r"\bwhere's\b": "where is",
+        r"\bwhen's\b": "when is", r"\bhow's\b": "how is",
+        r"\bwhy's\b": "why is", r"\bhere's\b": "here is",
+        r"\bthere's\b": "there is",
+        r"\bwe're\b": "we are", r"\byou're\b": "you are", r"\bthey're\b": "they are",
+        r"\bisn't\b": "is not", r"\baren't\b": "are not",
+        r"\bwasn't\b": "was not", r"\bweren't\b": "were not",
+        r"\bdoesn't\b": "does not", r"\bdon't\b": "do not", r"\bdidn't\b": "did not",
+        r"\bhasn't\b": "has not", r"\bhaven't\b": "have not", r"\bhadn't\b": "had not",
+        r"\bwon't\b": "will not",
+    }
     _CLAIM_RELATION_ALIASES = {
         'is': 'is',
         'are': 'is',
@@ -4228,6 +4252,21 @@ class WorkingMemory:
                 pass
         self.claim_conflicts.appendleft(conflict_entry)
 
+    def _expand_claim_contractions(self, text: str) -> str:
+        """PF1.6 residue W2: expand the closed, unambiguous contraction
+        set (_CLAIM_CONTRACTION_EXPANSIONS) so _extract_claims's
+        whitespace-delimited copula/auxiliary patterns can actually match
+        ordinary contracted English. Case-insensitive, case-preserving on
+        the leading letter (so a sentence-initial "He's" expands to "He
+        is", not "he is")."""
+        out = text
+        for pattern, expansion in self._CLAIM_CONTRACTION_EXPANSIONS.items():
+            def _repl(m, _expansion=expansion):
+                matched = m.group(0)
+                return _expansion.capitalize() if matched[0].isupper() else _expansion
+            out = re.sub(pattern, _repl, out, flags=re.IGNORECASE)
+        return out
+
     def _extract_claims(self, text: str, source: str, understood: dict | None = None) -> List[Dict[str, Any]]:
         raw = str(text or "").strip()
         if not raw or raw.endswith('?'):
@@ -4238,7 +4277,7 @@ class WorkingMemory:
             if self.extract_behavior_alignment_request(raw):
                 return []
 
-        line = raw.rstrip('.!')
+        line = self._expand_claim_contractions(raw.rstrip('.!'))
         out: List[Dict[str, Any]] = []
         seen = set()
 
@@ -4273,9 +4312,33 @@ class WorkingMemory:
             seen.add(key)
             out.append(claim)
 
+        # PF1.6 residue W2 (2026-07-21): {1,40}? required a subject at
+        # least 2 characters long, so single-letter pronoun subjects ("I")
+        # never matched at all -- "I claimed I wasn't upset..." skipped
+        # this branch entirely and fell through to the plain copula
+        # pattern below, which then captured "I claimed I" (the reporting
+        # frame swallowed whole) as its subject. {0,40}? lets "I" match.
+        # PF1.6 residue W2: the verb list only had 3rd-person -s forms and
+        # past tense -- "I claim...", "I think...", "I believe..." (base
+        # forms, the natural first-person phrasing) never matched. Bare
+        # forms are only grammatical for I/we/you as subject anyway
+        # (never a longer noun phrase), and restricting them to that
+        # exact subject also rules out the false-positive this caught
+        # live: "I just wanted to say hello" matching on "say" with
+        # "wanted to" swallowed into the subject group -- an infinitive
+        # purpose clause, not reported speech. The lookaheads keep the
+        # flexible-subject branch limited to the original -s/-ed forms
+        # and the strict i/we/you branch to the bare forms, while still
+        # capturing the verb into a single group (1) for the code below.
         reported_match = re.match(
-            r'^(?:my\s+\w+|[A-Za-z][A-Za-z0-9_\-\s]{1,40}?)\s+'
-            r'(says|said|thinks|thought|believes|believed|claims|claimed|insists|insisted)\s+(.+)$',
+            r'^(?:'
+            r'(?:my\s+\w+|[A-Za-z][A-Za-z0-9_\-\s]{0,40}?)\s+'
+            r'(?=(?:says|said|thinks|thought|believes|believed|claims|claimed|insists|insisted)\s)'
+            r'|'
+            r'(?:i|we|you)\s+(?=(?:say|think|believe|claim|insist)\s)'
+            r')'
+            r'(says|said|say|thinks|thought|think|believes|believed|believe|'
+            r'claims|claimed|claim|insists|insisted|insist)\s+(.+)$',
             line,
             re.IGNORECASE,
         )
@@ -4294,8 +4357,18 @@ class WorkingMemory:
                     if key not in seen:
                         seen.add(key)
                         out.append(claim)
-                if out:
-                    return out[:3]
+                # PF1.6 residue W2 (2026-07-21): a reported-speech sentence's
+                # assertion content lives in the reported clause -- if
+                # nothing extractable lives there (very often because the
+                # reporter/reportee are pronouns, deliberately skipped via
+                # _CLAIM_SKIP_SUBJECTS), the right answer is no claim, not
+                # falling through to re-scan the WHOLE original line. That
+                # fallthrough produced garbled subjects once the widened
+                # verb list (this same work item) made a verb inside the
+                # reported clause visible to the outer patterns loop too
+                # (e.g. "He says he trusts me" -> subject captured as "He
+                # says he", the reporting frame swallowed into the subject).
+                return out[:3]
 
         locative_action_match = re.match(
             r'^(?:i|we|he|she|they|someone|my\s+\w+|[A-Za-z][A-Za-z0-9_\-\s]{1,30}?)\s+'
@@ -4337,22 +4410,55 @@ class WorkingMemory:
             r'requires|require|needs|need|anchors|anchor|grounds|ground|tracks|track|'
             r'carries|carry|wires|wire|drives|drive|improves|improve|degrades|degrade|'
             r'forms|form|means|mean)',
+            # PF1.6 residue W2 (2026-07-21): the two lists above were
+            # scoped for technical/architectural relations (M1 Track
+            # claim-extraction) -- ordinary conversational stance/
+            # relationship verbs never matched at all ("trusts",
+            # "surprised", "promised", "booked"). Widened through this
+            # SAME enumerated-list mechanism (not a parallel extractor,
+            # per this work item's own scoping) rather than a generic
+            # infer_word_role fallback, which would risk misclassified
+            # tokens producing noisy/wrong claims into the substrate.
+            r'(trusts?|trusted|surprises?|surprised|wants?|wanted|promises?|promised|'
+            r'checks?|checked|books?|booked|feels?|felt|loves?|loved|hates?|hated|'
+            r'hopes?|hoped|fears?|feared|worr(?:ies|y)|worried|knows?|knew|'
+            r'understands?|understood|remembers?|remembered|forgets?|forgot|'
+            r'misses?|missed|appreciates?|appreciated|enjoys?|enjoyed|likes?|liked|'
+            r'dislikes?|disliked|prefers?|preferred|den(?:ies|y)|denied|supports?|'
+            r'supported|offers?|offered|expects?|expected|ignores?|ignored|'
+            r'respects?|respected|helps?|helped|hurts?|confuses?|confused|'
+            r'upsets?|bothers?|bothered|scares?|scared|annoys?|annoyed|believes?|believed)',
         ]
         patterns = [
             rf'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{{1,60}}?)\s+{relation_patterns[0]}\s+(.+)$',
             rf'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{{1,60}}?)\s+{relation_patterns[1]}\s+(.+)$',
+            rf'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{{1,60}}?)\s+{relation_patterns[2]}\s+(.+)$',
             r'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{1,60}?)\s+(is|are|was|were)\s+(not\s+)?(.+)$',
         ]
 
-        negated_aux_pattern = re.compile(
-            rf'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{{1,60}}?)\s+'
-            rf'(?:do|does|did)\s+not\s+{relation_patterns[1]}\s+(.+)$',
-            re.IGNORECASE,
-        )
-        negated_aux_match = negated_aux_pattern.match(line)
-        if negated_aux_match:
-            subject, relation, obj = negated_aux_match.groups()
-            _append_claim(subject, relation, obj, True)
+        # PF1.6 residue W2: originally only checked relation_patterns[1]
+        # (the technical-verb list) -- "doesn't support" (relation_
+        # patterns[2], the widened conversational list) never matched
+        # here even after contraction expansion turned "doesn't" into
+        # "does not". Both lists are checked now.
+        negated_aux_patterns = [
+            re.compile(
+                rf'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{{1,60}}?)\s+'
+                rf'(?:do|does|did)\s+not\s+{relation_patterns[1]}\s+(.+)$',
+                re.IGNORECASE,
+            ),
+            re.compile(
+                rf'^(?:the\s+|a\s+|an\s+)?([A-Za-z][A-Za-z0-9_\-\s]{{1,60}}?)\s+'
+                rf'(?:do|does|did)\s+not\s+{relation_patterns[2]}\s+(.+)$',
+                re.IGNORECASE,
+            ),
+        ]
+        for negated_aux_pattern in negated_aux_patterns:
+            negated_aux_match = negated_aux_pattern.match(line)
+            if negated_aux_match:
+                subject, relation, obj = negated_aux_match.groups()
+                _append_claim(subject, relation, obj, True)
+                break
 
         for pat in patterns:
             match = re.match(pat, line, re.IGNORECASE)

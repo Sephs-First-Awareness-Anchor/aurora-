@@ -66,10 +66,12 @@ def test_adequacy_rewards_a_real_predicate_argument_pair():
 
 
 def test_adequacy_no_bonus_when_verb_and_noun_are_not_both_anchored():
-    """'need' is anchored but 'chair' (the nearby noun) is not -- no
-    real on-topic predicate-argument pair exists, no bonus."""
+    """'need' is anchored but 'chair'/'office' (the nearby nouns) are
+    not -- no real on-topic predicate-argument pair exists, no bonus.
+    Uses >=3 countable words so W3's confidence-damping (below) doesn't
+    also apply here -- this test isolates the bonus behavior only."""
     anchor = {"need": 1.0}
-    text = "I need a chair"
+    text = "I need a chair for the office"
     score = adequacy_score(text, anchor)
     assert score == _old_relevance(text, anchor)
 
@@ -98,6 +100,61 @@ def test_adequacy_base_term_is_never_lower_than_old_relevance_on_real_probe_shap
     ]
     for text in samples:
         assert adequacy_score(text, anchor) >= _old_relevance(text, anchor)
+
+
+# ── W3 (PF1.6 residue, 2026-07-21): confidence damping ──────────────
+# "I am bit." scored adequacy 1.0 against an anchor containing "bit" --
+# the anchor rendering as a bare copula complement, with no real
+# relation, satisfied the predicate-argument check trivially because
+# "I"/"am" are both under the 3-char counting threshold, leaving "bit"
+# as the ONLY countable word. hits/len's confidence should scale with
+# how many words it's actually averaged over.
+
+def test_adequacy_damps_the_reported_bare_copula_case():
+    """The exact live example from the PF1.6 residue characterization
+    report: 'I am bit.' against an anchor from 'He's a bit nervous
+    around new people.' Previously scored 1.0."""
+    anchor = {"bit": 1.0, "nervous": 1.0, "around": 1.0, "new": 1.0, "people": 1.0}
+    score = adequacy_score("I am bit.", anchor)
+    assert score is not None
+    assert score < 0.5
+    assert score == 1.0 / 3
+
+
+def test_adequacy_single_countable_word_hit_is_damped_to_a_third():
+    anchor = {"fine": 1.0}
+    assert adequacy_score("I am fine.", anchor) == 1.0 / 3
+
+
+def test_adequacy_two_countable_words_damped_proportionally():
+    anchor = {"real": 1.0}
+    # "did"(3) + "real"(4) = 2 countable words; hits=1 -> base 0.5,
+    # confidence 2/3 -> 0.5 * 2/3 = 1/3.
+    score = adequacy_score("I did real.", anchor)
+    assert abs(score - (0.5 * (2 / 3))) < 1e-9
+
+
+def test_adequacy_three_or_more_countable_words_is_undamped():
+    """The damping only kicks in below the threshold -- ordinary-length
+    responses keep their exact prior arithmetic (already covered by
+    test_adequacy_base_term_is_never_lower_than_old_relevance_on_real_
+    probe_shaped_text above, restated here explicitly for W3's own
+    documentation)."""
+    anchor = {"clear": 1.0}
+    text = "I feel very clear today"  # 4 countable words
+    assert adequacy_score(text, anchor) == _old_relevance(text, anchor)
+
+
+def test_adequacy_damping_breaks_the_old_never_below_relevance_guarantee_only_for_short_text():
+    """Documents the deliberate, scoped exception: adequacy can now
+    score BELOW old relevance for pathologically short responses --
+    that guarantee was never meant to bless a single-word coincidence
+    as high-confidence adequacy. It still holds for ordinary-length
+    text (see the test above and the real-probe-shaped regression
+    guard)."""
+    anchor = {"bit": 1.0}
+    text = "I am bit."
+    assert adequacy_score(text, anchor) < _old_relevance(text, anchor)
 
 
 # ── role_coherent ────────────────────────────────────────────────

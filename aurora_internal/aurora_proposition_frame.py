@@ -121,6 +121,18 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
         # "aurora:activation=0.75") even outside the pipe-joined format.
         if "=" in tok:
             continue
+        # W1 live-fire finding (PF1.6 residue characterization,
+        # 2026-07-21): once the linguistic context started carrying real
+        # turn text, contractions ("he's", "what's", "i'm") surfaced as
+        # spurious relation/obj candidates -- infer_word_role has no
+        # apostrophe-aware rule, so an unrecognized contraction defaults
+        # to "noun" and binds straight into a content slot ("I am
+        # planning he's."). A contraction is a compressed pronoun+verb,
+        # never itself a usable standalone content word for this
+        # extraction's purposes -- excluded outright, same as the "="
+        # guard above.
+        if "'" in tok:
+            continue
         if tok == topic_lower:
             continue
         role = infer_word_role(tok)
@@ -136,17 +148,42 @@ def _extract_triple_from_thought_text(text: str) -> Optional[Dict[str, Any]]:
 
 
 def _frame_from_thought_state(systems: Dict[str, Any]) -> Optional[PropositionFrame]:
+    """W1 (PF1.6 residue characterization, 2026-07-21): unified_
+    interpretation/self_application are built by aurora_thought_
+    formation._reason_through_dominant() purely from administrative
+    ProcessContexts (memory-ambient, identity-predicates, loop-counts)
+    -- an internal telemetry trace, never the turn's own content, and
+    always in the pipe-joined shape _looks_like_internal_telemetry()
+    correctly rejects. Confirmed live: 0/60 probes ever reached this
+    rung through that text. The real fix is upstream, in aurora_braid_
+    wiring.py's _build_turn_process_contexts(), which now registers a
+    "linguistic" process carrying the turn's actual text -- read
+    directly from dominant_thread here, never through the telemetry
+    strings, so there's nothing for the telemetry guard to reject in
+    the first place."""
     thought_state = systems.get("_current_thought_state") if isinstance(systems, dict) else None
     if thought_state is None or bool(getattr(thought_state, "skipped", False)):
         return None
 
-    combined = " ".join(
-        str(s) for s in (
-            getattr(thought_state, "unified_interpretation", "") or "",
-            getattr(thought_state, "self_application", "") or "",
-        ) if s
-    ).strip()
-    triple = _extract_triple_from_thought_text(combined)
+    triple = None
+    for ctx in (getattr(thought_state, "dominant_thread", None) or []):
+        if getattr(ctx, "process_type", "") == "linguistic":
+            triple = _extract_triple_from_thought_text(
+                str(getattr(ctx, "what_it_is_operating_on", "") or ""))
+            if triple:
+                break
+
+    if not triple:
+        # Fallback for the pre-fix shape (no linguistic context present,
+        # e.g. an older/degraded thought_state) -- the telemetry guard
+        # still applies here, so this rarely produces anything, by design.
+        combined = " ".join(
+            str(s) for s in (
+                getattr(thought_state, "unified_interpretation", "") or "",
+                getattr(thought_state, "self_application", "") or "",
+            ) if s
+        ).strip()
+        triple = _extract_triple_from_thought_text(combined)
     if not triple:
         return None
 

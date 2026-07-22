@@ -17,12 +17,20 @@ from aurora_internal.aurora_proposition_frame import (  # noqa: E402
 
 class _FakeThoughtState:
     def __init__(self, unified_interpretation="", self_application="",
-                 confidence=0.5, unresolved=None, skipped=False):
+                 confidence=0.5, unresolved=None, skipped=False,
+                 dominant_thread=None):
         self.unified_interpretation = unified_interpretation
         self.self_application = self_application
         self.confidence = confidence
         self.unresolved = unresolved or []
         self.skipped = skipped
+        self.dominant_thread = dominant_thread or []
+
+
+class _FakeProcessContext:
+    def __init__(self, process_type, what_it_is_operating_on):
+        self.process_type = process_type
+        self.what_it_is_operating_on = what_it_is_operating_on
 
 
 class _FakeSubstrate:
@@ -88,6 +96,96 @@ def test_thought_state_with_no_text_falls_through():
     systems = {"_current_thought_state": thought}
     frame = build_frame(systems, _FakeState())
     assert frame is None
+
+
+# ── W1 fix (PF1.6 residue characterization, 2026-07-21): the real     ──
+# ── turn text lives in a "linguistic" ProcessContext in dominant_     ──
+# ── thread, not in unified_interpretation/self_application, which are ──
+# ── ALWAYS internal telemetry for any successful (non-skipped)        ──
+# ── integration -- confirmed live, 0/60 probes ever reached this rung ──
+# ── through the old text-only path.                                   ──
+
+def test_frame_from_thought_state_reads_linguistic_context_when_present():
+    thought = _FakeThoughtState(
+        # Real shape: unified_interpretation is telemetry, never prose.
+        unified_interpretation=(
+            "Operating on: X=0.50 T=0.50; sedi_ambient | Active processes: "
+            "constraint, memory, identity | Dominant pressure: X-axis (0.50)"
+        ),
+        self_application="This touches how I understand myself.",
+        confidence=0.72,
+        dominant_thread=[
+            _FakeProcessContext("memory", "sedi_ambient"),
+            _FakeProcessContext("identity", "identity_predicates"),
+            _FakeProcessContext("linguistic", "I need to help with the water project"),
+        ],
+    )
+    systems = {"_current_thought_state": thought}
+    frame = build_frame(systems, _FakeState())
+    assert frame is not None
+    assert frame.source == "thought"
+    assert frame.subject == "need"
+    assert frame.relation == "help"
+    assert frame.obj == "water"
+    assert frame.stance == 0.72
+
+
+def test_frame_from_thought_state_telemetry_text_alone_no_longer_blocks_when_linguistic_context_absent():
+    """Regression guard for the W1 finding itself: telemetry-shaped
+    unified_interpretation with NO linguistic context anywhere in
+    dominant_thread correctly falls through to None (via the fallback
+    path, still gated by the telemetry guard) -- this is the exact
+    real-world shape that produced 0/60 thought-rung fires before the
+    fix, preserved here so a future regression can't silently reappear."""
+    thought = _FakeThoughtState(
+        unified_interpretation=(
+            "Operating on: X=0.50 T=0.50 N=0.50 B=0.50 A=0.50; sedi_ambient; "
+            "identity_predicates | Active processes: constraint, memory, "
+            "identity, predictive | Triggered by: user_turn, continuous_braid | "
+            "Unresolved tension: 4 conflict(s) between processes | Background: "
+            "session pressure: 0.00 | Dominant pressure: X-axis (0.50)"
+        ),
+        self_application="This touches how I understand myself. My X-axis pressure (0.50) shapes this.",
+        confidence=0.40,
+        dominant_thread=[
+            _FakeProcessContext("memory", "sedi_ambient"),
+            _FakeProcessContext("identity", "identity_predicates"),
+        ],
+    )
+    systems = {"_current_thought_state": thought}
+    frame = build_frame(systems, _FakeState())
+    assert frame is None
+
+
+def test_frame_from_thought_state_linguistic_context_with_unusable_text_falls_through():
+    """The linguistic context's own text still goes through the normal
+    topic-extraction path -- garbage/empty content there still yields
+    no frame (fail-quiet all the way), not a forced pass."""
+    thought = _FakeThoughtState(
+        dominant_thread=[_FakeProcessContext("linguistic", "")],
+    )
+    systems = {"_current_thought_state": thought}
+    frame = build_frame(systems, _FakeState())
+    assert frame is None
+
+
+def test_frame_from_thought_state_excludes_contractions_from_relation_and_obj():
+    """Live-fire finding: once real turn text started flowing through
+    the linguistic context, contractions ("he's", "what's", "i'm")
+    surfaced as spurious relation/obj candidates -- infer_word_role has
+    no apostrophe-aware rule, so an unrecognized contraction defaults to
+    "noun" and would otherwise bind straight into a content slot ("I am
+    planning he's."). Confirmed live on the 60-probe battery; this is
+    the regression guard."""
+    thought = _FakeThoughtState(
+        dominant_thread=[_FakeProcessContext(
+            "linguistic", "He's a bit nervous around new people.")],
+    )
+    systems = {"_current_thought_state": thought}
+    frame = build_frame(systems, _FakeState())
+    if frame is not None:
+        assert "'" not in frame.relation
+        assert "'" not in frame.obj
 
 
 # ── Real-shape regression: unified_interpretation is internal         ──

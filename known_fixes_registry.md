@@ -5110,3 +5110,355 @@ directive:**
 Zero diagnostic leakage, zero abstain over-triggering, descriptor
 repetition well under bar -- reported as the genuinely clean parts of
 this baseline, not a blanket "PF1.6 passed."
+
+## PF1.6 Residue Characterization — W1: ThoughtState carried no turn content, 2026-07-21
+
+Follow-up audit (`AURORA_PF16_RESIDUE_CHARACTERIZATION_20260721.md`,
+external session, uploaded) found the PropositionFrame ladder living
+entirely on its bottom rung across the 60-probe battery: `frame_source`
+= anchor 55, claim 3, **thought 0**, none 2. The "thought" rung --
+Aurora's own formed thought driving what she says, the actual point of
+PF1 -- never fired once. Sunni: "let's just tackle them one at a time,"
+starting with W1 (this entry). W2 (claim gate rate) and W3 (adequacy
+saturation on bare copulas) queued, not started.
+
+**Root cause, confirmed via a live diagnostic before touching any
+code** (`scripts/w1_thought_state_diagnostic.py`): `ThoughtState.
+unified_interpretation` and `self_application` are built by `aurora_
+thought_formation._reason_through_dominant()` purely from
+administrative `ProcessContext`s (memory-ambient, identity-predicates,
+constraint loop-counts) -- an internal telemetry trace, never the
+turn's own content. A 4-turn live check showed `unified_interpretation`
+**identical across 4 completely unrelated turns** ("he's nervous
+around new people" / "revenue numbers down" / "crying all week" all
+produced the exact same string) and `skipped=False` with 5 registered
+processes every time -- ruling out the original audit's registration-
+starvation hypothesis outright. PF1.5's own telemetry guard
+(`_looks_like_internal_telemetry`, built to fix the real "I triggered
+x=0.50." bug during PF1.4) was correctly rejecting this text every
+single time -- not a false positive, structurally guaranteed to fire
+on 100% of real ThoughtStates, since `_reason_through_dominant` has no
+natural-language output mode at all.
+
+**Fix (Sunni's chosen direction: the deeper fix, not a narrow parser
+patch):** `aurora_braid_wiring.py`'s `_build_turn_process_contexts`
+now registers a `"linguistic"` `ProcessContext` carrying the turn's
+actual text (`self_relevance=0.75`, `axis_signature=["X","T","A"]`,
+chosen to overlap with memory/identity so it clusters into `dominant_
+thread` rather than sitting isolated in `supporting_context`).
+`aurora_internal/aurora_proposition_frame.py`'s `_frame_from_thought_
+state` now reads that context directly from `thought_state.dominant_
+thread` by `process_type=="linguistic"`, bypassing the telemetry
+strings entirely -- with a fallback to the old text-parsing path
+(still telemetry-guarded) for defensiveness. Verified live,
+before/after, same 4 turns: `build_frame -> source=thought` on all 4
+(was `None` on all 4), with genuinely turn-specific extracted content.
+
+**Two bugs found and fixed via the fix's own live-fire battery
+testing** (same discipline as PF1.4/PF1.5's own findings):
+
+1. **Contractions leaking into content slots.** First full 60-probe
+   re-run (`scripts/characterize_pf16_residue.py`, now also fixed to
+   scratch-isolate its boot instead of hitting real `aurora_state/`
+   directly) showed real text flowing through -- but also `"I am
+   planning he's."`, `"I am replacing what's real."` -- `infer_word_
+   role` has no apostrophe rule, so an unrecognized contraction
+   ("he's", "what's", "i'm") defaults to "noun" and binds straight
+   into ACTION/OBJECT. Fixed: an apostrophe guard in `_extract_
+   triple_from_thought_text`, same style as the existing "=" guard.
+   Re-run confirmed clean (0 contraction leaks from this path); two
+   residual cases ("she's", "sister's") traced via word-source
+   attribution to the ORDINARY `find_by_noncomp` channel-selection
+   path -- pre-existing lexicon contamination unrelated to this fix,
+   flagged not fixed (separate finding, out of W1's scope).
+
+**Before/after, same 60-probe battery, surface profile, scratch-
+isolated:**
+
+| | frame_source thought | frame_source anchor | residue (fail wellformed_and_coherent / adequacy<0.55) |
+|---|---|---|---|
+| Original audit | 0/60 | 55/60 | 53/60 |
+| After linguistic-context fix | 49/60 | 9/60 | 51/60 |
+| After contraction-guard fix | 49/60 | 9/60 | **49/60** |
+
+Sample delivered-text shift: `"I am bit."` (vacuous copula, original)
+-> `"I am planning around nervous. I find around. I do around real."`
+(real content, still not fully coherent -- W3's adequacy-saturation
+finding and general grammar quality are separate, queued work, not
+claimed solved here).
+
+**Reentrancy-guard test investigation (thorough, before committing):**
+the first full-suite run after this fix showed 3 failures instead of
+the usual 1 -- the known cv2 flake, plus two new ones. Investigated
+both rather than assuming either was caused by this fix:
+
+- `test_m1_2_provenance_hygiene.py::test_blind_origin_entries_are_
+  tagged_legacy_unverified` ("lang" missing its tag) -- confirmed
+  **pre-existing**: "lang" carries the same untagged state in the
+  git-committed `HEAD` version, unrelated to anything in this session.
+  Data drift from the continuously-running autonomous instance
+  outpacing M1.2's one-time tagging backfill. Not fixed here (separate
+  concern).
+- `test_d2_2_live_turn_reentrancy_guard.py::test_twenty_live_turns_
+  each_produce_exactly_one_top_level_call` -- confirmed via `git
+  stash` isolation that this fix DOES cause it in the full-suite
+  context (fails with the fix present, passes cleanly with it
+  stashed out, all else equal). Investigated the mechanism at length:
+  two custom live-trace scripts (`scripts/w1_reentrancy_trace.py`,
+  kept for future reentrancy debugging) reproducing the exact same
+  20-turn sequence as standalone scripts caught **zero** recursive
+  `process_external_user_turn` calls and confirmed the `_live_turn_
+  depth` guard holding on every one of 53 simulation-bridge
+  invocations. The missing experiment: fix present, test run in
+  **isolation** via pytest itself (not a custom script) --
+  **passed cleanly** (1 passed, 21:37). Conclusion: this fix does
+  NOT deterministically cause the failure on its own; it only
+  manifests under full-suite cross-test conditions -- the same class
+  of pre-existing test-isolation fragility as the already-documented
+  cv2.imdecode flake (module-level singletons -- `ThoughtBraid`,
+  `ThoughtContinuity`, `EmotionFirewall`, all process-global per
+  `aurora_braid_wiring.py`'s `_get_braid`/`_get_continuity`/`_get_
+  firewall` -- persist across all ~960 tests in one pytest process;
+  this fix's small per-turn timing change plausibly tips an existing
+  latent race, doesn't create one). Not fixed here -- flagged
+  honestly, matching the cv2 flake's own precedent in this registry,
+  rather than either hidden or blocking on a full concurrency
+  investigation this finding doesn't by itself justify.
+
+**Tests:** 21 in `tests/test_pf1_1_proposition_frame.py` (was 17: +3
+for the linguistic-context primary path, +1 for the contraction
+guard), 4 in `tests/test_w1_turn_content_context.py` (new). 25/25
+passing, plus the full existing PF1 regression set unaffected.
+
+Full data: `aurora_state/probe_battery/results/pf16_residue_
+characterization.json` (gitignored, local only). W2 (claim gate) next.
+
+## PF1.6 Residue Characterization — W2: claim gate firing rate, 2026-07-21
+
+Second work item, tackled one at a time per Sunni's instruction.
+Characterized `WorkingMemory._extract_claims` (`aurora_working_memory.py`
+-- the real gate feeding `proposition_substrate`; the residue report's
+own name for it, `_ws_claim_gate`, doesn't exist in the codebase and
+was traced to `aurora_articulation._is_word_salad`, an unrelated
+salad-detection gate on delivered text) against all 60 real probe
+turns, offline, no boot required. Four narrow, bounded widenings to
+the SAME existing gate, never a parallel extractor, per the report's
+own scoping:
+
+1. **Contraction expansion.** Every pattern in `_extract_claims`
+   requires the copula/auxiliary as a separate whitespace-delimited
+   token ("he is", "does not") -- ordinary contracted English ("he's",
+   "doesn't") never matched at all. Fixed via `_expand_claim_
+   contractions`, a new method applying a closed, unambiguous
+   expansion set (`_CLAIM_CONTRACTION_EXPANSIONS`) once, before
+   pattern matching -- deliberately excludes generic noun+'s
+   ("Sarah's book"), which stays genuinely ambiguous between
+   possessive and "has" and is left untouched. **Measured finding, not
+   assumed:** the copula-contraction half of this set (he's/she's/
+   it's/that's/what's/...) turned out to have ZERO effect on its own
+   in the real battery -- every word it expands to is itself a
+   pronoun/wh-word already on `_CLAIM_SKIP_SUBJECTS` (see below). The
+   negation-contraction half (doesn't/isn't/don't/...) is where it
+   actually matters: a concrete-noun subject with a contracted negated
+   verb ("The policy doesn't support flexibility" -> now extracts a
+   claim; didn't before).
+
+2. **Verb whitelist widened.** The two existing relation-verb lists
+   were scoped for technical/architectural relations (`connects to`,
+   `blocks`, `requires`, `causes`, ...) -- ordinary conversational
+   stance/relationship verbs never matched at all ("trusts",
+   "surprised", "wanted", "promised", "booked"). Added a third
+   enumerated list (`relation_patterns[2]`, ~35 curated verbs) through
+   the exact same mechanism, not a generic `infer_word_role` fallback
+   -- a fallback risks misclassified tokens producing noisy/wrong
+   claims into the substrate, where a curated list stays reviewable.
+   `negated_aux_pattern` (the "doesn't `<verb>`" path) originally only
+   checked the first technical-verb list -- widened to check both.
+
+3. **`reported_match` had two independent gaps.** Its subject-capture
+   regex required >=2 characters (`{1,40}?`, minimum non-zero), so
+   single-letter pronoun subjects ("I") never entered the reported-
+   speech branch at all -- "I claimed I wasn't upset, but I've brought
+   it up three times today." skipped straight past it and fell through
+   to the plain copula pattern, which then captured **"I claimed I"**
+   as its subject (the reporting frame swallowed whole into a garbled
+   claim). Fixed the minimum (`{0,40}?`). Its verb list also only had
+   3rd-person -s/past forms, never the natural first-person base form
+   ("I claim...", "I think...") -- added, but restricted to firing
+   only directly after `I`/`we`/`you` (the only subjects bare present
+   tense is grammatically valid for anyway) via a lookahead-branched
+   pattern rather than the flexible general subject capture. This
+   restriction turned out to be load-bearing, not just grammatical
+   pedantry: an unrestricted bare-form addition caught a live false
+   positive during this work's own testing -- "I just wanted to say
+   hello." matched on bare "say" with "wanted to" swallowed into the
+   subject capture (an infinitive purpose clause, not reported
+   speech), silently losing what had been a correctly-widened verb-
+   list claim on "wanted". Found and fixed before shipping, same
+   discipline as every other phase's own live-fire catches this
+   campaign has documented.
+
+   Also changed `_extract_claims` to unconditionally `return out[:3]`
+   after `reported_match` fires (previously only returned early `if
+   out`), rather than falling through to re-scan the whole original
+   line when the reported clause's own extraction produces nothing --
+   a reported-speech sentence's assertion lives in the reported
+   clause; if nothing extractable lives there (very often because the
+   reporter/reportee are pronouns, correctly skipped), the honest
+   answer is no claim, not a fallback match against the wrapper.
+
+**Deliberately NOT touched: `_CLAIM_SKIP_SUBJECTS`'s exclusion of bare
+pronoun subjects** (he/she/it/i/we/you/they/this/that/...). This is
+the actual, deeper reason the report's own headline examples ("He's a
+bit nervous around new people.", "She's a little anxious...") still
+produce no claim even with every fix above applied -- confirmed
+directly (`"He is a bit nervous around new people."` -> `[]`, `"The
+dog is a bit nervous around new people."` -> a real claim). This looks
+like a genuine, intentional design boundary (a claim like "he is
+nervous" without knowing who "he" resolves to is a real, unresolved-
+referent ambiguity the substrate may be right to refuse) rather than
+an oversight -- relaxing it would let in a substantial volume of
+ambiguous claims with real downstream effects (contradiction
+detection, claim substrate noise). Flagged here explicitly for Sunni/
+Cael's decision, matching this campaign's own "architecture calls are
+yours" doctrine, not decided unilaterally under a characterization
+work item.
+
+**Also NOT touched:** ditransitive reported speech ("I told my friend
+I was fine..." -> still produces a garbled `"i told my friend i"`
+subject) -- ordinary reported_match handles `SUBJECT + VERB + CLAUSE`,
+not `SUBJECT + VERB + INDIRECT_OBJECT + CLAUSE`; fixing "told X that
+Y" needs a genuinely different pattern, not a widening of the existing
+one, out of this item's bounded scope. And `"The policy claims to
+support flexibility..."` extracts with subject `"to"` (the infinitive
+marker, not stripped from the nested clause) -- a minor residual, not
+chased further.
+
+**Before/after, same 60-probe battery, offline (no boot needed --
+`_extract_claims` is pure):** `has_claim` **3/60 -> 6/60**. Every
+successful claim spot-checked; only known residuals are the two
+explicitly named above (ditransitive "told", infinitive-marker
+subject on "claims to"), no other garbled subjects.
+
+**Tests:** 12 new in `tests/test_w2_claim_gate_widening.py`, covering
+each fix individually, the pronoun-skip boundary explicitly (documents
+it, doesn't relax it), the false-positive-found-and-fixed case
+directly, and a full-battery regression guard asserting no future
+change reintroduces a reporting-verb-in-subject shape. **Full suite:
+978 passed, 2 failed** -- both already-documented, pre-existing,
+unrelated (`test_concept_image_ingestion_import.py`'s cv2 flake,
+`test_m1_2_provenance_hygiene.py`'s "lang" tagging drift); the
+reentrancy cross-test flake found during W1 did not even appear this
+run, consistent with it being non-deterministic timing-dependent
+rather than anything in this change.
+
+## PF1.6 Residue Characterization — W3: adequacy saturation on bare copula fragments, 2026-07-21
+
+Third and last work item. Root cause confirmed exactly as the report
+described, reproduced directly: `"I am bit."` (a live delivered
+response, an anchor-only PropositionFrame rendering as a bare copula
+plus the anchor word, no real relation) scored `adequacy_score` **1.0**
+against an anchor containing `"bit"`. Traced: `_ANCHOR_TOKEN_RE`
+requires 3+ character tokens (matching the old relevance scorer's own
+tokenization, per PF1.5's own design) -- "I" (1 char) and "am" (2
+chars) are both excluded from the count, leaving `"bit"` as the ONLY
+countable word in the response. `hits/len` on a denominator of 1 turns
+a single lucky anchor hit into a perfect score, regardless of whether
+the response actually asserts anything.
+
+The report offered two fix options: a relation-presence term (requires
+threading a `frame` parameter through `adequacy_score` and every one
+of its call sites) or a minimum-content check (self-contained). Chose
+the minimum-content check: `hits/len`'s statistical confidence scales
+with how many words it's actually averaged over, so the base term is
+now damped proportionally below `_MIN_COUNTABLE_WORDS_FOR_FULL_
+CONFIDENCE` (3) countable words -- `confidence = min(1.0, len(words) /
+3)`, `base *= confidence`. Undamped (byte-identical arithmetic to
+before) for any response of ordinary length; only pathologically short
+ones are affected. `adequacy_score`'s signature is unchanged, so no
+call site (`pf1_6_acceptance.py`, `pf1_5_instrument_revalidation.py`)
+needed updating.
+
+**Verified against the report's own example:** `"I am bit."` ->
+**0.333** (was 1.0).
+
+**Deliberate, tested exception to PF1.5's own invariant:** the
+existing test suite asserted `adequacy_score(text, anchor) >=
+_old_relevance(text, anchor)` unconditionally (a real regression guard
+from PF1.5's own tokenization-bug fix). That guarantee no longer holds
+for pathologically short responses by design -- the whole point of
+this fix is that a single-word coincidence should score LOWER than
+naive `hits/len` said it did, not merely "not lower." Confirmed the
+pre-existing invariant test's own 5 sample sentences all already have
+>=3 countable words (undamped, unaffected, passes unchanged) --
+the exception is real but scoped exactly as intended, not a silent
+weakening of the general guarantee.
+
+**Tests:** 5 new in `tests/test_pf1_5_instruments.py` (now 21, was
+16) -- the exact reported case, single- and two-countable-word damping
+arithmetic verified directly, confirmation that >=3-word responses are
+completely undamped, and the invariant-exception itself stated and
+tested explicitly rather than left implicit. One pre-existing test
+(`test_adequacy_no_bonus_when_verb_and_noun_are_not_both_anchored`)
+had its sample text lengthened to isolate the bonus behavior it was
+actually testing from this new, independent damping effect.
+
+**Real battery re-measurement** (`scripts/pf1_6_acceptance.py`, same
+3-pass/60-probe methodology as PF1.6's own acceptance run):
+
+| | mean simple_concrete adequacy | mean abstract_conceptual adequacy |
+|---|---|---|
+| PF1.6 original (undamped) | 0.787 | 0.912 |
+| **After W3's damping fix** | **0.702** | **0.835** |
+
+Both drop, as expected and intended -- vacuous short responses no
+longer inflate the mean; this is the instrument becoming more honest,
+not a regression to explain away. Motif diversity (3), descriptor
+repetition (9-11%), abstain rate (0.0), diagnostic leakage (0) all
+unchanged across the re-run, exactly as expected since none of them
+read `adequacy_score` at all.
+
+**Full suite: 982 passed, 3 failed** -- all three already-documented,
+pre-existing, unrelated (cv2 test-order flake, "lang" tagging drift,
+reentrancy cross-test flake -- the last one is non-deterministic and
+didn't appear in W1's or W2's own final pre-commit runs, but recurred
+here; still confirmed via W1's own git-stash isolation to be a
+full-suite-only cross-test artifact, not caused by any of W1/W2/W3's
+changes).
+
+---
+
+**This closes the PF1.6 residue characterization arc (W1, W2, W3),**
+tackled one at a time per Sunni's instruction, started from the
+external audit's own report. Honest summary of where this leaves
+things:
+
+- **W1** fixed the PropositionFrame "thought" rung from firing 0/60 to
+  49/60 (a real bug: `unified_interpretation` was always internal
+  telemetry, never language), plus a contraction-leak bug its own
+  live-fire testing caught along the way. Residue (probes failing
+  PF1.5's instruments) 53/60 -> 49/60.
+- **W2** widened the claim gate from firing 3/60 to 6/60 through four
+  bounded fixes (contractions, verb whitelist, negation-pattern
+  coverage, a reported-speech regex bug), explicitly leaving the
+  pronoun-subject exclusion untouched as a likely-intentional design
+  boundary for Sunni/Cael to decide on.
+- **W3** fixed the adequacy instrument's own blind spot (short
+  responses trivially scoring 1.0), producing more honest -- and
+  necessarily lower -- adequacy numbers than PF1.6's original
+  acceptance report.
+
+**Open items still flagged for Sunni/Cael, not resolved by this arc:**
+1. The motif-diversity ceiling from PF1.3 (3 promoted+valid motifs in
+   the live lineage vs. the directive's stated >=4) -- a mining/
+   promotion gap, unrelated to anything W1-W3 touched.
+2. `_CLAIM_SKIP_SUBJECTS`'s pronoun-subject exclusion (W2) -- real
+   architecture call about whether unresolved-referent claims should
+   ever enter the substrate.
+3. Ditransitive reported speech ("I told my friend I was fine...")
+   and the "claims to `<verb>`" infinitive-marker-as-subject residual
+   (W2) -- both out of this arc's bounded scope, noted not chased.
+4. Whether PF1's originally-scoped-but-not-built DESCRIPTOR
+   neighborhood constraint (PF1.4) is still worth building now that
+   real propositional content is flowing through more often (W1) --
+   a natural next question this arc surfaces but doesn't answer.
