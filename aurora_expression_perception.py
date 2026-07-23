@@ -2530,6 +2530,7 @@ class SentenceComposer:
                 valence_target, words,
                 input_text=_role_input_text,
                 f5_turn_id=f5_turn_id, f5_register=f5_register,
+                frame=frame,
             )
             if word:
                 words.append(word)
@@ -3071,12 +3072,76 @@ class SentenceComposer:
         except Exception:
             pass
 
+    def _descriptor_neighborhood(self, frame) -> set:
+        """PF3.3 (2026-07-21): words whose OETS node lies within one
+        relation hop of frame.subject or frame.obj. Her web defines
+        "about" -- no word lists, no tuned constants, same
+        get_all_relations_for traversal aurora_constraint_emission.
+        build_relevance_anchor_set already uses for one-hop expansion.
+        Returns an empty set (never raises) if there's nothing to
+        anchor to -- callers fall through to the unfiltered pool.
+
+        Co-occurrence-sourced relations are EXCLUDED from the
+        neighborhood, same FIX-A048 exclusion and rationale (PF3.1):
+        "clear"/"real" -- the exact generic-filler words this phase
+        targets -- carry 39 and 131 co-occurrence-sourced edges
+        respectively in the real, committed OETS graph (confirmed live,
+        aurora_state/aurora_oets_web.json), to near-arbitrary common
+        words ("exist", "always", "feel", "does", "time") purely from
+        being used so often across this whole campaign's testing
+        history. A first version excluding ONLY co-occurrence still
+        measured no improvement (9.22% -> 9.64%, if anything slightly
+        worse) -- traced live (scripts/pf3_3_descriptor_trace.py) and
+        found the actual leak was "co-expression" relations, created
+        fresh DURING the very session being measured: every response
+        Aurora generates that contains "clear"/"real" (nearly all of
+        them, precisely because they're the entrenched generic fillers)
+        wires a co-expression relation from every OTHER word in that
+        same response back to "clear"/"real" -- so the very act of using
+        them reinforces their own future eligibility as a "neighbor" of
+        whatever gets said next, a self-reinforcing loop identical in
+        kind to co-occurrence's (FIX-A032's own named pattern), despite
+        co-expression being general-case trustworthy elsewhere in this
+        codebase (aurora_constraint_emission.py's own comment lists it
+        among "deliberate structure" sources) -- that classification
+        assumed ordinary usage volume, which breaks down for genuinely
+        pathological outlier words. Both excluded here; other structural
+        relations (category_sharing, definition_analysis, conversation,
+        adjacency, ...) still count."""
+        if not self._has_oets or frame is None:
+            return set()
+        terms = [
+            str(t).strip().lower()
+            for t in (getattr(frame, "subject", ""), getattr(frame, "obj", ""))
+            if t
+        ]
+        if not terms:
+            return set()
+        neighborhood = set(terms)
+        get_all = getattr(self._oets.web, "get_all_relations_for", None)
+        if not callable(get_all):
+            return neighborhood
+        _EXCLUDED_RELATION_SOURCES = {"co-occurrence", "co-expression"}
+        for term in terms:
+            try:
+                rels = get_all(term) or []
+            except Exception:
+                continue
+            for rel in rels:
+                if getattr(rel, "source_of_knowledge", "") in _EXCLUDED_RELATION_SOURCES:
+                    continue
+                other = rel.target_word if rel.source_word == term else rel.source_word
+                if other:
+                    neighborhood.add(str(other).lower())
+        return neighborhood
+
     def _select_constraint_word(self, role: str, dominant_axis: str,
                                 chars: tuple, lex_role: str,
                                 valence_target: float,
                                 already: list,
                                 input_text: str = "",
-                                f5_turn_id: str = "", f5_register: str = "neutral") -> str:
+                                f5_turn_id: str = "", f5_register: str = "neutral",
+                                frame=None) -> str:
         """Concept-channel word selection with role fallback.
 
         R1.9.2 G1: relevance chooses WHAT is said, valence-proximity biases
@@ -3201,6 +3266,20 @@ class SentenceComposer:
 
         if not candidates:
             return ""
+
+        # PF3.3 (2026-07-21): the descriptor slot is the last generic-
+        # filler leak ("clear"/"real") once real propositional content is
+        # flowing through more often (W1). When a frame is present, filter
+        # the candidate pool to the frame's one-hop OETS neighborhood
+        # BEFORE the resonance/valence ranking below runs -- an empty
+        # neighborhood (or an empty intersection with this pool) falls
+        # through to the unfiltered pool unchanged (fail-quiet).
+        if role == "descriptor" and frame is not None:
+            neighborhood = self._descriptor_neighborhood(frame)
+            if neighborhood:
+                _neighborhood_candidates = [e for e in candidates if e.word.lower() in neighborhood]
+                if _neighborhood_candidates:
+                    candidates = _neighborhood_candidates
 
         # R1.9.2 G2 fix: deliberately NOT unioning `already` (words already
         # chosen earlier in THIS SAME response) into the anchor set. It was

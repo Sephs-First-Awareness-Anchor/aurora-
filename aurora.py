@@ -17283,6 +17283,23 @@ def _run_reasoning_pipeline(
         _direct_sensory_query or
         _inline_definition_turn
     )
+    # PF3.3 (2026-07-21) scope extension: gw._express() below composes
+    # through the SAME composer instance begin_expression() targets
+    # (gw.perception is systems['perception'], wired once at boot), but
+    # on turns where begin_expression() itself was skipped earlier in
+    # this function (state.response_content still empty at that point --
+    # confirmed live, heavily correlated with question-shaped input),
+    # composer._proposition_frame was never populated for THIS
+    # composition either -- and per the "voice transplant" logic just
+    # below, resp_B's content often becomes resp_A's delivered content,
+    # meaning this specific compose() call reaches the device far more
+    # often than its own frame-less state would suggest. See
+    # aurora_braid_wiring.ensure_proposition_frame_for_turn's docstring.
+    try:
+        from aurora_braid_wiring import ensure_proposition_frame_for_turn
+        ensure_proposition_frame_for_turn(systems)
+    except Exception:
+        pass
     try:
         resp_B = None if (suppress_afterthought or synthesis is None) else gw._express(packet, synthesis, mode)
     except Exception:

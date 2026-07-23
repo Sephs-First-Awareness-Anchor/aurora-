@@ -405,6 +405,45 @@ def reset_proposition_frame_for_turn(systems: Dict[str, Any]) -> None:
         pass
 
 
+def ensure_proposition_frame_for_turn(systems: Dict[str, Any]) -> None:
+    """PF3.3 (2026-07-21) scope extension: the frame-building portion of
+    begin_expression(), extracted so it can also run on the code path
+    aurora.py's dual_question_pipeline/_run_reasoning_pipeline actually
+    uses to generate delivered content for a large share of turns --
+    confirmed live (scripts/pf3_3_frame_absence_trace.py): begin_
+    expression() is gated behind `_perc_a5 and _resp_draft` and is
+    SKIPPED on turns where state.response_content is still empty at
+    that point (question-shaped inputs, heavily). Those turns still get
+    real delivered text, generated later via a SEPARATE call --
+    gw._express() -> perception.express() -> _build_expression() ->
+    compose() -- using the SAME composer instance (gw.perception is the
+    same object as systems['perception'], set once at boot), but
+    composer._proposition_frame was never populated for it, so every
+    frame-consuming fix in this whole PF1-PF3 arc (slot-binding,
+    descriptor neighborhood, ...) silently never applied to it. 67% of
+    surviving "clear"/"real" descriptor-repetition instances traced
+    directly to this gap. Safe to call more than once per turn (fresh
+    build_frame() call each time, same idempotent pattern reset_
+    proposition_frame_for_turn already relies on) -- deliberately does
+    NOT redo begin_expression's OTHER side effects (a fresh
+    StreamingExpressionLayer, SemanticIntentionBridge re-application),
+    only the frame itself, to avoid double-applying those elsewhere."""
+    try:
+        import types
+        from aurora_internal.aurora_proposition_frame import build_frame
+        perception = systems.get('perception')
+        composer = getattr(perception, 'composer', None) if perception else None
+        if composer is not None:
+            state_shim = types.SimpleNamespace(
+                noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
+            )
+            frame = build_frame(systems, state_shim)
+            systems['_proposition_frame'] = frame
+            composer.set_proposition_frame(frame)
+    except Exception:
+        pass
+
+
 def begin_expression(systems: Dict[str, Any]) -> None:
     """
     CALL SITE 3 — Just BEFORE perception.express() is called.
@@ -464,24 +503,11 @@ def begin_expression(systems: Dict[str, Any]) -> None:
         # PF1.2: transport PropositionFrame + ExpressionGuidance onto the
         # composer. Fail-quiet, additive -- compose() does not read either
         # yet (PF1.3/PF1.4), so this cannot change delivered output.
+        ensure_proposition_frame_for_turn(systems)
         try:
-            import types
-            from aurora_internal.aurora_proposition_frame import build_frame
             perception = systems.get('perception')
             composer = getattr(perception, 'composer', None) if perception else None
             if composer is not None:
-                # begin_expression only receives `systems`, not the real
-                # TurnState object build_frame's anchor rung expects --
-                # the same NonComp summary is already mirrored onto
-                # systems['_last_noncomp_input'] elsewhere in the
-                # pipeline (aurora.py), so shim a minimal namespace with
-                # the one attribute that rung reads.
-                state_shim = types.SimpleNamespace(
-                    noncomp_input_state=dict(systems.get('_last_noncomp_input') or {})
-                )
-                frame = build_frame(systems, state_shim)
-                systems['_proposition_frame'] = frame
-                composer.set_proposition_frame(frame)
                 composer.set_expression_guidance(systems.get('_expression_guidance'))
         except Exception:
             pass

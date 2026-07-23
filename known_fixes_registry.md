@@ -5695,3 +5695,116 @@ goes nowhere), and per-call dedup. Full existing `_extract_claims`/
 `build_frame` regression (`test_w2_claim_gate_widening.py`,
 `test_pf1_1_proposition_frame.py`, 33 tests) unaffected by the
 `_append_claim` reordering.
+
+## PF3.3 — Descriptor neighborhood constraint (+ scope extension: frame absence), 2026-07-21
+
+Directive PF3's own ruling, carried unchanged from PF2.3: when a frame
+is present and the role is `descriptor`
+(`aurora_expression_perception.py`, `SentenceComposer.compose()`'s
+role-fill dispatch), filter `_select_constraint_word`'s candidate pool
+to words whose OETS node lies within one relation hop of `frame.
+subject`/`frame.obj`, **before** the existing resonance/valence
+ranking runs; empty neighborhood (or empty intersection with the pool)
+falls through to the unfiltered pool, fail-quiet. Gate: descriptor
+repetition share ("clear"+"real" fraction of descriptor fills across
+the 60-probe battery) drops materially from the PF2.1/PF3.1/PF3.2
+baseline.
+
+**Implementation.** New `SentenceComposer._descriptor_neighborhood(frame)`:
+unions `frame.subject`/`frame.obj` themselves with every OETS one-hop
+neighbor via `get_all_relations_for` (same traversal `aurora_
+constraint_emission.build_relevance_anchor_set` already uses), wired
+into `_select_constraint_word` right after candidate-pool assembly and
+before the `candidates.sort(...)` ranking, gated to `role=="descriptor"
+and frame is not None`.
+
+**Two leaks found and fixed via this fix's OWN live-fire testing,
+same discipline as every prior W/FIX in this arc -- the directive's
+literal spec, implemented exactly, measured WORSE on the first two
+attempts, each traced to ground before shipping:**
+
+1. **Co-occurrence-sourced relations** (same FIX-A048 pattern, applied
+   here too): "clear"/"real" carry 39 and 131 co-occurrence-sourced
+   edges respectively in the real, committed OETS graph
+   (`aurora_state/aurora_oets_web.json`), to near-arbitrary common
+   words purely from being used so often across this campaign's whole
+   testing history. Excluded via the established `source_of_knowledge`
+   check.
+2. **Co-expression-sourced relations** -- excluding co-occurrence ALONE
+   still measured no improvement. Traced live
+   (`scripts/pf3_3_descriptor_trace.py`, direct instrumentation of
+   `_descriptor_neighborhood` against the real graph) and found the
+   actual leak: co-expression relations, created FRESH during the very
+   session being measured -- every response Aurora generates that
+   contains "clear"/"real" (nearly all of them, precisely because
+   they're the entrenched generic fillers) wires a co-expression
+   relation from every OTHER word in that response back to "clear"/
+   "real", so the act of using them reinforces their own future
+   eligibility as a "neighbor" of whatever gets said next -- a
+   self-reinforcing loop identical in kind to co-occurrence's
+   (FIX-A032's own named pattern), despite co-expression being
+   general-case trustworthy elsewhere in this codebase (`aurora_
+   constraint_emission.py`'s own comment lists it among "deliberate
+   structure" sources -- that classification assumed ordinary usage
+   volume, which breaks down for genuinely pathological outlier
+   words). Both relation sources excluded now.
+
+**Third finding, scope-extended at Sunni's explicit direction after a
+proper 3-pass live measurement:** even with both leaks fixed, three
+full-profile passes averaged 9.98% descriptor repetition (baseline
+9.22%) -- every single pass ABOVE baseline (9.31%/10.18%/10.46%),
+ruling out noise as the explanation. Traced why
+(`scripts/pf3_3_frame_absence_trace.py`, direct instrumentation of
+`begin_expression`/`compose()`): of the turns where "clear"/"real"
+survive, 67% have `frame_source: None` -- no `PropositionFrame` at
+all, meaning this fix's entire mechanism was architecturally unable to
+reach them. Root cause: `begin_expression()` (`aurora_braid_wiring.py`)
+-- the only place `composer._proposition_frame` gets built -- is gated
+in `aurora.py` behind `_perc_a5 and _resp_draft`, and is **skipped**
+whenever `state.response_content` is still empty at that point in
+`_run_reasoning_pipeline`, heavily correlated with question-shaped
+input (confirmed live: all 4 traced `uncertainty_signaling`-style
+questions never called `begin_expression` at all). Those turns still
+produce real delivered text -- generated LATER via a separate call,
+`dual_question_pipeline` -> `gw._express()` -> `perception.express()`
+-> `_build_expression()` -> `compose()`, through the SAME composer
+instance (`gw.perception` IS `systems['perception']`, wired once at
+boot) -- but `composer._proposition_frame` was never populated for
+it, so every frame-consuming fix in this whole PF1-PF3 arc (slot-
+binding, this phase's own neighborhood filter) silently never applied
+to a large share of turns.
+
+**Fix:** extracted `begin_expression`'s frame-building portion into a
+new, independently-callable `aurora_braid_wiring.
+ensure_proposition_frame_for_turn(systems)` (safe to call more than
+once per turn -- a fresh `build_frame()` call each time, deliberately
+NOT re-running `begin_expression`'s other side effects like a fresh
+`StreamingExpressionLayer` or re-applying `SemanticIntentionBridge`,
+to avoid double-applying those elsewhere). Called from two places now:
+`begin_expression` itself (unchanged behavior, refactored not
+duplicated) and a new call site in `aurora.py`, right before the
+`gw._express(packet, synthesis, mode)` call inside `dual_question_
+pipeline`'s reasoning-pipeline body that was previously composing
+frame-blind. Verified live: the SAME compose() call that showed
+`proposition_frame_set=False` before now shows `True`, and delivered
+text visibly changed from generic filler to frame-grounded content
+(e.g. `"Is this the right career move for the next twenty years?"` --
+frame `relation='move', obj='right'` -- delivered: `"I move right. I
+move."`, directly reflecting the frame, vs. the old frame-blind
+filler shape).
+
+**Validation status (honest, not yet fully closed):** full regression
+green (1022 passed, 2 pre-existing/unrelated failures, unchanged from
+every prior phase this arc). A single post-scope-extension live pass
+looks strongly promising (word_frac 6.25%, resp_frac 41.7% -- both
+BELOW the original 9.22%/51.7% baseline, a first for this phase), but
+**Sunni's explicit direction was to defer the rigorous 3-pass
+validation until all of PF3 is complete**, to avoid burning a 25-
+minute run after every remaining sub-phase. This entry will be updated
+with the final 3-pass-averaged numbers (both baseline and post-fix,
+matching PF1.6/W3's own methodology) once that batched validation
+runs. Until then: the underlying mechanism (neighborhood filter +
+frame-absence fix) is code-complete, tested (`tests/test_pf3_3_
+descriptor_neighborhood.py` 10, `tests/test_pf3_3_frame_absence.py`
+5), and regression-clean, but the directive's own numeric gate is
+PENDING CONFIRMATION, not yet closed.
