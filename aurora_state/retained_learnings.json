@@ -127123,6 +127123,29 @@
       ],
       "topic_words": [
         "language",
+        "i do",
+        "identity"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "composer_unified"
+      ],
+      "sightings": 2,
+      "first_seen": 1784824324.2275414,
+      "last_seen": 1784833727.84529
+    },
+    {
+      "text": "i do means clear i am seeing or always i am interesting what real",
+      "confidence": 0.5800000000000001,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "identity",
         "i do"
       ],
       "tags": [
@@ -127131,8 +127154,52 @@
         "composer_unified"
       ],
       "sightings": 1,
-      "first_seen": 1784824324.2275414,
-      "last_seen": 1784824324.2275414
+      "first_seen": 1784833728.5181768,
+      "last_seen": 1784833728.5181768
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:0eb50c5e6f7cb0; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "identity",
+        "acode_evolve_cdc727bff7"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 3,
+      "first_seen": 1784833728.6887817,
+      "last_seen": 1784833730.5025926
+    },
+    {
+      "text": "i do means clear i am seeing or real",
+      "confidence": 0.5,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "identity",
+        "i do"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1784833729.5707426,
+      "last_seen": 1784833729.5707426
     }
   ]
 }
