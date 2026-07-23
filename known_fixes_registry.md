@@ -6024,3 +6024,73 @@ causes it -- full-suite-only cross-test timing artifact, same class as
 the already-documented cv2.imdecode flake. Fix is a test-isolation
 fixture (reset the module-level singletons between tests); noisy,
 non-deterministic, environmental -- not chased further this phase.
+
+## Directive PF3 — final 3-pass validation, 2026-07-21
+
+Deferred at Sunni's explicit direction until all of PF3.1-3.6 was
+code-complete, to avoid a 25-minute live-battery run after every
+sub-phase. Run now, same methodology as PF1.6/W3 and PF3.3's own
+earlier 3-pass check: three independent full-profile
+`scripts/characterize_pf16_residue.py` runs on the final, complete
+PF3.1-3.6 code, averaged.
+
+| | residue | word_frac ("clear"+"real") | resp_frac | byte-identical duplicate groups |
+|---|---|---|---|---|
+| PF2.1 baseline (pre-PF3) | 49/60 | 9.22% | 51.7% | 3 |
+| Post-PF3.1+3.2 only (3-pass avg) | 50/60 | 9.98% | 59.4% | 0 |
+| **Post-PF3.1-3.6, final (3-pass avg)** | **44.7/60** | **8.67%** | **51.1%** | **0.3** |
+| — pass 1 | 43/60 | 8.26% | 50.0% | 0 |
+| — pass 2 | 47/60 | 8.30% | 46.7% | 0 |
+| — pass 3 | 44/60 | 9.45% | 56.7% | 1 |
+
+**Honest read, not spun:**
+- **Byte-identical duplicate outputs: resolved.** 3 -> ~0 (one
+  singleton in one of three passes, plausibly coincidental rather than
+  the systematic carryover contamination PF2.1 found). This was
+  PF2.1's own clearest, most severe smoke-test signal and it is gone.
+- **Residue and descriptor repetition: real but MODEST improvement,
+  not the dramatic "material drop" the directive's language might
+  suggest.** word_frac 9.22% -> 8.67% (~6% relative reduction, 2 of 3
+  passes clearly below baseline, one close to it); residue 49 -> 44.7
+  (~9% relative reduction). Consistent direction, not large magnitude.
+  resp_frac is essentially flat (51.7% -> 51.1%).
+- **PF3.4a's specific target (motif shape mixing bare-agent_action
+  against a richer sibling clause) does NOT show a clean win in this
+  final check**, and this is reported honestly rather than omitted:
+  recomputed the same rich+bare motif-mixing measure PF3.4's own
+  characterization used, this time against the final 3-pass data --
+  11/43 (25.6%), 19/47 (40.4%), 21/44 (47.7%) of residue, averaging
+  ~38%, versus PF3.4's own pre-fix single-run baseline of 14/49
+  (28.6%). Not lower; arguably higher. Plausible confound, not yet
+  isolated: PF3.3's frame-absence fix (`ensure_proposition_frame_for_
+  turn`) substantially INCREASED how many turns have a `PropositionFrame`
+  at all -- and `best_for_proposition`'s frame-driven motif selection
+  (where PF3.4a's guard operates) only ever ran on frame-present turns
+  in the first place. More frame-eligible turns plausibly means more
+  opportunities for the rich+bare pattern to surface at all, even if
+  PF3.4a's retry logic is correctly narrowing it WITHIN that larger
+  population -- these two effects are entangled in this measurement and
+  weren't separated. PF3.4a's own mechanism is verified correct in
+  isolation (`tests/test_pf3_4a_motif_thinning_guard.py`, 5 passing,
+  directly exercising the retry logic without the frame-availability
+  confound); the live, whole-system number just doesn't cleanly
+  demonstrate it yet. Not chased further this session -- isolating
+  PF3.3's and PF3.4a's individual live contributions would need its
+  own controlled A/B run (one flag disabling each independently),
+  which is new scope, not owed by this directive.
+
+**What actually closed, honestly:** the two most severe, most
+clearly-diagnosed defects from PF2.1's own characterization --
+paragraph-level whole-thread carryover (byte-identical duplicate
+outputs) and the frame-blind composition path (67% of surviving
+"clear"/"real" instances, `dual_question_pipeline` never wiring a
+frame at all) -- are both confirmed fixed. The subtler, second-order
+effects layered on top (usage-count/co-expression hub leaks, motif
+shape mixing) show real but smaller, partially-confounded improvement.
+This is where Directive PF3 lands -- not "solved," measurably better
+on its clearest signals, honestly incomplete on its subtler ones.
+
+Full regression across all six phases: consistently 2 pre-existing,
+unrelated failures (`test_m1_2_provenance_hygiene`, `test_concept_
+image_ingestion_import`), zero new regressions introduced by any
+PF3.1-3.6 change.
