@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784843142.3202446,
-  "generation": 10414,
-  "genome_version": 10414,
+  "timestamp": 1784847555.7855947,
+  "generation": 10416,
+  "genome_version": 10416,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 1.0,
-    "caution": 0.9745,
+    "curiosity": 0.9767,
+    "caution": 1.0,
     "emotional_expressiveness": 1.0,
-    "verbosity": 1.0,
-    "introspection": 0.9945,
+    "verbosity": 0.9751,
+    "introspection": 1.0,
     "pattern_sensitivity": 1.0,
-    "social_engagement": 0.9815,
+    "social_engagement": 1.0,
     "energy_conservation": 1.0
   },
-  "personality_drift": 3.8505,
+  "personality_drift": 3.8517,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5694309896934625,
-      "precision": 0.7441521668111999,
-      "depth": 0.883038398513138,
-      "confidence": 0.8187535190384068
+      "warmth": 0.5816341493081953,
+      "precision": 0.7684495268304352,
+      "depth": 0.9756682045729668,
+      "confidence": 0.7802048852592663
     },
     "cognitive": {
-      "curiosity": 0.6575463210746457,
-      "pattern_matching": 0.8781711458744466,
-      "abstraction": 0.5110135332891504,
-      "risk_assessment": 0.8582627628683638
+      "curiosity": 0.698371741129332,
+      "pattern_matching": 0.8073812370178308,
+      "abstraction": 0.5280089481812504,
+      "risk_assessment": 0.8796188264692245
     },
     "social": {
-      "empathy": 0.585,
-      "trust_extension": 0.9320539750893889,
-      "boundary_maintenance": 1.0,
-      "engagement": 0.8983000645220448
+      "empathy": 0.6268325982843564,
+      "trust_extension": 0.9010426673432275,
+      "boundary_maintenance": 0.965156754780288,
+      "engagement": 0.85892135204487
     }
   },
   "governance_stats": {
@@ -113,9 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 0,
-  "understanding_shards": 1,
+  "understanding_shards": 0,
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "6d43543c68d5"
+  "_checksum": "181376e78182"
 }
