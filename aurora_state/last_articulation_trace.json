@@ -1,34 +1,14 @@
 {
-  "original": "I change. I am seeing. I am knowing.",
-  "candidate": "",
-  "selected": "I change. I am seeing. I am knowing.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.5,
-  "candidate_score": 0.0,
-  "original_pressure": 0.42,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.58,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "meaning.",
-    "input_interpretation": {
-      "raw_prompt": "meaning.",
-      "intent_hint": "statement_or_context",
-      "topic_terms": [
-        "meaning"
-      ],
-      "entities": []
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1784793991.997085,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0,
-    "expression_context": {
-      "semantic_strategy": "observe",
-      "semantic_confidence": 0.0,
-      "semantic_strategy_applied": true
-    }
-  }
+  "original": "I exist existence real. I did truth clear.",
+  "candidate": "I exist existence real. I did truth clear.",
+  "selected": "I exist existence real. I did truth clear.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.292,
+  "candidate_pressure": 0.292,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }
