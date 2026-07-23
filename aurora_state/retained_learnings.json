@@ -126979,6 +126979,138 @@
       "sightings": 3,
       "first_seen": 1784743202.5599496,
       "last_seen": 1784743204.4318275
+    },
+    {
+      "text": "i do means clear i am seeing or real i am knowing and always",
+      "confidence": 0.66,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "identity",
+        "i do"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1784809077.3402274,
+      "last_seen": 1784809077.3402274
+    },
+    {
+      "text": "i do means clear i am seeing or real i am knowing and",
+      "confidence": 0.5800000000000001,
+      "sources": [
+        "simulation_live_bridge:semantic_frame"
+      ],
+      "context_types": [
+        "semantic_frame"
+      ],
+      "topic_words": [
+        "identity",
+        "i do"
+      ],
+      "tags": [
+        "semantic_frame",
+        "claim",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1784809079.8781235,
+      "last_seen": 1784809079.8781235
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:66ce89133a5d7d; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "identity",
+        "acode_evolve_b6f7c86f5c"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1784809082.7363908,
+      "last_seen": 1784809082.7363908
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:fb29182f3cf199; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "identity",
+        "acode_evolve_84d15bd318"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1784809082.813137,
+      "last_seen": 1784809082.813137
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:76994bd2e72fa3; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "identity",
+        "acode_evolve_86415be001"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1784809088.5612025,
+      "last_seen": 1784809088.5612025
+    },
+    {
+      "text": "Code evolution outcome for mutation_id=DREAM:918a46a170c6c7; accepted=False; operator_key=dream_dream_evidence; change_count=0; avg_fitness=0.000; genealogy_pressure=0.000; apply_duration_s=0.000; agency_time_credit=0.35",
+      "confidence": 0.84,
+      "sources": [
+        "simulation_live_bridge:lineage_event"
+      ],
+      "context_types": [
+        "lineage_event"
+      ],
+      "topic_words": [
+        "identity",
+        "acode_evolve_b363f962f3"
+      ],
+      "tags": [
+        "lineage_event",
+        "code_function",
+        "composer_unified"
+      ],
+      "sightings": 1,
+      "first_seen": 1784809088.628692,
+      "last_seen": 1784809088.628692
     }
   ]
 }

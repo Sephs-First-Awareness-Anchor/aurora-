@@ -1,14 +1,34 @@
 {
-  "original": "I exist existence real. I did truth clear.",
-  "candidate": "I exist existence real. I did truth clear.",
-  "selected": "I exist existence real. I did truth clear.",
-  "accepted": true,
-  "reason": "already_well_formed",
-  "original_score": 0.74,
-  "candidate_score": 0.74,
-  "original_pressure": 0.292,
-  "candidate_pressure": 0.292,
-  "pressure_relief": 0.0,
-  "safe": true,
-  "metadata": {}
+  "original": "I do. I am seeing or clear.",
+  "candidate": "",
+  "selected": "I do. I am seeing or clear.",
+  "accepted": false,
+  "reason": "no_candidate",
+  "original_score": 0.62,
+  "candidate_score": 0.0,
+  "original_pressure": 0.396,
+  "candidate_pressure": 1.0,
+  "pressure_relief": -0.604,
+  "safe": false,
+  "metadata": {
+    "prompt_excerpt": "identity.",
+    "input_interpretation": {
+      "raw_prompt": "identity.",
+      "intent_hint": "statement_or_context",
+      "topic_terms": [
+        "identity"
+      ],
+      "entities": []
+    },
+    "tone": "gentle",
+    "source": "no_pattern_matched",
+    "timestamp": 1784809086.7113957,
+    "min_relief_used": 0.035,
+    "semantic_strategy_relief_bump": 0.0,
+    "expression_context": {
+      "semantic_strategy": "observe",
+      "semantic_confidence": 0.0,
+      "semantic_strategy_applied": true
+    }
+  }
 }
