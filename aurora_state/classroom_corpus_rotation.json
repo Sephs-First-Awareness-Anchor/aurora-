@@ -91,15 +91,19 @@
     "corpus:coherence_maintenance:11",
     "corpus:coherence_maintenance:12",
     "corpus:coherence_maintenance:13",
-    "corpus:coherence_maintenance:14"
+    "corpus:coherence_maintenance:14",
+    "corpus:coherence_maintenance:15"
   ],
   "perspective_integration": [
-    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
+    "fail_point:train_epoch_2:episode_c6388e715bc2"
   ],
   "ambiguity_handling": [
-    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
+    "corpus:ambiguity_handling:0"
   ],
   "adaptive_strategy_selection": [
-    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3"
+    "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
+    "corpus:adaptive_strategy_selection:0"
   ]
 }

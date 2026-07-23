@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784784524.3475645,
-  "generation": 10382,
-  "genome_version": 10382,
+  "timestamp": 1784793988.2428262,
+  "generation": 10384,
+  "genome_version": 10384,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -70,30 +70,30 @@
     "caution": 1.0,
     "emotional_expressiveness": 1.0,
     "verbosity": 1.0,
-    "introspection": 0.9911,
+    "introspection": 1.0,
     "pattern_sensitivity": 1.0,
-    "social_engagement": 1.0,
-    "energy_conservation": 0.9465
+    "social_engagement": 0.9997,
+    "energy_conservation": 0.9602
   },
-  "personality_drift": 3.8376,
+  "personality_drift": 3.8599,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.6158467775543335,
-      "precision": 0.7406914323925671,
-      "depth": 0.9633212855924828,
-      "confidence": 0.9582967432201991
+      "warmth": 0.587043144861464,
+      "precision": 0.6694189557128586,
+      "depth": 1.0,
+      "confidence": 0.9041941538322019
     },
     "cognitive": {
-      "curiosity": 0.6533614646082367,
-      "pattern_matching": 0.8105403671661987,
-      "abstraction": 0.5326426354097631,
-      "risk_assessment": 0.8751410745370158
+      "curiosity": 0.585,
+      "pattern_matching": 0.791443559870935,
+      "abstraction": 0.48360000000000003,
+      "risk_assessment": 0.9036207716460228
     },
     "social": {
-      "empathy": 0.6058575661592001,
-      "trust_extension": 0.6963746890292233,
-      "boundary_maintenance": 0.9322468355622364,
-      "engagement": 0.9117657659056289
+      "empathy": 0.585,
+      "trust_extension": 0.7527111595876947,
+      "boundary_maintenance": 0.974660515823448,
+      "engagement": 0.9757416460364852
     }
   },
   "governance_stats": {
@@ -113,9 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 0,
-  "understanding_shards": 1,
+  "understanding_shards": 0,
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "682899251bff"
+  "_checksum": "dca4c245a59e"
 }
