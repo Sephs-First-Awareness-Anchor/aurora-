@@ -153,6 +153,50 @@ def test_negate_action_word_uses_do_support_for_regular_verbs():
     assert c._negate_action_word("help", "you") == "do not help"
 
 
+# ── PF3.6 Cluster B: do-support negation for past-tense main verbs ──
+# boundary_calibration_10 (2026-07-21 live characterization):
+# "I do not went. I do not went huge." -- do-support moves TENSE onto
+# the auxiliary ("did"), not just polarity; the main verb reverts to
+# its base form. "I do not went" was never grammatical English.
+
+def test_negate_action_word_irregular_past_tense_uses_did_not_base():
+    c = _composer()
+    assert c._negate_action_word("went", "I") == "did not go"
+    assert c._negate_action_word("said", "I") == "did not say"
+    assert c._negate_action_word("did", "I") == "did not do"
+
+
+def test_negated_frame_with_irregular_past_verb_produces_did_not_base():
+    """The exact live-confirmed shape, through the full bind path."""
+    c = _composer()
+    frame = PropositionFrame(subject="I", relation="went", obj="home",
+                              negated=True, source="thought")
+    word = c._bind_slot_from_frame("action", frame, ["agent"], ["I"])
+    assert word == "did not go"
+
+
+def test_negate_action_word_regular_past_tense_uses_did_not_base():
+    c = _composer()
+    assert c._negate_action_word("trusted", "I") == "did not trust"
+    assert c._negate_action_word("wanted", "I") == "did not want"
+
+
+def test_negate_action_word_present_tense_still_uses_do_not():
+    """Regression: a verb that ISN'T past tense (the ordinary, already-
+    working case) must keep today's "do not <base>" shape -- this fix
+    only changes past-tense verbs, nothing else."""
+    c = _composer()
+    assert c._negate_action_word("go", "I") == "do not go"
+    assert c._negate_action_word("trust", "I") == "do not trust"
+
+
+def test_past_tense_base_form_returns_none_for_non_past_verbs():
+    c = _composer()
+    assert c._past_tense_base_form("go") is None
+    assert c._past_tense_base_form("help") is None
+    assert c._past_tense_base_form("trust") is None
+
+
 # ── integration: through _compose_from_motif ────────────────────────
 
 class _FakeRole:

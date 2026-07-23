@@ -5947,3 +5947,80 @@ role string degrading gracefully rather than raising), repetition-
 share detection against synthetic characterization records (cross-
 clause overlap flagged, no-residue case returns `None` rather than a
 misleading 0%, a single-sentence response correctly never flagged).
+
+## PF3.6 — Registry & hygiene, 2026-07-21
+
+Directive PF3.6 (carried forward from PF2.5, extended): record, don't
+chase.
+
+**FIX-A013 note:** the directive names this entry "FIX-A013:
+Continuity Over-Trigger" for `ThoughtContinuity.carry_forward`'s
+axis-letter merge trigger bug. `FIX-A013` isn't actually free in this
+registry's own numbering (its next real slot was `FIX-A047` at the
+time PF3.1 shipped -- `FIX-A013` as a label only exists informally, in
+an unrelated `aurora_expression_perception.py` docstring about
+`save_lexicon()`, never as an entry here). Already fully documented,
+under its correct number, in **PF3.1's own entry above as FIX-A047**
+-- not duplicated here.
+
+**KNOWN-GAP: ditransitive reported speech.** "I told my friend I was
+fine, but I've been crying all week" needs a genuinely different claim
+pattern than `_extract_claims`'s existing reported-speech branch
+handles (a ditransitive reporting verb -- told WHOM WHAT -- not the
+single-object "said/thinks/believes" shape the branch was built for).
+Carried from PF2.5, unchanged. Out of scope until residue
+characterization shows it matters at volume; still doesn't, as of
+PF3.4's re-characterization (this arc's most recent volume check).
+
+**KNOWN-GAP: "claims to `<verb>`" infinitive-marker-as-subject.** "The
+policy claims to support flexibility, but every request gets denied"
+extracts with the stray infinitive "to" swallowed into the subject
+position by the existing reported-speech/relation patterns. Carried
+from PF2.5, unchanged, same deferral -- narrow, low-volume, needs its
+own pattern rather than a patch to the existing ones.
+
+**FIX-A050 (RUNTIME BUG) — Do-support negation dropped tense on
+past-tense main verbs (Cluster B).** Category: RUNTIME BUG. Pattern:
+`SentenceComposer._negate_action_word` (`aurora_expression_
+perception.py`) built do-support negation as `f"do not {base}"`
+unconditionally -- correct present-tense polarity flip ("I do not
+help"), but for a past-tense main verb ("went"), `base` passes through
+`_conjugate_for_subject` UNCHANGED (English past tense doesn't inflect
+for person, so "I went"/"you went" are both already correct when NOT
+negated -- there was nothing to conjugate FROM), producing "I do not
+went" -- confirmed live, `boundary_calibration_10`, never grammatical
+English. Do-support moves TENSE onto the auxiliary, not just polarity:
+"I did not go." **Fix:** new `_past_tense_base_form` -- an irregular-
+verb table reversing the SAME verbs `_CONJUGATIONS` already covers
+(established vocabulary, not new coverage), plus a regular `-ed`/
+`-ied` reversal checked against the live lexicon for the silent-e case
+("created" -> "creat" + "e" only if "create" is itself a known word,
+else the plain strip -- an honest, narrow limitation for un-seeded
+silent-e verbs, not claimed as a general lemmatizer). Returns `None`
+(fail-quiet) for anything not confidently past tense, so `_negate_
+action_word`'s existing present-tense behavior is completely
+unaffected. **Tests:** `tests/test_pf1_4_slot_binding.py` (+6, now
+30) -- the exact live-confirmed shape end to end
+(`"went"` negated -> `"did not go"`, through the full `_bind_slot_
+from_frame` path), irregular and regular past-tense verbs directly,
+an explicit regression case proving present-tense verbs keep today's
+"do not `<base>`" shape unchanged, and `_past_tense_base_form`
+returning `None` for non-past verbs. Full `test_function_word_gate_
+golden.py` / `test_golden_transcript_validation.py` / `test_l1_
+skeleton_validity_gate.py` / `test_l2_pos_gating.py` / `test_l3_
+conjugation_wiring.py` / `test_l3b_determiner_preposition_slots.py` /
+`test_l4_grounded_motif_fitness.py` regression (the R1.9.3/R1.9.4
+golden-set lineage the directive names) unaffected -- 57 passed.
+
+**Hygiene ticket (carried, unchanged, not this arc's debt):**
+reentrancy cross-test flake (`test_d2_2_live_turn_reentrancy_guard.py`
+::`test_twenty_live_turns_each_produce_exactly_one_top_level_call`) --
+module-singleton state (`ThoughtBraid`/`ThoughtContinuity`/
+`EmotionFirewall`, process-global per `aurora_braid_wiring.py`'s
+`_get_braid`/`_get_continuity`/`_get_firewall`) bleeding across all
+~1000+ tests in one pytest process. Confirmed via W1's own git-stash
+isolation (2026-07-21) that no single fix in this arc deterministically
+causes it -- full-suite-only cross-test timing artifact, same class as
+the already-documented cv2.imdecode flake. Fix is a test-isolation
+fixture (reset the module-level singletons between tests); noisy,
+non-deterministic, environmental -- not chased further this phase.

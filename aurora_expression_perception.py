@@ -2693,15 +2693,64 @@ class SentenceComposer:
 
         return None
 
+    # PF3.6 Cluster B (2026-07-21): do-support moves TENSE onto the
+    # auxiliary, not just polarity -- "I went" negates to "I did not
+    # go", never "I do not went" (confirmed live, boundary_
+    # calibration_10). _negate_action_word's original do-support path
+    # only ever produced "do not <verb>", bare-stem retention, because
+    # frame.relation ("went") passes through _conjugate_for_subject
+    # unchanged (no past-tense entry to conjugate FROM -- English past
+    # tense doesn't inflect for person, so "I went"/"you went" are both
+    # already correct there; the auxiliary-fronting requirement only
+    # exists once negation moves the verb behind "not"). Reverses the
+    # SAME irregular verbs _CONJUGATIONS already covers (established
+    # vocabulary, not new coverage) rather than a general lemmatizer.
+    _IRREGULAR_PAST_TO_BASE = {
+        'went': 'go', 'said': 'say', 'made': 'make', 'took': 'take',
+        'gave': 'give', 'came': 'come', 'found': 'find', 'got': 'get',
+        'knew': 'know', 'thought': 'think', 'saw': 'see', 'felt': 'feel',
+        'kept': 'keep', 'began': 'begin', 'heard': 'hear', 'ran': 'run',
+        'brought': 'bring', 'wrote': 'write', 'sat': 'sit', 'stood': 'stand',
+        'lost': 'lose', 'paid': 'pay', 'met': 'meet', 'grew': 'grow',
+        'led': 'lead', 'understood': 'understand', 'held': 'hold',
+        'sought': 'seek', 'chose': 'choose', 'became': 'become', 'did': 'do',
+    }
+
+    def _past_tense_base_form(self, verb: str) -> Optional[str]:
+        """Returns the base/infinitive form if `verb` is recognizably
+        past tense, else None (fail-quiet -- caller keeps today's
+        bare-stem behavior for anything this can't confidently reverse).
+        Irregulars via the table above; regular "-ed"/"-ied" reversed
+        with the same silent-e disambiguation _conjugate_for_subject's
+        own -es/-s stripping already relies on, checked against the
+        lexicon itself (her web defines it, same PF3.3 doctrine) rather
+        than a fixed spelling-rule guess."""
+        v = verb.lower()
+        if v in self._IRREGULAR_PAST_TO_BASE:
+            return self._IRREGULAR_PAST_TO_BASE[v]
+        if v.endswith('ied') and len(v) > 4:
+            return v[:-3] + 'y'
+        if v.endswith('ed') and len(v) > 3:
+            stem = v[:-2]
+            if (stem + 'e') in self.lexicon.entries:
+                return stem + 'e'
+            return stem
+        return None
+
     def _negate_action_word(self, verb: str, subject: str) -> str:
         """PF1.4: minimal do-support negation, reusing the existing
         _conjugate_for_subject table rather than a new one. 'be' forms
-        negate in place ("am not"/"are not"); everything else uses
-        do-support ("do not <base>") -- correct for "I"/"you" (the only
-        subjects this delivered voice ever uses; "does" never applies)."""
+        negate in place ("am not"/"are not"); a past-tense main verb
+        moves its tense onto the auxiliary ("did not go", PF3.6 Cluster
+        B); everything else uses present do-support ("do not <base>")
+        -- correct for "I"/"you" (the only subjects this delivered
+        voice ever uses; "does" never applies)."""
         base = self._conjugate_for_subject(verb, subject)
         if base in self._BE_NEGATION_FORMS:
             return f"{base} not"
+        past_base = self._past_tense_base_form(verb)
+        if past_base is not None:
+            return f"did not {past_base}"
         return f"do not {base}"
 
     # R1.9.2 G1: valence-proximity's bonus is bounded so no valence match,
