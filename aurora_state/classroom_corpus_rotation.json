@@ -96,7 +96,8 @@
     "corpus:coherence_maintenance:16",
     "corpus:coherence_maintenance:17",
     "corpus:coherence_maintenance:18",
-    "corpus:coherence_maintenance:19"
+    "corpus:coherence_maintenance:19",
+    "corpus:coherence_maintenance:20"
   ],
   "perspective_integration": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -104,7 +105,8 @@
     "corpus:perspective_integration:0",
     "corpus:perspective_integration:1",
     "corpus:perspective_integration:2",
-    "corpus:perspective_integration:3"
+    "corpus:perspective_integration:3",
+    "corpus:perspective_integration:4"
   ],
   "ambiguity_handling": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -112,7 +114,8 @@
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "corpus:ambiguity_handling:1",
     "corpus:ambiguity_handling:2",
-    "corpus:ambiguity_handling:3"
+    "corpus:ambiguity_handling:3",
+    "corpus:ambiguity_handling:4"
   ],
   "adaptive_strategy_selection": [
     "fail_point:prove_ep_epoch_1:episode_d45dd5bdbaf3",
@@ -120,6 +123,7 @@
     "corpus:adaptive_strategy_selection:1",
     "fail_point:train_epoch_2:episode_c6388e715bc2",
     "corpus:adaptive_strategy_selection:2",
-    "corpus:adaptive_strategy_selection:3"
+    "corpus:adaptive_strategy_selection:3",
+    "corpus:adaptive_strategy_selection:4"
   ]
 }
