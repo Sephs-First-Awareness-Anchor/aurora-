@@ -5882,3 +5882,68 @@ progress at commit time); live-battery confirmation of the (b)-bucket
 drop bundled into the same deferred 3-pass validation as PF3.3's own
 pending gate, per Sunni's explicit direction -- both will be measured
 and reported together once all of PF3 is code-complete.
+
+## PF3.5 — Motif promotion watch opens, 2026-07-21
+
+Directive PF3 (carried forward from PF2.4, window unchanged,
+observation widened). Developmental-gate rule stands: no seeding while
+the window is open -- structure was proven healthy and diverse in the
+residue; motifs earn fitness by carrying content, and PF3.1-3.4 are
+what's making real content arrive more consistently. Give the
+carryover-corrected, frame-completed, thinning-guarded branch a real
+window before judging structural capacity.
+
+**Window:** 14 days of live, thought-fed operation, OR 500 processed
+turns, whichever comes first -- **restarts from PF3.1's landing
+(2026-07-21), not PF2's**, since PF3.1 materially changed what content
+motifs actually receive (the whole point of the carryover-isolation
+work). Window closes 2026-08-04 (calendar) or at 500 turns.
+
+**Observation, widened per the directive -- both are "does she have
+enough ways to say things" signals, one watch:**
+(a) promoted, clause-valid motif count and shape distribution from
+`aurora_state/grammar_motifs.json` (existing promotion machinery, no
+new code beyond the readout);
+(b) Cluster-E-style repetition share (same-role-filled-twice
+frequency, PF3.4's own named pattern) across the standing probe
+battery.
+
+**Ships as:** `scripts/pf3_5_motif_watch_readout.py` (new, read-only,
+no scratch-isolation needed -- reads the live `grammar_motifs.json`
+directly since this is observation, never mutation) + this dated
+ledger note. `--characterization <path>` accepts any `characterize_
+pf16_residue.py` output for the (b) readout; a fresh battery run is
+its own already-established separate step, not re-implemented here.
+
+**First readout (2026-07-21, window just opened, 2 days elapsed --
+baseline for the window, not a trigger check):**
+- Total motifs tracked: 1057. Total promoted: 16. **Promoted AND
+  clause-valid: 3** -- `agent_action`, `agent_action_object`,
+  `agent_action_object_descriptor` -- confirming the exact ceiling
+  PF1.3/PF2's own "Ground" section already named ("3 promoted+valid
+  motifs in the live lineage vs. the directive's stated >=4").
+- Repetition share (against the most recent full-profile battery,
+  post PF3.1-3.4): 32/49 residue records (65.3%) show cross-clause
+  token overlap by this readout's own measure -- a coarser, whole-
+  response-text heuristic than PF3.4's own motif-level analysis (which
+  found 14/36 non-carryover records specifically matching the (b)
+  bare-`agent_action` pattern this readout can't distinguish from
+  ordinary topical word reuse without per-clause role data). Read as a
+  trend-tracking number across future readouts, not a precise
+  restatement of PF3.4's finding.
+
+**Trigger (window close, human call, not automated by the script):**
+if promoted clause-valid count is still 3 AND/OR repetition share
+hasn't materially improved from this baseline, seed candidate shapes
+through `MotifLineage.seed_motifs` (`aurora_grammar_engine.py:796`) --
+feed-the-mechanism; candidates enter the same fitness competition as
+everything else, no direct promotion. Not triggered now -- window just
+opened.
+
+**Tests:** `tests/test_pf3_5_motif_watch_readout.py` (5) -- promoted/
+clause-valid counting against a synthetic motif file (including an
+invalid-shape-but-promoted motif correctly excluded, and an unknown
+role string degrading gracefully rather than raising), repetition-
+share detection against synthetic characterization records (cross-
+clause overlap flagged, no-residue case returns `None` rather than a
+misleading 0%, a single-sentence response correctly never flagged).
