@@ -2,52 +2,52 @@
   "conscious_frame": {
     "coherence": 0.288,
     "conscious_crest": {
-      "axis": "T",
-      "intensity": 0.4364,
-      "label": "contextualize"
+      "axis": "N",
+      "intensity": 0.3997,
+      "label": "explain"
     },
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "overlay": {
       "active_crystals": [
-        "feeling"
+        "understand"
       ],
       "interaction_state": "present",
-      "present_anchor": "feeling.\n[recalled:feeling] feeling. [recalled:recalled:feeling] feeling.\n[recalled:feeling] feeling. [recalled:recalled:recalled:feeling...",
+      "present_anchor": "How do you understand existence?\n[recalled:understand] How do you understand existence? [recalled:existence] How do you understand existe...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
     "readiness": 0.4033,
-    "selected_action": "contextualize",
-    "should_speak": true,
-    "stance": "contextual_continuity",
+    "selected_action": "explain",
+    "should_speak": false,
+    "stance": "interpretive_explanation",
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     },
-    "timestamp": 1784772157.086993
+    "timestamp": 1784784527.7704887
   },
-  "saved_at": 1784772157.0871851,
+  "saved_at": 1784784527.7706776,
   "subsurface_state": {
-    "dominant_axis": "T",
+    "dominant_axis": "N",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "feeling"
+        "understand"
       ],
       "interaction_state": "present",
-      "present_anchor": "feeling.\n[recalled:feeling] feeling. [recalled:recalled:feeling] feeling.\n[recalled:feeling] feeling. [recalled:recalled:recalled:feeling...",
+      "present_anchor": "How do you understand existence?\n[recalled:understand] How do you understand existence? [recalled:existence] How do you understand existe...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.6514
+      "reinforcement_hint": 0.2514
     },
     "sub_crests": [
       {
@@ -57,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 1.0,
-        "label": "continuity_pull"
+        "intensity": 0.5,
+        "label": "familiar"
       },
       {
         "axis": "A",
@@ -78,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_holds"
+        "label": "thread_slipping"
       },
       {
         "axis": "N",
@@ -92,9 +92,9 @@
       }
     ],
     "subsurface_crest": {
-      "axis": "T",
-      "intensity": 0.5,
-      "label": "continuity_stable"
+      "axis": "N",
+      "intensity": 0.4476,
+      "label": "steady"
     }
   }
 }
