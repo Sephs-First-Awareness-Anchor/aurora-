@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784765259.195671,
-  "generation": 10378,
-  "genome_version": 10378,
+  "timestamp": 1784772154.2443867,
+  "generation": 10380,
+  "genome_version": 10380,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -66,34 +66,34 @@
   ],
   "memory_helices": 0,
   "traits": {
-    "curiosity": 0.9892,
+    "curiosity": 1.0,
     "caution": 1.0,
-    "emotional_expressiveness": 0.9937,
-    "verbosity": 0.9901,
-    "introspection": 0.9984,
+    "emotional_expressiveness": 1.0,
+    "verbosity": 1.0,
+    "introspection": 1.0,
     "pattern_sensitivity": 1.0,
-    "social_engagement": 0.987,
-    "energy_conservation": 0.9587
+    "social_engagement": 1.0,
+    "energy_conservation": 0.9394
   },
-  "personality_drift": 3.8172,
+  "personality_drift": 3.8394,
   "crystal_genomes": {
     "response": {
       "warmth": 0.5616,
-      "precision": 0.7953287831760326,
-      "depth": 1.0,
-      "confidence": 1.0
+      "precision": 0.7396540154049658,
+      "depth": 0.9903160663544062,
+      "confidence": 0.9861826807751092
     },
     "cognitive": {
-      "curiosity": 0.6356901988923321,
-      "pattern_matching": 0.8491641735854292,
+      "curiosity": 0.6045406963506645,
+      "pattern_matching": 0.8572782655662394,
       "abstraction": 0.48360000000000003,
-      "risk_assessment": 0.890785899058552
+      "risk_assessment": 0.9251411978044879
     },
     "social": {
-      "empathy": 0.6728028746954005,
-      "trust_extension": 0.7274404397664076,
-      "boundary_maintenance": 0.9092404846999652,
-      "engagement": 0.9062035809019554
+      "empathy": 0.6053761121310015,
+      "trust_extension": 0.7427112891185181,
+      "boundary_maintenance": 0.9431250554682199,
+      "engagement": 0.8995370100231577
     }
   },
   "governance_stats": {
@@ -113,9 +113,9 @@
   },
   "simulation_epochs": 194,
   "total_episodes": 0,
-  "understanding_shards": 0,
+  "understanding_shards": 1,
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "5c428516c892"
+  "_checksum": "2b4d5e07c72a"
 }
