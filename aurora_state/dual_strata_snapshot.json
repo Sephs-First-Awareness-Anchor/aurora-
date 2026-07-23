@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.252,
+    "coherence": 0.288,
     "conscious_crest": {
       "axis": "T",
-      "intensity": 0.45,
-      "label": "hold"
+      "intensity": 0.4364,
+      "label": "contextualize"
     },
     "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "identity"
+        "change"
       ],
       "interaction_state": "present",
-      "present_anchor": "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca...",
+      "present_anchor": "Tell me about change.\n[recalled:change] Tell me about change. [recalled:recalled:change] Tell me about change.\n[recalled:change] Tell me...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,27 +21,27 @@
       "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.3615,
-    "selected_action": "wait",
+    "readiness": 0.4033,
+    "selected_action": "contextualize",
     "should_speak": true,
-    "stance": "hold_for_coherence",
+    "stance": "contextual_continuity",
     "subsurface_crest": {
       "axis": "T",
       "intensity": 0.5,
       "label": "continuity_stable"
     },
-    "timestamp": 1784833730.4904218
+    "timestamp": 1784838206.1883528
   },
-  "saved_at": 1784833730.490518,
+  "saved_at": 1784838206.1885283,
   "subsurface_state": {
     "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "identity"
+        "change"
       ],
       "interaction_state": "present",
-      "present_anchor": "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca...",
+      "present_anchor": "Tell me about change.\n[recalled:change] Tell me about change. [recalled:recalled:change] Tell me about change.\n[recalled:change] Tell me...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419

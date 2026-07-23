@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.252,
+  "coherence": 0.288,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "identity",
-    "ambiguity": 0.295,
-    "cost_total": 0.165,
+    "active_topic": "change",
+    "ambiguity": 0.545,
+    "cost_total": 0.2041,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
@@ -30,7 +30,7 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.748
+      "severity": 0.712
     }
   ],
   "law_bindings": [],
@@ -67,23 +67,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6226,
+    "confidence": 0.6378,
     "expected_observation": "followup",
-    "expected_user_continuation": "identity",
+    "expected_user_continuation": "change",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.3925,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "identity"
+      "topic": "change"
     },
     "preload_context": [
-      "identity",
+      "change",
       "followup"
     ],
-    "readiness_bias": 0.4315,
+    "readiness_bias": 0.4198,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,20 +93,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3615,
+  "readiness": 0.4033,
   "recalled_fragments": [
-    "identity",
-    "i do means clear i am seeing or real i am interesting what always",
-    "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca..."
+    "change",
+    "Tell me about change.\n[recalled:change] Tell me about change. [recalled:recalled:change] Tell me about change.\n[recalled:change] Tell me ..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.1728,
-    "N": 0.0773,
-    "T": 0.7499,
+    "B": 0.2741,
+    "N": 0.0821,
+    "T": 0.6438,
     "X": 0.0
   },
-  "saved_at": 1784833730.4906871,
+  "saved_at": 1784838206.1887987,
   "sub_crests": [
     {
       "axis": "X",
