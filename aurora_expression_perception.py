@@ -2316,6 +2316,41 @@ class SentenceComposer:
     # COMPOSITION  -- The main output (scaffolding-aware)
     # ================================================================
 
+    def _motif_for_proposition_avoiding_thinning(self, lineage, frame, orient, outlet,
+                                                  richest_role_count: int,
+                                                  max_retries: int):
+        """PF3.4a (2026-07-21, ratified from PF3.4's characterization
+        note): best_for_proposition's own fitness-proportional sampling
+        (PF1.3, intentional -- diversity ACROSS responses) independently
+        re-samples for every sentence in ONE response against the SAME
+        frame, so a later sentence can land on a strictly thinner
+        skeleton (bare agent_action, no object/descriptor role to fill
+        at all) than an earlier sentence in the SAME response already
+        achieved -- even though the frame still has full subject/
+        relation/obj content available. PF3.4's characterization found
+        this as the single largest residue sub-pattern (14/36 non-
+        carryover records): one clause content-bearing, the sibling
+        clause ("I denied claims. I denied.") bare, from the identical
+        frame. Not slot-fill starvation (no empty slot is left unfilled)
+        -- the skeleton itself has no slot.
+
+        richest_role_count=0 (frame not fully populated, or this is the
+        response's first sentence) means "nothing to protect yet" --
+        every draw passes on the first comparison, no retry, identical
+        to pre-PF3.4a behavior. Bounded retries only, so a lineage with
+        genuinely no richer promoted skeleton available still returns
+        the best draw it found rather than looping or returning None."""
+        motif = lineage.best_for_proposition(frame, orient, outlet)
+        if richest_role_count <= 0 or motif is None:
+            return motif
+        for _ in range(max_retries):
+            if len(motif.role_sequence) >= richest_role_count:
+                break
+            retry = lineage.best_for_proposition(frame, orient, outlet)
+            if retry is not None:
+                motif = retry
+        return motif
+
     def compose(self, offspring: 'ExpressionOffspring',
                 assembly: 'AssemblyResult',
                 i_state: str,
@@ -2397,6 +2432,19 @@ class SentenceComposer:
         engine = getattr(self, "grammar_engine", None)
         lineage = getattr(engine, "_lineage", None) if engine is not None else None
 
+        # PF3.4a: avoid a later sentence in this SAME response landing on
+        # a strictly thinner motif skeleton than an earlier one already
+        # achieved against the identical frame -- see
+        # _motif_for_proposition_avoiding_thinning's own docstring.
+        _richest_role_count = 0
+        _frame_fully_populated = bool(
+            self._proposition_frame is not None
+            and getattr(self._proposition_frame, "subject", "")
+            and getattr(self._proposition_frame, "relation", "")
+            and getattr(self._proposition_frame, "obj", "")
+        )
+        _MAX_RICHNESS_RETRIES = 3
+
         sentences = []
         for s_i in range(sentence_count):
             motif = None
@@ -2411,8 +2459,11 @@ class SentenceComposer:
                     # of pressure-only scoring -- frame-absent turns keep
                     # today's exact best_for_pressure behavior.
                     if self._proposition_frame is not None:
-                        motif = lineage.best_for_proposition(
-                            self._proposition_frame, _orient, outlet)
+                        motif = self._motif_for_proposition_avoiding_thinning(
+                            lineage, self._proposition_frame, _orient, outlet,
+                            _richest_role_count if _frame_fully_populated else 0,
+                            _MAX_RICHNESS_RETRIES,
+                        )
                     else:
                         motif = lineage.best_for_pressure(_orient, outlet)
                 except Exception:
@@ -2427,6 +2478,8 @@ class SentenceComposer:
                 if motif is not None:
                     self._last_motifs_used.append(motif)
                     self._last_motif_sentences.append((motif, sent))
+                    if _frame_fully_populated:
+                        _richest_role_count = max(_richest_role_count, len(motif.role_sequence))
 
         text = " ".join(sentences)
 

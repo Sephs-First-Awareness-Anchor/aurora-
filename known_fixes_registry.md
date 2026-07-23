@@ -5808,3 +5808,77 @@ frame-absence fix) is code-complete, tested (`tests/test_pf3_3_
 descriptor_neighborhood.py` 10, `tests/test_pf3_3_frame_absence.py`
 5), and regression-clean, but the directive's own numeric gate is
 PENDING CONFIRMATION, not yet closed.
+
+## PF3.4 / PF3.4a — Cluster E characterization + motif-thinning guard, 2026-07-21
+
+Directive PF3.4: characterize Cluster E (PF2.1's "correct extraction,
+thin/repetitive rendering," 14/41 in the original characterization)
+before any code change -- group by promoted motif and whether the
+repetition is (a) same role filled twice, (b) a single-role motif
+selected when a frame with more participants was available, or (c)
+slot-fill genuinely starved of alternatives. Propose a fix as PF3.4a
+in the note itself, implement only on ratification.
+
+**Re-characterized against current data** (post PF3.1-3.3, 49-record
+residue set from the live battery, not PF2.1's original 14 --
+carryover/context-enrichment mechanisms this arc has since fixed
+changed which records fail and why, so the original list no longer
+reflects the live system). Split off 13 records still showing the
+already-tracked, separately-deferred "planning" context_keywords
+contamination (PF3.1's third finding) -- not Cluster E. Of the
+remaining 36:
+
+| Sub-pattern | Count |
+|---|---|
+| (a) Literal/near-literal clause duplication | 8 |
+| (a) Same action+object repeated, only descriptor varies | 8 |
+| (b) Motif shape collapses to bare `agent_action` mid-response | **14** |
+| Unclassified/mixed | 6 |
+
+**(b) is the largest single pattern, and matches the directive's own
+hypothesis exactly.** Checked `motifs` directly for every record in
+this bucket: each response mixes skeleton shapes across its own two
+clauses against the SAME frame -- one clause draws `agent_action_
+object` or `agent_action_object_descriptor` (content-bearing), the
+sibling clause draws the bare 2-role `agent_action` skeleton, which
+has no object/descriptor role to fill in the first place
+(`"I denied claims. I denied."`). Not slot-fill starvation
+(hypothesis (c) -- no empty slot goes unfilled); the skeleton itself
+has no slot. Root cause: `best_for_proposition`'s own fitness-
+proportional sampling (PF1.3, intentionally random for skeleton
+diversity ACROSS different responses) independently re-samples for
+every sentence in `compose()`'s loop against the identical frame, so
+a later sentence can draw something strictly thinner than an earlier
+sentence in the SAME response already achieved.
+
+**PF3.4a (ratified, implemented same phase):** `SentenceComposer.
+_motif_for_proposition_avoiding_thinning` -- a bounded retry (default
+3 attempts) around `best_for_proposition`, only when the frame is
+fully populated (subject+relation+obj all present): if a draw is
+strictly thinner (fewer role_sequence roles) than the richest skeleton
+already used elsewhere in THIS response, retry toward something that
+meets or exceeds it; if the lineage genuinely has nothing richer
+promoted, keep the best draw found (fail-quiet, never spins or returns
+None). `richest_role_count` tracked across `compose()`'s own sentence
+loop, reset implicitly each call. PF1.3's own diversity properties
+(fitness-proportional sampling, skeleton variety across DIFFERENT
+responses, `best_for_pressure`'s frame-absent path) are completely
+untouched -- this only constrains a downward move within one
+response's own clauses, and only when there's frame content to
+protect.
+
+**Tests:** `tests/test_pf3_4a_motif_thinning_guard.py` (5) -- no-retry
+when nothing to protect (richest_role_count=0, identical to calling
+best_for_proposition directly), retries away from a strictly-thinner
+draw when a richer skeleton exists, fails quiet to the best available
+draw when no richer skeleton is promoted, no wasted retry when the
+draw already meets richness, degrades gracefully when best_for_
+proposition itself returns None. Full existing `test_pf1_3_motif_
+selection.py`/`test_pf1_4_slot_binding.py` regression unaffected
+(`best_for_proposition` itself is untouched; the guard wraps it).
+
+**Validation status:** full regression pending (background run in
+progress at commit time); live-battery confirmation of the (b)-bucket
+drop bundled into the same deferred 3-pass validation as PF3.3's own
+pending gate, per Sunni's explicit direction -- both will be measured
+and reported together once all of PF3 is code-complete.
