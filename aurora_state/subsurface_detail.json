@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
+      "confidence": 0.35,
       "label": "topic_continuation"
     },
     {
@@ -17,11 +17,11 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "feeling",
+    "active_topic": "understanding",
     "ambiguity": 0.545,
-    "cost_total": 0.2184,
+    "cost_total": 0.2099,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
+    "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
@@ -35,17 +35,6 @@
   ],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -67,23 +56,23 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6446,
+    "confidence": 0.5995,
     "expected_observation": "followup",
-    "expected_user_continuation": "feeling",
+    "expected_user_continuation": "understanding",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.3925,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "feeling"
+      "topic": "understanding"
     },
     "preload_context": [
-      "feeling",
+      "understanding",
       "followup"
     ],
-    "readiness_bias": 0.4219,
+    "readiness_bias": 0.3746,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3433,
+  "readiness": 0.3231,
   "recalled_fragments": [
-    "feeling",
-    "Tell me about feeling.\n[recalled:feeling] Tell me about feeling. [recalled:recalled:feeling] Tell me about feeling.\n[recalled:feeling] Te..."
+    "understanding",
+    "What is understanding?\n[recalled:understanding] What is understanding? [recalled:recalled:understanding] What is understanding?\n[recalled..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2725,
-    "N": 0.0874,
-    "T": 0.6401,
+    "B": 0.4569,
+    "N": 0.5431,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784761521.9266262,
+  "saved_at": 1784765262.699932,
   "sub_crests": [
     {
       "axis": "X",
@@ -114,8 +103,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.5,
+      "label": "familiar"
     },
     {
       "axis": "A",
@@ -135,7 +124,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
