@@ -10,16 +10,16 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.288,
+  "coherence": 0.188,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "feeling",
+    "active_topic": "existence",
     "ambiguity": 0.545,
-    "cost_total": 0.2041,
+    "cost_total": 0.2184,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
@@ -30,7 +30,7 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.712
+      "severity": 0.812
     }
   ],
   "law_bindings": [],
@@ -67,9 +67,9 @@
     "alerts": [
       "novelty_shift"
     ],
-    "confidence": 0.6459,
+    "confidence": 0.6613,
     "expected_observation": "followup",
-    "expected_user_continuation": "feeling",
+    "expected_user_continuation": "existence",
     "likely_affect_shift": "curiosity",
     "mismatch": 0.325,
     "prediction_payload": {
@@ -77,13 +77,13 @@
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "feeling"
+      "topic": "existence"
     },
     "preload_context": [
-      "feeling",
+      "existence",
       "followup"
     ],
-    "readiness_bias": 0.4223,
+    "readiness_bias": 0.4269,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,19 +93,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.4033,
+  "readiness": 0.3433,
   "recalled_fragments": [
-    "feeling",
-    "feeling.\n[recalled:feeling] feeling. [recalled:recalled:feeling] feeling.\n[recalled:feeling] feeling. [recalled:recalled:recalled:feeling..."
+    "existence",
+    "existence.\n[recalled:existence] existence. [recalled:recalled:existence] existence.\n[recalled:existence] existence. [recalled:recalled:re..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2741,
-    "N": 0.0821,
-    "T": 0.6438,
+    "B": 0.2725,
+    "N": 0.0874,
+    "T": 0.6401,
     "X": 0.0
   },
-  "saved_at": 1784851469.2940226,
+  "saved_at": 1784858277.041669,
   "sub_crests": [
     {
       "axis": "X",
