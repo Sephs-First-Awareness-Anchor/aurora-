@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.288,
+    "coherence": 0.644,
     "conscious_crest": {
       "axis": "T",
-      "intensity": 0.4364,
+      "intensity": 0.5432,
       "label": "contextualize"
     },
     "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "trust"
+        "meaning"
       ],
       "interaction_state": "present",
-      "present_anchor": "Tell me about trust.\n[recalled:trust] Tell me about trust.",
+      "present_anchor": "meaning.\n[recalled:meaning] meaning. [recalled:recalled:meaning] meaning.\n[recalled:meaning] meaning.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,7 +21,7 @@
       "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.4033,
+    "readiness": 0.6525,
     "selected_action": "contextualize",
     "should_speak": true,
     "stance": "contextual_continuity",
@@ -30,18 +30,18 @@
       "intensity": 0.5,
       "label": "continuity_stable"
     },
-    "timestamp": 1784924594.7041798
+    "timestamp": 1784929593.9862893
   },
-  "saved_at": 1784924594.70486,
+  "saved_at": 1784929593.9865386,
   "subsurface_state": {
     "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "trust"
+        "meaning"
       ],
       "interaction_state": "present",
-      "present_anchor": "Tell me about trust.\n[recalled:trust] Tell me about trust.",
+      "present_anchor": "meaning.\n[recalled:meaning] meaning. [recalled:recalled:meaning] meaning.\n[recalled:meaning] meaning.",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
