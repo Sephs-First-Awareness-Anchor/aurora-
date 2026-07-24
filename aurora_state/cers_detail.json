@@ -19,7 +19,7 @@
     "unused_potential": [],
     "variant_confidence": 0.0
   },
-  "coherence": 0.188,
+  "coherence": 0.744,
   "deprecation_recommendation": {
     "agreement_rate": 1.0,
     "blocking_potential": [],
@@ -62,9 +62,9 @@
     "semantic_salience": 0.0,
     "variant_confidence": 0.0
   },
-  "prediction_confidence": 0.6483,
+  "prediction_confidence": 0.7513,
   "prediction_source": "understanding_contract+manifold",
-  "saved_at": 1784870556.0321052,
+  "saved_at": 1784879807.0207834,
   "sub_crests": [
     {
       "axis": "X",
@@ -83,8 +83,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.5575,
-      "label": "surprise"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
       "axis": "N",

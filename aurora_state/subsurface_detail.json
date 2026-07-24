@@ -10,46 +10,26 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.188,
+  "coherence": 0.744,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "a code evolve 5301dbc734",
+    "active_topic": "meaning",
     "ambiguity": 0.545,
-    "cost_total": 0.2241,
+    "cost_total": 0.1447,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
-    "interpreted_deep_passion": "settled_alignment",
+    "interpreted_deep_passion": "meaning_hold",
     "tracked_surface_emotion": "curiosity",
     "tracked_surface_intensity": 0.419
   },
-  "instability_markers": [
-    {
-      "label": "low_coherence",
-      "severity": 0.812
-    },
-    {
-      "label": "prediction_mismatch",
-      "severity": 0.5575
-    }
-  ],
+  "instability_markers": [],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 0.5575,
-      "label": "prediction_mismatch",
-      "rationale": "Observed input diverged from the currently primed continuation.",
-      "source": "prediction",
-      "tags": [
-        "reframe",
-        "surprise"
-      ],
-      "urgency": 0.812
-    },
     {
       "confidence": 1.0,
       "label": "callback_pressure",
@@ -80,26 +60,25 @@
   ],
   "prediction_signal": {
     "alerts": [
-      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.564,
+    "confidence": 0.6787,
     "expected_observation": "followup",
-    "expected_user_continuation": "a code evolve 5301dbc734",
+    "expected_user_continuation": "meaning",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.5575,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "X",
+      "axis_signature": "B",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "a code evolve 5301dbc734"
+      "topic": "meaning"
     },
     "preload_context": [
-      "a code evolve 5301dbc734",
+      "meaning",
       "followup"
     ],
-    "readiness_bias": 0.2815,
+    "readiness_bias": 0.4321,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -109,19 +88,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.2863,
+  "readiness": 0.7025,
   "recalled_fragments": [
-    "a code evolve 5301dbc734",
-    "What is feeling?\n[recalled:feeling] What is feeling? [recalled:recalled:feeling] What is feeling?\n[recalled:feeling] What is feeling? [re..."
+    "meaning",
+    "Tell me about meaning.\n[recalled:meaning] Tell me about meaning. [recalled:recalled:meaning] Tell me about meaning.\n[recalled:meaning] Te..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2719,
-    "N": 0.0894,
-    "T": 0.6386,
+    "B": 0.2808,
+    "N": 0.0596,
+    "T": 0.6595,
     "X": 0.0
   },
-  "saved_at": 1784870556.0290911,
+  "saved_at": 1784879807.0172634,
   "sub_crests": [
     {
       "axis": "X",
@@ -140,8 +119,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.5575,
-      "label": "surprise"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
       "axis": "N",
