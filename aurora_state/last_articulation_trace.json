@@ -1,29 +1,14 @@
 {
-  "original": "I tell. I tell truth. I tell meaning.",
-  "candidate": "",
-  "selected": "I tell. I tell truth. I tell meaning.",
-  "accepted": false,
-  "reason": "no_candidate",
-  "original_score": 0.5,
-  "candidate_score": 0.0,
-  "original_pressure": 0.3,
-  "candidate_pressure": 1.0,
-  "pressure_relief": -0.7,
-  "safe": false,
-  "metadata": {
-    "prompt_excerpt": "Tell me about meaning.",
-    "input_interpretation": {
-      "raw_prompt": "Tell me about meaning.",
-      "intent_hint": "statement_or_context",
-      "topic_terms": [
-        "meaning"
-      ],
-      "entities": []
-    },
-    "tone": "gentle",
-    "source": "no_pattern_matched",
-    "timestamp": 1784879802.5128467,
-    "min_relief_used": 0.035,
-    "semantic_strategy_relief_bump": 0.0
-  }
+  "original": "I changed moment coherent. I do and real.",
+  "candidate": "I changed moment coherent. I do and real.",
+  "selected": "I changed moment coherent. I do and real.",
+  "accepted": true,
+  "reason": "already_well_formed",
+  "original_score": 0.74,
+  "candidate_score": 0.74,
+  "original_pressure": 0.292,
+  "candidate_pressure": 0.292,
+  "pressure_relief": 0.0,
+  "safe": true,
+  "metadata": {}
 }

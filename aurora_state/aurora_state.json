@@ -1,8 +1,8 @@
 {
   "version": "2.0",
-  "timestamp": 1784879802.9161732,
-  "generation": 10424,
-  "genome_version": 10424,
+  "timestamp": 1784888393.3305678,
+  "generation": 10426,
+  "genome_version": 10426,
   "core_gene_count": 5,
   "active_genes": [
     "truth-seeking",
@@ -73,27 +73,27 @@
     "introspection": 1.0,
     "pattern_sensitivity": 1.0,
     "social_engagement": 1.0,
-    "energy_conservation": 0.9808
+    "energy_conservation": 0.9733
   },
-  "personality_drift": 3.8808,
+  "personality_drift": 3.8733,
   "crystal_genomes": {
     "response": {
-      "warmth": 0.5616,
-      "precision": 0.727949519712705,
-      "depth": 0.9780802469626908,
-      "confidence": 0.5551007557900989
+      "warmth": 0.6122933763548657,
+      "precision": 0.7342341549162713,
+      "depth": 0.9719968822164664,
+      "confidence": 0.5329731522526869
     },
     "cognitive": {
-      "curiosity": 0.809391613927791,
-      "pattern_matching": 0.8227632397501772,
+      "curiosity": 0.8305155130705604,
+      "pattern_matching": 0.78792613431477,
       "abstraction": 0.48360000000000003,
-      "risk_assessment": 0.8801706979173398
+      "risk_assessment": 0.8978718043512027
     },
     "social": {
-      "empathy": 0.5853713707228849,
-      "trust_extension": 0.7064821057825695,
-      "boundary_maintenance": 0.8621302495469697,
-      "engagement": 0.6828072872154778
+      "empathy": 0.6239240927453901,
+      "trust_extension": 0.6848785566691296,
+      "boundary_maintenance": 0.8391545361173207,
+      "engagement": 0.647392087671819
     }
   },
   "governance_stats": {
@@ -117,5 +117,5 @@
   "what_aurora_learned": [],
   "time_dilation": 3000.0,
   "stability_state": "stable",
-  "_checksum": "77a3a8b85c1e"
+  "_checksum": "ba2e9f67bbd5"
 }
