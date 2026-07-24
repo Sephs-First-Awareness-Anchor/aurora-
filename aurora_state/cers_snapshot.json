@@ -2,52 +2,52 @@
   "conscious_frame": {
     "coherence": 0.288,
     "conscious_crest": {
-      "axis": "N",
-      "intensity": 0.3997,
-      "label": "explain"
+      "axis": "T",
+      "intensity": 0.4364,
+      "label": "contextualize"
     },
-    "dominant_axis": "N",
+    "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "understand"
+        "feeling"
       ],
       "interaction_state": "present",
-      "present_anchor": "How do you understand awareness?\n[recalled:understand] How do you understand awareness? [recalled:awareness] How do you understand awaren...",
+      "present_anchor": "feeling.\n[recalled:feeling] feeling. [recalled:recalled:feeling] feeling.\n[recalled:feeling] feeling. [recalled:recalled:recalled:feeling...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
     "readiness": 0.288,
-    "selected_action": "explain",
-    "should_speak": false,
-    "stance": "interpretive_explanation",
+    "selected_action": "contextualize",
+    "should_speak": true,
+    "stance": "contextual_continuity",
     "subsurface_crest": {
-      "axis": "N",
-      "intensity": 0.4476,
-      "label": "steady"
+      "axis": "T",
+      "intensity": 0.5,
+      "label": "continuity_stable"
     },
-    "timestamp": 1784847559.3656645
+    "timestamp": 1784851469.3020504
   },
-  "saved_at": 1784847559.3663726,
+  "saved_at": 1784851469.3022234,
   "subsurface_state": {
-    "dominant_axis": "N",
+    "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "understand"
+        "feeling"
       ],
       "interaction_state": "present",
-      "present_anchor": "How do you understand awareness?\n[recalled:understand] How do you understand awareness? [recalled:awareness] How do you understand awaren...",
+      "present_anchor": "feeling.\n[recalled:feeling] feeling. [recalled:recalled:feeling] feeling.\n[recalled:feeling] feeling. [recalled:recalled:recalled:feeling...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
       },
       "present_tone": "curiosity",
-      "reinforcement_hint": 0.2514
+      "reinforcement_hint": 0.6514
     },
     "sub_crests": [
       {
@@ -57,8 +57,8 @@
       },
       {
         "axis": "T",
-        "intensity": 0.5,
-        "label": "familiar"
+        "intensity": 1.0,
+        "label": "continuity_pull"
       },
       {
         "axis": "A",
@@ -78,7 +78,7 @@
       {
         "axis": "T",
         "intensity": 1.0,
-        "label": "thread_slipping"
+        "label": "thread_holds"
       },
       {
         "axis": "N",
@@ -92,9 +92,9 @@
       }
     ],
     "subsurface_crest": {
-      "axis": "N",
-      "intensity": 0.4476,
-      "label": "steady"
+      "axis": "T",
+      "intensity": 0.5,
+      "label": "continuity_stable"
     }
   }
 }
