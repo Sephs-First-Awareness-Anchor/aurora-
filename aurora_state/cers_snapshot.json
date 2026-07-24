@@ -1,10 +1,10 @@
 {
   "conscious_frame": {
-    "coherence": 0.188,
+    "coherence": 0.644,
     "conscious_crest": {
       "axis": "N",
-      "intensity": 0.45,
-      "label": "hold"
+      "intensity": 0.5065,
+      "label": "explain"
     },
     "dominant_axis": "N",
     "overlay": {
@@ -12,7 +12,7 @@
         "understand"
       ],
       "interaction_state": "present",
-      "present_anchor": "How do you understand awareness?\n[recalled:understand] How do you understand awareness? [recalled:awareness] How do you understand awaren...",
+      "present_anchor": "How do you understand identity?\n[recalled:identity] How do you understand identity? [recalled:understand] How do you understand identity?...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,18 +21,18 @@
       "reinforcement_hint": 0.2514
     },
     "processing_mode": "blended",
-    "readiness": 0.188,
-    "selected_action": "wait",
+    "readiness": 0.644,
+    "selected_action": "explain",
     "should_speak": true,
-    "stance": "hold_for_coherence",
+    "stance": "interpretive_explanation",
     "subsurface_crest": {
       "axis": "N",
       "intensity": 0.4476,
       "label": "steady"
     },
-    "timestamp": 1784901486.2849522
+    "timestamp": 1784907175.3031588
   },
-  "saved_at": 1784901486.2851355,
+  "saved_at": 1784907175.3033662,
   "subsurface_state": {
     "dominant_axis": "N",
     "frame_request": "observation",
@@ -41,7 +41,7 @@
         "understand"
       ],
       "interaction_state": "present",
-      "present_anchor": "How do you understand awareness?\n[recalled:understand] How do you understand awareness? [recalled:awareness] How do you understand awaren...",
+      "present_anchor": "How do you understand identity?\n[recalled:identity] How do you understand identity? [recalled:understand] How do you understand identity?...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
