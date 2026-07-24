@@ -1,18 +1,18 @@
 {
   "conscious_frame": {
-    "coherence": 0.644,
+    "coherence": 0.188,
     "conscious_crest": {
       "axis": "T",
-      "intensity": 0.5432,
-      "label": "contextualize"
+      "intensity": 0.45,
+      "label": "hold"
     },
     "dominant_axis": "T",
     "overlay": {
       "active_crystals": [
-        "meaning"
+        "awareness"
       ],
       "interaction_state": "present",
-      "present_anchor": "meaning.\n[recalled:meaning] meaning. [recalled:recalled:meaning] meaning.\n[recalled:meaning] meaning.",
+      "present_anchor": "awareness.\n[recalled:awareness] awareness. [recalled:recalled:awareness] awareness.\n[recalled:awareness] awareness. [recalled:recalled:re...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
@@ -21,27 +21,27 @@
       "reinforcement_hint": 0.6514
     },
     "processing_mode": "blended",
-    "readiness": 0.6525,
-    "selected_action": "contextualize",
+    "readiness": 0.3433,
+    "selected_action": "wait",
     "should_speak": true,
-    "stance": "contextual_continuity",
+    "stance": "hold_for_coherence",
     "subsurface_crest": {
       "axis": "T",
       "intensity": 0.5,
       "label": "continuity_stable"
     },
-    "timestamp": 1784929593.9862893
+    "timestamp": 1784934350.5477448
   },
-  "saved_at": 1784929593.9865386,
+  "saved_at": 1784934350.5479412,
   "subsurface_state": {
     "dominant_axis": "T",
     "frame_request": "observation",
     "overlay": {
       "active_crystals": [
-        "meaning"
+        "awareness"
       ],
       "interaction_state": "present",
-      "present_anchor": "meaning.\n[recalled:meaning] meaning. [recalled:recalled:meaning] meaning.\n[recalled:meaning] meaning.",
+      "present_anchor": "awareness.\n[recalled:awareness] awareness. [recalled:recalled:awareness] awareness.\n[recalled:awareness] awareness. [recalled:recalled:re...",
       "present_sensory": {
         "dominant_facet": "",
         "maturity": 0.419
