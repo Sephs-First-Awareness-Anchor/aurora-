@@ -17,9 +17,9 @@
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "existence",
+    "active_topic": "a code evolve 5301dbc734",
     "ambiguity": 0.545,
-    "cost_total": 0.2184,
+    "cost_total": 0.2241,
     "dominant_emotion": "curiosity",
     "frame_continuity": 1.0,
     "interpreted_deep_emotion": "calm",
@@ -31,10 +31,25 @@
     {
       "label": "low_coherence",
       "severity": 0.812
+    },
+    {
+      "label": "prediction_mismatch",
+      "severity": 0.5575
     }
   ],
   "law_bindings": [],
   "micro_reasoning": [
+    {
+      "confidence": 0.5575,
+      "label": "prediction_mismatch",
+      "rationale": "Observed input diverged from the currently primed continuation.",
+      "source": "prediction",
+      "tags": [
+        "reframe",
+        "surprise"
+      ],
+      "urgency": 0.812
+    },
     {
       "confidence": 1.0,
       "label": "callback_pressure",
@@ -65,25 +80,26 @@
   ],
   "prediction_signal": {
     "alerts": [
+      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.6613,
+    "confidence": 0.564,
     "expected_observation": "followup",
-    "expected_user_continuation": "existence",
+    "expected_user_continuation": "a code evolve 5301dbc734",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.325,
+    "mismatch": 0.5575,
     "prediction_payload": {
       "affect": "curiosity",
       "axis_signature": "X",
       "certainty_band": "medium",
       "intent_type": "followup",
-      "topic": "existence"
+      "topic": "a code evolve 5301dbc734"
     },
     "preload_context": [
-      "existence",
+      "a code evolve 5301dbc734",
       "followup"
     ],
-    "readiness_bias": 0.4269,
+    "readiness_bias": 0.2815,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -93,19 +109,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3433,
+  "readiness": 0.2863,
   "recalled_fragments": [
-    "existence",
-    "existence.\n[recalled:existence] existence. [recalled:recalled:existence] existence.\n[recalled:existence] existence. [recalled:recalled:re..."
+    "a code evolve 5301dbc734",
+    "What is feeling?\n[recalled:feeling] What is feeling? [recalled:recalled:feeling] What is feeling?\n[recalled:feeling] What is feeling? [re..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2725,
-    "N": 0.0874,
-    "T": 0.6401,
+    "B": 0.2719,
+    "N": 0.0894,
+    "T": 0.6386,
     "X": 0.0
   },
-  "saved_at": 1784858277.041669,
+  "saved_at": 1784870556.0290911,
   "sub_crests": [
     {
       "axis": "X",
@@ -124,8 +140,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.45,
-      "label": "low_certainty"
+      "intensity": 0.5575,
+      "label": "surprise"
     },
     {
       "axis": "N",

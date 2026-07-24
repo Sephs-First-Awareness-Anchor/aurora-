@@ -2290,37 +2290,141 @@
         "Lower acceptance threshold for framing_selection by 0.053"
       ],
       "timestamp": 1784858277.2441792
+    },
+    {
+      "directive_id": "spd_d0f9ea0256a5",
+      "source_episode_ids": [
+        "episode_ecfa1249f933"
+      ],
+      "target_domains": [
+        "expression"
+      ],
+      "mutation_bias": {
+        "N_exploration": 0.5,
+        "B_exploration": 0.21
+      },
+      "promotion_bias": {
+        "uncertainty_signaling": 1.385
+      },
+      "cost_shaping": {
+        "uncertainty_signaling": 0.85
+      },
+      "threshold_shaping": {
+        "uncertainty_signaling": -0.09
+      },
+      "tolerance_shaping": {
+        "uncertainty_signaling": 1.3
+      },
+      "confidence": 0.7644347053271257,
+      "rationale": [
+        "Bias N-axis mutation exploration by 0.50 (deficit depth: 0.30)",
+        "Ease promotion burden for uncertainty_signaling structures by 1.39x",
+        "Reduce cost for uncertainty_signaling structures to 0.85x",
+        "Lower acceptance threshold for uncertainty_signaling by 0.090"
+      ],
+      "timestamp": 1784870556.3170705
+    },
+    {
+      "directive_id": "spd_f675b89273db",
+      "source_episode_ids": [
+        "episode_ecfa1249f933"
+      ],
+      "target_domains": [
+        "consciousness",
+        "simulation"
+      ],
+      "mutation_bias": {
+        "B_exploration": 0.5
+      },
+      "promotion_bias": {
+        "perspective_integration": 1.29
+      },
+      "cost_shaping": {
+        "perspective_integration": 0.85
+      },
+      "threshold_shaping": {
+        "perspective_integration": -0.09
+      },
+      "tolerance_shaping": {
+        "perspective_integration": 1.3
+      },
+      "confidence": 0.7074347053271256,
+      "rationale": [
+        "Bias B-axis mutation exploration by 0.50 (deficit depth: 0.30)",
+        "Ease promotion burden for perspective_integration structures by 1.29x",
+        "Reduce cost for perspective_integration structures to 0.85x",
+        "Lower acceptance threshold for perspective_integration by 0.090"
+      ],
+      "timestamp": 1784870556.3170898
+    },
+    {
+      "directive_id": "spd_25626bf00a1d",
+      "source_episode_ids": [
+        "episode_ecfa1249f933"
+      ],
+      "target_domains": [
+        "consciousness",
+        "simulation"
+      ],
+      "mutation_bias": {
+        "T_exploration": 0.5
+      },
+      "promotion_bias": {
+        "context_carryover": 1.2641539109848485
+      },
+      "cost_shaping": {
+        "context_carryover": 0.7909375000000001
+      },
+      "threshold_shaping": {
+        "context_carryover": -0.12543749999999998
+      },
+      "tolerance_shaping": {
+        "context_carryover": 1.4181249999999999
+      },
+      "confidence": 0.6919270519180348,
+      "rationale": [
+        "Bias T-axis mutation exploration by 0.50 (deficit depth: 0.42)",
+        "Ease promotion burden for context_carryover structures by 1.26x",
+        "Reduce cost for context_carryover structures to 0.79x",
+        "Lower acceptance threshold for context_carryover by 0.125"
+      ],
+      "timestamp": 1784870556.3171074
+    },
+    {
+      "directive_id": "spd_61a318c8a8b7",
+      "source_episode_ids": [
+        "episode_ecfa1249f933"
+      ],
+      "target_domains": [
+        "expression",
+        "identity"
+      ],
+      "mutation_bias": {
+        "X_exploration": 0.4
+      },
+      "promotion_bias": {
+        "framing_selection": 1.1544481818181818
+      },
+      "cost_shaping": {
+        "framing_selection": 0.9
+      },
+      "threshold_shaping": {
+        "framing_selection": -0.06
+      },
+      "tolerance_shaping": {
+        "framing_selection": 1.2
+      },
+      "confidence": 0.6261036144180347,
+      "rationale": [
+        "Bias X-axis mutation exploration by 0.40 (deficit depth: 0.20)",
+        "Ease promotion burden for framing_selection structures by 1.15x",
+        "Reduce cost for framing_selection structures to 0.90x",
+        "Lower acceptance threshold for framing_selection by 0.060"
+      ],
+      "timestamp": 1784870556.3171225
     }
   ],
   "history": [
-    {
-      "directive_id": "spd_679a97c49518",
-      "leverage_dim": "framing_selection",
-      "leverage_score": 0.38938719238249414,
-      "confidence": 0.6500984842387636,
-      "timestamp": 1784678376.5289316
-    },
-    {
-      "directive_id": "spd_46ee04a2bc5f",
-      "leverage_dim": "context_carryover",
-      "leverage_score": 1.0543727002164502,
-      "confidence": 0.849641322792215,
-      "timestamp": 1784685313.8139307
-    },
-    {
-      "directive_id": "spd_f19a68b18cef",
-      "leverage_dim": "uncertainty_signaling",
-      "leverage_score": 0.6199999999999999,
-      "confidence": 0.71932951272728,
-      "timestamp": 1784685313.813952
-    },
-    {
-      "directive_id": "spd_a470aeeba29b",
-      "leverage_dim": "perspective_integration",
-      "leverage_score": 0.5631640625,
-      "confidence": 0.7022787314772799,
-      "timestamp": 1784685313.8139765
-    },
     {
       "directive_id": "spd_1aecc03120fc",
       "leverage_dim": "framing_selection",
@@ -2992,6 +3096,34 @@
       "leverage_score": 0.32157142857142856,
       "confidence": 0.6298172191943017,
       "timestamp": 1784858277.2441792
+    },
+    {
+      "directive_id": "spd_d0f9ea0256a5",
+      "leverage_dim": "uncertainty_signaling",
+      "leverage_score": 0.77,
+      "confidence": 0.7644347053271257,
+      "timestamp": 1784870556.3170705
+    },
+    {
+      "directive_id": "spd_f675b89273db",
+      "leverage_dim": "perspective_integration",
+      "leverage_score": 0.58,
+      "confidence": 0.7074347053271256,
+      "timestamp": 1784870556.3170898
+    },
+    {
+      "directive_id": "spd_25626bf00a1d",
+      "leverage_dim": "context_carryover",
+      "leverage_score": 0.5283078219696971,
+      "confidence": 0.6919270519180348,
+      "timestamp": 1784870556.3171074
+    },
+    {
+      "directive_id": "spd_61a318c8a8b7",
+      "leverage_dim": "framing_selection",
+      "leverage_score": 0.30889636363636364,
+      "confidence": 0.6261036144180347,
+      "timestamp": 1784870556.3171225
     }
   ]
 }
