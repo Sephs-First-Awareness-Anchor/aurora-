@@ -2,7 +2,7 @@
   "action_bias_candidates": [],
   "candidate_interpretations": [
     {
-      "confidence": 1.0,
+      "confidence": 0.35,
       "label": "topic_continuation"
     },
     {
@@ -10,18 +10,18 @@
       "label": "affective_attention"
     }
   ],
-  "coherence": 0.288,
+  "coherence": 0.188,
   "comparison_channels": [
     "incoming_input",
     "present_sensory",
     "DCE_root"
   ],
   "contract_signals": {
-    "active_topic": "a code evolve a24af65ee1",
+    "active_topic": "existence",
     "ambiguity": 0.545,
     "cost_total": 0.2099,
     "dominant_emotion": "curiosity",
-    "frame_continuity": 1.0,
+    "frame_continuity": 0.0,
     "interpreted_deep_emotion": "calm",
     "interpreted_deep_passion": "settled_alignment",
     "tracked_surface_emotion": "curiosity",
@@ -30,37 +30,11 @@
   "instability_markers": [
     {
       "label": "low_coherence",
-      "severity": 0.712
-    },
-    {
-      "label": "prediction_mismatch",
-      "severity": 0.5575
+      "severity": 0.812
     }
   ],
   "law_bindings": [],
   "micro_reasoning": [
-    {
-      "confidence": 0.5575,
-      "label": "prediction_mismatch",
-      "rationale": "Observed input diverged from the currently primed continuation.",
-      "source": "prediction",
-      "tags": [
-        "reframe",
-        "surprise"
-      ],
-      "urgency": 0.712
-    },
-    {
-      "confidence": 1.0,
-      "label": "callback_pressure",
-      "rationale": "Prior context is exerting enough pull to bias the next conscious frame.",
-      "source": "memory_resonance",
-      "tags": [
-        "continuity",
-        "context"
-      ],
-      "urgency": 0.45
-    },
     {
       "confidence": 1.0,
       "label": "novelty_attention",
@@ -80,26 +54,25 @@
   ],
   "prediction_signal": {
     "alerts": [
-      "prediction_mismatch",
       "novelty_shift"
     ],
-    "confidence": 0.5613,
+    "confidence": 0.7011,
     "expected_observation": "followup",
-    "expected_user_continuation": "a code evolve a24af65ee1",
+    "expected_user_continuation": "existence",
     "likely_affect_shift": "curiosity",
-    "mismatch": 0.5575,
+    "mismatch": 0.325,
     "prediction_payload": {
       "affect": "curiosity",
-      "axis_signature": "X",
-      "certainty_band": "medium",
+      "axis_signature": "A",
+      "certainty_band": "high",
       "intent_type": "followup",
-      "topic": "a code evolve a24af65ee1"
+      "topic": "existence"
     },
     "preload_context": [
-      "a code evolve a24af65ee1",
+      "existence",
       "followup"
     ],
-    "readiness_bias": 0.2806,
+    "readiness_bias": 0.4388,
     "source": "understanding_contract"
   },
   "pressure_map": {
@@ -109,19 +82,19 @@
     "T": 0.0,
     "X": 0.0
   },
-  "readiness": 0.3413,
+  "readiness": 0.3433,
   "recalled_fragments": [
-    "a code evolve a24af65ee1",
-    "What does identity mean to you?\n[recalled:identity] What does identity mean to you? [recalled:mean] What does identity mean to you? [reca..."
+    "existence",
+    "Do you experience existence?\n[recalled:experience] Do you experience existence? [recalled:existence] Do you experience existence? [recall..."
   ],
   "salience_weights": {
     "A": 0.0,
-    "B": 0.2735,
-    "N": 0.0843,
-    "T": 0.6423,
+    "B": 0.4569,
+    "N": 0.5431,
+    "T": 0.0,
     "X": 0.0
   },
-  "saved_at": 1784999002.5908728,
+  "saved_at": 1785002651.6835625,
   "sub_crests": [
     {
       "axis": "X",
@@ -130,8 +103,8 @@
     },
     {
       "axis": "T",
-      "intensity": 1.0,
-      "label": "continuity_pull"
+      "intensity": 0.5,
+      "label": "familiar"
     },
     {
       "axis": "A",
@@ -140,8 +113,8 @@
     },
     {
       "axis": "X",
-      "intensity": 0.5575,
-      "label": "surprise"
+      "intensity": 0.45,
+      "label": "low_certainty"
     },
     {
       "axis": "N",
@@ -151,7 +124,7 @@
     {
       "axis": "T",
       "intensity": 1.0,
-      "label": "thread_holds"
+      "label": "thread_slipping"
     },
     {
       "axis": "N",
